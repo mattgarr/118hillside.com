@@ -51,6 +51,16 @@ strong { font-weight: 500; }
 .btn .short { display: none; }
 .btn.solid { background: var(--ink); color: var(--bg); }
 .btn.solid:hover { background: transparent; color: var(--ink); }
+.tour-card { position: relative; display: block; margin: 40px 0 16px; border-radius: 6px; overflow: hidden; color: #fff; text-decoration: none; background: var(--dark); }
+.tour-card img { display: block; width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; opacity: .82; transition: transform .6s ease, opacity .3s; }
+.tour-card:hover img { transform: scale(1.02); opacity: .92; }
+.tour-copy { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 32px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; background: linear-gradient(to top, rgba(10,10,10,.78), rgba(10,10,10,0)); }
+.tour-copy .eyebrow { color: #e8d3b0; }
+.tour-title { font-family: var(--serif); font-size: clamp(26px, 4vw, 42px); font-weight: 500; letter-spacing: .04em; line-height: 1.05; }
+.tour-sub { max-width: 620px; font-size: 15px; line-height: 1.5; color: rgba(255,255,255,.88); }
+.tour-copy .btn.solid { background: #fff; color: var(--ink); border-color: #fff; }
+@media (max-width: 640px) { .tour-card img { aspect-ratio: 4/5; } .tour-copy { padding: 18px; } .tour-sub { font-size: 14px; } }
+
 
 /* hero */
 .hero { position: relative; height: min(84vh, 920px); min-height: 420px; overflow: hidden; background: #ddd; }
@@ -173,9 +183,12 @@ footer p { margin: 0 0 8px; max-width: 900px; }
   <div class="wrap">
     <a class="brand" href="#top">118 Hillside Drive</a>
     <nav class="nav" aria-label="Sections">
-      <a href="#home">The Home</a><a href="#details">Details</a><a href="#gallery">Gallery</a><a href="#contact">Contact</a>
+      <a href="#home">The Home</a><a href="#details">Details</a><a href="tour/" style="color:var(--gold);font-weight:500;">3D Tour</a><a href="#gallery">Gallery</a><a href="#contact">Contact</a>
     </nav>
-    <a class="btn" href="#contact"><span class="long">Schedule a Showing</span><span class="short">Showings</span></a>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a class="btn solid" href="tour/"><span class="long">Explore 3D Tour</span><span class="short">3D Tour</span></a>
+      <a class="btn" href="#contact"><span class="long">Schedule a Showing</span><span class="short">Showings</span></a>
+    </div>
   </div>
 </header>
 
@@ -201,6 +214,10 @@ footer p { margin: 0 0 8px; max-width: 900px; }
 <section class="intro" id="home">
   <div class="wrap">
     <p class="lead"><strong>DISCOVER A HOME</strong> filled with light from skylights and walls of glass, with room for everyone in Woodside. A 2024 addition expanded the original home with a dramatic entry, a dining room open to the terrace, an upstairs primary suite, and a spacious lower level.</p>
+    <a class="tour-card" href="tour/" aria-label="Explore the interactive 3D tour of 118 Hillside Drive">
+      <img src="images/tour-preview.jpg" alt="3D model of 118 Hillside Drive seen from above, showing every room" loading="lazy" width="1600" height="900">
+      <span class="tour-copy"><span class="eyebrow">Interactive 3D tour</span><span class="tour-title">Walk through every room</span><span class="tour-sub">Tour the house stop by stop, see it in the dollhouse view, switch furniture on and off, and try paint colors and landscape ideas.</span><span class="btn solid">Explore the 3D tour &rarr;</span></span>
+    </a>
     <div class="glance"><div class="glance-item"><h3>A 2024 Addition</h3><p>A dramatic entry, a dining room open to the terrace, and a primary suite with a balcony</p></div><div class="glance-item"><h3>Room for Everyone</h3><p>6 bedrooms, 3 full baths, a skylit office, and a bonus lounge opening to the terrace</p></div><div class="glance-item"><h3>Living Space</h3><p>Approx. 3,087 sq.&nbsp;ft. on a ~7,000 sq.&nbsp;ft. lot</p></div><div class="glance-item"><h3>Outdoor Living</h3><p>A front porch, a paver terrace with an outdoor kitchen and pergola, and RV hookups</p></div><div class="glance-item"><h3>Woodside Glens</h3><p>About a mile to Woodside Town Center, in the Woodside Elementary School District</p></div><div class="glance-item"><h3>Oversized Garage</h3><p>High ceilings, built-in storage, and a 50-amp outlet for EV</p></div></div>
   </div>
 </section>
