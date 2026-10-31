@@ -350,6 +350,29 @@ html.b22ref .perfpill:not(#b22pill){display:none}
 #b22fade{position:absolute;pointer-events:none;display:none}
 @media (prefers-reduced-motion: reduce){ #b22pill{transition:none} #b22pill i{animation:none} }
 #hwBtn.on{background:#2a1238!important;color:#ffb04a!important;box-shadow:inset 0 0 0 1px #ff7a1a}#hwBtn.on svg{color:#ff7a1a}
+
+/* v24 busy24: busy state + status pill (CSS variables; html.halloween overrides) */
+/* from the page's own UI variables (--glass / --ink / --accent; phone --pgs / --pt / --ph-hi), so a theme layer that re-maps them restyles this too */
+:root{--busy-surface:var(--glass,rgba(241,242,239,.92));--busy-text:var(--ink,#1b1f22);--busy-accent:var(--accent,#55633a);--busy-radius:999px;--busy-shadow:0 4px 18px rgba(0,0,0,.16)}
+html.ph{--busy-surface:var(--pgs,var(--glass,rgba(241,242,239,.92)));--busy-text:var(--pt,var(--ink,#1b1f22));--busy-accent:var(--ph-hi,var(--accent,#55633a))}
+/* Halloween fallbacks (night surface + candle orange), same palette as the html.halloween theme layer */
+html.halloween,html.halloween.ph{--busy-surface:rgba(21,16,27,.92);--busy-text:#f3e6d0;--busy-accent:#ff8a2a;--busy-shadow:0 4px 18px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,122,26,.35)}
+.busy24{position:relative;cursor:progress!important}
+.busy24>*{opacity:.55}
+.busy24::after{content:"";position:absolute;right:-5px;top:-5px;width:14px;height:14px;box-sizing:border-box;border-radius:50%;background:var(--busy-surface);box-shadow:0 0 0 1px rgba(0,0,0,.08);
+  border:2px solid var(--busy-accent);border-right-color:transparent;animation:busy24spin .7s linear infinite;opacity:1;pointer-events:none;z-index:2}
+#busy24{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:9px;max-width:calc(100vw - 32px);box-sizing:border-box;
+  padding:8px 15px 8px 11px;border-radius:var(--busy-radius);background:var(--busy-surface);color:var(--busy-text);box-shadow:var(--busy-shadow);
+  font:500 13px/1.25 inherit;font-family:inherit;pointer-events:none;opacity:0;transform:translate(-50%,8px);transition:opacity .16s ease,transform .16s ease;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#busy24.on{opacity:1;transform:translate(-50%,0)}
+#busy24 i{flex:none;width:14px;height:14px;border-radius:50%;border:2px solid var(--busy-accent);border-right-color:transparent;animation:busy24spin .7s linear infinite;box-sizing:border-box}
+html.halloween #busy24 i{border:0;width:16px;height:16px;border-radius:45% 45% 50% 50%;background:radial-gradient(circle at 50% 60%,#ffd27a 0 18%,#ff8a2a 40%,#c4520e 72%);box-shadow:0 0 8px 2px rgba(255,138,42,.55);animation:busy24flick 1.1s ease-in-out infinite}
+#busy24 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.ph #busy24{bottom:calc(84px + env(safe-area-inset-bottom,0px));font-size:12.5px}
+@media (max-width:720px){#busy24{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+@keyframes busy24spin{to{transform:rotate(360deg)}}
+@keyframes busy24flick{0%,100%{transform:scale(1);opacity:1}45%{transform:scale(.88,.94);opacity:.82}70%{transform:scale(1.05);opacity:1}}
+@media (prefers-reduced-motion:reduce){.busy24::after,#busy24 i{animation-duration:2.4s}#busy24{transition:none}}
 </style>
 <style>/* ---- v19 phone UI (patch_v19_phone): every rule is scoped to html.ph ---- */
 .phonly{display:none!important}
@@ -11611,6 +11634,183 @@ window.HALLOWEEN.on = function(){ const r = hwOn(); hwSync(); return r; }; windo
 HW22.check = () => { const out = {legR: HW22.legR, snapped: HW22.snapped, uplights: HW22.moved, key: HW.builtKey, cached: [...HW22.cache.keys()].length};
   let left = 0; scene.traverse(o => { if(o.userData && o.userData.hw && !HW.on) left++; }); out.leftWhenOff = HW.on ? null : left; return out; };
 window.HALLOWEEN.check22 = HW22.check;
+
+/* ================= v24 busy24: faster slow toggles + status indicator (patch_v24_busy.py) ================= */
+const Q24 = new URLSearchParams(location.search);
+// ---- B1 Halloween ray grid
+const RG24 = {off: Q24.has('nogrid24'), grids: new WeakMap(), stamp: 0, rays: 0, tris: 0, builds: 0, buildMs: 0};
+window.__RG24 = RG24;
+const _rgRay = new THREE.Ray(), _rgA = new THREE.Vector3(), _rgB = new THREE.Vector3(), _rgC = new THREE.Vector3(), _rgP = new THREE.Vector3(), _rgW = new THREE.Vector3(), _rgU = new THREE.Vector3(), _rgE2 = new THREE.Vector3();
+function rgSig(o){ const g = o.geometry, a = g.attributes.position, i = g.index, d = g.drawRange;
+  return a.version + ':' + (i ? i.version + ':' + i.count : 'n') + ':' + a.count + ':' + d.start + ':' + d.count + ':' + g.groups.length + ':' + (Array.isArray(o.material) ? o.material.length : 1); }
+function rgSame(G, o){ const e = o.matrixWorld.elements, f = G.mw; for(let k = 0; k < 16; k++) if(e[k] !== f[k]) return false; return G.sig === rgSig(o) && G.mat === o.material; }
+function rgBuild(o){   // triangle entries in Mesh.raycast order, bucketed by world-XZ box into a uniform grid (CSR)
+  const t0 = performance.now(), g = o.geometry, pos = g.attributes.position, idx = g.index, mat = o.material, d = g.drawRange, E = o.matrixWorld.elements;
+  if(!pos || (g.morphAttributes && g.morphAttributes.position) || o.isSkinnedMesh) return null;
+  const J = [], MI = [];   // first index position of each triangle and its material (index into mats)
+  const mats = Array.isArray(mat) ? mat : [mat], n = idx ? idx.count : pos.count;
+  if(Array.isArray(mat)){ for(const gr of g.groups){ for(let j = Math.max(gr.start, d.start), e = Math.min(gr.start + gr.count, d.start + d.count); j < e; j += 3){ J.push(j); MI.push(gr.materialIndex); } } }
+  else for(let j = Math.max(0, d.start), e = Math.min(n, d.start + d.count); j < e; j += 3){ J.push(j); MI.push(0); }
+  const T = J.length; if(!T) return {T: 0, mw: E.slice(), sig: rgSig(o), mat};
+  const bx0 = new Float64Array(T), bx1 = new Float64Array(T), bz0 = new Float64Array(T), bz1 = new Float64Array(T); let X0 = 1e30, X1 = -1e30, Z0 = 1e30, Z1 = -1e30;
+  const vi = k => idx ? idx.getX(k) : k;
+  for(let t = 0; t < T; t++){ let x0 = 1e30, x1 = -1e30, z0 = 1e30, z1 = -1e30;
+    for(let q = 0; q < 3; q++){ const v = vi(J[t] + q), x = pos.getX(v), y = pos.getY(v), z = pos.getZ(v), wx = E[0] * x + E[4] * y + E[8] * z + E[12], wz = E[2] * x + E[6] * y + E[10] * z + E[14];
+      if(wx < x0) x0 = wx; if(wx > x1) x1 = wx; if(wz < z0) z0 = wz; if(wz > z1) z1 = wz; }
+    bx0[t] = x0 - 1e-3; bx1[t] = x1 + 1e-3; bz0[t] = z0 - 1e-3; bz1[t] = z1 + 1e-3;
+    if(bx0[t] < X0) X0 = bx0[t]; if(bx1[t] > X1) X1 = bx1[t]; if(bz0[t] < Z0) Z0 = bz0[t]; if(bz1[t] > Z1) Z1 = bz1[t]; }
+  const area = Math.max(1e-6, (X1 - X0) * (Z1 - Z0)); let cs = Math.max(.5, Math.sqrt(area / Math.max(1, T / 3)));
+  let nx = Math.max(1, Math.ceil((X1 - X0) / cs)), nz = Math.max(1, Math.ceil((Z1 - Z0) / cs)); while(nx * nz > 65536){ cs *= 1.4; nx = Math.max(1, Math.ceil((X1 - X0) / cs)); nz = Math.max(1, Math.ceil((Z1 - Z0) / cs)); }
+  const cx = v => Math.min(nx - 1, Math.max(0, Math.floor((v - X0) / cs))), cz = v => Math.min(nz - 1, Math.max(0, Math.floor((v - Z0) / cs)));
+  const cnt = new Int32Array(nx * nz + 1);
+  for(let t = 0; t < T; t++){ const a0 = cx(bx0[t]), a1 = cx(bx1[t]), c0 = cz(bz0[t]), c1 = cz(bz1[t]); for(let i = a0; i <= a1; i++) for(let k = c0; k <= c1; k++) cnt[i * nz + k + 1]++; }
+  for(let c = 0; c < nx * nz; c++) cnt[c + 1] += cnt[c];
+  const fill = cnt.slice(0, nx * nz), items = new Int32Array(cnt[nx * nz]);
+  for(let t = 0; t < T; t++){ const a0 = cx(bx0[t]), a1 = cx(bx1[t]), c0 = cz(bz0[t]), c1 = cz(bz1[t]); for(let i = a0; i <= a1; i++) for(let k = c0; k <= c1; k++) items[fill[i * nz + k]++] = t; }   // ascending t per cell
+  RG24.builds++; RG24.buildMs += performance.now() - t0;
+  return {T, J: Int32Array.from(J), MI: Int32Array.from(MI), mats, X0, Z0, cs, nx, nz, start: cnt, items, stamp: new Uint32Array(T), inv: new THREE.Matrix4().copy(o.matrixWorld).invert(), mw: E.slice(), sig: rgSig(o), mat, idx, pos};
+}
+function rgGet(o){ let G = RG24.grids.get(o); if(G === undefined || (G && !rgSame(G, o))){ G = rgBuild(o); RG24.grids.set(o, G); } return G; }
+const _hwCast0 = hwCast;
+function rgCast(from, dir, far = 60){
+  hwRC.set(from, dir); hwRC.near = 0; hwRC.far = far; _hwEnd.copy(from).addScaledVector(dir, far); _hwSeg.makeEmpty().expandByPoint(from).expandByPoint(_hwEnd).expandByScalar(.01);
+  const hits = []; RG24.rays++;
+  // the ray's world-XZ extent (raw and unit direction: a superset of what the far test can accept)
+  const L = dir.length() || 1; _rgU.copy(from).addScaledVector(dir, far / L);
+  const qx0 = Math.min(from.x, _hwEnd.x, _rgU.x) - 1e-3, qx1 = Math.max(from.x, _hwEnd.x, _rgU.x) + 1e-3, qz0 = Math.min(from.z, _hwEnd.z, _rgU.z) - 1e-3, qz1 = Math.max(from.z, _hwEnd.z, _rgU.z) + 1e-3;
+  for(const m of hwMeshes()){ if(!m.b.intersectsBox(_hwSeg)) continue; const o = m.o;
+    if(!o.layers.test(hwRC.layers) || o.material === undefined) continue;
+    const G = rgGet(o); if(!G){ o.raycast(hwRC, hits); continue; } if(!G.T) continue;
+    if(qx1 < G.X0 || qz1 < G.Z0 || qx0 > G.X0 + G.nx * G.cs || qz0 > G.Z0 + G.nz * G.cs) continue;
+    const i0 = Math.max(0, Math.floor((qx0 - G.X0) / G.cs)), i1 = Math.min(G.nx - 1, Math.floor((qx1 - G.X0) / G.cs)), k0 = Math.max(0, Math.floor((qz0 - G.Z0) / G.cs)), k1 = Math.min(G.nz - 1, Math.floor((qz1 - G.Z0) / G.cs));
+    let list; if(i0 === i1 && k0 === k1){ const c = i0 * G.nz + k0; list = G.items.subarray(G.start[c], G.start[c + 1]); }
+    else { const st = ++RG24.stamp; const acc = []; for(let i = i0; i <= i1; i++) for(let k = k0; k <= k1; k++){ const c = i * G.nz + k; for(let q = G.start[c], e = G.start[c + 1]; q < e; q++){ const t = G.items[q]; if(G.stamp[t] !== st){ G.stamp[t] = st; acc.push(t); } } }
+      if(st > 4e9){ RG24.stamp = 0; for(const x of [G]) x.stamp.fill(0); } acc.sort((a, b) => a - b); list = acc; }
+    if(!list.length) continue;
+    _rgRay.copy(hwRC.ray).applyMatrix4(G.inv); const idx = G.idx, pos = G.pos, E = o.matrixWorld;
+    for(let q = 0; q < list.length; q++){ const t = list[q], j = G.J[t], mt = G.mats[G.MI[t]]; RG24.tris++;
+      const a = idx ? idx.getX(j) : j, b = idx ? idx.getX(j + 1) : j + 1, c = idx ? idx.getX(j + 2) : j + 2;
+      _rgA.fromBufferAttribute(pos, a); _rgB.fromBufferAttribute(pos, b); _rgC.fromBufferAttribute(pos, c);
+      const r = mt.side === THREE.BackSide ? _rgRay.intersectTriangle(_rgC, _rgB, _rgA, true, _rgP) : _rgRay.intersectTriangle(_rgA, _rgB, _rgC, mt.side !== THREE.DoubleSide, _rgP);
+      if(r === null) continue; _rgW.copy(_rgP).applyMatrix4(E); const dist = hwRC.ray.origin.distanceTo(_rgW);
+      if(dist < hwRC.near || dist > hwRC.far) continue;
+      hits.push({distance: dist, point: _rgW.clone(), object: o, faceIndex: Math.floor(j / 3)}); } }
+  hits.sort((a, b) => a.distance - b.distance);
+  for(const h of hits){ const o = h.object; if(!o.isMesh || o.isInstancedMesh || o.userData.hw) continue;
+    const m = Array.isArray(o.material) ? o.material[0] : o.material; if(m && (m === M.glass || GLOW.includes(m) || (m.transparent && m.opacity < .5) || m.visible === false)) continue;
+    if(!hwVis(o)) continue; return h; } return null; }
+if(!RG24.off) hwCast = rgCast;
+// self-check: n random rays (down, up, horizontal) over the house, grid vs the original three.js path
+RG24.check = (n = 400) => { const was = HW_MESHES; if(!HW_TARGETS.length) HW_TARGETS = Object.keys(GROUPS).filter(k => !/^(trees|hills|hw|terrain)/.test(k)).map(k => GROUPS[k]);
+  HW_MESHES = null; hwMeshes(); const bb = new THREE.Box3(); for(const m of HW_MESHES) if(m.o.parent && /main|upper|lower|walls|floor/i.test(m.o.parent.name || '')) bb.union(m.b); if(bb.isEmpty()) for(const m of HW_MESHES) bb.union(m.b);
+  const R = rnd(2424), dirs = [new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 1, 0)]; let bad = 0, hit = 0; const ex = [];
+  for(let i = 0; i < n; i++){ const p = new THREE.Vector3(bb.min.x + R() * (bb.max.x - bb.min.x), bb.min.y + R() * (bb.max.y - bb.min.y), bb.min.z + R() * (bb.max.z - bb.min.z));
+    const d = i % 3 < 2 ? dirs[i % 2] : new THREE.Vector3(Math.cos(i), 0, Math.sin(i)), far = i % 3 < 2 ? 30 : 1.5 + R() * 4;
+    const a = _hwCast0(p, d, far), b = rgCast(p, d, far); if(a) hit++;
+    const same = (!a && !b) || (a && b && a.object === b.object && Math.abs(a.distance - b.distance) < 1e-9); if(!same){ bad++; if(ex.length < 5) ex.push([p.toArray().map(v => +v.toFixed(2)), d.toArray(), a && a.distance, b && b.distance]); } }
+  HW_MESHES = was; return {n, hit, bad, ex, grids: RG24.builds, gridMs: Math.round(RG24.buildMs)}; };
+// ---- B3 busy state + status pill
+const BUSY24 = {off: Q24.has('nobusy24'), active: null, queued: null, pillT: 0, swapOK: false, swapPending: false, replaying: false, lastBtn: null, lastBtnAt: 0, log: []};
+window.__BUSY24 = BUSY24; BUSY24.dbg = () => ({renderer, scene, camera, HW, PERF, get mode(){ return mode; }});
+function b24Pill(){ let e = document.getElementById('busy24');
+  if(!e){ e = document.createElement('div'); e.id = 'busy24'; e.setAttribute('role', 'status'); e.setAttribute('aria-live', 'polite'); e.innerHTML = '<i aria-hidden="true"></i><span></span>'; document.body.appendChild(e); }
+  return e; }
+function b24ShowPill(label){ const e = b24Pill(); e.querySelector('span').textContent = label; e.classList.add('on'); e.dataset.seen = String((+e.dataset.seen || 0) + 1); }
+BUSY24.start = (btn, label, now) => { const a = BUSY24.active = {btn, label, t0: performance.now()};
+  if(btn && !btn.offsetParent){ const more = document.getElementById('phMore'); if(more && more.offsetParent) a.alt = more; }   // phone: the control sits in the closed menu; the menu button shows the busy state
+  for(const b of [btn, a.alt]) if(b){ b.classList.add('busy24'); b.setAttribute('aria-busy', 'true'); }
+  clearTimeout(BUSY24.pillT); if(now) b24ShowPill(label); else BUSY24.pillT = setTimeout(() => { if(BUSY24.active === a) b24ShowPill(label); }, 300); return a; };
+BUSY24.end = () => { const a = BUSY24.active; if(!a) return; BUSY24.active = null; clearTimeout(BUSY24.pillT);
+  for(const b of [a.btn, a.alt]) if(b){ b.classList.remove('busy24'); b.removeAttribute('aria-busy'); }
+  const e = document.getElementById('busy24'); if(e) e.classList.remove('on');
+  BUSY24.log.push([a.label, Math.round(performance.now() - a.t0)]); if(BUSY24.log.length > 40) BUSY24.log.shift();
+  const q = BUSY24.queued; BUSY24.queued = null; if(q && q.isConnected) setTimeout(() => q.click(), 0); };
+// settled = the frame after the work has been rendered (that render is where new programs compile and buffers upload)
+// and then three short frames in a row (< 50 ms apart; work a change triggers a few frames later, such as a compile once a texture is in, keeps it busy); 4 s cap
+BUSY24.settle = () => { const t0 = performance.now(); let last = t0, ok = 0, n = 0;
+  const f = () => { const t = performance.now(), dt = t - last; last = t; n++; ok = dt < 50 ? ok + 1 : 0;
+    if((n >= 2 && ok >= 3) || t - t0 > 4000) BUSY24.end(); else requestAnimationFrame(f); };
+  requestAnimationFrame(f); };
+// run heavy work after the busy state has been painted
+BUSY24.defer = (btn, label, work) => { BUSY24.start(btn, label, true);
+  requestAnimationFrame(() => setTimeout(() => { let r = null; try{ r = work(); } catch(e){ console.warn('[busy24]', e); }
+    if(r && typeof r.then === 'function'){ const cap = setTimeout(BUSY24.settle, 20000); r.then(() => { clearTimeout(cap); BUSY24.settle(); }, () => { clearTimeout(cap); BUSY24.settle(); }); }   // background work (the design kernel): until it is done
+    else BUSY24.settle(); }, 0)); };
+const b24HwKeyCached = () => { try{ const k = hw22Key(); return HW.built && (HW.builtKey === k || HW22.cache.has(k)); }catch(e){ return false; } };
+// heavy controls: predicted slow -> busy state at once, the click itself replays after the paint
+const B24_HEAVY = [
+  {sel: '#hwBtn', label: () => HW.on ? 'Taking the decorations down…' : 'Lighting the jack-o’-lanterns…',
+   slow: () => !HW.on && !!(MODEL && BIM && FURN.items().length) && (!b24HwKeyCached() || !(WARM24.hwCompiled || WARM24.hwEverOn))},
+  {sel: '.tab[data-mode=design]', label: () => PERF.pendingVar && PERF.pendingVar.size ? 'Building the design concepts…' : 'Loading the design tools…',
+   slow: () => mode !== 'design' && ((PERF.pendingVar && PERF.pendingVar.size > 0 && !PERF.off('lazyvariants')) || (!KER && !PERF.kp && !PERF.off('baked') && !!(BIM && BIM.raw))),
+   after: () => PERF.kp},
+  {sel: '#optChips .opt', label: () => 'Building this layout…', slow: () => PERF.pendingVar && PERF.pendingVar.size > 0},
+  {sel: '#landPop [role=menuitemradio]', label: () => 'Planting the landscape idea…', slow: el => el.dataset.id !== (LS.front === LS.back ? LS.front : 'mixed') && !WARM24.landSeen.has(el.dataset.id)},
+  {sel: '#furnBtn', label: () => 'Decorating this layout…', slow: () => false},
+  {sel: '#paintPop [role=menuitemradio], #landBtn, #paintBtn, #tod, #treesBtn, #hdBtn, .tab, #lvSeg [role=radio], #next, #prev, #phDoll', label: () => '', slow: () => false}];
+const B24_SEL = B24_HEAVY.map(h => h.sel).join(',');
+document.addEventListener('click', e => {
+  if(BUSY24.off || BUSY24.replaying || !e.target || !e.target.closest) return;
+  const el = e.target.closest(B24_SEL); if(!el) return;
+  if(BUSY24.active){   // busy: a repeat click on the busy control is ignored, a click on another control is queued (last one wins)
+    e.stopImmediatePropagation(); e.preventDefault(); if(el !== BUSY24.active.btn) BUSY24.queued = el; return; }
+  const h = B24_HEAVY.find(q => el.matches(q.sel)); BUSY24.lastBtn = el; BUSY24.lastBtnAt = performance.now();
+  let slow = false; try{ slow = h.slow(el); }catch(x){}
+  if(!slow) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  BUSY24.defer(el, h.label(el), () => { BUSY24.replaying = true; try{ el.click(); } finally { BUSY24.replaying = false; } return h.after ? h.after() : null; });
+}, true);
+document.addEventListener('click', e => {   // after a landscape pick: remember it (its programs are compiled now)
+  const it = e.target && e.target.closest && e.target.closest('#landPop [role=menuitemradio]'); if(it) WARM24.landSeen.add(it.dataset.id);
+  // Halloween on: a variant / furniture change rebuilds the set now (busy state first) instead of at the next frame poll
+  if(HW.on && !anim) setTimeout(() => { try{ const k = hw22Key(); if(k !== HW.builtKey) hw22Swap(k); }catch(x){} }, 0);
+}, false);
+{ const _swap = hw22Swap; hw22Swap = function(key){
+    if(BUSY24.off || BUSY24.swapOK || !HW.on || HW22.cache.has(key)) return _swap.apply(this, arguments);
+    if(BUSY24.swapPending) return; BUSY24.swapPending = true;
+    const btn = performance.now() - BUSY24.lastBtnAt < 3000 ? BUSY24.lastBtn : null;
+    const run = () => { BUSY24.swapPending = false; if(!HW.on) return; const k = hw22Key(); if(k === HW.builtKey) return; BUSY24.swapOK = true; try{ _swap(k); } finally { BUSY24.swapOK = false; } };
+    if(BUSY24.active){ requestAnimationFrame(() => setTimeout(() => { try{ run(); }catch(e){ console.warn('[busy24] swap', e); } }, 0)); return; }
+    BUSY24.defer(btn, 'Decorating this layout…', run); }; }
+
+// ---- B2 idle warm-up (one job per idle slot, only while the visitor is idle)
+const WARM24 = {off: Q24.has('nowarm24'), last: performance.now(), log: [], hwCompiled: false, landSeen: new Set(), started: false};
+window.__WARM24 = WARM24;
+for(const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, () => { WARM24.last = performance.now(); }, {capture: true, passive: true});
+document.addEventListener('click', () => { WARM24.last = performance.now(); }, true);
+const w24Idle = (ms = 2500) => !document.hidden && !anim && window.__perfTrees === true && !!document.querySelector('#loading.done') && !BUSY24.active
+  && performance.now() - WARM24.last > ms && performance.now() - ((typeof GOV !== 'undefined' && GOV.lastMove) || 0) > ms;
+const w24Later = (ms, fn) => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, {timeout: 3000}) : fn()), ms);
+// compile a list of objects for the Halloween light state (dusk lamps on), ~12 ms slices, like GOV.warm's pass 1
+function w24Compile(objs){ const proxy = Object.create(scene); let chunk = null; proxy.traverseVisible = cb => scene.traverseVisible(cb); proxy.traverse = cb => cb(chunk);
+  const flips = []; scene.traverse(o => { if(o.isLight && !o.visible && (o.isPointLight || o.isSpotLight || o.isRectAreaLight) && o.userData.perfOff){ o.visible = true; flips.push(o); } });
+  const rt0 = renderer.getRenderTarget(); renderer.setRenderTarget(typeof HITCH_SCENE_RT === 'function' ? HITCH_SCENE_RT() : null); const ts = performance.now();
+  try{ while(objs.length && performance.now() - ts < 12){ chunk = objs.pop(); renderer.compile(proxy, camera); } }
+  finally{ for(const l of flips) l.visible = false; renderer.setRenderTarget(rt0); }
+  return objs.length > 0; }
+const W24_JOBS = [
+  {name: 'hwbuild', ready: () => !HW.on && !HW.built && !HW_AUTO && !!(MODEL && BIM && FURN.items().length) && (mode === 'tour' || mode === 'walk'),
+   run: () => { HW.chandSrc = DUSK_LIGHTS.find(l => l.parent && l.parent.name === 'main' && Math.abs(l.position.x - ROOM.entry.at[0]) < 4 && Math.abs(l.position.z - ROOM.entry.at[1]) < 4) || null; hwBuild(); }},
+  {name: 'hwcompile', ready: () => !HW.on && HW.built && !WARM24.hwCompiled && !DUSK,
+   // the Halloween set, then everything in the scene, for the Halloween (dusk-lamps-on) light set; programs already compiled are cache hits
+   run: () => { if(!WARM24.hwList){ WARM24.hwList = []; scene.traverse(o => { if(o.material && (o.isMesh || o.isPoints || o.isLine || o.isSprite)) WARM24.hwList.push(o); });
+       for(const g of [HW.ext, HW.inn, HW.sky]) if(g) g.traverse(o => { if(o.material && (o.isMesh || o.isPoints || o.isLine || o.isSprite)) WARM24.hwList.push(o); }); }
+     if(w24Compile(WARM24.hwList)) return 'more'; WARM24.hwList = null; WARM24.hwCompiled = true; }},
+  {name: 'variants', quiet: 4000, ready: () => !HW.on && mode !== 'design' && PERF.pendingVar && PERF.pendingVar.size > 0 && !PERF.off('lazyvariants'),
+   run: () => { const id = PERF.pendingVar.keys().next().value; PERF.ensureVariant(id); applyVisibility(); if(PERF.pendingVar.size) return 'more'; }}];
+function w24Step(){
+  if(WARM24.off) return;
+  const job = W24_JOBS.find(j => !j.done && j.ready());
+  if(!job){ if(W24_JOBS.some(j => !j.done)) w24Later(3000, w24Step); return; }
+  if(!w24Idle(job.quiet || 2500)) return w24Later(900, w24Step);
+  const t = performance.now(), p0 = renderer.info.programs.length; let more = false;
+  try{ more = job.run() === 'more'; }catch(e){ console.warn('[warm24]', job.name, e); job.done = true; }
+  if(!more) job.done = true; WARM24.log.push([job.name, Math.round(performance.now() - t), renderer.info.programs.length - p0]);
+  w24Later(more ? 60 : 700, w24Step); }
+// a variant / furniture change invalidates the compiled set (a new set gets built at the next Halloween click)
+{ const _b = hwBuild; hwBuild = function(){ const was = HW.built; const r = _b.apply(this, arguments); if(!was && HW.built && !HW.on) WARM24.hwCompiled = false; return r; }; }
+{ const _on = hwOn; hwOn = function(){ const r = _on.apply(this, arguments); if(HW.on) WARM24.hwEverOn = true; return r; }; }
+w24Later(4000, w24Step);
 boot();
 })();
 </script>
