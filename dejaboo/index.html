@@ -52,6 +52,24 @@ a{color:var(--pumpkin-hi)}
 a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--pumpkin);outline-offset:3px;border-radius:2px}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
+/* ---------- for-sale banner ---------- */
+.sale{background:var(--pumpkin);color:var(--night);padding:12px max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px))}
+.sale-in{max-width:660px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 18px}
+.sale-txt{display:flex;flex-direction:column;gap:2px;line-height:1.25;min-width:0}
+.sale-txt b{font-family:var(--f-body);font-weight:700;font-size:18px;letter-spacing:-.005em}
+.sale-txt span{font-size:14px;font-weight:500}
+.sale-links{display:flex;flex-wrap:wrap;gap:8px}
+.sale-links a{display:inline-flex;align-items:center;gap:5px;background:var(--night);color:var(--bone);text-decoration:none;font-family:var(--f-body);font-weight:600;font-size:14px;line-height:1;padding:10px 13px;border-radius:999px;white-space:nowrap}
+.sale-links a:hover{background:#2c1b45}
+.sale-links a:focus-visible{outline:2px solid var(--night);outline-offset:2px}
+.sale-links a .arr{color:var(--pumpkin-hi);font-size:12px}
+@media (max-width:480px){
+  .sale-in{flex-direction:column;align-items:stretch}
+  .sale-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sale-links a{justify-content:center;padding:10px 6px}
+  .sale-links .long{display:none}
+}
+
 /* ---------- hero ---------- */
 .hero{position:relative;isolation:isolate;overflow:hidden;text-align:center;
   background:linear-gradient(180deg,var(--sky-top) 0%,#22123f 34%,#3b1d58 62%,#5f2a63 82%,#7b3654 100%);
@@ -226,6 +244,17 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
     </symbol>
   </defs>
 </svg>
+
+<aside class="sale" aria-label="The house is for sale">
+  <div class="sale-in">
+    <div class="sale-txt"><b>This house is for sale.</b><span>See the listing, photos and a 3D tour before you come.</span></div>
+    <nav class="sale-links" aria-label="House for sale links">
+      <a href="https://www.compass.com/homedetails/118-Hillside-Dr-Woodside-CA-94062/1OXQSG_pid/" target="_blank" rel="noopener">Compass<span class="long"> listing</span> <span class="arr" aria-hidden="true">↗</span></a>
+      <a href="https://118hillside.com/" target="_blank" rel="noopener">Photos<span class="long"> &amp; details</span> <span class="arr" aria-hidden="true">↗</span></a>
+      <a href="https://118hillside.com/tour/" target="_blank" rel="noopener">3D tour <span class="arr" aria-hidden="true">↗</span></a>
+    </nav>
+  </div>
+</aside>
 
 <header class="hero">
   <svg class="stars" id="stars" aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 700"></svg>
@@ -413,7 +442,7 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
 
   <aside class="note">
     <span><b>Yes, the house is for sale.</b> If you or someone you know is curious, ask us anything. We'll have info on the kitchen counter.</span>
-    <span>Photos and details: <a href="https://118hillside.com/">118hillside.com</a></span>
+    <span><a href="https://www.compass.com/homedetails/118-Hillside-Dr-Woodside-CA-94062/1OXQSG_pid/" target="_blank" rel="noopener">Compass listing</a> · <a href="https://118hillside.com/" target="_blank" rel="noopener">Photos and details</a> · <a href="https://118hillside.com/tour/" target="_blank" rel="noopener">3D tour</a></span>
   </aside>
 
   <footer class="billing">
