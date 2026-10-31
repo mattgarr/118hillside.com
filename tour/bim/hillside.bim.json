@@ -11707,9 +11707,11 @@
      -18.202
     ]
    ],
-   "kind": "roof",
-   "z": null,
-   "finish": "drywall-ceil"
+   "kind": "flat",
+   "z": 13.33,
+   "finish": "drywall-ceil",
+   "source": "rule: v21 ext21 B1 (owner: flat bath ceiling; p25/p45)",
+   "note": "flat drywall ceiling under the bump-out shed; skylights SK-R01/R02 in light wells"
   },
   {
    "id": "L2-S02-C",
@@ -11886,7 +11888,10 @@
    "overhang": 1.2,
    "options": {
     "endMat": "shake",
-    "endMatNote": "street gable shakes (p66/p70)"
+    "endMatNote": "street gable shakes (p66/p70)",
+    "rakeUnder": [
+     -1
+    ]
    },
    "source": "A2.3 + A5.2 (ridge 13'-9 1/2\")",
    "ifc": "IfcRoof",
@@ -13477,7 +13482,7 @@
   {
    "id": "KX-16",
    "ifc": "IfcFurniture",
-   "kind": "fridgeFrenchDoor",
+   "kind": "fridge4Door",
    "at": [
     5.32,
     18.4,
@@ -13486,8 +13491,11 @@
    "rot": 0,
    "opts": {
     "d": 2.5,
-    "w": 3.0
-   }
+    "w": 3.0,
+    "h": 5.9,
+    "dispenser": true
+   },
+   "source": "v21 int21: p01 - 36in four-door stainless French-door refrigerator, water/ice dispenser left door"
   },
   {
    "id": "KX-17",
@@ -15128,9 +15136,9 @@
    "y": 3.04,
    "bottom": 8.1,
    "width": 0.46,
-   "depth": 0.83,
+   "depth": 0.625,
    "material": "fir",
-   "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault",
+   "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault | v21 int21: 5.5 x 7.5 in (p44/p59)",
    "by": "v19-living"
   },
   {
@@ -15158,9 +15166,9 @@
    "y": 6.79,
    "bottom": 8.1,
    "width": 0.46,
-   "depth": 0.83,
+   "depth": 0.625,
    "material": "fir",
-   "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault",
+   "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault | v21 int21: 5.5 x 7.5 in (p44/p59)",
    "by": "v19-living"
   },
   {
@@ -15188,9 +15196,9 @@
    "y": 10.54,
    "bottom": 8.1,
    "width": 0.46,
-   "depth": 0.83,
+   "depth": 0.625,
    "material": "fir",
-   "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault",
+   "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault | v21 int21: 5.5 x 7.5 in (p44/p59)",
    "by": "v19-living"
   },
   {
@@ -16869,7 +16877,8 @@
      }
     ]
    }
-  ]
+  ],
+  "conceptSync": "v21: each design concept also removes as-built elements derived from, hosted by, cut into or superseded inside what it remodels (C1-C7, see bim_rules_v21_concepts.py); removesAuto lists them"
  },
  "designOptions": [
   {
@@ -16934,6 +16943,9 @@
     ]
    },
    "removes": [
+    "FX-grab-h",
+    "FX-mirror-09",
+    "FX-showerSys-h",
     "FX-toilet-10",
     "FX-tubAlcove-11",
     "FX-vanity-09",
@@ -16970,6 +16982,9 @@
     "KX-PBACK",
     "KX-PCHAMF",
     "KX-UPS",
+    "L1-LIV-BM1",
+    "L1-LIV-BM2",
+    "L1-LIV-BM3",
     "L1-O23",
     "L1-O24",
     "L1-O25",
@@ -16979,6 +16994,14 @@
     "L1-O30",
     "L1-O31",
     "L1-O40",
+    "L1-O61",
+    "L1-O62",
+    "L1-O63",
+    "L1-OD1",
+    "L1-OD2",
+    "L1-OD3",
+    "L1-OD4",
+    "L1-S01-LIVVAULT",
     "L1-W00",
     "L1-W01",
     "L1-W02",
@@ -16990,6 +17013,8 @@
     "L1-W08",
     "L1-W09",
     "L1-W10",
+    "L1-W11-d1",
+    "L1-W11-d2",
     "L1-W13",
     "L1-W14",
     "L1-W15",
@@ -17021,16 +17046,14 @@
     "L1-W58",
     "L1-W59",
     "L1-W60",
+    "L1-W61",
     "L1-W62",
     "L1-W63",
     "L1-W64",
     "L1-W84",
-    "L1-W11-d1",
-    "L1-W11-d2",
-    "L1-OD1",
-    "L1-OD2",
-    "L1-OD3",
-    "L1-OD4"
+    "LT-LIV-CABLE1",
+    "LT-LIV-CABLE2",
+    "LT-LIV-CABLE3"
    ],
    "elements": [
     {
@@ -19033,7 +19056,66 @@
       11.0
      ]
     }
-   ]
+   ],
+   "removesAuto": [
+    [
+     "L1-O61",
+     "C2 jamb wall removed, nothing replaces it: L1-W84,L1-W62"
+    ],
+    [
+     "L1-O62",
+     "C2 jamb wall removed, nothing replaces it: L1-W58"
+    ],
+    [
+     "L1-O63",
+     "C2 jamb wall removed, nothing replaces it: L1-W58,L1-W62"
+    ],
+    [
+     "L1-W61",
+     "C4 jamb stub of removed L1-O62"
+    ],
+    [
+     "L1-S01-LIVVAULT",
+     "C5 vault edge ((4.87, -0.71), (4.87, 14.28)) open (55% backed, was 100%)"
+    ],
+    [
+     "L1-LIV-BM1",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE1",
+     "C6 host L1-LIV-BM1 removed"
+    ],
+    [
+     "L1-LIV-BM2",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE2",
+     "C6 host L1-LIV-BM2 removed"
+    ],
+    [
+     "L1-LIV-BM3",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE3",
+     "C6 host L1-LIV-BM3 removed"
+    ],
+    [
+     "FX-showerSys-h",
+     "C7 room remodelled (removes FX-tubAlcove-11)"
+    ],
+    [
+     "FX-grab-h",
+     "C7 mounted on removed wall L1-W31"
+    ],
+    [
+     "FX-mirror-09",
+     "C7 room remodelled (removes FX-vanity-09)"
+    ]
+   ],
+   "selfCheck": []
   },
   {
    "id": "apr24a",
@@ -19097,6 +19179,7 @@
     ]
    },
    "removes": [
+    "FX-washerFront-LIV",
     "KX-00",
     "KX-01",
     "KX-02",
@@ -19130,8 +19213,19 @@
     "KX-PBACK",
     "KX-PCHAMF",
     "KX-UPS",
+    "L1-LIV-BM1",
+    "L1-LIV-BM2",
+    "L1-LIV-BM3",
     "L1-O23",
     "L1-O24",
+    "L1-O61",
+    "L1-O62",
+    "L1-O63",
+    "L1-OD1",
+    "L1-OD2",
+    "L1-OD3",
+    "L1-OD4",
+    "L1-S01-LIVVAULT",
     "L1-W00",
     "L1-W01",
     "L1-W03",
@@ -19141,6 +19235,8 @@
     "L1-W08",
     "L1-W09",
     "L1-W10",
+    "L1-W11-d1",
+    "L1-W11-d2",
     "L1-W13",
     "L1-W14",
     "L1-W15",
@@ -19161,15 +19257,14 @@
     "L1-W58",
     "L1-W59",
     "L1-W60",
+    "L1-W61",
     "L1-W62",
     "L1-W63",
     "L1-W64",
     "L1-W84",
-    "L1-W11-d1",
-    "L1-W11-d2",
-    "L1-OD1",
-    "L1-OD2",
-    "L1-OD3"
+    "LT-LIV-CABLE1",
+    "LT-LIV-CABLE2",
+    "LT-LIV-CABLE3"
    ],
    "elements": [
     {
@@ -20716,7 +20811,62 @@
       20.2
      ]
     }
-   ]
+   ],
+   "removesAuto": [
+    [
+     "L1-O61",
+     "C2 jamb wall removed, nothing replaces it: L1-W84,L1-W62"
+    ],
+    [
+     "L1-O62",
+     "C2 jamb wall removed, nothing replaces it: L1-W58"
+    ],
+    [
+     "L1-O63",
+     "C2 jamb wall removed, nothing replaces it: L1-W58,L1-W62"
+    ],
+    [
+     "L1-OD4",
+     "C3 superseded by apr24a-O04"
+    ],
+    [
+     "L1-W61",
+     "C4 jamb stub of removed L1-O62"
+    ],
+    [
+     "L1-S01-LIVVAULT",
+     "C5 vault edge ((4.87, -0.71), (4.87, 14.28)) open (45% backed, was 100%)"
+    ],
+    [
+     "L1-LIV-BM1",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE1",
+     "C6 host L1-LIV-BM1 removed"
+    ],
+    [
+     "L1-LIV-BM2",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE2",
+     "C6 host L1-LIV-BM2 removed"
+    ],
+    [
+     "L1-LIV-BM3",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE3",
+     "C6 host L1-LIV-BM3 removed"
+    ],
+    [
+     "FX-washerFront-LIV",
+     "C7 inside concept wall apr24a-W04"
+    ]
+   ],
+   "selfCheck": []
   },
   {
    "id": "apr24b",
@@ -20780,6 +20930,7 @@
     ]
    },
    "removes": [
+    "FX-washerFront-LIV",
     "KX-00",
     "KX-01",
     "KX-02",
@@ -20813,8 +20964,19 @@
     "KX-PBACK",
     "KX-PCHAMF",
     "KX-UPS",
+    "L1-LIV-BM1",
+    "L1-LIV-BM2",
+    "L1-LIV-BM3",
     "L1-O23",
     "L1-O24",
+    "L1-O61",
+    "L1-O62",
+    "L1-O63",
+    "L1-OD1",
+    "L1-OD2",
+    "L1-OD3",
+    "L1-OD4",
+    "L1-S01-LIVVAULT",
     "L1-W00",
     "L1-W01",
     "L1-W03",
@@ -20824,6 +20986,8 @@
     "L1-W08",
     "L1-W09",
     "L1-W10",
+    "L1-W11-d1",
+    "L1-W11-d2",
     "L1-W13",
     "L1-W14",
     "L1-W15",
@@ -20844,15 +21008,14 @@
     "L1-W58",
     "L1-W59",
     "L1-W60",
+    "L1-W61",
     "L1-W62",
     "L1-W63",
     "L1-W64",
     "L1-W84",
-    "L1-W11-d1",
-    "L1-W11-d2",
-    "L1-OD1",
-    "L1-OD2",
-    "L1-OD3"
+    "LT-LIV-CABLE1",
+    "LT-LIV-CABLE2",
+    "LT-LIV-CABLE3"
    ],
    "elements": [
     {
@@ -22441,7 +22604,62 @@
       20.2
      ]
     }
-   ]
+   ],
+   "removesAuto": [
+    [
+     "L1-O61",
+     "C2 jamb wall removed, nothing replaces it: L1-W84,L1-W62"
+    ],
+    [
+     "L1-O62",
+     "C2 jamb wall removed, nothing replaces it: L1-W58"
+    ],
+    [
+     "L1-O63",
+     "C2 jamb wall removed, nothing replaces it: L1-W58,L1-W62"
+    ],
+    [
+     "L1-OD4",
+     "C3 superseded by apr24b-O04"
+    ],
+    [
+     "L1-W61",
+     "C4 jamb stub of removed L1-O62"
+    ],
+    [
+     "L1-S01-LIVVAULT",
+     "C5 vault edge ((4.87, -0.71), (4.87, 14.28)) open (45% backed, was 100%)"
+    ],
+    [
+     "L1-LIV-BM1",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE1",
+     "C6 host L1-LIV-BM1 removed"
+    ],
+    [
+     "L1-LIV-BM2",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE2",
+     "C6 host L1-LIV-BM2 removed"
+    ],
+    [
+     "L1-LIV-BM3",
+     "C6 host L1-S01-LIVVAULT removed"
+    ],
+    [
+     "LT-LIV-CABLE3",
+     "C6 host L1-LIV-BM3 removed"
+    ],
+    [
+     "FX-washerFront-LIV",
+     "C7 inside concept wall apr24b-W04"
+    ]
+   ],
+   "selfCheck": []
   }
  ]
 }

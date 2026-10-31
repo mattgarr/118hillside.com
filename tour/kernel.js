@@ -118,6 +118,13 @@ export function createKernel(W) {
         const pr = prism(pc.poly, Math.min(zmin, R.plate) - 2.5, zmax + pc.th + 1);
         slabs2.push(keepBelow(keepAbove(pr, pc.P), pc.P, pc.th));
         const sh = keepBelow(prism(pc.poly, R.plate - 2, zmax + 1), pc.P); shadows.push(sh); if (!pc.ext) cutters.push(sh);   // a roof carried past a wall dies into others without cutting them
+        // v21 ext21b rule (BIM options.rakeUnder = [end dirs]): past that gable END wall the roof is only a thin rake overhang, so in that
+        // band it cuts other roofs by its own slab only - a roof that runs into the gable wall passes under the rake to the wall.
+        if (R.kind === 'gable' && R.g && !pc.ext && cutters[cutters.length - 1] === sh && R.r && R.r.options && R.r.options.rakeUnder) { const g = R.g, BIG = 500;
+          for (const dir of R.r.options.rakeUnder) { const a0 = dir < 0 ? g.sA - .01 : g.s1, a1 = dir < 0 ? g.s0 : g.sB + .01; if (a1 - a0 < .02) continue;
+            const end = g.EW ? box(a0, -BIG, ZLO, a1, BIG, ZHI) : box(-BIG, a0, ZLO, BIG, a1, ZHI);
+            const thin = keepBelow(keepAbove(pr, pc.P), pc.P, pc.th).intersect(end);
+            cutters[cutters.length - 1] = cutters[cutters.length - 1].subtract(end).add(thin); } }
         attics.push(keepBelow(prism(pc.poly, R.plate - .7, zmax + 1), pc.P));
       }
       R.slab = U(slabs2); R.shadow = U(shadows); R.attic = U(attics); R.cutter = U(cutters);
@@ -224,7 +231,7 @@ export function createKernel(W) {
     // shaft linings between a flat ceiling and the roof above it
     const lin = [];
     for (const { k, zb } of ctx.shafts) { const c = ctx.ceilings.find(c2 => c2.kind === 'flat' && c2.z > zb && inPoly(c2.outline, k.at[0], k.at[1])); if (!c) continue;
-      const R = ctx.roofs.find(r => r.id === k.roof); const top = R ? Math.max(...R.pieces.map(pc => zAt(pc.P, k.at[0], k.at[1]))) + .05 : c.z + 1;
+      const R = ctx.roofs.find(r => r.id === k.roof); const pcs = R ? R.pieces.filter(pc => inPoly(pc.poly, k.at[0], k.at[1])) : [], top = R ? Math.max(...(pcs.length ? pcs : R.pieces).map(pc => zAt(pc.P, k.at[0], k.at[1]))) + .05 : c.z + 1;   // v21 ext21: the slope the skylight sits in (a gable's other plane runs above it)
       const hx = k.size[0] / 2, hy = k.size[1] / 2, t = .05;
       lin.push(box(k.at[0] - hx - t, k.at[1] - hy - t, c.z - .06, k.at[0] + hx + t, k.at[1] + hy + t, top).subtract(box(k.at[0] - hx, k.at[1] - hy, c.z - 1, k.at[0] + hx, k.at[1] + hy, top + 1))); }
     return { ceil: U(out), lining: U(lin) };
