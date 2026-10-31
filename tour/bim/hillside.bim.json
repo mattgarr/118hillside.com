@@ -4734,11 +4734,12 @@
      -8.697
     ]
    ],
-   "z0": 5.35,
+   "z0": 4.67,
    "z1": 13.57,
    "isExternal": true,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "cantilever": true
   },
   {
    "id": "L2-W30",
@@ -4762,11 +4763,12 @@
      -8.697
     ]
    ],
-   "z0": 5.35,
+   "z0": 4.67,
    "z1": 13.57,
    "isExternal": true,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "cantilever": true
   },
   {
    "id": "L2-W31",
@@ -5104,11 +5106,12 @@
      -8.222
     ]
    ],
-   "z0": 5.35,
+   "z0": 4.67,
    "z1": 13.57,
    "isExternal": true,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "cantilever": true
   },
   {
    "id": "L2-W38",
@@ -5132,11 +5135,12 @@
      -8.709
     ]
    ],
-   "z0": 5.35,
+   "z0": 4.67,
    "z1": 13.57,
    "isExternal": true,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "cantilever": true
   },
   {
    "id": "L2-W39",
@@ -5328,11 +5332,12 @@
      -10.222
     ]
    ],
-   "z0": 5.35,
+   "z0": 4.67,
    "z1": 13.57,
    "isExternal": true,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "cantilever": true
   },
   {
    "id": "L2-W46",
@@ -5356,11 +5361,12 @@
      -8.697
     ]
    ],
-   "z0": 5.35,
+   "z0": 4.67,
    "z1": 13.57,
    "isExternal": true,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "cantilever": true
   },
   {
    "id": "L2-W47",
@@ -18144,7 +18150,9 @@
     "frame": 0.1,
     "sash": 0.1,
     "note": "A0.1 type A: single casement, 2x2 simulated divided lites",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "CS-B": {
     "operation": "SIDEHUNG casement pair",
@@ -18156,7 +18164,9 @@
     "frame": 0.1,
     "sash": 0.1,
     "note": "A0.1 type B: two equal casements, 2x2 lites each",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "CS-C": {
     "operation": "SIDEHUNG casement, unequal pair",
@@ -18177,7 +18187,9 @@
     "frame": 0.17,
     "sash": 0.15,
     "note": "A0.1 type C",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "DH": {
     "operation": "DOUBLE_HUNG",
@@ -18187,7 +18199,9 @@
     "sash": 0.1,
     "meetingRail": true,
     "note": "existing house",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "DH-2": {
     "operation": "DOUBLE_HUNG pair",
@@ -18198,7 +18212,9 @@
     "meetingRail": true,
     "mullion": 0.3,
     "note": "ganged double-hung pair, plain sashes (p12, p41, p70, p73)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "DH-4": {
     "operation": "DOUBLE_HUNG, four ganged",
@@ -18214,7 +18230,9 @@
     "sash": 0.1,
     "meetingRail": true,
     "note": "four ganged double-hung, plain sashes (p44, p47, A5.2 west)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "CS-2": {
     "operation": "SIDEHUNG casement pair",
@@ -18223,7 +18241,9 @@
     "frame": 0.1,
     "sash": 0.1,
     "note": "plain casement pair (x09 wing gable, p64 lower bedroom 2, p57 hall bath)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "PIC-2": {
     "operation": "FIXEDCASEMENT, two picture lites",
@@ -18232,7 +18252,15 @@
     "grille": null,
     "frame": 0.12,
     "note": "family room: two fixed picture lites, wide centre mullion (p15, p41, p67)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": {
+     "projecting": true,
+     "thick": 0.125,
+     "proj": 0.17,
+     "horn": 0.0625,
+     "source": "owner round 6 + p69/p66"
+    }
    },
    "DH-G": {
     "operation": "DOUBLE_HUNG",
@@ -18246,7 +18274,9 @@
     "sash": 0.16,
     "meetingRail": true,
     "note": "existing house, divided upper sash (photo p66)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "CS-1": {
     "operation": "SIDEHUNG casement",
@@ -18255,7 +18285,9 @@
     "frame": 0.1,
     "sash": 0.1,
     "note": "single plain casement (p49 kitchen, p67)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "CS-T4": {
     "operation": "SIDEHUNG casement",
@@ -18268,7 +18300,9 @@
     "frame": 0.1,
     "sash": 0.1,
     "note": "street-gable casement: 4-lite top band over one clear lite (p39, p62, p66)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "CS-H2": {
     "operation": "SIDEHUNG casement pair",
@@ -18280,7 +18314,9 @@
     "frame": 0.1,
     "sash": 0.1,
     "note": "casement pair, one horizontal muntin per sash (p47, x09, p63 lower bedroom 1)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    },
    "CS-9": {
     "operation": "SIDEHUNG casement",
@@ -18292,7 +18328,9 @@
     "frame": 0.1,
     "sash": 0.1,
     "note": "small 9-lite casement (A5.2 north elevation)",
-    "casingExt": 0.33
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null
    }
   },
   "IfcDoorType": {
@@ -18348,7 +18386,7 @@
     "note": "interior doors and windows"
    },
    "casing-ext": {
-    "width": 0.29,
+    "width": 0.2917,
     "depth": 0.09,
     "profile": "flat 3.5in exterior trim"
    },
@@ -18551,7 +18589,19 @@
   ],
   "conceptSync": "v21: each design concept also removes as-built elements derived from, hosted by, cut into or superseded inside what it remodels (C1-C7, see bim_rules_v21_concepts.py); removesAuto lists them",
   "openingClear": {},
-  "concept22": "v22 concept22: pocket doors open unless closed (P1); openings clear of wall (P2, kernel O1/O2); concept vaults kept where their open edge rides on the upper wall line (V1)"
+  "concept22": "v22 concept22: pocket doors open unless closed (P1); openings clear of wall (P2, kernel O1/O2); concept vaults kept where their open edge rides on the upper wall line (V1)",
+  "goal23": {
+   "B1": "exterior window casing 3-1/2in all types; projecting sill only on PIC types",
+   "B2": "cantilevered L2 walls start at the framing soffit",
+   "cantilever": [
+    "L2-W28",
+    "L2-W30",
+    "L2-W37",
+    "L2-W38",
+    "L2-W45",
+    "L2-W46"
+   ]
+  }
  },
  "designOptions": [
   {
