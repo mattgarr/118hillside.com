@@ -5,13 +5,14 @@ CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
 UID:deja-boo-2026@118hillside.com
-DTSTAMP:20261030T230000Z
+DTSTAMP:20261031T010000Z
+SEQUENCE:1
 DTSTART:20261101T000000Z
 DTEND:20261101T040000Z
 SUMMARY:The Déjà Boo Experiment
 LOCATION:118 Hillside Drive\, Woodside\, CA 94062
 DESCRIPTION:Halloween open house. Candy at the front\, treats out back. 5 p
- m until the candy runs out. https://118hillside.com/dejaboo/
+ m till whenever. https://118hillside.com/dejaboo/
 URL:https://118hillside.com/dejaboo/
 END:VEVENT
 END:VCALENDAR
