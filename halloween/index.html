@@ -558,6 +558,9 @@ html.ph #busy24{bottom:calc(84px + env(safe-area-inset-bottom,0px));font-size:12
 .ng-x:hover{color:var(--ink)}
 #navHelp{padding:8px 11px} #navHelp b{font-family:var(--f-data);font-size:12.5px}
 html.ph #navHelp,html.ph .navguide{display:none!important}
+html.ph .navguide.ng-ph:not([hidden]){display:block!important;position:fixed;left:12px;right:12px;top:auto;bottom:calc(86px + env(safe-area-inset-bottom));width:auto;z-index:40;background:var(--pgs,var(--glass));color:var(--pt,var(--ink))}
+.navguide .ng-m{display:block;margin:6px 0 8px;font-size:13px;line-height:1.45}.navguide .ng-m:empty{display:none}.navguide .ng-m b{display:block;font-weight:600;margin-bottom:2px}.navguide .ng-m span{color:var(--muted)}
+html.ph .navguide.ng-ph .ng-l,html.ph .navguide.ng-ph .ng-m span{color:var(--pm,var(--muted))}html.ph .navguide.ng-ph b,html.ph .navguide.ng-ph .ng-h{color:var(--pt,var(--ink))}
 /* ---- v24 N4 Halloween theme layer: html.halloween re-maps the UI variables (normal mode untouched) ---- */
 html.halloween{--paper:#15101b;--paper-2:#21182a;--ink:#f3e6d0;--muted:#c9ab86;--line:rgba(255,138,40,.28);--accent:#ff7a1a;--accent-ink:#1a0d03;
   --glass:rgba(18,12,24,.9);--scrim:rgba(8,4,12,.9);--shadow:0 10px 30px rgba(0,0,0,.55),0 0 0 1px rgba(255,122,26,.18)}
@@ -822,7 +825,7 @@ const ROOMS = [
  {id:'lbed2',    name:'Lower-level bedroom', dims:'11′3″ × 14′9″', level:'lower', at:wp(610,1000), ph:[64,'x04']},
  {id:'office',   name:'Skylit office', dims:'7′7″ × 9′3″', level:'lower', at:wp(585,1710), ph:[20]},
  {id:'lbath',    name:'Lower-level bath', dims:'5′7″ × 9′9″', level:'lower', at:wp(945,1050), ph:[60,68,55,'x05']},
- {id:'laundry',  name:'Laundry room', dims:'6′8″ × 5′5″', level:'lower', at:wp(555,1385), ph:[4]},
+ {id:'laundry',  name:'Laundry room', dims:'6′8″ × 6′3″', level:'lower', at:wp(555,1385), ph:[4]},
  {id:'loft',     name:'Loft', dims:'6′9″ × 12′4″', level:'upper', at:up(1895,1390), ph:['x06',37,40]},
  {id:'primary',  name:'Primary bedroom', dims:'16′0″ × 14′5″', level:'upper', at:up(2038,714), ph:[6,35,26,24,46,'x07','x08']},
  {id:'closet',   name:'Walk-in closet', dims:'4′9″ × 11′0″', level:'upper', at:up(1835,1068), ph:[27,32,33]},
@@ -1071,7 +1074,7 @@ M.cushion= std({color:0xf1ece2, roughness:1});
 M.floorMain = std({color:0xffffff, roughness:.75});
 M.floorUpper = std({color:0xffffff, roughness:.75});
 M.lamp = new THREE.MeshBasicMaterial({color:0xfff1d6});
-M.trimExt = std({color:0xf4f4f1, roughness:.55});
+M.trimExt = std({color:0xf4f4f1, roughness:.55}); M.trimExt.color.copy(M.trim.color);   // v26 M3: Andersen White = the window frames
 M.oak = std({color:0xd9b98f, roughness:.55});
 M.tileFloor = std({color:0xe3e1dc, roughness:.35});
 M.garageFloor = std({color:0xa9a8a3, roughness:.8});
@@ -2863,7 +2866,7 @@ function applyPhotoMaterials(){
     M.siding.color.setRGB(B.r / .362, B.g / .3702, B.b / .3908); M.shake.color.setRGB(B.r / .3805, B.g / .3884, B.b / .4096); }   // warm greige, per photos useTex(M.roof,'roof_shingle',{ns:1.0,rough:.85});
   useTex(M.oak,'oak_floor',{rough:.5,ns:.4}); useTex(M.tileFloor,'tile_bath_large',{rough:.25,ns:.4}); useTex(M.garageFloor,'garage_floor',{rough:.75});
   useTex(M.deck,'deck_front',{ns:.8}); M.deck.color.set(0xb4ada5); useTex(M.deckRear,'deck_front',{tint:0x8a8a8a,ns:.8}); useTex(M.recFloor,'rec_floor',{rough:.9});
-  useTex(M.pavers,'pavers',{ns:1.0}); M.pavers.color.setRGB(1.035, .986, .929);   /* v22 P6: pavTint() as sRGB - linearizeMaterials() converts M colours afterwards */  useTex(M.mulch,'mulch',{ns:1.0}); useTex(M.gravel,'gravel',{ns:1.0});
+  useTex(M.pavers,'pavers',{ns:1.0}); M.pavers.color.setRGB(1, 1, 1);   /* v26 P1: photo-calibrated texture, no tint */   /* v22 P6: pavTint() as sRGB - linearizeMaterials() converts M colours afterwards */  useTex(M.mulch,'mulch',{ns:1.0}); useTex(M.gravel,'gravel',{ns:1.0});
   if(useTex(M.oakBark,'oak_bark',{ns:1.2})){ M.oakBark.map.repeat.set(2,3); if(M.oakBark.normalMap) M.oakBark.normalMap.repeat.set(2,3); }
   { const gd=TL.load('tex/garage_door.jpg'); gd.encoding=THREE.sRGBEncoding; gd.anisotropy=ANISO; M.garageDoor.map=gd; M.garageDoor.color.set(0xffffff); M.garageDoor.needsUpdate=true; }
   useTex(M.cab,'shaker_cabinet',{rough:.5}); useTex(M.counter,'quartz_counter',{rough:.2}); useTex(M.backsplash,'backsplash_slab',{rough:.15}); useTex(M.herring,'tile_herringbone',{rough:.3});
@@ -3752,6 +3755,22 @@ function emitVaultCans(v){
     iL.count = nL; iR.userData.noAO = iL.userData.noAO = true; grp('ceil').add(iR, iL);
   } finally { VAR = pv; FV_VAR = pf; }
 }
+function v26BeamWash(){   // v26 L2: 2700K wash from the hidden 4 ft bar on each living-room beam top
+  if(window.__v26wash){ __v26wash.parent && __v26wash.parent.remove(__v26wash); __v26wash.geometry.dispose(); window.__v26wash = null; }
+  const pos = [], col = [], idx = [], K = [1, .66, .36], NU = 14, NT = 28;
+  for(const R of falseVaultList()){ if(BIM.swap && BIM.swap.has(R.id)) continue;
+    for(const bm of (R.beams || [])){ const el = (BIM.raw.elements || []).find(e => e.id === bm.id), up = el && el.uplight; if(!up) continue;
+      const b1 = R.floor + bm.bottom + bm.depth, at = R.ns ? bm.y : bm.x, hl = up.length / 2, ta = R.c - R.hw, tb = R.c + R.hw, base = pos.length / 3;
+      for(let i = 0; i <= NT; i++) for(let j = 0; j <= NU; j++){ const t = ta + (tb - ta) * i / NT, u = at + (j / NU - .5) * 9;
+        const [bx, by] = R.ns ? [t, u] : [u, t], z = R.zAt(bx, by) - .025, [wx, wz] = W2(bx, by);
+        const dt = Math.max(0, Math.abs(t - R.c) - hl), du = Math.abs(u - at), h = Math.max(1.2, z - b1), d2 = dt * dt + du * du + h * h;
+        const I = Math.max(0, 1.3 * h / Math.pow(d2, 1.5) * 2.2 - .02) * (1 - Math.pow(Math.max(Math.abs(j / NU - .5) * 2, Math.abs(i / NT - .5) * 2), 6));
+        pos.push(wx, z, wz); col.push(K[0] * I, K[1] * I, K[2] * I); }
+      for(let i = 0; i < NT; i++) for(let j = 0; j < NU; j++){ const a = base + i * (NU + 1) + j, b = a + NU + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); } } }
+  if(!pos.length) return;
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
+  const m = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4});
+  m.color.setScalar(DUSK ? 1 : V26.washDay); const ms = new THREE.Mesh(g, m); ms.name = 'v26-beam-wash'; ms.renderOrder = 2; ms.userData.noAO = true; grp('ceil').add(ms); window.__v26wash = ms; }
 function buildFalseVaults(only){
   if(!LIGHTS.emit.includes(M.cableLens)) LIGHTS.emit.push(M.cableLens);
   const P = (bx, by, z) => { const [wx, wz] = W2(bx, by); return [wx, z, wz]; }, e = .03;
@@ -3771,11 +3790,11 @@ function buildFalseVaults(only){
       const V = (t, z, u) => R.ns ? P(t, pos + u, z) : P(pos + u, t, z);
       // UV in feet with u along the beam, so the grain runs lengthwise on every face
       const uvFlat = R.ns ? (v => [v[2], v[0] * 1.3]) : (v => [v[0], v[2] * 1.3]), uvSide = R.ns ? (v => [v[2], v[1] * 1.3 + .37]) : (v => [v[0], v[1] * 1.3 + .37]);
-      const F = (i, j, u0, u1, hint) => poly('beamFir', 'ceil', [V(prof[i][0], prof[i][1], u0), V(prof[j][0], prof[j][1], u0), V(prof[j][0], prof[j][1], u1), V(prof[i][0], prof[i][1], u1)], hint, uvFlat);
+      const F = (i, j, u0, u1, hint) => poly(bm.material === 'cherry' ? 'beamCherry26' : 'beamFir', 'ceil', [V(prof[i][0], prof[i][1], u0), V(prof[j][0], prof[j][1], u0), V(prof[j][0], prof[j][1], u1), V(prof[i][0], prof[i][1], u1)], hint, uvFlat);
       const up = [0, 1, 0], sideN = R.ns ? [1, 0, 0] : [0, 0, 1];
       F(0, 1, -hw2, hw2, [0, -1, 0]); F(3, 2, -hw2, hw2, up);
       for(const sg of [-1, 1]){ const u = sg * hw2, Q = [0, 1, 2, 3].map(k => V(prof[k][0], prof[k][1], u));
-        poly('beamFir', 'ceil', [Q[0], Q[1], Q[2]], sideN.map(v => v * sg), uvSide); poly('beamFir', 'ceil', [Q[0], Q[2], Q[3]], sideN.map(v => v * sg), uvSide); }
+        poly(bm.material === 'cherry' ? 'beamCherry26' : 'beamFir', 'ceil', [Q[0], Q[1], Q[2]], sideN.map(v => v * sg), uvSide); poly(bm.material === 'cherry' ? 'beamCherry26' : 'beamFir', 'ceil', [Q[0], Q[2], Q[3]], sideN.map(v => v * sg), uvSide); }
       // hosted cable lighting (IfcLightFixture kind cableTrack): two wires 'drop' under the beam, standoffs at the ends, spot heads
       for(const lf of (BIM.raw.elements || []).filter(e => e.ifc === 'IfcLightFixture' && e.host === bm.id && e.kind === 'cableTrack')){
         const yw = b0 - (lf.drop || .3), t0 = prof[0][0] + eb + .6, t1 = prof[1][0] - eb - .6, gap = (lf.wireGap || .26) / 2, gL = new THREE.Group(); gL.userData.el = lf.id;
@@ -3783,12 +3802,14 @@ function buildFalseVaults(only){
           const ms = new THREE.Mesh(new THREE.CylinderGeometry(r, r, L, 6), m); ms.position.copy(A).add(Bv).multiplyScalar(.5); ms.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); gL.add(ms); };
         for(const sg of [-1, 1]){ rod(V(t0, yw, sg * gap), V(t1, yw, sg * gap), .008, M.cableChrome);
           for(const t of [t0, t1]) rod(V(t, yw, sg * gap), V(t, b0 + .02, sg * gap), .012, M.cableChrome); }
-        const n = lf.heads || 6;
-        for(let k = 0; k < n; k++){ const t = t0 + (t1 - t0) * (k + .5) / n, sg = k % 2 ? 1 : -1, at = V(t, yw, sg * gap);
-          const tilt = (k % 3 - 1) * .35, hd = new THREE.Group(); hd.position.set(at[0], at[1] - .05, at[2]); hd.rotation.set(R.ns ? tilt : .5 * sg, 0, R.ns ? .5 * sg : tilt);
-          const body = new THREE.Mesh(new THREE.CylinderGeometry(.034, .044, .12, 12), M.cableChrome); body.position.y = -.05; hd.add(body);
-          const lens = new THREE.Mesh(new THREE.CircleGeometry(.034, 12), M.cableLens); lens.rotation.x = Math.PI / 2; lens.position.y = -.111; hd.add(lens);
-          rod([at[0], at[1], at[2]], [at[0], at[1] - .06, at[2]], .01, M.cableChrome); gL.add(hd); }
+        const n = lf.heads || 6, hr = (lf.headDia || .19) / 2;   // v26 L1: K-Hello heads across both cables
+        for(let k = 0; k < n; k++){ const t = t0 + (t1 - t0) * (k + .5) / n, sg = k % 2 ? 1 : -1, at = V(t, yw, 0);
+          rod(V(t, yw + .012, -gap - .01), V(t, yw + .012, gap + .01), .011, M.cableSatin26); rod([at[0], at[1] + .01, at[2]], [at[0], at[1] - .07, at[2]], .011, M.cableSatin26);
+          const aw = (Math.sign(t - R.c) || 1) * (.6 + .15 * (k % 2)), sd = .18 * sg, hd = new THREE.Group(); hd.position.set(at[0], at[1] - .07, at[2]); hd.rotation.set(R.ns ? -aw : sd, 0, R.ns ? -sd : aw);   // aimed out toward the walls/art at the beam ends (owner)
+          const yk = new THREE.Mesh(new THREE.TorusGeometry(hr * .98, .005, 5, 16, Math.PI), M.cableSatin26); yk.rotation.set(0, Math.PI / 2, Math.PI); yk.position.y = -hr; hd.add(yk);
+          const body = new THREE.Mesh(new THREE.SphereGeometry(hr * .92, 16, 10, 0, Math.PI * 2, 0, Math.PI * .62), M.cableSatin26); body.position.y = -hr; hd.add(body);
+          const lens = new THREE.Mesh(new THREE.CircleGeometry(hr * .74, 16), M.cableLens); lens.rotation.x = Math.PI / 2; lens.position.y = -hr - hr * .92 * Math.cos(Math.PI * .62) + .002; hd.add(lens);
+          gL.add(hd); }
         gL.traverse(o => { if(o.isMesh){ o.castShadow = false; o.receiveShadow = false; } }); grp('ceil').add(gL); }
       // check: the beam's ends are inside the vault, not in a wall
       for(const t of [prof[0][0] + eb + .05, prof[1][0] - eb - .05]){ const [wx, wz] = R.ns ? W2(t, pos) : W2(pos, t); if(inWallBody(wx, wz, b0 + .05)) LIV_REPORT.push(['beam-hits-wall', bm.id, 'end at ' + t.toFixed(2) + ' is in a wall']); }
@@ -3942,7 +3963,7 @@ function buildFurniture(){
   const Lw=LV.lower, U=LV.upper;
   // entry chandelier: built in buildLightFixtures() from lighting.json (FIX sputnikChandelier, style tubes)
   // living room: beams, sofas, glass table, rug
-  buildFalseVaults();   // v19 living: BIM vault coverings + hosted IfcBeam (replaces the v9 plan-px beams)
+  buildFalseVaults(); try{ v26BeamWash(); }catch(e){ console.warn('[v26] wash', e); }   // v19 living: BIM vault coverings + hosted IfcBeam (replaces the v9 plan-px beams)
   // built-in wardrobes in the primary walk-in closet (fixtures, not furniture)
   try{ buildClosetSystem22(); }catch(e0){ console.warn('closet22', e0); try{ buildClosetSystem(); }catch(e){ console.warn('closet system', e); FU(1775,930,1800,1200,U,7,'cab'); FU(1870,930,1895,1200,U,7,'cab'); } }   // closet22 (stops2 S2 fallback)
   // loose furniture and decor: placed from the staging table (photos), see STAGING
@@ -3979,7 +4000,7 @@ const YARD_SPEC = {
     ledger: 9.5, fall: 1.6, top: 7.9, beam: [.22, .5], post: .33, rafter: {w: .14, h: .33, sp: 2.0}, purlin: {w: .12, h: .2, sp: 2.0},
     posts: [[-55.6, -2.5], [-55.6, -8.45], [-50.2, -9.9]], padN: 2.6},
   screens: {y0: 1.1, maxPanel: 3.2, runs: null},   // derived in buildYard: behind leg 2 from the wing corner to the fence line, then north along the fence to the NW post
-  dining: {x: -49.0, y: -2.6, len: 7.2, w: 3.4, h: 2.48}, fenceX: -56.6
+  dining: {x: -47.2, y: -2.6, len: 7.2, w: 3.4, h: 2.48}, fenceX: -56.6   /* v26 Y2: east edge on the grill's east end, as in p08 */
 };
 // paver pad under the kitchen + dining set (photos p21/p47: pavers run under the whole kitchen, to the NW post and round the table)
 function YARD_PAD(){ const P = YARD_SPEC.pergola; return [[P.x0 - .5, P.y0], [P.x1, P.y0], [P.x1, P.padN], [P.x0 + 3.5, P.padN], [P.x0 - .5, P.padN - 3.5]]; }
@@ -4039,43 +4060,8 @@ function buildYard(){
     const cx = bx - off * Math.tan(K.leg2.turn * Math.PI / 360), cy = wy;
     S.screens.runs = [[[P.posts[2][0] - .2, wy], [cx, cy]], [[cx, cy], [ex, ey]]]; P.posts[1] = [+ex.toFixed(2), +ey.toFixed(2)]; R.screens = S.screens.runs;
     if(ex < S.fenceX - .3) console.warn('[pergola23] kitchen leg 2 runs past the west fence', ex); }
-  // ================================================================= PERGOLA (one builder: steel, polycarbonate, screens, fittings)
-  { const b = new H.Builder(); for(const k in mat) b.useMaterial(k, mat[k]);
-    const bw = P.beam[0], bh = P.beam[1], yS = P.y0 + P.strip;
-    tube(b, 'p23steel', wp(P.x0, P.y0 + bw / 2, hR(P.y0)), wp(P.x1, P.y0 + bw / 2, hR(P.y0)), bw, bh);                       // ledger on the wing wall
-    tube(b, 'p23steel', wp(P.x1, yS, hR(yS)), wp(P.xK, yS, hR(yS)), bw, bh);                                               // strip front beam
-    tube(b, 'p23steel', wp(P.xK, yS, hR(yS)), wp(P.xFront, P.y1, hR(P.y1)), bw, bh);                                       // 45-degree front beam
-    tube(b, 'p23steel', wp(P.xFront, P.y1, hR(P.y1)), wp(P.x0, P.y1, hR(P.y1)), bw, bh);                                   // north beam
-    tube(b, 'p23steel', wp(P.x0 + bw / 2, P.y1, hR(P.y1)), wp(P.x0 + bw / 2, P.y0, hR(P.y0)), bw, bh);                     // west beam
-    tube(b, 'p23steel', wp(P.x1 - bw / 2, P.y0, hR(P.y0)), wp(P.x1 - bw / 2, yS, hR(yS)), bw, bh);                         // strip end
-    let nr = 0, np = 0;
-    for(let x = P.x1 - P.rafter.sp; x > P.x0 + .4; x -= P.rafter.sp){ const ye = yEdge(x) - .12; if(ye - P.y0 < .8) continue; nr++;   // rafters N-S
-      tube(b, 'p23steel', wp(x, P.y0 + bw, hR(P.y0 + bw)), wp(x, ye, hR(ye)), P.rafter.w, P.rafter.h); }
-    for(let y = P.y0 + P.purlin.sp; y < P.y1 - .5; y += P.purlin.sp){ np++;                                                  // purlins E-W, flush on top
-      tube(b, 'p23steel', wp(P.x0 + bw, y, hR(y)), wp(xEdge(y) - .1, y, hR(y)), P.purlin.w, P.purlin.h); }
-    for(const [px, py] of P.posts){ const top = hR(py) - bh + .02; b.bb('p23steel', py - P.post / 2, yT, px - P.post / 2, py + P.post / 2, top, px + P.post / 2, .015);   // posts + base plates
-      b.bb('p23steel', py - .3, yT, px - .3, py + .3, yT + .03, px + .3); }
-    // polycarbonate sheet over the whole outline, following the roof plane (+ a fine flute texture with leaf litter, p13)
-    { const o = [[P.x0, P.y0], [P.x1, P.y0], [P.x1, yS], [P.xK, yS], [P.xFront, P.y1], [P.x0, P.y1]], tri = T.ShapeUtils.triangulateShape(o.map(([x, y]) => new T.Vector2(x, y)), []), pos = [], uv = [];
-      for(const [x, y] of o){ const v = wp(x, y, hR(y) + .03); pos.push(v.x, v.y, v.z); uv.push(x / 4, y / 4); }
-      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setIndex(tri.flat()); g.computeVertexNormals();
-      b.add('p23poly', g, null, {keepUV: true}); }
-    // louvred screens: framed panels of horizontal blades, slim light posts between panels (p13/p47), tops under the roof beams
-    for(const [[ax, ay], [bx, by]] of S.screens.runs){ const len = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(len / S.screens.maxPanel)), ux = (bx - ax) / len, uy = (by - ay) / len;
-      for(let k = 0; k < n; k++){ const t0 = len * k / n + (k ? .13 : .02), t1 = len * (k + 1) / n - (k < n - 1 ? .13 : .02), cx = ax + ux * (t0 + t1) / 2, cy = ay + uy * (t0 + t1) / 2, w = t1 - t0;
-        const top = Math.min(hR(ay + uy * t0), hR(ay + uy * t1)) - bh - .08 - yT, h = top - S.screens.y0;
-        const fr = (x0, y0, x1, y1) => { const A = (s, t) => { const [qx, qz] = W2(ax + ux * s, ay + uy * s); return [qx, qz]; };   // frame member along the run
-          const [p0x, p0z] = A(x0), [p1x, p1z] = A(x1); b.bb('p23screen', Math.min(p0x, p1x) - (uy ? .05 : 0), yT + S.screens.y0 + y0, Math.min(p0z, p1z) - (ux ? .05 : 0), Math.max(p0x, p1x) + (uy ? .05 : 0), yT + S.screens.y0 + y1, Math.max(p0z, p1z) + (ux ? .05 : 0)); };
-        fr(t0, 0, t0 + .1, h); fr(t1 - .1, 0, t1, h); fr(t0, h - .12, t1, h); fr(t0, 0, t1, .1);
-        const blade = 3.5 / 12, gap = 1.1 / 12, nb = Math.floor((h - .22) / (blade + gap));
-        for(let i = 0; i < nb; i++){ const yy = yT + S.screens.y0 + .12 + (i + .5) * (h - .24) / nb, A = wp(ax + ux * (t0 + .1), ay + uy * (t0 + .1), yy + blade / 2), B = wp(ax + ux * (t1 - .1), ay + uy * (t1 - .1), yy + blade / 2);
-          tube(b, 'p23screen', A, B, .05, blade); }
-        } }
-    // wall light + camera under the strip (p21/p08), wired along the ledger
-    { const [lx, lz] = W2(P.x0 + 5.6, P.y0 + .02), y = hR(P.y0) - bh - .55; b.cyl('p23steel', .19, .19, .09, lx + .045, y, lz, 20, {rz: Math.PI / 2}); b.cyl('p23lens', .14, .14, .02, lx + .1, y, lz, 20, {rz: Math.PI / 2});
-      const [cx, cz] = W2(P.xK + 1.1, P.y0 + .02), yc = hR(P.y0) - bh - .25; b.bb('p23white', cx, yc - .08, cz - .08, cx + .12, yc + .08, cz + .08, .02); b.cyl('p23white', .07, .07, .22, cx + .2, yc - .04, cz, 14, {rz: Math.PI / 2 - .3}); b.cyl('p23lens', .045, .045, .01, cx + .31, yc - .08, cz, 12, {rz: Math.PI / 2 - .3}); }
-    const g = b.build('pergola23'); g.traverse(o => { if(o.isMesh && o.material === mat.p23poly){ o.castShadow = false; o.renderOrder = 3; } }); grp('yard').add(g);
-    R.rafters = nr; R.purlins = np; R.pergolaMeshes = g.children.length; }
+  // ================================================================= PERGOLA: pergola26 (one plane, L with a 45-deg turn, steel + polycarbonate + LED strips)
+  p26Pergola({S, P, K, R, yT, mat, wp, tube}); R.pergolaMeshes = R.pergola26 && R.pergola26.meshes;
   // ================================================================= DINING (one builder)
   { const b = new H.Builder(); for(const k in mat) b.useMaterial(k, mat[k]); const D = S.dining;
     const [tx, tz] = W2(D.x, D.y); b.push(Mx(tx, yT, tz, 0, 0, 0)); p23Table(b, D);                    // local x = BIM y (long axis N-S), z = BIM x
@@ -4094,6 +4080,138 @@ function buildYard(){
     R.issues = iss; if(iss.length) console.warn('[pergola23]', iss.join('; ')); R.ms = +(performance.now() - t0).toFixed(1); }
   // seating near the rec-room doors
   if(!window.STAGE){ F(1060,1380,1170,1430,yT,1.35,'fabric','yard'); F(1060,1430,1080,1520,yT,1.35,'fabric','yard'); F(1100,1450,1160,1500,yT,1.2,'wood','yard'); }
+}
+/* pergola26: the backyard pergola rebuilt to the owner's description (10/31) and photos p08, p13, p21, p30, p47.
+   Owner: ONE roof plane at one consistent pitch, high at the two-storey corner (east) and falling WEST along the kitchen toward the
+   kamado end (~5 deg; p08/p30 show the front beam and the ledger both dropping westward); L-shaped plan with a 45-degree turn that
+   follows the outdoor-kitchen run; matte black powder-coated steel posts, beams and rafters; clear (slightly hazy, fluted) polycarbonate
+   on top; a warm 2700K LED strip on the underside of EVERY crossbeam/rafter (and the front beams).
+   Plan (BIM feet, x = east, y = north): leg 1 is a 3 ft strip on the wing wall from the two-storey corner (eastX) to the kink (kinkX);
+   leg 2 is the band between the screens (behind kitchen leg 2, turned K.leg2.turn = 45 deg) and a front beam PARALLEL to kitchen leg 2;
+   a north beam and the NW post close it (p13, p47). A valley member runs from the screen bend to the kink (p13 'Y' junction).
+   Everything below is derived from PERGOLA26_SPEC + YARD_SPEC (kitchen run, screen runs, wall soffit found by buildYard), so a corrected
+   number moves every member, panel and light with it. One merged mesh per material (Builder); no textures beyond the existing flute canvas;
+   one point light (dusk/Halloween only). */
+const PERGOLA26_SPEC = window.PERGOLA26_SPEC = {
+  pitchDeg: 5, fall: [-1, 0],          // plan direction the roof falls in (west); owner Q1 (a) + p08/p30
+  topBelowSoffit: .1,                  // sheet top at the east end sits this far under the wing's soffit (BIM wall top, p08)
+  eastX: -37.6, strip: 3.0, kinkX: -45.2, northY: -2.3, nwPost: [-55.6, -2.5],   // outline (p08 / p21 / p13 / p47 fits, pergola23)
+  sheetT: .03,                         // polycarbonate + glazing bar: member tops sit this far under the sheet top
+  beam: {w: .17, h: .42}, rafter: {w: .14, h: .30, sp: 2.5}, post: .30,          // 2x5 / 2x3.5 black tube (p13 proportions)
+  led: {w: .07, h: .02, dusk: 1.5},    // continuous strip under every rafter + the front/north/valley beams; 2700K (owner Q2/Q3)
+  cct: 0xffb46b,                       // ~2700K in sRGB
+  light: {at: [-48.6, -7.2], drop: .35, distance: 18, decay: 2, intensity: 1.1},  // one modest warm fill under the roof at dusk
+  sheet: {opacity: .5, dayGlow: .25, duskGlow: .03}                               // fake transmitted daylight: no transmission pass
+};
+const PERGOLA26 = window.PERGOLA26 = {report: {}, lights: []};
+// intervals of the line o + t d (plan) inside polygon poly (even-odd), sorted
+function p26Clip(poly, o, d){
+  const ts = [];
+  for(let i = 0; i < poly.length; i++){ const a = poly[i], b = poly[(i + 1) % poly.length], ex = b[0] - a[0], ey = b[1] - a[1], den = d[0] * ey - d[1] * ex;
+    if(Math.abs(den) < 1e-9) continue;
+    const t = ((a[0] - o[0]) * ey - (a[1] - o[1]) * ex) / den, s = ((a[0] - o[0]) * d[1] - (a[1] - o[1]) * d[0]) / den;
+    if(s >= -1e-9 && s < 1 - 1e-9) ts.push(t); }
+  ts.sort((x, y) => x - y); const out = []; for(let i = 0; i + 1 < ts.length; i += 2) out.push([ts[i], ts[i + 1]]); return out; }
+function p26Materials(mat){
+  const T = THREE, Z = PERGOLA26_SPEC, S = o => { const m = new T.MeshStandardMaterial(o); m.color.convertSRGBToLinear(); m.emissive.convertSRGBToLinear(); return m; };
+  const poly = mat.p23poly.map;
+  return {
+    p26steel: S({color: 0x111214, roughness: .62, metalness: .25}),                                                  // matte black powder coat
+    p26poly: S({color: 0xf2f6f7, map: poly, emissive: 0xe4ecf0, emissiveMap: poly, emissiveIntensity: Z.sheet.dayGlow, roughness: .22, metalness: 0,
+      transparent: true, opacity: Z.sheet.opacity, depthWrite: false, side: T.DoubleSide}),
+    p26led: S({color: 0x8c8882, emissive: Z.cct, emissiveIntensity: 0, roughness: .45, metalness: 0}),             // frosted diffuser, lit at dusk
+    p23screen: mat.p23screen, p23steel: mat.p23steel, p23white: mat.p23white, p23lens: mat.p23lens
+  };
+}
+function p26TOD(){
+  const m = PERGOLA26.mat, Z = PERGOLA26_SPEC; if(!m) return; let on = false; try{ on = !!DUSK; }catch(e){}
+  // by mesh name, not material reference: later passes (zfight polygon offset) may swap in clones of these materials
+  const set = (mm, k, v) => { for(const x of (Array.isArray(mm) ? mm : [mm])) if(x) x[k] = v; };
+  const g = PERGOLA26.group; if(g) g.traverse(o => { if(!o.isMesh) return; if(o.name === 'p26led') set(o.material, 'emissiveIntensity', on ? Z.led.dusk : 0); else if(o.name === 'p26poly') set(o.material, 'emissiveIntensity', on ? Z.sheet.duskGlow : Z.sheet.dayGlow); });
+  m.p26led.emissiveIntensity = on ? Z.led.dusk : 0; m.p26poly.emissiveIntensity = on ? Z.sheet.duskGlow : Z.sheet.dayGlow;
+  for(const l of PERGOLA26.lights) l.intensity = on ? Z.light.intensity : 0; PERGOLA26.on = on; }
+if(typeof setTOD === 'function' && !setTOD.__p26){ const _p26st = setTOD; setTOD = function(){ const r = _p26st.apply(this, arguments); try{ p26TOD(); }catch(e){ console.warn('[pergola26] tod', e); } return r; }; setTOD.__p26 = true; }
+function p26Pergola(c){
+  const {S, P, K, R, yT, mat, wp, tube} = c, T = THREE, H = FIX.helpers, Z = PERGOLA26_SPEC, rep = PERGOLA26.report = {}, iss = [];
+  const m = PERGOLA26.mat || (PERGOLA26.mat = p26Materials(mat)), b = new H.Builder(); for(const k in m) b.useMaterial(k, m[k]);
+  const tn = Math.tan(Z.pitchDeg * Math.PI / 180), y0 = P.y0, yS = y0 + Z.strip, al = K.leg2.turn * Math.PI / 180;
+  const zE = (R.soffit != null ? R.soffit : P.ledger + .15) - Z.topBelowSoffit;                                // sheet top at the east end (ft over the pad)
+  const zTop = (x, y) => yT + zE - tn * ((x - Z.eastX) * Z.fall[0] + (y - y0) * Z.fall[1]);                    // world y of the sheet top: one plane
+  const zMem = (x, y) => zTop(x, y) - Z.sheetT;                                                                // member tops
+  // ---- outline (plan): wall ledger, screen line (behind kitchen leg 2), west edge, north beam, 45-deg front beam, strip front, east end
+  const Bk = S.screens.runs[1][0], E = S.screens.runs[1][1], xF = Z.kinkX - (Z.northY - yS) / Math.tan(al);
+  const A = [Z.eastX, y0], Bw = [Bk[0], y0], N = [Z.nwPost[0], Z.northY], F = [xF, Z.northY], Kk = [Z.kinkX, yS], Sx = [Z.eastX, yS];
+  const poly = [A, Bw, E, N, F, Kk, Sx];
+  let area = 0; for(let i = 0; i < poly.length; i++){ const p = poly[i], q = poly[(i + 1) % poly.length]; area += p[0] * q[1] - q[0] * p[1]; }
+  const ccw = area > 0, inN = (a, q) => { const ex = q[0] - a[0], ey = q[1] - a[1], L = Math.hypot(ex, ey); return ccw ? [-ey / L, ex / L] : [ey / L, -ex / L]; };
+  // ---- members: each lies in the roof plane (top edge on the plane), cross-section vertical
+  const mem = (p, q, w, h, led) => { const A3 = wp(p[0], p[1], zMem(p[0], p[1])), B3 = wp(q[0], q[1], zMem(q[0], q[1])); tube(b, 'p26steel', A3, B3, w, h);
+    if(led){ const dl = Z.led, Al = wp(p[0], p[1], zMem(p[0], p[1]) - h), Bl = wp(q[0], q[1], zMem(q[0], q[1]) - h); tube(b, 'p26led', Al, Bl, dl.w, dl.h); rep.leds = (rep.leds || 0) + 1; rep.ledFt = (rep.ledFt || 0) + Math.hypot(q[0] - p[0], q[1] - p[1]); } };
+  const edge = (a, q, w, h, led, trim = 0) => { const n = inN(a, q), o = w / 2, L = Math.hypot(q[0] - a[0], q[1] - a[1]), ux = (q[0] - a[0]) / L, uy = (q[1] - a[1]) / L;
+    mem([a[0] + n[0] * o + ux * trim, a[1] + n[1] * o + uy * trim], [q[0] + n[0] * o - ux * trim, q[1] + n[1] * o - uy * trim], w, h, led); };
+  const bw = Z.beam.w, bh = Z.beam.h;
+  edge(A, Bw, bw, bh, false);            // ledger on the wing wall (p08/p21: just over the window head, dropping west)
+  edge(Bw, E, bw, bh, false);            // back beam over the screens (p13)
+  edge(E, N, bw, bh, false);             // west edge to the NW post
+  edge(N, F, bw, bh, true);              // north beam (p13 top right)
+  edge(F, Kk, bw, bh, true);             // front beam parallel to kitchen leg 2 (the 45-degree turn)
+  edge(Kk, Sx, bw, bh, true);            // strip front beam (p08/p21)
+  edge(Sx, A, bw, bh, false);            // east end at the two-storey corner
+  mem([Bw[0] + .1, Bw[1] + bw], [Kk[0] - .05, Kk[1] - bw * .5], Z.rafter.w, Z.rafter.h + .06, true);   // valley member: screen bend -> kink
+  // ---- rafters (crossbeams): leg 1 perpendicular to the wall, leg 2 perpendicular to the 45-degree beams; clipped to the outline and the valley
+  const side = p => Math.sign((Kk[0] - Bw[0]) * (p[1] - Bw[1]) - (Kk[1] - Bw[1]) * (p[0] - Bw[0])), sA = side(A), sE = side(E);
+  const valleyT = (o, d) => { const ex = Kk[0] - Bw[0], ey = Kk[1] - Bw[1], den = d[0] * ey - d[1] * ex; return Math.abs(den) < 1e-9 ? null : ((Bw[0] - o[0]) * ey - (Bw[1] - o[1]) * ex) / den; };
+  const rafter = (o, d, keep) => { const iv = p26Clip(poly, o, d); if(!iv.length) return 0; let [t0, t1] = iv[0];
+    const tv = valleyT(o, d); if(tv != null && tv > t0 && tv < t1){ const mid = side([o[0] + d[0] * (t0 + tv) / 2, o[1] + d[1] * (t0 + tv) / 2]); if(mid === keep) t1 = tv - Z.rafter.w * .7; else t0 = tv + Z.rafter.w * .7; }
+    else { const mid = side([o[0] + d[0] * (t0 + t1) / 2, o[1] + d[1] * (t0 + t1) / 2]); if(mid !== keep) return 0; }
+    t0 += bw * .98; t1 -= bw * .98; if(t1 - t0 < .6) return 0;
+    mem([o[0] + d[0] * t0, o[1] + d[1] * t0], [o[0] + d[0] * t1, o[1] + d[1] * t1], Z.rafter.w, Z.rafter.h, true); return 1; };
+  let n1 = 0, n2 = 0; const sp = Z.rafter.sp;
+  { const L1 = Z.eastX - Bw[0], k1 = Math.max(1, Math.round(L1 / sp)), s1 = L1 / k1;                                  // even spacing, leg 1
+    for(let i = 1; i < k1; i++) n1 += rafter([Z.eastX - s1 * i, y0 - 1], [0, 1], sA); }
+  { const ux = E[0] - Bk[0], uy = E[1] - Bk[1], L2 = Math.hypot(ux, uy), u = [ux / L2, uy / L2], nn = [Math.sin(al), Math.cos(al)];   // leg 2: from the screen line out
+    const k2 = Math.max(1, Math.round(L2 / sp)), s2 = L2 / k2;
+    for(let i = 1; i < k2 + 4; i++){ const q = s2 * (i - .5), o = [Bk[0] + u[0] * q - nn[0], Bk[1] + u[1] * q - nn[1]]; n2 += rafter(o, nn, sE); } }
+  // ---- posts + base plates: wing corner (screen start), screen end, NW post (p13, p47)
+  const posts = [P.posts[2], [E[0] + inN(E, N)[0] * .2, E[1] + .1], Z.nwPost];
+  for(const [px, py] of posts){ const [wx, wz] = W2(px, py), top = zMem(px, py) - bh + .02, h = Z.post / 2;
+    b.bb('p26steel', wx - h, yT, wz - h, wx + h, top, wz + h, .015); b.bb('p26steel', wx - .3, yT, wz - .3, wx + .3, yT + .03, wz + .3); }
+  // ---- polycarbonate: one sheet over the outline, in the plane; flutes run down-slope (u = plan y, v = plan x)
+  { const tri = T.ShapeUtils.triangulateShape(poly.map(([x, y]) => new T.Vector2(x, y)), []), pos = [], uv = [];
+    for(const [x, y] of poly){ const v = wp(x, y, zTop(x, y) - Z.sheetT + .012); pos.push(v.x, v.y, v.z); uv.push(y / 4, x / 4); }
+    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setIndex(tri.flat()); g.computeVertexNormals();
+    b.add('p26poly', g, null, {keepUV: true}); }
+  // ---- louvred screens (pergola23 runs), tops under the sloping back beam
+  for(const [[ax, ay], [bx, by]] of S.screens.runs){ const len = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(len / S.screens.maxPanel)), ux = (bx - ax) / len, uy = (by - ay) / len;
+    for(let k = 0; k < n; k++){ const t0 = len * k / n + (k ? .13 : .02), t1 = len * (k + 1) / n - (k < n - 1 ? .13 : .02), w = t1 - t0;
+      const top = Math.min(zMem(ax + ux * t0, ay + uy * t0), zMem(ax + ux * t1, ay + uy * t1)) - bh - .08 - yT, h = top - S.screens.y0;
+      const fr = (x0, y0_, x1, y1_) => { const A_ = s => W2(ax + ux * s, ay + uy * s); const [p0x, p0z] = A_(x0), [p1x, p1z] = A_(x1);
+        b.bb('p23screen', Math.min(p0x, p1x) - (uy ? .05 : 0), yT + S.screens.y0 + y0_, Math.min(p0z, p1z) - (ux ? .05 : 0), Math.max(p0x, p1x) + (uy ? .05 : 0), yT + S.screens.y0 + y1_, Math.max(p0z, p1z) + (ux ? .05 : 0)); };
+      fr(t0, 0, t0 + .1, h); fr(t1 - .1, 0, t1, h); fr(t0, h - .12, t1, h); fr(t0, 0, t1, .1);
+      const blade = 3.5 / 12, gap = 1.1 / 12, nb = Math.floor((h - .22) / (blade + gap));
+      for(let i = 0; i < nb; i++){ const yy = yT + S.screens.y0 + .12 + (i + .5) * (h - .24) / nb;
+        tube(b, 'p23screen', wp(ax + ux * (t0 + .1), ay + uy * (t0 + .1), yy + blade / 2), wp(ax + ux * (t1 - .1), ay + uy * (t1 - .1), yy + blade / 2), .05, blade); } } }
+  // ---- wall light + camera under the ledger (p21/p08), following the sloped ledger
+  { const lx0 = P.x0 + 5.6, [lx, lz] = W2(lx0, y0 + .02), y = zMem(lx0, y0) - bh - .55; b.cyl('p23steel', .19, .19, .09, lx + .045, y, lz, 20, {rz: Math.PI / 2}); b.cyl('p23lens', .14, .14, .02, lx + .1, y, lz, 20, {rz: Math.PI / 2});
+    const cx0 = Z.kinkX + 1.1, [cx, cz] = W2(cx0, y0 + .02), yc = zMem(cx0, y0) - bh - .25; b.bb('p23white', cx, yc - .08, cz - .08, cx + .12, yc + .08, cz + .08, .02); b.cyl('p23white', .07, .07, .22, cx + .2, yc - .04, cz, 14, {rz: Math.PI / 2 - .3}); b.cyl('p23lens', .045, .045, .01, cx + .31, yc - .08, cz, 12, {rz: Math.PI / 2 - .3}); }
+  const g = b.build('pergola26'); g.traverse(o => { if(!o.isMesh) return; if(o.material === m.p26poly){ o.castShadow = false; o.renderOrder = 3; } if(o.material === m.p26led) o.castShadow = false; }); grp('yard').add(g); if(PERGOLA26.group && PERGOLA26.group.parent && PERGOLA26.group !== g) PERGOLA26.group.parent.remove(PERGOLA26.group); PERGOLA26.group = g;
+  // ---- one warm fill light under the roof (dusk / Halloween only; intensity 0 by day). Not in DUSK_LIGHTS: Halloween's lamp pool stays as it was.
+  for(const l of PERGOLA26.lights) if(l.parent) l.parent.remove(l); PERGOLA26.lights = [];
+  { const [ax, ay] = Z.light.at, [lx, lz] = W2(ax, ay), l = new T.PointLight(Z.cct, 0, Z.light.distance, Z.light.decay); l.color.convertSRGBToLinear();
+    l.position.set(lx, zMem(ax, ay) - Z.rafter.h - Z.light.drop, lz); l.name = 'pergola26-led-fill'; grp('yard').add(l); PERGOLA26.lights.push(l); }
+  p26TOD();
+  // ---- keep YARD_SPEC consumers (Halloween string lights hang at P.top - beam) under the lowest part of the roof
+  P.beam = [bw, bh]; P.top = +(zMem(Math.min(...poly.map(q => q[0])), y0) - yT).toFixed(2); P.ledger = +(zE - Z.sheetT).toFixed(2);
+  // ---- self-checks
+  const hs = poly.map(([x, y]) => zMem(x, y) - Z.rafter.h - yT), low = Math.min(...hs), high = Math.max(...hs);
+  if(R.soffit != null && zE > R.soffit + 1e-6) iss.push('sheet above the wing soffit');
+  if(low < 7.3) iss.push(`headroom ${low.toFixed(2)} ft under the low (west) end`);
+  if(n1 < 2 || n2 < 2) iss.push(`too few rafters (${n1}, ${n2})`);
+  if(Math.abs(Math.atan2(hs[0] - hs[1], Math.abs(poly[0][0] - poly[1][0])) * 180 / Math.PI - Z.pitchDeg * (Z.fall[0] ? 1 : 0)) > .3) iss.push('ledger pitch off spec');
+  for(const [px, py] of posts) if(!inPoly(poly, px, py)) iss.push(`post ${px.toFixed(1)},${py.toFixed(1)} outside the roof`);
+  Object.assign(rep, {poly: poly.map(q => q.map(v => +v.toFixed(2))), pitchDeg: Z.pitchDeg, eastTop: +zE.toFixed(2), undersideLow: +low.toFixed(2), undersideHigh: +high.toFixed(2),
+    rafters: [n1, n2], posts: posts.map(q => q.map(v => +v.toFixed(2))), meshes: g.children.filter(o => o.isMesh).length, issues: iss});
+  R.pergola26 = rep; if(iss.length) console.warn('[pergola26]', iss.join('; '));
 }
 function pergola23Materials(){
   const T = THREE, tex = (w, h, draw, rep) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.encoding = T.sRGBEncoding; t.anisotropy = 4; return t; };
@@ -4363,6 +4481,19 @@ function i22TerrainCheck(add){ const t = TERR && TERR.tiers[0]; if(!t) return; l
   const I = window.__I22 = window.__I22 || {}; I.terrainSamples = n; I.terrainAbove = bad; I.terrainAboveBySpace = per;
   for(const [id, k] of Object.entries(per)) add('terrain-above-floor', id, k + ' terrain samples at or above the floor of ' + id); }
 /* ---------------- landscape ---------------- */
+function v26MinInner(inn, bx, by, r, hi){   // v26 T2: lowest inner-tier surface within one outer cell of (bx, by)
+  let m = hi; const c = v => Math.max(-inn.half, Math.min(inn.half, v));
+  const st = Math.max(inn.step, r / 4);   // <= 9 x 9 samples per vertex (load time)
+  for(let dx = -r; dx <= r + 1e-6; dx += st) for(let dy = -r; dy <= r + 1e-6; dy += st){ const h = terrAt(inn, c(bx + dx), c(by + dy)); if(h != null && h < m) m = h; }
+  V26T2.n++; return m; }
+const V26T2 = window.__V26T2 = {n: 0, skirts: 0};
+function v26Skirt(k, n, P, UV, I){   // v26 T2: a 4 ft skirt down from the edge of every tier that has an outer tier (own vertices: edge normals unchanged)
+  if(k >= TERR.tiers.length - 1) return {P, UV};
+  const E = []; for(let c = 0; c < n; c++) E.push(c); for(let r = 1; r < n; r++) E.push(r * n + n - 1); for(let c = n - 2; c >= 0; c--) E.push((n - 1) * n + c); for(let r = n - 2; r > 0; r--) E.push(r * n);
+  const L = E.length, b = n * n, P2 = new Float32Array((b + 2 * L) * 3), U2 = new Float32Array((b + 2 * L) * 2); P2.set(P); U2.set(UV);
+  E.forEach((v, j) => { for(const [o, dy] of [[0, 0], [L, -4]]){ const q = b + o + j; P2[q * 3] = P[v * 3]; P2[q * 3 + 1] = P[v * 3 + 1] + dy; P2[q * 3 + 2] = P[v * 3 + 2]; U2[q * 2] = UV[v * 2]; U2[q * 2 + 1] = UV[v * 2 + 1]; } });
+  for(let j = 0; j < L; j++){ const a = b + j, c = b + (j + 1) % L, a2 = a + L, c2 = c + L; I.push(a, c, a2, c, c2, a2, a, a2, c, c, a2, c2); }
+  V26T2.skirts++; return {P: P2, UV: U2}; }
 function buildSite(){
   const W2b = (bx, by) => [by, bx];
   // terrain tiers, each textured with its NAIP orthophoto; outer tiers sit a little lower so inner ones win where they overlap
@@ -4373,12 +4504,12 @@ function buildSite(){
       let hv = t.H[i] / 20 + t.lo - drop;
         if(k > 0){ const inn = TERR.tiers[k - 1], ab = Math.abs(bx), ay = Math.abs(by);   // goal23 G9: the overlap ring follows the inner tier
           if(ab <= inn.half + 1e-6 && ay <= inn.half + 1e-6){ const hi = terrAt(inn, Math.max(-inn.half, Math.min(inn.half, bx)), Math.max(-inn.half, Math.min(inn.half, by)));
-            if(hi != null){ hv = hi - ((ab >= inn.half - 1e-6 || ay >= inn.half - 1e-6) ? 0 : Math.max(1.5, drop)); GOAL23.seam = (GOAL23.seam || 0) + 1; } } }
+            if(hi != null){ hv = v26MinInner(inn, bx, by, t.step, hi) - ((ab >= inn.half - 1e-6 || ay >= inn.half - 1e-6) ? .3 : Math.max(1.5, drop)); /* v26 T2 */ GOAL23.seam = (GOAL23.seam || 0) + 1; } } }
         P[i * 3] = by; P[i * 3 + 1] = hv; P[i * 3 + 2] = bx; UV[i * 2] = c / (n - 1); UV[i * 2 + 1] = 1 - r / (n - 1); }
     for(let r = 0; r < n - 1; r++) for(let c = 0; c < n - 1; c++){ const a = r * n + c, b = a + 1, d = a + n, e = d + 1;
       if(k > 0){ const inner = TERR.tiers[k - 1], bx = -t.half + (c + .5) * t.step, by = t.half - (r + .5) * t.step; if(Math.abs(bx) < inner.half - 2 * t.step && Math.abs(by) < inner.half - 2 * t.step) continue; }
       I.push(a, d, b, b, d, e); }
-    geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(UV, 2)); geo.setIndex(I); geo.computeVertexNormals();
+    const SK = v26Skirt(k, n, P, UV, I); geo.setAttribute('position', new THREE.BufferAttribute(SK.P, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(SK.UV, 2)); geo.setIndex(I); geo.computeVertexNormals();   // v26 T2 skirt
     const tex = TL.load('terrain/' + t.img); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = ANISO;
     const mat = new THREE.MeshStandardMaterial({map: tex, roughness: 1, metalness: 0, color: 0xf2f0ea});
     if(k === 0) siteCoverMaterial(mat);
@@ -4395,7 +4526,7 @@ function buildSite(){
   SITE_RULES.report();
 }
 /* ---- v22 paver band (bimtools/patch_v22_pavers22.py) ---- */
-function pavTint(){ return [1.08, .97, .85]; }   // v22 P6: warm greige paver tint (linear multiplier)
+function pavTint(){ return [1, 1, 1]; }   // v26 P1 (was [1.08, .97, .85]): tex/pavers is photo-calibrated (tools/tex_v26.py)   // v22 P6: warm greige paver tint (linear multiplier)
 const PAV_BAND = {w: .9, out: .75, unit: .6, lift: .06, near: 1.6, step: 1.0, minRun: 1.5};
 function pavSmooth(P0){   // P1: survey-trace sawtooth (edges < 2.5 ft) -> the laid curve; corners between long edges kept
   const L = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -5055,11 +5186,12 @@ const lampPts = [ [wp(1480,1830),9], [wp(1590,2560),9], [up(2038,714),LV.upper+9
 for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6); l.position.set(p[0],y,p[1]); scene.add(l); DUSK_LIGHTS.push(l); }
 let DUSK = false;
 /* ---------------- time of day: real sun for Woodside (37.438 N, 122.254 W), mid-October ---------------- */
-const TOD = [{key: 'morning', label: 'Morning', h: 9.0}, {key: 'midday', label: 'Midday', h: 13.0}, {key: 'afternoon', label: 'Afternoon', h: 16.0},
+const V26 = window.__V26 = Object.assign({tint: [1.02, .965, 1.06], sunK: .6, sectors: 16, lensDay: 1.6, washDay: .14}, window.__V26 || {});   // v26 S2/S3 calibration
+const TOD = [{key: 'morning', label: 'Morning', h: 9.5, doy: 160}, {key: 'midday', label: 'Midday', h: 13.0}, {key: 'afternoon', label: 'Afternoon', h: 16.0},
              {key: 'golden', label: 'Golden hour', h: 17.75}, {key: 'dusk', label: 'Dusk', h: 18.75}];
-let TOD_KEY = 'midday', SUN_DIR = new THREE.Vector3(0, 1, 0);
-function sunPosition(hourLocal){   // NOAA approximation; returns {alt, az} radians, az clockwise from true north
-  const lat = 37.438 * Math.PI / 180, lon = -122.254, doy = 288, tz = -7;
+let TOD_KEY = 'morning' /* v26 S1: the listing shoot's light by default */, SUN_DIR = new THREE.Vector3(0, 1, 0);
+function sunPosition(hourLocal, doyIn){   // NOAA approximation; returns {alt, az} radians, az clockwise from true north
+  const lat = 37.438 * Math.PI / 180, lon = -122.254, doy = doyIn || 288, tz = -7;   // v26 S1: per-preset day of year
   const g = 2 * Math.PI / 365 * (doy - 1 + (hourLocal - 12) / 24);
   const eqt = 229.18 * (.000075 + .001868 * Math.cos(g) - .032077 * Math.sin(g) - .014615 * Math.cos(2 * g) - .040849 * Math.sin(2 * g));
   const decl = .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g);
@@ -5104,7 +5236,7 @@ let ENV_IN = null, ENV_INSIDE = false;
 function applyEnv(){ const e = ENV_INSIDE && ENV_IN ? ENV_IN : ENV_RT; if(e) scene.environment = e.texture; }
 function setTOD(key){
   const T = TOD.find(t => t.key === key) || TOD[1]; TOD_KEY = T.key; DUSK = T.key === 'dusk'; tick.glow = undefined;
-  const sp = sunPosition(T.h), plan = sp.az - 46.14 * Math.PI / 180;                 // true azimuth -> plan (x = plan north, z = plan east)
+  const sp = sunPosition(T.h, T.doy), plan = sp.az - 46.14 * Math.PI / 180;                 // true azimuth -> plan (x = plan north, z = plan east)
   const alt = Math.max(sp.alt, -.02);
   SUN_DIR.set(Math.cos(plan) * Math.cos(alt), Math.max(.03, Math.sin(alt)), Math.sin(plan) * Math.cos(alt)).normalize();
   const e = Math.sin(Math.max(0, sp.alt)), low = 1 - Math.min(1, e / .35);                    // 0 high sun .. 1 sun on the horizon
@@ -5118,7 +5250,7 @@ function setTOD(key){
   scene.fog.color.copy(DUSK ? new THREE.Color(0x8e7f8d) : lerpC(0xc5d5df, 0xd9c6b0, low));
   // key light: the sun; fill comes from the sky environment, not extra lights
   sun.color.copy(DUSK ? new THREE.Color(0xff9a5a) : lerpC(0xfff3e2, 0xff9c50, Math.pow(low, .7))); sun.color.convertSRGBToLinear();
-  sun.intensity = DUSK ? .35 : 2.6 * (.35 + .65 * Math.min(1, e / .5));
+  sun.intensity = DUSK ? .35 : 2.6 * (.35 + .65 * Math.min(1, e / .5)) * V26.sunK;   // v26 S3
   hemi.intensity = DUSK ? .12 : .18; hemi.color.set(DUSK ? 0x8f8fb8 : 0xdfe3e6); hemi.groundColor.set(DUSK ? 0x3a3330 : 0x8a857c);   /* goal23 G8 */
   amb.intensity = DUSK ? .04 : 0; fill.intensity = 0; fill2.intensity = 0; camLight.intensity = 0;
   BASE_EXPOSURE = DUSK ? 1.25 : (.82 + .25 * low); renderer.toneMappingExposure = BASE_EXPOSURE;
@@ -5208,6 +5340,24 @@ function viewReset(){
 
 /* ---------------- groups visibility per mode ---------------- */
 function isDoll(){ return mode==='doll' || mode==='design'; }
+const V26O = window.__V26O = {n: 0, ms: 0, last: null};
+function v26Pivot(cx, cy){   // v26 O1: the point under the cursor at drag start (clamped to the dollhouse bounds)
+  const t0 = performance.now(), r = canvas.getBoundingClientRect(), rc = new THREE.Raycaster(), B = dollBox(), m = 24;
+  rc.setFromCamera(new THREE.Vector2((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), camera);
+  let hit = null; const ray = rc.ray;
+  if(ray.intersectBox(B, new THREE.Vector3())){ const objs = []; for(const k of ['main', 'upper', 'lower', 'roof', 'lowerRoof', 'vaultUp', 'ceil', 'furn', 'furnU', 'land']) if(GROUPS[k] && GROUPS[k].visible) objs.push(GROUPS[k]);
+    const h = rc.intersectObjects(objs, true).find(q => q.object.visible && !(q.object.material && q.object.material.transparent && q.object.material.opacity < .3)); if(h) hit = h.point.clone(); }
+  if(!hit){ for(let d = 1; d < 900; d += Math.max(1, d * .02)){ const q = ray.at(d, new THREE.Vector3()); let g; try{ g = ground(q.x, q.z); }catch(e){ g = -1e9; } if(q.y <= g){ hit = q; break; } } }
+  if(!hit) hit = B.getCenter(new THREE.Vector3());
+  hit.x = clamp(hit.x, B.min.x - m, B.max.x + m); hit.z = clamp(hit.z, B.min.z - m, B.max.z + m); hit.y = clamp(hit.y, LV.lower - 1, 30);
+  V26O.n++; V26O.ms = +(performance.now() - t0).toFixed(1); V26O.last = hit.toArray().map(v => +v.toFixed(1)); return hit; }
+function v26PivotOrbit(P, yaw, pitch){   // v26 O1: rotate camera + target about the pivot P
+  const C = camera.position.clone().sub(P), T = target.clone().sub(P), up = new THREE.Vector3(0, 1, 0);
+  const qy = new THREE.Quaternion().setFromAxisAngle(up, yaw); C.applyQuaternion(qy); T.applyQuaternion(qy);
+  const r = C.length(), ph = Math.acos(clamp(C.y / Math.max(1e-6, r), -1, 1)), ph2 = clamp(ph + pitch, .1, 1.47), b = ph2 - ph;
+  if(Math.abs(b) > 1e-6){ const ax = new THREE.Vector3(C.z, 0, -C.x).normalize(), q = new THREE.Quaternion().setFromAxisAngle(ax, b), C2 = C.clone().applyQuaternion(q);
+    const ok = Math.abs(Math.acos(clamp(C2.y / r, -1, 1)) - ph2) < 1e-3, qq = ok ? q : new THREE.Quaternion().setFromAxisAngle(ax, -b); C.applyQuaternion(qq); T.applyQuaternion(qq); }
+  camera.position.copy(P).add(C); target.copy(P).add(T); orbitFromCamera(); }
 const vis = {roof:false, upper:true, labels:true, trees:true, treesDoll:false, level:'main'};
 /* v22 doll22: dollhouse section (bimtools/patch_v22_doll22.py).
    Three states: 'main' (lower, garage and main storeys, each cut CUT_H = 7'-6" above its own floor; the upper storey and
@@ -6170,9 +6320,9 @@ const NAVG = (() => {
   const mark = () => { mem = true; try{ localStorage.setItem(KEY, '1'); }catch(e){} };
   const tipsSeen = () => (revealAt != null ? revealAt : performance.now()) >= FAST;
   function build(){ if(card) return card; card = document.createElement('div'); card.className = 'navguide'; card.hidden = true; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'How to move around');
-    card.innerHTML = '<div class="ng-h"><span class="ng-g" aria-hidden="true"></span>How to move around<button type="button" class="ng-x" aria-label="Close">×</button></div>' + '<span class="ng-tips ng-d"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Drag</b> to look around or turn the model</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Scroll</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Shift</b>-drag to slide · <b>Ctrl/⌘</b>-drag to tilt</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click a white circle or <b>Next ›</b> to move</span></span></span><span class="ng-tips ng-p"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>One finger</b> to look around</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Two fingers</b> to slide</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Pinch</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a circle or <b>›</b> to move</span></span></span>';
+    card.innerHTML = '<div class="ng-h"><span class="ng-g" aria-hidden="true"></span>How to move around<button type="button" class="ng-x" aria-label="Close">×</button></div><span class="ng-m"></span>' + '<span class="ng-tips ng-d"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Drag</b> to look around or turn the model</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Scroll</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Shift</b>-drag to slide · <b>Ctrl/⌘</b>-drag to tilt</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click a white circle or <b>Next ›</b> to move</span></span></span><span class="ng-tips ng-p"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>One finger</b> to look around</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Two fingers</b> to slide</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Pinch</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a circle or <b>›</b> to move</span></span></span>';
     card.querySelector('.ng-x').onclick = () => hide(); document.body.appendChild(card); return card; }
-  function show(auto){ build(); card.hidden = false; clearTimeout(timer); timer = setTimeout(hide, auto ? 8000 : 12000); mark(); }
+  function show(auto, keepM){ build(); if(!keepM){ const mm = card.querySelector('.ng-m'); if(mm) mm.innerHTML = ''; } card.classList.toggle('ng-ph', document.documentElement.classList.contains('ph')); card.hidden = false; clearTimeout(timer); timer = setTimeout(hide, auto ? 8000 : 12000); mark(); }
   function hide(){ clearTimeout(timer); if(card) card.hidden = true; }
   const open = () => !!card && !card.hidden;
   addEventListener('keydown', e => { if(e.key === 'Escape' && open()){ hide(); } }, true);
@@ -6183,7 +6333,8 @@ const NAVG = (() => {
     if(!seen() && !ph && revealAt < FAST) show(true); mark(); window.__NAVG.auto = open(); }
   { const L = document.getElementById('loading'); if(L){ const ck = () => { if(L.classList.contains('done')) onReveal(); }; new MutationObserver(ck).observe(L, {attributes: true, attributeFilter: ['class']}); ck(); } }
   { const b = document.getElementById('navHelp'); if(b) b.onclick = e => { e.stopPropagation(); open() ? hide() : show(false); }; }
-  return {show, hide, open, tipsSeen};
+  function showMode(title, html, auto){ build(); const mm = card.querySelector('.ng-m'); if(mm) mm.innerHTML = '<b>' + title + '</b><span>' + html + '</span>'; show(auto, true); }   // v26 G1
+  return {show, hide, open, tipsSeen, showMode};
 })();
 window.__NAVGUIDE = NAVG;
 const ptrs=new Map(); let joy=null, pinch=null, lastTap=0;
@@ -6194,6 +6345,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(mode==='walk' && nav==='look' && e.pointerType==='touch' && lx<rect.width*.42 && !joy && ptrs.size===0){
     joy={id:e.pointerId,x:e.clientX,y:e.clientY,dx:0,dy:0,t:performance.now(),moved:false}; const j=$('#joy'); j.hidden=false; j.style.left=lx+'px'; j.style.top=(e.clientY-rect.top)+'px'; $('#joyb').style.transform=''; return; }
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,t:performance.now(),button:e.button,mod:e.shiftKey||e.altKey,tilt:(e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey});   // v24 N1
+  if(nav==='orbit' && isDoll() && e.button===0 && !(e.shiftKey||e.altKey||e.ctrlKey||e.metaKey) && ptrs.size===1){ try{ ptrs.get(e.pointerId).piv = v26Pivot(e.clientX, e.clientY); }catch(err){} }   // v26 O1
   pinch=null; ring.visible=false; canvas.className='grabbing';
 });
 canvas.addEventListener('pointermove',e=>{
@@ -6210,6 +6362,7 @@ canvas.addEventListener('pointermove',e=>{
     else if(p.tilt){ const k=(camera.fov*Math.PI/180)/h*1.1, d=target.clone().sub(camera.position), r=Math.max(.5,d.length());   // v24 N1: Ctrl/Cmd-drag = look around in place (grab-the-world)
       let ya=Math.atan2(-d.x,-d.z)+dx*k, pi=clamp(Math.asin(clamp(d.y/r,-1,1))+dy*k,-1.45,1.2);
       target.set(camera.position.x-Math.sin(ya)*Math.cos(pi)*r, camera.position.y+Math.sin(pi)*r, camera.position.z-Math.cos(ya)*Math.cos(pi)*r); orbitFromCamera(); }
+    else if(p.piv && ptrs.size===1) v26PivotOrbit(p.piv, -dx*2*Math.PI/h*.75, -dy*2*Math.PI/h*.75);   // v26 O1
     else { sph.theta -= dx*2*Math.PI/h*.75; sph.phi -= dy*2*Math.PI/h*.75; }
   } else { const k=(camera.fov*Math.PI/180)/h*1.1; yaw += dx*k; pitch=clamp(pitch+dy*k,-1.3,1.3); }
 });
@@ -7519,8 +7672,8 @@ function runModelChecks(){
     for(const f of BIM.raw.elements.filter(e => isFixtureEl(e) && e.at && e.at.length > 2 && !BIM.swap.has(e.id) && !['counterTop', 'openShelves', 'rug', 'sinkUndermount', 'faucetKitchen', 'hoodChimney', 'tvWall', 'mirror'].includes(e.kind))){
       let sz; try{ sz = (window.BUILTIN && BUILTIN.has(f.kind) ? BUILTIN : FIX).sizeOf(f.kind, f.opts || {}); }catch(e){ continue; }
       const r = f.rot * Math.PI / 180, fx = Math.cos(r), fy = Math.sin(r), sx = -fy, sy = fx, w = sz[0], d = sz[1];
-      const z0 = f.at[2] + ((f.opts && f.opts.mountY && /upper|mirror|hood|tv|medicine|sconce/.test(f.kind)) ? f.opts.mountY : 0), z1 = f.at[2] + sz[2];
-      const pts = [[-w / 2 + .03, .03], [w / 2 - .03, .03], [w / 2 - .03, d - .03], [-w / 2 + .03, d - .03]].map(([a, b]) => [f.at[0] + sx * a + fx * b, f.at[1] + sy * a + fy * b]);
+      const z0 = f.at[2] + ((f.opts && f.opts.mountY && /upper|Upper|mirror|hood|tv|medicine|sconce|faucet|^counter$/.test(f.kind)) ? f.opts.mountY : 0), z1 = f.at[2] + sz[2];
+      const pts = ((FIX.footprintOf && FIX.footprintOf(f.kind, f.opts || {})) || [[-w / 2 + .03, .03], [w / 2 - .03, .03], [w / 2 - .03, d - .03], [-w / 2 + .03, d - .03]]).map(([a, b]) => [f.at[0] + sx * a + fx * b, f.at[1] + sy * a + fy * b]);
       FPS.push({f, pts, z0, z1, xs: pts.map(p => p[0]), ys: pts.map(p => p[1])}); }
     const segX = (A, B) => { const ax = [Math.min(...A.xs), Math.max(...A.xs)], ay = [Math.min(...A.ys), Math.max(...A.ys)], bx = [Math.min(...B.xs), Math.max(...B.xs)], by = [Math.min(...B.ys), Math.max(...B.ys)];
       if(ax[1] < bx[0] || bx[1] < ax[0] || ay[1] < by[0] || by[1] < ay[0]) return false;
@@ -7983,6 +8136,9 @@ M.beamFir = std({color: 0xffffff, roughness: .7, map: canvasTex(1024, 128, (g, w
   for(let k = 0; k < 3; k++){ const x = r() * w, y = h * (.25 + r() * .5); g.fillStyle = 'rgba(112,66,30,.28)'; g.beginPath(); g.ellipse(x, y, 3 + r() * 2.5, 2 + r(), 0, 0, 7); g.fill(); }
 }, [9, 1.1])});
 M.cableChrome = std({color: 0xd4d7da, roughness: .28, metalness: .85});
+M.beamCherry26 = M.beamFir.clone(); M.beamCherry26.color.set(0xc9c4d4); M.beamCherry26.userData = {};   // v26 W1: cherry, natural (fir grain x linear .58/.55/.65 after linearize)
+M.flag26 = std({color: 0xa5a29f, roughness: .86, vertexColors: true, side: THREE.DoubleSide});   // v26 Y1 flagstone
+M.cableSatin26 = std({color: 0xc6c9cc, roughness: .42, metalness: .8});   // v26 L1: satin aluminum (700KHELLO3)
 M.beamFir.userData.noAO = true;   // int21 I1: slender member in an acute vault wedge - SSAO halo went black
 M.cableLens = new THREE.MeshStandardMaterial({color: 0xfff3dc, emissive: 0xffd9a0, emissiveIntensity: 0, roughness: .3});
 /* v19 living L5: FIX kind 'shoeBench' - painted slatted bench (p36): lengthwise top slats, lower slatted shoe shelf, square legs at the
@@ -8061,7 +8217,7 @@ function xlMount(e, spec){
 }
 function buildExteriorLights(L){
   const blk = new THREE.MeshStandardMaterial({color: 0x0f0f0f, roughness: .55, metalness: .1}), inner = new THREE.MeshStandardMaterial({color: 0x0b0b0b, roughness: .7, side: THREE.DoubleSide});
-  const block = new THREE.MeshStandardMaterial({color: 0xf1efe9, roughness: .7}), lens = new THREE.MeshStandardMaterial({color: 0xfff3e2, emissive: 0xffc890, emissiveIntensity: 0, roughness: .25});
+  const block = new THREE.MeshStandardMaterial({color: new THREE.Color(0xadaba2).convertSRGBToLinear(), roughness: .8}),   /* v26 L3: body colour */ lens = new THREE.MeshStandardMaterial({color: 0xfff3e2, emissive: 0xffc890, emissiveIntensity: 0, roughness: .25});
   XL.lens.push(lens); const texs = {}, root = grp('main'); XL.washMeshes = [];
   for(const e of L.exterior){
     const model = e.model || (/Edgey/i.test(e.fixture || '') ? 'edgey' : /Cylinder/i.test(e.fixture || '') ? 'cylinder' : null), spec = XL_SPEC[model];
@@ -8318,7 +8474,8 @@ function applyLightingState(){
   for(const m of LIGHTS.chand) m.emissiveIntensity = DUSK ? 3.2 : 1.1;
   if(LIGHTS.cans) LIGHTS.cans.emissiveIntensity = DUSK ? 2.2 : .9;
   for(const m of LIGHTS.washes) m.opacity = DUSK ? .75 : 0;
-  for(const m of LIGHTS.emit) m.emissiveIntensity = DUSK ? 2.4 : 0;
+  for(const m of LIGHTS.emit) m.emissiveIntensity = DUSK ? 2.4 : (m === M.cableLens ? V26.lensDay : 0);   // v26 L1
+  if(window.__v26wash) __v26wash.material.color.setScalar(DUSK ? 1 : V26.washDay);   // v26 L2
   if(XL) XL.apply();
 }
 /* ---------------- landscape concepts ---------------- */
@@ -8564,7 +8721,7 @@ const LOOK = {
   outExpo: (low) => .80 + .22 * low, inDay: .95, inDuskStops: 0,
   inExpo(dusk, base){ return dusk ? base * Math.pow(2, this.inDuskStops) : this.inDay; },
   aoMinFt: .04, aoMaxFt: 2.5, aoRadius: 1.4, aoStrength: .8,
-  grade: {wb: [.985, 1, 1.02], sat: 1.0, con: .25, gam: 1.0, lift: 0, white: .92},
+  grade: {wb: [1, 1, 1] /* v26 M2 */, sat: 1.0, con: .25, gam: 1.0, lift: 0, white: .92},
   // dusk (civil twilight, p03): blue-grey zenith, warm horizon, camera white balance keeps the grey siding grey,
   // windows read warm-white (2700-3000 K lamps), not saturated orange
   dusk: {top: 0x4a6382, mid: 0xe2aa84, bot: 0x2c2e33, glow: 0xff8a40, hemi: 0xaeb6c4, hills: [0x3c4250, 0x56606e, 0x737f8e],
@@ -8647,7 +8804,7 @@ function lookFrame(){
     if(window.FIX && FIX.materialNames) for(const n of FIX.materialNames()){ const m = FIX.mat(n); if(m && 'envMap' in m && m.envMap){ m.envMap = null; m.needsUpdate = true; } } }; }
 { const _anti = antiTileAll; antiTileAll = function(){ _anti.apply(this, arguments); lookMaterials(); lookGlassAll(); }; }
 { const _setTOD = setTOD; setTOD = function(key){ _setTOD.apply(this, arguments);
-    const T = TOD.find(t => t.key === TOD_KEY) || TOD[1], sp = sunPosition(T.h), e = Math.sin(Math.max(0, sp.alt)), low = 1 - Math.min(1, e / .35);
+    const T = TOD.find(t => t.key === TOD_KEY) || TOD[1], sp = sunPosition(T.h, T.doy), e = Math.sin(Math.max(0, sp.alt)), low = 1 - Math.min(1, e / .35);
     if(!DUSK){ BASE_EXPOSURE = LOOK.outExpo(low); renderer.toneMappingExposure = BASE_EXPOSURE; }
     else { const D = LOOK.dusk, U = skyMat.uniforms;   // rule 11: dusk sky, white balance, exposure and window glow (p03)
       U.top.value.set(D.top); U.mid.value.set(D.mid); U.bot.value.set(D.bot); U.glow.value.set(D.glow); hemi.color.set(D.hemi);
@@ -8662,13 +8819,22 @@ function goal23Bal(g, W, y0, y1, kk, tint){   // linear grey-world balance of ro
   const m = (r + gg + b) / 3, T = tint || [1, 1, 1], f = [r, gg, b].map((c, j) => Math.pow(1 + kk * (m * T[j] / c - 1), 1 / 2.2));
   for(let i = 0; i < a.length; i += 4){ a[i] = Math.min(255, a[i] * f[0]); a[i + 1] = Math.min(255, a[i + 1] * f[1]); a[i + 2] = Math.min(255, a[i + 2] * f[2]); }
   g.putImageData(d, 0, y0); return f.map(v => +v.toFixed(3)); }
+function v26BalAz(g, W, y0, y1, kk, T){   // v26 S2: linear balance of rows y0..y1 toward white point T, per azimuth sector
+  const S = V26.sectors, h = y1 - y0, d = g.getImageData(0, y0, W, h), a = d.data, sw = W / S, Lf = v => { v /= 255; return v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  const sum = Array.from({length: S}, () => [1e-6, 1e-6, 1e-6]);
+  for(let y = 0; y < h; y++) for(let x = 0; x < W; x++){ const i = (y * W + x) * 4, q = sum[Math.min(S - 1, x / sw | 0)]; q[0] += Lf(a[i]); q[1] += Lf(a[i + 1]); q[2] += Lf(a[i + 2]); }
+  const sm = sum.map((q, j) => [0, 1, 2].map(c => .25 * sum[(j + S - 1) % S][c] + .5 * q[c] + .25 * sum[(j + 1) % S][c]));
+  const F = sm.map(c => { const m = (c[0] + c[1] + c[2]) / 3; return c.map((v, j) => Math.pow(1 + kk * (m * T[j] / v - 1), 1 / 2.2)); });
+  for(let x = 0; x < W; x++){ const u = x / sw - .5, j0 = Math.floor(u), t = u - j0, A = F[(j0 + S) % S], B = F[(j0 + 1) % S], f0 = A[0] + (B[0] - A[0]) * t, f1 = A[1] + (B[1] - A[1]) * t, f2 = A[2] + (B[2] - A[2]) * t;
+    for(let y = 0; y < h; y++){ const i = (y * W + x) * 4; a[i] = Math.min(255, a[i] * f0); a[i + 1] = Math.min(255, a[i + 1] * f1); a[i + 2] = Math.min(255, a[i + 2] * f2); } }
+  g.putImageData(d, 0, y0); return F.map(f => f.map(v => +v.toFixed(3))); }
 function goal23WallWB(cv){   // goal23 G6
   const g = cv.getContext('2d', {willReadFrequently: true}), W = cv.width, H = cv.height;
   // 1) the lower hemisphere (ground bounce: what soffits, eaves and rake undersides see) is balanced on its own, so the olive
   //    ground band + the sky-half white balance do not light every underside yellow (p08: eave undersides read cool grey)
   const kg = window.__G23WBG != null ? window.__G23WBG : 1; if(kg > 0) GOAL23WB.ground = goal23Bal(g, W, Math.round(H / 2), H, kg);
   // 2) then the band a vertical wall sees (50 deg above to 40 deg below the horizon: treeline + near ground)
-  const kk = window.__G23WB2 != null ? window.__G23WB2 : 1; if(kk > 0) GOAL23WB.gains = goal23Bal(g, W, Math.round(H / 2 - 50 / 180 * H), Math.round(H / 2 + (window.__G23LO != null ? window.__G23LO : 40) / 180 * H), kk, window.__G23TINT || [1.05, 1, .92]); }   // white point: the listing photographer's daylight balance (p08/p21/p66 shade siding reads neutral-warm, never green)
+  const kk = window.__G23WB2 != null ? window.__G23WB2 : 1; if(kk > 0) GOAL23WB.gains = v26BalAz(g, W, Math.round(H / 2 - 50 / 180 * H), Math.round(H / 2 + (window.__G23LO != null ? window.__G23LO : 40) / 180 * H), kk, window.__G23TINT || V26.tint); }   // white point: the listing photographer's daylight balance (p08/p21/p66 shade siding reads neutral-warm, never green)
 const GOAL23WB = {};
 window.__GOAL23WB = GOAL23WB;
 // rule 9: the sky panorama gets the surroundings - Woodside is oak woodland, so from the horizon up to ~10-16 deg the
@@ -8879,6 +9045,7 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
     const key = 'hillside.phint.' + m;
     if(!force && m === 'tour' && window.__NAVGUIDE && window.__NAVGUIDE.tipsSeen()) return;   // v24 N3: the splash already showed these tips
     if(!force){ try{ if(localStorage.getItem(key)) return; localStorage.setItem(key, '1'); }catch(e){} }
+    if(window.__NAVGUIDE && window.__NAVGUIDE.showMode){ toast.hidden = true; window.__NAVGUIDE.showMode(t[0], t[1], !force); return; }   // v26 G1: one guide
     toast.innerHTML = '<b>' + t[0] + '</b>' + t[1]; toast.hidden = false; toast.classList.remove('out');
     clearTimeout(toastT); toastT = setTimeout(() => { toast.classList.add('out'); toastT = setTimeout(() => { toast.hidden = true; }, 450); }, force ? 3800 : 4600);
   }
@@ -8937,6 +9104,8 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   sync();
   window.__phDoll = {sync, bar};
 })();
+/* v26 S1: daylight exterior stops show the listing shoot's sun (their photos' light) */
+for(const st of STOPS) if(st.level === 'outside' && !st.tod && !st.aerial) st.tod = 'morning';
 /* ---------------- v20 story: per-stop time of day (patch_v20_story) ---------------- */
 (function storyTOD(){
   let own = null;                                   // the viewer's time of day while a stop shows its own
@@ -9133,12 +9302,12 @@ window.__g20P = GLASS20_PROBES; window.__glass20 = () => ({stats: GLASS20.stats,
 
 /* ================= v20 LIGHT pass: per-room daylight IBL, meter, ceilings, oak, grade (patch_v20_light.py) ================= */
 const LIGHT = {
-  ceil: 0xebebea, oakTint: 0xead6bd, oakGrain: 1.55, oakMean: [.540, .363, .237], oakRough: .38,
+  ceil: 0xebebea, oakTint: 0xdde4f3, oakLin: [.92, .97, 1.11], oakGrain: .75 /* v26 M1: linear tint from the p74 floor/wall ratio */, oakMean: [.540, .363, .237], oakRough: .38,
   glassIn: .6, openAir: ['balcony', 'frontdeck'],
   room: {on: true, W: 256, H: 128, bounceExp: .35, fRef: .06, sMin: .72, sMax: 1.12,
          ceil: '#b4b4b4', wall: '#a3a29f', floor: '#8c8883', hemiGround: 0x8f8c88, skyMix: .45, trees: '#8c9870', ground: '#a8a491', dark: '#6a655e', skyMul: 1.0},
   meter: {on: true, tin: .63, tout: .49, tdusk: 0, tduskIn: .34, kDusk: .9, duskStops: 2.3, noMeterDuskIn: .5, k: .6, protect: 2.0, noMeterIn: 1.25, gamma: .45, maxStops: .6, rate: 1.6, every: 6},
-  grade: {con: .32, sat: 1.06, wb: [.985, 1, 1.02]},
+  grade: {con: .32, sat: 1.06, wb: [1, 1, 1] /* v26 M2 */},
   outLift: .035, duskLift: .06, duskHemi: .2,
   garageDoorMean: [168, 162, 151],   // sRGB mean of tex/garage_door.jpg (beige-grey photo texture of a white-painted door)
   dusk: {mid: 0xe8955a, bot: 0x2a2a31, top: 0x34507c, band: 0x9db4cf, bandAt: .2},
@@ -9299,7 +9468,7 @@ function lightMaterials(){
     M.garageDoor.color.setRGB(t.r / m[0], t.g / m[1], t.b / m[2]); }
   if(M.ceil) M.ceil.color.copy(lin(LIGHT.ceil)); LIGHT_U.ceil.value.copy(lin(LIGHT.ceil));
   for(const k in M) if(/^paint(_|$)/.test(k) && M[k] && M[k].isMeshStandardMaterial) lightPaintCeil(M[k]);
-  const o = M.oak; if(o){ o.color.copy(lin(LIGHT.oakTint)); o.roughness = LIGHT.oakRough;
+  const o = M.oak; if(o){ o.color.copy(lin(LIGHT.oakTint)); if(LIGHT.oakLin) o.color.setRGB(...LIGHT.oakLin); o.roughness = LIGHT.oakRough;   /* v26 M1 */
     if(o.map && !o.userData.lightGrain){ o.userData.lightGrain = true; const prev = o.onBeforeCompile, pk = o.customProgramCacheKey;
       o.onBeforeCompile = (sh, r) => { if(prev) prev(sh, r); sh.uniforms.oakGrain = LIGHT_U.grain; sh.uniforms.oakMean = LIGHT_U.mean;
         sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float oakGrain; uniform vec3 oakMean;')
@@ -11811,6 +11980,190 @@ function w24Step(){
 { const _b = hwBuild; hwBuild = function(){ const was = HW.built; const r = _b.apply(this, arguments); if(!was && HW.built && !HW.on) WARM24.hwCompiled = false; return r; }; }
 { const _on = hwOn; hwOn = function(){ const r = _on.apply(this, arguments); if(HW.on) WARM24.hwEverOn = true; return r; }; }
 w24Later(4000, w24Step);
+/* v26 T1: orthophoto drapes sample at their geometric stretch (no streaks on steep hillsides) */
+const V26_FLAG = [[[-9.86, 14.04], [-11.91, 13.66], [-15.08, 15.92], [-18.06, 17.99], [-19.52, 20.78], [-19.59, 24.95], [-18.84, 26.86], [-16.98, 28.18], [-14.06, 25.67], [-11.02, 23]],
+  [[-13.06, 17.5], [-15.58, 16.19], [-20.03, 16.06], [-22.16, 22.33], [-22.26, 24.24], [-22.54, 25.54], [-20.34, 25.51]]];   // v26 Y1: BIM plan, from p18 / p47
+function v26Flagstones(){
+  const r = rnd(2611), S = 2.7, inF = (x, y) => V26_FLAG.some(P => inPoly(P, x, y)), PF = (typeof pavFields === 'function' ? pavFields() : []).map(f => f.P);
+  const onPav = (x, y) => PF.some(P => inPoly(P, x, y)); const xs = V26_FLAG.flat().map(q => q[0]), ys = V26_FLAG.flat().map(q => q[1]); const C = [];
+  for(let x = Math.min(...xs); x <= Math.max(...xs); x += S) for(let y = Math.min(...ys); y <= Math.max(...ys); y += S * .87){ const cx = x + (r() - .5) * .8 + ((Math.round(y / (S * .87)) & 1) ? S / 2 : 0), cy = y + (r() - .5) * .6;
+    if(inF(cx, cy) && !onPav(cx, cy) && !onPav(cx + 1, cy) && !onPav(cx - 1, cy) && !onPav(cx, cy + 1) && !onPav(cx, cy - 1)) C.push([cx, cy, 1.0 + r() * .45]); }
+  for(const c of C){ let m = 9; for(const d of C) if(d !== c) m = Math.min(m, Math.hypot(d[0] - c[0], d[1] - c[1])); c[2] = Math.min(c[2], m / 2 - .06); }
+  const pos = [], col = [], idx = []; let n = 0;
+  for(const [cx, cy, rad] of C){ if(rad < .45) continue; const k = 7, a0 = r() * 6.3, tone = .92 + r() * .16, b = pos.length / 3; const [wx, wz] = W2(cx, cy); pos.push(wx, ground(wx, wz) + .05, wz); col.push(tone, tone, tone * 1.02);
+    for(let i = 0; i < k; i++){ const a = a0 + i / k * 6.283 + (r() - .5) * .5, rr = rad * (.86 + r() * .22), [vx, vz] = W2(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); pos.push(vx, ground(vx, vz) + .05, vz); col.push(tone, tone, tone * 1.02); }
+    for(let i = 0; i < k; i++) idx.push(b, b + 1 + (i + 1) % k, b + 1 + i); n++; }
+  if(!n) return; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+  { const nn = g.attributes.normal; for(let i = 0; i < nn.count; i++) nn.setXYZ(i, 0, 1, 0); }   // lying flat: up-facing for both windings
+  const ms = new THREE.Mesh(g, M.flag26); ms.name = 'v26-flagstones'; ms.receiveShadow = true; grp('land').add(ms); window.__V26FLAG = n; }
+function v26TerrainStretch(){
+  const V = '#include <beginnormal_vertex>\n  v26Tb = clamp(log2(1.0 / max(objectNormal.y, 0.15)) * 1.6, 0.0, 3.5);';
+  (GROUPS.terrain ? GROUPS.terrain.children : []).forEach((m, k) => { const mat = m.material; if(!mat || mat.userData.v26T1) return; mat.userData.v26T1 = true;
+    const prev = mat.onBeforeCompile, pk = mat.customProgramCacheKey ? mat.customProgramCacheKey.bind(mat) : () => '';
+    mat.onBeforeCompile = (sh, r) => { if(prev) prev.call(mat, sh, r);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float v26Tb;').replace('#include <beginnormal_vertex>', V);
+      let f = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float v26Tb;');
+      f = f.includes('#include <map_fragment>') ? f.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.replace('texture2D( map, vUv )', 'texture2D( map, vUv, v26Tb )')) : f.replace('texture2D(map, vUv)', 'texture2D(map, vUv, v26Tb)');
+      sh.fragmentShader = f; };
+    mat.customProgramCacheKey = () => pk() + '|v26T1'; mat.needsUpdate = true; });
+  window.__V26T1 = (GROUPS.terrain ? GROUPS.terrain.children.length : 0);
+}
+{ const _bs = buildSite; buildSite = function(){ const r = _bs.apply(this, arguments); if(window.__V26T1on) try{ v26TerrainStretch(); }catch(e){ console.warn('[v26] T1', e); } try{ v26Flagstones(); }catch(e){ console.warn('[v26] Y1', e); } return r; }; }
+/* v26 laundry: FIX kinds */
+if(window.FIX && FIX.make && !FIX.__laundry26){ FIX.__laundry26 = true; const _mk = FIX.make, _sz = FIX.sizeOf;
+  const IN = 1 / 12, GAP = .125 * IN, DT = .75 * IN, KICK = 4 * IN, KICKD = 3 * IN, R2 = Math.SQRT2, HALF = Math.PI / 2;
+  const KINDS = {laundryCornerBase: 1, laundryCornerUpper: 1, laundryBase: 1, washerDryerStack: 1, faucetSpring: 1};
+  const DEF = {
+    laundryCornerBase: {leg: 38 * IN, d: 2, h: 34.75 * IN, finish: 'cabinetWhite', hw: 'nickelBrushed', pull: 'knob'},
+    laundryCornerUpper: {leg: 2, d: 1, h: 3.5, mountY: 61 * IN, finish: 'cabinetWhite', hw: 'nickelBrushed', pull: 'knob'},
+    laundryBase: {type: 'trash', w: 1.25, d: 2, h: 34.75 * IN, finish: 'cabinetWhite', hw: 'nickelBrushed', pull: 'bar', shelves: [16 * IN]},
+    washerDryerStack: {w: 28 * IN, d: 32 * IN, h: 39.75 * IN, color: 'diamondGray', gap: .75 * IN},
+    faucetSpring: {mountY: 3, finish: 'stainless'}};
+  // GE front-load pair materials: created once, registered with FIX so fixtureReflections() gives them the env map
+  const lin = c => new THREE.Color(c).convertSRGBToLinear();
+  const panelTex = dryer => canvasTex(1024, 160, (g, W, H) => {   // printed control-panel graphics (cycle names around the dial, buttons, display)
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#2d3034'); gr.addColorStop(.5, '#24272a'); gr.addColorStop(1, '#1b1d20'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(0, 0, W, 10);
+    const kx = W * .73, ky = H * .5;
+    g.font = '600 15px Helvetica, Arial, sans-serif'; g.fillStyle = '#c9ccd0'; g.textBaseline = 'middle';
+    const L = dryer ? ['MIXED LOAD', 'COTTONS', 'DELICATES', 'BULKY', 'SANITIZE'] : ['NORMAL', 'WHITES', 'TOWELS', 'BULKY', 'SANITIZE'];
+    const Rr = dryer ? ['QUICK DRY', 'TIMED DRY', 'STEAM REFRESH', 'ACTIVEWEAR', 'AIR FLUFF'] : ['QUICK WASH', 'DELICATES', 'COLD WASH', 'RINSE & SPIN', 'SELF CLEAN'];
+    L.forEach((t, i) => { g.textAlign = 'right'; g.fillText(t, kx - 82, ky + (i - 2) * 26); });
+    Rr.forEach((t, i) => { g.textAlign = 'left'; g.fillText(t, kx + 82, ky + (i - 2) * 26); });
+    g.strokeStyle = '#8a8e93'; g.lineWidth = 2;                                  // buttons: rounded outlines with tiny labels
+    const bx0 = dryer ? W * .22 : W * .36; for(let i = 0; i < 4; i++){ const x = bx0 + i * 46; g.beginPath(); g.arc(x, ky + 30, 13, 0, 7); g.stroke(); }
+    g.font = '500 11px Helvetica, Arial, sans-serif'; g.textAlign = 'center'; ['TEMP', 'SOIL', 'SPIN', 'OPTIONS'].forEach((t, i) => g.fillText(dryer && i < 2 ? ['DRY', 'TEMP'][i] : t, bx0 + i * 46, ky + 56));
+    g.fillStyle = '#050607'; g.fillRect(bx0 - 14, ky - 52, 170, 46);             // display window
+    g.fillStyle = '#e8f1ff'; g.font = '700 30px Helvetica, Arial, sans-serif'; g.textAlign = 'left'; g.fillText(dryer ? '0:45' : '1:05', bx0 + 4, ky - 29);
+    g.fillStyle = '#9fa3a8'; g.beginPath(); g.arc(W * .955, ky - 30, 12, 0, 7); g.fill();   // power / start
+    g.fillStyle = '#c9ccd0'; g.font = '600 13px Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.fillText('START', W * .955, ky + 6);
+  }, null);
+  const GE = {
+    geBody: new THREE.MeshPhysicalMaterial({color: lin(0x5c5f63), metalness: .6, roughness: .36, clearcoat: 1, clearcoatRoughness: .08, envMapIntensity: 1.1}),
+    geTrim: new THREE.MeshPhysicalMaterial({color: lin(0x121315), metalness: .2, roughness: .25, clearcoat: .8, clearcoatRoughness: .1}),
+    geChrome: new THREE.MeshStandardMaterial({color: lin(0x9a9ea3), metalness: 1, roughness: .16, envMapIntensity: 1.1}),
+    geSatin: new THREE.MeshStandardMaterial({color: lin(0x8d9196), metalness: .9, roughness: .38}),
+    geGlass: new THREE.MeshPhysicalMaterial({color: lin(0x1a1f23), metalness: 0, roughness: .03, transparent: true, opacity: .5, clearcoat: 1, clearcoatRoughness: .02, depthWrite: false, envMapIntensity: 1.6}),
+    geRubber: new THREE.MeshStandardMaterial({color: lin(0x2b2d30), roughness: .85}),
+    geDrum: new THREE.MeshStandardMaterial({color: lin(0x6d7176), metalness: .85, roughness: .5}),
+    gePanelW: new THREE.MeshPhysicalMaterial({color: 0xffffff, map: panelTex(false), metalness: .2, roughness: .3, clearcoat: 1, clearcoatRoughness: .05}),
+    gePanelD: new THREE.MeshPhysicalMaterial({color: 0xffffff, map: panelTex(true), metalness: .2, roughness: .3, clearcoat: 1, clearcoatRoughness: .05})};
+  for(const k in GE) GE[k].name = k;
+  FIX.setMaterials(GE); { const _mn = FIX.materialNames; FIX.materialNames = () => _mn().concat(Object.keys(GE)); }
+  const sizeOf = (k, O) => k === 'laundryBase' ? [O.w, O.d, O.h] : k === 'washerDryerStack' ? [O.w, O.d + .1, 2 * O.h + O.gap] : k === 'faucetSpring' ? [.3, .35, O.mountY + 1.75]
+    : [R2 * O.leg, (O.leg + O.d) / R2, (O.mountY || 0) + O.h];
+  // ---- shared joinery
+  function shaker(b, m, w, h, cx, cy, zf){   // 5-piece Shaker overlay front (Delano): 2-3/4" frame, recessed flat panel
+    const f = Math.max(1.1 * IN, Math.min(2.75 * IN, w * .24, h * .24)), zc = zf - DT / 2, r = .006;
+    b.rbox(m, f, h, DT, r, cx - w / 2 + f / 2, cy, zc); b.rbox(m, f, h, DT, r, cx + w / 2 - f / 2, cy, zc);
+    b.rbox(m, w - 2 * f + .004, f, DT, r, cx, cy + h / 2 - f / 2, zc); b.rbox(m, w - 2 * f + .004, f, DT, r, cx, cy - h / 2 + f / 2, zc);
+    b.box(m, w - 2 * f + .01, h - 2 * f + .01, DT - .3 * IN, cx, cy, zf - DT + (DT - .3 * IN) / 2); return f; }
+  function knob(b, m, x, y, z){ b.lathe(m, [[0, 0], [.028, 0], [.018, .03], [.02, .07], [.05, .09], [.055, .11], [.045, .128], [0, .132]], 18, x, y, z, {rx: HALF}); }
+  function barH(b, m, len, x, y, z){ const r = .021, so = .1;
+    b.cyl(m, r, r, len, x, y, z + so, 14, {rz: HALF});
+    for(const sx of [-1, 1]) b.cyl(m, .016, .02, so, x + sx * (len / 2 - .045), y, z + so / 2, 10, {rx: HALF}); }
+  // plan polygon [[x,z]] -> extruded prism from y0 to y1 (fixtures.js planShape convention)
+  function prism(b, m, pts, y0, y1){ const sh = new THREE.Shape(pts.map(q => new THREE.Vector2(q[0], -q[1])));
+    b.extrude(m, sh, y1 - y0, FIX.helpers.M(0, y0, 0, -HALF, 0, 0)); }
+  const cornerPoly = (L, D, zf) => { const zs = (L + D) / R2, k = zf - zs;   // pentagon; the face pulled back by k
+    return [[0, 0], [L / R2, L / R2], [(L - D) / R2 - k, zs + k], [-(L - D) / R2 + k, zs + k], [-L / R2, L / R2]]; };
+  // ---- kinds
+  function cornerBase(b, O){
+    const L = O.leg, D = O.d, h = O.h, fin = O.finish, zs = (L + D) / R2, wf = R2 * (L - D);
+    prism(b, fin, cornerPoly(L, D, zs - DT), KICK, h);
+    prism(b, fin, cornerPoly(L, D, zs - DT - KICKD), 0, KICK);
+    const top = h - GAP / 2, fh = .52, x0 = -wf / 2 + GAP / 2, x1 = wf / 2 - GAP / 2, W = x1 - x0;
+    shaker(b, fin, W, fh - GAP, 0, top - fh / 2, zs);                                     // false front (no hardware)
+    const dy0 = KICK + GAP / 2, dy1 = top - fh - GAP / 2, dh = dy1 - dy0, f = shaker(b, fin, W, dh, 0, (dy0 + dy1) / 2, zs);
+    knob(b, O.hw, x1 - f / 2, dy1 - .2, zs); }
+  function cornerUpper(b, O){
+    const L = O.leg, D = O.d, y0 = O.mountY, y1 = y0 + O.h, fin = O.finish, zs = (L + D) / R2, wf = R2 * (L - D);
+    prism(b, fin, cornerPoly(L, D, zs - DT), y0, y1);
+    const W = wf - GAP, f = shaker(b, fin, W, O.h - GAP, 0, (y0 + y1) / 2, zs);
+    knob(b, O.hw, W / 2 - f / 2, y0 + GAP / 2 + .2, zs); }
+  function base(b, O){
+    const w = O.w, d = O.d, h = O.h, fin = O.finish, zf = d;
+    if(O.type === 'open'){ const t = DT;   // open base: two finished sides, back, top, shelves (the lowest is the bottom deck), no toe kick
+      b.bb(fin, -w / 2, 0, 0, -w / 2 + t, h, d); b.bb(fin, w / 2 - t, 0, 0, w / 2, h, d);
+      b.bb(fin, -w / 2 + t, 0, 0, w / 2 - t, h, .25 * IN);
+      b.bb(fin, -w / 2 + t, h - t, 0, w / 2 - t, h, d);
+      for(const y of (O.shelves || [])) b.bb(fin, -w / 2 + t, y - t, .25 * IN, w / 2 - t, y, d - .02, .004);
+      return; }
+    b.bb(fin, -w / 2, KICK, 0, w / 2, h, d - DT); b.bb(fin, -w / 2, 0, 0, w / 2, KICK, d - DT - KICKD);
+    const top = h - GAP / 2, dr = .52, X0 = -w / 2 + GAP / 2, W = w - GAP;
+    shaker(b, fin, W, dr - GAP, 0, top - dr / 2, zf); barH(b, O.hw, w > 1.4 ? 7 * IN : 5 * IN, 0, top - dr / 2, zf);   // drawer
+    const y0 = KICK + GAP / 2, y1 = top - dr - GAP / 2; shaker(b, fin, W, y1 - y0, 0, (y0 + y1) / 2, zf);
+    barH(b, O.hw, w > 1.4 ? 7 * IN : 5 * IN, 0, y1 - .22, zf); }                         // pull-out front: bar near the top
+  /* GE 28" front-load washer / matching dryer (spec sheets: 28" W, 39-3/4" H, 32" D incl. door; ~23" door ring). Local frame: back at
+     z = 0, front +z, x centred. Rounded clear-coated cabinet, a gloss control console with printed graphics, a chrome cycle dial,
+     a thick chrome door ring around a smoked glass porthole with real depth (bezel, rubber gasket, stainless drum with lifters),
+     a washer detergent drawer and the UltraFresh vent band, a recessed kick panel. */
+  function geUnit(b, y0, O, dryer){
+    const w = O.w, d = O.d, h = O.h, zb = d - .36, r = .07;                 // zb: cabinet front plane; the door stands ~4" proud (32" incl. door)
+    b.rbox('geBody', w, h - .08, zb, r, 0, y0 + .08 + (h - .08) / 2, zb / 2, {seg: 3});
+    b.bb('geTrim', -w / 2 + .1, y0, .3, w / 2 - .1, y0 + .1, zb - .06);       // feet / plinth shadow
+    b.bb('geTrim', -w / 2 + .08, y0 + .1, zb - .02, w / 2 - .08, y0 + .26, zb + .004, .01);   // kick panel
+    // console: gloss band across the top of the front, printed face, dial, logo
+    const ph = .46, py = y0 + h - .06 - ph / 2;
+    b.rbox('geTrim', w - .06, ph, .06, .03, 0, py, zb + .005, {seg: 2});
+    b.add(dryer ? 'gePanelD' : 'gePanelW', new THREE.PlaneGeometry(w - .14, ph - .08), FIX.helpers.M(0, py, zb + .036));
+    const kx = (w - .14) * (.73 - .5), kr = .155;                            // dial position follows the printed panel
+    b.cyl('geChrome', kr + .025, kr + .025, .03, kx, py, zb + .045, 40, {rx: HALF});
+    b.cyl('geTrim', kr - .012, kr - .02, .06, kx, py, zb + .085, 40, {rx: HALF});
+    b.torus('geChrome', kr - .012, .012, kx, py, zb + .115, 8, 40);
+    b.box('geChrome', .016, .07, .01, kx, py + kr - .06, zb + .118);
+    b.cyl('geChrome', .045, .045, .012, -(w - .14) / 2 + .1, py + .1, zb + .04, 24, {rx: HALF});   // GE monogram badge
+    if(!dryer){ // detergent drawer: proud front with a finger recess, at the console's left
+      const dw = .62, dx = -w / 2 + .1 + dw / 2;
+      b.rbox('geBody', dw, ph - .1, .05, .02, dx, py, zb + .06, {seg: 2});
+      b.rbox('geTrim', .3, .06, .03, .015, dx, py - .07, zb + .08, {seg: 1}); }
+    // door: ~23" chrome ring standing ~4" proud of the cabinet, smoked glass porthole with real depth behind it
+    const cy = y0 + .26 + (h - .26 - ph - .06) * .5 + .02, R = Math.min(w * .41, .96), zd = zb + .22, gR = R - .17;
+    b.cyl('geDrum', gR - .04, gR - .04, .01, 0, cy, zb + .006, 40, {rx: HALF});                       // drum back
+    b.cyl('geDrum', gR - .04, gR - .04, .23, 0, cy, zb + .12, 40, {rx: HALF, open: true});              // drum shell
+    for(let i = 0; i < 3; i++){ const a = i * Math.PI * 2 / 3 + .4; b.boxR('geSatin', .07, .09, .2, Math.cos(a) * (gR - .1), cy + Math.sin(a) * (gR - .1), zb + .12, 0, 0, a + HALF); }   // lifters
+    b.cyl('geRubber', R + .02, R - .02, .2, 0, cy, zb + .11, 48, {rx: HALF, open: true});                // door hinge collar / shadow side
+    b.torus('geRubber', gR - .01, .06, 0, cy, zb + .23, 10, 48);                                         // gasket (bellows)
+    b.lathe('geChrome', [[R - .14, 0], [R + .02, 0], [R + .06, .03], [R + .05, .09], [R, .12], [R - .1, .12], [R - .15, .09], [R - .17, .05]], 56, 0, cy, zd, {rx: HALF});   // thick ring
+    b.lathe('geTrim', [[R - .3, 0], [R - .15, 0], [R - .15, .09], [R - .2, .1], [R - .3, .03]], 48, 0, cy, zd, {rx: HALF});   // dark inner bezel
+    const sr = gR / Math.sin(.62);                                                                       // glass dome bulging forward
+    b.sphere('geGlass', sr, 0, cy, zd + .15 - sr, 48, 8, {thetaLength: .62, rx: HALF});
+    b.rbox('geChrome', .07, .5, .07, .03, R + .03, cy, zd + .08, {seg: 2});   // handle on the ring's right
+    if(!dryer){ // UltraFresh Vent System: perforated satin band over the top of the ring
+      for(let i = 0; i < 38; i++){ const a = Math.PI * (.08 + .84 * i / 37); b.boxR('geSatin', .018, .075, .02, Math.cos(a) * (R + .13), cy + Math.sin(a) * (R + .13), zb + .012, 0, 0, a - HALF); } }
+    else b.cyl('geChrome', .04, .04, .01, 0, cy + R - .05, zd + .125, 20, {rx: HALF}); }      // dryer: badge on the ring
+  function wdStack(b, O){
+    geUnit(b, 0, O, false);
+    b.bb('geTrim', -O.w / 2 + .02, O.h - .005, .1, O.w / 2 - .02, O.h + O.gap + .005, O.d - .38);   // GFA28KITN stacking-kit seam
+    b.bb('geSatin', -O.w / 2 + .02, O.h + O.gap * .35, O.d - .385, O.w / 2 - .02, O.h + O.gap * .65, O.d - .375);
+    geUnit(b, O.h + O.gap, O, true); }
+  function faucet(b, O){ const m = O.finish, y = O.mountY;
+    b.lathe(m, [[0, 0], [.085, 0], [.085, .012], [.07, .025], [0, .028]], 24, 0, y, 0);
+    b.lathe(m, [[0, .02], [.05, .02], [.05, .5], [.04, .56], [.032, .62], [.03, .8], [0, .8]], 24, 0, y, 0);
+    b.cyl(m, .03, .03, .07, .065, y + .4, 0, 14, {rz: HALF}); b.rod(m, [.09, y + .4, 0], [.13, y + .58, .02], .014, 8);   // side lever
+    b.rod(m, [0, y + .66, 0], [0, y + .66, .14], .02, 10); b.lathe(m, [[0, 0], [.035, 0], [.042, .03], [.042, .2], [.03, .26], [0, .26]], 18, 0, y + .5, .16);   // dock + spray head
+    const pts = [], H0 = y + .8, H1 = y + 1.62, turns = 14;                               // coil spring around the hose
+    for(let i = 0; i <= turns * 10; i++){ const t = i / (turns * 10), a = t * turns * Math.PI * 2; pts.push([Math.cos(a) * .045, H0 + t * (H1 - H0), Math.sin(a) * .045]); }
+    b.tube(m, pts, .008, turns * 10, 4);
+    b.tube(m, [[0, H1, 0], [0, H1 + .1, .02], [0, H1 + .12, .1], [0, H1 + .02, .17], [0, y + .78, .16]], .02, 16, 8); }   // hose arc to the head
+  const _fp = FIX.footprintOf;   // exact plan footprint for the model checks (corner pieces are pentagons), inset 0.03 ft like the rectangles
+  FIX.footprintOf = function(kind, o){ if(kind !== 'laundryCornerBase' && kind !== 'laundryCornerUpper') return _fp ? _fp.apply(this, arguments) : null;
+    const O = Object.assign({}, DEF[kind], o || {}), e = .03, L = O.leg - e * R2, D = O.d - 2 * e;
+    return cornerPoly(L, D, (L + D) / R2).map(([x, zz]) => [x, zz + e * R2]); };
+  FIX.sizeOf = function(kind, o){ if(!KINDS[kind]) return _sz.apply(this, arguments); return sizeOf(kind, Object.assign({}, DEF[kind], o || {})); };
+  FIX.make = function(kind, o){ if(!KINDS[kind]) return _mk.apply(this, arguments);
+    const O = Object.assign({}, DEF[kind], o || {}), b = new FIX.helpers.Builder();
+    ({laundryCornerBase: cornerBase, laundryCornerUpper: cornerUpper, laundryBase: base, washerDryerStack: wdStack, faucetSpring: faucet})[kind](b, O);
+    const g = b.build(kind); g.userData = {kind, category: kind === 'washerDryerStack' ? 'laundry' : 'kitchen', opts: O, size: sizeOf(kind, O)}; return g; };
+  try{ // white quartzite (p04): near-white ground, broad soft grey drifts and a few fine darker veins running one way; 6 ft tile
+    const map = canvasTex(512, 512, (g, W, H) => { const r = rnd(2611); g.fillStyle = '#f3f3f1'; g.fillRect(0, 0, W, H);
+      const vein = (wd, col, al, blur, n) => { for(let k = 0; k < n; k++){ const y0 = r() * H, sl = -.35 + r() * .2; g.save(); g.filter = `blur(${blur}px)`; g.globalAlpha = al * (.5 + r() * .5);
+        g.strokeStyle = col; g.lineWidth = wd * (.5 + r()); g.lineCap = 'round'; for(const oy of [-H, 0, H]){ g.beginPath(); let x = -40, y = y0 + oy; g.moveTo(x, y);
+          while(x < W + 40){ x += 20 + r() * 25; y += sl * 30 + (r() - .5) * 13; g.lineTo(x, y); } g.stroke(); } g.restore(); } };
+      vein(35, '#d9dbdd', .5, 13, 7); vein(9, '#c3c6ca', .45, 4, 9); vein(1.6, '#a3a8ae', .45, .6, 10); vein(.8, '#8e939a', .35, 0, 8); }, [6, 6]);
+    const q = new THREE.MeshStandardMaterial({color: new THREE.Color(0xe4e4e2).convertSRGBToLinear(), map, roughness: .34, metalness: 0, envMapIntensity: .55}); q.name = 'quartziteWhite';   // honed-polished, albedo ~0.75 (p04 reads light grey-white, not paper white)
+    FIX.setMaterials({quartziteWhite: q}); }catch(e){ console.warn('[laundry26] quartzite', e); }
+}
 boot();
 })();
 </script>

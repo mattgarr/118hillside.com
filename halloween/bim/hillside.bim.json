@@ -5457,7 +5457,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-A",
+   "type": "AW-A",
    "tag": "006",
    "center": [
     -19.324,
@@ -5479,7 +5479,8 @@
    "note": "Adu Laundry",
    "schedule": {
     "source": "photos v19",
-    "evidence": "laundry: 2x2 casement just above the backsplash (p04)"
+    "evidence": "laundry: 2x2 casement just above the backsplash (p04)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -5547,14 +5548,15 @@
    "operation": "SINGLE_SWING",
    "swing": {
     "hinge": "start",
-    "side": "reverse"
+    "side": "normal"
    },
    "openAngle": 78,
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "swingRule": "v26 laundry L7: out-swing into the hallway, hinges left from the hall (2024 order, left hand reverse)"
   },
   {
    "id": "L1-O03",
@@ -5587,7 +5589,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-B",
+   "type": "AW-B",
    "tag": "G01A",
    "center": [
     9.486,
@@ -5609,7 +5611,8 @@
    "note": "Garage",
    "schedule": {
     "source": "A0.1 + photos v19",
-    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)"
+    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -5986,7 +5989,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-A",
+   "type": "AW-A",
    "tag": "G01B",
    "center": [
     17.6,
@@ -6008,7 +6011,8 @@
    "note": "Garage side window (relocated toward the front)",
    "schedule": {
     "source": "photos v19",
-    "evidence": "garage side window: casement 2x2 (p29), was modelled double-hung"
+    "evidence": "garage side window: casement 2x2 (p29), was modelled double-hung",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6016,7 +6020,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-A",
+   "type": "AW-A",
    "tag": "003B",
    "center": [
     -28.678,
@@ -6038,7 +6042,8 @@
    "note": "Adu Bath",
    "schedule": {
     "source": "photos v19",
-    "evidence": "lower bath: 2x2 casement, high sill (p60, p68, x09)"
+    "evidence": "lower bath: 2x2 casement, high sill (p60, p68, x09)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6118,7 +6123,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-A",
+   "type": "AW-A",
    "tag": "003A",
    "center": [
     -34.061,
@@ -6140,7 +6145,8 @@
    "note": "Adu Bath",
    "schedule": {
     "source": "photos v19",
-    "evidence": "lower bath: 2x2 casement, high sill (p47, x09)"
+    "evidence": "lower bath: 2x2 casement, high sill (p47, x09)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6648,7 +6654,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-2",
+   "type": "CS-HS",
    "tag": "005",
    "center": [
     -39.939,
@@ -6670,7 +6676,8 @@
    "note": "Adu Bed 2",
    "schedule": {
     "source": "photos v19",
-    "evidence": "lower bedroom 2: plain casement pair (p64)"
+    "evidence": "lower bedroom 2: plain casement pair (p64)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6678,7 +6685,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-A",
+   "type": "CS-H1",
    "tag": "008A",
    "center": [
     -4.348,
@@ -6700,7 +6707,8 @@
    "note": "Adu Office",
    "schedule": {
     "source": "A0.1 + photos v19",
-    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)"
+    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6708,7 +6716,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L1",
-   "type": "CS-A",
+   "type": "CS-H1",
    "tag": "008B",
    "center": [
     -2.48,
@@ -6730,7 +6738,8 @@
    "note": "Adu Office",
    "schedule": {
     "source": "A0.1 + photos v19",
-    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)"
+    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6864,7 +6873,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L2",
-   "type": "CS-A",
+   "type": "AW-A",
    "tag": "202B",
    "center": [
     -36.976,
@@ -6886,7 +6895,8 @@
    "note": "Primary Bedroom",
    "schedule": {
     "source": "A0.1 + photos v19",
-    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)"
+    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6894,7 +6904,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L2",
-   "type": "CS-A",
+   "type": "AW-A",
    "tag": "202C",
    "center": [
     -28.744,
@@ -6916,7 +6926,8 @@
    "note": "Primary Bedroom",
    "schedule": {
     "source": "A0.1 + photos v19",
-    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)"
+    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -6996,7 +7007,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L2",
-   "type": "CS-A",
+   "type": "FX-A",
    "tag": "201B",
    "center": [
     -16.804,
@@ -7018,7 +7029,8 @@
    "note": "Primary Bath",
    "schedule": {
     "source": "A0.1 + photos v19",
-    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)"
+    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -7026,7 +7038,7 @@
    "ifc": "IfcWindow",
    "kind": "window",
    "storey": "L2",
-   "type": "CS-A",
+   "type": "AW-A",
    "tag": "201A",
    "center": [
     -21.568,
@@ -7048,7 +7060,8 @@
    "note": "Primary Bath",
    "schedule": {
     "source": "A0.1 + photos v19",
-    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)"
+    "evidence": "2023 addition casement, 2x2 lites (p06, p24-p26, p36, p40, p45, p47, x06)",
+    "order": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   {
@@ -9178,7 +9191,8 @@
    ],
    "z": -4.56,
    "thickness": 0.06,
-   "finish": "tile-floor"
+   "finish": "stone-entry",
+   "finishRule": "v26 laundry L6: Quartziti Glacier (A3 Tile final order)"
   },
   {
    "id": "L1-S01-F01",
@@ -13384,30 +13398,6 @@
    }
   },
   {
-   "id": "FX-washerFront-07",
-   "ifc": "IfcElectricAppliance",
-   "kind": "washerFront",
-   "at": [
-    -20.9,
-    -29.85,
-    -4.56
-   ],
-   "rot": 90,
-   "opts": {}
-  },
-  {
-   "id": "FX-dryerFront-08",
-   "ifc": "IfcElectricAppliance",
-   "kind": "dryerFront",
-   "at": [
-    -18.6,
-    -29.85,
-    -4.56
-   ],
-   "rot": 90,
-   "opts": {}
-  },
-  {
    "id": "FX-vanity-09",
    "ifc": "IfcSanitaryTerminal",
    "kind": "vanity",
@@ -15574,9 +15564,16 @@
    "bottom": 8.1,
    "width": 0.46,
    "depth": 0.625,
-   "material": "fir",
+   "material": "cherry",
    "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault | v21 int21: 5.5 x 7.5 in (p44/p59)",
-   "by": "v19-living"
+   "by": "v19-living",
+   "finish": "natural",
+   "uplight": {
+    "length": 4.0,
+    "cct": 2700,
+    "visible": false,
+    "source": "owner 10/31: 4 ft 2700K LED bar on the beam top (hidden), washes the vault"
+   }
   },
   {
    "id": "LT-LIV-CABLE1",
@@ -15586,11 +15583,18 @@
    "host": "L1-LIV-BM1",
    "kind": "cableTrack",
    "name": "Low-voltage cable lighting under the beam",
-   "heads": 6,
+   "heads": 5,
    "drop": 0.3,
-   "wireGap": 0.26,
-   "source": "v19 living: p44/p59 - two tensioned wires under each beam, standoffs at the ends, small chrome spot heads",
-   "by": "v19-living"
+   "wireGap": 0.2916666666666667,
+   "source": "v19 living: p44/p59 - two tensioned wires under each beam, standoffs at the ends, small chrome spot heads; v26 B1: owner product 700KHELLO3, spec sheet, p44/p59 count",
+   "by": "v19-living",
+   "product": "Visual Comfort (Generation Lighting) Kable Lite K-Hello head 700KHELLO3",
+   "finish": "satin aluminum",
+   "louver": "egg-crate",
+   "lamp": "MR16",
+   "cct": 2700,
+   "headDia": 0.19166666666666665,
+   "headMount": "across both cables"
   },
   {
    "id": "L1-LIV-BM2",
@@ -15604,9 +15608,16 @@
    "bottom": 8.1,
    "width": 0.46,
    "depth": 0.625,
-   "material": "fir",
+   "material": "cherry",
    "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault | v21 int21: 5.5 x 7.5 in (p44/p59)",
-   "by": "v19-living"
+   "by": "v19-living",
+   "finish": "natural",
+   "uplight": {
+    "length": 4.0,
+    "cct": 2700,
+    "visible": false,
+    "source": "owner 10/31: 4 ft 2700K LED bar on the beam top (hidden), washes the vault"
+   }
   },
   {
    "id": "LT-LIV-CABLE2",
@@ -15616,11 +15627,18 @@
    "host": "L1-LIV-BM2",
    "kind": "cableTrack",
    "name": "Low-voltage cable lighting under the beam",
-   "heads": 6,
+   "heads": 5,
    "drop": 0.3,
-   "wireGap": 0.26,
-   "source": "v19 living: p44/p59 - two tensioned wires under each beam, standoffs at the ends, small chrome spot heads",
-   "by": "v19-living"
+   "wireGap": 0.2916666666666667,
+   "source": "v19 living: p44/p59 - two tensioned wires under each beam, standoffs at the ends, small chrome spot heads; v26 B1: owner product 700KHELLO3, spec sheet, p44/p59 count",
+   "by": "v19-living",
+   "product": "Visual Comfort (Generation Lighting) Kable Lite K-Hello head 700KHELLO3",
+   "finish": "satin aluminum",
+   "louver": "egg-crate",
+   "lamp": "MR16",
+   "cct": 2700,
+   "headDia": 0.19166666666666665,
+   "headMount": "across both cables"
   },
   {
    "id": "L1-LIV-BM3",
@@ -15634,9 +15652,16 @@
    "bottom": 8.1,
    "width": 0.46,
    "depth": 0.625,
-   "material": "fir",
+   "material": "cherry",
    "source": "v19 living: p44/p51/p59 - three E-W fir beams ~5.5 x 10 in, ends cut to the vault, mid-height of the vault | v21 int21: 5.5 x 7.5 in (p44/p59)",
-   "by": "v19-living"
+   "by": "v19-living",
+   "finish": "natural",
+   "uplight": {
+    "length": 4.0,
+    "cct": 2700,
+    "visible": false,
+    "source": "owner 10/31: 4 ft 2700K LED bar on the beam top (hidden), washes the vault"
+   }
   },
   {
    "id": "LT-LIV-CABLE3",
@@ -15646,11 +15671,18 @@
    "host": "L1-LIV-BM3",
    "kind": "cableTrack",
    "name": "Low-voltage cable lighting under the beam",
-   "heads": 6,
+   "heads": 5,
    "drop": 0.3,
-   "wireGap": 0.26,
-   "source": "v19 living: p44/p59 - two tensioned wires under each beam, standoffs at the ends, small chrome spot heads",
-   "by": "v19-living"
+   "wireGap": 0.2916666666666667,
+   "source": "v19 living: p44/p59 - two tensioned wires under each beam, standoffs at the ends, small chrome spot heads; v26 B1: owner product 700KHELLO3, spec sheet, p44/p59 count",
+   "by": "v19-living",
+   "product": "Visual Comfort (Generation Lighting) Kable Lite K-Hello head 700KHELLO3",
+   "finish": "satin aluminum",
+   "louver": "egg-crate",
+   "lamp": "MR16",
+   "cct": 2700,
+   "headDia": 0.19166666666666665,
+   "headMount": "across both cables"
   },
   {
    "id": "L1-O60",
@@ -17096,9 +17128,10 @@
    ],
    "z": -4.56,
    "thickness": 0.06,
-   "finish": "tile-floor",
+   "finish": "stone-entry",
    "name": "Threshold Adu Laundry",
-   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)",
+   "finishRule": "v26 laundry L6: Quartziti Glacier (A3 Tile final order)"
   },
   {
    "id": "L1-O07-P-THR",
@@ -17999,6 +18032,352 @@
    "finish": "oak",
    "name": "Threshold Bedroom 2 closet",
    "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "LX-SINKBASE",
+   "ifc": "IfcFurniture",
+   "kind": "laundryCornerBase",
+   "at": [
+    -23.294,
+    -29.916,
+    -4.56
+   ],
+   "rot": 45.0,
+   "opts": {
+    "finish": "cabinetWhite",
+    "hw": "nickelBrushed",
+    "style": "shaker",
+    "leg": 3.1666666666666665,
+    "d": 2.0,
+    "h": 2.895833333333333,
+    "pull": "knob"
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L2 corner sink base, 45-degree face (drawing SB18L / diagonal sink base)",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
+   "product": "Crystal Cabinets premium, Delano (Preston) white painted Shaker overlay"
+  },
+  {
+   "id": "LX-TRASH",
+   "ifc": "IfcFurniture",
+   "kind": "laundryBase",
+   "at": [
+    -23.294,
+    -26.1243,
+    -4.56
+   ],
+   "rot": 0.0,
+   "opts": {
+    "finish": "cabinetWhite",
+    "hw": "nickelBrushed",
+    "style": "shaker",
+    "type": "trash",
+    "w": 1.25,
+    "d": 2.0,
+    "h": 2.895833333333333,
+    "pull": "bar"
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L2 BWRB15 pull-out wastebasket base, right of the sink",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
+   "product": "Crystal Cabinets BWRB15"
+  },
+  {
+   "id": "LX-OPENBASE",
+   "ifc": "IfcFurniture",
+   "kind": "laundryBase",
+   "at": [
+    -18.5742,
+    -29.916,
+    -4.56
+   ],
+   "rot": 90.0,
+   "opts": {
+    "finish": "cabinetWhite",
+    "hw": "nickelBrushed",
+    "style": "shaker",
+    "type": "open",
+    "w": 3.1063333333333327,
+    "d": 2.0,
+    "h": 2.895833333333333,
+    "shelves": [
+     0.375,
+     1.5
+    ]
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L2 BFDNDMI36 open base (no doors, basket storage, tiled floor base), left of the sink",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
+   "product": "Crystal Cabinets BFDNDMI36 (modified: open)"
+  },
+  {
+   "id": "LX-WD",
+   "ifc": "IfcElectricAppliance",
+   "kind": "washerDryerStack",
+   "at": [
+    -23.169,
+    -24.3657,
+    -4.56
+   ],
+   "rot": 0.0,
+   "opts": {
+    "w": 2.2465,
+    "d": 2.6666666666666665,
+    "h": 3.3125,
+    "color": "diamondGray"
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L5 stacked GE 28in front-load washer + dryer (GFA28KITN stack kit), Diamond Gray",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
+   "product": {
+    "manufacturer": "GE Appliances",
+    "model": "GE 28in front-load washer/dryer pair, stacked (exact model not on record)",
+    "evidence": "photo p04 (GE badges, UltraFresh Vent System washer), eBay GFA28KITN order Feb 2026, owner 10/31/26"
+   }
+  },
+  {
+   "id": "LX-COUNTER",
+   "ifc": "IfcFurniture",
+   "kind": "counterTop",
+   "at": [
+    0,
+    0,
+    -4.56
+   ],
+   "rot": 0,
+   "opts": {
+    "mountY": -1.6642,
+    "t": 0.1042,
+    "mat": "quartziteWhite",
+    "noSplash": true,
+    "outlines": [
+     [
+      [
+       -23.294,
+       -29.916
+      ],
+      [
+       -17.021,
+       -29.916
+      ],
+      [
+       -17.021,
+       -27.8327
+      ],
+      [
+       -20.0928,
+       -27.8327
+      ],
+      [
+       -21.2107,
+       -26.7148
+      ],
+      [
+       -21.2107,
+       -25.4993
+      ],
+      [
+       -23.294,
+       -25.4993
+      ]
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -21.1526,
+       -28.6408
+      ],
+      [
+       -22.0188,
+       -27.7746
+      ],
+      [
+       -21.2705,
+       -27.0263
+      ],
+      [
+       -20.4043,
+       -27.8925
+      ]
+     ]
+    ]
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L3 L-shaped quartzite top, 25in deep, chamfered over the corner sink base, ends at the washer/dryer",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26"
+  },
+  {
+   "id": "LX-SPLASH-M",
+   "ifc": "IfcFurniture",
+   "kind": "counter",
+   "at": [
+    -23.294,
+    -27.7077,
+    -4.56
+   ],
+   "rot": 0.0,
+   "opts": {
+    "w": 4.4167,
+    "d": 0.0625,
+    "t": 0.3333,
+    "mat": "quartziteWhite",
+    "mountY": 3.0
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L3 4in quartzite splash, machine wall",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26"
+  },
+  {
+   "id": "LX-SPLASH-W",
+   "ifc": "IfcFurniture",
+   "kind": "counter",
+   "at": [
+    -20.1262,
+    -29.916,
+    -4.56
+   ],
+   "rot": 90.0,
+   "opts": {
+    "w": 6.2105,
+    "d": 0.0625,
+    "t": 0.3333,
+    "mat": "quartziteWhite",
+    "mountY": 3.0
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L3 4in quartzite splash, window wall",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26"
+  },
+  {
+   "id": "LX-SINK",
+   "ifc": "IfcSanitaryTerminal",
+   "kind": "sinkUndermount",
+   "at": [
+    -21.5946,
+    -28.2166,
+    -4.56
+   ],
+   "rot": 45.0,
+   "opts": {
+    "w": 1.25,
+    "d": 1.0833,
+    "depth": 0.65,
+    "mountY": 2.8958
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L3 undermount single bowl on the diagonal (photo p04)",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26"
+  },
+  {
+   "id": "LX-FAUCET",
+   "ifc": "IfcSanitaryTerminal",
+   "kind": "faucetSpring",
+   "at": [
+    -21.7831,
+    -28.4051,
+    -4.56
+   ],
+   "rot": 45.0,
+   "opts": {
+    "mountY": 3.0,
+    "finish": "stainless"
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L3 spring pull-down faucet behind the bowl (photo p04)",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26"
+  },
+  {
+   "id": "LX-UC-CORNER",
+   "ifc": "IfcFurniture",
+   "kind": "laundryCornerUpper",
+   "at": [
+    -23.294,
+    -29.916,
+    -4.56
+   ],
+   "rot": 45.0,
+   "opts": {
+    "finish": "cabinetWhite",
+    "hw": "nickelBrushed",
+    "style": "shaker",
+    "mountY": 5.0833,
+    "h": 3.5,
+    "d": 1.0,
+    "pull": "knob",
+    "crown": false,
+    "leg": 2.0
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L4 WCD2442 diagonal corner wall cabinet",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
+   "product": "Crystal Cabinets WCD2442 12L"
+  },
+  {
+   "id": "LX-UC-W30",
+   "ifc": "IfcFurniture",
+   "kind": "upperCabinet",
+   "at": [
+    -23.294,
+    -26.7077,
+    -4.56
+   ],
+   "rot": 0.0,
+   "opts": {
+    "finish": "cabinetWhite",
+    "hw": "nickelBrushed",
+    "style": "shaker",
+    "mountY": 5.0833,
+    "h": 3.5,
+    "d": 1.0,
+    "pull": "knob",
+    "crown": false,
+    "w": 2.4167
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L4 W3042 two-door wall cabinet beside the machines",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
+   "product": "Crystal Cabinets W3042"
+  },
+  {
+   "id": "LX-UC-W12",
+   "ifc": "IfcFurniture",
+   "kind": "upperCabinet",
+   "at": [
+    -17.3912,
+    -29.916,
+    -4.56
+   ],
+   "rot": 90.0,
+   "opts": {
+    "finish": "cabinetWhite",
+    "hw": "nickelBrushed",
+    "style": "shaker",
+    "mountY": 5.0833,
+    "h": 3.5,
+    "d": 1.0,
+    "pull": "knob",
+    "crown": false,
+    "w": 0.7405,
+    "hinge": "left"
+   },
+   "space": "L1-S00",
+   "by": "v26-laundry",
+   "rule": "L4 W1242L single-door upper at the door-wall end of the window wall (owner 10/31: it is there)",
+   "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
+   "product": "Crystal Cabinets W1242L",
+   "note": "drawn 12in; trimmed to 8.9in so it clears the window casing in the model"
   }
  ],
  "materials": {
@@ -18331,6 +18710,81 @@
     "casingExt": 0.2917,
     "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
     "sillExt": null
+   },
+   "AW-A": {
+    "operation": "TOPHUNG awning",
+    "units": 1,
+    "grille": [
+     2,
+     2
+    ],
+    "frame": 0.1,
+    "sash": 0.1,
+    "note": "A-Series awning, 2W2H SDL",
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null,
+    "source": "v26 B4: Andersen order H0628-380974 (A1)"
+   },
+   "AW-B": {
+    "operation": "TOPHUNG awning pair, both vent",
+    "units": 2,
+    "grille": [
+     2,
+     2
+    ],
+    "frame": 0.1,
+    "sash": 0.1,
+    "note": "A-Series double awning AAN21040-2, 2W2H SDL each",
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null,
+    "source": "v26 B4: Andersen order H0628-380974 (A1)"
+   },
+   "FX-A": {
+    "operation": "FIXEDCASEMENT picture",
+    "units": 1,
+    "grille": [
+     2,
+     2
+    ],
+    "frame": 0.1,
+    "sash": 0.1,
+    "note": "A-Series picture APW2634, 2W2H SDL aligned to the casements",
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null,
+    "source": "v26 B4: Andersen order H0628-380974 (A1)"
+   },
+   "CS-H1": {
+    "operation": "SIDEHUNG casement",
+    "units": 1,
+    "grille": [
+     1,
+     2
+    ],
+    "frame": 0.1,
+    "sash": 0.1,
+    "note": "A-Series casement ACW21050, 1W2H SDL (one horizontal bar)",
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null,
+    "source": "v26 B4: Andersen order H0628-380974 (A1)"
+   },
+   "CS-HS": {
+    "operation": "SIDEHUNG casement + stationary",
+    "units": 2,
+    "grille": [
+     1,
+     2
+    ],
+    "frame": 0.1,
+    "sash": 0.1,
+    "note": "A-Series casement ACW2450 + stationary, 1W2H SDL",
+    "casingExt": 0.2917,
+    "casingExtNote": "HardieTrim 1x4 nominal, 3-1/2in face, picture frame (owner)",
+    "sillExt": null,
+    "source": "v26 B4: Andersen order H0628-380974 (A1)"
    }
   },
   "IfcDoorType": {
