@@ -5550,13 +5550,14 @@
     "hinge": "start",
     "side": "normal"
    },
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
    },
-   "swingRule": "v26 laundry L7: out-swing into the hallway, hinges left from the hall (2024 order, left hand reverse)"
+   "swingRule": "v26 laundry L7: out-swing into the hallway, hinges left from the hall (2024 order, left hand reverse)",
+   "state": "open"
   },
   {
    "id": "L1-O03",
@@ -5668,7 +5669,7 @@
    "head": 4.2646,
    "isExternal": false,
    "note": "Garage (threshold on the stair midway landing; one step down into the garage - A2.1)",
-   "state": "closed",
+   "state": "open",
    "era": "addition",
    "leafHeight": 7.0,
    "product": {
@@ -5683,7 +5684,7 @@
     "hinge": "start",
     "side": "reverse"
    },
-   "openAngle": 0,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
@@ -5715,7 +5716,7 @@
    "head": 2.5546,
    "isExternal": false,
    "note": "Adu Entry",
-   "state": "closed",
+   "state": "open",
    "era": "addition",
    "leafHeight": 7.0,
    "product": {
@@ -5730,7 +5731,7 @@
     "hinge": "start",
     "side": "reverse"
    },
-   "openAngle": 0,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
@@ -5813,7 +5814,7 @@
    "note": "Under-stair closet",
    "era": "addition",
    "leafHeight": 7.0,
-   "state": "closed",
+   "state": "open",
    "product": {
     "manufacturer": "JELD-WEN",
     "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
@@ -5826,7 +5827,7 @@
     "hinge": "start",
     "side": "normal"
    },
-   "openAngle": 0,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
@@ -5901,12 +5902,13 @@
     "hinge": "start",
     "side": "reverse"
    },
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L1-O10",
@@ -5947,12 +5949,13 @@
     "hinge": "start",
     "side": "reverse"
    },
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L1-O11",
@@ -6085,12 +6088,13 @@
     "hinge": "start",
     "side": "normal"
    },
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L1-O15",
@@ -6446,12 +6450,13 @@
     "hinge": "end",
     "side": "normal"
    },
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L1-O27",
@@ -6612,12 +6617,13 @@
     "hinge": "start",
     "side": "normal"
    },
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L1-O32",
@@ -6781,7 +6787,8 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "round flush cup pulls, top-hung track"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L1-O37",
@@ -6995,12 +7002,13 @@
     "hinge": "start",
     "side": "reverse"
    },
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L2-O04",
@@ -15457,11 +15465,12 @@
    ],
    "at": [
     -35.5,
-    -19.94
+    -20.83
    ],
    "roof": "RF-UPPER",
    "shade": "remote",
-   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans"
+   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans; v27: slope position from owner photo IMG_0587",
+   "placement": "v27 K1: mid-slope by ridge-gap rule (was y -19.94)"
   },
   {
    "id": "SK-R08",
@@ -15474,11 +15483,12 @@
    ],
    "at": [
     -31.35,
-    -19.94
+    -20.83
    ],
    "roof": "RF-UPPER",
    "shade": "remote",
-   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans"
+   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans; v27: slope position from owner photo IMG_0587",
+   "placement": "v27 K1: mid-slope by ridge-gap rule (was y -19.94)"
   },
   {
    "id": "SK-R09",
@@ -15491,11 +15501,12 @@
    ],
    "at": [
     -35.5,
-    -15.74
+    -14.85
    ],
    "roof": "RF-UPPER",
    "shade": "remote",
-   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans"
+   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans; v27: slope position from owner photo IMG_0587",
+   "placement": "v27 K1: mid-slope by ridge-gap rule (was y -15.74)"
   },
   {
    "id": "SK-R10",
@@ -15508,11 +15519,12 @@
    ],
    "at": [
     -31.35,
-    -15.74
+    -14.85
    ],
    "roof": "RF-UPPER",
    "shade": "remote",
-   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans"
+   "source": "listing copy (four skylights) + photos p06/p26/x07/x08; spacing from RCP A2.5 cans; v27: slope position from owner photo IMG_0587",
+   "placement": "v27 K1: mid-slope by ridge-gap rule (was y -15.74)"
   },
   {
    "id": "L1-S01-LIVVAULT",
@@ -15769,8 +15781,8 @@
    "sill": 0.0,
    "head": 6.7812,
    "isExternal": false,
-   "state": "closed",
-   "openAngle": 0,
+   "state": "open",
+   "openAngle": "auto",
    "note": "Laundry closet (stacked washer/dryer ready) - living room, left (p59, p51)",
    "by": "v19-living",
    "era": "original",
@@ -15817,8 +15829,8 @@
    "sill": 0.0,
    "head": 6.7812,
    "isExternal": false,
-   "state": "closed",
-   "openAngle": 0,
+   "state": "open",
+   "openAngle": "auto",
    "note": "Hall closet - living room back wall (p59)",
    "by": "v19-living",
    "era": "original",
@@ -16386,12 +16398,13 @@
     "nominal": "2'-8\" x 6'-8\""
    },
    "operation": "SINGLE_SWING",
-   "openAngle": 78,
+   "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "state": "open"
   },
   {
    "ifc": "IfcDoor",
@@ -16434,7 +16447,8 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "round flush cup pulls, top-hung track"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L1-W11-d1",
@@ -16577,7 +16591,8 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "round flush cup pulls, top-hung track"
-   }
+   },
+   "state": "open"
   },
   {
    "ifc": "IfcDoor",
@@ -16620,7 +16635,8 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "round flush cup pulls, top-hung track"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "FX-showerGlass-L0",
@@ -18378,6 +18394,146 @@
    "source": "Crystal Cabinets '118 hillside Laundry Design 7.7.23.pdf' (Hayward Lumber 7/18/23) + photo p04 + owner 10/31/26",
    "product": "Crystal Cabinets W1242L",
    "note": "drawn 12in; trimmed to 8.9in so it clears the window casing in the model"
+  },
+  {
+   "id": "DS-01",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    36.94,
+    4.28
+   ],
+   "feed": "RF-MAIN south eave, street end (corner by the front gable)",
+   "evidence": "p69 (top right), p70 (left of the front gable)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-02",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    4.87,
+    32.71
+   ],
+   "feed": "RF-MAIN north eave, yard end",
+   "evidence": "IMG_0477, IMG_0479 (left corner, by the AC units)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-03",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    -6.92,
+    27.29
+   ],
+   "feed": "RF-WING north eave, yard gable corner",
+   "evidence": "IMG_0478 (strapped leader at the gable corner), IMG_0477",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-04",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    22.74,
+    -25.99
+   ],
+   "feed": "RF-GARAGE south eave, street end",
+   "evidence": "p70 (garage front-left corner)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-05",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    22.74,
+    -9.98
+   ],
+   "feed": "RF-GARAGE north eave, street end",
+   "evidence": "p02, p69 (garage front-right corner, to the pavers)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-06",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    -2.14,
+    -25.39
+   ],
+   "feed": "RF-UPPER south eave, street end (onto the low roof)",
+   "evidence": "p70 (left corner of the clerestory gable)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-07",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    -2.39,
+    -10.08
+   ],
+   "feed": "RF-UPPER north eave, street end (onto the entry roof)",
+   "evidence": "p02, p69, p70 (right corner of the clerestory gable)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-08",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    -40.11,
+    -10.08
+   ],
+   "feed": "RF-UPPER north eave, west end (onto the kitchen-wing roof)",
+   "evidence": "IMG_0476 (top right, ends on the low roof)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-09",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    -37.03,
+    -8.1
+   ],
+   "feed": "RF-UP-N north eave, west end (to the terrace)",
+   "evidence": "p08, IMG_0476, IMG_0482, IMG_0473 (inside corner by the outdoor kitchen)",
+   "material": "aluminium, trim white"
+  },
+  {
+   "id": "DS-10",
+   "ifc": "IfcPipeSegment",
+   "predefined": "USERDEFINED",
+   "objectType": "DOWNSPOUT",
+   "name": "Downspout (2x3 rectangular leader)",
+   "at": [
+    -50.4,
+    -12.84
+   ],
+   "feed": "RF-L02 west eave, north end (side yard)",
+   "evidence": "IMG_0473 (side-yard wall corner, black drain elbow)",
+   "material": "aluminium, trim white"
   }
  ],
  "materials": {
@@ -19055,6 +19211,30 @@
     "L2-W45",
     "L2-W46"
    ]
+  },
+  "v27doors": {
+   "interiorDefault": "open",
+   "swingAngle": "auto <= 92 deg, clear of walls and other leaves",
+   "keepShut": [
+    "exterior",
+    "garage door",
+    "sliders",
+    "hidden flush door"
+   ]
+  },
+  "v27details": {
+   "skylightSlope": {
+    "roof": "RF-UPPER",
+    "ridgeY": -17.84,
+    "halfSpan": 7.43,
+    "ridgeGap": 0.2,
+    "source": "IMG_0587 ceiling (ridge gap .20 / unit .37 / wall gap .43 of the run), p06, p26, IMG_0585"
+   },
+   "downspouts": {
+    "source": "photographed leaders only (DOWNSPOUT elements)",
+    "matchFt": 1.0,
+    "count": 10
+   }
   }
  },
  "designOptions": [
