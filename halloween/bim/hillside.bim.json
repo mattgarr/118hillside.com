@@ -2647,6 +2647,152 @@
    "source": "A2.1"
   },
   {
+   "id": "L1-W22S",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -12.731,
+     -18.826
+    ],
+    [
+     -12.204,
+     -18.826
+    ],
+    [
+     -12.204,
+     -13.415
+    ],
+    [
+     -12.731,
+     -13.415
+    ]
+   ],
+   "z0": -4.56,
+   "z1": 4.44,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "owner 2026-10-30 + p56 (rule v22 int22 P8)",
+   "note": "lounge east wall under the stair, in the plane of the lounge door's wall (drywall both sides)"
+  },
+  {
+   "id": "L1-W22F",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "kind": "soffit",
+   "footprint": [
+    [
+     -13.731,
+     -15.265
+    ],
+    [
+     -12.731,
+     -15.265
+    ],
+    [
+     -12.731,
+     -13.665
+    ],
+    [
+     -13.731,
+     -13.665
+    ]
+   ],
+   "z0": 3.89,
+   "z1": 4.44,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "p56 (rule v22 int22 P8)",
+   "note": "drywall soffit box at the ceiling, lounge east wall"
+  },
+  {
+   "id": "L1-W22D",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -12.204,
+     -14.442
+    ],
+    [
+     -9.481,
+     -14.442
+    ],
+    [
+     -9.481,
+     -13.982
+    ],
+    [
+     -12.204,
+     -13.982
+    ]
+   ],
+   "z0": -4.56,
+   "z1": 2.372,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "owner 2026-10-30 (rule v22 int22 P8)",
+   "note": "closet divider under the first riser of ST-UP, to the soffit"
+  },
+  {
+   "id": "L1-W22Sh",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -12.731,
+     -13.415
+    ],
+    [
+     -12.204,
+     -13.415
+    ],
+    [
+     -12.204,
+     -11.082
+    ],
+    [
+     -12.731,
+     -11.082
+    ]
+   ],
+   "z0": 0.44,
+   "z1": 4.44,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "rule v22 int22 P8",
+   "note": "header over the hidden door"
+  },
+  {
+   "id": "L1-W22Sn",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -12.731,
+     -11.082
+    ],
+    [
+     -12.204,
+     -11.082
+    ],
+    [
+     -12.204,
+     -10.732
+    ],
+    [
+     -12.731,
+     -10.732
+    ]
+   ],
+   "z0": -4.56,
+   "z1": 4.44,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "owner 2026-10-30 + p56 (rule v22 int22 P8)",
+   "note": "lounge east wall under the stair, in the plane of the lounge door's wall (drywall both sides)"
+  },
+  {
    "id": "L1-W99",
    "ifc": "IfcWall",
    "storey": "L1",
@@ -3663,6 +3809,64 @@
    "source": "A2.1"
   },
   {
+   "id": "L1-W22P",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -31.6,
+     -16.462
+    ],
+    [
+     -31.0,
+     -16.462
+    ],
+    [
+     -31.0,
+     -13.65
+    ],
+    [
+     -31.6,
+     -13.65
+    ]
+   ],
+   "z0": -4.56,
+   "z1": 4.44,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "owner 2026-10-30 + x05/p60 (rule v22 int22 P1)",
+   "note": "pocket-door partition at the foot of the lower tub: WC/tub compartment (pocket side)"
+  },
+  {
+   "id": "L1-W22Pn",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -31.6,
+     -11.317
+    ],
+    [
+     -31.0,
+     -11.317
+    ],
+    [
+     -31.0,
+     -10.732
+    ],
+    [
+     -31.6,
+     -10.732
+    ]
+   ],
+   "z0": -4.56,
+   "z1": 4.44,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "owner 2026-10-30 + x05/p60 (rule v22 int22 P1)",
+   "note": "pocket-door partition at the foot of the lower tub: WC/tub compartment"
+  },
+  {
    "id": "L1-W114",
    "ifc": "IfcWall",
    "storey": "L1",
@@ -3808,11 +4012,11 @@
    "storey": "L2",
    "footprint": [
     [
-     -24.41,
+     -23.371,
      -21.754
     ],
     [
-     -24.41,
+     -23.371,
      -21.409
     ],
     [
@@ -3828,7 +4032,8 @@
    "z1": 13.57,
    "isExternal": false,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "rule": "closet22 K2"
   },
   {
    "id": "L2-W04",
@@ -3840,11 +4045,11 @@
      -21.888
     ],
     [
-     -24.41,
+     -23.371,
      -21.888
     ],
     [
-     -24.41,
+     -23.371,
      -21.754
     ],
     [
@@ -3856,7 +4061,8 @@
    "z1": 13.57,
    "isExternal": false,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "rule": "closet22 K2"
   },
   {
    "id": "L2-W05",
@@ -3977,7 +4183,7 @@
    "storey": "L2",
    "footprint": [
     [
-     -20.494,
+     -20.871,
      -21.754
     ],
     [
@@ -3989,7 +4195,7 @@
      -21.559
     ],
     [
-     -20.494,
+     -20.871,
      -21.559
     ]
    ],
@@ -3997,7 +4203,8 @@
    "z1": 13.57,
    "isExternal": false,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "rule": "closet22 K2"
   },
   {
    "id": "L2-W10",
@@ -4013,11 +4220,11 @@
      -21.754
     ],
     [
-     -20.494,
+     -20.871,
      -21.754
     ],
     [
-     -20.494,
+     -20.871,
      -21.888
     ]
    ],
@@ -4025,7 +4232,8 @@
    "z1": 13.57,
    "isExternal": false,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "rule": "closet22 K2"
   },
   {
    "id": "L2-W11",
@@ -4041,11 +4249,11 @@
      -21.409
     ],
     [
-     -20.494,
+     -20.871,
      -21.409
     ],
     [
-     -20.494,
+     -20.871,
      -21.559
     ]
    ],
@@ -4053,7 +4261,8 @@
    "z1": 13.57,
    "isExternal": false,
    "topToRoof": true,
-   "source": "A2.2"
+   "source": "A2.2",
+   "rule": "closet22 K2"
   },
   {
    "id": "L2-W12",
@@ -5291,7 +5500,9 @@
    "sill": -4.56,
    "head": 3.44,
    "isExternal": true,
-   "note": "Adu Entry"
+   "note": "Adu Entry",
+   "trim": "drywall-return",
+   "trimNote": "owner 2026-10-30: plain drywall returns with corner bead, no casing (p65)"
   },
   {
    "id": "L1-O02",
@@ -5419,7 +5630,9 @@
    "sill": -4.56,
    "head": 2.44,
    "isExternal": false,
-   "note": ""
+   "note": "",
+   "trim": "drywall-return",
+   "trimNote": "owner 2026-10-30: plain drywall returns with corner bead, no casing (p65)"
   },
   {
    "id": "L1-O06",
@@ -5516,11 +5729,108 @@
    }
   },
   {
-   "id": "L1-O08",
+   "id": "L1-O22H",
+   "ifc": "IfcDoor",
+   "kind": "door",
+   "storey": "L1",
+   "type": "D-HID",
+   "tag": "007C",
+   "center": [
+    -12.468,
+    -12.248
+   ],
+   "axis": [
+    0.0,
+    1.0
+   ],
+   "normal": [
+    1.0,
+    0.0
+   ],
+   "width": 2.333,
+   "wallThickness": 0.527,
+   "sill": -4.56,
+   "head": 0.44,
+   "isExternal": false,
+   "note": "Under-stair storage (hidden door)",
+   "era": "addition",
+   "leafHeight": 4.948,
+   "state": "closed",
+   "trim": "flush",
+   "flushFace": "reverse",
+   "leafStyle": "flat-slab",
+   "leafFinish": "wall paint",
+   "operation": "SINGLE_SWING",
+   "swing": {
+    "hinge": "end",
+    "side": "reverse"
+   },
+   "openAngle": 0,
+   "product": {
+    "type": "flush hidden door: flat slab painted the wall colour, flush with the lounge face, out-swing on concealed hinges, 1/8\" reveal, no casing",
+    "nominal": "2'-4\" x 5'-0\""
+   },
+   "hardware": {
+    "finish": "brushed nickel",
+    "set": "concealed touch latch + small round knob (p56)",
+    "hinges": "concealed"
+   },
+   "source": "owner 2026-10-30 + p56 (rule v22 int22 P8)"
+  },
+  {
+   "id": "L1-O22A",
    "ifc": "IfcDoor",
    "kind": "door",
    "storey": "L1",
    "type": "D-IA",
+   "tag": "007D",
+   "center": [
+    -10.843,
+    -19.096
+   ],
+   "axis": [
+    1.0,
+    0.0
+   ],
+   "normal": [
+    0.0,
+    -1.0
+   ],
+   "width": 2.333,
+   "wallThickness": 0.541,
+   "sill": -4.56,
+   "head": 2.555,
+   "isExternal": false,
+   "note": "Under-stair closet",
+   "era": "addition",
+   "leafHeight": 7.0,
+   "state": "closed",
+   "product": {
+    "manufacturer": "JELD-WEN",
+    "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
+    "leafThickness": 0.1146,
+    "finish": "painted white, semi-gloss",
+    "nominal": "2'-4\" x 7'-0\""
+   },
+   "operation": "SINGLE_SWING",
+   "swing": {
+    "hinge": "start",
+    "side": "normal"
+   },
+   "openAngle": 0,
+   "hardware": {
+    "finish": "brushed nickel",
+    "set": "round knob + round rosette both sides",
+    "hinges": "3 x 3-1/2\" butt hinges"
+   },
+   "source": "owner 2026-10-30 (rule v22 int22 P8)"
+  },
+  {
+   "id": "L1-O08",
+   "ifc": "IfcOpeningElement",
+   "kind": "opening",
+   "storey": "L1",
+   "type": "CASED",
    "tag": "005A",
    "center": [
     -25.866,
@@ -5539,28 +5849,9 @@
    "sill": -4.56,
    "head": 2.5546,
    "isExternal": false,
-   "note": "Adu Bed 2",
-   "swing": {
-    "hinge": "start",
-    "side": "reverse"
-   },
-   "swingNote": "v20 lounge: swings into the bedroom hall (p65); clear of the counter run",
-   "era": "addition",
-   "leafHeight": 7.0,
-   "product": {
-    "manufacturer": "JELD-WEN",
-    "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
-    "leafThickness": 0.1146,
-    "finish": "painted white, semi-gloss",
-    "nominal": "2'-8\" x 7'-0\""
-   },
-   "operation": "SINGLE_SWING",
-   "openAngle": 78,
-   "hardware": {
-    "finish": "brushed nickel",
-    "set": "round knob + round rosette both sides",
-    "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   "note": "Lounge to bedroom hall: cased opening, drywall returns, no door (owner 2026-10-30; p65/p72)",
+   "trim": "drywall-return",
+   "door": "none"
   },
   {
    "id": "L1-O09",
@@ -6516,7 +6807,51 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "recessed edge pull + round flush cup pulls"
-   }
+   },
+   "state": "open"
+  },
+  {
+   "id": "L1-O22P",
+   "ifc": "IfcDoor",
+   "kind": "pocket",
+   "storey": "L1",
+   "type": "D-IB",
+   "tag": "003C",
+   "center": [
+    -31.3,
+    -12.483
+   ],
+   "axis": [
+    0.0,
+    1.0
+   ],
+   "normal": [
+    1.0,
+    0.0
+   ],
+   "width": 2.333,
+   "wallThickness": 0.6,
+   "sill": -4.56,
+   "head": 2.555,
+   "isExternal": false,
+   "note": "Lower bath WC/tub compartment",
+   "era": "addition",
+   "leafHeight": 7.0,
+   "product": {
+    "manufacturer": "JELD-WEN",
+    "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
+    "leafThickness": 0.1146,
+    "finish": "painted white, semi-gloss",
+    "nominal": "2'-4\" x 7'-0\""
+   },
+   "operation": "SLIDING_TO_SIDE (pocket)",
+   "pocket": "start",
+   "hardware": {
+    "finish": "brushed nickel",
+    "set": "recessed edge pull + round flush cup pulls"
+   },
+   "source": "owner 2026-10-30 (rule v22 int22 P1)",
+   "state": "open"
   },
   {
    "id": "L2-O00",
@@ -6839,7 +7174,8 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "recessed edge pull + round flush cup pulls"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L2-O10",
@@ -6880,7 +7216,8 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "recessed edge pull + round flush cup pulls"
-   }
+   },
+   "state": "open"
   },
   {
    "id": "L2-O11",
@@ -6890,7 +7227,7 @@
    "type": "D-IB",
    "tag": "203",
    "center": [
-    -23.16,
+    -22.121,
     -21.524
    ],
    "axis": [
@@ -6921,7 +7258,9 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "recessed edge pull + round flush cup pulls"
-   }
+   },
+   "rule": "closet22 K2: owner - 27in from the primary-suite-side corner to the opening",
+   "state": "open"
   },
   {
    "id": "L1-S00",
@@ -7716,19 +8055,46 @@
    "zone": "lower",
    "outline": [
     [
-     -22.854,
+     -25.584,
      -10.732
     ],
     [
-     -14.854,
+     -12.731,
      -10.732
     ],
     [
-     -6.754,
-     -10.732
+     -12.731,
+     -18.826
     ],
     [
-     -1.294,
+     -11.174,
+     -18.826
+    ],
+    [
+     -12.731,
+     -18.872
+    ],
+    [
+     -12.731,
+     -22.859
+    ],
+    [
+     -25.584,
+     -22.859
+    ]
+   ],
+   "area": 155.904,
+   "floor": -4.56,
+   "name": "ADU kitchen + ADU living"
+  },
+  {
+   "id": "L1-S06H",
+   "ifc": "IfcSpace",
+   "storey": "L0",
+   "zone": "lower",
+   "outline": [
+    [
+     -9.481,
      -10.732
     ],
     [
@@ -7745,18 +8111,6 @@
     ],
     [
      -2.794,
-     -19.086
-    ],
-    [
-     -2.794,
-     -20.961
-    ],
-    [
-     -2.794,
-     -22.419
-    ],
-    [
-     -2.794,
      -22.836
     ],
     [
@@ -7765,23 +8119,11 @@
     ],
     [
      -12.168,
-     -22.419
-    ],
-    [
-     -12.168,
-     -19.752
-    ],
-    [
-     -12.168,
      -19.336
     ],
     [
      -8.918,
      -19.336
-    ],
-    [
-     -8.918,
-     -13.578
     ],
     [
      -8.918,
@@ -7798,51 +8140,12 @@
     [
      -9.481,
      -12.806
-    ],
-    [
-     -9.481,
-     -18.776
-    ],
-    [
-     -12.731,
-     -18.872
-    ],
-    [
-     -12.731,
-     -19.752
-    ],
-    [
-     -12.731,
-     -22.419
-    ],
-    [
-     -12.731,
-     -22.859
-    ],
-    [
-     -16.461,
-     -22.859
-    ],
-    [
-     -25.584,
-     -22.859
-    ],
-    [
-     -25.584,
-     -19.919
-    ],
-    [
-     -25.584,
-     -17.192
-    ],
-    [
-     -25.584,
-     -10.732
     ]
    ],
-   "area": 285.664,
+   "area": 103.511,
    "floor": -4.56,
-   "name": "ADU kitchen + ADU living"
+   "name": "Lower stair hall",
+   "source": "rule v22 int22 P8 (split by the under-stair closets)"
   },
   {
    "id": "L1-S07",
@@ -8135,6 +8438,41 @@
      -10.732
     ],
     [
+     -31.6,
+     -10.732
+    ],
+    [
+     -31.6,
+     -16.462
+    ],
+    [
+     -31.771,
+     -16.462
+    ],
+    [
+     -34.524,
+     -16.462
+    ],
+    [
+     -36.584,
+     -16.462
+    ]
+   ],
+   "area": 28.558,
+   "floor": -4.56,
+   "name": "ADU bath"
+  },
+  {
+   "id": "L1-S11W",
+   "ifc": "IfcSpace",
+   "storey": "L0",
+   "zone": "lower",
+   "outline": [
+    [
+     -31.0,
+     -10.732
+    ],
+    [
      -29.928,
      -10.732
     ],
@@ -8151,21 +8489,15 @@
      -16.462
     ],
     [
-     -31.771,
-     -16.462
-    ],
-    [
-     -34.524,
-     -16.462
-    ],
-    [
-     -36.584,
+     -31.0,
      -16.462
     ]
    ],
-   "area": 59.802,
+   "area": 27.802,
    "floor": -4.56,
-   "name": "ADU bath"
+   "name": "Lower bath (tub + WC)",
+   "note": "WC/tub compartment behind the pocket door L1-O22P (owner 2026-10-30)",
+   "source": "rule v22 int22 P1"
   },
   {
    "id": "L1-S12",
@@ -8543,15 +8875,15 @@
      -21.409
     ],
     [
-     -21.91,
+     -20.871,
      -21.409
     ],
     [
-     -21.91,
+     -20.871,
      -21.16
     ],
     [
-     -24.41,
+     -23.371,
      -21.16
     ],
     [
@@ -8663,27 +8995,27 @@
    "zone": "upper",
    "outline": [
     [
-     -23.244,
+     -23.371,
      -21.76
     ],
     [
-     -21.91,
+     -20.871,
      -21.76
     ],
     [
-     -20.494,
+     -20.871,
      -21.76
     ],
     [
-     -20.494,
+     -20.871,
      -21.869
     ],
     [
-     -20.494,
+     -20.871,
      -21.869
     ],
     [
-     -20.494,
+     -20.871,
      -21.919
     ],
     [
@@ -8711,7 +9043,7 @@
      -21.919
     ],
     [
-     -23.244,
+     -23.371,
      -21.869
     ]
    ],
@@ -9330,10 +9662,6 @@
    "space": "L1-S06",
    "outline": [
     [
-     -9.49,
-     -18.776
-    ],
-    [
      -12.731,
      -18.872
     ],
@@ -9358,8 +9686,16 @@
      -10.732
     ],
     [
-     -9.49,
+     -12.731,
      -10.732
+    ],
+    [
+     -12.731,
+     -18.826
+    ],
+    [
+     -11.178,
+     -18.826
     ]
    ],
    "z": -4.56,
@@ -9566,6 +9902,34 @@
      -10.732
     ],
     [
+     -31.6,
+     -10.732
+    ],
+    [
+     -31.6,
+     -16.462
+    ],
+    [
+     -36.584,
+     -16.462
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "tile-floor"
+  },
+  {
+   "id": "L1-S11W-F",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S11W",
+   "outline": [
+    [
+     -31.0,
+     -10.732
+    ],
+    [
      -26.148,
      -10.732
     ],
@@ -9574,7 +9938,7 @@
      -16.462
     ],
     [
-     -36.584,
+     -31.0,
      -16.462
     ]
    ],
@@ -9878,11 +10242,11 @@
      -21.409
     ],
     [
-     -21.91,
+     -20.871,
      -21.409
     ],
     [
-     -21.91,
+     -20.871,
      -21.16
     ],
     [
@@ -9910,15 +10274,15 @@
    "space": "L2-S02",
    "outline": [
     [
-     -23.244,
+     -23.371,
      -21.76
     ],
     [
-     -20.494,
+     -20.871,
      -21.76
     ],
     [
-     -20.494,
+     -20.871,
      -21.919
     ],
     [
@@ -9946,7 +10310,7 @@
      -21.919
     ],
     [
-     -23.244,
+     -23.371,
      -21.869
     ]
    ],
@@ -10806,6 +11170,51 @@
    "finish": "drywall-ceil"
   },
   {
+   "id": "L1-S06-CF0",
+   "ifc": "IfcCovering",
+   "predefined": "CEILING",
+   "storey": "L0",
+   "space": "L1-S06",
+   "outline": [
+    [
+     -26.284,
+     -10.032
+    ],
+    [
+     -12.031,
+     -10.032
+    ],
+    [
+     -12.031,
+     -10.73
+    ],
+    [
+     -12.204,
+     -10.73
+    ],
+    [
+     -12.204,
+     -19.482
+    ],
+    [
+     -12.031,
+     -19.482
+    ],
+    [
+     -12.031,
+     -23.559
+    ],
+    [
+     -26.284,
+     -23.559
+    ]
+   ],
+   "kind": "flat",
+   "z": 4.44,
+   "finish": "drywall-ceil",
+   "source": "rule v22 int22 P3 (under the upper floor plate)"
+  },
+  {
    "id": "L1-S06-C",
    "ifc": "IfcCovering",
    "predefined": "CEILING",
@@ -10813,19 +11222,48 @@
    "space": "L1-S06",
    "outline": [
     [
-     -22.854,
+     -25.584,
      -10.732
     ],
     [
-     -14.854,
+     -12.731,
      -10.732
     ],
     [
-     -6.754,
-     -10.732
+     -12.731,
+     -18.826
     ],
     [
-     -1.294,
+     -11.174,
+     -18.826
+    ],
+    [
+     -12.731,
+     -18.872
+    ],
+    [
+     -12.731,
+     -22.859
+    ],
+    [
+     -25.584,
+     -22.859
+    ]
+   ],
+   "kind": "roof",
+   "z": null,
+   "finish": "drywall-ceil",
+   "note": "open to the roof: skylights above"
+  },
+  {
+   "id": "L1-S06-CH",
+   "ifc": "IfcCovering",
+   "predefined": "CEILING",
+   "storey": "L0",
+   "space": "L1-S06H",
+   "outline": [
+    [
+     -9.481,
      -10.732
     ],
     [
@@ -10842,18 +11280,6 @@
     ],
     [
      -2.794,
-     -19.086
-    ],
-    [
-     -2.794,
-     -20.961
-    ],
-    [
-     -2.794,
-     -22.419
-    ],
-    [
-     -2.794,
      -22.836
     ],
     [
@@ -10862,23 +11288,11 @@
     ],
     [
      -12.168,
-     -22.419
-    ],
-    [
-     -12.168,
-     -19.752
-    ],
-    [
-     -12.168,
      -19.336
     ],
     [
      -8.918,
      -19.336
-    ],
-    [
-     -8.918,
-     -13.578
     ],
     [
      -8.918,
@@ -10895,46 +11309,6 @@
     [
      -9.481,
      -12.806
-    ],
-    [
-     -9.481,
-     -18.776
-    ],
-    [
-     -12.731,
-     -18.872
-    ],
-    [
-     -12.731,
-     -19.752
-    ],
-    [
-     -12.731,
-     -22.419
-    ],
-    [
-     -12.731,
-     -22.859
-    ],
-    [
-     -16.461,
-     -22.859
-    ],
-    [
-     -25.584,
-     -22.859
-    ],
-    [
-     -25.584,
-     -19.919
-    ],
-    [
-     -25.584,
-     -17.192
-    ],
-    [
-     -25.584,
-     -10.732
     ]
    ],
    "kind": "roof",
@@ -11239,6 +11613,42 @@
      -10.732
     ],
     [
+     -31.6,
+     -10.732
+    ],
+    [
+     -31.6,
+     -16.462
+    ],
+    [
+     -31.771,
+     -16.462
+    ],
+    [
+     -34.524,
+     -16.462
+    ],
+    [
+     -36.584,
+     -16.462
+    ]
+   ],
+   "kind": "flat",
+   "z": 4.44,
+   "finish": "drywall-ceil"
+  },
+  {
+   "id": "L1-S11W-C",
+   "ifc": "IfcCovering",
+   "predefined": "CEILING",
+   "storey": "L0",
+   "space": "L1-S11W",
+   "outline": [
+    [
+     -31.0,
+     -10.732
+    ],
+    [
      -29.928,
      -10.732
     ],
@@ -11255,15 +11665,7 @@
      -16.462
     ],
     [
-     -31.771,
-     -16.462
-    ],
-    [
-     -34.524,
-     -16.462
-    ],
-    [
-     -36.584,
+     -31.0,
      -16.462
     ]
    ],
@@ -11651,15 +12053,15 @@
      -21.409
     ],
     [
-     -21.91,
+     -20.871,
      -21.409
     ],
     [
-     -21.91,
+     -20.871,
      -21.16
     ],
     [
-     -24.41,
+     -23.371,
      -21.16
     ],
     [
@@ -11721,27 +12123,27 @@
    "space": "L2-S02",
    "outline": [
     [
-     -23.244,
+     -23.371,
      -21.76
     ],
     [
-     -21.91,
+     -20.871,
      -21.76
     ],
     [
-     -20.494,
+     -20.871,
      -21.76
     ],
     [
-     -20.494,
+     -20.871,
      -21.869
     ],
     [
-     -20.494,
+     -20.871,
      -21.869
     ],
     [
-     -20.494,
+     -20.871,
      -21.919
     ],
     [
@@ -11769,13 +12171,14 @@
      -21.919
     ],
     [
-     -23.244,
+     -23.371,
      -21.869
     ]
    ],
-   "kind": "roof",
-   "z": null,
-   "finish": "drywall-ceil"
+   "kind": "flat",
+   "z": 13.57,
+   "finish": "drywall-ceil",
+   "rule": "closet22 K1: walk-in closet flat ceiling (p32)"
   },
   {
    "id": "L2-S03-C",
@@ -11891,7 +12294,9 @@
     "endMatNote": "street gable shakes (p66/p70)",
     "rakeUnder": [
      -1
-    ]
+    ],
+    "shakeFrieze": false,
+    "shakeFriezeNote": "shakes meet the lap siding directly, no band (p66, p70, p39)"
    },
    "source": "A2.3 + A5.2 (ridge 13'-9 1/2\")",
    "ifc": "IfcRoof",
@@ -12058,7 +12463,9 @@
       -0.794,
       -10.046
      ]
-    ]
+    ],
+    "shakeFrieze": true,
+    "shakeFriezeNote": "white frieze band across the gable base (p69, p70, p02)"
    },
    "source": "A2.3 + A5.1",
    "ifc": "IfcRoof",
@@ -12457,28 +12864,16 @@
    "predefined": "SHED_ROOF",
    "outline": [
     [
-     -40.358,
-     -24.892
-    ],
-    [
      -40.431,
      -24.892
     ],
     [
      -40.431,
      -25.25
-    ],
-    [
-     -39.625,
-     -25.25
-    ],
-    [
-     -39.625,
-     -26.266
     ],
     [
      -40.575,
-     -26.266
+     -25.25
     ],
     [
      -40.575,
@@ -12495,13 +12890,20 @@
     [
      -40.358,
      -22.6
+    ],
+    [
+     -40.358,
+     -24.892
     ]
    ],
    "low": "W",
    "base": 5.35,
    "pitch": 0.25,
    "material": "roof-shingle",
-   "lowLine": -50.181
+   "lowLine": -50.181,
+   "notes": [
+    "ext22 E2: overlap with RF-L00 (0.97 sq ft, 1.9 ft above it, unsupported) removed"
+   ]
   },
   {
    "id": "SK-R01",
@@ -12838,7 +13240,8 @@
     -12.8
    ],
    "z": 5.57,
-   "material": "deck-comp"
+   "material": "deck-coating",
+   "materialNote": "walkable deck coating, pale warm grey, no boards (p10, p19, x07)"
   },
   {
    "id": "RL-REAR-STAIR",
@@ -13968,12 +14371,12 @@
      -10.732
     ]
    ],
-   "z0": 0.857,
+   "z0": 4.44,
    "z1": 5.57,
    "isExternal": false,
    "topToRoof": false,
    "source": "rule: v19 stairs",
-   "note": "stair wall side (west), stepped above the soffit"
+   "note": "stair wall side (west), stepped above the soffit | v22 int22: starts on the under-stair wall"
   },
   {
    "id": "ST-UP-SW-lo-2",
@@ -13997,12 +14400,12 @@
      -13.982
     ]
    ],
-   "z0": 2.372,
+   "z0": 4.44,
    "z1": 5.57,
    "isExternal": false,
    "topToRoof": false,
    "source": "rule: v19 stairs",
-   "note": "stair wall side (west), stepped above the soffit"
+   "note": "stair wall side (west), stepped above the soffit | v22 int22: starts on the under-stair wall"
   },
   {
    "id": "ST-UP-SW-lo-3",
@@ -14026,12 +14429,12 @@
      -14.959
     ]
    ],
-   "z0": 2.991,
+   "z0": 4.44,
    "z1": 5.57,
    "isExternal": false,
    "topToRoof": false,
    "source": "rule: v19 stairs",
-   "note": "stair wall side (west), stepped above the soffit"
+   "note": "stair wall side (west), stepped above the soffit | v22 int22: starts on the under-stair wall"
   },
   {
    "id": "ST-UP-SW-lo-4",
@@ -14055,12 +14458,12 @@
      -15.875
     ]
    ],
-   "z0": 3.61,
+   "z0": 4.44,
    "z1": 5.57,
    "isExternal": false,
    "topToRoof": false,
    "source": "rule: v19 stairs",
-   "note": "stair wall side (west), stepped above the soffit"
+   "note": "stair wall side (west), stepped above the soffit | v22 int22: starts on the under-stair wall"
   },
   {
    "id": "ST-UP-SW-lo-5",
@@ -14084,12 +14487,12 @@
      -16.792
     ]
    ],
-   "z0": 4.229,
+   "z0": 4.44,
    "z1": 5.57,
    "isExternal": false,
    "topToRoof": false,
    "source": "rule: v19 stairs",
-   "note": "stair wall side (west), stepped above the soffit"
+   "note": "stair wall side (west), stepped above the soffit | v22 int22: starts on the under-stair wall"
   },
   {
    "id": "ST-UP-SW-lo-6",
@@ -14495,16 +14898,44 @@
      -19.367
     ],
     [
-     -12.204,
+     -12.009,
+     -19.367
+    ],
+    [
+     -12.009,
      -18.826
     ],
     [
-     -9.041,
+     -12.204,
      -18.826
+    ]
+   ],
+   "z0": -4.56,
+   "z1": 4.44,
+   "isExternal": false,
+   "topToRoof": false,
+   "source": "A2.1"
+  },
+  {
+   "id": "L1-W97-s2b",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -9.676,
+     -19.367
     ],
     [
      -9.041,
      -19.367
+    ],
+    [
+     -9.041,
+     -18.826
+    ],
+    [
+     -9.676,
+     -18.826
     ]
    ],
    "z0": -4.56,
@@ -15267,7 +15698,14 @@
    "head": 6.67,
    "isExternal": false,
    "note": "Living room to kitchen hall (p59 right)",
-   "by": "v19-living"
+   "by": "v19-living",
+   "pocketDoor": {
+    "leaf": "in pocket",
+    "state": "pocketed",
+    "pocket": "start",
+    "source": "owner 2026-10-30: pocket door between living room and kitchen hall stays in its pocket"
+   },
+   "operation": "cased opening (pocket-door leaf stays in its pocket)"
   },
   {
    "id": "L1-O62",
@@ -15461,14 +15899,14 @@
    "ifc": "IfcFurniture",
    "kind": "baseCabinet",
    "at": [
-    -18.55,
+    -18.2,
     -22.85,
     -4.56
    ],
    "rot": 90,
    "opts": {
     "doors": "drawerDoor",
-    "w": 3.5,
+    "w": 2.799,
     "counter": null,
     "hw": "nickelBrushed",
     "pull": "bar",
@@ -15486,14 +15924,14 @@
    "ifc": "IfcFurniture",
    "kind": "baseCabinet",
    "at": [
-    -21.575,
+    -20.599,
     -22.85,
     -4.56
    ],
    "rot": 90,
    "opts": {
     "doors": "drawerDoor",
-    "w": 2.55,
+    "w": 2.0,
     "counter": null,
     "hw": "nickelBrushed",
     "pull": "bar",
@@ -15510,14 +15948,15 @@
    "ifc": "IfcElectricAppliance",
    "kind": "beverageCooler",
    "at": [
-    -23.476,
+    -22.599,
     -22.85,
     -4.56
    ],
    "rot": 90,
    "opts": {
     "hinge": "left",
-    "w": 1.25
+    "w": 1.958,
+    "bay": 2.0
    },
    "space": "L1-S06",
    "source": "v20 lounge: p65 (white shaker drawer-over-door bases, 15in stainless/glass cooler, bar sink with spring pull-down, black honed top), p72",
@@ -15528,7 +15967,7 @@
    "ifc": "IfcFurniture",
    "kind": "baseCabinet",
    "at": [
-    -24.85,
+    -24.599,
     -22.85,
     -4.56
    ],
@@ -15537,7 +15976,7 @@
     "doors": "sink",
     "sink": false,
     "faucet": false,
-    "w": 1.499,
+    "w": 2.0,
     "counter": null,
     "hw": "nickelBrushed",
     "pull": "bar",
@@ -15586,19 +16025,19 @@
     "holes": [
      [
       [
-       -25.35,
+       -25.099,
        -22.43
       ],
       [
-       -24.35,
+       -24.099,
        -22.43
       ],
       [
-       -24.35,
+       -24.099,
        -21.18
       ],
       [
-       -25.35,
+       -25.099,
        -21.18
       ]
      ]
@@ -15612,7 +16051,7 @@
    "ifc": "IfcSanitaryTerminal",
    "kind": "sinkUndermount",
    "at": [
-    -24.85,
+    -24.599,
     -22.43,
     -4.56
    ],
@@ -15632,7 +16071,7 @@
    "ifc": "IfcSanitaryTerminal",
    "kind": "faucetKitchen",
    "at": [
-    -24.85,
+    -24.599,
     -22.73,
     -4.56
    ],
@@ -15660,15 +16099,16 @@
    ],
    "rot": 90,
    "opts": {
-    "size": 65,
-    "mountY": 5.428,
+    "size": 75,
+    "mountY": 5.609,
     "standoff": 0.1,
     "style": "thinBezel"
    },
    "product": {
     "manufacturer": "Samsung",
-    "model": "65-inch 4K smart TV, thin black bezel, low-profile wall mount",
-    "diagonal_in": 65
+    "model": "75-inch 4K smart TV, thin black bezel, low-profile wall mount",
+    "diagonal_in": 75,
+    "note": "owner 10/30: bigger TV lining up with the three in-wall speakers (span 5.50 ft, TV 5.45 ft wide)"
    },
    "source": "brochure (65-inch Samsung TV); owner; p65 position over the counter",
    "by": "v20-lounge"
@@ -15786,8 +16226,8 @@
    "storey": "L0",
    "space": "L1-S06",
    "at": [
-    -9.48,
-    -13.65,
+    -12.731,
+    -11.632,
     -4.56
    ],
    "rot": 180,
@@ -15814,10 +16254,6 @@
    "thickness": 0.06,
    "id": "L1-S06-F06H",
    "outline": [
-    [
-     -0.794,
-     -10.732
-    ],
     [
      -0.794,
      -19.086
@@ -15860,18 +16296,10 @@
     ],
     [
      -9.481,
-     -18.776
+     -10.732
     ],
     [
-     -12.731,
-     -18.872
-    ],
-    [
-     -9.49,
-     -18.776
-    ],
-    [
-     -9.49,
+     -0.794,
      -10.732
     ]
    ],
@@ -16067,7 +16495,8 @@
    "hardware": {
     "finish": "brushed nickel",
     "set": "recessed edge pull + round flush cup pulls"
-   }
+   },
+   "state": "open"
   },
   {
    "ifc": "IfcDoor",
@@ -16328,6 +16757,1242 @@
     "ledEdges": true
    },
    "by": "v20-bath"
+  },
+  {
+   "id": "L1-S06CA",
+   "ifc": "IfcSpace",
+   "storey": "L0",
+   "zone": "lower",
+   "outline": [
+    [
+     -12.204,
+     -18.826
+    ],
+    [
+     -9.481,
+     -18.826
+    ],
+    [
+     -9.481,
+     -14.442
+    ],
+    [
+     -12.204,
+     -14.442
+    ]
+   ],
+   "area": 11.938,
+   "floor": -4.56,
+   "name": "Under-stair closet",
+   "source": "owner 2026-10-30 (rule v22 int22 P8)"
+  },
+  {
+   "id": "L1-S06CA-F",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06CA",
+   "outline": [
+    [
+     -12.204,
+     -18.826
+    ],
+    [
+     -9.481,
+     -18.826
+    ],
+    [
+     -9.481,
+     -14.442
+    ],
+    [
+     -12.204,
+     -14.442
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak"
+  },
+  {
+   "id": "L1-S06CB",
+   "ifc": "IfcSpace",
+   "storey": "L0",
+   "zone": "lower",
+   "outline": [
+    [
+     -12.204,
+     -13.982
+    ],
+    [
+     -9.481,
+     -13.982
+    ],
+    [
+     -9.481,
+     -10.732
+    ],
+    [
+     -12.204,
+     -10.732
+    ]
+   ],
+   "area": 8.85,
+   "floor": -4.56,
+   "name": "Under-stair storage (hidden door)",
+   "source": "owner 2026-10-30 (rule v22 int22 P8)"
+  },
+  {
+   "id": "L1-S06CB-F",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06CB",
+   "outline": [
+    [
+     -12.204,
+     -13.982
+    ],
+    [
+     -9.481,
+     -13.982
+    ],
+    [
+     -9.481,
+     -10.732
+    ],
+    [
+     -12.204,
+     -10.732
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "stone-entry"
+  },
+  {
+   "id": "L1-S06CA-C",
+   "ifc": "IfcCovering",
+   "predefined": "CEILING",
+   "storey": "L0",
+   "space": "L1-S06CA",
+   "kind": "soffit",
+   "outline": [
+    [
+     -12.204,
+     -18.826
+    ],
+    [
+     -9.481,
+     -18.826
+    ],
+    [
+     -9.481,
+     -14.442
+    ],
+    [
+     -12.204,
+     -14.442
+    ]
+   ],
+   "plane": {
+    "p": [
+     -12.204,
+     -14.959,
+     2.372
+    ],
+    "g": [
+     0.0,
+     -0.67527
+    ]
+   },
+   "zMax": 4.44,
+   "finish": "drywall-ceil",
+   "source": "owner 2026-10-30 (rule v22 int22 P8)",
+   "note": "drywall soffit under ST-UP, sloped with the flight, flat at the storey ceiling where the flight passes above it"
+  },
+  {
+   "id": "L1-S06CB-C",
+   "ifc": "IfcCovering",
+   "predefined": "CEILING",
+   "storey": "L0",
+   "space": "L1-S06CB",
+   "kind": "soffit",
+   "outline": [
+    [
+     -12.204,
+     -13.982
+    ],
+    [
+     -9.481,
+     -13.982
+    ],
+    [
+     -9.481,
+     -10.732
+    ],
+    [
+     -12.204,
+     -10.732
+    ]
+   ],
+   "plane": {
+    "p": [
+     -12.204,
+     -10.732,
+     0.857
+    ],
+    "g": [
+     0.0,
+     0.0
+    ]
+   },
+   "zMax": 4.44,
+   "finish": "drywall-ceil",
+   "source": "owner 2026-10-30 (rule v22 int22 P8)",
+   "note": "drywall soffit under the quarter landing LND-Q"
+  },
+  {
+   "id": "LT-L0-CLA",
+   "ifc": "IfcLightFixture",
+   "predefined": "POINTSOURCE",
+   "storey": "L0",
+   "space": "L1-S06CA",
+   "kind": "flushDome",
+   "at": [
+    -10.843,
+    -17.25,
+    3.919
+   ],
+   "dia": 0.9,
+   "room": "Under-stair closet",
+   "type": "flush-mount dome ceiling light (closet)",
+   "x": -10.843,
+   "y": -17.25,
+   "level": "L0",
+   "state": "off",
+   "source": "owner 2026-10-30 (rule v22 int22 P8)",
+   "note": "on the closet soffit"
+  },
+  {
+   "id": "L1-O19-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L1",
+   "space": "L1-S01",
+   "outline": [
+    [
+     -6.796,
+     -10.774
+    ],
+    [
+     -1.252,
+     -10.774
+    ],
+    [
+     -1.252,
+     -10.128
+    ],
+    [
+     -6.796,
+     -10.128
+    ]
+   ],
+   "z": 0.0,
+   "thickness": 0.06,
+   "finish": "stone-entry",
+   "name": "Threshold L1-O19",
+   "source": "rule v22 int22 P2 (door thresholds)"
+  },
+  {
+   "id": "L2-O09-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L2",
+   "space": "L2-S01",
+   "outline": [
+    [
+     -20.742,
+     -18.004
+    ],
+    [
+     -18.158,
+     -18.004
+    ],
+    [
+     -18.158,
+     -17.036
+    ],
+    [
+     -20.742,
+     -17.036
+    ]
+   ],
+   "z": 5.57,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold Primary Bath",
+   "source": "rule v22 int22 P2 (door thresholds)"
+  },
+  {
+   "id": "L1-O02-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S08",
+   "outline": [
+    [
+     -16.741,
+     -23.64
+    ],
+    [
+     -16.419,
+     -23.64
+    ],
+    [
+     -16.419,
+     -26.514
+    ],
+    [
+     -16.741,
+     -26.514
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "stone-entry",
+   "name": "Threshold Adu Laundry",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O02-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S00",
+   "outline": [
+    [
+     -17.063,
+     -26.514
+    ],
+    [
+     -17.063,
+     -23.64
+    ],
+    [
+     -16.741,
+     -23.64
+    ],
+    [
+     -16.741,
+     -26.514
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold Adu Laundry",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O07-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06",
+   "outline": [
+    [
+     -12.449,
+     -19.711
+    ],
+    [
+     -12.126,
+     -19.711
+    ],
+    [
+     -12.126,
+     -22.461
+    ],
+    [
+     -12.449,
+     -22.461
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Adu Entry",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O07-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06",
+   "outline": [
+    [
+     -12.772,
+     -22.461
+    ],
+    [
+     -12.772,
+     -19.711
+    ],
+    [
+     -12.449,
+     -19.711
+    ],
+    [
+     -12.449,
+     -22.461
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "stone-entry",
+   "name": "Threshold Adu Entry",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O22H-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06CB",
+   "outline": [
+    [
+     -12.468,
+     -11.04
+    ],
+    [
+     -12.163,
+     -11.04
+    ],
+    [
+     -12.163,
+     -13.456
+    ],
+    [
+     -12.468,
+     -13.456
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "stone-entry",
+   "name": "Threshold Under-stair storage (hidden door)",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O22H-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06",
+   "outline": [
+    [
+     -12.773,
+     -13.456
+    ],
+    [
+     -12.773,
+     -11.04
+    ],
+    [
+     -12.468,
+     -11.04
+    ],
+    [
+     -12.468,
+     -13.456
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "stone-entry",
+   "name": "Threshold Under-stair storage (hidden door)",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O22A-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06",
+   "outline": [
+    [
+     -9.635,
+     -19.096
+    ],
+    [
+     -9.635,
+     -19.408
+    ],
+    [
+     -12.051,
+     -19.408
+    ],
+    [
+     -12.051,
+     -19.096
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Under-stair closet",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O22A-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06CA",
+   "outline": [
+    [
+     -12.051,
+     -18.784
+    ],
+    [
+     -9.635,
+     -18.784
+    ],
+    [
+     -9.635,
+     -19.096
+    ],
+    [
+     -12.051,
+     -19.096
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Under-stair closet",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O08-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S06",
+   "outline": [
+    [
+     -25.866,
+     -17.151
+    ],
+    [
+     -25.543,
+     -17.151
+    ],
+    [
+     -25.543,
+     -19.961
+    ],
+    [
+     -25.866,
+     -19.961
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "stone-entry",
+   "name": "Threshold Lounge to bedroom hall: cased opening, drywall returns, no door (owner 2026-10-30; p65/p72)",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O08-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S10",
+   "outline": [
+    [
+     -26.189,
+     -19.961
+    ],
+    [
+     -26.189,
+     -17.151
+    ],
+    [
+     -25.866,
+     -17.151
+    ],
+    [
+     -25.866,
+     -19.961
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Lounge to bedroom hall: cased opening, drywall returns, no door (owner 2026-10-30; p65/p72)",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O09-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S10",
+   "outline": [
+    [
+     -26.429,
+     -20.481
+    ],
+    [
+     -26.429,
+     -20.271
+    ],
+    [
+     -29.429,
+     -20.271
+    ],
+    [
+     -29.429,
+     -20.481
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold L1-O09",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O09-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S09",
+   "outline": [
+    [
+     -29.429,
+     -20.691
+    ],
+    [
+     -26.429,
+     -20.691
+    ],
+    [
+     -26.429,
+     -20.481
+    ],
+    [
+     -29.429,
+     -20.481
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold L1-O09",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O10-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S10",
+   "outline": [
+    [
+     -36.949,
+     -17.054
+    ],
+    [
+     -36.709,
+     -17.054
+    ],
+    [
+     -36.709,
+     -20.098
+    ],
+    [
+     -36.949,
+     -20.098
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Adu Bed 1",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O10-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S12",
+   "outline": [
+    [
+     -37.189,
+     -20.098
+    ],
+    [
+     -37.189,
+     -17.054
+    ],
+    [
+     -36.949,
+     -17.054
+    ],
+    [
+     -36.949,
+     -20.098
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Adu Bed 1",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O14-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S11",
+   "outline": [
+    [
+     -31.73,
+     -16.661
+    ],
+    [
+     -31.73,
+     -16.421
+    ],
+    [
+     -34.566,
+     -16.421
+    ],
+    [
+     -34.566,
+     -16.661
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold Adu Bathroom",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O14-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S10",
+   "outline": [
+    [
+     -34.566,
+     -16.901
+    ],
+    [
+     -31.73,
+     -16.901
+    ],
+    [
+     -31.73,
+     -16.661
+    ],
+    [
+     -34.566,
+     -16.661
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Adu Bathroom",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O26-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L1",
+   "space": "L1-S01",
+   "outline": [
+    [
+     5.069,
+     25.279
+    ],
+    [
+     5.314,
+     25.279
+    ],
+    [
+     5.314,
+     22.529
+    ],
+    [
+     5.069,
+     22.529
+    ]
+   ],
+   "z": 0.0,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold L1-O26",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O26-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L1",
+   "space": "L1-S05",
+   "outline": [
+    [
+     4.824,
+     22.529
+    ],
+    [
+     4.824,
+     25.279
+    ],
+    [
+     5.069,
+     25.279
+    ],
+    [
+     5.069,
+     22.529
+    ]
+   ],
+   "z": 0.0,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold L1-O26",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O31-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L1",
+   "space": "L1-S04",
+   "outline": [
+    [
+     10.027,
+     25.55
+    ],
+    [
+     10.027,
+     25.821
+    ],
+    [
+     7.277,
+     25.821
+    ],
+    [
+     7.277,
+     25.55
+    ]
+   ],
+   "z": 0.0,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold L1-O31",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O31-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L1",
+   "space": "L1-S01",
+   "outline": [
+    [
+     7.277,
+     25.279
+    ],
+    [
+     10.027,
+     25.279
+    ],
+    [
+     10.027,
+     25.55
+    ],
+    [
+     7.277,
+     25.55
+    ]
+   ],
+   "z": 0.0,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold L1-O31",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O36-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S12",
+   "outline": [
+    [
+     -41.753,
+     -22.53
+    ],
+    [
+     -41.753,
+     -22.263
+    ],
+    [
+     -48.087,
+     -22.263
+    ],
+    [
+     -48.087,
+     -22.53
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Adu Bed 1 Closet",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O36-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S13",
+   "outline": [
+    [
+     -48.087,
+     -22.797
+    ],
+    [
+     -41.753,
+     -22.797
+    ],
+    [
+     -41.753,
+     -22.53
+    ],
+    [
+     -48.087,
+     -22.53
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Adu Bed 1 Closet",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O37-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S07",
+   "outline": [
+    [
+     -12.45,
+     -23.573
+    ],
+    [
+     -12.108,
+     -23.573
+    ],
+    [
+     -12.108,
+     -26.327
+    ],
+    [
+     -12.45,
+     -26.327
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Adu Office",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O37-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S08",
+   "outline": [
+    [
+     -12.792,
+     -26.327
+    ],
+    [
+     -12.792,
+     -23.573
+    ],
+    [
+     -12.45,
+     -23.573
+    ],
+    [
+     -12.45,
+     -26.327
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "stone-entry",
+   "name": "Threshold Adu Office",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O22P-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S11W",
+   "outline": [
+    [
+     -31.3,
+     -11.275
+    ],
+    [
+     -30.958,
+     -11.275
+    ],
+    [
+     -30.958,
+     -13.691
+    ],
+    [
+     -31.3,
+     -13.691
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold Lower bath WC/tub compartment",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-O22P-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L0",
+   "space": "L1-S11",
+   "outline": [
+    [
+     -31.642,
+     -13.691
+    ],
+    [
+     -31.642,
+     -11.275
+    ],
+    [
+     -31.3,
+     -11.275
+    ],
+    [
+     -31.3,
+     -13.691
+    ]
+   ],
+   "z": -4.56,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold Lower bath WC/tub compartment",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L2-O03-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L2",
+   "space": "L2-S03",
+   "outline": [
+    [
+     -15.433,
+     -18.161
+    ],
+    [
+     -15.163,
+     -18.161
+    ],
+    [
+     -15.163,
+     -21.161
+    ],
+    [
+     -15.433,
+     -21.161
+    ]
+   ],
+   "z": 5.57,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Primary Bed",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L2-O03-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L2",
+   "space": "L2-S01",
+   "outline": [
+    [
+     -15.703,
+     -21.161
+    ],
+    [
+     -15.703,
+     -18.161
+    ],
+    [
+     -15.433,
+     -18.161
+    ],
+    [
+     -15.433,
+     -21.161
+    ]
+   ],
+   "z": 5.57,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold Primary Bed",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L2-O11-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L2",
+   "space": "L2-S01",
+   "outline": [
+    [
+     -20.829,
+     -21.524
+    ],
+    [
+     -20.829,
+     -21.118
+    ],
+    [
+     -23.413,
+     -21.118
+    ],
+    [
+     -23.413,
+     -21.524
+    ]
+   ],
+   "z": 5.57,
+   "thickness": 0.06,
+   "finish": "tile-floor",
+   "name": "Threshold Primary Dressing",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L2-O11-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L2",
+   "space": "L2-S02",
+   "outline": [
+    [
+     -23.413,
+     -21.93
+    ],
+    [
+     -20.829,
+     -21.93
+    ],
+    [
+     -20.829,
+     -21.524
+    ],
+    [
+     -23.413,
+     -21.524
+    ]
+   ],
+   "z": 5.57,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Primary Dressing",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-OD2-P-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L1",
+   "space": "L1-S01",
+   "outline": [
+    [
+     22.632,
+     20.81
+    ],
+    [
+     22.632,
+     21.062
+    ],
+    [
+     15.218,
+     21.062
+    ],
+    [
+     15.218,
+     20.81
+    ]
+   ],
+   "z": 0.0,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Bedroom 2 closet",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
+  },
+  {
+   "id": "L1-OD2-N-THR",
+   "ifc": "IfcSlab",
+   "predefined": "FLOOR",
+   "storey": "L1",
+   "space": "L1-S02",
+   "outline": [
+    [
+     15.218,
+     20.558
+    ],
+    [
+     22.632,
+     20.558
+    ],
+    [
+     22.632,
+     20.81
+    ],
+    [
+     15.218,
+     20.81
+    ]
+   ],
+   "z": 0.0,
+   "thickness": 0.06,
+   "finish": "oak",
+   "name": "Threshold Bedroom 2 closet",
+   "source": "rule v22 int22 P2 (door thresholds) + qa22 QB1 (split at the leaf line)"
   }
  ],
  "materials": {
@@ -16827,7 +18492,7 @@
    {
     "space": "L1-S11",
     "name": "Lower-level bath",
-    "floor": "woodlook",
+    "floor": "woodlookGrey",
     "faces": [
      {
       "mat": "blueSq",
@@ -16838,17 +18503,15 @@
        2.83,
        9.0
       ]
-     },
-     {
-      "mat": "wave",
-      "where": {
-       "xmin": -31.6
-      },
-      "z": [
-       0,
-       9.0
-      ]
-     },
+     }
+    ],
+    "floorNote": "grey wood-look plank tile (x05, p55, p60) - qa22 QB2"
+   },
+   {
+    "space": "L1-S11W",
+    "name": "Lower-level bath tub + WC",
+    "floor": "woodlookGrey",
+    "faces": [
      {
       "mat": "blueSq",
       "strip": {
@@ -16859,6 +18522,13 @@
       },
       "z": [
        1.67,
+       9.0
+      ]
+     },
+     {
+      "mat": "wave",
+      "z": [
+       0,
        9.0
       ]
      }
@@ -16875,10 +18545,13 @@
       "back": "blueSq",
       "surface": true
      }
-    ]
+    ],
+    "floorNote": "grey wood-look plank tile (x05, p55, p60) - qa22 QB2"
    }
   ],
-  "conceptSync": "v21: each design concept also removes as-built elements derived from, hosted by, cut into or superseded inside what it remodels (C1-C7, see bim_rules_v21_concepts.py); removesAuto lists them"
+  "conceptSync": "v21: each design concept also removes as-built elements derived from, hosted by, cut into or superseded inside what it remodels (C1-C7, see bim_rules_v21_concepts.py); removesAuto lists them",
+  "openingClear": {},
+  "concept22": "v22 concept22: pocket doors open unless closed (P1); openings clear of wall (P2, kernel O1/O2); concept vaults kept where their open edge rides on the upper wall line (V1)"
  },
  "designOptions": [
   {
@@ -16982,9 +18655,6 @@
     "KX-PBACK",
     "KX-PCHAMF",
     "KX-UPS",
-    "L1-LIV-BM1",
-    "L1-LIV-BM2",
-    "L1-LIV-BM3",
     "L1-O23",
     "L1-O24",
     "L1-O25",
@@ -17001,7 +18671,6 @@
     "L1-OD2",
     "L1-OD3",
     "L1-OD4",
-    "L1-S01-LIVVAULT",
     "L1-W00",
     "L1-W01",
     "L1-W02",
@@ -17051,9 +18720,9 @@
     "L1-W63",
     "L1-W64",
     "L1-W84",
-    "LT-LIV-CABLE1",
-    "LT-LIV-CABLE2",
-    "LT-LIV-CABLE3"
+    "L1-O26-THR",
+    "L1-O31-THR",
+    "L1-OD2-THR"
    ],
    "elements": [
     {
@@ -19055,6 +20724,66 @@
       30.0,
       11.0
      ]
+    },
+    {
+     "id": "jan24-HDR01",
+     "ifc": "IfcWall",
+     "storey": "L1",
+     "status": "existing",
+     "footprint": [
+      [
+       4.865,
+       -1.1639999999999997
+      ],
+      [
+       5.319,
+       -1.1639999999999997
+      ],
+      [
+       5.319,
+       14.733999999999998
+      ],
+      [
+       4.865,
+       14.733999999999998
+      ]
+     ],
+     "z0": 7.5,
+     "z1": 8.0,
+     "isExternal": false,
+     "topToRoof": true,
+     "predefined": "HEADER",
+     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
+    },
+    {
+     "id": "jan24-HDR02",
+     "ifc": "IfcWall",
+     "storey": "L1",
+     "status": "existing",
+     "footprint": [
+      [
+       -9.68,
+       14.446
+      ],
+      [
+       5.12,
+       14.446
+      ],
+      [
+       5.12,
+       14.696
+      ],
+      [
+       -9.68,
+       14.696
+      ]
+     ],
+     "z0": 7.5,
+     "z1": 8.0,
+     "isExternal": false,
+     "topToRoof": true,
+     "predefined": "HEADER",
+     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
     }
    ],
    "removesAuto": [
@@ -19075,34 +20804,6 @@
      "C4 jamb stub of removed L1-O62"
     ],
     [
-     "L1-S01-LIVVAULT",
-     "C5 vault edge ((4.87, -0.71), (4.87, 14.28)) open (55% backed, was 100%)"
-    ],
-    [
-     "L1-LIV-BM1",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE1",
-     "C6 host L1-LIV-BM1 removed"
-    ],
-    [
-     "L1-LIV-BM2",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE2",
-     "C6 host L1-LIV-BM2 removed"
-    ],
-    [
-     "L1-LIV-BM3",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE3",
-     "C6 host L1-LIV-BM3 removed"
-    ],
-    [
      "FX-showerSys-h",
      "C7 room remodelled (removes FX-tubAlcove-11)"
     ],
@@ -19115,7 +20816,37 @@
      "C7 room remodelled (removes FX-vanity-09)"
     ]
    ],
-   "selfCheck": []
+   "selfCheck": [],
+   "keptByRule": [
+    [
+     "L1-LIV-BM1",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-LIV-BM2",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-LIV-BM3",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-S01-LIVVAULT",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE1",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE2",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE3",
+     "V1 vault edge rides on the upper wall line"
+    ]
+   ]
   },
   {
    "id": "apr24a",
@@ -19213,9 +20944,6 @@
     "KX-PBACK",
     "KX-PCHAMF",
     "KX-UPS",
-    "L1-LIV-BM1",
-    "L1-LIV-BM2",
-    "L1-LIV-BM3",
     "L1-O23",
     "L1-O24",
     "L1-O61",
@@ -19225,7 +20953,6 @@
     "L1-OD2",
     "L1-OD3",
     "L1-OD4",
-    "L1-S01-LIVVAULT",
     "L1-W00",
     "L1-W01",
     "L1-W03",
@@ -19262,9 +20989,7 @@
     "L1-W63",
     "L1-W64",
     "L1-W84",
-    "LT-LIV-CABLE1",
-    "LT-LIV-CABLE2",
-    "LT-LIV-CABLE3"
+    "L1-OD2-THR"
    ],
    "elements": [
     {
@@ -20810,6 +22535,66 @@
       11.3,
       20.2
      ]
+    },
+    {
+     "id": "apr24a-HDR01",
+     "ifc": "IfcWall",
+     "storey": "L1",
+     "status": "existing",
+     "footprint": [
+      [
+       4.865,
+       -1.1639999999999997
+      ],
+      [
+       5.319,
+       -1.1639999999999997
+      ],
+      [
+       5.319,
+       14.733999999999998
+      ],
+      [
+       4.865,
+       14.733999999999998
+      ]
+     ],
+     "z0": 7.5,
+     "z1": 8.0,
+     "isExternal": false,
+     "topToRoof": true,
+     "predefined": "HEADER",
+     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
+    },
+    {
+     "id": "apr24a-HDR02",
+     "ifc": "IfcWall",
+     "storey": "L1",
+     "status": "existing",
+     "footprint": [
+      [
+       -9.68,
+       14.446
+      ],
+      [
+       5.12,
+       14.446
+      ],
+      [
+       5.12,
+       14.696
+      ],
+      [
+       -9.68,
+       14.696
+      ]
+     ],
+     "z0": 7.5,
+     "z1": 8.0,
+     "isExternal": false,
+     "topToRoof": true,
+     "predefined": "HEADER",
+     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
     }
    ],
    "removesAuto": [
@@ -20834,39 +22619,41 @@
      "C4 jamb stub of removed L1-O62"
     ],
     [
-     "L1-S01-LIVVAULT",
-     "C5 vault edge ((4.87, -0.71), (4.87, 14.28)) open (45% backed, was 100%)"
-    ],
-    [
-     "L1-LIV-BM1",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE1",
-     "C6 host L1-LIV-BM1 removed"
-    ],
-    [
-     "L1-LIV-BM2",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE2",
-     "C6 host L1-LIV-BM2 removed"
-    ],
-    [
-     "L1-LIV-BM3",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE3",
-     "C6 host L1-LIV-BM3 removed"
-    ],
-    [
      "FX-washerFront-LIV",
      "C7 inside concept wall apr24a-W04"
     ]
    ],
-   "selfCheck": []
+   "selfCheck": [],
+   "keptByRule": [
+    [
+     "L1-LIV-BM1",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-LIV-BM2",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-LIV-BM3",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-S01-LIVVAULT",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE1",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE2",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE3",
+     "V1 vault edge rides on the upper wall line"
+    ]
+   ]
   },
   {
    "id": "apr24b",
@@ -20964,9 +22751,6 @@
     "KX-PBACK",
     "KX-PCHAMF",
     "KX-UPS",
-    "L1-LIV-BM1",
-    "L1-LIV-BM2",
-    "L1-LIV-BM3",
     "L1-O23",
     "L1-O24",
     "L1-O61",
@@ -20976,7 +22760,6 @@
     "L1-OD2",
     "L1-OD3",
     "L1-OD4",
-    "L1-S01-LIVVAULT",
     "L1-W00",
     "L1-W01",
     "L1-W03",
@@ -21013,9 +22796,7 @@
     "L1-W63",
     "L1-W64",
     "L1-W84",
-    "LT-LIV-CABLE1",
-    "LT-LIV-CABLE2",
-    "LT-LIV-CABLE3"
+    "L1-OD2-THR"
    ],
    "elements": [
     {
@@ -22603,6 +24384,66 @@
       11.3,
       20.2
      ]
+    },
+    {
+     "id": "apr24b-HDR01",
+     "ifc": "IfcWall",
+     "storey": "L1",
+     "status": "existing",
+     "footprint": [
+      [
+       4.865,
+       -1.1639999999999997
+      ],
+      [
+       5.319,
+       -1.1639999999999997
+      ],
+      [
+       5.319,
+       14.733999999999998
+      ],
+      [
+       4.865,
+       14.733999999999998
+      ]
+     ],
+     "z0": 7.5,
+     "z1": 8.0,
+     "isExternal": false,
+     "topToRoof": true,
+     "predefined": "HEADER",
+     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
+    },
+    {
+     "id": "apr24b-HDR02",
+     "ifc": "IfcWall",
+     "storey": "L1",
+     "status": "existing",
+     "footprint": [
+      [
+       -9.68,
+       14.446
+      ],
+      [
+       5.12,
+       14.446
+      ],
+      [
+       5.12,
+       14.696
+      ],
+      [
+       -9.68,
+       14.696
+      ]
+     ],
+     "z0": 7.5,
+     "z1": 8.0,
+     "isExternal": false,
+     "topToRoof": true,
+     "predefined": "HEADER",
+     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
     }
    ],
    "removesAuto": [
@@ -22627,39 +24468,41 @@
      "C4 jamb stub of removed L1-O62"
     ],
     [
-     "L1-S01-LIVVAULT",
-     "C5 vault edge ((4.87, -0.71), (4.87, 14.28)) open (45% backed, was 100%)"
-    ],
-    [
-     "L1-LIV-BM1",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE1",
-     "C6 host L1-LIV-BM1 removed"
-    ],
-    [
-     "L1-LIV-BM2",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE2",
-     "C6 host L1-LIV-BM2 removed"
-    ],
-    [
-     "L1-LIV-BM3",
-     "C6 host L1-S01-LIVVAULT removed"
-    ],
-    [
-     "LT-LIV-CABLE3",
-     "C6 host L1-LIV-BM3 removed"
-    ],
-    [
      "FX-washerFront-LIV",
      "C7 inside concept wall apr24b-W04"
     ]
    ],
-   "selfCheck": []
+   "selfCheck": [],
+   "keptByRule": [
+    [
+     "L1-LIV-BM1",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-LIV-BM2",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-LIV-BM3",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "L1-S01-LIVVAULT",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE1",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE2",
+     "V1 vault edge rides on the upper wall line"
+    ],
+    [
+     "LT-LIV-CABLE3",
+     "V1 vault edge rides on the upper wall line"
+    ]
+   ]
   }
  ]
 }

@@ -80,7 +80,17 @@ export function createKernel(W) {
       const tOut = lowN ? y1 : y0, P = lowN ? { c: base + sp * y1, gx: 0, gy: -sp } : { c: base - sp * y0, gx: 0, gy: sp };
       const yE = lowN ? tOut + ov : tOut - ov, yIn = gd.tc;                                // run into the main roof up to its ridge
       const ya = Math.min(yE, yIn), yb = Math.max(yE, yIn);
-      roofs.push({ id: sh.id, kind: 'shed', pieces: [{ poly: rect(x0 - rk, ya, x1 + rk, yb), P, th: ROOF_TH }], plate: base, group: 'roof', top: 'roof',
+      // v22 vault22 V2: rake overhangs only beyond the host eave line; inside it the dormer spans between its side walls' inside faces
+      let pcs = [{ poly: rect(x0 - rk, ya, x1 + rk, yb), P, th: ROOF_TH }];
+      const yH = gd.EW ? (lowN ? gd.t1 : gd.t0) : null;
+      if (yH !== null && yH > ya + .05 && yH < yb - .05) {
+        const yo = (yH + yE) / 2, sideIn = (xe, dir) => { let best = xe;   // dir +1: west rake (inside face = wall's max x)
+          for (const w of walls) { const b = bbox(w.footprint); if (w.z1 < base - .7 || b[0] > xe + .02 || b[2] < xe + .02 * dir || b[1] > yo || b[3] < yo) continue;
+            if (!(b[0] <= xe + .02 * dir && b[2] >= xe + .02 * dir)) continue; const f = dir > 0 ? b[2] : b[0]; if (Math.abs(f - xe) < 1.2) best = dir > 0 ? Math.max(best, f) : Math.min(best, f); }
+          return best; };
+        const xi0 = sideIn(x0, 1), xi1 = sideIn(x1, -1), oa = lowN ? yH : ya, ob = lowN ? yb : yH, ia = lowN ? ya : yH, ib = lowN ? yH : yb;
+        pcs = [{ poly: rect(x0 - rk, oa, x1 + rk, ob), P, th: ROOF_TH }, { poly: rect(xi0, ia, xi1, ib), P, th: ROOF_TH }]; sh.__v22 = { xi0, xi1, ia, ib, P }; }
+      roofs.push({ id: sh.id, kind: 'shed', pieces: pcs, plate: base, group: 'roof', top: 'roof', v22in: sh.__v22 || null,
         frame: { type: 'shed', axis: 'y', sl: Math.hypot(1, sp) }, ends: [], cheeks: { x0, x1, ya, yb, P }, r: sh });
     }
     /* ---- lower roofs (flat membrane or 3:12 sheds), eaves only on edges that face outdoors ---- */
@@ -139,10 +149,15 @@ export function createKernel(W) {
     const deckAir = U(openDecks.map(d => box(Math.min(d.rect[0], d.rect[2]), Math.min(d.rect[1], d.rect[3]), d.z - .9, Math.max(d.rect[0], d.rect[2]), Math.max(d.rect[1], d.rect[3]), d.z + 7.5)));
     /* ---- final roofs ---- */
     for (const R of roofs) {
-      const others = U(roofs.filter(o2 => o2 !== R && o2.cutter).map(o2 => o2.cutter));
+      const others = U(roofs.filter(o2 => o2 !== R && o2.cutter).map(o2 => o2.cutter)); R._oth = others;   // v22 vault22 V1: reused below
       let m = sub(sub(sub(R.slab, others), roomVol), shaftAll); if (deckAir) m = sub(m, deckAir);
       const cuts = ((R.r && R.r.options && R.r.options.cuts) || []).map(c => box(c[0], c[1], ZLO, c[2], c[3], ZHI));     // explicit cut-outs (e.g. over the stair hall)
       if (cuts.length) m = sub(m, U(cuts));
+      if (R.kind === 'shed' && R.v22in) { const v = R.v22in, H = roofs.find(o => o.id === R.r.into);   // v22 vault22 V2b: the dormer's cheeks
+        if (H) { m = sub(m, H.slab);   // V1b: inside the host the host's slab wins (no buried sliver of dormer slab inside the vault's slab)
+          const top = U(H.pieces.map(pc => { const zs = pc.poly.map(([x, y]) => zAt(pc.P, x, y)); return keepAbove(prism(pc.poly, Math.min(...zs) - 1, ZHI), pc.P, pc.th - .01); }));
+          for (const [a, b] of [[v.xi0 - .35, v.xi0], [v.xi1, v.xi1 + .35]]) { const c = keepBelow(prism(rect(a, v.ia, b, v.ib), R.plate - .01, ZHI), v.P).intersect(top);
+            if (c && !c.isEmpty()) m = m.add(c); } } }
       R.final = m.asOriginal(); R.oid = R.final.originalID();
     }
     return { bim, walls, spaces, slabs, ceilings, roofs, roomVol, shafts, shaftAll, gInfo, inWall };
@@ -186,8 +201,12 @@ export function createKernel(W) {
     if (!(k in ctx._at)) ctx._at[k] = U(ctx.roofs.filter(r => Math.abs(r.plate - z1) < .7).map(r => r.attic)); return ctx._at[k]; };
   /* region above the roofs a wall of plate z1 belongs to (roofs at or above its level): such walls never stand above them */
   const aboveFor = (ctx, z1) => { ctx._ab = ctx._ab || {}; const k = z1.toFixed(2);
-    if (!(k in ctx._ab)) ctx._ab[k] = U(ctx.roofs.filter(r => z1 <= r.plate + .7).flatMap(r => r.pieces.map(pc => { const zs = pc.poly.map(([x, y]) => zAt(pc.P, x, y));
-      return keepAbove(prism(pc.poly, Math.min(...zs) - 1, ZHI), pc.P, pc.th); })));
+    // v22 vault22 V1: a roof bounds walls only where it exists - a dormer's above-region is cut by the other roofs' cutters (as its
+    // slab is), every other roof's by the dormers' cutters
+    const abv = r => r._abv || (r._abv = sub(U(r.pieces.map(pc => { const zs = pc.poly.map(([x, y]) => zAt(pc.P, x, y));
+      return keepAbove(prism(pc.poly, Math.min(...zs) - 1, ZHI), pc.P, pc.th); })), r.kind === 'shed' ? (r._oth || null) : ctx._shc));
+    if (ctx._shc === undefined) ctx._shc = U(ctx.roofs.filter(r => r.kind === 'shed' && r.cutter).map(r => r.cutter));   // dormers' cutters
+    if (!(k in ctx._ab)) ctx._ab[k] = U(ctx.roofs.filter(r => z1 <= r.plate + .7).map(abv).filter(m => m && !m.isEmpty()));
     return ctx._ab[k]; };
   function buildWalls(ctx, walls, openings, storey, extra) {
     const roofsAll = ctx._roofsAll || (ctx._roofsAll = U(ctx.roofs.map(r => r.final)));
@@ -197,6 +216,12 @@ export function createKernel(W) {
       if (w.topToRoof !== false) { const at = atticFor(ctx, w.z1);
         if (at) m = m.add(prism(w.footprint, w.z1 - .01, ZHI).intersect(at)); }
       m = sub(m, aboveFor(ctx, w.z1));
+      if (w.topToRoof !== false) for (const sh of ctx.shafts) {   // v22 vault22 V4: up the skylight shaft to the roof top
+        const R = ctx.roofs.find(r => r.id === sh.k.roof), pc = R && (R.pieces.find(q => inPoly(q.poly, sh.k.at[0], sh.k.at[1])) || R.pieces[0]); if (!pc) continue;
+        const b = bbox(w.footprint), hx = sh.k.size[0] / 2 - .01, hy = sh.k.size[1] / 2 - .01, X0 = sh.k.at[0] - hx, X1 = sh.k.at[0] + hx, Y0 = sh.k.at[1] - hy, Y1 = sh.k.at[1] + hy;
+        if (b[0] >= X1 || b[2] <= X0 || b[1] >= Y1 || b[3] <= Y0) continue;
+        const up = keepBelow(prism(w.footprint, w.z1 - .01, ZHI).intersect(box(X0, Y0, ZLO, X1, Y1, ZHI)), pc.P, pc.th);
+        if (up && !up.isEmpty()) m = m.add(up); }
       solids.push(m);
     }
     // each opening sits in a wall body: same thickness and height as the walls at its jambs (cut below)
@@ -206,8 +231,10 @@ export function createKernel(W) {
       let f0 = 1e9, f1 = -1e9, z0 = 1e9, z1 = -1e9, toRoof = false;
       for (const w of walls) { const b = bbox(w.footprint), wa0 = hz ? b[0] : b[1], wa1 = hz ? b[2] : b[3], wc0 = hz ? b[1] : b[0], wc1 = hz ? b[3] : b[2];
         if (wc1 - wc0 > 1.6 || cc < wc0 - .3 || cc > wc1 + .3) continue;
+        if (wa1 - wa0 < wc1 - wc0 - 1e-6) continue;   // v22 concept22 O1: a partition running across the opening line is not a jamb wall
         if (Math.abs(wa1 - a0) < .2 || Math.abs(wa0 - a1) < .2 || (wa0 < a0 + .05 && wa1 > a1 - .05)) { f0 = Math.min(f0, wc0); f1 = Math.max(f1, wc1); z0 = Math.min(z0, w.z0); z1 = Math.max(z1, w.z1); toRoof = toRoof || w.topToRoof !== false; } }
       if (f1 <= f0) { f0 = cc - o.wallThickness / 2; f1 = cc + o.wallThickness / 2; z0 = Math.min(o.sill, o.sill - 1); z1 = o.head + .5; }
+      o.__body = [f0, f1];   // v22 concept22 O2: the cut spans the body
       const fp = hz ? rect(a0, f0, a1, f1) : rect(f0, a0, f1, a1);
       let m = prism(fp, z0, z1);
       if (toRoof) { const at = atticFor(ctx, z1); if (at) m = m.add(prism(fp, z1 - .01, ZHI).intersect(at)); }
@@ -216,8 +243,9 @@ export function createKernel(W) {
     }
     for (const x of (extra || [])) solids.push(x);
     let all = U(solids); if (!all) return null;
-    const cuts = openings.map(o => { const hw = o.width / 2, ht = o.wallThickness / 2 + .2, [cx, cy] = o.center;
-      const r = Math.abs(o.axis[0]) > .5 ? [cx - hw, cy - ht, cx + hw, cy + ht] : [cx - ht, cy - hw, cx + ht, cy + hw];
+    const cuts = openings.map(o => { const hw = o.width / 2, ht = o.wallThickness / 2 + .2, [cx, cy] = o.center, hz = Math.abs(o.axis[0]) > .5, cc = hz ? cy : cx;
+      const c0 = Math.min(cc - ht, o.__body ? o.__body[0] - .05 : 1e9), c1 = Math.max(cc + ht, o.__body ? o.__body[1] + .05 : -1e9); delete o.__body;   // v22 concept22 O2
+      const r = hz ? [cx - hw, c0, cx + hw, c1] : [c0, cy - hw, c1, cy + hw];
       return box(r[0], r[1], o.sill, r[2], r[3], o.head); });
     all = sub(all, U(cuts)); all = sub(all, roofsAll);
     // (walls are trimmed to the roofs of their own level as they are built)
@@ -299,7 +327,7 @@ export function createKernel(W) {
     // an opening whose sill is above the floor has wall under it, so the baseboard runs straight past (no notch)
     const orect = o => { const hw = o.width / 2 + .02, ht = o.wallThickness / 2, [cx, cy] = o.center;
       return Math.abs(o.axis[0]) > .5 ? rect(cx - hw, cy - ht, cx + hw, cy + ht) : rect(cx - ht, cy - hw, cx + ht, cy + hw); };
-    const sills = openings.filter(o => o.sill > z + .5 && o.center && o.width);
+    const sills = openings.filter(o => o.sill > z + .5 && o.head <= z + 9.5 && o.center && o.width);   // v22 int22 K1: this level's openings only
     let wc = wl.map(w => cs(w.footprint)).reduce((a, b) => a.add(b));
     if (sills.length) wc = wc.add(sills.map(o => cs(orect(o))).reduce((a, b) => a.add(b)));
     const free = fl.subtract(wc);
@@ -308,7 +336,7 @@ export function createKernel(W) {
     const sp = (ctx.spaces || []).filter(q => q.outline && q.outline.length > 2);
     const inside = sp.map(q => q.outline).concat(lands.map(e => e.outline));      // rooms + interior landings
     if (inside.length) mask = mask.intersect(inside.map(cs).reduce((a, b) => a.add(b)).offset(.35, 'Miter'));
-    const doors = openings.filter(o => o.sill <= z + .5 && o.head > z + 2).map(o => { const hw = o.width / 2 + (BB.noCasing.test(o.type || '') ? .02 : BB.reach), ht = o.wallThickness / 2 + .3, [cx, cy] = o.center;
+    const doors = openings.filter(o => o.sill <= z + .5 && o.head > z + 2).map(o => { const hw = o.width / 2 + ((BB.noCasing.test(o.type || '') || o.trim === 'drywall-return') ? .02 : BB.reach)   /* v22 int22 K2 */, ht = o.wallThickness / 2 + .3, [cx, cy] = o.center;
       return cs(Math.abs(o.axis[0]) > .5 ? rect(cx - hw, cy - ht, cx + hw, cy + ht) : rect(cx - ht, cy - hw, cx + ht, cy + hw)); });
     const stops = doors.concat(baseStops(ctx, z));
     if (stops.length) mask = mask.subtract(stops.reduce((a, b) => a.add(b)));

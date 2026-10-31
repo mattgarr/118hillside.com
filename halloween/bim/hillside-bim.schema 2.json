@@ -1,0 +1,510 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "hillside-bim.schema.json",
+ "title": "hillside-bim 1.0 \u2014 IFC4-aligned building model (JSON)",
+ "description": "Lightweight BIM for one house. Element classes and property names follow IFC4 (ISO 16739-1:2018) so the model maps 1:1 onto IfcWall, IfcWindow, IfcDoor, IfcSlab, IfcCovering, IfcRoof, IfcSpace, IfcStair, IfcRailing and IfcFurnishingElement subtypes. Lengths in feet; x = east, y = north, z = up (0 = main finished floor).",
+ "type": "object",
+ "required": [
+  "format",
+  "version",
+  "units",
+  "project",
+  "storeys",
+  "elements"
+ ],
+ "properties": {
+  "format": {
+   "const": "hillside-bim"
+  },
+  "version": {
+   "type": "string"
+  },
+  "units": {
+   "type": "object",
+   "properties": {
+    "length": {
+     "enum": [
+      "FOOT",
+      "METRE"
+     ]
+    },
+    "angle": {
+     "enum": [
+      "DEGREE",
+      "RADIAN"
+     ]
+    }
+   },
+   "required": [
+    "length"
+   ]
+  },
+  "ifcAlignment": {
+   "type": "string"
+  },
+  "project": {
+   "type": "object",
+   "required": [
+    "name"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "site": {
+     "type": "string"
+    },
+    "datumElevation": {
+     "type": "number"
+    },
+    "axes": {
+     "type": "object"
+    },
+    "sources": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id"
+      ]
+     }
+    },
+    "planSet": {
+     "type": "string"
+    },
+    "sheetTransform": {
+     "type": "object"
+    }
+   }
+  },
+  "storeys": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "elevation"
+    ],
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "elevation": {
+      "type": "number"
+     },
+     "ceiling": {
+      "type": "number"
+     },
+     "datum": {
+      "type": "number"
+     }
+    }
+   }
+  },
+  "materials": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "name"
+    ]
+   }
+  },
+  "types": {
+   "type": "object"
+  },
+  "elements": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/element"
+   }
+  },
+  "designOptions": {
+   "description": "Alternative designs (IFC: one IfcGroup per option). Each option removes as-built elements by id and adds its own; elements use the same shapes as /elements.",
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "removes",
+     "elements"
+    ],
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "short": {
+      "type": "string"
+     },
+     "date": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "concept",
+       "proposed",
+       "approved",
+       "built"
+      ]
+     },
+     "description": {
+      "type": "string"
+     },
+     "scope": {
+      "type": "string"
+     },
+     "region": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      }
+     },
+     "walkStart": {
+      "type": "object",
+      "properties": {
+       "at": {
+        "type": "array"
+       },
+       "look": {
+        "type": "array"
+       }
+      }
+     },
+     "removes": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "elements": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/element"
+      }
+     }
+    }
+   }
+  }
+ },
+ "$defs": {
+  "xy": {
+   "type": "array",
+   "items": {
+    "type": "number"
+   },
+   "minItems": 2,
+   "maxItems": 2
+  },
+  "xyz": {
+   "type": "array",
+   "items": {
+    "type": "number"
+   },
+   "minItems": 3,
+   "maxItems": 3
+  },
+  "polygon": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/xy"
+   },
+   "minItems": 3
+  },
+  "rect": {
+   "type": "array",
+   "items": {
+    "type": "number"
+   },
+   "minItems": 4,
+   "maxItems": 4,
+   "description": "[xmin, ymin, xmax, ymax]"
+  },
+  "element": {
+   "type": "object",
+   "required": [
+    "id",
+    "ifc"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "ifc": {
+     "type": "string",
+     "pattern": "^Ifc[A-Za-z]+$"
+    },
+    "name": {
+     "type": "string"
+    },
+    "storey": {
+     "type": "string"
+    }
+   },
+   "allOf": [
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "const": "IfcWall"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "footprint",
+       "z0",
+       "z1",
+       "isExternal"
+      ],
+      "properties": {
+       "footprint": {
+        "$ref": "#/$defs/polygon"
+       },
+       "z0": {
+        "type": "number"
+       },
+       "z1": {
+        "type": "number"
+       },
+       "isExternal": {
+        "type": "boolean"
+       },
+       "topToRoof": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "enum": [
+         "IfcWindow",
+         "IfcDoor",
+         "IfcOpeningElement"
+        ]
+       },
+       "predefined": {
+        "not": {
+         "const": "SKYLIGHT"
+        }
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "kind",
+       "center",
+       "axis",
+       "normal",
+       "width",
+       "sill",
+       "head"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "window",
+         "door",
+         "slider",
+         "garage",
+         "pocket",
+         "bypass",
+         "opening"
+        ]
+       },
+       "center": {
+        "$ref": "#/$defs/xy"
+       },
+       "axis": {
+        "$ref": "#/$defs/xy"
+       },
+       "normal": {
+        "$ref": "#/$defs/xy"
+       },
+       "width": {
+        "type": "number",
+        "exclusiveMinimum": 0
+       },
+       "sill": {
+        "type": "number"
+       },
+       "head": {
+        "type": "number"
+       },
+       "type": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "tag": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "const": "IfcSpace"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "outline",
+       "floor"
+      ],
+      "properties": {
+       "outline": {
+        "$ref": "#/$defs/polygon"
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "const": "IfcSlab"
+       },
+       "predefined": {
+        "const": "FLOOR"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "outline",
+       "z",
+       "finish"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "const": "IfcCovering"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "outline",
+       "kind"
+      ],
+      "properties": {
+       "kind": {
+        "enum": [
+         "flat",
+         "roof"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "const": "IfcRoof"
+       },
+       "predefined": {
+        "const": "GABLE_ROOF"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "rect",
+       "ridge",
+       "plate",
+       "pitch",
+       "overhang"
+      ],
+      "properties": {
+       "rect": {
+        "$ref": "#/$defs/rect"
+       },
+       "ridge": {
+        "enum": [
+         "EW",
+         "NS"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "const": "IfcStair"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "start",
+       "end",
+       "z0",
+       "z1"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "ifc": {
+        "enum": [
+         "IfcSanitaryTerminal",
+         "IfcFurniture",
+         "IfcElectricAppliance",
+         "IfcFurnishingElement"
+        ]
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "kind",
+       "at",
+       "rot"
+      ],
+      "properties": {
+       "at": {
+        "$ref": "#/$defs/xyz"
+       },
+       "rot": {
+        "type": "number"
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}
