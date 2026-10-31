@@ -160,7 +160,7 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
 .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 @media (max-width:400px){.ticket .stub{padding:16px 11px}.ticket .stub b{font-size:34px}.ticket .main{padding:18px 14px 16px 16px}}
 
-/* the route: a trail through the house */
+/* the plan: a trail of stops */
 .trail{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .trail li{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;padding-bottom:22px}
 .trail li:last-child{padding-bottom:0}
@@ -170,7 +170,7 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
 .stop{display:flex;flex-direction:column;gap:2px;padding-top:3px;min-width:0}
 .where{font-family:var(--f-type);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
 .stop b{font-size:20px;font-weight:700;line-height:1.25}
-.stop p{margin:0;color:var(--dim);font-size:15px}
+.stop p{margin:0;color:var(--dim);font-size:15px;text-wrap:pretty}
 
 /* experiments */
 .head-ghost{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
@@ -364,16 +364,16 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
   </div>
 
   <section>
-    <div><p class="kicker">The route</p><h2>Trick at the front. Treat in the back.</h2></div>
+    <div><p class="kicker">The plan</p><h2>Trick at the front. Treat in the back.</h2></div>
     <ol class="trail">
       <li><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M11 16a5 5 0 1 0 10 0a5 5 0 1 0-10 0Z"/><path d="M11 16 4.5 11.5v9ZM21 16l6.5-4.5v9Z"/></svg></span>
-        <div class="stop"><span class="where">1 · Front door</span><b>Candy for the kids</b><p>Full-size bars while they last.</p></div></li>
-      <li><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4.5 15.5 16 6l11.5 9.5"/><path d="M8 13v14h16V13"/><path d="M13.5 27v-7h5v7"/></svg></span>
-        <div class="stop"><span class="where">2 · Through the house</span><b>Take the long way</b><p>Wander through on your way to the back. Look around.</p></div></li>
-      <li><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="16" rx="2"/><path d="M12 27.5h8"/><path d="M17.5 11v7.6l4 1.2"/><circle cx="15.6" cy="18.6" r="2"/></svg></span>
-        <div class="stop"><span class="where">3 · The den</span><b>Something on the big screen</b><p>A live Halloween concert from Baltimore, for anyone who wants to sit a minute.</p></div></li>
+        <div class="stop"><span class="where">Front door</span><b>Candy for the kids</b><p>Candy for every trick-or-treater, while it lasts.</p></div></li>
       <li><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 13h15v7a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7Z"/><path d="M22 15h1.5a3 3 0 0 1 0 6H22"/><path d="M12 9.5c0-2 2-2 2-4.5M17 9.5c0-2 2-2 2-4.5"/></svg></span>
-        <div class="stop"><span class="where">4 · Out back</span><b>Grown-up treats</b><p>Drinks, snacks, a spot to regroup, and the experiments.</p></div></li>
+        <div class="stop"><span class="where">Out back</span><b>Grown-up treats</b><p>Drinks, snacks, a spot to regroup, and the experiments.</p></div></li>
+      <li><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4.5 15.5 16 6l11.5 9.5"/><path d="M8 13v14h16V13"/><path d="M13.5 27v-7h5v7"/></svg></span>
+        <div class="stop"><span class="where">Through the house</span><b>Take the long way</b><p>Wander through and look around on your way in or out.</p></div></li>
+      <li><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="16" rx="2"/><path d="M12 27.5h8"/><path d="M17.5 11v7.6l4 1.2"/><circle cx="15.6" cy="18.6" r="2"/></svg></span>
+        <div class="stop"><span class="where">The den</span><b>Billy Strings: Heartbeat of Eternia</b><p>Billy's He-Man-themed Halloween show, live from Baltimore on the big screen. Pull up a seat for a song or two.</p></div></li>
     </ol>
   </section>
 
@@ -449,7 +449,7 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
         <li><span class="when">FEB 18–24, 1971</span><b>The Grateful Dead at the Capitol Theatre</b><p>Six nights in Port Chester, NY. Each night about 2,000 fans were shown an image and asked to beam it to a man asleep in a dream lab 45 miles away. His dreams matched on 4 of 6 nights. Chance says 1.</p></li>
         <li><span class="when">FEB 18–24, 2021</span><b>Billy Strings: The Déjà Vu Experiment</b><p>Same six dates, same theater, fifty years later, sent out by livestream.</p></li>
         <li><span class="when">FEB 3–6, 2022</span><b>Billy Strings: Déjà Tu</b><p>Return to the Experiment. Four more nights at the Capitol Theatre.</p></li>
-        <li class="now"><span class="when">OCT 31, 2026</span><b>The Déjà Boo Experiment</b><p>118 Hillside Drive, Woodside. Billy's Halloween show plays in the den. Look for the posters from those nights in the hall.</p></li>
+        <li class="now"><span class="when">OCT 31, 2026</span><b>The Déjà Boo Experiment</b><p>118 Hillside Drive, Woodside. Billy's Halloween show, Heartbeat of Eternia, plays live in the den. Look for the posters from those nights in the hall.</p></li>
       </ol>
     </div>
   </details>
