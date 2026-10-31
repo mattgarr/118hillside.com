@@ -2843,11 +2843,13 @@ function zfLayers(){
   if(ZF_MN.size !== Object.keys(M).length){ ZF_MN.clear(); for(const k in M) ZF_MN.set(M[k], k); }
   const setPO = (m, P) => { if(!m || m.polygonOffset || m.transparent || P <= 0) return m; m.polygonOffset = true; m.polygonOffsetFactor = P >= 3 ? -.5 : 0; m.polygonOffsetUnits = -4 * P;   /* slope term only for thin trim/decals: a floor pulled by slope at grazing angles would show through the wall base */ m.needsUpdate = true; return m; };
   scene.traverse(o => { if(!o.isMesh || o.userData.zfL) return; o.userData.zfL = 1;
-    const par = o.parent, fix = par && par.isGroup && par.children.length > 1 && o.name && !ZF_MN.has(o.material);   // FIX.make parts: mesh named by its FIX material
+    const par = o.parent, rootFin = !!(par && Object.values(GROUPS).includes(par)),   /* ortho23 O1: a root-group child is a finish, not a fixture part */
+      fix = par && par.isGroup && par.children.length > 1 && o.name && !ZF_MN.has(o.material) && !rootFin;   // FIX.make parts: mesh named by its FIX material
     if(Array.isArray(o.material)){ o.material.forEach(m => setPO(m, ZF_LAYER[ZF_MN.get(m)] || 0)); return; }
     const key = ZF_MN.get(o.material);
     if(key !== undefined){ setPO(o.material, ZF_LAYER[key] || 0); return; }
     if(o.material && ZF_LAYER[o.material.name]){ setPO(o.material, ZF_LAYER[o.material.name]); return; }   // library materials (e.g. FIX 'quartz' counters) by name
+    if(rootFin && o.name && o.material && !ZF_MN.has(o.material)){ if(!o.material.polygonOffset) o.userData.o23fin = 1; setPO(o.material, 1); return; }   // ortho23 O1: finish layer
     if(fix && o.name && window.FIX && !o.isInstancedMesh){   // a fixture part: rank by size inside its fixture, smaller parts on top
       const sz = c => { if(!c.geometry) return 0; if(!c.geometry.boundingSphere) c.geometry.computeBoundingSphere(); return c.geometry.boundingSphere.radius; };
       const sib = par.children.filter(c => c.isMesh && !(c.material && c.material.transparent)).sort((a, b) => sz(b) - sz(a));
@@ -2855,6 +2857,82 @@ function zfLayers(){
       if(r > 0 && !o.material.transparent){ o.material = o.material.clone(); setPO(o.material, 3 + .5 * r); } } });
 }
 window.__zfLayers = zfLayers;
+const O23 = {toSiding: 0, toPaint: 0, byGroup: {}};
+function ortho23Reclass(){
+  if(!BIM || !BIM.raw) return O23; const E = BIM.raw.elements || [], T0 = performance.now(); O23.runs = (O23.runs || 0) + 1;
+  const SP = E.filter(e => e.ifc === 'IfcSpace' && e.outline), WL = E.filter(e => e.ifc === 'IfcWall' && e.footprint), CZ = {};
+  for(const c of E) if(c.ifc === 'IfcCovering' && c.space && c.kind === 'flat' && c.z != null) CZ[c.space] = Math.max(CZ[c.space] != null ? CZ[c.space] : -1e9, c.z);
+  const pip = (x, y, P) => { let a = false; for(let i = 0, j = P.length - 1; i < P.length; j = i++){ const [xi, yi] = P[i], [xj, yj] = P[j]; if((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) a = !a; } return a; };
+  const STZ = {}; for(const q of (BIM.raw.storeys || [])) STZ[q.id] = q;
+  const inSpace = (bx, by, h, strict) => SP.some(s => { const top = CZ[s.id] != null ? CZ[s.id] : (strict ? s.floor + 7.9 : Math.max(s.floor + 7.9, (STZ[s.storey] ? STZ[s.storey].ceiling : s.floor + 8) + 2)); return h >= s.floor - .05 && h <= (strict ? Math.min(top, s.floor + 7.9) : top) && pip(bx, by, s.outline); });
+  // roof cover: inside a roof's own footprint (no overhang) and below its top (+1 ft) = attic / indoor air, never 'outside'
+  const RF = E.filter(e => e.ifc === 'IfcRoof').map(r => { let P, span; if(r.rect){ const [x0, y0, x1, y1] = r.rect; P = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+      span = r.ridge ? Math.min(x1 - x0, y1 - y0) / 2 : ((r.low === 'N' || r.low === 'S') ? y1 - y0 : x1 - x0); }
+    else { P = r.outline; const xs = P.map(q => q[0]), ys = P.map(q => q[1]); span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)); }
+    return {P, top: (r.plate != null ? r.plate : (r.base != null ? r.base : 8)) + (r.pitch || .25) * span + 1}; });
+  const covered = (bx, by, h) => RF.some(r => h < r.top && pip(bx, by, r.P));
+  const OUTROOM = /^(frontdeck|balcony|terrace|yard|street)$/;
+  // outdoor air at world point (x, h, z): no roof footprint over it (below that roof's top), no space volume, no wall, no tour room
+  const LVL = {}; for(const q of (ROOMS || [])) LVL[q.id] = q.level;
+  const roomLow = (x, h, z) => { const r = roomAt(x, z, false); if(!r) return null; const lv = LVL[r], lo = lv === 'lower' ? -4.65 : (lv === 'garage' ? -3.45 : -.1); return h > lo && h < (lv === 'lower' ? 4.6 : 8.2) ? r : null; };
+  const roomH = (x, h, z) => { const up = h > 5.6 ? roomAt(x, z, true) : null; if(up) return up; const r = roomAt(x, z, false); if(!r) return null; const lv = LVL[r], lo = lv === 'lower' ? -4.65 : (lv === 'garage' ? -3.45 : -.1); return h > lo && h < (lv === 'lower' ? 4.6 : 8.2) ? r : null; };
+  const outdoor = (x, h, z, rooms) => !covered(z, x, h) && !inSpace(z, x, h, false) && !inWall(z, x, h) && !(rooms && roomH(x, h, z));
+  const inWall = (bx, by, h) => WL.some(w => h >= w.z0 - .05 && h <= w.z1 + .05 && pip(bx, by, w.footprint));
+  const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), nn = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+  for(const gname of ['main', 'upper', 'main@asbuilt', 'vault@asbuilt']){ const G = GROUPS[gname]; if(!G) continue;
+    const meshes = G.children.filter(o => o.isMesh && !o.userData.o23 && !o.userData.o23done && o.geometry && o.geometry.attributes.position && !Array.isArray(o.material));
+    const keyOf = o => { for(const k in M) if(M[k] === o.material) return k; return null; };
+    const moves = {};   // target key -> [[mesh, triIndices]]
+    const PT = [];   // paint triangles that stayed: [mesh, ii, planeKey, vertexKeys, centre point 0.9 ft out]
+    for(const o of meshes) o.userData.o23done = 1;   // each merged mesh is classified once (finish() runs several times)
+    for(const o of meshes){ const k = keyOf(o); if(!k || !(k === 'siding' || /^paint(_|$)/.test(k))) continue;
+      const geo = o.geometry, P = geo.attributes.position, idx = geo.index, nT = (idx ? idx.count : P.count) / 3; o.updateWorldMatrix(true, false); const mw = o.matrixWorld;
+      for(let t = 0; t < nT; t++){ const ii = [0, 1, 2].map(j => idx ? idx.getX(3 * t + j) : 3 * t + j);
+        A.fromBufferAttribute(P, ii[0]).applyMatrix4(mw); B.fromBufferAttribute(P, ii[1]).applyMatrix4(mw); C.fromBufferAttribute(P, ii[2]).applyMatrix4(mw);
+        nn.crossVectors(e1.subVectors(B, A), e2.subVectors(C, A)); const ar = nn.length(); if(ar < 1e-6) continue; nn.divideScalar(ar); if(Math.abs(nn.y) > .2) continue;
+        const cx = (A.x + B.x + C.x) / 3, cy = (A.y + B.y + C.y) / 3, cz = (A.z + B.z + C.z) / 3, at = d => [cx + nn.x * d, cy, cz + nn.z * d];   // world (x, y, z) = (BIM y, up, BIM x)
+        const qx = cx + nn.x * .3, qy = cy, qz = cz + nn.z * .3, bx = qz, by = qx;
+        // wall-end strips only: the triangle's horizontal extent along the face is <= 1 ft (corner / end returns, not whole walls)
+        const wd = Math.max(Math.hypot(A.x - B.x, A.z - B.z), Math.hypot(B.x - C.x, B.z - C.z), Math.hypot(C.x - A.x, C.z - A.z)); if(wd > 1 && k === 'siding') continue;   // siding -> paint: wall-end strips only
+        let to = null;
+        const vIn = ((A, B, C, nn) => () => [A, B, C].some(v => inSpace(v.z + nn.z * .3, v.x + nn.x * .3, v.y, true) || !!roomLow(v.x + nn.x * .9, v.y, v.z + nn.z * .9) || (!!roomH(v.x + nn.x * .9, v.y, v.z + nn.z * .9) && covered(v.z + nn.z * .9, v.x + nn.x * .9, v.y))))(A.clone(), B.clone(), C.clone(), nn.clone());   // upper-grid rooms only under a roof (the grid bleeds past walls)   // any corner of the triangle faces a room
+        if(k !== 'siding'){ if(outdoor(...at(.3), false) && [1, 2, 4].every(d => outdoor(...at(d), true)) && !vIn()) to = 'siding'; }   // looks at outside air all the way out
+        else { const rm = roomH(...at(.9));
+          if(rm && !OUTROOM.test(rm) && [.3, .9].every(d => { const [x, h, z] = at(d); return inSpace(z, x, h, true) && covered(z, x, h) && !inWall(z, x, h); })) to = paintMat(rm); }   // looks into a BIM space under the roof
+        if(k !== 'siding' && !to){ const pk = [nn.x, nn.z].map(v => Math.round(v * 50)).join(',') + '|' + Math.round((nn.x * A.x + nn.z * A.z) * 40);
+          PT.push([o, ii, pk, [A, B, C].map(v => [v.x, v.y, v.z].map(c => Math.round(c * 50)).join(',')), at(.9), vIn]); }
+        if(k !== 'siding' && to) (O23.seed = O23.seed || []).push([o, ii, [nn.x, nn.z].map(v => Math.round(v * 50)).join(',') + '|' + Math.round((nn.x * A.x + nn.z * A.z) * 40), [A, B, C].map(v => [v.x, v.y, v.z].map(c => Math.round(c * 50)).join(','))]);
+        if(to && to !== k){ (moves[to] = moves[to] || []).push([o, ii]); if((O23.log = O23.log || []).length < 200) O23.log.push([gname, k, to, +bx.toFixed(1), +by.toFixed(1), +qy.toFixed(1), +(ar / 2).toFixed(2)]); } } }
+    // a paint patch goes as a whole: coplanar paint triangles that share a vertex with a converted one and face outside air
+    // (no space volume, no roof footprint, no wall 0.9 ft out) follow it (no saw-tooth paint/siding boundaries across one face)
+    if(O23.seed && O23.seed.length){ const conv = new Map(); for(const [o, ii, pk, vk] of O23.seed){ for(const v of vk) conv.set(pk + '#' + v, 1); }
+      let grew = true, guard = 0; const done = new Set();
+      while(grew && guard++ < 40){ grew = false; PT.forEach((t, i) => { if(done.has(i)) return; const [o, ii, pk, vk, c9, vin] = t; if(!vk.some(v => conv.has(pk + '#' + v))) return; if(vin()){ done.add(i); return; }
+        if(inSpace(c9[2], c9[0], c9[1], false) || covered(c9[2], c9[0], c9[1]) || inWall(c9[2], c9[0], c9[1])){ done.add(i); return; }
+        done.add(i); grew = true; for(const v of vk) conv.set(pk + '#' + v, 1); (moves.siding = moves.siding || []).push([o, ii]); O23.flood = (O23.flood || 0) + 1; }); } }
+    O23.seed = null;
+    for(const to in moves){ const list = moves[to]; let dst = G.children.find(o => o.isMesh && o.material === M[to] && o.geometry && !o.geometry.index);
+      const src = new Map(); for(const [o, ii] of list){ (src.get(o) || src.set(o, []).get(o)).push(ii); }
+      // append the moved triangles to the target mesh (or a new one), then drop them from their source meshes
+      const names = dst ? Object.keys(dst.geometry.attributes) : Object.keys(list[0][0].geometry.attributes);
+      const add = {}; for(const n of names) add[n] = [];
+      for(const [o, tris] of src){ const ga = o.geometry.attributes; for(const ii of tris) for(const i of ii) for(const n of names){ const a = ga[n]; if(!a){ for(let c = 0; c < (dst ? dst.geometry.attributes[n].itemSize : 3); c++) add[n].push(0); continue; } for(let c = 0; c < a.itemSize; c++) add[n].push(a.getComponent ? a.getComponent(i, c) : a.array[i * a.itemSize + c]); } }
+      if(dst){ const g = dst.geometry, ng = new THREE.BufferGeometry(); for(const n of names){ const a = g.attributes[n]; const arr = new Float32Array(a.count * a.itemSize + add[n].length); arr.set(a.array.subarray(0, a.count * a.itemSize)); arr.set(add[n], a.count * a.itemSize); ng.setAttribute(n, new THREE.BufferAttribute(arr, a.itemSize)); } dst.geometry = ng; g.dispose(); }
+      else { const ng = new THREE.BufferGeometry(); for(const n of names){ const isz = list[0][0].geometry.attributes[n].itemSize; ng.setAttribute(n, new THREE.BufferAttribute(new Float32Array(add[n]), isz)); }
+        dst = new THREE.Mesh(ng, M[to]); dst.castShadow = true; dst.receiveShadow = true; dst.userData.o23 = 1; G.add(dst); }
+      for(const [o, tris] of src){ const geo = o.geometry, idx = geo.index, drop = new Set(tris.map(ii => ii.join(','))), keep = [], nT = (idx ? idx.count : geo.attributes.position.count) / 3;
+        for(let t = 0; t < nT; t++){ const ii = [0, 1, 2].map(j => idx ? idx.getX(3 * t + j) : 3 * t + j); if(!drop.has(ii.join(','))) keep.push(...ii); }
+        if(idx) geo.setIndex(keep); else { const ng = new THREE.BufferGeometry(); for(const n in geo.attributes){ const a = geo.attributes[n], arr = new Float32Array(keep.length * a.itemSize);
+          keep.forEach((s2, j) => { for(let c = 0; c < a.itemSize; c++) arr[j * a.itemSize + c] = a.array[s2 * a.itemSize + c]; }); ng.setAttribute(n, new THREE.BufferAttribute(arr, a.itemSize)); } o.geometry = ng; geo.dispose(); } }
+      const nTri = list.length; if(to === 'siding') O23.toSiding += nTri; else O23.toPaint += nTri; O23.byGroup[gname + '>' + to] = (O23.byGroup[gname + '>' + to] || 0) + nTri; }
+  }
+  O23.ms = (O23.ms || 0) + Math.round(performance.now() - T0);
+  return O23;
+}
+window.__ortho23Reclass = () => O23;
+window.__ortho23Check = () => { const R = new Set(Object.values(GROUPS)), over = []; let n = 0;   // ortho23 O2
+  scene.traverse(o => { if(!o.isMesh || !o.userData.o23fin || !R.has(o.parent)) return; n++; const m = o.material; if(m.polygonOffset && m.polygonOffsetUnits < -4) over.push(o.name); });
+  return {finishes: n, overPulled: over}; };
 let _zfBox = null, _zfN = 0;
 const zfNearFor = d => clamp(d * .15, .4, 3);   // near = 15% of the clearance to the nearest thing we know about, 0.4..3 ft
 window.__zfNearFor = zfNearFor;
@@ -3784,61 +3862,338 @@ function buildFurniture(){
   { const fr = new THREE.MeshStandardMaterial({color: 0x55585d, roughness: .5, metalness: .3}); grp('furnU').traverse(k => { if(k.isMesh && k.material && k.material.name === 'aluCharcoal'){ k.material = fr; } }); }
 }
 
-/* pergola, outdoor kitchen, terrace furniture: spec measured from photos p30 (straight on to the wing's north face), p43 and p47.
-   Plan feet (BIM x = east, y = north). The kitchen backs onto the bed-1 wing's north face (L1-W110/W115, y -10.1) under window
-   L1-O17, the run turns north at the wing's NW corner (x -50.2) along a louvred screen just inside the rear fence (x ~ -56). */
+/* pergola23: rear-terrace outdoor kitchen, pergola and dining set rebuilt from the listing photos p13 (close-up of the kitchen corner),
+   p21 (from the NW), p08 (straight on), p07, p30/p47 (dusk). Plan feet (BIM x = east, y = north); every number below is a measured fact
+   (see the comment beside it) and the builders are rules over these numbers, so a corrected measurement moves everything with it.
+   - Pergola: black powder-coated steel; a SHED roof of clear twin-wall polycarbonate on steel rafters (2 ft o.c.) + purlins - not slats.
+     High side on a ledger just under the wing's soffit (found by a ray up the wall), falling ~1.4 ft to the north beam (p47: house side
+     ~9.5 ft, NW post ~8 ft). Outline: a narrow 3 ft strip along the wall from the two-storey corner, a 45-degree front beam, then the
+     north beam to the NW post (p08, p47); one post at the wing's NW corner, one at each west corner; louvred screens on the west/south.
+   - Kitchen (NewAge-style modular): brushed stainless carcasses + 1.5" stainless counter, teak-look LOUVRED door/drawer fronts in
+     teak frames, stainless pulls (vertical on doors, horizontal on drawers). Leg 1 on the wing wall E->W: drawer-over-doors cabinet,
+     2-door cabinet, stainless filler, 6.2 ft grill module (side burner 2 knobs + 44" grill 5 knobs, 3 louvred doors below), stainless
+     corner; leg 2 S->N along the west screen: 3-drawer stack, open stainless kamado cart (two shelves, louvred drawer) with a glossy
+     black bell-dome kamado, twin stainless bands and a stainless chimney cap (p13, p21).
+   - Dining: white marble-look top 7.2 x 3.4 ft on a charcoal aluminium base, long axis N-S in front of the grill; six charcoal
+     horseshoe-back armchairs with light grey seat cushions, two per side + one per end (p07, p21, p47).
+   One merged mesh per material per assembly (Builder), procedural canvas textures only (no files). */
+const PERGOLA23 = window.PERGOLA23 = {report: {}};
 const YARD_SPEC = {
-  kitchen: {d: 2.17, h: 3.0,
-    leg1: {x0: -40.3, y: -10.05, mods: [{kind: 'outdoorCabinet', w: 5.0, opts: {front: 'doors', doors: 3}}, {gap: .2}, {kind: 'builtInGrill', w: 5.0}]},   // east -> west
-    leg2: {x: -55.5, mods: [{kind: 'outdoorCabinet', w: 2.5, opts: {front: 'drawers', drawers: 3, d: 2.17}}, {kind: 'kamadoStation', w: 2.6, opts: {d: 2.4}}]}},   // south -> north
-  pergola: {x0: -55.8, x1: -40.0, y0: -10.1, y1: -2.3, xFront: -47.5, top: 9.7, beam: [.33, .67], post: .33, rafter: {w: .17, h: .5, sp: 1.33}, slat: {w: .25, h: .1, sp: .55},
-    posts: [[-55.6, -2.5], [-55.6, -9.9], [-50.2, -9.9]]},
-  screens: {y0: 1.1, y1: 9.0, maxPanel: 4.2, runs: [[[-50.4, -9.95], [-55.45, -9.95]], [[-55.6, -9.85], [-55.6, -2.65]]]},
-  dining: {x: -48.8, y: -4.6, w: 8.0, d: 3.2, perSide: 3}
+  kitchen: {d: 2.17, h: 3.0, tt: .125,
+    // leg 1 on the wing wall, fronts north, E -> W. p08 (square-on, far): starts 1.5 ft E of window L1-O17; 2 cabinets 5.5 ft, 0.6 ft stainless
+    // filler, grill module 6.2 ft = side burner 1.65 + 44" grill; p13: the wing corner (x -50.2) is behind the grill's west half
+    leg1: {x0: -39.1, y: -10.05, mods: [{kind: 'cab', w: 2.75, front: 'drawerDoors'}, {kind: 'cab', w: 2.75, front: 'doors'}, {kind: 'filler', w: .6},
+      {kind: 'grill', w: 6.2, side: 1.65}]},
+    // leg 2 turns 45 deg toward the NW at the grill's west end (p13 and p47 see its fronts square-on from the NE/N; p21 sees the run 'bend' toward
+    // the camera; it must end inside the west fence); a stainless wedge fills the bend (gap = d * tan(turn / 2))
+    leg2: {turn: 45, mods: [{kind: 'cab', w: 2.5, front: 'drawers', drawers: 3}, {kind: 'kamado', w: 2.7, d: 2.35}]}},
+  pergola: {x0: -55.8, x1: -37.6, y0: -10.1, y1: -2.3, strip: 3.0, xK: -45.2, xFront: -49.5,               // outline (p08/p47)
+    ledger: 9.5, fall: 1.6, top: 7.9, beam: [.22, .5], post: .33, rafter: {w: .14, h: .33, sp: 2.0}, purlin: {w: .12, h: .2, sp: 2.0},
+    posts: [[-55.6, -2.5], [-55.6, -8.45], [-50.2, -9.9]], padN: 2.6},
+  screens: {y0: 1.1, maxPanel: 3.2, runs: null},   // derived in buildYard: behind leg 2 from the wing corner to the fence line, then north along the fence to the NW post
+  dining: {x: -49.0, y: -2.6, len: 7.2, w: 3.4, h: 2.48}, fenceX: -56.6
 };
+// paver pad under the kitchen + dining set (photos p21/p47: pavers run under the whole kitchen, to the NW post and round the table)
+function YARD_PAD(){ const P = YARD_SPEC.pergola; return [[P.x0 - .5, P.y0], [P.x1, P.y0], [P.x1, P.padN], [P.x0 + 3.5, P.padN], [P.x0 - .5, P.padN - 3.5]]; }
 function buildYard(){
-  const yB = GROUND_BACK, S = YARD_SPEC;
-  const gy = (bx, by) => { const [wx, wz] = W2(bx, by); return Math.max(yB, ground(wx, wz) + .22); };   // paver surface
-  const yT = gy((S.pergola.x0 + S.pergola.x1) / 2, (S.pergola.y0 + S.pergola.y1) / 2);
-  const bb = (ax, ay, bx, by, y0, y1, mat) => box(Math.min(ay, by), y0, Math.min(ax, bx), Math.max(ay, by), y1, Math.max(ax, bx), {all: mat}, 'yard');   // BIM-plan box
-  const fix = (kind, opts, bx, by, nx, ny, y) => { if(!(window.FIX && FIX.make)) return; try{ const o = FIX.make(kind, opts), [wx, wz] = W2(bx, by);
-    o.position.set(wx, y, wz); o.rotation.y = Math.atan2(ny, nx); grp('yard').add(o); return o; }catch(e){ console.warn(kind, e); } };
-  // pavers under the pergola/kitchen (the C-6 terrace stops at x -47; photos p43/p47 show pavers under the whole kitchen)
-  { const P = S.pergola; for(let x = P.x0 - .5; x < P.x1; x += 2) for(let y = P.y0; y < P.y1 + 1; y += 2){ const xa = x, xb = Math.min(x + 2, P.x1), ya = y, yb2 = Math.min(y + 2, P.y1 + 1);
-      const V = (bx, by) => { const [wx, wz] = W2(bx, by); return [wx, Math.max(yT - .005, ground(wx, wz) + .2), wz]; };   /* never below the mulch (+.16) */ B('pavers', 'land').push([V(xa, ya), V(xa, yb2), V(xb, yb2), V(xb, ya)], [0, 1, 0], q => [q[0], -q[2]]); } }
-  // kitchen: modules laid along leg 1 (house wall, fronts north) then leg 2 (west screen, fronts east); a stainless corner counter between
-  { const K = S.kitchen, L1 = K.leg1, L2 = K.leg2; let x = L1.x0;
-    for(const md of L1.mods){ if(md.gap){ x -= md.gap; continue; } fix(md.kind, Object.assign({w: md.w, d: K.d, h: K.h}, md.opts || {}), x - md.w / 2, L1.y, 0, 1, yT); x -= md.w; }
-    const cx0 = x, cx1 = L2.x;                                                     // corner piece fills from the last leg-1 module to the screen
-    fix('outdoorCabinet', {w: cx0 - cx1, d: K.d, h: K.h, front: 'blank'}, (cx0 + cx1) / 2, L1.y, 0, 1, yT);
-    let y = L1.y + K.d;
-    for(const md of L2.mods){ fix(md.kind, Object.assign({w: md.w, h: K.h}, md.opts || {}), L2.x, y + md.w / 2, 1, 0, yT); y += md.w; } }
-  // pergola: black steel posts + perimeter beams, ledger on the wing wall, rafters N-S at 16" o.c., E-W slats on top; front edge runs
-  // diagonally from the NW post line back to the house at the two-storey corner (p30/p43/p47)
-  { const P = S.pergola, bt = yT + P.top, bh = P.beam[1], bw = P.beam[0], pw = P.post / 2;
-    const yEdge = x => x <= P.xFront ? P.y1 : P.y1 + (x - P.xFront) / (P.x1 - P.xFront) * (P.y0 - P.y1);       // north edge at plan x
-    const xEdge = y => P.xFront + (P.y1 - y) / (P.y1 - P.y0) * (P.x1 - P.xFront);                             // east edge at plan y
-    for(const [px, py] of P.posts) bb(px - pw, py - pw, px + pw, py + pw, yT, bt, 'steel');
-    bb(P.x0, P.y0, P.x1, P.y0 + bw, bt - bh, bt, 'steel');                                                    // ledger / south beam
-    bb(P.x0, P.y0, P.x0 + bw, P.y1, bt - bh, bt, 'steel');                                                    // west beam
-    bb(P.x0, P.y1 - bw, P.xFront, P.y1, bt - bh, bt, 'steel');                                                // north beam
-    { const [ax, az] = W2(P.xFront, P.y1), [cx2, cz2] = W2(P.x1, P.y0), len = Math.hypot(cx2 - ax, cz2 - az);  // diagonal beam
-      const m = new THREE.Mesh(new THREE.BoxGeometry(len, bh, bw), M.steel); m.position.set((ax + cx2) / 2, bt - bh / 2, (az + cz2) / 2); m.rotation.y = -Math.atan2(cz2 - az, cx2 - ax); m.castShadow = m.receiveShadow = true; grp('yard').add(m); }
-    for(let x = P.x0 + P.rafter.sp; x < P.x1 - .3; x += P.rafter.sp) if(yEdge(x) - .05 > P.y0 + bw + .1) bb(x - P.rafter.w / 2, P.y0 + bw, x + P.rafter.w / 2, yEdge(x) - .05, bt - P.rafter.h, bt, 'steel');
-    for(let y = P.y0 + .3; y < P.y1 - .1; y += P.slat.sp) bb(P.x0, y - P.slat.w / 2, xEdge(y), y + P.slat.w / 2, bt, bt + P.slat.h, 'steel');
-    // louvred screens between the posts: panels no wider than S.screens.maxPanel, slim light posts between panels (p43/p47)
-    for(const [[ax, ay], [bx2, by2]] of S.screens.runs){ const len = Math.hypot(bx2 - ax, by2 - ay), np = Math.max(1, Math.ceil(len / S.screens.maxPanel)), ux = (bx2 - ax) / len, uy = (by2 - ay) / len;
-      for(let k = 0; k < np; k++){ const t0 = len * k / np, t1 = len * (k + 1) / np, mx = ax + ux * (t0 + t1) / 2, my = ay + uy * (t0 + t1) / 2;
-        fix('louvreScreen', {w: len / np - .12, h: S.screens.y1 - S.screens.y0}, mx, my, -uy, ux, yT + S.screens.y0);
-        if(k > 0){ const qx = ax + ux * t0, qy = ay + uy * t0; bb(qx - .07, qy - .07, qx + .07, qy + .07, yT, bt - bh, 'trimExt'); } } } }
-  // dining table (stone top, black legs) with chairs, in front of the kitchen (p43, p47)
-  { const D = S.dining, [wx, wz] = W2(D.x, D.y);
-    const t = fix('diningTable', {w: D.w, d: D.d, h: 2.5, top: 'marble', base: 'legs', baseMat: 'blackMetal'}, D.x, D.y - D.d / 2, 0, 1, yT);
-    for(const sd of [-1, 1]) for(let i = 0; i < D.perSide; i++){ const cxp = D.x - D.w / 2 + D.w * (i + .5) / D.perSide, cyp = D.y + sd * (D.d / 2 + 1.75);
-      fix('diningChair', {style: 'upholstered', fabric: 'fabricDark', wood: 'blackMetal'}, cxp, cyp, 0, -sd, yT); } }
+  const S = YARD_SPEC, P = S.pergola, K = S.kitchen, R = PERGOLA23.report = {}, t0 = performance.now();
+  const lift = (typeof PAV_BAND !== 'undefined' ? PAV_BAND.lift : .06) - .01;                      // flush with the C-6 terrace pavers
+  const yT = ground(...W2((P.x0 + P.x1) / 2, (P.y0 + P.y1) / 2)) + lift;
+  const H = FIX.helpers, Mx = H.M, T = THREE;
+  const mat = PERGOLA23.mat || (PERGOLA23.mat = pergola23Materials());
+  // ---------------------------------------------------------------- paver pad (flush, wound to face up)
+  { const poly = YARD_PAD(), tri = T.ShapeUtils.triangulateShape(poly.map(([x, y]) => new T.Vector2(x, y)), []), pos = [], uv = [];
+    for(const [x, y] of poly){ const [wx, wz] = W2(x, y); pos.push(wx, ground(wx, wz) + lift, wz); uv.push(x, -y); }   // same unit scale as the terrain-painted C-6 pavers
+    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2));
+    const idx = []; for(const t of tri){ const [a, b, c] = t, A = poly[a], B = poly[b], C = poly[c];
+      const cr = (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0]); idx.push(...(cr > 0 ? [a, b, c] : [a, c, b])); }   // plan CCW stays CCW seen from +y in world (x/z swap + y up)
+    g.setIndex(idx); g.computeVertexNormals();
+    const m = new T.Mesh(g, M.pavers); m.name = 'pergola23-pad'; m.receiveShadow = true; grp('land').add(m);
+    R.padUp = g.attributes.normal.getY(0) > .9; }
+  // ---------------------------------------------------------------- ledger height: just under the plate (= soffit) of the BIM walls it hangs on
+  // (external walls whose outside face is the ledger line y0 and that overlap the ledger's x range; the eave soffit sits at the wall top)
+  { const ws = (BIM && BIM.walls || []).filter(w => w.isExternal && w.footprint && w.z1 != null).filter(w => { const xs = w.footprint.map(q => q[0]), ys = w.footprint.map(q => q[1]);
+      return Math.abs(Math.max(...ys) - P.y0) < .25 && Math.max(...xs) > P.x0 && Math.min(...xs) < P.x1; });
+    R.ledgerWalls = ws.map(w => w.id); const z1 = ws.length ? Math.min(...ws.map(w => w.z1)) : null; R.soffit = z1 != null ? +(z1 - yT).toFixed(2) : null;
+    if(R.soffit && R.soffit > 8.4 && R.soffit < 11.5) P.ledger = +(R.soffit - .15).toFixed(2);
+    P.top = +(P.ledger - P.fall).toFixed(2); R.ledger = P.ledger; R.north = P.top; }
+  const hR = by => yT + P.ledger - (by - P.y0) / (P.y1 - P.y0) * P.fall;                              // roof top (under the sheet) at plan y
+  const yEdge = x => x >= P.xK ? P.y0 + P.strip : x >= P.xFront ? P.y0 + P.strip + (P.xK - x) / (P.xK - P.xFront) * (P.y1 - P.y0 - P.strip) : P.y1;
+  const xEdge = y => y <= P.y0 + P.strip ? P.x1 : P.xK - (y - P.y0 - P.strip) / (P.y1 - P.y0 - P.strip) * (P.xK - P.xFront);
+  const wp = (x, y, h) => { const [wx, wz] = W2(x, y); return new T.Vector3(wx, h, wz); };
+  // a beam/tube between two points; top edge on the line, w across (horizontal), h down
+  const tube = (b, m, A, B, w, h) => { const d = B.clone().sub(A), L = d.length(); d.normalize(); const s = new T.Vector3(-d.z, 0, d.x).normalize(), u = new T.Vector3().crossVectors(d, s).normalize();
+    if(u.y < 0){ u.negate(); s.negate(); }
+    const c = A.clone().add(B).multiplyScalar(.5).addScaledVector(u, -h / 2), mm = new T.Matrix4().makeBasis(d, u, s).setPosition(c);
+    b.add(m, new T.BoxGeometry(L, h, w), mm); };
+  // ================================================================= KITCHEN (one builder)
+  { const b = new H.Builder(); for(const k in mat) b.useMaterial(k, mat[k]);
+    const place = (bx, by, nx, ny) => { const [wx, wz] = W2(bx, by); return Mx(wx, yT, wz, 0, Math.atan2(ny, nx), 0); };
+    const mods = []; let x = K.leg1.x0;
+    for(const md of K.leg1.mods){ b.push(place(x - md.w / 2, K.leg1.y, 0, 1)); p23Module(b, md, K); b.pop(); mods.push([md.kind, x, x - md.w]); x -= md.w; }
+    // leg 2: back line from the leg-1 back corner B, direction u (west, turned toward north), fronts n
+    const al = K.leg2.turn * Math.PI / 180, ux = -Math.cos(al), uy = Math.sin(al), nx = Math.sin(al), ny = Math.cos(al), Bx = x, By = K.leg1.y;
+    K.leg2.gap = K.d * Math.tan(al / 2) + .02;
+    let t = K.leg2.gap; const L2 = [];
+    for(const md of K.leg2.mods){ const cx = Bx + ux * (t + md.w / 2), cy = By + uy * (t + md.w / 2); b.push(place(cx, cy, nx, ny)); p23Module(b, md, K); b.pop(); L2.push([md.kind, cx, cy]); t += md.w; }
+    K.leg2.end = [Bx + ux * t, By + uy * t]; K.leg2.u = [ux, uy];
+    // stainless wedge in the bend: back corner, leg-1 front corner, leg-2 front-left corner (body + counter)
+    { const F1 = [Bx, By + K.d], F2 = [Bx + ux * K.leg2.gap + nx * K.d, By + uy * K.leg2.gap + ny * K.d], B0 = [Bx + ux * K.leg2.gap, By + uy * K.leg2.gap];
+      const sh = new THREE.Shape([[Bx + .2, By], B0, F2, F1].map(([px, py]) => { const [wx, wz] = W2(px, py); return new THREE.Vector2(wx, -wz); }));
+      b.extrude('stainless', sh, K.h - K.tt - .3, Mx(0, yT + .3, 0, -Math.PI / 2, 0, 0)); b.extrude('stainless', sh, K.tt, Mx(0, yT + K.h - K.tt, 0, -Math.PI / 2, 0, 0)); }
+    R.kitchen = {leg1: [K.leg1.x0, +x.toFixed(2)], leg2: L2.map(q => [q[0], +q[1].toFixed(2), +q[2].toFixed(2)]), end: K.leg2.end.map(v => +v.toFixed(2))};
+    const g = b.build('outdoorKitchen23'); grp('yard').add(g);
+    R.kitchen.meshes = g.children.length; }
+  // screens (p13/p47/p18): from the wing-corner post along the back of the grill to the bend, then along leg 2's back line to just past its end;
+  // the NW post stands free beyond them. Panels <= maxPanel wide with 0.26 ft open gaps (p13).
+  { const [ux, uy] = K.leg2.u, bx = R.kitchen.leg1[1], wy = P.posts[2][1] - .05, off = .3, ex = K.leg2.end[0] + ux * .3 - Math.sin(K.leg2.turn * Math.PI / 180) * off, ey = K.leg2.end[1] + uy * .3 - Math.cos(K.leg2.turn * Math.PI / 180) * off;
+    const cx = bx - off * Math.tan(K.leg2.turn * Math.PI / 360), cy = wy;
+    S.screens.runs = [[[P.posts[2][0] - .2, wy], [cx, cy]], [[cx, cy], [ex, ey]]]; P.posts[1] = [+ex.toFixed(2), +ey.toFixed(2)]; R.screens = S.screens.runs;
+    if(ex < S.fenceX - .3) console.warn('[pergola23] kitchen leg 2 runs past the west fence', ex); }
+  // ================================================================= PERGOLA (one builder: steel, polycarbonate, screens, fittings)
+  { const b = new H.Builder(); for(const k in mat) b.useMaterial(k, mat[k]);
+    const bw = P.beam[0], bh = P.beam[1], yS = P.y0 + P.strip;
+    tube(b, 'p23steel', wp(P.x0, P.y0 + bw / 2, hR(P.y0)), wp(P.x1, P.y0 + bw / 2, hR(P.y0)), bw, bh);                       // ledger on the wing wall
+    tube(b, 'p23steel', wp(P.x1, yS, hR(yS)), wp(P.xK, yS, hR(yS)), bw, bh);                                               // strip front beam
+    tube(b, 'p23steel', wp(P.xK, yS, hR(yS)), wp(P.xFront, P.y1, hR(P.y1)), bw, bh);                                       // 45-degree front beam
+    tube(b, 'p23steel', wp(P.xFront, P.y1, hR(P.y1)), wp(P.x0, P.y1, hR(P.y1)), bw, bh);                                   // north beam
+    tube(b, 'p23steel', wp(P.x0 + bw / 2, P.y1, hR(P.y1)), wp(P.x0 + bw / 2, P.y0, hR(P.y0)), bw, bh);                     // west beam
+    tube(b, 'p23steel', wp(P.x1 - bw / 2, P.y0, hR(P.y0)), wp(P.x1 - bw / 2, yS, hR(yS)), bw, bh);                         // strip end
+    let nr = 0, np = 0;
+    for(let x = P.x1 - P.rafter.sp; x > P.x0 + .4; x -= P.rafter.sp){ const ye = yEdge(x) - .12; if(ye - P.y0 < .8) continue; nr++;   // rafters N-S
+      tube(b, 'p23steel', wp(x, P.y0 + bw, hR(P.y0 + bw)), wp(x, ye, hR(ye)), P.rafter.w, P.rafter.h); }
+    for(let y = P.y0 + P.purlin.sp; y < P.y1 - .5; y += P.purlin.sp){ np++;                                                  // purlins E-W, flush on top
+      tube(b, 'p23steel', wp(P.x0 + bw, y, hR(y)), wp(xEdge(y) - .1, y, hR(y)), P.purlin.w, P.purlin.h); }
+    for(const [px, py] of P.posts){ const top = hR(py) - bh + .02; b.bb('p23steel', py - P.post / 2, yT, px - P.post / 2, py + P.post / 2, top, px + P.post / 2, .015);   // posts + base plates
+      b.bb('p23steel', py - .3, yT, px - .3, py + .3, yT + .03, px + .3); }
+    // polycarbonate sheet over the whole outline, following the roof plane (+ a fine flute texture with leaf litter, p13)
+    { const o = [[P.x0, P.y0], [P.x1, P.y0], [P.x1, yS], [P.xK, yS], [P.xFront, P.y1], [P.x0, P.y1]], tri = T.ShapeUtils.triangulateShape(o.map(([x, y]) => new T.Vector2(x, y)), []), pos = [], uv = [];
+      for(const [x, y] of o){ const v = wp(x, y, hR(y) + .03); pos.push(v.x, v.y, v.z); uv.push(x / 4, y / 4); }
+      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setIndex(tri.flat()); g.computeVertexNormals();
+      b.add('p23poly', g, null, {keepUV: true}); }
+    // louvred screens: framed panels of horizontal blades, slim light posts between panels (p13/p47), tops under the roof beams
+    for(const [[ax, ay], [bx, by]] of S.screens.runs){ const len = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(len / S.screens.maxPanel)), ux = (bx - ax) / len, uy = (by - ay) / len;
+      for(let k = 0; k < n; k++){ const t0 = len * k / n + (k ? .13 : .02), t1 = len * (k + 1) / n - (k < n - 1 ? .13 : .02), cx = ax + ux * (t0 + t1) / 2, cy = ay + uy * (t0 + t1) / 2, w = t1 - t0;
+        const top = Math.min(hR(ay + uy * t0), hR(ay + uy * t1)) - bh - .08 - yT, h = top - S.screens.y0;
+        const fr = (x0, y0, x1, y1) => { const A = (s, t) => { const [qx, qz] = W2(ax + ux * s, ay + uy * s); return [qx, qz]; };   // frame member along the run
+          const [p0x, p0z] = A(x0), [p1x, p1z] = A(x1); b.bb('p23screen', Math.min(p0x, p1x) - (uy ? .05 : 0), yT + S.screens.y0 + y0, Math.min(p0z, p1z) - (ux ? .05 : 0), Math.max(p0x, p1x) + (uy ? .05 : 0), yT + S.screens.y0 + y1, Math.max(p0z, p1z) + (ux ? .05 : 0)); };
+        fr(t0, 0, t0 + .1, h); fr(t1 - .1, 0, t1, h); fr(t0, h - .12, t1, h); fr(t0, 0, t1, .1);
+        const blade = 3.5 / 12, gap = 1.1 / 12, nb = Math.floor((h - .22) / (blade + gap));
+        for(let i = 0; i < nb; i++){ const yy = yT + S.screens.y0 + .12 + (i + .5) * (h - .24) / nb, A = wp(ax + ux * (t0 + .1), ay + uy * (t0 + .1), yy + blade / 2), B = wp(ax + ux * (t1 - .1), ay + uy * (t1 - .1), yy + blade / 2);
+          tube(b, 'p23screen', A, B, .05, blade); }
+        } }
+    // wall light + camera under the strip (p21/p08), wired along the ledger
+    { const [lx, lz] = W2(P.x0 + 5.6, P.y0 + .02), y = hR(P.y0) - bh - .55; b.cyl('p23steel', .19, .19, .09, lx + .045, y, lz, 20, {rz: Math.PI / 2}); b.cyl('p23lens', .14, .14, .02, lx + .1, y, lz, 20, {rz: Math.PI / 2});
+      const [cx, cz] = W2(P.xK + 1.1, P.y0 + .02), yc = hR(P.y0) - bh - .25; b.bb('p23white', cx, yc - .08, cz - .08, cx + .12, yc + .08, cz + .08, .02); b.cyl('p23white', .07, .07, .22, cx + .2, yc - .04, cz, 14, {rz: Math.PI / 2 - .3}); b.cyl('p23lens', .045, .045, .01, cx + .31, yc - .08, cz, 12, {rz: Math.PI / 2 - .3}); }
+    const g = b.build('pergola23'); g.traverse(o => { if(o.isMesh && o.material === mat.p23poly){ o.castShadow = false; o.renderOrder = 3; } }); grp('yard').add(g);
+    R.rafters = nr; R.purlins = np; R.pergolaMeshes = g.children.length; }
+  // ================================================================= DINING (one builder)
+  { const b = new H.Builder(); for(const k in mat) b.useMaterial(k, mat[k]); const D = S.dining;
+    const [tx, tz] = W2(D.x, D.y); b.push(Mx(tx, yT, tz, 0, 0, 0)); p23Table(b, D);                    // local x = BIM y (long axis N-S), z = BIM x
+    const seats = [[-D.len / 4, 1], [D.len / 4, 1], [-D.len / 4, -1], [D.len / 4, -1]].map(([u, s]) => [u, s * (D.w / 2 + .55), s > 0 ? 0 : Math.PI]);
+    seats.push([D.len / 2 + .45, 0, Math.PI / 2], [-D.len / 2 - .45, 0, -Math.PI / 2]);   // chairs face local -z, i.e. the table
+    for(const [u, v, r] of seats){ b.push(Mx(u, 0, v, 0, r, 0)); p23Chair(b); b.pop(); }
+    b.pop(); const g = b.build('dining23'); grp('yard').add(g); R.chairs = seats.length; }
+  // ---------------------------------------------------------------- self-checks: kitchen clear of the wall, table clear of the kitchen, everything under/inside the pad
+  { const iss = [], K1 = K.leg1, D = S.dining;
+    if(K1.y < P.y0 - .01) iss.push('kitchen leg 1 behind the wall');
+    const bx = R.kitchen.leg1[1], tn = Math.tan(K.leg2.turn * Math.PI / 180), yF = x => K1.y + K.d + .08 + (x < bx ? (bx - x) * tn : 0);   // kitchen front line
+    const ch = [[D.x, D.y - D.len / 2 - .45]]; for(const s of [-1, 1]) for(const v of [-1, 1]) ch.push([D.x + s * (D.w / 2 + .55), D.y + v * D.len / 4]);
+    for(const [cx, cy] of ch) if(cy - .85 < yF(cx)) iss.push(`chair at ${cx.toFixed(1)},${cy.toFixed(1)} hits the kitchen`);
+    if(!inPoly(YARD_PAD(), D.x, D.y + D.len / 2 + 1.5)) iss.push('north chair off the pad');
+    if(R.soffit == null) iss.push('no BIM wall under the ledger (default height used)');
+    R.issues = iss; if(iss.length) console.warn('[pergola23]', iss.join('; ')); R.ms = +(performance.now() - t0).toFixed(1); }
   // seating near the rec-room doors
-  if(!window.STAGE){ F(1060,1380,1170,1430,yB,1.35,'fabric','yard'); F(1060,1430,1080,1520,yB,1.35,'fabric','yard'); F(1100,1450,1160,1500,yB,1.2,'wood','yard'); }   // staging table
+  if(!window.STAGE){ F(1060,1380,1170,1430,yT,1.35,'fabric','yard'); F(1060,1430,1080,1520,yT,1.35,'fabric','yard'); F(1100,1450,1160,1500,yT,1.2,'wood','yard'); }
 }
+function pergola23Materials(){
+  const T = THREE, tex = (w, h, draw, rep) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.encoding = T.sRGBEncoding; t.anisotropy = 4; return t; };
+  let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  // twin-wall polycarbonate: flutes every ~3/8", milky haze, a little leaf litter and dust (p13 shows both)
+  const poly = tex(256, 256, (g, w, h) => { g.fillStyle = '#e9eef0'; g.fillRect(0, 0, w, h);
+    for(let x = 0; x < w; x += 4){ g.fillStyle = 'rgba(120,130,135,.18)'; g.fillRect(x, 0, 1, h); }
+    for(let i = 0; i < 70; i++){ g.fillStyle = `rgba(${90 + rnd() * 40 | 0},${70 + rnd() * 30 | 0},${40 + rnd() * 20 | 0},${.35 + rnd() * .4})`; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 1.5 + rnd() * 3.5, .8 + rnd() * 1.5, rnd() * 3, 0, 6.3); g.fill(); }
+    for(let i = 0; i < 900; i++){ g.fillStyle = 'rgba(80,80,70,.12)'; g.fillRect(rnd() * w, rnd() * h, 1, 1); } });
+  const S = (o) => { const m = new T.MeshStandardMaterial(o); m.color.convertSRGBToLinear(); m.emissive.convertSRGBToLinear(); return m; };   // hex colours are sRGB
+  const m = {
+    p23steel: S({color: 0x0d0e0f, roughness: .55, metalness: .2}),                                       // black powder coat
+    p23poly: S({color: 0xffffff, map: poly, roughness: .28, metalness: 0, transparent: true, opacity: .62, depthWrite: false, side: T.DoubleSide}),
+    p23screen: S({color: 0x1c1917, roughness: .62, metalness: .15}),                                      // charcoal-brown aluminium blades
+    p23post: S({color: 0xc8c8c3, roughness: .45, metalness: .3}),
+    p23white: S({color: 0xf1f1ee, roughness: .4, metalness: 0}),
+    p23lens: S({color: 0xffffff, emissive: 0xfff1d8, emissiveIntensity: .25, roughness: .3}),
+    p23ssDark: S({color: 0x8e9194, roughness: .4, metalness: .85}),                                      // shaded stainless (cart back, divider, feet)
+    p23knob: S({color: 0xd8dbdd, roughness: .28, metalness: .8}),
+    p23black: S({color: 0x101112, roughness: .5, metalness: .2}),
+    p23ceramic: S({color: 0x0a0b0c, roughness: .12, metalness: .1}),                                     // glossy glazed kamado
+    p23frame: S({color: 0x35373a, roughness: .55, metalness: .35}),                                     // charcoal powder-coated aluminium
+    p23cushion: S({color: 0xaeaca7, roughness: .95, metalness: 0}),
+  };
+  m.stainless = (() => { const t = FIX.mat('stainless').clone(); t.color.setHex(0xaeb3b7).convertSRGBToLinear(); t.roughness = .42; t.metalness = .6; t.envMapIntensity = .7; return t; })();   // cool brushed 304 (p13)
+  // teak-look powder-coat fronts (p13): mid brown, slightly grey, fine grain along the blades; drawn on a small canvas, mapped by world-scale box UVs
+  const teak = tex(256, 256, (g, w, h) => { g.fillStyle = '#7d5a44'; g.fillRect(0, 0, w, h);
+    for(let i = 0; i < 160; i++){ const y = rnd() * h, c = rnd(); g.fillStyle = c < .5 ? `rgba(52,34,24,${.1 + rnd() * .25})` : `rgba(150,112,86,${.08 + rnd() * .18})`; g.fillRect(0, y, w, .6 + rnd() * 2.2); }
+    for(let i = 0; i < 30; i++){ g.fillStyle = 'rgba(40,26,18,.18)'; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 6 + rnd() * 20, .8 + rnd() * 1.5, 0, 0, 6.3); g.fill(); } });
+  teak.repeat.set(.5, .5);
+  m.teak = S({color: 0xffffff, map: teak, roughness: .58, metalness: 0});
+  // table top: white sintered stone with soft grey veining (p13/p07), small canvas
+  const vein = tex(512, 256, (g, w, h) => { g.fillStyle = '#efeeea'; g.fillRect(0, 0, w, h);
+    for(let i = 0; i < 9; i++){ g.strokeStyle = `rgba(120,122,125,${.08 + rnd() * .14})`; g.lineWidth = .6 + rnd() * 1.6; g.beginPath(); let x = rnd() * w, y = 0; g.moveTo(x, y);
+      while(y < h){ const nx = x + (rnd() - .35) * 60, ny = y + 20 + rnd() * 40; g.quadraticCurveTo(x + (rnd() - .5) * 40, (y + ny) / 2, nx, ny); x = nx; y = ny; } g.stroke(); } });
+  m.p23top = S({color: 0xe6e5e1, map: vein, roughness: .24, metalness: 0});
+  return m;
+}
+// one kitchen module in local frame: x across (-w/2..w/2, -x = viewer's left), y up from the pavers, z from the back (0) to the front (d)
+function p23Module(b, md, K){
+  const w = md.w, d = md.d || K.d, h = K.h, tt = K.tt, toe = .3, z = d - .06;
+  const carcass = (top = true) => { b.bb('stainless', -w / 2, toe, 0, w / 2, h - tt, z);                                   // body
+    b.bb('p23black', -w / 2 + .05, .02, .12, w / 2 - .05, toe, z - .18);                                               // recessed plinth
+    for(const s of [-1, 1]) b.bb('p23ssDark', s * w / 2 - .025, 0, .1, s * w / 2 + .025, .05, .25);                      // levelling feet
+    if(top) b.bb('stainless', -w / 2, h - tt, -.02, w / 2, h, d + .08, .012); };                                           // counter, 1" front overhang
+  // louvred front: teak frame, angled teak blades, dark void behind, stainless pull
+  const front = (x0, x1, y0, y1, pull) => { const g = .012, fw = .11, ft = .065;
+    b.bb('p23black', x0 + g, y0 + g, z, x1 - g, y1 - g, z + .02);
+    b.bb('teak', x0 + g, y0 + g, z + .02, x0 + g + fw, y1 - g, z + ft); b.bb('teak', x1 - g - fw, y0 + g, z + .02, x1 - g, y1 - g, z + ft);
+    b.bb('teak', x0 + g + fw, y1 - g - fw, z + .02, x1 - g - fw, y1 - g, z + ft); b.bb('teak', x0 + g + fw, y0 + g, z + .02, x1 - g - fw, y0 + g + fw, z + ft);
+    const ih = (y1 - y0) - 2 * (g + fw), n = Math.max(2, Math.round(ih / .13));
+    for(let i = 0; i < n; i++){ const yc = y0 + g + fw + (i + .5) * ih / n; b.boxR('teak', x1 - x0 - 2 * (g + fw) + .01, ih / n * .82, .022, (x0 + x1) / 2, yc, z + .045, -.62, 0, 0); }
+    if(pull === 'h'){ const L = Math.min(1.15, (x1 - x0) * .6), cx = (x0 + x1) / 2, py = y1 - .14; b.rod('p23knob', [cx - L / 2, py, z + .13], [cx + L / 2, py, z + .13], .016, 8);
+      for(const s of [-1, 1]) b.rod('p23knob', [cx + s * L / 2, py, z + ft], [cx + s * L / 2, py, z + .13], .012, 6); }
+    else if(pull){ const px = pull === 'l' ? x0 + .17 : x1 - .17, yt = y1 - .2, yb = Math.max(y0 + .25, yt - .75); b.rod('p23knob', [px, yb, z + .13], [px, yt, z + .13], .016, 8);
+      for(const yy of [yb, yt]) b.rod('p23knob', [px, yy, z + ft], [px, yy, z + .13], .012, 6); } };
+  const fx0 = -w / 2 + .07, fx1 = w / 2 - .07, fy0 = toe + .04, fy1 = h - tt - .05;
+  const doors = (x0, x1, y0, y1, n) => { const q = (x1 - x0) / n; for(let i = 0; i < n; i++) front(x0 + q * i, x0 + q * (i + 1), y0, y1, n === 1 ? 'r' : (i % 2 ? 'l' : 'r')); };
+  if(md.kind === 'filler'){ carcass(); return; }
+  if(md.kind === 'cab'){ carcass();
+    if(md.front === 'drawers'){ const n = md.drawers || 3, hh = (fy1 - fy0) / n; for(let i = 0; i < n; i++) front(fx0, fx1, fy0 + hh * i, fy0 + hh * (i + 1), 'h'); }
+    else if(md.front === 'drawerDoors'){ front(fx0, fx1, fy1 - .58, fy1, 'h'); doors(fx0, fx1, fy0, fy1 - .6, 2); }
+    else doors(fx0, fx1, fy0, fy1, md.doors || 2);
+    return; }
+  if(md.kind === 'grill'){ carcass(false);
+    const gs = -w / 2 + md.side, band = .5;                                                                             // side burner | grill split
+    b.bb('stainless', -w / 2, h - tt, -.02, w / 2, h, .35, .01);                                                            // counter strip behind the heads
+    b.bb('stainless', -w / 2, h - tt, -.02, -w / 2 + .1, h, d + .08); b.bb('stainless', w / 2 - .1, h - tt, -.02, w / 2, h, d + .08);
+    doors(fx0, fx1, fy0, fy1 - band - .02, 3);
+    // control fascia (slightly sloped) with chrome knobs: 2 for the side burner, 5 for the grill (3 + 2 either side of the badge)
+    b.boxR('stainless', w - .22, band, .1, 0, h - band / 2 - .03, d - .02, -.12, 0, 0);
+    b.bb('p23ssDark', gs - .02, h - band - .05, d - .08, gs + .02, h, d + .04);
+    const knob = kx => { b.cyl('p23knob', .085, .095, .1, kx, h - band / 2 - .04, d + .07, 20, {rx: Math.PI / 2}); b.cyl('p23knob', .1, .1, .015, kx, h - band / 2 - .04, d + .02, 20, {rx: Math.PI / 2}); };
+    for(let i = 0; i < 2; i++) knob(-w / 2 + .45 + i * (md.side - .8));
+    const gw = w - md.side - .15; for(let i = 0; i < 5; i++) knob(gs + .4 + (gw - .8) * (i < 3 ? i * .2 : .6 + (i - 3) * .4) + (i >= 3 ? .1 : 0));
+    // side burner: flat stainless lid
+    b.bb('stainless', -w / 2 + .12, h, .4, gs - .08, h + .1, d - .12, .02);
+    // grill head: firebox lip + hood with a rounded back, flat front, badge, thermometer, bar handle on standoffs
+    const hw = gw - .1, hc = gs + .05 + gw / 2, hz0 = .35, hz1 = d - .1, D = hz1 - hz0, Hh = .86;   // tall boxy hood (p13)
+    b.bb('stainless', hc - hw / 2 - .04, h, hz0 - .05, hc + hw / 2 + .04, h + .14, hz1 + .04, .01);
+    const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(D, 0); sh.lineTo(D, Hh * .7); sh.quadraticCurveTo(D * .98, Hh, D * .75, Hh); sh.lineTo(D * .2, Hh * .98); sh.quadraticCurveTo(0, Hh * .95, 0, Hh * .55); sh.lineTo(0, 0);
+    b.extrude('stainless', sh, hw, FIX.helpers.M(hc + hw / 2, h + .14, hz0, 0, -Math.PI / 2, 0), {bevel: .015, bevelSegments: 2, curveSegments: 12});
+    const hy = h + .14 + Hh * .5; b.rod('p23knob', [hc - hw / 2 + .3, hy, hz1 + .2], [hc + hw / 2 - .3, hy, hz1 + .2], .035, 12);
+    for(const s of [-1, 1]) b.rod('p23knob', [hc + s * (hw / 2 - .3), hy, hz1 + .01], [hc + s * (hw / 2 - .3), hy, hz1 + .2], .025, 8);
+    b.cyl('p23knob', .09, .09, .03, hc, h + .14 + Hh * .76, hz1 + .005, 24, {rx: Math.PI / 2}); b.cyl('p23black', .07, .07, .01, hc, h + .14 + Hh * .76, hz1 + .025, 20, {rx: Math.PI / 2});
+    return; }
+  if(md.kind === 'kamado'){ const t = .06;
+    for(const s of [-1, 1]) b.bb('stainless', s * w / 2 - (s > 0 ? t : 0), toe - .25, 0, s * w / 2 + (s < 0 ? t : 0), h - tt, d);       // side panels to the floor
+    b.bb('p23ssDark', -w / 2, .1, 0, w / 2, h - tt, .06);                                                            // back
+    b.bb('stainless', -w / 2, h - tt, -.02, w / 2, h, d + .06, .012);                                                     // top deck (the kamado drops into it)
+    b.bb('stainless', -w / 2 + t, 1.62, .06, w / 2 - t, 1.67, d - .04); b.bb('stainless', -w / 2 + t, .95, .06, w / 2 - t, 1.0, d - .04);   // two open shelves
+    b.bb('p23black', -w / 2 + .05, .02, .12, w / 2 - .05, .1, d - .2);
+    front(-w / 2 + t, w / 2 - t, .1, .93, 'h');                                                                       // louvred drawer below
+    // kamado (bell dome, p13): glazed bowl down in the cart, two stainless bands at the seam, chimney cap, front handle, rear hinge
+    const Rr = .98, cz = d / 2 + .05, yS = h + .12;
+    b.lathe('p23ceramic', [[0, 1.7], [.55, 1.72], [.85, 2.1], [Rr - .02, 2.6], [Rr, yS - .1]], 40, 0, 0, cz);
+    b.cyl('p23ssDark', .5, .5, .06, 0, 1.72, cz, 24);                                                                 // ash drawer ring on the upper shelf
+    b.lathe('p23ceramic', [[Rr - .01, yS + .16], [Rr - .04, yS + .36], [.72, yS + .75], [.5, yS + 1.06], [.36, yS + 1.22], [0, yS + 1.24]], 44, 0, 0, cz);   // conical bell (p13)
+    for(const yy of [yS - .04, yS + .12]) b.cyl('stainless', Rr + .035, Rr + .035, .12, 0, yy, cz, 44);
+    b.cyl('stainless', .17, .2, .17, 0, yS + 1.3, cz, 24); b.cyl('stainless', .21, .21, .05, 0, yS + 1.41, cz, 24);
+    b.bb('stainless', -.17, yS + .05, cz + Rr + .02, .17, yS + .11, cz + Rr + .2, .02);
+    b.bb('stainless', -.21, yS + .2, cz + Rr - .02, .21, yS + .29, cz + Rr + .03, .02);                                     // badge plate
+    b.bb('p23black', -.32, yS - .22, cz - Rr - .14, .32, yS + .3, cz - Rr + .02, .02);
+    return; }
+}
+// dining table: local x = long axis (len), z = width; marble-look top with umbrella hole, charcoal aluminium legs + apron (p07/p13)
+function p23Table(b, D){
+  const L = D.len, W = D.w, h = D.h, t = .1;
+  b.add('p23top', (() => { const g = new THREE.BoxGeometry(L, t, W); g.translate(0, h - t / 2, 0); const uv = g.attributes.uv; for(let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i), uv.getY(i)); return g; })(), null, {keepUV: true});
+  b.cyl('p23black', .09, .09, .012, 0, h + .002, 0, 20); b.cyl('p23knob', .11, .11, .01, 0, h + .001, 0, 20);
+  b.bb('p23frame', -L / 2 + .15, h - t - .2, -W / 2 + .15, L / 2 - .15, h - t, -W / 2 + .25); b.bb('p23frame', -L / 2 + .15, h - t - .2, W / 2 - .25, L / 2 - .15, h - t, W / 2 - .15);
+  b.bb('p23frame', -L / 2 + .15, h - t - .2, -W / 2 + .25, -L / 2 + .25, h - t, W / 2 - .25); b.bb('p23frame', L / 2 - .25, h - t - .2, -W / 2 + .25, L / 2 - .15, h - t, W / 2 - .25);
+  for(const sx of [-1, 1]) for(const sz of [-1, 1]) b.bb('p23frame', sx * (L / 2 - .15) - (sx > 0 ? .17 : 0), 0, sz * (W / 2 - .15) - (sz > 0 ? .17 : 0), sx * (L / 2 - .15) + (sx < 0 ? .17 : 0), h - t, sz * (W / 2 - .15) + (sz < 0 ? .17 : 0));
+}
+// horseshoe-back armchair (p07/p21): faces local -z. Square legs; the back is two curved bands (top rail + mid rail) on an elliptical
+// plan that wraps from arm to arm, carried by the two rear legs and a front arm post each side; light grey seat cushion with a dark frame.
+function p23Chair(b){
+  const T = THREE, sy = 1.48, rx = .88, rz = .8, cz = .02;                       // band ellipse (plan) half-axes, centre
+  const at = a => [rx * Math.cos(a), cz + rz * Math.sin(a)];                      // a = 0 right side, pi/2 back, pi left side
+  const leg = (x, z, y1) => b.bb('p23frame', x - .055, 0, z - .055, x + .055, y1, z + .055, .01);
+  for(const a of [Math.PI * .28, Math.PI * .72]){ const [x, z] = at(a); leg(x, z, 2.5); }                      // rear legs run up into the top rail
+  for(const sx of [-1, 1]) leg(sx * .78, -.72, sy);                                                     // front legs
+  for(const a of [-.12, Math.PI + .12]){ const [x, z] = at(a); b.bb('p23frame', x - .05, sy, z - .05, x + .05, 2.5, z + .05, .01); }   // arm posts
+  b.bb('p23frame', -.84, sy - .14, -.78, .84, sy, .7, .015);                                            // seat frame
+  b.rbox('p23cushion', 1.58, .28, 1.4, .08, 0, sy + .13, -.06, {seg: 2});
+  for(const [yy, hh] of [[2.5, .2], [2.02, .11]]){ const sh = new T.Shape(), th = .07, a0 = -.14, a1 = Math.PI + .14;
+    sh.absellipse(0, cz, rx + th / 2, rz + th / 2, a0, a1, false); sh.absellipse(0, cz, rx - th / 2, rz - th / 2, a1, a0, true);
+    b.extrude('p23frame', sh, hh, FIX.helpers.M(0, yy, 0, Math.PI / 2, 0, 0), {bevel: .01, bevelSegments: 1, curveSegments: 24}); }
+}
+
+/* pergola23 L: terrace lounge set by the rec-room doors (p08 square-on, p21, p07, p30): light grey-taupe flat-weave resin wicker
+   (multi-tone strands ~1/2" high, over-under), deep white welted cushions (seat ~6", loose back cushions) with striped lumbar pillows,
+   arms that flare outward toward the top; coffee table in weathered grey teak - slatted top, chunky block legs, open under (not wicker).
+   Replaces STAGE kinds wickerSofa / outdoorCoffee (same options, origin, footprint and userData), one merged mesh per material. */
+const P23L = {};
+function p23LoungeMats(){
+  if(P23L.m) return P23L.m;
+  const T = THREE, cv = (w, h, f) => { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); return c; };
+  let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  // 1 ft tile, 256 px: horizontal flat strands ~0.4" high (30 rows/ft) running 2-4" between the vertical stakes, staggered row to row;
+  // each strand one tone from a grey-taupe / mushroom / brown mix, rounded with a light crown and dark edges (p08 close-up)
+  const weave = cv(256, 256, (g, W, H) => { g.fillStyle = '#5a5146'; g.fillRect(0, 0, W, H); const rows = 30, rh = H / rows;
+    for(let r = 0; r < rows; r++){ const y = r * rh; let x = -((r * 37) % 64);
+      while(x < W){ const L = 40 + rnd() * 50, t = rnd(), v = .9 + rnd() * .18;
+        const base = t < .5 ? [156, 149, 137] : t < .82 ? [133, 124, 111] : [106, 97, 86];
+        const c = k => `rgb(${base.map(q => Math.min(255, q * v * k) | 0)})`, gr = g.createLinearGradient(0, y, 0, y + rh);
+        gr.addColorStop(0, c(.72)); gr.addColorStop(.4, c(1.08)); gr.addColorStop(1, c(.66));
+        g.fillStyle = gr; for(const o of [0, W]){ g.fillRect(x + 1 - o, y + .6, L - 2, rh - 1.2); } x += L; } } });
+  const grain = cv(256, 64, (g, W, H) => { g.fillStyle = '#a49a8c'; g.fillRect(0, 0, W, H);
+    for(let i = 0; i < 90; i++){ g.fillStyle = rnd() < .5 ? `rgba(80,72,62,${.1 + rnd() * .2})` : `rgba(210,204,195,${.1 + rnd() * .2})`; g.fillRect(0, rnd() * H, W, .5 + rnd() * 1.5); } });
+  const tex = (c, srgb) => { const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; if(srgb) t.encoding = T.sRGBEncoding; t.anisotropy = 4; return t; };
+  const S = o => { const m = new T.MeshStandardMaterial(o); m.color.convertSRGBToLinear(); return m; };
+  const wm = tex(weave, true), wb = tex(weave, false), tg = tex(grain, true); wm.repeat.set(3, 3); wb.repeat.set(3, 3);   // UVs here run ~3 per ft: keep strands ~0.4"
+  return (P23L.m = {
+    wicker23: S({color: 0xffffff, map: wm, bumpMap: wb, bumpScale: .012, roughness: .78, metalness: 0}),
+    teakGrey23: S({color: 0xffffff, map: tg, roughness: .82, metalness: 0}),
+    cushion23: S({color: 0xf3f1ec, roughness: .95, metalness: 0}),
+    welt23: S({color: 0xe6e3dc, roughness: .9, metalness: 0}),
+  });
+}
+function p23Lounge(kind, o){
+  const H = FIX.helpers, b = new H.Builder(), m = p23LoungeMats(); for(const k in m) b.useMaterial(k, m[k]);
+  const U = {boxUV: true}, Ur = (x) => Object.assign({boxUV: true, seg: 2}, x || {});
+  if(kind === 'outdoorCoffee'){ const w = o.w, d = o.d, h = o.h, lg = .29, n = 9, gap = .04, sw = (d - gap * (n - 1)) / n;
+    for(let i = 0; i < n; i++){ const z0 = i * (sw + gap); b.bb('teakGrey23', -w / 2, h - .1, z0, w / 2, h, z0 + sw, .008, U); }              // top slats along the length
+    b.bb('teakGrey23', -w / 2 + .06, h - .32, .06, w / 2 - .06, h - .1, .2, 0, U); b.bb('teakGrey23', -w / 2 + .06, h - .32, d - .2, w / 2 - .06, h - .1, d - .06, 0, U);   // aprons
+    b.bb('teakGrey23', -w / 2 + .06, h - .32, .2, -w / 2 + .2, h - .1, d - .2, 0, U); b.bb('teakGrey23', w / 2 - .2, h - .32, .2, w / 2 - .06, h - .1, d - .2, 0, U);
+    for(const sx of [-1, 1]) for(const sz of [0, 1]){ const x = sx * (w / 2 - .05 - lg / 2), z = sz ? d - .05 - lg / 2 : .05 + lg / 2; b.bb('teakGrey23', x - lg / 2, 0, z - lg / 2, x + lg / 2, h - .1, z + lg / 2, .01, U); }
+  } else {                                                                                                   // wickerSofa (seats 1 = club chair)
+    const w = o.w, d = o.d, h = o.h + .15, aw = o.seats === 1 ? .62 : .5, ah = h - .35, sy = 1.05;
+    b.rbox('wicker23', w - 2 * aw + .1, sy, d - .1, .08, 0, sy / 2, d / 2, Ur());                                 // seat deck / skirt to the pavers
+    b.rbox('wicker23', w, h - .1, .42, .1, 0, (h - .1) / 2, .21, Ur({rx: -.08}));                                 // back, slight rake
+    for(const s of [-1, 1]){ b.rbox('wicker23', aw, ah, d, .12, s * (w / 2 - aw / 2) + s * .04, ah / 2, d / 2, Ur({rz: -s * .07}));   // arms flaring outward toward the top
+      b.rbox('wicker23', aw + .14, .14, d + .02, .07, s * (w / 2 - aw / 2) + s * .1, ah - .02, d / 2, Ur({rz: -s * .07})); }   // rolled arm cap
+    for(const s of [-1, 1]) for(const z of [.15, d - .15]) b.bb('wicker23', s * (w / 2 - .2) - .08, 0, z - .08, s * (w / 2 - .2) + .08, .06, z + .08, 0, U);   // glides (same mesh as the frame)
+    const iw = w - 2 * aw - .04, n = o.seats, cw = iw / n;
+    for(let i = 0; i < n; i++){ const x = -iw / 2 + cw * (i + .5);
+      b.rbox('cushion23', cw - .03, .5, d - .55, .1, x, sy + .25, .5 + (d - .55) / 2, {seg: 3, bulge: [0, .035, 0]});   // 6" seat cushion
+      b.rbox('cushion23', cw - .01, .03, d - .53, .015, x, sy + .49, .5 + (d - .55) / 2, {seg: 1});                     // welt
+      b.rbox('cushion23', cw - .05, 1.35, .5, .14, x, sy + .5 + .62, .62, {seg: 3, rx: -.17, bulge: [0, 0, .06]}); }  // loose back cushion
+    const np = o.seats === 1 ? 1 : 2; for(let i = 0; i < np; i++){ const x = o.seats === 1 ? -cw * .18 : (i - .5) * cw * .8;
+      b.rbox('stripeCushion', o.seats === 1 ? .95 : 1.2, .62, .26, .1, x, sy + .82, 1.08, {seg: 3, rx: -.25, bulge: [0, 0, .05]}); }   // striped lumbar pillows (p08)
+  }
+  const g = b.build(kind); g.userData = {kind, category: 'furniture', opts: o, size: [o.w, o.d, o.h]}; return g;
+}
+if(window.STAGE && STAGE.make && !STAGE.__p23){ const mk = STAGE.make; STAGE.__p23 = true;
+  STAGE.make = function(kind, o){ if(kind === 'wickerSofa' || kind === 'outdoorCoffee'){ const D = kind === 'wickerSofa' ? {w: 6.4, d: 2.9, h: 2.5, seats: 3} : {w: 3.8, d: 2.2, h: 1.3};
+      const oo = Object.assign({}, D); for(const k in (o || {})) if(o[k] !== undefined) oo[k] = o[k]; try{ return p23Lounge(kind, oo); }catch(e){ console.warn('[pergola23] lounge', e); } }
+    return mk.apply(this, arguments); }; }
 
 /* ---------------- int22 I3: terrain under the building + self-check ---------------- */
 const I22_FOOT = () => BIM.spaces.filter(s => s.outline && s.outline.length > 2 && s.floor != null).map(s => { const xs = s.outline.map(q => q[0]), ys = s.outline.map(q => q[1]);
@@ -3968,7 +4323,7 @@ function pavRestY(cx, cz, w, d, yaw){   // a piece rests on the highest support 
 function pavFields(){   // every paver field: [BIM plan outline, surface height at world (x, z), raised?]
   const F = ((TERR && TERR.paved) || []).map(pa => ({name: pa.name, P: pavSmooth(pa.polygon), y: (x, z) => ground(x, z) + PAV_BAND.lift}));
   if(typeof YARD_SPEC !== 'undefined'){ const P = YARD_SPEC.pergola, [cx, cz] = W2((P.x0 + P.x1) / 2, (P.y0 + P.y1) / 2), yT = Math.max(GROUND_BACK, ground(cx, cz) + .22);   // buildYard's pad
-    F.push({name: 'pergola paver pad', P: [[P.x0 - .5, P.y0], [P.x1, P.y0], [P.x1, P.y1 + 1], [P.x0 - .5, P.y1 + 1]], y: (x, z) => Math.max(yT - .005, ground(x, z) + .2) + .012, raised: true}); }
+    F.push({name: 'pergola paver pad', P: YARD_PAD(), y: (x, z) => ground(x, z) + PAV_BAND.lift, raised: true}); }   // pergola23: flush pad, same polygon as buildYard
   return F; }
 function paverBandTexture(){   // P5: one soldier unit = 64 x 128 px (0.6 ft along x 0.9 ft across), 16 per repeat
   const W = 1024, H = 128, U = 16, uw = W / U, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
@@ -7797,7 +8152,7 @@ function landscapeContext(){   // the site, in the BIM plan frame (x east, y nor
   for(const w of BIM.walls) if(w.storey === 'L1' && w.isExternal) house.push(w.footprint);
   for(const d of BIM.decks) if(d.z < 4){ const [a, b, c, e] = d.rect; house.push([[a, b], [c, b], [c, e], [a, e]]); }
   const paved = TERR.paved.map(pa => pa.polygon);
-  if(typeof YARD_SPEC !== 'undefined'){ const P = YARD_SPEC.pergola; paved.push([[P.x0 - .5, P.y0], [P.x1, P.y0], [P.x1, P.y1 + 1], [P.x0 - .5, P.y1 + 1]]); }
+  if(typeof YARD_SPEC !== 'undefined'){ const P = YARD_SPEC.pergola; paved.push(YARD_PAD()); }
   const stops = STOPS.filter(st => st.level === 'outside' && Array.isArray(st.pos))
     .map(st => ({name: st.t, at: [st.pos[2], st.pos[0]], eye: st.pos[1] - ground(st.pos[0], st.pos[2])}));
   return { toWorld: (x, y) => W2(x, y), heightAt: (x, z) => ground(x, z), lot: TERR.lot, house, paved,
@@ -9069,7 +9424,7 @@ if(window.FIX && FIX.make && !FIX.__bath20){ FIX.__bath20 = true; const _mk = FI
     return r;
   };
 }
-{ const _fin = finish; finish = function(){ const r = _fin.apply(this, arguments); try{ bath20Standoff(); bath20NoBase(); }catch(e){ console.warn('bath20 base', e); BATH20.problems.push(String(e)); } return r; }; }
+{ const _fin = finish; finish = function(){ const r = _fin.apply(this, arguments); try{ ortho23Reclass(); }catch(e){ console.warn('ortho23 reclass', e); O23.err = String(e && e.stack || e).slice(0, 300); } try{ bath20Standoff(); bath20NoBase(); }catch(e){ console.warn('bath20 base', e); BATH20.problems.push(String(e)); } return r; }; }
 { const _bb = buildBIM; buildBIM = function(){ const r = _bb.apply(this, arguments); try{ bathTile20(); }catch(e){ console.warn('bath20', e); BATH20.problems.push(String(e)); } return r; }; }
 setTimeout(function bath20Env(){ try{ const env = FIX.mat('chrome').envMap; if(!env) return setTimeout(bath20Env, 1500); for(const k in BATH20.mats){ BATH20.mats[k].envMap = env; BATH20.mats[k].envMapIntensity = BATH20.mats[k].metalness > .5 ? .9 : .35; BATH20.mats[k].needsUpdate = true; } }catch(e){} }, 1500);
 window.__bath20F = () => BATH20_FACES; window.__bath20nb = () => { bath20NoBase(); return [BATH20.stats.baseboardTrisDropped, BATH20_FACES.length]; }; window.__bath20faces = id => { const sp = BIM.byId[id]; return bath20Faces(sp.outline, BATH20.T, sp.floor).map(e => [e.a.map(v => +v.toFixed(2)), e.b.map(v => +v.toFixed(2)), +e.T.toFixed(3)]); }; window.__bath20 = () => ({stats: BATH20.stats, problems: BATH20.problems, fixtures: FIXOBJ.filter(f => /showerSys|showerGlass|mirror-21|mirror-01/.test(f.id)).map(f => f.id)});
@@ -9753,6 +10108,9 @@ const ACC = (() => {
 window.__aa = {state: () => AAX.state(), A: AAX, ACC};
 
 /* ================= v22 perf22 (patch_v22_perf22.py): light-count stability + exact any-hit waypoint occlusion ================= */
+// objects made by this block (uuids) draw from a private generator: the page's own Math.random sequence (tree planting, SSAO
+// kernels) stays exactly what it was without it
+const P22RAND = Math.random; { let rs = 0x2545f491; Math.random = () => { rs ^= rs << 13; rs >>>= 0; rs ^= rs >>> 17; rs ^= rs << 5; rs >>>= 0; return rs / 4294967296; }; }
 const P22OFF = k => /[?&]perf-off\b/.test(location.search) || new RegExp('[?&]perf-' + k + '-off\\b').test(location.search);
 // ---- 1. light pads
 { const LP = {list: [], n: 0, max: new Map(), pool: {p: [], s: []}, holder: null, stats: {pads: 0, renders: 0}};
@@ -9789,7 +10147,9 @@ const P22OFF = k => /[?&]perf-off\b/.test(location.search) || new RegExp('[?&]pe
 // ---- 2. any-hit occlusion
 const P22OCC = (() => {
   const T = THREE, BV = new WeakMap(), R = {on: () => !P22OFF('occbvh'), stats: {rays: 0, bvh: 0, gen: 0, built: 0}};
-  let batchKey = -1, objs = [], gen = [], sph = null, inv = [];
+  let batchKey = -1, batchT0 = 0, objs = [], gen = [], sph = null, inv = [];
+  const bkey = g => { const pos = g.attributes.position, idx = g.index; return pos.version + ':' + (idx ? idx.version : -1) + ':' + g.drawRange.start + ':' + g.drawRange.count + ':' + pos.count; };
+  const ready = g => { const B = BV.get(g); return !!B && B.key === bkey(g); };
   const vA = new T.Vector3(), vB = new T.Vector3(), vC = new T.Vector3(), pt = new T.Vector3(), ptW = new T.Vector3(), lr = new T.Ray(), sp = new T.Sphere(), e = new T.Vector3();
   const opaque = m => !(m && m.transparent);
   const plainMesh = o => o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && o.raycast === T.Mesh.prototype.raycast && o.material && !Array.isArray(o.material) &&
@@ -9840,6 +10200,8 @@ const P22OCC = (() => {
     if(g.boundingBox !== null && lr.intersectsBox(g.boundingBox) === false) return false;
     e.copy(ray.direction).multiplyScalar(rc.far).add(ray.origin).applyMatrix4(inv[i]);
     const tmax = isFinite(rc.far) ? e.distanceTo(lr.origin) * 1.0001 + 1e-4 : Infinity;
+    // a geometry without a BVH yet: build it only within this batch's 4 ms budget, else answer with three's own raycast (exact)
+    if(!ready(g)){ if(performance.now() - batchT0 > 4){ tmp.length = 0; o.raycast(rc, tmp); R.stats.slow = (R.stats.slow || 0) + 1; return tmp.length > 0; } }
     const pos = g.attributes.position, B = bvhFor(g); if(!B.nt) return false; R.stats.bvh++;
     const back = m.side === T.BackSide, cull = m.side !== T.DoubleSide; const st = [0];
     while(st.length){ const n = B.nodes[st.pop()]; if(!slab(n.box, lr.origin, lr.direction, tmax)) continue;
@@ -9852,7 +10214,7 @@ const P22OCC = (() => {
     return false; }
   const tmp = [];
   R.hit = (rc, roots, frameKey) => {
-    if(frameKey !== batchKey){ batchKey = frameKey; collect(roots, rc); }
+    if(frameKey !== batchKey){ batchKey = frameKey; batchT0 = performance.now(); collect(roots, rc); }
     R.stats.rays++; const ray = rc.ray, O = ray.origin, D = ray.direction, far = rc.far;
     for(let i = 0; i < objs.length; i++){ const cx = sph[i * 4] - O.x, cy = sph[i * 4 + 1] - O.y, cz = sph[i * 4 + 2] - O.z, r = sph[i * 4 + 3];
       const tc = cx * D.x + cy * D.y + cz * D.z, d2 = cx * cx + cy * cy + cz * cz - tc * tc; if(d2 > r * r) continue;   // line misses the sphere
@@ -9864,6 +10226,12 @@ const P22OCC = (() => {
     if(R.checkOn){ const ref = rc.intersectObjects(roots, true).filter(h => !(h.object.material && h.object.material.transparent)).length > 0; R.stats.chk = (R.stats.chk || 0) + 1;
       if(ref !== v){ R.stats.bad = (R.stats.bad || 0) + 1; console.warn('[p22] occ mismatch', ref, v); } }
     return v; };
+  { const idle = (ms, fn) => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, {timeout: 3000}) : fn()), ms); let list = null;
+    const pre = () => { if(!window.__perfTrees) return idle(2000, pre);
+      if(!list){ list = []; scene.traverse(o => { if(plainMesh(o) && opaque(o.material) && o.geometry.attributes.position.count >= 300) list.push(o.geometry); }); }
+      const t = performance.now(); while(list.length && performance.now() - t < 8){ const g = list.pop(); if(!ready(g)) bvhFor(g); }
+      if(list.length) idle(50, pre); };
+    if(R.on()) idle(3000, pre); }
   window.__p22 = Object.assign(window.__p22 || {}, {occ: R}); return R; })();
 // ---- 3. probe warm: programs for the mirror probes' output encoding, compiled ahead in idle slices
 { const PW = {stats: {objs: 0, progs0: 0, progs: 0, ms: 0, probes: 0}, started: false};
@@ -9872,17 +10240,20 @@ const P22OCC = (() => {
   const busy = () => document.hidden || (typeof anim !== 'undefined' && anim) || (typeof GOV !== 'undefined' && performance.now() - (GOV.lastMove || 0) < 1500);
   const run = () => {
     if(P22OFF('probewarm') || typeof GLASS20_PROBES === 'undefined') return;
-    if(!GLASS20_PROBES.length || !(typeof GOV !== 'undefined' && GOV.warmMs)) return later(3000, run);     // after the main warm-up
+    if(!GLASS20_PROBES.length || !window.__perfTrees) return later(1500, run);                                  // once the trees are in
     const sceneEnc = encOf(typeof HITCH_SCENE_RT === 'function' ? HITCH_SCENE_RT() : null);
-    const probeEnc = encOf(GLASS20_PROBES[0].rt); if(sceneEnc === probeEnc) return;                           // desktop: same programs
-    const dummy = new THREE.WebGLRenderTarget(1, 1, {depthBuffer: true}); dummy.texture.encoding = probeEnc; dummy.texture.generateMipmaps = false;
-    const cp = camera.position, probes = GLASS20_PROBES.slice().sort((a, b) => a.p.distanceTo(cp) - b.p.distanceTo(cp));
+    const probeEnc = encOf(GLASS20_PROBES[0].rt); if(sceneEnc === probeEnc){ PW.need = false; return; } PW.need = true;                           // desktop: same programs
+    const r0 = Math.random; Math.random = () => .5; const dummy = new THREE.WebGLRenderTarget(1, 1, {depthBuffer: true}); Math.random = r0; dummy.texture.encoding = probeEnc; dummy.texture.generateMipmaps = false;
+    // nearest the tour's next stops first (where the next captures will happen), then the rest by distance
+    const cp = camera.position, nexts = []; try{ for(let k = 1; k <= 3; k++){ const st = STOPS[(stopIdx + k) % STOPS.length]; if(st && st.pos) nexts.push(new THREE.Vector3(...st.pos)); } }catch(e){}
+    const dist = q => Math.min(q.p.distanceTo(cp) + 1000, ...nexts.map((v, k) => q.p.distanceTo(v) + k * 40));
+    const probes = GLASS20_PROBES.slice().sort((a, b) => dist(a) - dist(b));
     const fr = new THREE.Frustum(), pm = new THREE.Matrix4();
     const proxy = Object.create(scene); proxy.traverseVisible = cb => scene.traverseVisible(cb); let chunk = null; proxy.traverse = cb => cb(chunk);
     let qi = 0, objs = null, i = 0; const t0 = performance.now(); PW.stats.progs0 = renderer.info.programs.length; PW.started = true;
     const step = () => {
       if(busy()) return later(700, step);
-      if(!objs){ if(qi >= probes.length){ PW.stats.ms = Math.round(performance.now() - t0); PW.stats.progs = renderer.info.programs.length - PW.stats.progs0; dummy.dispose(); return; }
+      if(!objs){ if(qi >= probes.length){ PW.done = true; PW.stats.ms = Math.round(performance.now() - t0); PW.stats.progs = renderer.info.programs.length - PW.stats.progs0; dummy.dispose(); return; }
         const q = probes[qi]; objs = []; i = 0; const seen = new Set(); const hid = new Set(GLASS20_PROBES.map(o => o.mesh));
         q.cam.updateMatrixWorld(true);
         for(const c of q.cam.children){ c.updateMatrixWorld(true); pm.multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse); fr.setFromProjectionMatrix(pm);
@@ -9897,7 +10268,225 @@ const P22OCC = (() => {
       objs = null; qi++; later(0, step); };
     later(0, step); };
   if(!(PERF.isTest() && !/[?&]gov=1/.test(location.href))) later(4000, run);
+  PW.t0 = performance.now(); window.__P22PW = PW;
   window.__p22 = Object.assign(window.__p22 || {}, {probewarm: PW}); }
+// ---- 4. PVS: objects hidden from the eye in EVERY direction are not drawn while the eye stays put
+const P22PVS = (() => {
+  const T = THREE, V = {on: () => !P22OFF('pvs'), pvs: null, job: null, stats: {computes: 0, ms: 0, culled: 0, testees: 0, occluders: 0, invalid: 0, lastWhy: ''}, restPos: new T.Vector3(), restT: 0, anim: new WeakSet(), fails: 0, failPos: new T.Vector3(), rts: null, rtT: 0};
+  const gl = renderer.getContext(), ok = renderer.capabilities.isWebGL2 && !!gl.getExtension('EXT_color_buffer_float');
+  if(!ok || coarse){ V.on = () => false; return V; }
+  const shadowCams = () => { const a = []; scene.traverse(o => { if(o.isLight && o.shadow && o.shadow.camera) a.push(o.shadow.camera); }); return a; };
+  const lit = o => { for(let x = o; x; x = x.parent){ if(!x.visible) return false; if(x === scene) return true; } return false; };
+  const defOBC = T.Material.prototype.onBeforeCompile;
+  // a material's own shader hook is harmless here when its COMPILED vertex shader moves nothing: same count of position
+  // terms (transformed / gl_Position / mvPosition) as a plain material of the same type (wind sway, terrain, mirrors differ)
+  const VSAFE = new WeakMap(), VBASE = {}, vcount = s => (s.match(/transformed/g) || []).length + '|' + (s.match(/gl_Position/g) || []).length + '|' + (s.match(/mvPosition/g) || []).length;
+  const vsrc = m => { const pr = renderer.properties.get(m), P = pr && pr.currentProgram; return P && P.vertexShader ? gl.getShaderSource(P.vertexShader) || '' : null; };
+  const vsafe = m => { if(m.onBeforeCompile === defOBC) return true; if(VSAFE.has(m)) return VSAFE.get(m);
+    const src = vsrc(m); if(src === null) return false; const base = VBASE[m.type]; if(base === undefined) return false;
+    const ok = vcount(src) === base; VSAFE.set(m, ok); return ok; };
+  const learnBase = () => { scene.traverse(o => { const m = o.material; if(!m || Array.isArray(m) || m.onBeforeCompile !== defOBC || VBASE[m.type] !== undefined) return; const src = vsrc(m); if(src) VBASE[m.type] = vcount(src); }); };
+  const plainMat = m => m && !Array.isArray(m) && m.visible !== false && !m.displacementMap && !m.wireframe && !m.morphTargets && !m.skinning && vsafe(m);
+  const plainMesh = o => o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && o.geometry && o.geometry.isBufferGeometry && !(o.geometry.morphAttributes && o.geometry.morphAttributes.position);
+  const isOcc = o => plainMesh(o) && plainMat(o.material) && !o.material.transparent && !(o.material.alphaTest > 0) && o.material.depthWrite && o.material.depthTest && o.material.colorWrite !== false && o.layers.test(camera.layers);
+  const isTest = o => plainMesh(o) && plainMat(o.material) && o.frustumCulled !== false && o.renderOrder === 0 && o.material.depthTest && o.layers.mask === 1 && !o.onBeforeRender.p22 && o.onBeforeRender === T.Object3D.prototype.onBeforeRender;
+  // distance-to-eye materials (one per side) and the box test material
+  const VS = 'varying vec3 wp; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); wp = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }';
+  const U0 = {cpos: {value: new T.Vector3()}};
+  const dmat = side => new T.ShaderMaterial({uniforms: U0, side, vertexShader: VS, fragmentShader: 'uniform vec3 cpos; varying vec3 wp; void main(){ gl_FragColor = vec4(length(wp - cpos), 0.0, 0.0, 1.0); }'});
+  const DM = [dmat(T.FrontSide), dmat(T.BackSide), dmat(T.DoubleSide)];
+  const TU = {cpos: U0.cpos, dtex: {value: null}, invR: {value: 1}};
+  const tmat = new T.ShaderMaterial({uniforms: TU, side: T.DoubleSide, depthTest: false, depthWrite: false, colorWrite: false, vertexShader: VS,
+    fragmentShader: 'uniform vec3 cpos; uniform sampler2D dtex; uniform float invR; varying vec3 wp; void main(){ float d = length(wp - cpos); vec2 uv = gl_FragCoord.xy * invR; float m = 0.0;' +
+      ' for(int i = -1; i <= 1; i++) for(int j = -1; j <= 1; j++) m = max(m, texture2D(dtex, uv + vec2(float(i), float(j)) * invR).r);' +
+      ' if(d > m * 1.002 + 0.03) discard; gl_FragColor = vec4(1.0); }'});
+  const tmatW = tmat.clone(); tmatW.uniforms = TU; tmatW.wireframe = true;                       // + the triangle edges as lines: thin parts always rasterise
+  const box = new T.BoxGeometry(1, 1, 1); box.computeBoundingSphere();
+  const tscene = new T.Scene(); tscene.autoUpdate = false;
+  const qpool = [];
+  // the objects made here (uuids) draw from a private generator, so the page's own Math.random sequence (tree planting, SSAO
+  // kernels) is exactly what it would have been without this mechanism
+  let rs = 0x9e3779b9; const prng = () => { rs ^= rs << 13; rs >>>= 0; rs ^= rs >>> 17; rs ^= rs << 5; rs >>>= 0; return rs / 4294967296; };
+  const priv = fn => function(){ const r0 = Math.random; Math.random = prng; try{ return fn.apply(this, arguments); } finally { Math.random = r0; } };
+  const later = (ms, fn) => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, {timeout: 500}) : fn()), ms);
+  const sideIdx = m => m.side === T.BackSide ? 1 : m.side === T.DoubleSide ? 2 : 0;
+  const K = 1;                                                                    // tiles per cube-face side: effective resolution 2R
+  const FACES = [[1, 0, 0, 0, -1, 0], [-1, 0, 0, 0, -1, 0], [0, 1, 0, 0, 0, 1], [0, -1, 0, 0, 0, -1], [0, 0, 1, 0, -1, 0], [0, 0, -1, 0, -1, 0]];
+  const W = new T.Box3(), C = new T.Vector3(), S = new T.Vector3();
+  // ---- snapshot / validation: the PVS holds while the eye, every occluder and every culled mesh are exactly as they were
+  const snap = (list) => { const a = new Float64Array(list.length * 16); list.forEach((o, i) => a.set(o.matrixWorld.elements, i * 16)); return a; };
+  const matKey = m => (m.transparent ? 1 : 0) + ':' + m.side + ':' + m.alphaTest + ':' + m.depthWrite + ':' + m.visible + ':' + m.colorWrite;
+  function valid(P){
+    if(!P || P.pos.distanceToSquared(camera.position) > 1e-10 || camera.near > P.near + 1e-9) return 'eye';
+    const bad = (o, why) => { V.anim.add(o); V.stats.lastObj = (o.name || '') + '<' + ((o.parent && o.parent.name) || ''); return why; };
+    for(let i = 0; i < P.occ.length; i++){ const o = P.occ[i];
+      if(o.geometry !== P.occG[i] || o.material !== P.occM[i] || matKey(o.material) !== P.occK[i] || !lit(o) || !o.layers.test(camera.layers)) return bad(o, 'occ');
+      const e = o.matrixWorld.elements, b = i * 16; for(let k = 0; k < 16; k++) if(e[k] !== P.occX[b + k]) return bad(o, 'occmove'); }
+    for(let i = 0; i < P.cul.length; i++){ const o = P.cul[i]; if(o.geometry !== P.culG[i] || o.material !== P.culM[i] || o.layers.mask !== 1) return bad(o, 'cul');
+      const e = o.matrixWorld.elements, b = i * 16; for(let k = 0; k < 16; k++) if(e[k] !== P.culX[b + k]) return bad(o, 'culmove'); }
+    return null; }
+  // ---- compute (idle slices: gather, then one cube face per slice, then the query results)
+  const start = priv(function(){
+    const t0 = performance.now(); scene.updateMatrixWorld(); if(!V.based){ learnBase(); V.based = Object.keys(VBASE).length > 2; }
+    const pos = camera.position.clone(), near = camera.near, nearC = near * 2.5, keep = nearC * 3;
+    const dpr = renderer.getPixelRatio(), w = canvas.clientWidth * Math.max(dpr, 1) * 1.5, hf = 2 * Math.atan(Math.tan(T.MathUtils.degToRad(camera.fov) / 2) * camera.aspect);
+    const R = Math.min(coarse ? 2560 : 3072, Math.max(1024, Math.ceil(w / (2 * Math.tan(hf / 2)) * 2 / 256) * 256));
+    const occ = [], tst = [];
+    scene.traverseVisible(o => { if(V.anim.has(o)) return; if(isOcc(o)) occ.push(o); if(isTest(o)){ if(o.geometry.boundingBox === null) o.geometry.computeBoundingBox();
+        W.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); if(W.isEmpty()) return; const dd = W.distanceToPoint(pos); if(dd < keep) return;
+        // thin meshes (a box dimension under 6 texels at their distance: panels, rugs, rails seen edge-on) are never culled: a
+        // grazing sliver of one can be thinner than any test raster
+        const e = o.matrixWorld.elements; o.geometry.boundingBox.getSize(S);
+        if(Math.min(S.x * Math.hypot(e[0], e[1], e[2]), S.y * Math.hypot(e[4], e[5], e[6]), S.z * Math.hypot(e[8], e[9], e[10])) < 6 * Math.max(.1, dd) * 2 / (R * K)) return;
+        tst.push(o); } });
+    if(!tst.length) return null;
+    if(!V.rts || V.rts[0].width !== R){ if(V.rts) V.rts.forEach(t => t.dispose());
+      V.rts = [new T.WebGLRenderTarget(R, R, {format: T.RedFormat, type: T.FloatType, minFilter: T.NearestFilter, magFilter: T.NearestFilter, depthBuffer: true, generateMipmaps: false}),
+               new T.WebGLRenderTarget(R, R, {format: T.RedFormat, type: T.UnsignedByteType, minFilter: T.NearestFilter, magFilter: T.NearestFilter, depthBuffer: false, generateMipmaps: false})]; }
+    const rt = V.rts[0], rt2 = V.rts[1]; V.rtT = performance.now();
+    const cam = new T.PerspectiveCamera(90, 1, nearC, 1e6); cam.position.copy(pos);
+    // one box per testee (world AABB grown by 1.5 texels at its distance so it always rasterises)
+    // chunky meshes (every box dimension >= 6 texels at their distance) are tested with their own triangles AND their edges as
+    // lines (a thin rail inside a big box still rasterises along its length); thinner ones with
+    // their world box grown by 1.5 texels, which always rasterises
+    const boxes = tst.map((o, i) => { W.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); const d = Math.max(.1, W.distanceToPoint(pos)), tx = d * 2 / (R * K);
+      const e = o.matrixWorld.elements, sx = Math.hypot(e[0], e[1], e[2]), sy = Math.hypot(e[4], e[5], e[6]), sz = o.geometry.boundingBox.getSize(S) && Math.hypot(e[8], e[9], e[10]);
+      const dmin = Math.min(S.x * sx, S.y * sy, S.z * sz); let m;
+      if(dmin >= 6 * tx){ m = new T.Mesh(o.geometry, tmat); m.matrixAutoUpdate = false; m.matrixWorld.copy(o.matrixWorld);
+        const m2 = new T.Mesh(o.geometry, tmatW); m2.matrixAutoUpdate = false; m2.matrixWorld.copy(o.matrixWorld); m2.userData.i = i; m2.onBeforeRender = qBegin; m2.onAfterRender = qEnd; m.userData.w = m2; }
+      else { W.expandByScalar(tx * 1.5 + .01); m = new T.Mesh(box, tmat); m.matrixAutoUpdate = false; W.getCenter(C); W.getSize(S);
+        m.matrix.compose(C, new T.Quaternion(), S); m.matrixWorld.copy(m.matrix); }
+      m.userData.i = i; m.onBeforeRender = qBegin; m.onAfterRender = qEnd; return m; });
+    tscene.children.length = 0; for(const b of boxes){ b.parent = tscene; tscene.children.push(b); if(b.userData.w){ b.userData.w.parent = tscene; tscene.children.push(b.userData.w); } }
+    V.stats.computes++; V.stats.startMs = Math.round(performance.now() - t0);
+    return {t0, pos, near, nearC, R, occ, tst, boxes, rt, rt2, cam, face: 0, queries: [], seen: new Uint8Array(tst.length), cpu: performance.now() - t0,
+      snapTst: snap(tst), snapOcc: snap(occ), snapG: occ.map(o => o.geometry), snapM: occ.map(o => o.material), snapK: occ.map(o => matKey(o.material))}; });
+  let curJob = null;
+  function qBegin(){ const q = qpool.pop() || gl.createQuery(); gl.beginQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE, q); curJob.queries.push([q, this.userData.i]); }
+  function qEnd(){ gl.endQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE); }
+  function face(J){
+    const fi = Math.floor(J.face / (K * K)), ti = J.face % (K * K), f = FACES[fi];
+    J.cam.up.set(f[3], f[4], f[5]); J.cam.position.copy(J.pos); J.cam.lookAt(J.pos.x + f[0], J.pos.y + f[1], J.pos.z + f[2]);
+    J.cam.setViewOffset(J.R * K, J.R * K, (ti % K) * J.R, Math.floor(ti / K) * J.R, J.R, J.R); J.cam.updateMatrixWorld(true);
+    // the eye's view of opaque occluders as distance-to-eye; sides grouped in layers 2/3/4
+    const masks = J.occ.map(o => o.layers.mask); J.occ.forEach(o => o.layers.mask = 1 << (2 + sideIdx(o.material)));
+    const st = {rt: renderer.getRenderTarget(), ac: renderer.autoClear, cc: renderer.getClearColor(new T.Color()), ca: renderer.getClearAlpha(), au: renderer.shadowMap.autoUpdate, nu: renderer.shadowMap.needsUpdate,
+      bg: scene.background, fog: scene.fog, ov: scene.overrideMaterial, tm: renderer.toneMapping, sau: scene.autoUpdate};
+    try{
+      renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = false; scene.background = null; scene.fog = null; scene.autoUpdate = false;
+      U0.cpos.value.copy(J.pos); renderer.setRenderTarget(J.rt); renderer.setClearColor(new T.Color(1e9, 1e9, 1e9), 1); renderer.clear(true, true, false); renderer.autoClear = false;
+      for(let s = 0; s < 3; s++){ J.cam.layers.set(2 + s); scene.overrideMaterial = DM[s]; renderer.render(scene, J.cam); }
+      scene.overrideMaterial = st.ov;
+      // every testee box against it, one occlusion query each (boxes outside this face are frustum-culled: no query)
+      TU.dtex.value = J.rt.texture; TU.invR.value = 1 / J.R; renderer.setRenderTarget(J.rt2); J.cam.layers.set(0); curJob = J; renderer.render(tscene, J.cam); curJob = null;
+    } finally {
+      J.occ.forEach((o, i) => o.layers.mask = masks[i]);
+      renderer.setRenderTarget(st.rt); renderer.autoClear = st.ac; renderer.setClearColor(st.cc, st.ca); renderer.shadowMap.autoUpdate = st.au; renderer.shadowMap.needsUpdate = st.nu;
+      scene.background = st.bg; scene.fog = st.fog; scene.overrideMaterial = st.ov; scene.autoUpdate = st.sau; }
+    J.face++; }
+  function finish(J){
+    for(const [q, i] of J.queries){ if(gl.getQueryParameter(q, gl.QUERY_RESULT)) J.seen[i] = 1; qpool.push(q); }
+    J.queries = []; tscene.children.length = 0;
+    const cul = J.tst.filter((o, i) => !J.seen[i]);
+    V.stats.ms = Math.round(performance.now() - J.t0); V.stats.culled = cul.length; V.stats.testees = J.tst.length; V.stats.occluders = J.occ.length; V.stats.R = J.R;
+    return {pos: J.pos, near: J.near, occ: J.occ, occX: J.snapOcc, occG: J.snapG, occM: J.snapM, occK: J.snapK, cul, culX: snap(cul), culG: cul.map(o => o.geometry), culM: cul.map(o => o.material)}; }
+  const abort = J => { for(const [q] of J.queries){ try{ gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE); }catch(e){} qpool.push(q); } J.queries = []; tscene.children.length = 0; };
+  function step(){
+    const J = V.job; if(!J) return;
+    if(J.pos.distanceToSquared(camera.position) > 1e-10 || nav !== 'look' || mode === 'doll'){ abort(J); V.job = null; return; }
+    if(J.face < 6 * K * K){ face(J); return later(0, step); }
+    if(J.queries.some(([q]) => !gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE))) return later(16, step);
+    scene.updateMatrixWorld();
+    let moved = 0; const chk = (L, X) => L.forEach((o, i) => { const e = o.matrixWorld.elements; for(let k = 0; k < 16; k++) if(e[k] !== X[i * 16 + k]){ V.anim.add(o); moved++; return; } });
+    chk(J.occ, J.snapOcc); chk(J.tst, J.snapTst);
+    J.occ.forEach((o, i) => { if(o.geometry !== J.snapG[i] || o.material !== J.snapM[i] || !lit(o)){ V.anim.add(o); moved++; } });
+    const P = finish(J); V.job = null;
+    if(moved){ V.stats.moved = (V.stats.moved || 0) + moved; V.restT = performance.now(); return; }   // measure again without the animated objects
+    V.pvs = P; };
+  // ---- per frame (first main render of the frame): keep / drop the PVS, start a computation when the eye rests
+  let checked = false, active = false;                         // once per frame: every render() of one frame runs in the same task
+  V.prepare = () => {
+    if(checked) return active; checked = true; queueMicrotask(() => { checked = false; });
+    const now = performance.now();
+    if(!V.restPos.equals(camera.position)){ V.restPos.copy(camera.position); V.restT = now; }
+    active = false;
+    if(V.pvs){ scene.updateMatrixWorld(); const why = valid(V.pvs); if(why){ V.pvs = null; V.stats.invalid++; V.stats.lastWhy = why;
+        if(why !== 'eye'){ if(V.failPos.equals(camera.position)) V.fails++; else { V.fails = 1; V.failPos.copy(camera.position); } V.restT = now; } } else active = true; }
+    if(V.rts && !V.job && now - V.rtT > 20000){ V.rts.forEach(t => t.dispose()); V.rts = null; }                       // targets freed when unused
+    const wait = 1500 * Math.pow(2, V.failPos.equals(camera.position) ? Math.min(V.fails, 5) : 0);                      // a busy view backs off
+    if(!V.pvs && !V.job && nav === 'look' && mode !== 'doll' && !anim && now - V.restT > wait && !document.hidden && !(typeof GOV !== 'undefined' && now - (GOV.lastMove || 0) < 1500)){ try{ V.job = start(); if(V.job) later(0, step); }catch(e){ console.warn('[p22] pvs', e); V.job = null; } }
+    return active; };
+  // three r128 builds the eye's draw lists first, then renders the shadow maps testing objects against the EYE camera's layers:
+  // the culled meshes are back on layer 0 for the shadow pass (they still cast shadows), and off again for the eye's lists
+  const orig = renderer.render, SM = renderer.shadowMap, smOrig = SM.render; let culling = null;
+  SM.render = function(){ const L = culling; if(!L) return smOrig.apply(this, arguments);
+    for(let i = 0; i < L.length; i++) L[i].layers.mask = 1;
+    try{ return smOrig.apply(this, arguments); } finally { for(let i = 0; i < L.length; i++) L[i].layers.mask = 2; } };
+  renderer.render = function(sc, cam){
+    if(sc !== scene || cam !== camera || !V.on() || !V.prepare()) return orig.apply(this, arguments);
+    const L = V.pvs.cul; for(let i = 0; i < L.length; i++) L[i].layers.mask = 2; culling = L;
+    try{ return orig.apply(this, arguments); } finally { culling = null; for(let i = 0; i < L.length; i++) L[i].layers.mask = 1; } };
+  // its own five programs are compiled in an idle slot after load, so the first measurement compiles nothing
+  setTimeout(priv(() => { try{ const sc = new T.Scene(), rt = new T.WebGLRenderTarget(1, 1), c = new T.PerspectiveCamera();
+    for(const m of [...DM, tmat, tmatW]) sc.add(new T.Mesh(box, m)); const r0 = renderer.getRenderTarget(); renderer.setRenderTarget(rt); renderer.compile(sc, c); renderer.setRenderTarget(r0); rt.dispose(); }catch(e){} }), 9000);
+  window.__p22 = Object.assign(window.__p22 || {}, {pvs: V});
+  return V; })();
+// ---- 5. light-set warm-up that also runs at dusk / in Halloween, Halloween pre-built on intent, no probe capture in a fly
+{ const HWW = {stats: {runs: 0, progs: 0, ms: 0, hwPre: false}, gen: 0};
+  const later = (ms, fn) => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, {timeout: 2000}) : fn()), ms);
+  const busy = () => document.hidden || (typeof anim !== 'undefined' && anim) || (typeof GOV !== 'undefined' && performance.now() - (GOV.lastMove || 0) < 1500);
+  const hw = () => { try{ return HW; }catch(e){ return null; } };                 // declared further down the page (Halloween patch)
+  const lamps = () => { const a = []; scene.traverse(o => { if(o.isLight && (o.isPointLight || o.isSpotLight || o.isRectAreaLight) && !(o.userData && o.userData.p22pad)) a.push(o); }); return a; };
+  const proxy = Object.create(scene); proxy.traverseVisible = cb => scene.traverseVisible(cb); let chunk = null; proxy.traverse = cb => cb(chunk);
+  const dummyLin = new THREE.WebGLRenderTarget(1, 1); dummyLin.texture.generateMipmaps = false;
+  // one run: every material (scene + a pre-built Halloween set) x {the light set of the moment, the other one} x {the scene's
+  // target, the mirror probes' encoding when it differs}
+  function run(){
+    const gen = ++HWW.gen, t0 = performance.now(), p0 = renderer.info.programs.length; HWW.stats.runs++;
+    const objs = []; const add = o => { if(o.material && (o.isMesh || o.isPoints || o.isLine)) objs.push(o); };
+    scene.traverse(add); const H = hw(); if(H && H.built && !H.on){ if(H.ext) H.ext.traverse(add); if(H.inn) H.inn.traverse(add); }
+    const sceneRT = () => (typeof HITCH_SCENE_RT === 'function' ? HITCH_SCENE_RT() : null);
+    const enc = rt => rt ? rt.texture.encoding : renderer.outputEncoding;
+    const passes = [[0, 'scene'], [1, 'scene']];
+    try{ if(typeof GLASS20_PROBES !== 'undefined' && GLASS20_PROBES.length && enc(GLASS20_PROBES[0].rt) !== enc(sceneRT())) passes.push([0, 'probe'], [1, 'probe']); }catch(e){}
+    let pi = 0, i = 0;
+    const step = () => {
+      if(gen !== HWW.gen) return;
+      if(busy()) return later(700, step);
+      const [other, tgt] = passes[pi], flips = [];
+      if(other){ const L = lamps(), lit = L.some(l => l.visible);
+        for(const l of L){ if(lit && l.visible){ l.visible = false; flips.push([l, true]); } else if(!lit && !l.visible && l.userData.perfOff){ l.visible = true; flips.push([l, false]); } } }
+      const rt0 = renderer.getRenderTarget(), ts = performance.now();
+      if(tgt === 'probe'){ dummyLin.texture.encoding = GLASS20_PROBES[0].rt.texture.encoding; renderer.setRenderTarget(dummyLin); } else renderer.setRenderTarget(sceneRT());
+      try{ while(i < objs.length && performance.now() - ts < 10){ chunk = objs[i++]; renderer.compile(proxy, camera); } }
+      catch(e){ console.warn('[p22] set warm', e); return; }
+      finally{ for(const [l, v] of flips) l.visible = v; renderer.setRenderTarget(rt0); }
+      if(i < objs.length) return later(0, step);
+      i = 0; if(++pi < passes.length) return later(0, step);
+      HWW.stats.progs += renderer.info.programs.length - p0; HWW.stats.ms = Math.round(performance.now() - t0); };
+    later(0, step); }
+  HWW.run = run;
+  if(!P22OFF('setwarm') && !(PERF.isTest() && !/[?&]gov=1/.test(location.href))){
+    // the main warm-up (GOV.warm) waits while the lit set is on screen; at dusk / in Halloween it never ran
+    let firstAt = 0, started = false, lastHW = null;
+    const watch = () => { const now = performance.now(); if(!firstAt) firstAt = now; const H = hw(), on = !!(H && H.on);
+      if(!started){ if(typeof GOV !== 'undefined' && GOV.warmMs) started = true; else if(now - firstAt > 8000 && typeof DUSK !== 'undefined' && DUSK && window.__perfTrees){ started = true; run(); } lastHW = on; }   // GOV.warm is parked at dusk
+      else if(on !== lastHW){ lastHW = on; run(); }                                   // Halloween switched: warm the new state (both light sets)
+      later(1000, watch); };
+    later(3000, watch);
+    // intent: pointer over / focus on the Halloween button builds the decorations off-scene and compiles them before the click
+    const btn = document.querySelector('#hwBtn');
+    const intent = () => { const H = hw(); if(!H || H.built || HWW.stats.hwPre) return; HWW.stats.hwPre = true;
+      later(0, () => { try{ if(typeof hwBuild === 'function') hwBuild(); }catch(e){ console.warn('[p22] hw prebuild', e); return; } run(); }); };
+    if(btn){ btn.addEventListener('pointerenter', intent, {passive: true}); btn.addEventListener('focus', intent); btn.addEventListener('touchstart', intent, {passive: true}); }
+  }
+  // no mirror-probe capture during a camera flight (a capture renders the scene six more times and may compile programs)
+  if(typeof glass20Step === 'function'){ const g0 = glass20Step; glass20Step = function(){ if(!P22OFF('flycapture')){ if(typeof anim !== 'undefined' && anim) return;
+      // phones: a NEW capture waits until the probe programs are compiled (<= 40 s); a capture under way finishes
+      const PW = window.__P22PW; if(PW && PW.need !== false && !PW.done && performance.now() - PW.t0 < 40000 && !(typeof GLASS20_PROBES !== 'undefined' && GLASS20_PROBES.some(q => q.face >= 0))) return; }
+      return g0.apply(this, arguments); }; }
+  window.__p22 = Object.assign(window.__p22 || {}, {setwarm: HWW}); }
+Math.random = P22RAND;
 
 /* ================= v22 boot22 (patch_v22_boot22.py): yielding boot, progressive reveal, refining cross-fade ================= */
 const BOOT22 = (() => {
