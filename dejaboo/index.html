@@ -79,9 +79,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var
   .sale-line{align-items:center;gap:14px}
   .sale-line b{font-size:16px}
   .tomb{width:76px;height:82px;padding-top:12px;font-size:17px;border-radius:38px 38px 5px 5px}
-  .sale-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sale-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   .sale-links a{justify-content:center;padding:10px 6px}
   .sale-links .long{display:none}
+  /* Halloween tour gets its own full-width row on phones */
+  .sale-links a:first-child{grid-column:1/-1}
+  .sale-links a:first-child .long{display:inline}
 }
 
 /* ---------- hero ---------- */
@@ -263,9 +266,9 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
   <div class="sale-in">
     <p class="sale-line" style="margin:0"><span class="tomb"><span>House</span><span>For</span><span>Sale</span></span><b>If you lived here, you'd be trick-or-treating by now.</b></p>
     <nav class="sale-links" aria-label="House for sale links">
+      <a href="https://118hillside.com/halloween/" target="_blank" rel="noopener">Halloween<span class="long"> 3D</span> tour <span class="arr" aria-hidden="true">↗</span></a>
       <a href="https://www.compass.com/homedetails/118-Hillside-Dr-Woodside-CA-94062/1OXQSG_pid/" target="_blank" rel="noopener">Compass<span class="long"> listing</span> <span class="arr" aria-hidden="true">↗</span></a>
       <a href="https://118hillside.com/" target="_blank" rel="noopener">Photos<span class="long"> &amp; details</span> <span class="arr" aria-hidden="true">↗</span></a>
-      <a href="https://118hillside.com/tour/" target="_blank" rel="noopener">3D tour <span class="arr" aria-hidden="true">↗</span></a>
     </nav>
   </div>
 </aside>
@@ -456,7 +459,7 @@ h3{font-family:var(--f-body);font-weight:700;font-size:21px;line-height:1.2;marg
 
   <aside class="note">
     <span><b>Yes, the house is for sale.</b> If you or someone you know is curious, ask us anything. We'll have info on the kitchen counter.</span>
-    <span><a href="https://www.compass.com/homedetails/118-Hillside-Dr-Woodside-CA-94062/1OXQSG_pid/" target="_blank" rel="noopener">Compass listing</a> · <a href="https://118hillside.com/" target="_blank" rel="noopener">Photos and details</a> · <a href="https://118hillside.com/tour/" target="_blank" rel="noopener">3D tour</a></span>
+    <span><a href="https://118hillside.com/halloween/" target="_blank" rel="noopener">Halloween 3D tour</a> · <a href="https://www.compass.com/homedetails/118-Hillside-Dr-Woodside-CA-94062/1OXQSG_pid/" target="_blank" rel="noopener">Compass listing</a> · <a href="https://118hillside.com/" target="_blank" rel="noopener">Photos and details</a></span>
   </aside>
 
   <footer class="billing">
