@@ -62,6 +62,23 @@ strong { font-weight: 500; }
 @media (max-width: 640px) { .tour-card img { aspect-ratio: 4/5; } .tour-copy { padding: 18px; } .tour-sub { font-size: 14px; } }
 
 
+
+/* hook band: tour + games, right under the hero */
+.hook { background: var(--dark); padding: 18px 0 22px; }
+.hook .wrap { display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; max-width: 1320px; }
+.hook a { position: relative; display: block; overflow: hidden; border-radius: 6px; color: #fff; text-decoration: none; background: #000; min-height: 230px; }
+.hook img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .78; transition: transform .6s ease, opacity .3s; }
+.hook a:hover img { transform: scale(1.03); opacity: .9; }
+.hook .hc { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; background: linear-gradient(to top, rgba(10,10,10,.82), rgba(10,10,10,0)); }
+.hook .eyebrow { margin: 0; color: #e8d3b0; }
+.hook .ht { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); font-weight: 500; letter-spacing: .03em; line-height: 1.05; }
+.hook .hs { font-size: 14.5px; line-height: 1.45; color: rgba(255,255,255,.88); max-width: 520px; }
+.hook .btn { margin-top: 6px; background: #fff; color: var(--ink); border-color: #fff; }
+.hook .games .btn { background: #f08a24; border-color: #f08a24; color: #1a0f05; }
+@media (max-width: 760px) { .hook .wrap { grid-template-columns: 1fr; } .hook a { min-height: 190px; } }
+.hero:has(+ .hook) { height: min(60vh, 760px); min-height: 300px; }
+@media (max-width: 760px) { .hero:has(+ .hook) { height: 38vh; min-height: 240px; } }
+
 /* hero */
 .hero { position: relative; height: min(84vh, 920px); min-height: 420px; overflow: hidden; background: #ddd; }
 .hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 60%; }
@@ -183,7 +200,7 @@ footer p { margin: 0 0 8px; max-width: 900px; }
   <div class="wrap">
     <a class="brand" href="#top">118 Hillside Drive</a>
     <nav class="nav" aria-label="Sections">
-      <a href="#home">The Home</a><a href="#details">Details</a><a href="tour/" style="color:var(--gold);font-weight:500;">3D Tour</a><a href="#gallery">Gallery</a><a href="#contact">Contact</a>
+      <a href="#home">The Home</a><a href="#details">Details</a><a href="games/" style="color:var(--gold);font-weight:500;">Games</a><a href="#gallery">Gallery</a><a href="#contact">Contact</a>
     </nav>
     <div style="display:flex;gap:10px;align-items:center;">
       <a class="btn solid" href="tour/"><span class="long">Explore 3D Tour</span><span class="short">3D Tour</span></a>
@@ -194,6 +211,19 @@ footer p { margin: 0 0 8px; max-width: 900px; }
 
 <main id="top">
 <section class="hero" aria-label="Front of the home"><img class="" src="images/front-exterior-1600.jpg" srcset="images/front-exterior-800.jpg 800w, images/front-exterior-1600.jpg 1600w, images/front-exterior-2400.jpg 2400w, images/front-exterior-2559.jpg 2559w" sizes="100vw" width="2559" height="1497" alt="Front of 118 Hillside Drive with the garage, entry stairs and paver driveway" loading="eager" fetchpriority="high" decoding="async"></section>
+
+<section class="hook" aria-label="Explore the home online">
+  <div class="wrap">
+    <a class="tour" href="tour/" aria-label="Explore the interactive 3D tour">
+      <img src="images/tour-preview.jpg" alt="3D model of 118 Hillside Drive from above" loading="eager" width="1600" height="900">
+      <span class="hc"><span class="eyebrow">Interactive 3D tour</span><span class="ht">Walk through every room</span><span class="hs">Stop by stop, dollhouse view, furniture on or off, paint and landscape ideas.</span><span class="btn">Start the tour &rarr;</span></span>
+    </a>
+    <a class="games" href="games/" aria-label="Browse the family games played inside the 3D house">
+      <img src="images/games-preview.jpg" alt="The house at night in game mode" loading="eager" width="1280" height="809">
+      <span class="hc"><span class="eyebrow">For kids &amp; families</span><span class="ht">Play in the house</span><span class="hs">Seasonal games inside the 3D house: mazes, hide-and-seek with Snowball the cat, and more.</span><span class="btn">Browse games &rarr;</span></span>
+    </a>
+  </div>
+</section>
 
 <section class="title">
   <p class="eyebrow">Woodside Glens</p>
@@ -214,10 +244,6 @@ footer p { margin: 0 0 8px; max-width: 900px; }
 <section class="intro" id="home">
   <div class="wrap">
     <p class="lead"><strong>DISCOVER A HOME</strong> filled with light from skylights and walls of glass, with room for everyone in Woodside. A 2024 addition expanded the original home with a dramatic entry, a dining room open to the terrace, an upstairs primary suite, and a spacious lower level.</p>
-    <a class="tour-card" href="tour/" aria-label="Explore the interactive 3D tour of 118 Hillside Drive">
-      <img src="images/tour-preview.jpg" alt="3D model of 118 Hillside Drive seen from above, showing every room" loading="lazy" width="1600" height="900">
-      <span class="tour-copy"><span class="eyebrow">Interactive 3D tour</span><span class="tour-title">Walk through every room</span><span class="tour-sub">Tour the house stop by stop, see it in the dollhouse view, switch furniture on and off, and try paint colors and landscape ideas.</span><span class="btn solid">Explore the 3D tour &rarr;</span></span>
-    </a>
     <div class="glance"><div class="glance-item"><h3>A 2024 Addition</h3><p>A dramatic entry, a dining room open to the terrace, and a primary suite with a balcony</p></div><div class="glance-item"><h3>Room for Everyone</h3><p>6 bedrooms, 3 full baths, a skylit office, and a bonus lounge opening to the terrace</p></div><div class="glance-item"><h3>Living Space</h3><p>Approx. 3,087 sq.&nbsp;ft. on a ~7,000 sq.&nbsp;ft. lot</p></div><div class="glance-item"><h3>Outdoor Living</h3><p>A front porch, a paver terrace with an outdoor kitchen and pergola, and RV hookups</p></div><div class="glance-item"><h3>Woodside Glens</h3><p>About a mile to Woodside Town Center, in the Woodside Elementary School District</p></div><div class="glance-item"><h3>Oversized Garage</h3><p>High ceilings, built-in storage, and a 50-amp outlet for EV</p></div></div>
   </div>
 </section>
