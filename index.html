@@ -87,6 +87,13 @@ strong { font-weight: 500; }
 .title .price { display: inline-block; margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--gold);
   font-size: 21px; font-weight: 400; letter-spacing: .06em; }
 
+.title-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+.hook .games img { opacity: .95; }
+.hero-cta { position: absolute; z-index: 2; right: 24px; bottom: 24px; background: #fff !important; color: var(--ink) !important; border-color: #fff !important; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+.hero-cta:hover { background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important; }
+@media (max-width: 760px) { .hero-cta { right: 50%; transform: translateX(50%); bottom: 16px; } }
+.hook .games .hc { background: linear-gradient(to top, rgba(10,10,10,.88) 0%, rgba(10,10,10,.6) 45%, rgba(10,10,10,0) 80%); text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+.hook .games .btn { text-shadow: none; }
 /* stats */
 .stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper); }
 .stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; }
@@ -199,7 +206,7 @@ footer p { margin: 0 0 8px; max-width: 900px; }
 <script src="/assets/site-header.js" defer></script>
 
 <main id="top">
-<section class="hero" aria-label="Front of the home"><img class="" src="images/front-exterior-1600.jpg" srcset="images/front-exterior-800.jpg 800w, images/front-exterior-1600.jpg 1600w, images/front-exterior-2400.jpg 2400w, images/front-exterior-2559.jpg 2559w" sizes="100vw" width="2559" height="1497" alt="Front of 118 Hillside Drive with the garage, entry stairs and paver driveway" loading="eager" fetchpriority="high" decoding="async"></section>
+<section class="hero" aria-label="Front of the home"><a class="btn solid hero-cta" href="#contact">Schedule a Showing</a><img class="" src="images/front-exterior-1600.jpg" srcset="images/front-exterior-800.jpg 800w, images/front-exterior-1600.jpg 1600w, images/front-exterior-2400.jpg 2400w, images/front-exterior-2559.jpg 2559w" sizes="100vw" width="2559" height="1497" alt="Front of 118 Hillside Drive with the garage, entry stairs and paver driveway" loading="eager" fetchpriority="high" decoding="async"></section>
 
 <section class="hook" aria-label="Explore the home online">
   <div class="wrap">
@@ -208,7 +215,7 @@ footer p { margin: 0 0 8px; max-width: 900px; }
       <span class="hc"><span class="eyebrow">Interactive 3D tour</span><span class="ht">Walk through every room</span><span class="hs">Stop by stop, dollhouse view, furniture on or off, paint and landscape ideas.</span><span class="btn">Start the tour &rarr;</span></span>
     </a>
     <a class="games" href="games/" aria-label="Browse the family games played inside the 3D house">
-      <img src="images/games-preview.jpg" alt="The house at night in game mode" loading="eager" width="1280" height="809">
+      <img src="images/games-preview.jpg" alt="The Pumpkin Patch Maze game in the backyard of the 3D house" loading="eager" width="1280" height="752">
       <span class="hc"><span class="eyebrow">For kids &amp; families</span><span class="ht">Play in the house</span><span class="hs">Seasonal games inside the 3D house: mazes, hide-and-seek with Snowball the cat, and more.</span><span class="btn">Browse games &rarr;</span></span>
     </a>
   </div>
@@ -219,6 +226,7 @@ footer p { margin: 0 0 8px; max-width: 900px; }
   <h1 class="display">A <span style="white-space:nowrap">Light-Filled</span> <span style="white-space:nowrap">Six-Bedroom</span> Home With Room For Everyone In Woodside Glens</h1>
   <p class="addr">118 Hillside Drive &nbsp;|&nbsp; Woodside</p>
   <div class="price">Offered at $4,195,000</div>
+  <div class="title-cta"><a class="btn solid" href="#contact">Schedule a Showing</a><a class="btn" href="tel:+16503150224">Call 650.315.0224</a></div>
 </section>
 
 <section class="stats" aria-label="Key facts">
