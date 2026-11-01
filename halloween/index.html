@@ -1749,6 +1749,47 @@ window.__shadow22 = {on: location.href.indexOf('shadow22-off') < 0, lookSpan: 60
   f = f.slice(0, k) + '#if defined( SHADOWMAP_TYPE_PCF )\n' + body + '\n#elif defined( SHADOWMAP_TYPE_PCF_UNUSED )' + f.slice(k + '#if defined( SHADOWMAP_TYPE_PCF )'.length);
   C.shadowmap_pars_fragment = f;
 })();
+/* v29 leak (bimtools/patch_v29_leak.py): interior point lights reach only surfaces that face into their own IfcSpace */
+const RM29 = (() => {
+  const T = THREE, C = T.ShaderChunk, R = {push: .3, margin: .4, cell: .25, ok: false, on: true, pts: null, n: 0, ms: 0, err: null, last: []};
+  R.G = [new T.Vector4(0, 0, 1, 0), new T.Vector4(1, 1, R.push, 0)];   // [x0, z0, 1/cell, on], [W, H, push, -]
+  R.L = []; for(let i = 0; i < 64; i++) R.L.push(new T.Vector4(0, 0, 0, 0));   // per uploaded point light: [space, storey, floor, on]
+  R.tex = new T.DataTexture(new Uint8Array(4), 1, 1, T.RGBAFormat); R.tex.minFilter = R.tex.magFilter = T.NearestFilter; R.tex.generateMipmaps = false;
+  R.tex.needsUpdate = true; R.tex.clone = function(){ return this; };   // one shared texture: ShaderLib uniforms are cloned per material
+  const pars = `
+uniform highp sampler2D rmTex;
+uniform vec4 rmG[ 2 ];
+#if NUM_POINT_LIGHTS > 0
+uniform vec4 rmL[ NUM_POINT_LIGHTS ];
+#endif
+float rmMask( const in vec4 L, const in vec4 ids, const in vec4 ce, const in vec3 p ){
+	if( L.w < 0.5 ) return 1.0;
+	vec4 oh = vec4( equal( vec4( L.y ), vec4( 0.0, 1.0, 2.0, 3.0 ) ) );
+	float id = dot( ids, oh ), top = L.z + dot( ce, oh ) * 25.5;
+	return ( abs( id - L.x ) < 0.5 && p.y > L.z - ${R.margin.toFixed(2)} && p.y < top + ${R.margin.toFixed(2)} ) ? 1.0 : 0.0;
+}
+`;
+  const head = `vec4 rmIds = vec4( 0.0 ), rmCe = vec4( 0.0 ); vec3 rmP = vec3( 0.0 );
+#if NUM_POINT_LIGHTS > 0
+if( rmG[ 0 ].w > 0.5 ){
+	mat3 rmR = mat3( viewMatrix ); vec3 rmD = geometry.position - viewMatrix[ 3 ].xyz;
+	vec3 rmN = vec3( dot( rmR[ 0 ], geometry.normal ), dot( rmR[ 1 ], geometry.normal ), dot( rmR[ 2 ], geometry.normal ) );
+	rmP = vec3( dot( rmR[ 0 ], rmD ), dot( rmR[ 1 ], rmD ), dot( rmR[ 2 ], rmD ) ) + rmN * rmG[ 1 ].z;
+	vec2 rmC = floor( ( rmP.xz - rmG[ 0 ].xy ) * rmG[ 0 ].z );
+	if( all( greaterThanEqual( rmC, vec2( 0.0 ) ) ) && all( lessThan( rmC, rmG[ 1 ].xy ) ) ){
+		vec2 rmUV = ( rmC + 0.5 ) / vec2( rmG[ 1 ].x, 2.0 * rmG[ 1 ].y );
+		rmIds = texture2D( rmTex, rmUV ) * 255.0; rmCe = texture2D( rmTex, rmUV + vec2( 0.0, 0.5 ) );
+	}
+}
+#endif
+`;
+  const a = 'IncidentLight directLight;\n', b = '\t\tgetPointDirectLightIrradiance( pointLight, geometry, directLight );\n';
+  if(C.lights_fragment_begin.split(a).length !== 2 || C.lights_fragment_begin.split(b).length !== 2) throw new Error('v29 leak: lights chunk changed');
+  C.lights_fragment_begin = C.lights_fragment_begin.replace(a, a + head).replace(b, b + '\t\tdirectLight.color *= rmMask( rmL[ i ], rmIds, rmCe, rmP );\n');
+  C.lights_physical_pars_fragment = pars + C.lights_physical_pars_fragment;
+  for(const k of ['standard', 'physical']) Object.assign(T.ShaderLib[k].uniforms, {rmTex: {value: R.tex}, rmG: {value: R.G}, rmL: {value: R.L}});
+  return R;
+})();
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(62, 1, 0.4, 90000);
 camera.position.set(78,82,104);
@@ -6516,6 +6557,64 @@ const camLight = new THREE.PointLight(0xfff6ea, .45, 34, 1.4); camera.add(camLig
 scene.fog = new THREE.Fog(0xcfdde6, 2500, 70000);   // aerial perspective over the real terrain out to Skyline
 const lampPts = [ [wp(1480,1830),9], [wp(1590,2560),9], [up(2038,714),LV.upper+9], [wp(855,1390),LV.lower+8], [wp(1160,1835),9], [wp(1640,2170),9], [up(1950,1400),LV.upper+9] ];
 for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6); l.position.set(p[0],y,p[1]); scene.add(l); DUSK_LIGHTS.push(l); }
+/* v29 leak: R1/R2 runtime (see RM29). Storey channels: L0 lower, LG garage, L1 main, L2 upper. */
+{ const R = RM29, CH = {L0: 0, LG: 1, L1: 2, L2: 3}, v = new THREE.Vector3();
+  R.build = () => {
+    if(typeof BIM === 'undefined' || !BIM || !BIM.spaces || typeof ceilingAt !== 'function' || !FLOORS.length) return false;
+    const t0 = performance.now(), SP = BIM.spaces.filter(s => s.outline && s.outline.length > 2 && CH[s.storey] != null && isFinite(s.floor));
+    if(!SP.length) return false;
+    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for(const s of SP) for(const [bx, by] of s.outline){ x0 = Math.min(x0, by); x1 = Math.max(x1, by); z0 = Math.min(z0, bx); z1 = Math.max(z1, bx); }
+    const c = R.cell; x0 -= 1; z0 -= 1; const W = Math.ceil((x1 + 1 - x0) / c), H = Math.ceil((z1 + 1 - z0) / c), D = new Uint8Array(W * H * 2 * 4);
+    R.rooms = [null]; const ceil = new Map();
+    for(const s of SP){ const k = R.rooms.length, ch = CH[s.storey], P = s.outline.map(([bx, by]) => [by, bx]); if(k > 255) break;
+      R.rooms.push({id: s.id, name: s.name, storey: s.storey, ch, floor: s.floor, cells: 0});
+      let zmin = 1e9, zmax = -1e9; for(const q of P){ zmin = Math.min(zmin, q[1]); zmax = Math.max(zmax, q[1]); }
+      for(let j = Math.max(0, Math.floor((zmin - z0) / c)); j <= Math.min(H - 1, Math.ceil((zmax - z0) / c)); j++){
+        const zc = z0 + (j + .5) * c, xs = [];
+        for(let i = 0, m = P.length - 1; i < P.length; m = i++){ const [xa, za] = P[m], [xb, zb] = P[i];
+          if((za > zc) !== (zb > zc)) xs.push(xa + (zc - za) / (zb - za) * (xb - xa)); }
+        xs.sort((a, b) => a - b);
+        for(let q = 0; q + 1 < xs.length; q += 2)
+          for(let i = Math.max(0, Math.ceil((xs[q] - x0) / c - .5)); i < W && x0 + (i + .5) * c <= xs[q + 1]; i++){
+            const xc = x0 + (i + .5) * c, key = k * 1e6 + Math.floor(xc) * 1000 + Math.floor(zc);   // ceiling sampled on a 1 ft grid
+            let ce = ceil.get(key); if(ce == null){ try{ ce = ceilingAt(Math.floor(zc) + .5, Math.floor(xc) + .5, s.floor).z; }catch(e){ ce = s.floor + 9; } ceil.set(key, ce); }
+            const o = (j * W + i) * 4 + ch; D[o] = k; D[o + W * H * 4] = Math.max(1, Math.min(255, Math.round((ce - s.floor) * 10))); R.rooms[k].cells++; } } }
+    R.D = D; R.W = W; R.H = H; R.x0 = x0; R.z0 = z0;
+    R.tex.image = {data: D, width: W, height: 2 * H}; R.tex.needsUpdate = true;
+    R.G[0].set(x0, z0, 1 / c, 1); R.G[1].set(W, H, R.push, 0);
+    R.ms = +(performance.now() - t0).toFixed(1); R.ok = true; return true; };
+  // the space a world point is in (R1): plan cell + floor .. ceiling + 1 ft on that storey; null outside every space
+  R.at = (p) => { if(!R.ok) return null; const i = Math.floor((p.x - R.x0) / R.cell), j = Math.floor((p.z - R.z0) / R.cell);
+    if(i < 0 || j < 0 || i >= R.W || j >= R.H) return null;
+    for(let ch = 0; ch < 4; ch++){ const k = R.D[(j * R.W + i) * 4 + ch]; if(!k) continue; const r = R.rooms[k], top = r.floor + R.D[((j + R.H) * R.W + i) * 4 + ch] / 10;
+      if(p.y >= r.floor - .5 && p.y <= top + 1) return k; }
+    return null; };
+  // three.js's uploaded point-light structs (lights.state.point, in shader order), found through any compiled lit material
+  const findPts = (rend) => { let a = null;
+    scene.traverse(o => { if(a || !o.isMesh || !o.material || !o.material.isMeshStandardMaterial) return; const u = rend.properties.get(o.material).uniforms;
+      if(u && u.pointLights && Array.isArray(u.pointLights.value) && u.rmL) a = u.pointLights.value; });
+    return a; };
+  R.frame = (rend, cam) => {
+    if(!R.ok && !(R.tries++ % 30 === 0 && R.build())) return;
+    if(!R.pts && !(R.pts = findPts(rend))) return;
+    const P = R.pts, n = Math.min(P.length, R.L.length);
+    for(let i = 0; i < n; i++){ const e = P[i], q = R.L[i];
+      v.copy(e.position).applyMatrix4(cam.matrixWorld); const k = R.on ? R.at(v) : null;
+      if(k) q.set(k, R.rooms[k].ch, R.rooms[k].floor, 1); else q.set(0, 0, 0, 0); }
+    for(let i = n; i < R.n; i++) R.L[i].set(0, 0, 0, 0);
+    R.n = n; R.G[0].w = R.on ? 1 : 0; };
+  R.tries = 0;
+  const hook = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({colorWrite: false, depthWrite: false, depthTest: false, fog: false}));
+  hook.name = 'v29leak-hook'; hook.frustumCulled = false; hook.renderOrder = -1e9; hook.userData.noCull = true;
+  hook.onBeforeRender = (rend, sc, cam) => { try{ R.frame(rend, cam); }catch(e){ R.err = String(e); R.G[0].w = 0; } };   // runs after three set up this frame's lights, before any lit draw
+  scene.add(hook); R.hook = hook; window.__rm29 = R;
+  window.__v29leak = () => { const out = [];
+    scene.traverse(o => { if(!o.isPointLight) return; const p = o.getWorldPosition(new THREE.Vector3()), k = R.at(p);
+      out.push({name: o.name || (o.parent && o.parent.name) || '', at: p.toArray().map(x => +x.toFixed(1)), dist: o.distance, space: k ? R.rooms[k].id + ' ' + R.rooms[k].name : null}); });
+    return {ok: R.ok, on: R.on, ms: R.ms, grid: R.ok ? [R.W, R.H] : null, spaces: R.rooms ? R.rooms.slice(1).map(r => r.id + ':' + r.cells) : [], uploaded: R.n,
+      tagged: R.L.slice(0, R.n).filter(q => q.w > 0).length, err: R.err, lights: out}; };
+}
 let DUSK = false;
 /* ---------------- time of day: real sun for Woodside (37.438 N, 122.254 W), mid-October ---------------- */
 const V26 = window.__V26 = Object.assign({tint: [1.02, .965, 1.06], sunK: .6, sectors: 16, lensDay: 1.6, washDay: .14}, window.__V26 || {});   // v26 S2/S3 calibration
@@ -9171,7 +9270,7 @@ function buildGarage22(){
   const deckTris = [];
   // ================= G2 loft beam: stained fir under the loft's open edge, side wall to side wall
   g = 'ceil'; const beamX = lbx;   // the loft's open (east) edge
-  bbox('beamFir', beamX - .5, beamX + .04, Y0, Y1, loftUnder - .94, loftUnder);
+  /* v31nobeam: owner - no wood beam; drywall-wrapped loft edge */ bbox(M.paint_garage ? 'paint_garage' : 'ceil', beamX - .5, beamX + .04, Y0, Y1, loftUnder - .94, loftUnder);
   // ================= G4 racks
   const RK = G.RACK;
   const rack = (cx, cy, deckZ, load, dd) => {      // centre (BIM), deck top z; long side (w) along y; dd = depth along x (default RK.d)
@@ -18256,6 +18355,87 @@ function pocket31Check(){                                // the pocket wall body
   for(const it of POCKET31.items) if(it.kind === 'swing31' && it.legs.some(L => !(L.ang > .3))) out.push({type: 'pocket31', id: it.id, msg: 'closet door has no free opening angle'});
   return out;
 }
+/* ---------------- v32 closets32: John Lewis Home closet systems (jltools/patch_v32_closets.py) ---------------- */
+const CLOSETS32 = window.CLOSETS32 = {list: [], meshes: 0, verts: 0, err: null};
+function buildClosets32(){
+  const L = BIM.raw.elements.filter(e => e.ifc === 'IfcFurnishingElement' && e.kind === 'closetSystem' && e.frame);
+  if(!L.length || !(window.FIX && FIX.helpers && FIX.helpers.Builder)) return;
+  const b = new FIX.helpers.Builder(), W = (x, y, z) => [y, z, x];                       // BIM -> world (as closet22)
+  const mk = (name, hex, met, rough) => { const m = new THREE.MeshStandardMaterial({metalness: met, roughness: rough}); m.color.setHex(hex).convertSRGBToLinear(); m.name = name; return m; };
+  if(!window.__closet32Mats) window.__closet32Mats = {honey: mk('closetHoney', 0xc4843f, 0, .55), bar: mk('closetBar32', 0xc8ccd0, .85, .28)};
+  b.useMaterial('closetHoney', window.__closet32Mats.honey); b.useMaterial('closetBar32', window.__closet32Mats.bar);
+  const ME = 'closetBar32', IN1 = 1 / 12, T = .0625;
+  for(const inst of L){
+    const fr = inst.frame, w = {o: fr.o, a: fr.a, n: fr.n, L: fr.L}, f = inst.floor, Dc = fr.D, WH = inst.finish === 'white' ? 'cabinetWhite' : 'closetHoney';
+    const P = (u, d, z) => [w.o[0] + w.a[0] * u + w.n[0] * d, w.o[1] + w.a[1] * u + w.n[1] * d, z];
+    const box = (m, u0, d0, z0, u1, d1, z1) => { const A = W(...P(u0, d0, z0)), C = W(...P(u1, d1, z1));
+      b.bb(m, Math.min(A[0], C[0]), Math.min(A[1], C[1]), Math.min(A[2], C[2]), Math.max(A[0], C[0]), Math.max(A[1], C[1]), Math.max(A[2], C[2])); };
+    const rodW = (m, p, q, r, seg) => b.rod(m, W(...P(...p)), W(...P(...q)), r, seg || 8);
+    const shelf = (u0, u1, z, D, o) => { o = o || {};                                     // closet22 slatted shelf
+      box(WH, u0, D - T, z - 1.5 * IN1, u1, D, z);
+      if(!o.noBack) box(WH, u0, 0, z - (o.cleat || 3) * IN1, u1, T, z);
+      const n = Math.max(2, Math.round((u1 - u0) / (2.4 * IN1))), pitch = (u1 - u0) / n, sw = Math.max(1.4 * IN1, pitch - .9 * IN1);
+      for(let k = 0; k < n; k++){ const m = u0 + (k + .5) * pitch; box(WH, m - sw / 2, T, z - .045, m + sw / 2, D - T, z - .005); }
+      box(WH, u0, T, z - .07, u0 + T * .8, D - T, z - .005); box(WH, u1 - T * .8, T, z - .07, u1, D - T, z - .005); };
+    const bracket = (u, z, D) => { const h = Math.min(.95, D * .85), sh = new THREE.Shape(); z -= .045;   // closet22 arched gusset on the wall
+      sh.moveTo(0, 0); sh.lineTo(D * .82, 0); sh.lineTo(D * .82, -.09); sh.quadraticCurveTo(D * .2, -.12, .07, -h); sh.lineTo(0, -h); sh.lineTo(0, 0);
+      const nW = new THREE.Vector3(w.n[1], 0, w.n[0]), aW = new THREE.Vector3(w.a[1], 0, w.a[0]), up = new THREE.Vector3(0, 1, 0);
+      const m = new THREE.Matrix4().makeBasis(nW, up, aW), o = W(...P(u - T / 2, 0, z)); m.setPosition(o[0], o[1], o[2]);
+      b.extrude(WH, [sh], T, m, {curveSegments: 5}); };
+    const bar = (u0, u1, zS, D) => { const d = Math.min(10.25 * IN1, D * .72), z = zS - 5 * IN1, r = .055;   // closet22 garment bar
+      rodW(ME, [u0 + .03, d, z], [u1 - .03, d, z], r, 12);
+      const hang = u => { box(ME, u - .014, d - .06, z, u + .014, d + .06, zS - .045); rodW(ME, [u - .02, d, z], [u + .02, d, z], .085, 12); };
+      hang(u0 + .035); hang(u1 - .035); const Lr = u1 - u0, k = Math.ceil(Lr / 4) - 1; for(let i = 1; i <= k; i++) hang(u0 + Lr * i / (k + 1)); };
+    const run = (u0, u1, zS, D, rod) => { if(u1 - u0 < .8) return; shelf(u0, u1, zS, D); if(rod) bar(u0, u1, zS, D);
+      bracket(u0 + .1, zS, D); bracket(u1 - .1, zS, D); const Lr = u1 - u0, k = Math.ceil(Lr / 4) - 1; for(let i = 1; i <= k; i++) bracket(u0 + Lr * i / (k + 1), zS, D); };
+    const pull = (u, z, d) => { const hw = 2.6 * IN1, ph = .085, pts = [];                 // closet22 bow pull
+      for(let i = 0; i <= 4; i++){ const t = i / 4; pts.push([u - hw + 2 * hw * t, d + ph, z - .028 * Math.sin(Math.PI * t)]); }
+      for(let i = 0; i < 4; i++) rodW(ME, pts[i], pts[i + 1], .018, 6);
+      rodW(ME, [u - hw, d, z], [u - hw, d + ph + .01, z], .02, 6); rodW(ME, [u + hw, d, z], [u + hw, d + ph + .01, z], .02, 6); };
+    const TWD = 26.25 * IN1, TD = Math.min(16 * IN1, Dc - .15), zB = f + 3.5 * IN1, zT = f + 7.0, rv = .25 * IN1;
+    const tower = (u0, nSh, DRin) => { const u1 = u0 + TWD, fd = TD - .07, DR = (DRin || []).map(v => v * IN1);   // closet22 tower (drawers optional)
+      const zD = DR.length ? zB + IN1 + DR.reduce((a, v) => a + v + rv, 0) : zB;
+      if(DR.length){ box(WH, u0, 0, zB, u0 + T, fd, zD); box(WH, u1 - T, 0, zB, u1, fd, zD); box(WH, u0 + T, 0, zB, u1 - T, fd, zB + IN1); }
+      box(WH, u0, 0, zD, u1, TD, zD + T);
+      for(const [a0, a1] of [[u0, u0 + T], [u1 - T, u1]]){                                    // ladder sides
+        box(WH, a0, 0, zD + T, a1, 1.6 * IN1, zT - .05); box(WH, a0, TD - 1.6 * IN1, zD + T, a1, TD, zT - .05);
+        const nL = Math.floor((zT - .12 - (zD + T + IN1)) / (2.6 * IN1)), pL = (zT - .12 - (zD + T + IN1)) / nL;
+        for(let k = 0; k < nL; k++){ const z = zD + T + IN1 + k * pL; box(WH, a0 + .006, 1.6 * IN1, z, a1 - .006, TD - 1.6 * IN1, z + pL - IN1); } }
+      shelf(u0 + T, u1 - T, zT, TD, {cleat: 2});
+      const hH = zT - .05 - (zD + T);
+      for(let k = 1; k <= nSh; k++) shelf(u0 + T + .01, u1 - T - .01, zD + T + hH * k / (nSh + 1), TD - .04, {noBack: true});
+      let z = zB + IN1;
+      for(const h of DR){ const z0 = z + rv / 2, z1 = z + h + rv / 2, a0 = u0 + .006, a1 = u1 - .006, fr2 = 2.25 * IN1, fr3 = Math.min(fr2, h * .28);
+        box(WH, a0, fd, z0, a1, TD - .025, z1);
+        box(WH, a0, TD - .03, z0, a0 + fr2, TD, z1); box(WH, a1 - fr2, TD - .03, z0, a1, TD, z1);
+        box(WH, a0 + fr2, TD - .03, z0, a1 - fr2, TD, z0 + fr3); box(WH, a0 + fr2, TD - .03, z1 - fr3, a1 - fr2, TD, z1);
+        pull((u0 + u1) / 2, (z0 + z1) / 2 + .02, TD); z += h + rv; }
+      return [u0, u1]; };
+    const SD = Math.min(14 * IN1, Dc - .2), e0 = .03, e1 = w.L - .03, lay = inst.layout, rec = {id: inst.id, layout: lay, finish: inst.finish, L: w.L, towers: 0};
+    if(lay === 'doubleHang'){                                  // owner 11/1: shelf tower about mid-closet; left = one high shelf + bar; right = two stacked bars
+      const ta = Math.max(e0 + 1.0, Math.min((w.L - TWD) / 2, e1 - TWD - 1.0)), tb = ta + TWD;
+      tower(ta, 6); rec.towers = 1;
+      run(e0, ta - .01, zT, SD, true);
+      run(tb + .01, e1, zT, SD, true); run(tb + .01, e1, f + 3.5, SD, true); }
+    else if(lay === 'shelfTowers'){                             // p528-530: shelf towers side by side, top shelf over the returns
+      const nT = Math.max(1, Math.min(2, Math.floor((w.L - .2) / TWD))), ta = (w.L - nT * TWD) / 2;
+      for(let i = 0; i < nT; i++) tower(ta + i * TWD, 6); rec.towers = nT;
+      if(ta - e0 > .4){ run(e0, ta - .01, zT, SD, false); run(ta + nT * TWD + .01, e1, zT, SD, false); } }
+    else if(lay === 'hallTower'){                               // p534: tower on the right, shelf + bar on the left
+      const ta = e1 - TWD; tower(ta, 6); rec.towers = 1; run(e0, ta - .01, f + 6.75, SD, true); }
+    else if(lay === 'drawerTower'){                             // p553/p563: double hang | tower (6 drawers + hutch) | shelves + bar
+      const ta = Math.max(e0 + 1.2, Math.min(w.L * .27 - TWD / 2, e1 - TWD - 2)), tb = ta + TWD;
+      tower(ta, 2, [6.5, 6.5, 6.5, 6.5, 6.5, 6.5]); rec.towers = 1;
+      run(e0, ta - .01, zT, SD, true); run(e0, ta - .01, f + 3.5, SD, true);
+      run(tb + .01, e1, zT, SD, false); run(tb + .01, e1, f + 5.6, SD, false); run(tb + .01, e1, f + 4.0, SD, true); }
+    CLOSETS32.list.push(rec);
+  }
+  const g = b.build('closets32'); g.userData = {kind: 'closetSystem', category: 'furniture', source: 'closets32'};
+  g.traverse(o => { if(o.isMesh){ o.castShadow = false; o.receiveShadow = true; CLOSETS32.meshes++; CLOSETS32.verts += o.geometry.attributes.position.count; } });
+  grp('furn').add(g); CLOSETS32.group = g;
+}
+{ const _bf32 = buildFurniture; buildFurniture = function(){ const r = _bf32.apply(this, arguments); try{ buildClosets32(); }catch(e){ CLOSETS32.err = String(e); console.warn('[closets32]', e); } return r; }; }
+{ const _fx32 = buildFixturesBIM; buildFixturesBIM = function(list){ return _fx32.call(this, (list || BIM.fixtures).filter(f => f.kind !== 'closetSystem')); }; }
 boot();
 })();
 </script>

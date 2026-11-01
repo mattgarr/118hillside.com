@@ -18634,6 +18634,234 @@
    "source": "owner 2026-11-01: upper storage over the middle-bedroom closet, 2 sliders | owner 2026-11-01: closet doors default closed, operable",
    "state": "closed",
    "operable": true
+  },
+  {
+   "id": "JLH-L1-O36",
+   "ifc": "IfcFurnishingElement",
+   "kind": "closetSystem",
+   "type": "JLH-CS",
+   "storey": "L1",
+   "door": "L1-O36",
+   "finish": "white",
+   "layout": "drawerTower",
+   "floor": -4.56,
+   "frame": {
+    "o": [
+     -40.32,
+     -24.605
+    ],
+    "a": [
+     -1.0,
+     0.0
+    ],
+    "n": [
+     0.0,
+     1.0
+    ],
+    "L": 9.25,
+    "D": 1.85,
+    "door": [
+     1.475,
+     7.725
+    ]
+   },
+   "source": "owner 2026-11-01: John Lewis Home closet system (p553/p563)",
+   "at": [
+    -44.945,
+    -24.605,
+    -4.56
+   ],
+   "rot": 180.0
+  },
+  {
+   "id": "JLH-L1-O63",
+   "ifc": "IfcFurnishingElement",
+   "kind": "closetSystem",
+   "type": "JLH-CS",
+   "storey": "L1",
+   "door": "L1-O63",
+   "finish": "honey",
+   "layout": "hallTower",
+   "floor": 0,
+   "frame": {
+    "o": [
+     -0.085,
+     16.69
+    ],
+    "a": [
+     1.0,
+     0.0
+    ],
+    "n": [
+     0.0,
+     -1.0
+    ],
+    "L": 4.95,
+    "D": 1.95,
+    "door": [
+     1.275,
+     4.325
+    ]
+   },
+   "source": "owner 2026-11-01: John Lewis Home closet system (p534)",
+   "at": [
+    2.39,
+    16.69,
+    0
+   ],
+   "rot": 0.0
+  },
+  {
+   "id": "JLH-L1-OD2",
+   "ifc": "IfcFurnishingElement",
+   "kind": "closetSystem",
+   "type": "JLH-CS",
+   "storey": "L1",
+   "door": "L1-OD2",
+   "finish": "honey",
+   "layout": "doubleHang",
+   "floor": 0,
+   "frame": {
+    "o": [
+     23.975,
+     18.75
+    ],
+    "a": [
+     -1.0,
+     0.0
+    ],
+    "n": [
+     0.0,
+     1.0
+    ],
+    "L": 10.05,
+    "D": 1.85,
+    "door": [
+     1.385,
+     8.715
+    ]
+   },
+   "source": "owner 2026-11-01: John Lewis Home closet system (p510)",
+   "at": [
+    18.95,
+    18.75,
+    0
+   ],
+   "rot": 180.0
+  },
+  {
+   "id": "JLH-L1-OD4",
+   "ifc": "IfcFurnishingElement",
+   "kind": "closetSystem",
+   "type": "JLH-CS",
+   "storey": "L1",
+   "door": "L1-OD4",
+   "finish": "honey",
+   "layout": "doubleHang",
+   "floor": 0,
+   "frame": {
+    "o": [
+     24.34,
+     31.99
+    ],
+    "a": [
+     1.0,
+     0.0
+    ],
+    "n": [
+     0.0,
+     -1.0
+    ],
+    "L": 12.15,
+    "D": 2.05,
+    "door": [
+     1.4,
+     10.4
+    ]
+   },
+   "source": "owner 2026-11-01: John Lewis Home closet system (p510)",
+   "at": [
+    30.415,
+    31.99,
+    0
+   ],
+   "rot": 0.0
+  },
+  {
+   "id": "JLH-L1-OD5",
+   "ifc": "IfcFurnishingElement",
+   "kind": "closetSystem",
+   "type": "JLH-CS",
+   "storey": "L1",
+   "door": "L1-OD5",
+   "finish": "white",
+   "layout": "drawerTower",
+   "floor": -4.56,
+   "frame": {
+    "o": [
+     -23.68,
+     -23.215
+    ],
+    "a": [
+     -0.0,
+     -1.0
+    ],
+    "n": [
+     -1.0,
+     0.0
+    ],
+    "L": 9.5,
+    "D": 1.9,
+    "door": [
+     1.195,
+     7.205
+    ]
+   },
+   "source": "owner 2026-11-01: John Lewis Home closet system (p553/p563)",
+   "at": [
+    -23.68,
+    -27.965,
+    -4.56
+   ],
+   "rot": -90.0
+  },
+  {
+   "id": "JLH-L1-OD6",
+   "ifc": "IfcFurnishingElement",
+   "kind": "closetSystem",
+   "type": "JLH-CS",
+   "storey": "L1",
+   "door": "L1-OD6",
+   "finish": "honey",
+   "layout": "shelfTowers",
+   "floor": 0,
+   "frame": {
+    "o": [
+     -0.527,
+     14.746
+    ],
+    "a": [
+     -1.0,
+     0.0
+    ],
+    "n": [
+     0.0,
+     1.0
+    ],
+    "L": 5.85,
+    "D": 1.95,
+    "door": [
+     1.529,
+     5.571
+    ]
+   },
+   "source": "owner 2026-11-01: John Lewis Home closet system (p528-530)",
+   "at": [
+    -3.452,
+    14.746,
+    0
+   ],
+   "rot": 180.0
   }
  ],
  "materials": {
@@ -19112,6 +19340,16 @@
     "height": 0.36,
     "depth": 0.06
    }
+  },
+  "JLH-CS": {
+   "ifc": "IfcFurnishingElementType",
+   "name": "John Lewis Home solid-wood closet system",
+   "finishes": {
+    "white": "#fcf8f2",
+    "honey": "#c98a4b"
+   },
+   "components": "tower 26.25x16in ladder sides, slatted shelves, bar under shelf 10.25in off the wall, shaker drawers 5-6 high",
+   "source": "owner 2026-11-01: John Lewis Home closet system"
   }
  },
  "rules": {
