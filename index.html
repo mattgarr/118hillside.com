@@ -26,7 +26,7 @@
   --wrap: 1180px;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 70px; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-weight: 300;
   font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
 img { display: block; max-width: 100%; height: auto; }
@@ -45,7 +45,7 @@ strong { font-weight: 500; }
 .nav { display: flex; gap: 28px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; }
 .nav a { text-decoration: none; color: var(--muted); }
 .nav a:hover { color: var(--ink); }
-.btn { display: inline-block; padding: 11px 22px; border: 1px solid var(--ink); font-size: 12.5px; letter-spacing: .18em;
+.btn { display: inline-block; padding: 11px 22px; border-radius: 999px; border: 1px solid var(--ink); font-size: 12.5px; letter-spacing: .18em;
   text-transform: uppercase; text-decoration: none; font-weight: 400; transition: background .2s, color .2s; white-space: nowrap; }
 .btn:hover { background: var(--ink); color: var(--bg); }
 .btn .short { display: none; }
@@ -74,8 +74,7 @@ strong { font-weight: 500; }
 .hook .ht { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); font-weight: 500; letter-spacing: .03em; line-height: 1.05; }
 .hook .hs { font-size: 14.5px; line-height: 1.45; color: rgba(255,255,255,.88); max-width: 520px; }
 .hook .btn { margin-top: 6px; background: #fff; color: var(--ink); border-color: #fff; }
-.hook .games .btn { background: #f08a24; border-color: #f08a24; color: #1a0f05; }
-@media (max-width: 760px) { .hook .wrap { grid-template-columns: 1fr; } .hook a { min-height: 190px; } }
+@media (max-width: 760px) { .hook .wrap { grid-template-columns: 1fr; } .hook a { min-height: 0; } .hook .hc { position: relative; padding-top: 70px; } }
 .hero:has(+ .hook) { height: min(60vh, 760px); min-height: 300px; }
 @media (max-width: 760px) { .hero:has(+ .hook) { height: 38vh; min-height: 240px; } }
 
@@ -196,18 +195,8 @@ footer p { margin: 0 0 8px; max-width: 900px; }
 </head>
 <body>
 
-<header class="topbar">
-  <div class="wrap">
-    <a class="brand" href="#top">118 Hillside Drive</a>
-    <nav class="nav" aria-label="Sections">
-      <a href="#home">The Home</a><a href="#details">Details</a><a href="games/" style="color:var(--gold);font-weight:500;">Games</a><a href="#gallery">Gallery</a><a href="#contact">Contact</a>
-    </nav>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <a class="btn solid" href="tour/"><span class="long">Explore 3D Tour</span><span class="short">3D Tour</span></a>
-      <a class="btn" href="#contact"><span class="long">Schedule a Showing</span><span class="short">Showings</span></a>
-    </div>
-  </div>
-</header>
+<header id="siteHeader"><noscript><a href="/">118 Hillside Drive</a> · <a href="/tour/">3D Tour</a> · <a href="/games/">Games</a> · <a href="/#contact">Schedule a Showing</a></noscript></header>
+<script src="/assets/site-header.js" defer></script>
 
 <main id="top">
 <section class="hero" aria-label="Front of the home"><img class="" src="images/front-exterior-1600.jpg" srcset="images/front-exterior-800.jpg 800w, images/front-exterior-1600.jpg 1600w, images/front-exterior-2400.jpg 2400w, images/front-exterior-2559.jpg 2559w" sizes="100vw" width="2559" height="1497" alt="Front of 118 Hillside Drive with the garage, entry stairs and paver driveway" loading="eager" fetchpriority="high" decoding="async"></section>
