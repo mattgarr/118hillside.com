@@ -39,7 +39,7 @@
 
   var path = location.pathname;
   var home = '/', HOME = [['Overview', '/#home'], ['Details', '/#details'], ['Gallery', '/#gallery'], ['Contact', '/#contact']];
-  var GAMES = [['All games', '/games/', ''], ['Halloween', '/games/?season=halloween', ''], ['Thanksgiving', '/games/?season=thanksgiving', 'soon'], ['Christmas', '/games/?season=christmas', 'soon']];
+  var GAMES = [['All games', '/games/', ''], ['Halloween', '/games/?season=halloween', ''], ['Thanksgiving', '/games/?season=thanksgiving', ''], ['Christmas', '/games/?season=christmas', 'soon']];
   var TOUR = [['Guided tour', '/tour/'], ['Walk around', '/tour/?view=walk'], ['Dollhouse', '/tour/?view=doll'], ['Design ideas', '/tour/?view=design']];
   var SHOW = [['Call Michael', 'tel:+16503150224', '650.315.0224'], ['Text Michael', 'sms:+16503150224', ''], ['Email Michael', 'mailto:Michael@MichaelWarrenRealEstate.com?subject=Showing%20request%3A%20118%20Hillside%20Drive', ''], ['Agent details', '/#contact', '']];
   var onGames = /^\/games\//.test(path), onTour = /^\/tour\//.test(path);

@@ -1,0 +1,212 @@
+{
+ "siding_lap": {
+  "file": "siding_lap.jpg",
+  "normal": "siding_lap_n.jpg",
+  "tileFeet": [
+   12.0,
+   7.0
+  ],
+  "source": "p71",
+  "notes": "procedural fiber-cement lap siding, 7in exposure, 12 ft tile"
+ },
+ "pavers": {
+  "file": "pavers.jpg",
+  "normal": "pavers_n.jpg",
+  "tileFeet": [
+   8.0,
+   8.0
+  ],
+  "source": "p42",
+  "notes": "procedural tumbled concrete pavers, 8 ft tile"
+ },
+ "mulch": {
+  "file": "mulch.jpg",
+  "normal": "mulch_n.jpg",
+  "tileFeet": [
+   3.159,
+   2.6
+  ],
+  "source": "p08",
+  "notes": "Shredded wood-chip mulch, backyard (rectified ground plane, min-cut seamless)."
+ },
+ "gravel": {
+  "file": "gravel.jpg",
+  "normal": "gravel_n.jpg",
+  "tileFeet": [
+   2.314,
+   1.8
+  ],
+  "source": "p66",
+  "notes": "Front-yard gravel: it reads as small rounded pea gravel / crushed rock in tan-grey-rust tones rather than fine DG. Cut from the shaded part of the bed (rectified); sun-dapple flattened."
+ },
+ "oak_bark": {
+  "file": "oak_bark.jpg",
+  "normal": "oak_bark_n.jpg",
+  "tileFeet": [
+   1.0,
+   2.077
+  ],
+  "source": "p08",
+  "notes": "Coast live oak bark from the big trunk at left edge of p08 (two vertical sections side by side, min-cut seams); map with V along the trunk."
+ },
+ "oak_floor": {
+  "file": "oak_floor.jpg",
+  "normal": "oak_floor_n.jpg",
+  "tileFeet": [
+   16.0,
+   16.0
+  ],
+  "source": "p20 (grain), p48/p34/p73 (colour)",
+  "notes": "procedural wide-plank white oak, 16 ft tile"
+ },
+ "deck_front": {
+  "file": "deck_front.jpg",
+  "normal": "deck_front_n.jpg",
+  "tileFeet": [
+   12.0,
+   11.979166666666666
+  ],
+  "source": "p75",
+  "notes": "procedural composite decking, 12 ft tile"
+ },
+ "shake_gable": {
+  "file": "shake_gable.jpg",
+  "normal": "shake_gable_n.jpg",
+  "tileFeet": [
+   4.0,
+   4.0
+  ],
+  "source": "p69 (colour)",
+  "notes": "procedural staggered shakes, colour from p69"
+ },
+ "roof_shingle": {
+  "file": "roof_shingle.jpg",
+  "normal": "roof_shingle_n.jpg",
+  "tileFeet": [
+   16.0,
+   15.9375
+  ],
+  "source": "p69/p70 (colour)",
+  "notes": "procedural laminate shingles, 16 ft tile"
+ },
+ "tile_bath_large": {
+  "file": "tile_bath_large.jpg",
+  "normal": null,
+  "tileFeet": [
+   4.0,
+   4.0
+  ],
+  "source": "p05",
+  "notes": "Primary-bath large-format marble-look porcelain (white with soft grey veining), cut from the shower side wall. Tile = two 24x48in tiles laid horizontally, half-offset, with thin grout; seams fall on grout lines."
+ },
+ "tile_herringbone": {
+  "file": "tile_herringbone.jpg",
+  "normal": "tile_herringbone_n.jpg",
+  "tileFeet": [
+   1.413,
+   1.413
+  ],
+  "source": "p25 (colours)",
+  "notes": "SEMI-PROCEDURAL: 45-degree herringbone of 2x6in honed tiles (aspect read from p25) with tile and grout colours sampled from the accent wall behind the round mirrors; exact lattice so it tiles perfectly. Non-square tile."
+ },
+ "tile_blue_mosaic": {
+  "file": "tile_blue_mosaic.jpg",
+  "normal": "tile_blue_mosaic_n.jpg",
+  "tileFeet": [
+   2.0,
+   2.0
+  ],
+  "source": "p68/p60 (colours)",
+  "notes": "SEMI-PROCEDURAL: lower-bath blue glass mosaic, 1x2in stacked cells, per-cell colours drawn from k-means clusters of the real tiles in p68 (weights preserved), glassy gradient + soft highlight, grey grout. 2x2 ft tile."
+ },
+ "tile_subway": {
+  "file": "tile_subway.jpg",
+  "normal": "tile_subway_n.jpg",
+  "tileFeet": [
+   4.0,
+   4.0
+  ],
+  "source": "p22 (colours)",
+  "notes": "SEMI-PROCEDURAL: hall-bath glossy white 3x12in subway in running bond, colours sampled from p22; 4x4 ft tile."
+ },
+ "tile_subway_band": {
+  "file": "tile_subway_band.jpg",
+  "normal": "tile_subway_band_n.jpg",
+  "tileFeet": [
+   2.0,
+   0.167
+  ],
+  "source": "p22 (colours)",
+  "notes": "Accent band (two rows of 1in-tall linear marble/grey mosaic) for the hall-bath stripe; repeats along U only; 2in tall."
+ },
+ "quartz_counter": {
+  "file": "quartz_counter.jpg",
+  "normal": null,
+  "tileFeet": [
+   5.0,
+   5.0
+  ],
+  "source": "p11 (colours)",
+  "notes": "SEMI-PROCEDURAL: white quartz with soft, broken grey veins (domain-warped, exactly periodic); base white and vein grey sampled from the kitchen island (p11). Cutting the real slab produced obviously repeating vein fragments, so this replaces it."
+ },
+ "backsplash_slab": {
+  "file": "backsplash_slab.jpg",
+  "normal": null,
+  "tileFeet": [
+   5.0,
+   5.0
+  ],
+  "source": "p48/p00/p11 (colours)",
+  "notes": "SEMI-PROCEDURAL: kitchen full-height marble-look slab backsplash - bolder, more frequent grey veining than the counters, colours sampled from the slab material in p11/p48; exactly periodic 5x5 ft."
+ },
+ "shaker_cabinet": {
+  "file": "shaker_cabinet.jpg",
+  "normal": null,
+  "tileFeet": [
+   1.25,
+   2.083
+  ],
+  "source": "p00/p48/p04 (colour)",
+  "notes": "SYNTHESIZED single door face (not tiling): white shaker, 2-3/4in rails/stiles, recessed flat centre panel with baked-in soft shading; 15x25in proportions - stretch to each cabinet front. Colour = measured cabinet white."
+ },
+ "rec_floor": {
+  "file": "rec_floor.jpg",
+  "normal": null,
+  "tileFeet": [
+   3.0,
+   3.558
+  ],
+  "source": "p72",
+  "notes": "Lower-level rec-room floor: it is a light beige stone-look tile / LVT (fine mottling, faint straight joints, specular sun patches in p51/p63), NOT carpet. Cut from p72 open floor; joints are too faint to model."
+ },
+ "garage_floor": {
+  "file": "garage_floor.jpg",
+  "normal": null,
+  "tileFeet": [
+   10.0,
+   10.0
+  ],
+  "source": "synth",
+  "notes": "SYNTHESIZED: the garage floor is not visible in p29 (shot looks up at the ceiling/door). Plain sealed grey concrete with a saw-cut control joint every 10 ft at the tile edge."
+ },
+ "sisal_rug": {
+  "file": "sisal_rug.jpg",
+  "normal": null,
+  "tileFeet": [
+   1.5,
+   1.5
+  ],
+  "source": "p23",
+  "notes": "Natural sisal/jute flat-weave rug (living room), rectified from the rug left of the glass coffee table. Colour re-balanced to the daylight rug reading in p44 (#b09271); p23 is warm-cast."
+ },
+ "oak_leaves": {
+  "file": "oak_leaves.png",
+  "normal": null,
+  "tileFeet": [
+   3.0,
+   3.0
+  ],
+  "source": "p52 (colours)",
+  "notes": "SYNTHESIZED alpha sprite atlas 1024x512: two coast-live-oak leaf clusters (left/right halves, each 512x512 ~3ft across) of small oval leaves with midribs on twigs; leaf colours = k-means of the sunlit/shaded canopy in p52. Use alphaTest ~0.5."
+ }
+}

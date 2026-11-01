@@ -5814,7 +5814,7 @@
    "note": "Under-stair closet",
    "era": "addition",
    "leafHeight": 7.0,
-   "state": "open",
+   "state": "closed",
    "product": {
     "manufacturer": "JELD-WEN",
     "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
@@ -5833,7 +5833,8 @@
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
    },
-   "source": "owner 2026-10-30 (rule v22 int22 P8)"
+   "source": "owner 2026-10-30 (rule v22 int22 P8) | owner 2026-11-01: closet doors default closed, operable",
+   "operable": true
   },
   {
    "id": "L1-O08",
@@ -6753,7 +6754,7 @@
    "ifc": "IfcDoor",
    "kind": "bypass",
    "storey": "L1",
-   "type": "D-IC",
+   "type": "D-IA",
    "tag": "004B",
    "center": [
     -44.92,
@@ -6780,15 +6781,23 @@
     "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
     "leafThickness": 0.1146,
     "finish": "painted white, semi-gloss",
-    "nominal": "2'-8\" x 7'-0\""
+    "nominal": "pair 3'-0\" x 7'-0\""
    },
-   "operation": "SLIDING bypass",
-   "leaves": 2,
+   "operation": "DOUBLE_SWING (pair)",
    "hardware": {
     "finish": "brushed nickel",
-    "set": "round flush cup pulls, top-hung track"
+    "set": "round knob + rosette each leaf, ball catches (no centre post)",
+    "hinges": "3 x 3-1/2\" butt hinges per leaf"
    },
-   "state": "open"
+   "state": "closed",
+   "swing": {
+    "hinge": "both",
+    "side": "normal"
+   },
+   "openAngle": "auto",
+   "leafWidth": 3.0,
+   "source": "owner 2026-11-01: closet pair of swing doors (French, no centre post), panels 36.00\" | owner 2026-11-01: closet doors default closed, operable",
+   "operable": true
   },
   {
    "id": "L1-O37",
@@ -7287,7 +7296,9 @@
     "set": "recessed edge pull + round flush cup pulls"
    },
    "rule": "closet22 K2: owner - 27in from the primary-suite-side corner to the opening",
-   "state": "open"
+   "state": "closed",
+   "operable": true,
+   "source": "owner 2026-11-01: closet doors default closed, operable"
   },
   {
    "id": "L1-S00",
@@ -7992,10 +8003,6 @@
    "outline": [
     [
      -6.138,
-     16.741
-    ],
-    [
-     -6.138,
      17.034
     ],
     [
@@ -8045,33 +8052,9 @@
     [
      -2.054,
      17.034
-    ],
-    [
-     -2.054,
-     16.741
-    ],
-    [
-     -2.054,
-     16.741
-    ],
-    [
-     -0.551,
-     16.741
-    ],
-    [
-     -0.551,
-     14.718
-    ],
-    [
-     -6.431,
-     14.718
-    ],
-    [
-     -6.431,
-     16.741
     ]
    ],
-   "area": 120.243,
+   "area": 107.152,
    "floor": 0.0,
    "name": "Bedroom"
   },
@@ -15762,7 +15745,7 @@
    "ifc": "IfcDoor",
    "kind": "door",
    "storey": "L1",
-   "type": "D-IA",
+   "type": "D-IB",
    "tag": null,
    "center": [
     -7.975,
@@ -15781,8 +15764,7 @@
    "sill": 0.0,
    "head": 6.7812,
    "isExternal": false,
-   "state": "open",
-   "openAngle": "auto",
+   "state": "closed",
    "note": "Laundry closet (stacked washer/dryer ready) - living room, left (p59, p51)",
    "by": "v19-living",
    "era": "original",
@@ -15794,23 +15776,22 @@
     "finish": "painted white, semi-gloss",
     "nominal": "2'-8\" x 6'-8\""
    },
-   "operation": "SINGLE_SWING",
-   "swing": {
-    "hinge": "start",
-    "side": "normal"
-   },
+   "operation": "SLIDING_TO_SIDE (pocket)",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "pocket": "end",
+   "operable": true,
+   "source": "owner 2026-11-01: living-room closets are pocket doors | owner 2026-11-01: closet doors default closed, operable"
   },
   {
    "id": "L1-O63",
    "ifc": "IfcDoor",
    "kind": "door",
    "storey": "L1",
-   "type": "D-IA",
+   "type": "D-IB",
    "tag": null,
    "center": [
     2.715,
@@ -15829,8 +15810,7 @@
    "sill": 0.0,
    "head": 6.7812,
    "isExternal": false,
-   "state": "open",
-   "openAngle": "auto",
+   "state": "closed",
    "note": "Hall closet - living room back wall (p59)",
    "by": "v19-living",
    "era": "original",
@@ -15842,16 +15822,15 @@
     "finish": "painted white, semi-gloss",
     "nominal": "2'-8\" x 6'-8\""
    },
-   "operation": "SINGLE_SWING",
-   "swing": {
-    "hinge": "start",
-    "side": "normal"
-   },
+   "operation": "SLIDING_TO_SIDE (pocket)",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "pocket": "start",
+   "operable": true,
+   "source": "owner 2026-11-01: living-room closets are pocket doors | owner 2026-11-01: closet doors default closed, operable"
   },
   {
    "id": "FX-washerFront-LIV",
@@ -16414,7 +16393,7 @@
    "head": 6.7812,
    "isExternal": false,
    "status": "existing",
-   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19)",
+   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19) | owner 2026-11-01: triple bypass closet sliders | owner 2026-11-01: closet doors default closed, operable",
    "tag": null,
    "id": "L1-OD2",
    "type": "D-IC",
@@ -16448,7 +16427,8 @@
     "finish": "brushed nickel",
     "set": "round flush cup pulls, top-hung track"
    },
-   "state": "open"
+   "state": "closed",
+   "operable": true
   },
   {
    "id": "L1-W11-d1",
@@ -16558,7 +16538,7 @@
    "head": 6.7812,
    "isExternal": false,
    "status": "existing",
-   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19)",
+   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19) | owner 2026-11-01: triple bypass closet sliders | owner 2026-11-01: closet doors default closed, operable",
    "tag": null,
    "id": "L1-OD4",
    "type": "D-IC",
@@ -16592,7 +16572,8 @@
     "finish": "brushed nickel",
     "set": "round flush cup pulls, top-hung track"
    },
-   "state": "open"
+   "state": "closed",
+   "operable": true
   },
   {
    "ifc": "IfcDoor",
@@ -16602,10 +16583,10 @@
    "head": 2.5546,
    "isExternal": false,
    "status": "existing",
-   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19)",
+   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19) | owner 2026-11-01: closet pair of swing doors (French, no centre post), panels 35.12\" | owner 2026-11-01: closet doors default closed, operable",
    "tag": null,
    "id": "L1-OD5",
-   "type": "D-IC",
+   "type": "D-IA",
    "center": [
     -25.865,
     -27.415
@@ -16621,7 +16602,6 @@
    "width": 6.01,
    "wallThickness": 0.57,
    "note": "Lower bedroom 2 closet",
-   "leaves": 2,
    "era": "addition",
    "leafHeight": 7.0,
    "product": {
@@ -16629,14 +16609,22 @@
     "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
     "leafThickness": 0.1146,
     "finish": "painted white, semi-gloss",
-    "nominal": "2'-8\" x 7'-0\""
+    "nominal": "pair 35.1\" x 7'-0\""
    },
-   "operation": "SLIDING bypass",
+   "operation": "DOUBLE_SWING (pair)",
    "hardware": {
     "finish": "brushed nickel",
-    "set": "round flush cup pulls, top-hung track"
+    "set": "round knob + rosette each leaf, ball catches (no centre post)",
+    "hinges": "3 x 3-1/2\" butt hinges per leaf"
    },
-   "state": "open"
+   "state": "closed",
+   "swing": {
+    "hinge": "both",
+    "side": "normal"
+   },
+   "openAngle": "auto",
+   "leafWidth": 2.9269,
+   "operable": true
   },
   {
    "id": "FX-showerGlass-L0",
@@ -18534,6 +18522,118 @@
    "feed": "RF-L02 west eave, north end (side yard)",
    "evidence": "IMG_0473 (side-yard wall corner, black drain elbow)",
    "material": "aluminium, trim white"
+  },
+  {
+   "id": "L1-S05C",
+   "ifc": "IfcSpace",
+   "storey": "L1",
+   "zone": "exist",
+   "name": "Closet",
+   "floor": 0.0,
+   "outline": [
+    [
+     -6.389,
+     14.74
+    ],
+    [
+     -0.556,
+     14.74
+    ],
+    [
+     -0.556,
+     16.696
+    ],
+    [
+     -6.389,
+     16.696
+    ]
+   ],
+   "area": 11.409,
+   "source": "owner 2026-11-01: middle-bedroom closet"
+  },
+  {
+   "ifc": "IfcDoor",
+   "kind": "door",
+   "storey": "L1",
+   "sill": 0.0,
+   "head": 6.7812,
+   "isExternal": false,
+   "era": "original",
+   "leafHeight": 6.6667,
+   "id": "L1-OD6",
+   "type": "D-IB",
+   "center": [
+    -4.077,
+    16.8625
+   ],
+   "axis": [
+    1.0,
+    0.0
+   ],
+   "normal": [
+    0.0,
+    1.0
+   ],
+   "width": 4.042,
+   "wallThickness": 0.333,
+   "note": "Middle bedroom closet - 48\" pocket door (two 24\" doors joined into one leaf; p526)",
+   "operation": "SLIDING_TO_SIDE (pocket)",
+   "leafPanels": 2,
+   "product": {
+    "manufacturer": "JELD-WEN",
+    "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
+    "leafThickness": 0.1146,
+    "finish": "painted white, semi-gloss",
+    "nominal": "4'-0\" x 6'-8\" (two 2'-0\" Craftsman doors joined)"
+   },
+   "hardware": {
+    "finish": "brushed nickel",
+    "set": "recessed edge pull + round flush cup pulls"
+   },
+   "source": "owner 2026-11-01: middle-bedroom closet, 48\" pocket | owner 2026-11-01: 48\" pocket closet slider, one leaf made of two 24\" doors | owner 2026-11-01: closet doors default closed, operable",
+   "pocket": "end",
+   "status": "existing",
+   "leafWidth": 4.042,
+   "state": "closed",
+   "operable": true
+  },
+  {
+   "ifc": "IfcDoor",
+   "storey": "L1",
+   "isExternal": false,
+   "era": "original",
+   "status": "existing",
+   "center": [
+    -4.077,
+    16.8625
+   ],
+   "axis": [
+    1.0,
+    0.0
+   ],
+   "normal": [
+    0.0,
+    1.0
+   ],
+   "width": 4.042,
+   "wallThickness": 0.333,
+   "id": "L1-OD6U",
+   "kind": "door",
+   "type": "D-IC",
+   "leaves": 2,
+   "leafStyle": "flat-panel",
+   "sill": 7.1979,
+   "head": 8.7979,
+   "leafHeight": 1.4333,
+   "note": "Middle bedroom closet upper storage - 2 sliding doors (p526)",
+   "operation": "SLIDING bypass",
+   "hardware": {
+    "finish": "black",
+    "set": "recessed finger slots, top-hung track"
+   },
+   "source": "owner 2026-11-01: upper storage over the middle-bedroom closet, 2 sliders | owner 2026-11-01: closet doors default closed, operable",
+   "state": "closed",
+   "operable": true
   }
  ],
  "materials": {
@@ -19240,12 +19340,12 @@
  "designOptions": [
   {
    "id": "jan24",
-   "name": "Concept A",
+   "name": "Open Plan",
    "short": "Jan 2024",
    "date": "2024-01-25",
    "source": "240125 Proposed Phase 2 Remodel Plan (concept)",
    "status": "concept",
-   "description": "Kitchen moves into the west wing; open family and dining room in the middle; new bath, au pair suite and office/guest room on the east side; hall bath becomes a pantry.",
+   "description": "One big open space: kitchen, dining, family room and a sitting/games area together, with a pantry, a new bath and two bedrooms on the east side.",
    "scope": "L1 main (1950s) house: interior layout, kitchen, baths, and some exterior windows",
    "region": [
     [
@@ -21383,7 +21483,7 @@
      "id": "jan24-L06",
      "ifc": "IfcAnnotation",
      "kind": "roomLabel",
-     "name": "Au pair",
+     "name": "Bedroom",
      "at": [
       31.0,
       27.0
@@ -21403,7 +21503,7 @@
      "id": "jan24-L08",
      "ifc": "IfcAnnotation",
      "kind": "roomLabel",
-     "name": "Office / guest",
+     "name": "Bedroom",
      "at": [
       30.0,
       11.0
@@ -21533,1820 +21633,13 @@
    ]
   },
   {
-   "id": "apr24a",
-   "name": "Concept B",
-   "short": "Apr 2024",
-   "date": "2024-04-22",
-   "source": "240422 Proposed Phase 2 Remodel Plan",
-   "status": "concept",
-   "description": "Open kitchen with a 12-ft island across the middle; family room to the west; office, pantry, au pair and gym/guest rooms along the north.",
-   "scope": "L1 main (1950s) house: interior layout, kitchen, baths, and some exterior windows",
-   "region": [
-    [
-     -10.5,
-     -1.4
-    ],
-    [
-     5.4,
-     -1.4
-    ],
-    [
-     5.4,
-     4.4
-    ],
-    [
-     37.0,
-     4.4
-    ],
-    [
-     37.0,
-     32.5
-    ],
-    [
-     5.0,
-     32.5
-    ],
-    [
-     5.0,
-     27.1
-    ],
-    [
-     -7.0,
-     27.1
-    ],
-    [
-     -7.0,
-     18.85
-    ],
-    [
-     -9.95,
-     18.85
-    ]
-   ],
-   "walkStart": {
-    "at": [
-     -4.0,
-     6.0
-    ],
-    "look": [
-     17.0,
-     15.5
-    ]
-   },
-   "removes": [
-    "FX-washerFront-LIV",
-    "KX-00",
-    "KX-01",
-    "KX-02",
-    "KX-03",
-    "KX-04",
-    "KX-05",
-    "KX-06",
-    "KX-07",
-    "KX-08",
-    "KX-09",
-    "KX-10",
-    "KX-11",
-    "KX-12",
-    "KX-13",
-    "KX-14",
-    "KX-15",
-    "KX-16",
-    "KX-17",
-    "KX-18",
-    "KX-19",
-    "KX-20",
-    "KX-21",
-    "KX-23",
-    "KX-24",
-    "KX-BICT",
-    "KX-BUILTIN",
-    "KX-COUNTER",
-    "KX-CUBBY",
-    "KX-MW",
-    "KX-MWUP",
-    "KX-PBACK",
-    "KX-PCHAMF",
-    "KX-UPS",
-    "L1-O23",
-    "L1-O24",
-    "L1-O61",
-    "L1-O62",
-    "L1-O63",
-    "L1-OD1",
-    "L1-OD2",
-    "L1-OD3",
-    "L1-OD4",
-    "L1-W00",
-    "L1-W01",
-    "L1-W03",
-    "L1-W04",
-    "L1-W06",
-    "L1-W07",
-    "L1-W08",
-    "L1-W09",
-    "L1-W10",
-    "L1-W11-d1",
-    "L1-W11-d2",
-    "L1-W13",
-    "L1-W14",
-    "L1-W15",
-    "L1-W16",
-    "L1-W18",
-    "L1-W19",
-    "L1-W20",
-    "L1-W42",
-    "L1-W43",
-    "L1-W46",
-    "L1-W48",
-    "L1-W50",
-    "L1-W51",
-    "L1-W53",
-    "L1-W55",
-    "L1-W56",
-    "L1-W57",
-    "L1-W58",
-    "L1-W59",
-    "L1-W60",
-    "L1-W61",
-    "L1-W62",
-    "L1-W63",
-    "L1-W64",
-    "L1-W84",
-    "L1-OD2-THR"
-   ],
-   "elements": [
-    {
-     "id": "apr24a-W01",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       -6.39,
-       16.6
-      ],
-      [
-       4.86,
-       16.6
-      ],
-      [
-       4.86,
-       17.15
-      ],
-      [
-       -6.39,
-       17.15
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W02",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       4.86,
-       15.58
-      ],
-      [
-       5.32,
-       15.58
-      ],
-      [
-       5.32,
-       22.57
-      ],
-      [
-       4.86,
-       22.57
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W03",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       4.87,
-       4.9
-      ],
-      [
-       5.27,
-       4.9
-      ],
-      [
-       5.27,
-       6.0
-      ],
-      [
-       4.87,
-       6.0
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W04",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       -9.39,
-       17.25
-      ],
-      [
-       -6.81,
-       17.25
-      ],
-      [
-       -6.81,
-       17.55
-      ],
-      [
-       -9.39,
-       17.55
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W05",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       13.53,
-       18.24
-      ],
-      [
-       13.94,
-       18.24
-      ],
-      [
-       13.94,
-       22.75
-      ],
-      [
-       13.53,
-       22.75
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O01",
-     "ifc": "IfcDoor",
-     "kind": "door",
-     "storey": "L1",
-     "type": "D-IA",
-     "center": [
-      13.735,
-      24.045
-     ],
-     "axis": [
-      0.0,
-      1.0
-     ],
-     "normal": [
-      -1.0,
-      0.0
-     ],
-     "width": 2.59,
-     "wallThickness": 0.41,
-     "sill": 0.0,
-     "head": 6.7812,
-     "isExternal": false,
-     "status": "new",
-     "era": "original",
-     "leafHeight": 6.6667,
-     "product": {
-      "manufacturer": "JELD-WEN",
-      "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
-      "leafThickness": 0.1146,
-      "finish": "painted white, semi-gloss",
-      "nominal": "2'-8\" x 6'-8\""
-     },
-     "operation": "SINGLE_SWING",
-     "swing": {
-      "hinge": "end",
-      "side": "reverse"
-     },
-     "openAngle": 78,
-     "hardware": {
-      "finish": "brushed nickel",
-      "set": "round knob + round rosette both sides",
-      "hinges": "3 x 3-1/2\" butt hinges"
-     }
-    },
-    {
-     "id": "apr24a-W06",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       13.94,
-       20.42
-      ],
-      [
-       14.3,
-       20.42
-      ],
-      [
-       14.3,
-       21.08
-      ],
-      [
-       13.94,
-       21.08
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W07",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       23.3,
-       20.42
-      ],
-      [
-       23.95,
-       20.42
-      ],
-      [
-       23.95,
-       21.08
-      ],
-      [
-       23.3,
-       21.08
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O02",
-     "ifc": "IfcDoor",
-     "kind": "door",
-     "storey": "L1",
-     "type": "D-IC",
-     "center": [
-      18.8,
-      20.75
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 9.0,
-     "wallThickness": 0.3,
-     "sill": 0.0,
-     "head": 6.7812,
-     "isExternal": false,
-     "status": "new",
-     "era": "original",
-     "leafHeight": 6.6667,
-     "product": {
-      "manufacturer": "JELD-WEN",
-      "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
-      "leafThickness": 0.1146,
-      "finish": "painted white, semi-gloss",
-      "nominal": "2'-8\" x 6'-8\""
-     },
-     "operation": "SLIDING bypass",
-     "leaves": 3,
-     "hardware": {
-      "finish": "brushed nickel",
-      "set": "round flush cup pulls, top-hung track"
-     }
-    },
-    {
-     "id": "apr24a-W08",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       23.95,
-       18.24
-      ],
-      [
-       24.36,
-       18.24
-      ],
-      [
-       24.36,
-       31.99
-      ],
-      [
-       23.95,
-       31.99
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W09",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       27.58,
-       18.24
-      ],
-      [
-       36.49,
-       18.24
-      ],
-      [
-       36.49,
-       18.66
-      ],
-      [
-       27.58,
-       18.66
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O03",
-     "ifc": "IfcDoor",
-     "kind": "door",
-     "storey": "L1",
-     "type": "D-IA",
-     "center": [
-      25.97,
-      18.45
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 3.22,
-     "wallThickness": 0.42,
-     "sill": 0.0,
-     "head": 6.7812,
-     "isExternal": false,
-     "status": "new",
-     "era": "original",
-     "leafHeight": 6.6667,
-     "product": {
-      "manufacturer": "JELD-WEN",
-      "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
-      "leafThickness": 0.1146,
-      "finish": "painted white, semi-gloss",
-      "nominal": "2'-8\" x 6'-8\""
-     },
-     "operation": "SINGLE_SWING",
-     "swing": {
-      "hinge": "start",
-      "side": "reverse"
-     },
-     "openAngle": 78,
-     "hardware": {
-      "finish": "brushed nickel",
-      "set": "round knob + round rosette both sides",
-      "hinges": "3 x 3-1/2\" butt hinges"
-     }
-    },
-    {
-     "id": "apr24a-O04",
-     "ifc": "IfcDoor",
-     "kind": "door",
-     "storey": "L1",
-     "type": "D-IC",
-     "center": [
-      30.24,
-      29.73
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 9.0,
-     "wallThickness": 0.41,
-     "sill": 0.0,
-     "head": 6.7812,
-     "isExternal": false,
-     "status": "new",
-     "era": "original",
-     "leafHeight": 6.6667,
-     "product": {
-      "manufacturer": "JELD-WEN",
-      "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
-      "leafThickness": 0.1146,
-      "finish": "painted white, semi-gloss",
-      "nominal": "2'-8\" x 6'-8\""
-     },
-     "operation": "SLIDING bypass",
-     "leaves": 3,
-     "hardware": {
-      "finish": "brushed nickel",
-      "set": "round flush cup pulls, top-hung track"
-     }
-    },
-    {
-     "id": "apr24a-W10",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       8.5,
-       18.24
-      ],
-      [
-       23.95,
-       18.24
-      ],
-      [
-       23.95,
-       18.66
-      ],
-      [
-       8.5,
-       18.66
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W11",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       8.5,
-       21.85
-      ],
-      [
-       13.53,
-       21.85
-      ],
-      [
-       13.53,
-       22.45
-      ],
-      [
-       8.5,
-       22.45
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W12",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       8.83,
-       20.92
-      ],
-      [
-       9.4,
-       20.92
-      ],
-      [
-       9.4,
-       21.85
-      ],
-      [
-       8.83,
-       21.85
-      ]
-     ],
-     "z0": 0.0,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O05",
-     "ifc": "IfcOpeningElement",
-     "kind": "door",
-     "storey": "L1",
-     "type": "D-IB",
-     "center": [
-      9.115,
-      19.79
-     ],
-     "axis": [
-      0.0,
-      1.0
-     ],
-     "normal": [
-      -1.0,
-      0.0
-     ],
-     "width": 2.26,
-     "wallThickness": 0.57,
-     "sill": 0.0,
-     "head": 6.7812,
-     "isExternal": false,
-     "status": "new",
-     "era": "original",
-     "leafHeight": 6.6667,
-     "product": {
-      "manufacturer": "JELD-WEN",
-      "model": "Craftsman 3-panel (1 top panel over 2 tall panels), shaker sticking",
-      "leafThickness": 0.1146,
-      "finish": "painted white, semi-gloss",
-      "nominal": "2'-8\" x 6'-8\""
-     },
-     "operation": "SLIDING_TO_SIDE (pocket)",
-     "pocket": "start",
-     "hardware": {
-      "finish": "brushed nickel",
-      "set": "recessed edge pull + round flush cup pulls"
-     }
-    },
-    {
-     "id": "apr24a-W13",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       18.24,
-       4.4
-      ],
-      [
-       20.35,
-       4.4
-      ],
-      [
-       20.35,
-       4.9
-      ],
-      [
-       18.24,
-       4.9
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O06",
-     "ifc": "IfcWindow",
-     "kind": "window",
-     "storey": "L1",
-     "type": "CS-A",
-     "center": [
-      21.818,
-      4.65
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 2.936,
-     "wallThickness": 0.5,
-     "sill": 2.0,
-     "head": 7.4,
-     "isExternal": true,
-     "status": "new"
-    },
-    {
-     "id": "apr24a-W14",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       23.286,
-       4.4
-      ],
-      [
-       23.616,
-       4.4
-      ],
-      [
-       23.616,
-       4.9
-      ],
-      [
-       23.286,
-       4.9
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O07",
-     "ifc": "IfcWindow",
-     "kind": "window",
-     "storey": "L1",
-     "type": "CS-A",
-     "center": [
-      25.084,
-      4.65
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 2.936,
-     "wallThickness": 0.5,
-     "sill": 2.0,
-     "head": 7.4,
-     "isExternal": true,
-     "status": "new"
-    },
-    {
-     "id": "apr24a-W15",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       26.552,
-       4.4
-      ],
-      [
-       26.882,
-       4.4
-      ],
-      [
-       26.882,
-       4.9
-      ],
-      [
-       26.552,
-       4.9
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O08",
-     "ifc": "IfcWindow",
-     "kind": "window",
-     "storey": "L1",
-     "type": "CS-A",
-     "center": [
-      28.35,
-      4.65
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 2.936,
-     "wallThickness": 0.5,
-     "sill": 2.0,
-     "head": 7.4,
-     "isExternal": true,
-     "status": "new"
-    },
-    {
-     "id": "apr24a-W16",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       29.818,
-       4.4
-      ],
-      [
-       30.148000000000003,
-       4.4
-      ],
-      [
-       30.148000000000003,
-       4.9
-      ],
-      [
-       29.818,
-       4.9
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O09",
-     "ifc": "IfcWindow",
-     "kind": "window",
-     "storey": "L1",
-     "type": "CS-A",
-     "center": [
-      31.616,
-      4.65
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 2.936,
-     "wallThickness": 0.5,
-     "sill": 2.0,
-     "head": 7.4,
-     "isExternal": true,
-     "status": "new"
-    },
-    {
-     "id": "apr24a-W17",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       33.084,
-       4.4
-      ],
-      [
-       33.414,
-       4.4
-      ],
-      [
-       33.414,
-       4.9
-      ],
-      [
-       33.084,
-       4.9
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O10",
-     "ifc": "IfcWindow",
-     "kind": "window",
-     "storey": "L1",
-     "type": "CS-A",
-     "center": [
-      34.882,
-      4.65
-     ],
-     "axis": [
-      1.0,
-      0.0
-     ],
-     "normal": [
-      0.0,
-      -1.0
-     ],
-     "width": 2.936,
-     "wallThickness": 0.5,
-     "sill": 2.0,
-     "head": 7.4,
-     "isExternal": true,
-     "status": "new"
-    },
-    {
-     "id": "apr24a-W18",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       36.35,
-       4.4
-      ],
-      [
-       36.99,
-       4.4
-      ],
-      [
-       36.99,
-       4.9
-      ],
-      [
-       36.35,
-       4.9
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-W19",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       36.49,
-       4.9
-      ],
-      [
-       36.99,
-       4.9
-      ],
-      [
-       36.99,
-       5.07
-      ],
-      [
-       36.49,
-       5.07
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-O11",
-     "ifc": "IfcWindow",
-     "kind": "window",
-     "storey": "L1",
-     "type": "CS-A",
-     "center": [
-      36.74,
-      6.525
-     ],
-     "axis": [
-      0.0,
-      1.0
-     ],
-     "normal": [
-      1.0,
-      0.0
-     ],
-     "width": 2.91,
-     "wallThickness": 0.5,
-     "sill": 2.0,
-     "head": 7.4,
-     "isExternal": true,
-     "status": "new"
-    },
-    {
-     "id": "apr24a-W20",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "new",
-     "footprint": [
-      [
-       36.49,
-       7.98
-      ],
-      [
-       36.99,
-       7.98
-      ],
-      [
-       36.99,
-       17.44
-      ],
-      [
-       36.49,
-       17.44
-      ]
-     ],
-     "z0": -5.2,
-     "z1": 8.0,
-     "isExternal": true,
-     "topToRoof": true
-    },
-    {
-     "id": "apr24a-F01",
-     "ifc": "IfcElectricAppliance",
-     "kind": "fridgeFrenchDoor",
-     "at": [
-      10.85,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 3.5
-     }
-    },
-    {
-     "id": "apr24a-F02",
-     "ifc": "IfcFurniture",
-     "kind": "baseCabinet",
-     "at": [
-      13.85,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 2.5,
-      "sink": false,
-      "faucet": false
-     }
-    },
-    {
-     "id": "apr24a-F03",
-     "ifc": "IfcFurniture",
-     "kind": "upperCabinet",
-     "at": [
-      13.85,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 2.5,
-      "mountY": 4.5,
-      "h": 3.0
-     }
-    },
-    {
-     "id": "apr24a-F04",
-     "ifc": "IfcFurniture",
-     "kind": "baseCabinet",
-     "at": [
-      19.35,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 2.5,
-      "sink": false,
-      "faucet": false
-     }
-    },
-    {
-     "id": "apr24a-F05",
-     "ifc": "IfcFurniture",
-     "kind": "upperCabinet",
-     "at": [
-      19.35,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 2.5,
-      "mountY": 4.5,
-      "h": 3.0
-     }
-    },
-    {
-     "id": "apr24a-F06",
-     "ifc": "IfcElectricAppliance",
-     "kind": "range36",
-     "at": [
-      16.6,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F07",
-     "ifc": "IfcElectricAppliance",
-     "kind": "hoodChimney",
-     "at": [
-      16.6,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "mountY": 6.0,
-      "toCeiling": 8.0
-     }
-    },
-    {
-     "id": "apr24a-F08",
-     "ifc": "IfcFurniture",
-     "kind": "tallCabinet",
-     "at": [
-      21.44,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 1.675
-     }
-    },
-    {
-     "id": "apr24a-F09",
-     "ifc": "IfcFurniture",
-     "kind": "tallCabinet",
-     "at": [
-      23.11,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 1.675
-     }
-    },
-    {
-     "id": "apr24a-F10",
-     "ifc": "IfcFurniture",
-     "kind": "island",
-     "at": [
-      16.67,
-      9.17,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {
-      "w": 12.0,
-      "d": 3.5,
-      "seatingSide": "back",
-      "sink": true
-     }
-    },
-    {
-     "id": "apr24a-F11",
-     "ifc": "IfcFurniture",
-     "kind": "barStool",
-     "at": [
-      11.6,
-      7.62,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F12",
-     "ifc": "IfcFurniture",
-     "kind": "barStool",
-     "at": [
-      13.6,
-      7.62,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F13",
-     "ifc": "IfcFurniture",
-     "kind": "barStool",
-     "at": [
-      15.6,
-      7.62,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F14",
-     "ifc": "IfcFurniture",
-     "kind": "barStool",
-     "at": [
-      17.6,
-      7.62,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F15",
-     "ifc": "IfcFurniture",
-     "kind": "barStool",
-     "at": [
-      19.6,
-      7.62,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F16",
-     "ifc": "IfcFurniture",
-     "kind": "barStool",
-     "at": [
-      21.6,
-      7.62,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F17",
-     "ifc": "IfcFurniture",
-     "kind": "diningTable",
-     "at": [
-      30.0,
-      9.5,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {
-      "w": 7.0,
-      "d": 2.9
-     }
-    },
-    {
-     "id": "apr24a-F18",
-     "ifc": "IfcFurniture",
-     "kind": "diningChair",
-     "at": [
-      28.0,
-      13.9,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F19",
-     "ifc": "IfcFurniture",
-     "kind": "diningChair",
-     "at": [
-      28.0,
-      8.0,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F20",
-     "ifc": "IfcFurniture",
-     "kind": "diningChair",
-     "at": [
-      30.0,
-      13.9,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F21",
-     "ifc": "IfcFurniture",
-     "kind": "diningChair",
-     "at": [
-      30.0,
-      8.0,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F22",
-     "ifc": "IfcFurniture",
-     "kind": "diningChair",
-     "at": [
-      32.0,
-      13.9,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F23",
-     "ifc": "IfcFurniture",
-     "kind": "diningChair",
-     "at": [
-      32.0,
-      8.0,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F24",
-     "ifc": "IfcFurniture",
-     "kind": "baseCabinet",
-     "at": [
-      32.4,
-      18.24,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 8.0,
-      "sink": false,
-      "faucet": false
-     }
-    },
-    {
-     "id": "apr24a-F25",
-     "ifc": "IfcFurniture",
-     "kind": "consoleTable",
-     "at": [
-      -2.25,
-      16.6,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 7.0
-     }
-    },
-    {
-     "id": "apr24a-F26",
-     "ifc": "IfcFurniture",
-     "kind": "tvWall",
-     "at": [
-      -2.25,
-      16.6,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "size": 65
-     }
-    },
-    {
-     "id": "apr24a-F27",
-     "ifc": "IfcFurnishingElement",
-     "kind": "rug",
-     "at": [
-      -2.3,
-      3.4,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {
-      "w": 8,
-      "d": 10
-     }
-    },
-    {
-     "id": "apr24a-F28",
-     "ifc": "IfcFurniture",
-     "kind": "sofa3",
-     "at": [
-      -2.25,
-      3.0,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {
-      "w": 7.0
-     }
-    },
-    {
-     "id": "apr24a-F29",
-     "ifc": "IfcFurniture",
-     "kind": "sideTable",
-     "at": [
-      -2.27,
-      7.3,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {
-      "style": "round",
-      "dia": 3.6,
-      "h": 1.4
-     }
-    },
-    {
-     "id": "apr24a-F30",
-     "ifc": "IfcFurniture",
-     "kind": "armchairBoucle",
-     "at": [
-      -7.334,
-      13.368,
-      0.0
-     ],
-     "rot": 320,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F31",
-     "ifc": "IfcFurniture",
-     "kind": "armchairBoucle",
-     "at": [
-      2.784,
-      13.368,
-      0.0
-     ],
-     "rot": 220,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F32",
-     "ifc": "IfcFurniture",
-     "kind": "sideTable",
-     "at": [
-      -8.65,
-      9.7,
-      0.0
-     ],
-     "rot": 0,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F33",
-     "ifc": "IfcFurniture",
-     "kind": "sideTable",
-     "at": [
-      -7.45,
-      4.7,
-      0.0
-     ],
-     "rot": 0,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F34",
-     "ifc": "IfcFurniture",
-     "kind": "desk",
-     "at": [
-      -1.0,
-      26.53,
-      0.0
-     ],
-     "rot": 270,
-     "opts": {
-      "w": 4.5
-     }
-    },
-    {
-     "id": "apr24a-F35",
-     "ifc": "IfcFurniture",
-     "kind": "officeChair",
-     "at": [
-      -1.0,
-      23.3,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F36",
-     "ifc": "IfcFurniture",
-     "kind": "bedQueen",
-     "at": [
-      23.95,
-      26.5,
-      0.0
-     ],
-     "rot": 180,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F37",
-     "ifc": "IfcFurniture",
-     "kind": "nightstand",
-     "at": [
-      23.95,
-      22.75,
-      0.0
-     ],
-     "rot": 180,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F38",
-     "ifc": "IfcFurniture",
-     "kind": "nightstand",
-     "at": [
-      23.95,
-      30.25,
-      0.0
-     ],
-     "rot": 180,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F39",
-     "ifc": "IfcFurniture",
-     "kind": "dresser",
-     "at": [
-      13.94,
-      28.2,
-      0.0
-     ],
-     "rot": 0,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F40",
-     "ifc": "IfcFurniture",
-     "kind": "bedQueen",
-     "at": [
-      36.49,
-      26.86,
-      0.0
-     ],
-     "rot": 180,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-F41",
-     "ifc": "IfcFurniture",
-     "kind": "exerciseBike",
-     "at": [
-      28.0,
-      20.45,
-      0.0
-     ],
-     "rot": 90,
-     "opts": {}
-    },
-    {
-     "id": "apr24a-L01",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Office",
-     "at": [
-      -0.8,
-      21.5
-     ]
-    },
-    {
-     "id": "apr24a-L02",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Family room",
-     "at": [
-      -2.5,
-      10.5
-     ]
-    },
-    {
-     "id": "apr24a-L03",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Kitchen",
-     "at": [
-      16.5,
-      14.6
-     ]
-    },
-    {
-     "id": "apr24a-L04",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Dining",
-     "at": [
-      30.0,
-      14.8
-     ]
-    },
-    {
-     "id": "apr24a-L05",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Au pair",
-     "at": [
-      19.0,
-      26.0
-     ]
-    },
-    {
-     "id": "apr24a-L06",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Gym / guest",
-     "at": [
-      30.5,
-      24.0
-     ]
-    },
-    {
-     "id": "apr24a-L07",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Bath",
-     "at": [
-      9.4,
-      29.2
-     ]
-    },
-    {
-     "id": "apr24a-L08",
-     "ifc": "IfcAnnotation",
-     "kind": "roomLabel",
-     "name": "Pantry",
-     "at": [
-      11.3,
-      20.2
-     ]
-    },
-    {
-     "id": "apr24a-HDR01",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       4.865,
-       -1.1639999999999997
-      ],
-      [
-       5.319,
-       -1.1639999999999997
-      ],
-      [
-       5.319,
-       14.733999999999998
-      ],
-      [
-       4.865,
-       14.733999999999998
-      ]
-     ],
-     "z0": 7.5,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true,
-     "predefined": "HEADER",
-     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
-    },
-    {
-     "id": "apr24a-HDR02",
-     "ifc": "IfcWall",
-     "storey": "L1",
-     "status": "existing",
-     "footprint": [
-      [
-       -9.68,
-       14.446
-      ],
-      [
-       5.12,
-       14.446
-      ],
-      [
-       5.12,
-       14.696
-      ],
-      [
-       -9.68,
-       14.696
-      ]
-     ],
-     "z0": 7.5,
-     "z1": 8.0,
-     "isExternal": false,
-     "topToRoof": true,
-     "predefined": "HEADER",
-     "note": "removed wall line kept above the spring of L1-S01-LIVVAULT (rule v22 concept22 V2)"
-    }
-   ],
-   "removesAuto": [
-    [
-     "L1-O61",
-     "C2 jamb wall removed, nothing replaces it: L1-W84,L1-W62"
-    ],
-    [
-     "L1-O62",
-     "C2 jamb wall removed, nothing replaces it: L1-W58"
-    ],
-    [
-     "L1-O63",
-     "C2 jamb wall removed, nothing replaces it: L1-W58,L1-W62"
-    ],
-    [
-     "L1-OD4",
-     "C3 superseded by apr24a-O04"
-    ],
-    [
-     "L1-W61",
-     "C4 jamb stub of removed L1-O62"
-    ],
-    [
-     "FX-washerFront-LIV",
-     "C7 inside concept wall apr24a-W04"
-    ]
-   ],
-   "selfCheck": [],
-   "keptByRule": [
-    [
-     "L1-LIV-BM1",
-     "V1 vault edge rides on the upper wall line"
-    ],
-    [
-     "L1-LIV-BM2",
-     "V1 vault edge rides on the upper wall line"
-    ],
-    [
-     "L1-LIV-BM3",
-     "V1 vault edge rides on the upper wall line"
-    ],
-    [
-     "L1-S01-LIVVAULT",
-     "V1 vault edge rides on the upper wall line"
-    ],
-    [
-     "LT-LIV-CABLE1",
-     "V1 vault edge rides on the upper wall line"
-    ],
-    [
-     "LT-LIV-CABLE2",
-     "V1 vault edge rides on the upper wall line"
-    ],
-    [
-     "LT-LIV-CABLE3",
-     "V1 vault edge rides on the upper wall line"
-    ]
-   ]
-  },
-  {
    "id": "apr24b",
-   "name": "Concept C",
-   "short": "Apr 2024, Plan B",
+   "name": "Semi-Open Plan",
+   "short": "Apr 2024",
    "date": "2024-04-24",
    "source": "240424 Proposed Phase 2 Plan 'B'",
    "status": "concept",
-   "description": "Variation on Concept B: 13-ft island, 48-in fridge, pantry wall instead of a pantry room, dining table turned north-south.",
+   "description": "Open kitchen and dining around a 13-ft island, with the family room, a pantry wall and three bedrooms in their own rooms.",
    "scope": "L1 main (1950s) house: interior layout, kitchen, baths, and some exterior windows",
    "region": [
     [
@@ -24993,7 +23286,7 @@
      "id": "apr24b-L01",
      "ifc": "IfcAnnotation",
      "kind": "roomLabel",
-     "name": "Office",
+     "name": "Bedroom",
      "at": [
       -0.8,
       21.5
@@ -25033,7 +23326,7 @@
      "id": "apr24b-L05",
      "ifc": "IfcAnnotation",
      "kind": "roomLabel",
-     "name": "Au pair",
+     "name": "Bedroom",
      "at": [
       19.0,
       26.0
@@ -25043,7 +23336,7 @@
      "id": "apr24b-L06",
      "ifc": "IfcAnnotation",
      "kind": "roomLabel",
-     "name": "Gym / guest",
+     "name": "Bedroom",
      "at": [
       30.5,
       24.0

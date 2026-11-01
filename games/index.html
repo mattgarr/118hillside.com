@@ -70,7 +70,7 @@ h1 { font-family:var(--serif); font-weight:500; font-size:clamp(30px,5vw,48px); 
 <script>
 /* Game library. Add a season by adding an entry; a season goes live when live:true and its page exists. */
 var SEASONS = [
-  { id:'halloween', name:'Halloween', icon:'🎃', from:'10-01', to:'11-01', live:true, path:'../halloween/',
+  { id:'halloween', name:'Halloween', icon:'🎃', from:'10-01', to:'10-31', live:true, path:'../halloween/',
     bg:'linear-gradient(135deg,#1b1027,#3b1f4f 60%,#c2571a)', btn:'#f08a24', btnInk:'#1a0f05',
     title:'Halloween night', sub:'Seven spooky-silly games with Snowball the cat.',
     games:[
@@ -82,15 +82,15 @@ var SEASONS = [
       {id:'stairdoor',icon:'🗝️', title:'Secret of the Stair Door', blurb:'Help Hilda open the secret door', ages:'6+', c:'#efe6cf'},
       {id:'potion',   icon:'🧪', title:'Potion Hunt',             blurb:'Find 10 glowing potions',       ages:'6+', c:'#e2f0d9'}
     ]},
-  { id:'thanksgiving', name:'Thanksgiving', icon:'🦃', from:'11-02', to:'11-30', live:false, path:'../thanksgiving/',
+  { id:'thanksgiving', name:'Thanksgiving', icon:'🦃', from:'11-01', to:'11-30', live:true, path:'../thanksgiving/',
     bg:'linear-gradient(135deg,#3a2414,#8a4b1c 55%,#d99a3c)', btn:'#ffd27a', btnInk:'#2a1806',
-    title:'Thanksgiving', sub:'Chase Tom the turkey, rake the leaves, get dinner on the table.',
+    title:'Thanksgiving dinner', sub:'Catch Tom before dinner and find your way out of the corn maze.',
     games:[
-      {id:'turkey',  icon:'🦃', title:'Turkey Trot',  blurb:'Catch Tom before dinner',     ages:'4+', c:'#f3dfc8'},
+      {id:'turkey',  icon:'🦃', title:'Turkey Trot',  blurb:'Tom is too excited for dinner', ages:'4+', c:'#f3dfc8'},
       {id:'corn',    icon:'🌽', title:'Corn Maze',    blurb:'Lead Tom out of the corn',    ages:'4+', c:'#f6eac0'},
-      {id:'leaves',  icon:'🍂', title:'Leaf Pile',    blurb:'Rake it up, jump right in',   ages:'3+', c:'#f4d9c4'},
-      {id:'dinner',  icon:'🍗', title:'Dinner Rush',  blurb:'Get dinner on the table',     ages:'5+', c:'#eedfd2'},
-      {id:'thankful',icon:'🍁', title:'Thankful Tree',blurb:'Fill the oak with thanks',    ages:'all', c:'#f2e2cf'}
+      {id:'leaves',  icon:'🍂', title:'Leaf Pile',    blurb:'Rake it up, jump right in',   ages:'3+', c:'#f4d9c4', soon:true},
+      {id:'dinner',  icon:'🍗', title:'Dinner Rush',  blurb:'Get dinner on the table',     ages:'5+', c:'#eedfd2', soon:true},
+      {id:'thankful',icon:'🍁', title:'Thankful Tree',blurb:'Fill the oak with thanks',    ages:'all', c:'#f2e2cf', soon:true}
     ]},
   { id:'christmas', name:'Christmas', icon:'🎄', from:'12-01', to:'12-31', live:false, path:'../christmas/',
     bg:'linear-gradient(135deg,#0f2a1f,#1f4d36 60%,#b8322a)', btn:'#fff', btnInk:'#123',
@@ -127,9 +127,9 @@ function renderTabs(){
 function renderGrid(){
   var g = document.getElementById('grid'), n = document.getElementById('note'), s = current; g.innerHTML = '';
   s.games.forEach(function(x){
-    var a = document.createElement(s.live ? 'a' : 'div'); a.className = 'game' + (s.live ? '' : ' soon');
-    if(s.live){ a.href = href(s, x); a.onclick = function(){ try{ gtag('event','games_pick',{season:s.id, game:x.id}); }catch(e){} }; }
-    a.innerHTML = '<span class="icon" style="background:'+x.c+'">'+x.icon+'</span><span><div class="gt">'+esc(x.title)+'</div><div class="gb">'+esc(x.blurb)+'</div><div class="ga">Ages '+esc(x.ages)+'</div></span><span class="play">'+(s.live?'Play':'Soon')+'</span>';
+    var ok = s.live && !x.soon, a = document.createElement(ok ? 'a' : 'div'); a.className = 'game' + (ok ? '' : ' soon');
+    if(ok){ a.href = href(s, x); a.onclick = function(){ try{ gtag('event','games_pick',{season:s.id, game:x.id}); }catch(e){} }; }
+    a.innerHTML = '<span class="icon" style="background:'+x.c+'">'+x.icon+'</span><span><div class="gt">'+esc(x.title)+'</div><div class="gb">'+esc(x.blurb)+'</div><div class="ga">Ages '+esc(x.ages)+'</div></span><span class="play">'+(ok?'Play':'Soon')+'</span>';
     g.appendChild(a);
   });
   n.textContent = s.games.length ? (s.live ? '' : s.name+' games are on the way.') : s.name+' games are coming in December.';
