@@ -9403,10 +9403,10 @@ function buildStorageLofts(){
       if(window.FIX && FIX.make){ try{ const c = FIX.make('recessedLight', {light: false}); c.position.set(wx, under, wz); grp(g).add(c); }catch(e){} }
       const pl = new THREE.PointLight(0xffd7a8, 0, 18, 2); pl.position.set(wx, under - .3, wz); grp(g).add(pl); if(typeof DUSK_LIGHTS !== 'undefined') DUSK_LIGHTS.push(pl); }
     // pull-down attic ladder (22.5" x 54" rough opening), hatch closed, pull cord hanging
-    { const hx = bx - 1.6, hy = (ay + by) / 2 - 3.85, Lh = 4.5, Wh = 1.875;   // long side runs along the loft; v22 garage22 G7: south half (rack 1 hangs in the north half, p29)
+    { const hx = ax + 1.6 /* v32hatch: owner - near the back wall */, hy = (ay + by) / 2 - 3.85, Lh = 4.5, Wh = 1.875;   // long side runs along the loft; v22 garage22 G7: south half (rack 1 hangs in the north half, p29)
       const P = (x, y) => W2(x, y), a = P(hx - Wh / 2, hy - Lh / 2), b2 = P(hx + Wh / 2, hy + Lh / 2);
       const X0 = Math.min(a[0], b2[0]), X1 = Math.max(a[0], b2[0]), Z0 = Math.min(a[1], b2[1]), Z1 = Math.max(a[1], b2[1]);
-      box(X0 - .25, under - .06, Z0 - .25, X1 + .25, under - .01, Z1 + .25, {all: 'trim'}, g);              // casing
+      window.__hatch32 = [X0, Z0, X1, Z1, under]; box(X0 - .25, under - .06, Z0 - .25, X1 + .25, under - .01, Z1 + .25, {all: 'trim'}, g);              // casing
       box(X0 + .03, under - .09, Z0 + .03, X1 - .03, under - .04, Z1 - .03, {all: 'door'}, g);              // hatch panel
       for(const [x0, z0, x1, z1] of [[X0 - .035, Z0 - .035, X1 + .035, Z0 + .03], [X0 - .035, Z1 - .03, X1 + .035, Z1 + .035], [X0 - .035, Z0, X0 + .03, Z1], [X1 - .03, Z0, X1 + .035, Z1]])
         box(x0, under - .075, z0, x1, under - .061, z1, {all: 'steel'}, g);                                  // goal23 G10: dark reveal ring around the panel
