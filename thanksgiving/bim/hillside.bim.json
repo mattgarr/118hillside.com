@@ -1390,7 +1390,7 @@
    "footprint": [
     [
      5.319,
-     17.154
+     17.214
     ],
     [
      5.319,
@@ -1402,7 +1402,7 @@
     ],
     [
      4.861,
-     17.154
+     17.214
     ]
    ],
    "z0": 0.0,
@@ -1418,7 +1418,7 @@
    "footprint": [
     [
      -6.389,
-     17.113
+     17.173
     ],
     [
      -6.389,
@@ -1430,7 +1430,7 @@
     ],
     [
      -6.806,
-     17.113
+     17.173
     ]
    ],
    "z0": 0.0,
@@ -1446,19 +1446,19 @@
    "footprint": [
     [
      -0.556,
-     17.029
+     17.089
     ],
     [
      5.319,
-     17.029
+     17.089
     ],
     [
      5.319,
-     17.154
+     17.214
     ],
     [
      -0.556,
-     17.154
+     17.214
     ]
    ],
    "z0": 0.0,
@@ -1474,19 +1474,19 @@
    "footprint": [
     [
      -6.264,
-     17.029
+     17.089
     ],
     [
      -6.264,
-     17.113
+     17.173
     ],
     [
      -6.806,
-     17.113
+     17.173
     ],
     [
      -6.806,
-     17.029
+     17.089
     ]
    ],
    "z0": 0.0,
@@ -1502,19 +1502,19 @@
    "footprint": [
     [
      5.319,
-     16.988
+     17.048
     ],
     [
      5.319,
-     17.029
+     17.089
     ],
     [
      -2.056,
-     17.029
+     17.089
     ],
     [
      -2.056,
-     16.988
+     17.048
     ]
    ],
    "z0": 0.0,
@@ -1530,19 +1530,19 @@
    "footprint": [
     [
      5.319,
-     16.821
+     16.881
     ],
     [
      5.319,
-     16.988
+     17.048
     ],
     [
      -0.139,
-     16.988
+     17.048
     ],
     [
      -0.139,
-     16.821
+     16.881
     ]
    ],
    "z0": 0.0,
@@ -1558,19 +1558,19 @@
    "footprint": [
     [
      -6.098,
-     16.696
+     16.756
     ],
     [
      -6.098,
-     17.029
+     17.089
     ],
     [
      -6.806,
-     17.029
+     17.089
     ],
     [
      -6.806,
-     16.696
+     16.756
     ]
    ],
    "z0": 0.0,
@@ -1586,19 +1586,19 @@
    "footprint": [
     [
      5.319,
-     16.696
+     16.756
     ],
     [
      5.319,
-     16.821
+     16.881
     ],
     [
      -2.056,
-     16.821
+     16.881
     ],
     [
      -2.056,
-     16.696
+     16.756
     ]
    ],
    "z0": 0.0,
@@ -1650,11 +1650,11 @@
     ],
     [
      -6.389,
-     16.696
+     16.756
     ],
     [
      -6.806,
-     16.696
+     16.756
     ]
    ],
    "z0": 0.0,
@@ -1678,18 +1678,18 @@
     ],
     [
      -0.098,
-     17.029
+     17.089
     ],
     [
      -0.556,
-     17.029
+     17.089
     ]
    ],
    "z0": 0.0,
-   "z1": 8.0,
+   "z1": 8.8028,
    "isExternal": false,
-   "topToRoof": true,
-   "source": "A2.1"
+   "topToRoof": false,
+   "source": "A2.1 | v33 R2: stops at the storage-loft deck"
   },
   {
    "id": "L1-W57",
@@ -1702,11 +1702,11 @@
     ],
     [
      5.319,
-     16.696
+     16.756
     ],
     [
      4.861,
-     16.696
+     16.756
     ],
     [
      4.861,
@@ -5550,13 +5550,13 @@
     "hinge": "start",
     "side": "normal"
    },
-   "openAngle": "auto",
+   "openAngle": 165,
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
    },
-   "swingRule": "v26 laundry L7: out-swing into the hallway, hinges left from the hall (2024 order, left hand reverse)",
+   "swingRule": "v26 laundry L7: out-swing into the hallway, hinges left from the hall (2024 order, left hand reverse) | v33 Q3: at 90 deg the leaf stood in the L1-O01->L1-O05 passage; opens to 165 deg, back to the wall",
    "state": "open"
   },
   {
@@ -5729,14 +5729,15 @@
    "operation": "SINGLE_SWING",
    "swing": {
     "hinge": "start",
-    "side": "reverse"
+    "side": "normal"
    },
    "openAngle": "auto",
    "hardware": {
     "finish": "brushed nickel",
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
-   }
+   },
+   "swingRule": "v33 Q3: open leaf stood in the L1-O05 passage; swings the other way"
   },
   {
    "id": "L1-O22H",
@@ -6449,7 +6450,7 @@
    "operation": "SINGLE_SWING",
    "swing": {
     "hinge": "end",
-    "side": "normal"
+    "side": "reverse"
    },
    "openAngle": "auto",
    "hardware": {
@@ -6457,7 +6458,8 @@
     "set": "round knob + round rosette both sides",
     "hinges": "3 x 3-1/2\" butt hinges"
    },
-   "state": "open"
+   "state": "open",
+   "swingRule": "v33 Q3: open leaf stood in the L1-O31 passage; swings the other way"
   },
   {
    "id": "L1-O27",
@@ -7407,11 +7409,11 @@
     ],
     [
      -0.144,
-     16.741
+     16.801
     ],
     [
      4.866,
-     16.741
+     16.801
     ],
     [
      4.866,
@@ -7826,7 +7828,7 @@
      14.718
     ]
    ],
-   "area": 1075.501,
+   "area": 1075.817,
    "floor": 0.0,
    "name": "Entry + Dining area + Bedroom + Kitchen + Family room"
   },
@@ -8003,11 +8005,11 @@
    "outline": [
     [
      -6.138,
-     17.034
+     17.094
     ],
     [
      -6.431,
-     17.148
+     17.208
     ],
     [
      -6.431,
@@ -8035,26 +8037,26 @@
     ],
     [
      4.866,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.034
+     17.094
     ],
     [
      -2.054,
-     17.034
+     17.094
     ]
    ],
-   "area": 107.152,
+   "area": 106.474,
    "floor": 0.0,
    "name": "Bedroom"
   },
@@ -8218,7 +8220,27 @@
    ],
    "area": 70.973,
    "floor": -4.56,
-   "name": "ADU office"
+   "name": "ADU office",
+   "accentWalls": [
+    {
+     "paint": "SW 6227 Meditative",
+     "hex": "#8c9fa2",
+     "a": [
+      -2.83,
+      -30.832
+     ],
+     "b": [
+      -12.168,
+      -30.832
+     ],
+     "inward": [
+      0.0,
+      1.0
+     ],
+     "door": "L1-O37",
+     "rule": "owner spec: accent = wall on the right looking into the room from the doorway"
+    }
+   ]
   },
   {
    "id": "L1-S08",
@@ -8973,28 +8995,32 @@
     {
      "at": [
       -25.595,
-      -15.137
+      -16.665
      ],
      "face": [
-      1,
-      0
+      1.0,
+      0.0
      ],
      "zc": 10.82,
-     "h": 2.9,
-     "plate": 0.55
+     "h": 2.0,
+     "plate": 0.4,
+     "plateFinish": "blackMetal",
+     "by": "v33-real"
     },
     {
      "at": [
       -25.595,
-      -8.347
+      -9.509
      ],
      "face": [
-      1,
-      0
+      1.0,
+      0.0
      ],
      "zc": 10.82,
-     "h": 2.9,
-     "plate": 0.55
+     "h": 2.0,
+     "plate": 0.4,
+     "plateFinish": "blackMetal",
+     "by": "v33-real"
     }
    ]
   },
@@ -9222,11 +9248,11 @@
     ],
     [
      -0.144,
-     16.741
+     16.801
     ],
     [
      4.866,
-     16.741
+     16.801
     ],
     [
      4.866,
@@ -9606,15 +9632,15 @@
    "outline": [
     [
      -6.138,
-     16.741
+     16.801
     ],
     [
      -6.138,
-     17.034
+     17.094
     ],
     [
      -6.431,
-     17.148
+     17.208
     ],
     [
      -6.431,
@@ -9626,27 +9652,27 @@
     ],
     [
      4.866,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.034
+     17.094
     ],
     [
      -2.054,
-     17.034
+     17.094
     ],
     [
      -2.054,
-     16.741
+     16.801
     ],
     [
      -0.551,
-     16.741
+     16.801
     ],
     [
      -0.551,
@@ -9658,7 +9684,7 @@
     ],
     [
      -6.431,
-     16.741
+     16.801
     ]
    ],
    "z": 0.0,
@@ -10498,11 +10524,11 @@
     ],
     [
      -0.144,
-     16.741
+     16.801
     ],
     [
      4.866,
-     16.741
+     16.801
     ],
     [
      4.866,
@@ -11097,15 +11123,15 @@
    "outline": [
     [
      -6.138,
-     16.741
+     16.801
     ],
     [
      -6.138,
-     17.034
+     17.094
     ],
     [
      -6.431,
-     17.148
+     17.208
     ],
     [
      -6.431,
@@ -11133,35 +11159,35 @@
     ],
     [
      4.866,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.148
+     17.208
     ],
     [
      -0.145,
-     17.034
+     17.094
     ],
     [
      -2.054,
-     17.034
+     17.094
     ],
     [
      -2.054,
-     16.741
+     16.801
     ],
     [
      -2.054,
-     16.741
+     16.801
     ],
     [
      -0.551,
-     16.741
+     16.801
     ],
     [
      -0.551,
@@ -11173,7 +11199,7 @@
     ],
     [
      -6.431,
-     16.741
+     16.801
     ]
    ],
    "kind": "roof",
@@ -13329,12 +13355,12 @@
    "kind": "vanity",
    "at": [
     -36.55,
-    -13.628,
+    -13.598,
     -4.56
    ],
    "rot": 0,
    "opts": {
-    "w": 5.6,
+    "w": 5.676,
     "sinks": 2,
     "top": "quartziteWhite",
     "faucetFinish": "champagneBronze",
@@ -13349,7 +13375,7 @@
    "kind": "mirror",
    "at": [
     -36.55,
-    -15.403,
+    -15.392,
     -4.56
    ],
    "rot": 0,
@@ -13441,12 +13467,12 @@
    "kind": "vanity",
    "at": [
     -25.6,
-    -11.742,
+    -13.087,
     5.57
    ],
    "rot": 0,
    "opts": {
-    "w": 6.0,
+    "w": 8.706,
     "sinks": 2,
     "top": "quartzDark",
     "faucetFinish": "nickelBrushed",
@@ -13456,23 +13482,23 @@
     "layout": [
      [
       "drawers",
-      0.75
+      1.741
      ],
      [
       "sink",
-      1.55
+      1.741
      ],
      [
       "drawers",
-      1.4
+      1.741
      ],
      [
       "sink",
-      1.55
+      1.741
      ],
      [
       "drawers",
-      0.75
+      1.741
      ]
     ]
    }
@@ -13483,7 +13509,7 @@
    "kind": "mirror",
    "at": [
     -25.6,
-    -13.217,
+    -14.829,
     5.57
    ],
    "rot": 0,
@@ -13492,8 +13518,7 @@
     "shape": "round",
     "frame": "thin black",
     "fw": 0.05,
-    "mountY": 3.95,
-    "backlit": true
+    "mountY": 3.95
    }
   },
   {
@@ -15830,7 +15855,8 @@
    },
    "pocket": "start",
    "operable": true,
-   "source": "owner 2026-11-01: living-room closets are pocket doors | owner 2026-11-01: closet doors default closed, operable"
+   "source": "owner 2026-11-01: living-room closets are pocket doors | owner 2026-11-01: closet doors default closed, operable | owner 2026-11-01: closet depth from photo (owner 2026-11-02: clear depth 24 in (overrides the IMG_0496 photo read of ~29.4 in))",
+   "clearDepth": 2.0
   },
   {
    "id": "FX-washerFront-LIV",
@@ -16393,7 +16419,7 @@
    "head": 6.7812,
    "isExternal": false,
    "status": "existing",
-   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19) | owner 2026-11-01: triple bypass closet sliders | owner 2026-11-01: closet doors default closed, operable",
+   "source": "marketing floor plan 2025-09-20 + photos (doors rule v19) | owner 2026-11-01: triple bypass closet sliders | owner 2026-11-01: closet doors default closed, operable | owner 2026-11-02: middle-bedroom triple-slider opening ~9 ft (IMG_0526)",
    "tag": null,
    "id": "L1-OD2",
    "type": "D-IC",
@@ -16409,9 +16435,9 @@
     0.0,
     1.0
    ],
-   "width": 7.33,
+   "width": 9.0,
    "wallThickness": 0.42,
-   "note": "Bedroom 2 closet",
+   "note": "Middle bedroom closet",
    "leaves": 3,
    "era": "original",
    "leafHeight": 6.6667,
@@ -16440,11 +16466,11 @@
      20.6
     ],
     [
-     15.260000000000002,
+     14.425,
      20.6
     ],
     [
-     15.260000000000002,
+     14.425,
      21.024
     ],
     [
@@ -16464,7 +16490,7 @@
    "storey": "L1",
    "footprint": [
     [
-     22.59,
+     23.425,
      20.6
     ],
     [
@@ -16476,7 +16502,7 @@
      21.024
     ],
     [
-     22.59,
+     23.425,
      21.024
     ]
    ],
@@ -16556,7 +16582,7 @@
    ],
    "width": 9.0,
    "wallThickness": 0.41,
-   "note": "Bedroom 3 closet",
+   "note": "Front bedroom closet",
    "leaves": 3,
    "era": "original",
    "leafHeight": 6.6667,
@@ -16746,7 +16772,7 @@
    "kind": "mirror",
    "at": [
     5.36,
-    29.125,
+    27.312,
     0.0
    ],
    "rot": 0,
@@ -16767,7 +16793,7 @@
    "kind": "mirror",
    "at": [
     -25.6,
-    -10.267,
+    -11.346,
     5.57
    ],
    "rot": 0,
@@ -16776,8 +16802,7 @@
     "shape": "round",
     "frame": "thin black",
     "fw": 0.05,
-    "mountY": 3.95,
-    "backlit": true
+    "mountY": 3.95
    },
    "by": "v20-bath"
   },
@@ -16787,7 +16812,7 @@
    "kind": "mirror",
    "at": [
     -36.55,
-    -11.853,
+    -11.804,
     -4.56
    ],
    "rot": 0,
@@ -17985,19 +18010,19 @@
    "space": "L1-S01",
    "outline": [
     [
-     22.632,
+     23.467,
      20.81
     ],
     [
-     22.632,
+     23.467,
      21.062
     ],
     [
-     15.218,
+     14.383,
      21.062
     ],
     [
-     15.218,
+     14.383,
      20.81
     ]
    ],
@@ -18015,19 +18040,19 @@
    "space": "L1-S02",
    "outline": [
     [
-     15.218,
+     14.383,
      20.558
     ],
     [
-     22.632,
+     23.467,
      20.558
     ],
     [
-     22.632,
+     23.467,
      20.81
     ],
     [
-     15.218,
+     14.383,
      20.81
     ]
    ],
@@ -18541,14 +18566,14 @@
     ],
     [
      -0.556,
-     16.696
+     16.756
     ],
     [
      -6.389,
-     16.696
+     16.756
     ]
    ],
-   "area": 11.409,
+   "area": 11.759,
    "source": "owner 2026-11-01: middle-bedroom closet"
   },
   {
@@ -18564,7 +18589,7 @@
    "type": "D-IB",
    "center": [
     -4.077,
-    16.8625
+    16.9225
    ],
    "axis": [
     1.0,
@@ -18576,7 +18601,7 @@
    ],
    "width": 4.042,
    "wallThickness": 0.333,
-   "note": "Middle bedroom closet - 48\" pocket door (two 24\" doors joined into one leaf; p526)",
+   "note": "Gym bedroom (back) closet - 48\" pocket door (two 24\" doors joined into one leaf; p526)",
    "operation": "SLIDING_TO_SIDE (pocket)",
    "leafPanels": 2,
    "product": {
@@ -18604,8 +18629,8 @@
    "era": "original",
    "status": "existing",
    "center": [
-    -4.077,
-    16.8625
+    -3.611,
+    16.9645
    ],
    "axis": [
     1.0,
@@ -18615,25 +18640,28 @@
     0.0,
     1.0
    ],
-   "width": 4.042,
-   "wallThickness": 0.333,
+   "width": 3.4367,
+   "wallThickness": 0.417,
    "id": "L1-OD6U",
    "kind": "door",
    "type": "D-IC",
    "leaves": 2,
    "leafStyle": "flat-panel",
-   "sill": 7.1979,
-   "head": 8.7979,
-   "leafHeight": 1.4333,
-   "note": "Middle bedroom closet upper storage - 2 sliding doors (p526)",
+   "sill": 8.8628,
+   "head": 11.7295,
+   "leafHeight": 2.7,
+   "note": "Gym bedroom (back) upper storage cabinet over the 48\" pocket closet - 2 sliding doors (IMG_0529)",
    "operation": "SLIDING bypass",
    "hardware": {
-    "finish": "black",
-    "set": "recessed finger slots, top-hung track"
+    "set": "none",
+    "note": "no visible hardware - plain flat sliders (owner 2026-11-02)"
    },
-   "source": "owner 2026-11-01: upper storage over the middle-bedroom closet, 2 sliders | owner 2026-11-01: closet doors default closed, operable",
+   "source": "owner 2026-11-01: upper storage cabinet(s) with sliders on the gym bedroom (back) closet wall (IMG_0529 (both corners in frame), IMG_0528 / IMG_0530); frame flush to the ceiling 12.03 ft | owner 2026-11-01: closet doors default closed, operable",
    "state": "closed",
-   "operable": true
+   "operable": true,
+   "trim": "picture-frame",
+   "trimFace": 1,
+   "storage": "L1-S05-LOFT"
   },
   {
    "id": "JLH-L1-O36",
@@ -18686,7 +18714,7 @@
    "frame": {
     "o": [
      -0.085,
-     16.69
+     16.74
     ],
     "a": [
      1.0,
@@ -18696,8 +18724,8 @@
      0.0,
      -1.0
     ],
-    "L": 4.95,
-    "D": 1.95,
+    "L": 4.94,
+    "D": 2.0,
     "door": [
      1.275,
      4.325
@@ -18705,8 +18733,8 @@
    },
    "source": "owner 2026-11-01: John Lewis Home closet system (p534)",
    "at": [
-    2.39,
-    16.69,
+    2.385,
+    16.74,
     0
    ],
    "rot": 0.0
@@ -18737,8 +18765,8 @@
     "L": 10.05,
     "D": 1.85,
     "door": [
-     1.385,
-     8.715
+     0.55,
+     9.55
     ]
    },
    "source": "owner 2026-11-01: John Lewis Home closet system (p510)",
@@ -18837,8 +18865,8 @@
    "floor": 0,
    "frame": {
     "o": [
-     -0.527,
-     14.746
+     -0.557,
+     14.756
     ],
     "a": [
      -1.0,
@@ -18848,20 +18876,226 @@
      0.0,
      1.0
     ],
-    "L": 5.85,
-    "D": 1.95,
+    "L": 5.82,
+    "D": 2.0,
     "door": [
-     1.529,
-     5.571
+     1.499,
+     5.541
     ]
    },
    "source": "owner 2026-11-01: John Lewis Home closet system (p528-530)",
    "at": [
-    -3.452,
-    14.746,
+    -3.467,
+    14.756,
     0
    ],
    "rot": 180.0
+  },
+  {
+   "ifc": "IfcDoor",
+   "storey": "L1",
+   "isExternal": false,
+   "era": "original",
+   "status": "existing",
+   "axis": [
+    1.0,
+    0.0
+   ],
+   "normal": [
+    0.0,
+    1.0
+   ],
+   "kind": "door",
+   "type": "D-IC",
+   "leaves": 2,
+   "leafStyle": "flat-panel",
+   "operation": "SLIDING bypass",
+   "hardware": {
+    "set": "none",
+    "note": "no visible hardware - plain flat sliders (owner 2026-11-02)"
+   },
+   "id": "L1-OD7U",
+   "center": [
+    1.339,
+    16.989
+   ],
+   "width": 4.2367,
+   "wallThickness": 0.5,
+   "sill": 8.8628,
+   "head": 11.7295,
+   "leafHeight": 2.7,
+   "trim": "picture-frame",
+   "trimFace": 1,
+   "note": "Gym bedroom (back) upper storage cabinet over the art / bench wall (above the hall closet) - 2 sliding doors (IMG_0529)",
+   "state": "closed",
+   "operable": true,
+   "source": "owner 2026-11-01: upper storage cabinet(s) with sliders on the gym bedroom (back) closet wall (IMG_0529 (both corners in frame), IMG_0528 / IMG_0530); frame flush to the ceiling 12.03 ft | owner 2026-11-01: closet doors default closed, operable",
+   "storage": "L1-S05-LOFT"
+  },
+  {
+   "id": "L1-O63-HDR",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     1.19,
+     14.279
+    ],
+    [
+     4.24,
+     14.279
+    ],
+    [
+     4.24,
+     14.738
+    ],
+    [
+     1.19,
+     14.738
+    ]
+   ],
+   "z0": 6.7812,
+   "z1": 8.0,
+   "isExternal": false,
+   "topToRoof": true,
+   "source": "v33 R2: header wall over L1-O63 up to the roof (closes the storage loft)"
+  },
+  {
+   "id": "L1-OD6-HDR",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     -6.098,
+     16.756
+    ],
+    [
+     -2.056,
+     16.756
+    ],
+    [
+     -2.056,
+     17.173
+    ],
+    [
+     -6.098,
+     17.173
+    ]
+   ],
+   "z0": 6.7812,
+   "z1": 8.0,
+   "isExternal": false,
+   "topToRoof": true,
+   "source": "v33 R2: header wall over L1-OD6 up to the roof (closes the storage loft)"
+  },
+  {
+   "ifc": "IfcDoor",
+   "storey": "L1",
+   "isExternal": false,
+   "era": "original",
+   "status": "existing",
+   "axis": [
+    1.0,
+    0.0
+   ],
+   "normal": [
+    0.0,
+    1.0
+   ],
+   "kind": "door",
+   "type": "D-IC",
+   "leaves": 2,
+   "leafStyle": "flat-panel",
+   "operation": "SLIDING bypass",
+   "hardware": {
+    "set": "none",
+    "note": "no visible hardware - plain flat sliders (owner 2026-11-02)"
+   },
+   "id": "L1-OD2U",
+   "center": [
+    18.9729,
+    20.812
+   ],
+   "width": 8.77,
+   "wallThickness": 0.424,
+   "sill": 8.0104,
+   "head": 12.3986,
+   "leafHeight": 4.2215,
+   "trim": "picture-frame",
+   "trimFace": 1,
+   "note": "Middle bedroom upper storage cabinet over the triple-slider closet - 2 plain sliding doors (IMG_0526)",
+   "state": "closed",
+   "operable": true,
+   "source": "owner 2026-11-01: upper storage cabinet(s) with sliders on the Middle bedroom (triple-slider closet, next to the gym bedroom) closet wall (IMG_0526 (square-on; width from the closet casing, height from the closet leaves)); frame flush to the ceiling 12.70 ft | owner 2026-11-01: closet doors default closed, operable",
+   "storage": "L1-OD2-LOFT"
+  },
+  {
+   "id": "L1-OD2-HDR",
+   "ifc": "IfcWall",
+   "storey": "L1",
+   "footprint": [
+    [
+     14.425,
+     20.6
+    ],
+    [
+     23.425,
+     20.6
+    ],
+    [
+     23.425,
+     21.024
+    ],
+    [
+     14.425,
+     21.024
+    ]
+   ],
+   "z0": 6.7812,
+   "z1": 8.0,
+   "isExternal": false,
+   "topToRoof": true,
+   "source": "v33 R2: header wall over L1-OD2 up to the roof (closes the storage loft)"
+  },
+  {
+   "id": "FX-medcab-20-L",
+   "ifc": "IfcFurniture",
+   "kind": "medicineCabinet",
+   "at": [
+    -24.52,
+    -17.47,
+    5.57
+   ],
+   "rot": 90.0,
+   "opts": {
+    "w": 2.0,
+    "h": 3.0,
+    "d": 0.33,
+    "mountY": 3.95,
+    "recessed": true
+   },
+   "by": "v33-real",
+   "source": "owner photos IMG_0596 / IMG_0603: mirrored cabinet on each side wall of the vanity alcove"
+  },
+  {
+   "id": "FX-medcab-20-R",
+   "ifc": "IfcFurniture",
+   "kind": "medicineCabinet",
+   "at": [
+    -24.52,
+    -8.704,
+    5.57
+   ],
+   "rot": 270.0,
+   "opts": {
+    "w": 2.0,
+    "h": 3.0,
+    "d": 0.33,
+    "mountY": 3.95,
+    "recessed": true
+   },
+   "by": "v33-real",
+   "source": "owner photos IMG_0596 / IMG_0603: mirrored cabinet on each side wall of the vanity alcove"
   }
  ],
  "materials": {
@@ -19573,6 +19807,482 @@
     "matchFt": 1.0,
     "count": 10
    }
+  },
+  "storageLofts": [
+   {
+    "id": "L1-S05-LOFT",
+    "outline": [
+     [
+      -6.371,
+      14.749
+     ],
+     [
+      4.859,
+      14.749
+     ],
+     [
+      4.859,
+      16.739
+     ],
+     [
+      -6.371,
+      16.739
+     ]
+    ],
+    "z0": 8.8628,
+    "z1": 12.6433,
+    "deck": 0.06,
+    "cabinets": [
+     "L1-OD6U",
+     "L1-OD7U"
+    ],
+    "back": {
+     "line": [
+      [
+       -6.371,
+       14.749
+      ],
+      [
+       4.859,
+       14.749
+      ]
+     ],
+     "top": 12.262,
+     "into": 1.0,
+     "note": "the far wall of the loft stands to the roof (the kernel stops the living-room band at its false vault)"
+    },
+    "source": "owner 2026-11-01: storage loft behind the upper cabinets (IMG_0529 (both corners in frame), IMG_0528 / IMG_0530)"
+   },
+   {
+    "id": "L1-OD2-LOFT",
+    "outline": [
+     [
+      13.9529,
+      18.75
+     ],
+     [
+      23.9329,
+      18.75
+     ],
+     [
+      23.9329,
+      20.6
+     ],
+     [
+      13.9529,
+      20.6
+     ]
+    ],
+    "z0": 8.0104,
+    "z1": 13.2595,
+    "deck": 0.06,
+    "cabinets": [
+     "L1-OD2U"
+    ],
+    "back": {
+     "line": [
+      [
+       13.9529,
+       18.75
+      ],
+      [
+       23.9329,
+       18.75
+      ]
+     ],
+     "top": 13.6121,
+     "into": 1.0,
+     "note": "the far wall of the loft stands to the roof (the kernel stops the living-room band at its false vault)"
+    },
+    "source": "owner 2026-11-01: storage loft behind the upper cabinets (IMG_0526 (square-on; width from the closet casing, height from the closet leaves))"
+   }
+  ],
+  "closetInteriors": [
+   {
+    "id": "L1-S05-LOFT",
+    "doors": [
+     "L1-OD6U",
+     "L1-OD7U"
+    ],
+    "outline": [
+     [
+      -6.371,
+      14.749
+     ],
+     [
+      4.859,
+      14.749
+     ],
+     [
+      4.859,
+      16.739
+     ],
+     [
+      -6.371,
+      16.739
+     ]
+    ],
+    "z0": 8.8628,
+    "z1": 13.6433,
+    "by": "storage loft",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-OD2-LOFT",
+    "doors": [
+     "L1-OD2U"
+    ],
+    "outline": [
+     [
+      13.9529,
+      18.75
+     ],
+     [
+      23.9329,
+      18.75
+     ],
+     [
+      23.9329,
+      20.6
+     ],
+     [
+      13.9529,
+      20.6
+     ]
+    ],
+    "z0": 8.0104,
+    "z1": 14.2595,
+    "by": "storage loft",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-O22A-CL",
+    "doors": [
+     "L1-O22A"
+    ],
+    "outline": [
+     [
+      -18.023,
+      -19.3665
+     ],
+     [
+      -3.663,
+      -19.3665
+     ],
+     [
+      -3.663,
+      -22.8265
+     ],
+     [
+      -18.023,
+      -22.8265
+     ]
+    ],
+    "z0": -4.56,
+    "z1": 11.440000000000001,
+    "by": "closet box from the walls",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-O36-CL",
+    "doors": [
+     "L1-O36"
+    ],
+    "outline": [
+     [
+      -49.54,
+      -22.755
+     ],
+     [
+      -40.34,
+      -22.755
+     ],
+     [
+      -40.34,
+      -24.615
+     ],
+     [
+      -49.54,
+      -24.615
+     ]
+    ],
+    "z0": -4.56,
+    "z1": 11.440000000000001,
+    "by": "closet box from the walls",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L2-S02",
+    "doors": [
+     "L2-O11"
+    ],
+    "outline": [
+     [
+      -23.371,
+      -21.76
+     ],
+     [
+      -20.871,
+      -21.76
+     ],
+     [
+      -20.871,
+      -21.76
+     ],
+     [
+      -20.871,
+      -21.869
+     ],
+     [
+      -20.871,
+      -21.869
+     ],
+     [
+      -20.871,
+      -21.919
+     ],
+     [
+      -18.371,
+      -21.919
+     ],
+     [
+      -18.371,
+      -21.869
+     ],
+     [
+      -14.494,
+      -21.869
+     ],
+     [
+      -14.494,
+      -26.682
+     ],
+     [
+      -25.621,
+      -26.682
+     ],
+     [
+      -25.621,
+      -21.919
+     ],
+     [
+      -23.371,
+      -21.869
+     ]
+    ],
+    "z0": 5.57,
+    "z1": 21.57,
+    "by": "closet space \"Primary dressing\"",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-O62-CL",
+    "doors": [
+     "L1-O62"
+    ],
+    "outline": [
+     [
+      -9.375,
+      14.74
+     ],
+     [
+      -6.815,
+      14.74
+     ],
+     [
+      -6.815,
+      18.26
+     ],
+     [
+      -9.375,
+      18.26
+     ]
+    ],
+    "z0": 0,
+    "z1": 16,
+    "by": "closet box from the walls",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-O63-CL",
+    "doors": [
+     "L1-O63"
+    ],
+    "outline": [
+     [
+      -0.085,
+      14.74
+     ],
+     [
+      4.855,
+      14.74
+     ],
+     [
+      4.855,
+      16.74
+     ],
+     [
+      -0.085,
+      16.74
+     ]
+    ],
+    "z0": 0,
+    "z1": 16,
+    "by": "closet box from the walls",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-S02",
+    "doors": [
+     "L1-OD2"
+    ],
+    "outline": [
+     [
+      23.95,
+      20.6
+     ],
+     [
+      23.95,
+      18.66
+     ],
+     [
+      13.94,
+      18.66
+     ],
+     [
+      13.94,
+      20.6
+     ]
+    ],
+    "z0": 0,
+    "z1": 16,
+    "by": "closet space \"Closet\"",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-OD4-CL",
+    "doors": [
+     "L1-OD4"
+    ],
+    "outline": [
+     [
+      24.36,
+      29.94
+     ],
+     [
+      36.48,
+      29.94
+     ],
+     [
+      36.48,
+      31.98
+     ],
+     [
+      24.36,
+      31.98
+     ]
+    ],
+    "z0": 0,
+    "z1": 16,
+    "by": "closet box from the walls",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-OD5-CL",
+    "doors": [
+     "L1-OD5"
+    ],
+    "outline": [
+     [
+      -25.58,
+      -32.695
+     ],
+     [
+      -25.58,
+      -23.235
+     ],
+     [
+      -23.7,
+      -23.235
+     ],
+     [
+      -23.7,
+      -32.695
+     ]
+    ],
+    "z0": -4.56,
+    "z1": 11.440000000000001,
+    "by": "closet box from the walls",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   },
+   {
+    "id": "L1-S05C",
+    "doors": [
+     "L1-OD6"
+    ],
+    "outline": [
+     [
+      -6.389,
+      14.74
+     ],
+     [
+      -0.556,
+      14.74
+     ],
+     [
+      -0.556,
+      16.756
+     ],
+     [
+      -6.389,
+      16.756
+     ]
+    ],
+    "z0": 0,
+    "z1": 16,
+    "by": "closet space \"Closet\"",
+    "paint": "closet",
+    "finish": "SW 7757 High Reflective White, flat (owner paint spec: closet walls)"
+   }
+  ],
+  "closets33": {
+   "source": "owner 2026-11-01 closets round 2 (CLOSETS_BRIEF.md)",
+   "log": [
+    "R1 L1-O63 depth 23.3\" -> 24.0\": back wall band 16.650..17.210 moved +0.060 ft (21 elements: JLH-L1-O63, L1-OD6, L1-OD6U, L1-S01, L1-S01-C, L1-S01-F01, L1-S05, L1-S05-C, L1-S05-F05, L1-S05C, L1-W46, L1-W47, L1-W48, L1-W49, L1-W50, L1-W51, L1-W52, L1-W53, L1-W55, L1-W56, L1-W57)",
+    "R1b L1-OD2 width 7.33 -> 9.00 ft (wanted 9.00; room for 9.42 between the walls less casings), jambs 14.425..23.425; moved L1-W11-d1, L1-W11-d2, L1-OD2-P-THR, L1-OD2-N-THR, JLH-L1-OD2",
+    "labels: L1-OD4 = Front bedroom closet, L1-OD2 = Middle bedroom closet, L1-OD6 = Gym bedroom (back) closet - 48\" pocket door (two 24\" doors joined into one leaf; p526)",
+    "R1 refit: JLH-L1-O63 D 2.00, JLH-L1-OD6 D 2.00",
+    "R2 cabinets ['L1-OD6U', 'L1-OD7U'] (new ['L1-OD7U']): frame top 12.02 = ceiling, sill 8.86 head 11.73, widths [41.2, 50.8]; loft L1-S05-LOFT 11.23 x 1.99 ft, deck 8.86, partitions cut ['L1-W56'], headers ['L1-O63-HDR', 'L1-OD6-HDR']",
+    "R2 cabinets ['L1-OD2U'] (new ['L1-OD2U']): frame top 12.69 = ceiling, sill 8.01 head 12.40, widths [105.2]; loft L1-OD2-LOFT 9.98 x 1.85 ft, deck 8.01, partitions cut [], headers ['L1-OD2-HDR']",
+    "R2b no visible hardware: L1-OD6U, L1-OD7U, L1-OD2U",
+    "R3 closet interiors white: 11 volumes for 12 doors: L1-S05-LOFT <- L1-OD6U/L1-OD7U (storage loft); L1-OD2-LOFT <- L1-OD2U (storage loft); L1-O22A-CL <- L1-O22A (closet box from the walls); L1-O36-CL <- L1-O36 (closet box from the walls); L2-S02 <- L2-O11 (closet space \"Primary dressing\"); L1-O62-CL <- L1-O62 (closet box from the walls); L1-O63-CL <- L1-O63 (closet box from the walls); L1-S02 <- L1-OD2 (closet space \"Closet\"); L1-OD4-CL <- L1-OD4 (closet box from the walls); L1-OD5-CL <- L1-OD5 (closet box from the walls); L1-S05C <- L1-OD6 (closet space \"Closet\"); hidden-door spaces left alone: ['L1-S06', 'L1-S06CB']"
+   ]
+  },
+  "v33real": {
+   "note": "v33 interior realism rules Q1-Q4",
+   "report": [
+    "Q1 FX-vanity-00 5.60->5.68 ft",
+    "Q1 FX-vanity-20 6.00->8.71 ft",
+    "Q2 FX-mirror-21 framed: no backlight",
+    "Q2 FX-mirror-21b framed: no backlight",
+    "Q2 L2-S01 sconces at [[-25.595, -16.665], [-25.595, -9.509]]",
+    "Q2 FX-medcab-20-L rot 90.0",
+    "Q2 FX-medcab-20-R rot 270.0",
+    "Q3 L1-O02 opens to the wall (blocked L1-O01->L1-O05)",
+    "Q3 L1-O07 flipped (blocked L1-O05)",
+    "Q3 L1-O26 flipped (blocked L1-O31)",
+    "Q4 L1-S07 accent SW 6227 Meditative on edge [-2.83, -30.832]-[-12.168, -30.832] (door L1-O37)"
+   ]
   }
  },
  "designOptions": [
