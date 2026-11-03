@@ -88,4 +88,10 @@
   document.addEventListener('click', function (e) { if (!h.contains(e.target)) closeAll(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeAll(); if (sheet.classList.contains('open')) burger.click(); } });
   h.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a) { try { gtag('event', 'nav_click', {to: a.getAttribute('href')}); } catch (x) {} } });
+  // Showing requests: any Call / Text / Email link anywhere on the page (GA4 key event "showing_contact").
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="tel:"],a[href^="sms:"],a[href^="mailto:"]'); if (!a) return;
+    var m = a.getAttribute('href').split(':')[0], method = {tel: 'call', sms: 'text', mailto: 'email'}[m] || m;
+    try { gtag('event', 'showing_contact', {method: method, page: location.pathname, where: h.contains(a) ? 'header' : 'page', transport_type: 'beacon'}); } catch (x) {}
+  }, true);
 })();
