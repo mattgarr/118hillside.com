@@ -20181,6 +20181,36 @@ if(R14.on && typeof r13Contact === 'function'){
       o.traverse(m => { if(m.isMesh && m.geometry && !(m.material && m.material.transparent)){ if(!m.geometry.boundingBox) m.geometry.computeBoundingBox(); const B = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld); if(B.max.y - B.min.y < 2.5) R14.tops.push({B, o}); } }); }
     return _r13c.apply(this, arguments); }; }
 BIM3.report.r14 = R14.report;
+/* ===== PHOTOREAL r15 (11/4: primary-bath wall tile to the owner photos; r15/REPORT.md) ===== */
+/* R15-1 rule:tile-look-from-owner-photos - Athena Blanc 24x48 matte (library tile-pb-wall). The page texture (tex/tile_pb_wall) was a
+   near-white sheet (sRGB mean 230,227,220) with faint blobby swirls (luma spread 5 %); the owner photos (IMG_0600 / 0601 close, 0595 /
+   0597 / 0604 wide; owner photos beat the listing's p45) show a light warm grey porcelain - about 0.72 x the white vanity fronts in the
+   same light (IMG_0604) - with broad, sweeping grey strata running diagonally across each tile and visible within-tile contrast (luma
+   spread ~20-25 % at IMG_0600). The canvas is redrawn at the same layout as the photo texture (8 x 8 ft: 4 x 2 tiles of 24x48, so the
+   existing normal map's joints still line up): base sRGB 206,202,195, soft wide bands + a few thin darker veins per tile at ~20-35 deg,
+   Ash joints. One 1024 px canvas, drawn once. */
+const R15 = window.R15 = {on: !/[?&]r15-off\b/.test(location.search), report: {}};
+function r15AthenaTex(){ const W = 1024, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'); let s = 151; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const TW = W / 4, TH = W / 2, base = [206, 202, 195];
+  for(let i = 0; i < 4; i++) for(let j = 0; j < 2; j++){ const x0 = i * TW, y0 = j * TH, v = (R() - .5) * 6;
+    g.fillStyle = `rgb(${base[0] + v | 0},${base[1] + v | 0},${base[2] + v | 0})`; g.fillRect(x0, y0, TW, TH);
+    g.save(); g.beginPath(); g.rect(x0, y0, TW, TH); g.clip();
+    const ang = (20 + R() * 15) * Math.PI / 180 * (R() < .5 ? 1 : -1), ca = Math.cos(ang), sa = Math.sin(ang), cx = x0 + TW / 2, cy = y0 + TH / 2;
+    const strip = (off, wid, col, a, wob) => { g.strokeStyle = `rgba(${col},${col - 2},${col - 6},${a})`; g.lineWidth = wid; g.beginPath();
+      for(let t = -TH; t <= TH; t += 12){ const w = Math.sin(t / 90 + off) * wob + Math.sin(t / 37 + off * 2) * wob * .3; const px = cx + ca * t - sa * (off + w), py = cy + sa * t + ca * (off + w); t === -TH ? g.moveTo(px, py) : g.lineTo(px, py); } g.stroke(); };
+    for(let k = 0; k < 8; k++) strip((R() - .5) * TH * 1.2, 30 + R() * 110, R() < .7 ? 146 : 238, .1 + R() * .14, 10 + R() * 26);   // broad soft strata (most of the within-tile contrast)
+    for(let k = 0; k < 4; k++){ const o = (R() - .5) * TH * 1.1, wb = 6 + R() * 14;                                               // thin veins: a soft halo + an uneven core
+      strip(o, 8 + R() * 10, 140, .05 + R() * .05, wb); strip(o + (R() - .5) * 3, .8 + R() * 1.6, 128, .08 + R() * .1, wb); }
+    for(let k = 0; k < 400; k++){ const q = 170 + R() * 60 | 0; g.fillStyle = `rgba(${q},${q},${q - 3},.08)`; g.fillRect(x0 + R() * TW, y0 + R() * TH, 1.4, 1.4); }
+    g.restore(); }
+  g.fillStyle = '#9b978f'; for(let x = 0; x <= W; x += TW) g.fillRect(x - 1.5, 0, 3, W); for(let y = 0; y <= W; y += TH) g.fillRect(0, y - 1.5, W, 3);   // 1/16" Ash joints
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; t.anisotropy = typeof ANISO !== 'undefined' ? ANISO : 8; return t; }
+{ const _b15 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b15.apply(this, arguments);
+    if(R15.on){ try{ const seen = new Set(); scene.traverse(o => { if(!o.isMesh) return; for(const m of (Array.isArray(o.material) ? o.material : [o.material])){
+        if(m && m.name === 'bath20_tile_pb_wall' && !seen.has(m)){ seen.add(m); const old = m.map, t = r15AthenaTex(); if(old && old.repeat){ t.repeat.copy(old.repeat); t.offset.copy(old.offset); } m.map = t; m.color.setRGB(1, 1, 1); m.needsUpdate = true; } } });
+        R15.report.pbWall = seen.size; }catch(e){ console.warn('[r15] tile', e); } }
+    return r; }; }
+BIM3.report.r15 = R15.report;
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
