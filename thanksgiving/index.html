@@ -19943,6 +19943,166 @@ if(R11.on){
       try{ if(!R11.frontDone && Array.isArray(points) && opts && opts.variants){ R11.frontDone = true; const t0 = performance.now(), add = r11Frontage(); points.push(...add); R11.report.frontageTrees = add.length; R11.report.frontageMs = +(performance.now() - t0).toFixed(1); } }catch(e){ console.warn('[r11] frontage', e); }
       return _tf.apply(this, arguments); }; } }
 BIM3.report.r11 = R11.report;
+/* ===== CGTELLS r13 (11/4: fresh-eyes "this is a render" tells, all 19 stops desk + phone; bim3_work/r13/REPORT.md) =====
+   ?r13-off turns the whole block off. Everything here is built once after load (idle) from model data the page already has: no
+   textures, no passes, no per-frame scene work beyond one uniform write. */
+const R13 = window.R13 = {on: !/[?&]r13-off\b/.test(location.search), report: {}, k: {value: 0}};
+/* shared multiply-blend "occlusion decal" material: vertex colour = how much light survives (1 = none taken). Multiply blending is
+   order-independent over the opaque frame; on the desktop it multiplies the linear beauty target, on the phone (no composer) the
+   sRGB output encodes the same grey, so the perceived darkening is the same on both. uK fades it (0 = off). */
+function r13DecalMat(uK){ const m = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, depthWrite: false, blending: THREE.MultiplyBlending, premultipliedAlpha: false, side: THREE.DoubleSide, toneMapped: false, fog: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -24});
+  m.onBeforeCompile = sh => { sh.uniforms.uK = uK; sh.fragmentShader = 'uniform float uK;\n' + sh.fragmentShader.replace(/}\s*$/, '  gl_FragColor.rgb = mix(vec3(1.0), gl_FragColor.rgb, uK);\n}'); };
+  m.customProgramCacheKey = () => 'r13decal'; m.name = 'r13Occlusion'; return m; }
+function r13Mesh(P, C, mat, name){ const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+  g.computeBoundingSphere(); const m = new THREE.Mesh(g, mat); m.name = name; m.renderOrder = -5; m.castShadow = m.receiveShadow = false; m.userData.noAO = true; m.userData.noPick = true; m.frustumCulled = true; return m; }
+/* a band of quads between rows of world points: rows[r][i] = [x,y,z], shade[r] = surviving light on that row */
+function r13Band(P, C, rows, shade){ for(let r = 0; r + 1 < rows.length; r++) for(let i = 0; i + 1 < rows[r].length; i++){
+    const a = rows[r][i], b = rows[r][i + 1], c = rows[r + 1][i + 1], d = rows[r + 1][i];
+    if(!a || !b || !c || !d) continue; const f = typeof shade === 'function', sa = f ? shade(r, i) : shade[r], sb = f ? shade(r, i + 1) : shade[r], sc = f ? shade(r + 1, i + 1) : shade[r + 1], sd = f ? shade(r + 1, i) : shade[r + 1];
+    P.push(...a, ...b, ...c, ...a, ...c, ...d); C.push(sa, sa, sa, sb, sb, sb, sc, sc, sc, sa, sa, sa, sc, sc, sc, sd, sd, sd); } }
+/* smooth occlusion profile across a band (no visible outer edge: quadratic fall-off to exactly 1) and a taper along it toward every
+   break (an opening, an open-plan edge), so a band never ends in a hard square end */
+const R13U = [0, .12, .3, .55, 1], R13PROF = R13U.map(u => (1 - u) * (1 - u));
+function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0), on = i => !!rows[0][i];
+  for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = [.15, .55, .85, 1][d]; }
+  return (r, i) => 1 - (1 - s0) * R13PROF[r] * tp[i]; }
+
+/* R13-1 rule:room-edge-occlusion - every interior read as evenly lit white boxes: no darkening where wall meets ceiling, wall meets
+   wall, or wall meets floor (desktop SSAO's screen radius barely reaches a 9 ft room's corners; the phone has no SSAO at all). Every
+   listing / owner photo shows those soft corner gradients. For every interior model space, along each polygon edge that is backed by
+   a wall body (inWallBody, so open-plan virtual edges are skipped) and not cut by an opening (meta openings), soft occlusion bands are
+   laid on the ceiling and the wall top (following the space's own ceiling planes, so vaults and gables are followed), on the floor at
+   the wall base, and up both walls of each inside corner. Merged into one mesh per house group; fades with EXPO_IN (indoors only) and
+   only in Tour / Walk. */
+const R13E = {step: .75, ceilW: 1.6, wallW: 1.4, floorW: .8, vertW: 1.3, sCeil: .6, sWall: .64, sFloor: .58, sVert: .66, lift: .012};
+function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
+  const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
+  const bucket = k => out[k] = out[k] || {P: [], C: []};
+  const wall = (x, y, nx, ny, h) => { const w = W2(x - nx * .3, y - ny * .3); return inWallBody(w[0], w[1], h); };
+  const opening = (x, y, z0, z1) => { for(const o of OP){ const ax = o.axis || [1, 0], nn = o.normal || [-ax[1], ax[0]], dx = x - o.center[0], dy = y - o.center[1];
+      if(Math.abs(dx * ax[0] + dy * ax[1]) < o.width / 2 + .08 && Math.abs(dx * nn[0] + dy * nn[1]) < (o.thickness || .5) / 2 + .45 && o.sill < z1 && o.head > z0) return true; } return false; };
+  const V = (x, y, z) => { const w = W2(x, y); return [w[0], z, w[1]]; };
+  for(const s of BIM2S.spaces){ if(!s.interior || s.openAir || !s.poly || s.poly.length < 3) continue; rep.spaces++;
+    const P = s.poly, n = P.length; let A = 0; for(let i = 0, j = n - 1; i < n; j = i++) A += P[j][0] * P[i][1] - P[i][0] * P[j][1];
+    const sg = A > 0 ? 1 : -1, f = s.floorZ, top = s.storey === 'L2' ? 'upper' : 'main';
+    const ceil = (x, y) => { const c = BIM2S.ceilAt(s, x, y); return (c == null || c < f + 6 || c > f + 30) ? null : c; };
+    const inN = i => { const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); return L < 1e-6 ? null : {a, dx: dx / L, dy: dy / L, L, nx: -dy / L * sg, ny: dx / L * sg}; };
+    for(let i = 0; i < n; i++){ const e = inN(i); if(!e || e.L < .8) continue; rep.edges++;
+      const N = Math.max(1, Math.ceil(e.L / E.step)), S = [];
+      for(let k = 0; k <= N; k++){ const t = Math.min(e.L - .02, Math.max(.02, e.L * k / N)), x = e.a[0] + e.dx * t, y = e.a[1] + e.dy * t, c = ceil(x + e.nx * .05, y + e.ny * .05); S.push({x, y, c}); }
+      // ceiling + wall-top bands
+      const NR = R13U.length, mk = () => R13U.map(() => []), cc = mk(), ww = mk(), ff = mk();
+      for(let k = 0; k <= N; k++){ const q = S[k], prev = S[Math.max(0, k - 1)], next = S[Math.min(N, k + 1)];
+        const okC = q.c != null && wall(q.x, q.y, e.nx, e.ny, q.c - .3) && !opening(q.x, q.y, q.c - E.wallW, q.c) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, q.c - E.wallW, q.c) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, q.c - E.wallW, q.c);
+        if(okC){ const L = E.lift;
+          R13U.forEach((u, r) => { const d = u * E.ceilW, x = q.x + e.nx * d, y = q.y + e.ny * d, c = ceil(x, y); cc[r].push(c == null ? null : V(x, y, c - L)); });
+          R13U.forEach((u, r) => { ww[r].push(V(q.x + e.nx * L, q.y + e.ny * L, q.c - .004 - u * E.wallW)); }); }
+        else { for(let r = 0; r < NR; r++){ cc[r].push(null); ww[r].push(null); } }
+        const okF = wall(q.x, q.y, e.nx, e.ny, f + 1) && !opening(q.x, q.y, f - .1, f + .4) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, f - .1, f + .4) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, f - .1, f + .4);
+        R13U.forEach((u, r) => { ff[r].push(okF ? V(q.x + e.nx * u * E.floorW, q.y + e.ny * u * E.floorW, f + .025) : null); }); }
+      for(let k = 0; k <= N; k++) if(cc.some(r => !r[k])) for(const r of cc) r[k] = null;   // a ceiling column is all or nothing
+      r13Band(bucket('ceil').P, bucket('ceil').C, cc, r13Shade(cc, E.sCeil)); r13Band(bucket(top).P, bucket(top).C, ww, r13Shade(ww, E.sWall)); r13Band(bucket(top).P, bucket(top).C, ff, r13Shade(ff, E.sFloor));
+      // inside corner at the end of this edge: both walls, floor to ceiling
+      const e2 = inN((i + 1) % n); if(!e2 || e2.L < .8) continue;
+      const cr = e.dx * e2.dy - e.dy * e2.dx; if(cr * sg < .5) continue;   // a convex polygon vertex = an inside room corner (~90 deg)
+      const vx = P[(i + 1) % n][0], vy = P[(i + 1) % n][1], cv = ceil(vx - e.dx * .1 + e.nx * .1, vy - e.dy * .1 + e.ny * .1); if(cv == null) continue; rep.corners++;
+      for(const [dx, dy, nx, ny] of [[-e.dx, -e.dy, e.nx, e.ny], [e2.dx, e2.dy, e2.nx, e2.ny]]){   // along each wall, away from the corner
+        const W = E.vertW, L = E.lift, rows = R13U.map(() => []), zs = []; for(let z = f + .05; z < cv - .05; z += 1) zs.push(z); zs.push(cv - .02);
+        for(let k = 0; k < zs.length; k++){ const z = zs[k], z1 = zs[Math.min(zs.length - 1, k + 1)], z0 = zs[Math.max(0, k - 1)];
+          const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
+          R13U.forEach((u, r) => rows[r].push(ok ? V(vx + dx * u * W + nx * L, vy + dy * u * W + ny * L, z) : null)); }
+        // rows[r] = a constant distance from the corner, running up the wall
+        r13Band(bucket(top).P, bucket(top).C, rows, r13Shade(rows, E.sVert)); } } }
+  const meshes = [];
+  for(const k in out){ if(!out[k].P.length || !GROUPS[k]) continue; const m = r13Mesh(out[k].P, out[k].C, R13.edgeMat || (R13.edgeMat = r13DecalMat(R13.k)), 'r13-edge-ao-' + k); GROUPS[k].add(m); meshes.push(m); rep.tris += out[k].P.length / 9; }
+  R13.report.edgeAO = rep; return meshes; }
+
+/* R13-2 rule:contact-shadow - furniture, beds, stools, toilets and counter decor stood on the floor with no ambient contact shadow:
+   the sun shadow map only darkens where the sun reaches, so in the shaded part of a room (and everywhere on the phone, which has no
+   SSAO) pieces looked pasted on. Every staged / fixture piece that rests on a floor (its base within 3" of the space's finished floor,
+   or on a rug) or on another piece's top (decor on tables and counters) gets a soft rectangular contact shadow under its own rotated
+   footprint, fading out past the edge. Wall-hung pieces (art, mirrors, TVs, upper cabinets, towel bars) are skipped because nothing
+   supports them. One merged mesh per furniture group (it follows the group's visibility: options, dollhouse). */
+const R13C = {skip: /^(rug|rug2|art|mirror|wallMirror|tvWall|inWallSpeaker|towelRing|towelBar|medicineCabinet|upperCabinet|upperMicrowave|ceilingFan|finishedPanel|hoodGlassCanopy|faucetKitchen|sinkUndermount|tubAlcove|yogaMat)$/,
+  kFloor: .6, kTop: .45};
+function r13FootBox(o){ const ry = o.rotation.y, q = o.quaternion.clone(); o.rotation.set(0, 0, 0); o.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(o); o.quaternion.copy(q); o.updateMatrixWorld(true);
+  return {b, ry, px: o.position.x, pz: o.position.z}; }
+function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].filter(g => GROUPS[g]), items = [], rugs = [], rep = {pieces: 0, floor: 0, onTop: 0, skipped: 0};
+  for(const gn of groups) for(const o of GROUPS[gn].children){ if(o.userData.r13) continue; const kind = o.userData.kind || '';
+    let fb; try{ fb = r13FootBox(o); }catch(e){ continue; } if(fb.b.isEmpty()) continue;
+    const it = {o, gn, kind, fb, w: fb.b.max.x - fb.b.min.x, d: fb.b.max.z - fb.b.min.z, y0: fb.b.min.y, y1: fb.b.max.y,
+      cx: (fb.b.min.x + fb.b.max.x) / 2 - fb.px, cz: (fb.b.min.z + fb.b.max.z) / 2 - fb.pz};
+    const c = Math.cos(fb.ry), s = Math.sin(fb.ry); it.wx = fb.px + it.cx * c + it.cz * s; it.wz = fb.pz - it.cx * s + it.cz * c;   // footprint centre in the world (yaw about Y)
+    it.world = new THREE.Box3().setFromObject(o);
+    if(/^rug/.test(kind)) rugs.push(it); items.push(it); }
+  const P = {}, C = {};
+  for(const it of items){ if(R13C.skip.test(it.kind) || it.w * it.d > 90 || Math.max(it.w, it.d) < .15 || it.y1 - it.y0 < .08){ rep.skipped++; continue; }
+    const sp = BIM2S && BIM2S.spaceUnderFeet(it.wz, it.wx, it.y0 + .3);   // BIM plan (x, y) = world (z, x)
+    let y = null, k = R13C.kFloor;
+    if(sp && Math.abs(it.y0 - sp.floorZ) < .25){ y = sp.floorZ; for(const r of rugs){ const B = r.world; if(it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z && B.max.y > y && B.max.y < it.y0 + .2) y = B.max.y; } rep.floor++; }
+    else { for(const o of items){ if(o === it || R13C.skip.test(o.kind) && !/Cabinet|vanity/.test(o.kind)) continue; const B = o.world;
+        if(Math.abs(B.max.y - it.y0) < .12 && it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z){ y = Math.max(y == null ? -1e9 : y, B.max.y); } }
+      if(y != null){ k = R13C.kTop; rep.onTop++; } }
+    if(y == null){ rep.skipped++; continue; }
+    y += .014; const w = it.w / 2, d = it.d / 2, m = Math.max(.1, Math.min(.5, .12 + .14 * Math.min(it.w, it.d))), c = Math.cos(it.fb.ry), s = Math.sin(it.fb.ry);
+    const pt = (u, v) => [it.wx + u * c + v * s, y, it.wz - u * s + v * c];
+    const ring = (gx, gz) => [pt(-gx, -gz), pt(gx, -gz), pt(gx, gz), pt(-gx, gz), pt(-gx, -gz)];
+    const rows = [ring(w * .8, d * .8), ring(w, d), ring(w + m * .45, d + m * .45), ring(w + m, d + m)], sh = [1 - k, 1 - k * .8, 1 - k * .3, 1];
+    const p = P[it.gn] = P[it.gn] || [], cc = C[it.gn] = C[it.gn] || [];
+    { const a = rows[0]; const s0 = sh[0]; p.push(...a[0], ...a[1], ...a[2], ...a[0], ...a[2], ...a[3]); for(let q = 0; q < 18; q++) cc.push(s0); }
+    r13Band(p, cc, rows, sh); rep.pieces++; }
+  const meshes = []; R13.cMat = R13.cMat || r13DecalMat({value: 1});
+  for(const gn in P){ const m = r13Mesh(P[gn], C[gn], R13.cMat, 'r13-contact-' + gn); m.userData.r13 = true; GROUPS[gn].add(m); meshes.push(m); }
+  R13.report.contact = rep; return meshes; }
+
+/* R13-3 rule:lit-shade-glows - a table lamp whose bulb is on (staging33 lampTop: 'bulb' emissive) showed a grey, unlit shade
+   wherever the shade was the oat linen (lower bedroom, stop 15), and only a faint 0.18 glow on the white drums. A shade around a lit
+   bulb transmits it: the shade mesh (the one whose box encloses the bulb) gets its own warm emissive at its own colour. */
+const R13L = {white: .34, linen: .36};
+function r13Shades(){ let n = 0; const seen = new Map();
+  for(const gn of ['furn', 'furnU', 'furn@asbuilt']) if(GROUPS[gn]) for(const o of GROUPS[gn].children){ const bulbs = []; o.traverse(q => { if(q.isMesh && q.material && q.material.name === 'bulb') bulbs.push(q); });
+    if(!bulbs.length) continue; o.updateMatrixWorld(true);
+    for(const bl of bulbs){ const bp = new THREE.Box3().setFromObject(bl).getCenter(new THREE.Vector3());
+      o.traverse(q => { if(!q.isMesh || q === bl || !q.material || Array.isArray(q.material) || /bulb|nickel|brass|glass|chrome|black/i.test(q.material.name)) return;
+        const B = new THREE.Box3().setFromObject(q); if(!B.containsPoint(bp) || B.max.y - B.min.y > 1.4) return;
+        const m0 = q.material; let m = seen.get(m0); if(!m){ m = m0.clone(); m.name = m0.name + '+r13lit'; const lum = .2126 * m.color.r + .7152 * m.color.g + .0722 * m.color.b;
+          m.emissive = new THREE.Color(0xffe2b8).convertSRGBToLinear().multiply(m.color.clone().multiplyScalar(1 / Math.max(.05, lum))); m.emissiveIntensity = /white/i.test(m0.name) ? R13L.white : R13L.linen; seen.set(m0, m); }
+        q.material = m; n++; }); } }
+  R13.report.shades = n; return n; }
+
+/* R13-4 rule:ceiling-bounce-tone - ceilings drew as bright as (or brighter than) the walls under them; a real ceiling sees no sky
+   and no sun, only light bounced off the floor and walls, so every interior photo shows it a step darker / greyer than the lit walls
+   (p44, p63, IMG_0560: ceiling ~0.9-0.95 x the wall). The ceiling group's paint takes 0.9 x its albedo (its own material copy, so
+   walls sharing the paint keep theirs). Colour only. */
+const R13CT = {k: .9};
+function r13Ceil(){ if(!GROUPS.ceil) return 0; const inCeil = new Set(), outside = new Set(), done = new Map(); let n = 0;
+  GROUPS.ceil.traverse(o => { if(o.isMesh) for(const m of [].concat(o.material)) inCeil.add(m); });
+  scene.traverse(o => { if(o.isMesh){ let p = o; while(p && p !== GROUPS.ceil) p = p.parent; if(!p) for(const m of [].concat(o.material)) outside.add(m); } });
+  GROUPS.ceil.traverse(o => { if(!o.isMesh || o.userData.noAO) return; const one = m => { if(!m || !m.color || m.transparent || m.userData.r13ceil) return m;
+      let c = done.get(m); if(!c){ c = outside.has(m) ? m.clone() : m; c.userData = Object.assign({}, c.userData, {r13ceil: true}); c.color.multiplyScalar(R13CT.k); done.set(m, c); n++; } return c; };
+    o.material = Array.isArray(o.material) ? o.material.map(one) : one(o.material); });
+  R13.report.ceilMats = n; return n; }
+
+if(R13.on){
+  const go = () => { if(R13.built === true) return; R13.built = true; const t0 = performance.now();
+    try{ R13.edges = r13EdgeAO(); }catch(e){ console.warn('[r13] edge ao', e); }
+    try{ R13.contact = r13Contact(); }catch(e){ console.warn('[r13] contact', e); }
+    try{ r13Shades(); }catch(e){ console.warn('[r13] shades', e); }
+    try{ r13Ceil(); }catch(e){ console.warn('[r13] ceil', e); }
+    R13.report.buildMs = +(performance.now() - t0).toFixed(1); R13.furnN = r13FurnN(); };
+  const r13FurnN = () => ['furn', 'furnU', 'furn@asbuilt'].reduce((a, g) => a + (GROUPS[g] ? GROUPS[g].children.length : 0), 0);
+  // after the loading screen is done (idle: no added load time), and again for the contact shadows if the furniture set changes (Design options)
+  const poll = setInterval(() => { try{ const L = document.querySelector('#loading'); if(!(L && L.classList.contains('done')) || !BIM2S) return;
+      if(!R13.built){ (window.requestIdleCallback || setTimeout)(go, {timeout: 1500}); R13.built = 'q'; return; }
+      if(R13.built === true && R13.furnN !== r13FurnN()){ for(const m of (R13.contact || [])){ m.parent && m.parent.remove(m); m.geometry.dispose(); } R13.contact = r13Contact(); R13.furnN = r13FurnN(); R13.report.rebuilt = (R13.report.rebuilt || 0) + 1; } }catch(e){} }, 1000);
+  // the corner bands fade with the page's own smoothed indoor factor, Tour / Walk only (exteriors, dollhouse, design: off)
+  // own rAF tick (outside every render call: the SSAO normal pass hides these decals through o.visible, so visibility must never be
+  // written from inside a scene render)
+  const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0; R13.k.value = k;
+      if(R13.edges) for(const m of R13.edges) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick13); };
+  requestAnimationFrame(tick13); }
+BIM3.report.r13 = R13.report;
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
