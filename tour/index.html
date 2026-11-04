@@ -1,30 +1,6 @@
 <meta charset="utf-8">
-<!-- seo:start -->
-<title>3D Tour of 118 Hillside Drive, Woodside, CA | Walk Every Room</title>
-<meta name="description" content="Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.">
-<link rel="canonical" href="https://118hillside.com/tour/">
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="118 Hillside Drive, Woodside">
-<meta property="og:locale" content="en_US">
-<meta property="og:title" content="3D Tour of 118 Hillside Drive, Woodside, CA">
-<meta property="og:description" content="Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.">
-<meta property="og:url" content="https://118hillside.com/tour/">
-<meta property="og:image" content="https://118hillside.com/images/tour-preview.jpg">
-<meta property="og:image:alt" content="3D model of 118 Hillside Drive from above">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="3D Tour of 118 Hillside Drive, Woodside, CA">
-<meta name="twitter:description" content="Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.">
-<meta name="twitter:image" content="https://118hillside.com/images/tour-preview.jpg">
-<meta name="geo.region" content="US-CA">
-<meta name="geo.placename" content="Woodside">
-<meta name="geo.position" content="37.43822;-122.25428">
-<link rel="icon" href="/favicon.ico" sizes="48x48">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://118hillside.com/tour/#page","url":"https://118hillside.com/tour/","name":"3D Tour of 118 Hillside Drive, Woodside, CA","description":"Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.","inLanguage":"en-US","primaryImageOfPage":"https://118hillside.com/images/tour-preview.jpg","isPartOf":{"@type":"WebSite","@id":"https://118hillside.com/#website","url":"https://118hillside.com/","name":"118 Hillside Drive, Woodside"},"about":{"@type":"SingleFamilyResidence","@id":"https://118hillside.com/#residence","name":"118 Hillside Drive, Woodside, CA 94062","address":{"@type":"PostalAddress","streetAddress":"118 Hillside Drive","addressLocality":"Woodside","addressRegion":"CA","postalCode":"94062","addressCountry":"US"},"url":"https://118hillside.com/"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"118 Hillside Drive","item":"https://118hillside.com/"},{"@type":"ListItem","position":2,"name":"3D Tour of 118 Hillside Drive, Woodside, CA","item":"https://118hillside.com/tour/"}]}}]}</script>
-<!-- seo:end -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Interactive 3D tour of 118 Hillside Drive, Woodside: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TML59CSLTY"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());var _gi=0;try{var _q=location.search;if(/[?&]internal=1/.test(_q))localStorage.setItem("ga_internal","1");if(/[?&]internal=0/.test(_q))localStorage.removeItem("ga_internal");_gi=localStorage.getItem("ga_internal")==="1";}catch(e){}gtag("config","G-TML59CSLTY",_gi?{traffic_type:"internal"}:{});</script>
 <meta charset="utf-8">
@@ -47,6 +23,7 @@
       if(memo[u]) return memo[u].then(function(t){ if(t == null) return nf(u); E.hits++; return new Response(t, {status: 200, headers: {'content-type': 'application/json'}}); }); }
     return nf.apply(window, arguments); };
 }catch(e){} })();</script>
+<title>118 Hillside Drive · 3D Walkthrough</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19432,6 +19409,106 @@ if(typeof v27TodStart === 'function'){ const _ts = v27TodStart; v27TodStart = fu
         for(const l of (DUSK_LIGHTS || [])){ l.intensity = G.lamps; } } }catch(e){ console.warn('[bim3] golden', e); }
     return r; }; }
 BIM3.report.golden = GOLDEN35;
+/* ===== RENDER r4 (owner 11/3 night) ===== */
+/* SH-1 rule:shade-while-moving ("it doesn't really show the shading when it's moving... even some light degree of shading").
+   The speed governor (v19 GOV) renders camera motion at a lower ladder level than the still frame. Levels 5-7 turned SSAO off
+   (ao 0) and stopped foliage receiving sun shadows (fol 0): while the camera moved, contact shading under eaves, trim, furniture
+   and the tree canopies' self-shadow vanished, then popped back on the first still frame. Now every motion level keeps
+   foliage shadows (fol 1) and L5 keeps half-resolution SSAO (ao 1; measured: AO at L6-7 cost too much); the extra AO cost is paid for with a slightly lower motion render
+   scale (s x sqrt(.66/.8) = x0.91 at L5-7), so each level's modelled frame cost is unchanged and the governor's choices stay the
+   same. Side effect: fol is 1 at every level, so stop/start no longer re-traverses the scene to toggle foliage receiveShadow
+   (GOV.foliage), and L4->still no longer differs in AO. Shadow-map sizes are untouched (no reallocation at stop/start). */
+const B3SH = {on: !/[?&]shade-move-off\b/.test(location.search), before: null};
+if(B3SH.on && typeof GOV !== 'undefined' && GOV.L){
+  B3SH.before = GOV.L.map(l => ({i: l.i, s: l.s, ao: l.ao, fol: l.fol}));
+  for(const l of GOV.L){ if(l.ao === 0 && l.i <= 5){ l.ao = 1; l.s = +(l.s * Math.sqrt(.66 / .8)).toFixed(3); } l.fol = 1;   // r4 perf: SSAO re-draws the scene (normal pass + visibility walks), +3 ms CPU / +4 ms GPU at L7 on desktop with hitches -> AO kept down to L5 only; L6-7 (slowest devices) keep sun + foliage shadows
+    l.cost = l.s * l.s * (l.ao === 2 ? 1 : l.ao === 1 ? .8 : .66) * (l.taps === 16 ? 1 : .86) * (l.aa >= 8 ? 1.15 : l.aa >= 4 ? 1 : l.aa >= 2 ? .93 : .88); }
+  BIM3.report.shadeMove = {levels: GOV.L.map(l => ({i: l.i, s: l.s, ao: l.ao, fol: l.fol}))}; }
+/* BM-1 rule:living-beams-cherry: the living-room beams (BM-L1-01..03, model material 'fir-beam') are cherry hardwood, natural
+   finish (owner, v26 interview); v33 drew them with M.beamCherry26. The package material maps to the page's fir beam
+   (BIM2_TEXALIAS.fir), which read pale orange at dusk. The L1 ceiling beam mesh now takes v33's cherry material. */
+{ const _b3bm = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3bm.apply(this, arguments);
+    try{ let n = 0; if(BIM2S && M.beamCherry26) for(const m of BIM2S.meshes){ const u = m.userData && m.userData.bim2; if(!u || u.material !== 'fir-beam' || !u.ranges || !u.ranges.length) continue;
+        if(u.ranges.every(x => /^BM-L1-/.test(x[0]))){ m.material = M.beamCherry26; n++; } }
+      BIM3.report.cherryBeams = n; }catch(e){ console.warn('[bim3] cherry beams', e); }
+    return r; }; }
+/* GH-2 rule:golden-siding-neutral: GOLDEN35's sun (0xffa95e x1.1) tinted the sunlit grey-cream siding peach/yellow (sat .18 on
+   the south wall). The sun is now a softer warm white (0xffc896, x1.03 net): the low-sun warmth stays in the sky, fog, hemi and
+   long shadows, and sunlit siding reads as its paint (sat .12, same hue as the shaded wall). */
+GOLDEN35.sun = 0xffc896; GOLDEN35.sunK = 1.1 * .94;
+/* UI-1 phone label overlaps: hotspot (.wpl) and room (.lbl) labels are page-level overlays (z 3) that were drawn under the
+   3D/Photo toggle (clipped: 'Landi') and showed through the translucent design panel. A label whose box meets a panel is hidden
+   (visibility, so it is not clickable either) until it clears it. Checked every 2nd frame from cached panel boxes; labels only. */
+try{ const st = document.createElement('style'); st.id = 'b3-ui1';
+  st.textContent = '#labels .b3occ,#wplabels .b3occ{visibility:hidden!important}' +
+    /* UI-2: the fixed disclaimer pill sat on the 'Photos by room' heading: the gallery header starts below the pill */
+    '#gallery #gwrap>header{padding-top:30px}@media (max-width:600px){#gallery #gwrap>header{padding-top:34px}}';
+  document.head.appendChild(st); }catch(e){ console.warn('[bim3] ui1 css', e); }
+const B3OCC = {n: 0, hid: 0, sel: '#card,#realSeg,.navguide,#phMenu,.phsheet'};
+B3OCC.run = () => {
+  const L1 = document.getElementById('labels'), L2 = document.getElementById('wplabels'); const els = [];
+  for(const P of [L1, L2]) if(P && !P.hidden) for(const e of P.children) if(e.style.display !== 'none' || e.classList.contains('b3occ')) els.push(e);
+  if(!els.length) return;
+  const obs = []; for(const o of document.querySelectorAll(B3OCC.sel)){ if(!o.offsetParent && getComputedStyle(o).position !== 'fixed') continue;
+    const cs = getComputedStyle(o); if(cs.visibility === 'hidden' || +cs.opacity < .05) continue; const r = o.getBoundingClientRect(); if(r.width > 4 && r.height > 4) obs.push(r); }
+  let hid = 0;
+  for(const e of els){ if(e.style.display === 'none'){ e.classList.remove('b3occ'); continue; }
+    const r = e.getBoundingClientRect(); const hit = obs.some(o => r.right > o.left && r.left < o.right && r.bottom > o.top && r.top < o.bottom);
+    if(hit !== e.classList.contains('b3occ')) e.classList.toggle('b3occ', hit); if(hit) hid++; }
+  B3OCC.hid = hid; };
+{ const loop = () => { requestAnimationFrame(loop); if(++B3OCC.n % 2) return; try{ B3OCC.run(); }catch(e){} }; requestAnimationFrame(loop); }
+window.__b3occ = B3OCC;
+/* MR-1 (coordinator 11/3 night, FX-mirror-ENTRY) rule:mirror-never-black: a mirror's room probe (glass20Probe) captures the room
+   from a point in front of the glass; where the reflection leaves through a glass wall / door (the entry mirror beside the
+   steel-glass front wall) the capture holds the dark exterior and the mirror read as a solid black disc at grazing angles.
+   Every mirror's reflected light now has a light floor (linear .34 ~ the lit foyer wall), so a mirror always reads light, as in
+   p54/p71; bright reflections are unchanged. Applied in the mirror material's own shader hook (survives probe re-configure). */
+const B3MR = {floor: .34, dusk: .22, n: 0, U: {value: .34}};   // floor follows the light level: x.22 at dusk (lamp-lit rooms), so a mirror never glows
+{ const _g36 = glass20Frame; glass20Frame = function(){ _g36.apply(this, arguments); B3MR.U.value = B3MR.floor * ((typeof DUSK !== 'undefined' && DUSK) ? B3MR.dusk : 1); }; }
+{ const _gmm = glass20MirrorMat; glass20MirrorMat = function(q){ _gmm.apply(this, arguments); const m = q.mesh.material;
+    if(!m || !m.onBeforeCompile || m.userData.b3mr === m.onBeforeCompile) return;   // re-wrap whenever glass20MirrorMat installed a new hook (probe ready)
+    const obc = m.onBeforeCompile, key = m.customProgramCacheKey;
+    m.onBeforeCompile = function(sh){ obc.apply(this, arguments); sh.uniforms.gFloor = B3MR.U;
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float gFloor;')
+        .replace('#include <lights_fragment_maps>', '#include <lights_fragment_maps>\n#if defined( RE_IndirectSpecular )\n radiance = max(radiance, vec3(gFloor));\n#endif'); };
+    m.customProgramCacheKey = () => key() + 'f'; m.userData.b3mr = m.onBeforeCompile; m.needsUpdate = true; B3MR.n++; }; }
+window.__b3mr = B3MR;
+/* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
+   The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
+   the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
+   S1 rule:terrain-paint - a typed paved element whose site.json render.page is 'terrain-paint' (pavers) is painted into the terrain cover
+      exactly like the C-6 paver fields (TERR.paved: same tint, soldier band, beds, drape on the USGS mesh); its kernel slab is the
+      model record and is taken out of the drawn scene (no double surface, no tint seam at the property line).
+   S2 rule:hardscape-clears-planting - legacy bed shrubs (pavBedPlants, v22 P10) whose instance centre lies inside a typed hardscape
+      polygon (flagstone, walkway) are removed: the photos show stone there, not shrubs.
+   S3 the fence type's library material 'redwood' draws with the page's survey-fence wood (M.fence), like the v22 survey fences.
+   S4 rule:gravel-tan - the terrain cover's gravel / DG (R/W shoulder, front-yard gravel) is the warm tan of photos p70 / p66, not the
+      grey stock texture: the gravel sample is tinted (linear x [2.0, 1.75, 1.4], from the texture mean vs the p70 gravel mean).
+   Report: window.__SITE_TYPED. */
+const SITE_TYPED = window.__SITE_TYPED = {painted: [], hiddenMeshes: 0, plantsRemoved: 0, fences: [], flagstones: [], gravelTan: false};
+{ const _scm = siteCoverMaterial; siteCoverMaterial = function(mat){ const r = _scm.apply(this, arguments), ob = mat.onBeforeCompile;   // S4
+    mat.onBeforeCompile = sh => { ob(sh); const k = 's2l(texture2D(sGrav, wq * rGrav).rgb) * cw.g';
+      if(sh.fragmentShader.includes(k)){ sh.fragmentShader = sh.fragmentShader.replace(k, 's2l(texture2D(sGrav, wq * rGrav).rgb) * vec3(2.0, 1.75, 1.4) * cw.g'); SITE_TYPED.gravelTan = true; } };
+    mat.customProgramCacheKey = () => 'siteCover1tan'; mat.needsUpdate = true; return r; }; }
+try{ BIM2_TEXALIAS.redwood = 'fence'; }catch(e){}                                                        // S3
+function siteTyped(){ const S = (typeof BIM2S !== 'undefined' && BIM2S && BIM2S.meta && BIM2S.meta.site) || {}; return {hard: (S.hardscape || []).filter(h => Array.isArray(h.polygon) && h.polygon.length > 2), fences: (S.fences || []).filter(f => Array.isArray(f.line) && f.status !== 'pending' && f.build !== false)}; }
+{ const _bs = buildSite; buildSite = function(){
+  const T = siteTyped(), painted = T.hard.filter(h => (h.render || {}).page === 'terrain-paint');
+  try{ if(TERR && TERR.paved) for(const h of painted) if(!TERR.paved.some(p => p.typedId === h.id)){ TERR.paved.push({name: h.name || h.id, polygon: h.polygon.map(p => [p[0], p[1]]), typedId: h.id}); SITE_TYPED.painted.push(h.id); }   // S1
+    const ids = new Set(painted.map(h => h.id));
+    if(ids.size) for(const m of (BIM2S.meshes || [])){ const b = (m.userData || {}).bim2 || {}, R = b.ranges || [];
+      if(R.length && R.every(r => ids.has(r[0])) && m.parent){ m.parent.remove(m); SITE_TYPED.hiddenMeshes++; } } }catch(e){ console.warn('[site] S1', e); }
+  const r = _bs.apply(this, arguments);
+  try{ const polys = T.hard.map(h => h.polygon);                                                          // S2
+    if(PAV_PLANTS && polys.length){ const q = new THREE.Vector3(), mtx = new THREE.Matrix4(), Z = new THREE.Matrix4().makeScale(0, 0, 0);
+      PAV_PLANTS.updateMatrixWorld(true);
+      PAV_PLANTS.traverse(o => { if(!o.isInstancedMesh) return; let ch = false;
+        for(let i = 0; i < o.count; i++){ o.getMatrixAt(i, mtx); q.setFromMatrixPosition(mtx).applyMatrix4(o.matrixWorld);
+          if(polys.some(P => inPoly(P, q.z, q.x))){ o.setMatrixAt(i, Z); ch = true; if(o.name !== 'contactShadows') SITE_TYPED.plantsRemoved++; } }
+        if(ch) o.instanceMatrix.needsUpdate = true; }); } }catch(e){ console.warn('[site] S2', e); }
+  SITE_TYPED.fences = T.fences.map(f => f.id); SITE_TYPED.flagstones = T.hard.filter(h => /FLAGSTONE/i.test(h.kind || '')).map(h => h.id);
+  try{ console.info('[site] typed', JSON.stringify(SITE_TYPED)); }catch(e){}
+  return r; }; }
 boot();
 })();
 </script>
