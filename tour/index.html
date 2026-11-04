@@ -20220,7 +20220,7 @@ BIM3.report.r15 = R15.report;
    Material.prototype.onBeforeCompile; a material whose own onBeforeCompile does not chain to the prototype keeps the static grade
    (#ifndef R16WB branch: same maths with wb = 1). With the flag the r11 light-colour fold is off (no double correction). Without the
    flag nothing here runs. */
-const R16 = window.R16 = {on: /[?&]phonegrade=1\b/.test(location.search) && (typeof coarse !== 'undefined' ? coarse : false) && !(typeof GRADE_PASS !== 'undefined' && GRADE_PASS),
+const R16 = window.R16 = {on: !/[?&]phonegrade=0\b/.test(location.search) &&   /* owner 11/4: default ON (phone tested); ?phonegrade=0 = old r11 look */ (typeof coarse !== 'undefined' ? coarse : false) && !(typeof GRADE_PASS !== 'undefined' && GRADE_PASS),
   report: {}, wb: new THREE.Vector3(1, 1, 1), wbIn: [.975, .997, 1.035]};   // tuned on the 19 stops (r16/REPORT.md): the r11 fold's effect plus the grade's saturation
 if(R16.on){ try{
   const G = Object.assign({sat: 1, con: 0, white: 1}, (typeof LIGHT !== 'undefined' && LIGHT.grade) || {}, {white: 1});   // phone: no white-point lift (the phone exposure path has no meter; .92 put interiors ~16 luma over desktop)
