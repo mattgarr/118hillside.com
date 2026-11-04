@@ -19653,6 +19653,78 @@ function p5Select(order, a, b, k, cen, ax){ let lo = a, hi = b - 1;
       if(!PC.lock && (wm > PC.vs * .8 || mf > .2)){ PC.lock = true; PC.good = 0; P5.stats.paceLocks++; }
       else if(PC.lock){ if(wm < PC.vs * .45) { if(++PC.good >= 4){ PC.lock = false; PC.miss.length = 0; } } else PC.good = 0; } }
     return r; }; }
+/* ===== PHOTOREAL r6 (11/4 sweep: tour stops + exteriors paired with owner photos 10/31 and listing photos; r6/sweep/REPORT.md) ===== */
+const R6 = window.R6 = {on: !/[?&]r6-off\b/.test(location.search), fixMissing: [], report: {}};
+/* R6-1 rule:fixture-material-registered - a fixture/built-in that names a library material the FIX table does not know falls back to
+   flat 0x999999 grey (FIX.mat). The lounge wet-bar counter (FX-L0-COUNTER, mat stoneBlack; photos p65, IMG_0547 / 0557: black
+   counter) was built before the page's AV block registered stoneBlack, so it drew mid grey. stoneBlack is now registered before the
+   house is built, and any remaining fallback is a runtime check item (bim3ModelChecks -> __CHECKS). */
+function r6StoneBlack(){ if(!(window.FIX && FIX.setMaterials)) return false;
+  const m = new THREE.MeshStandardMaterial({color: 0x0a0b0c, roughness: .32, metalness: .05, envMapIntensity: .8}); m.name = 'stoneBlack';   // same values as the page's AV block (honed-polished black, IMG_0547 reflections)
+  FIX.setMaterials({stoneBlack: m}); return true; }
+{ const _w = console.warn; console.warn = function(){ try{ const s = String(arguments[0] || ''); const k = /^FIX: unknown material "([^"]+)"/.exec(s); if(k && !R6.fixMissing.includes(k[1])) R6.fixMissing.push(k[1]); }catch(e){} return _w.apply(this, arguments); }; }
+if(R6.on) R6.report.stoneBlack = r6StoneBlack();
+/* R6-2 rule:hex-is-linear-in-r128 - the page runs three r128 without colour management, so a raw hex on a THREE material is LINEAR.
+   The primary-bath vanity top (BATH20 quartzDark, 0x37312d raw) therefore rendered as sRGB ~#807a75, a light brown-grey; owner
+   photos IMG_0595 / 0596 show a near-black quartz (sRGB ~#1a1a1c). Set from sRGB. Same family as the v35 bim2XlMat fix. */
+function r6QuartzDark(){ if(typeof BATH20 === 'undefined' || !BATH20.mats || !BATH20.mats.quartzDark) return false;
+  const m = BATH20.mats.quartzDark; m.color.set(0x25221f).convertSRGBToLinear(); m.roughness = .22; m.needsUpdate = true; return true; }
+/* R6-3 rule:glass-edge-tone - every thick glass slab (shower screens, glass rails; GLASS20 G4 splits the slab into faces + an edge
+   material) drew its polished edge in saturated teal 0x5a8f7f at .9 opacity: a 10-20 px teal stripe down the primary-bath shower
+   screen at the stop. Photos p45 / IMG_0595 show the edge of the low-iron screen as a pale green-grey line. */
+if(R6.on && typeof GLASS20 !== 'undefined'){ GLASS20.edge = 0xa3bab1; GLASS20.edgeDark = 0x4d5f58; R6.report.glassEdge = true; }
+{ const _b6 = bim2BuildHouse; bim2BuildHouse = function(){ if(R6.on){ try{ R6.report.stoneBlack = r6StoneBlack(); R6.report.quartzDark = r6QuartzDark(); }catch(e){ console.warn('[r6] materials', e); } }
+    return _b6.apply(this, arguments); }; }
+{ const _mc6 = bim3ModelChecks; bim3ModelChecks = function(){ const out = _mc6.apply(this, arguments);
+    for(const n of R6.fixMissing) out.push({type: 'fixture-material', id: n, msg: 'FIX material "' + n + '" is not registered: drawn as fallback grey'});
+    window.__CHECKS = out; const el = document.querySelector('#modelCheck'); if(el && out.length) el.textContent = 'Model check: ' + out.length + ' item(s) to review'; return out; }; }
+/* R6-4 rule:ground-cover-tone - the paver photo texture is calibrated per paver, but at tour distances its per-paver tone spread
+   (plus the golden sky in the shade) read as a high-contrast lilac/cream checkerboard (stops 2, 17, 18, 19); the real pavers (p08,
+   p18, p69, IMG_0476 / 0482) are an even tumbled grey with soft variation. The bark mulch read orange and saturated against the pale
+   straw-tan fines in p18 / IMG_0482. Each ground-cover sample is pulled toward its texture mean (1x1 mip, so no per-texture constant)
+   and partly desaturated. Shader-only: one extra (cache-hit) fetch per ground fragment, no new textures, no extra passes. */
+const R6G = {pav: {k: .55, s: .6}, mulch: {k: .85, s: .62}};
+const R6_GLSL = 'vec3 r6Tone(vec3 c, vec3 m, float k, float s){ c = m + (c - m) * k; float y = dot(c, vec3(.2126, .7152, .0722)); return max(vec3(0.0), mix(vec3(y), c, s)); }\n';
+function r6ToneMat(mat, P, tag){ if(!mat || !mat.isMaterial || (mat.userData && mat.userData.r6tone)) return false; mat.userData.r6tone = tag;
+  const prev = mat.onBeforeCompile, pk = mat.customProgramCacheKey;
+  mat.onBeforeCompile = function(sh, r){ if(prev) prev.call(this, sh, r);
+    // r128 hands onBeforeCompile the unexpanded chunk: a material whose map_fragment nobody rewrote gets the stock chunk inlined
+    if(sh.fragmentShader.includes('#include <map_fragment>')) sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#ifdef USE_MAP\n  vec4 texelColor = mapTexelToLinear(texture2D(map, vUv));\n  diffuseColor *= texelColor;\n#endif');
+    if(!/diffuseColor \*= texelColor;/.test(sh.fragmentShader)) return;
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + R6_GLSL)
+      .replace('diffuseColor *= texelColor;', 'texelColor.rgb = r6Tone(texelColor.rgb, mapTexelToLinear(texture2D(map, vUv, 12.0)).rgb, ' + P.k.toFixed(3) + ', ' + P.s.toFixed(3) + ');\n  diffuseColor *= texelColor;'); };
+  mat.customProgramCacheKey = function(){ return (pk ? pk.call(this) : '') + '|r6' + tag; }; mat.needsUpdate = true; return true; }
+{ const _at6 = antiTileAll; antiTileAll = function(){ const r = _at6.apply(this, arguments);
+    if(R6.on){ try{ R6.report.pavMat = r6ToneMat(M.pavers, R6G.pav, 'pav'); R6.report.mulchMat = r6ToneMat(M.mulch, R6G.mulch, 'mulch'); }catch(e){ console.warn('[r6] tone', e); } }
+    return r; }; }
+{ const _sc6 = siteCoverMaterial; siteCoverMaterial = function(mat){ const r = _sc6.apply(this, arguments);
+    if(!R6.on) return r;
+    try{ const prev = mat.onBeforeCompile, pk = mat.customProgramCacheKey, n0 = {n: 0};
+      mat.onBeforeCompile = function(sh, rr){ if(prev) prev.call(this, sh, rr);
+        const a = 's2l(texture2D(sPav, wq * rPav).rgb)', b = 's2l(texture2D(sMulch, wq * rMulch).rgb)', f = sh.fragmentShader; n0.n = (f.includes(a) ? 1 : 0) + (f.includes(b) ? 1 : 0);
+        sh.fragmentShader = f.replace('vec3 s2l(vec3 c){ return pow(c, vec3(2.2)); }', 'vec3 s2l(vec3 c){ return pow(c, vec3(2.2)); }\n' + R6_GLSL)
+          .replace(a, 'r6Tone(' + a + ', s2l(texture2D(sPav, wq * rPav, 12.0).rgb), ' + R6G.pav.k.toFixed(3) + ', ' + R6G.pav.s.toFixed(3) + ')')
+          .replace(b, 'r6Tone(' + b + ', s2l(texture2D(sMulch, wq * rMulch, 12.0).rgb), ' + R6G.mulch.k.toFixed(3) + ', ' + R6G.mulch.s.toFixed(3) + ')');
+        R6.report.coverTone = n0.n; };
+      mat.customProgramCacheKey = function(){ return (pk ? pk.call(this) : '') + '|r6cover'; }; mat.needsUpdate = true; }catch(e){ console.warn('[r6] cover tone', e); }
+    return r; }; }
+/* the soldier band (paver-band mesh, its own canvas texture sampled from tex/pavers) gets the same pull */
+{ const _pb6 = buildPaverBand; buildPaverBand = function(){ const r = _pb6.apply(this, arguments);
+    if(R6.on){ try{ const g = grp('land'); g.traverse(o => { if(o.isMesh && o.name === 'paver-band') R6.report.band = r6ToneMat(o.material, R6G.pav, 'band'); }); }catch(e){ console.warn('[r6] band', e); } }
+    return r; }; }
+/* R6-5 rule:interior-camera-white-balance - indoors the golden-hour light (warm sun through the glass, warm lamps, warm env bake)
+   turned the light-grey walls cream/khaki and the shaded walls olive (stops 6-16: walls measured R/B 1.10-1.18, e.g. #dcd6c7);
+   every interior photo (listing p01/p15/p36/p74, owner IMG_0495/0503) has neutral grey walls, R/B 1.02-1.06, because the camera
+   white-balances indoors. Indoors (blended by the page's own smoothed EXPO_IN), the grade pass gets a camera white balance; outdoors,
+   dusk, Halloween and Thanksgiving are untouched. Uniform-only: no shader or pass change. */
+const R6WB = {wb: [.965, .99, 1.045]};
+{ const prev6 = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prev6) prev6.apply(this, arguments);
+    if(!R6.on) return;
+    try{ if(DUSK || (typeof HW !== 'undefined' && HW.on) || (typeof TG !== 'undefined' && TG.on) || !GRADE_PASS || !GRADE_PASS.uniforms.wb) return;
+      const k = typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : (ENV_INSIDE ? 1 : 0); if(k <= 0) return;
+      const g = (LOOK.grade && LOOK.grade.wb) || [1, 1, 1], w = R6WB.wb;   // absolute from the grade's own wb (lookFrame sets it once a frame; onBeforeRender runs once per scene pass)
+      GRADE_PASS.uniforms.wb.value.set(g[0] * (1 + (w[0] - 1) * k), g[1] * (1 + (w[1] - 1) * k), g[2] * (1 + (w[2] - 1) * k)); }catch(e){} }; }
+BIM3.report.r6 = R6.report;
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
