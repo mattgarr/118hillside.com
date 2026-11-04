@@ -1789,7 +1789,7 @@ const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawi
 const wp = (px,py) => [(px-OX)/26.667, (py-OY)/26.667];   // marketing-plan px -> world (exact scale from the architect's drawings)
 const up = (px,py) => wp(px+UDX, py+UDY);
 const LV = {lower:-4.56, garage:-3.34, main:0, upper:5.57, outside:-3.3};
-const EYE = 5.3;
+const EYE = /[?&]nav18-off\b/.test(location.search) ? 5.3 : 5.0;   /* NAV r18: owner - eye 5 ft over the floor */
 const LEVEL_TXT = {lower:'Lower level', main:'Main level', upper:'Upper level', garage:'Garage', outside:'Outside'};
 const pad = n => String(n).padStart(2,'0');
 const pid = n => typeof n==='string' ? n : 'p'+pad(n);
@@ -6609,7 +6609,7 @@ canvas.addEventListener('pointermove',e=>{
       target.set(camera.position.x-Math.sin(ya)*Math.cos(pi)*r, camera.position.y+Math.sin(pi)*r, camera.position.z-Math.cos(ya)*Math.cos(pi)*r); orbitFromCamera(); }
     else if(p.piv && ptrs.size===1) v26PivotOrbit(p.piv, -dx*2*Math.PI/h*.75, -dy*2*Math.PI/h*.75);   // v26 O1
     else { sph.theta -= dx*2*Math.PI/h*.75; sph.phi -= dy*2*Math.PI/h*.75; }
-  } else { const k=(camera.fov*Math.PI/180)/h*1.1; yaw += dx*k; pitch=clamp(pitch+dy*k,-1.3,1.3); }
+  } else { if(typeof navGrabLook === 'function' && navGrabLook(e.clientX, e.clientY, dx, dy)) return; const k=(camera.fov*Math.PI/180)/h*1.1; yaw += dx*k; pitch=clamp(pitch+dy*k,-1.3,1.3); }
 });
 const endPtr=e=>{
   if(joy && e.pointerId===joy.id){ const tap=!joy.moved && performance.now()-joy.t<350; joy=null; $('#joy').hidden=true; if(tap && e.type==='pointerup') clickAt(e.clientX,e.clientY,false); return; }
@@ -19303,6 +19303,26 @@ const B3SKY = {pane: null};
 /* v35 #5: top of the wall face an exterior light hangs on (model host.faceTop / roofUnder), absolute ft; null = unknown */
 function bim3XlFaceTop(e){ const L = BIM2S && (BIM2S.meta.exteriorLights || []).find(q => q.id === e.id); const h = L && L.host; if(!h) return null;
   const t = h.faceTop != null ? h.faceTop : h.roofUnder; return t != null ? +t : null; }
+/* R18 (owner 11/4: "all of the decking should be the same color ... medium gray, kind of like you have on the risers, rather than the
+   bluish gray") rule:decking-one-material: every composite decking surface (deck slabs, rim boards, stair treads, risers, landings: model
+   material deck-composite-grey) draws with ONE material - the stair risers' neutral medium grey (v33 M.deckBoard 0x9d9892, roughness .78)
+   on a board texture: 5-1/2" boards with 3/16" gaps and butt joints, grain along u. The kernel lays u along each board (G4b grain axis:
+   rule:deck-boards-parallel-to-ledger for decks, the long axis for treads / risers). The old deck_front photo-texture (blue-grey, grain
+   ACROSS its boards) is no longer used for the model's decks. Texture tile 8 ft x 8 boards. */
+function bim3DeckMat(){
+  if(M.deckUnified18) return M.deckUnified18;
+  const PX = 128, Lft = 8, nB = 8, pitch = (5.5 + .1875) / 12, W = Lft * PX, H = Math.round(nB * pitch * PX), r = rnd(1804);
+  const tex = canvasTex(W, H, (g, w, h) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); const bh = h / nB, gap = Math.max(2, Math.round(.1875 / 12 * PX));
+    for(let b = 0; b < nB; b++){ const y0 = b * bh, tone = 236 + Math.round((r() - .5) * 18); g.fillStyle = `rgb(${tone},${tone},${tone - 1})`; g.fillRect(0, y0, w, bh - gap);
+      for(let i = 0; i < 26; i++){ const y = y0 + 2 + r() * (bh - gap - 4), a = .025 + r() * .05; g.strokeStyle = `rgba(70,68,64,${a})`; g.lineWidth = .6 + r() * 1.3; g.beginPath(); g.moveTo(0, y);
+        for(let x = 0; x <= w; x += 48) g.lineTo(x, y + Math.sin(x * .011 + i * 2.1) * 1.2); g.stroke(); }
+      g.fillStyle = 'rgb(92,90,86)'; g.fillRect(0, y0 + bh - gap, w, gap);                                   // the gap between boards (shadow)
+      if(r() < .6){ const x = Math.round(r() * w); g.fillStyle = 'rgb(120,118,114)'; g.fillRect(x, y0, 2, bh - gap); } } });   // a butt joint
+  tex.repeat.set(1 / Lft, 1 / (nB * pitch));
+  const m = std({map: tex, color: 0x9d9892, roughness: .78}); m.name = 'deckUnified18'; M.deckUnified18 = m; BIM3.report.deck18 = {tileFt: [Lft, +(nB * pitch).toFixed(3)], color: '9d9892'}; return m; }
+{ const _mm18 = bim2MapMaterial; bim2MapMaterial = function(name){ const root = String(name || '').split('#')[0];
+    if(root === 'deck-composite-grey' || root === 'deck-comp'){ try{ return bim3DeckMat(); }catch(e){ console.warn('[r18] deck', e); } }
+    return _mm18.apply(this, arguments); }; }
 /* G35-4 stairs (v33 railMats / deckFlight look): stair parts (package group 'stairs') draw with v33's stair materials, not the floor ones:
    oak treads keep the floor oak (as v33) with a toned nosing strip at every step (kernel B4e 'oak-nosing'); a composite exterior stair is v33's grey deck board (M.deckBoard),
    not the striped deck-floor texture; risers/skirts in trim paint stay the page's riser white (M.riser). */
@@ -19312,6 +19332,7 @@ function bim3StairLook(){
   const rep = {tread: 0, deck: 0, riser: 0};
   for(const m of BIM2S.meshes){ const nm = (m.userData.bim2 && m.userData.bim2.name) || m.name || ''; if(!/^stairs\|/.test(nm)) continue; const mat = nm.split('|')[2] || '';
     if(/^oak-nosing/.test(mat)){ if(!M.oakNosing35 && M.oak){ M.oakNosing35 = M.oak.clone(); M.oakNosing35.color.multiplyScalar(.62); } if(M.oakNosing35){ m.material = M.oakNosing35; rep.nosing = (rep.nosing || 0) + 1; } }
+    else if(/^deck-comp/.test(mat)){ m.material = bim3DeckMat(); rep.deck++; }   // r18: one decking material (treads, risers, landings, decks)
     else if(/^deck-/.test(mat) && M.deckBoard){ m.material = M.deckBoard; rep.deck++; }
     else if(/trim-semigloss|^mdf/.test(mat) && M.riser){ m.material = M.riser; rep.riser++; } }
   BIM3.report.stairLook = rep; }
@@ -20028,9 +20049,16 @@ const R13C = {skip: /^(rug|rug2|art|mirror|wallMirror|tvWall|inWallSpeaker|towel
   kFloor: .6, kTop: .45};
 function r13FootBox(o){ const ry = o.rotation.y, q = o.quaternion.clone(); o.rotation.set(0, 0, 0); o.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(o); o.quaternion.copy(q); o.updateMatrixWorld(true);
   return {b, ry, px: o.position.x, pz: o.position.z}; }
-function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].filter(g => GROUPS[g]), items = [], rugs = [], rep = {pieces: 0, floor: 0, onTop: 0, skipped: 0};
-  for(const gn of groups) for(const o of GROUPS[gn].children){ if(o.userData.r13) continue; const kind = o.userData.kind || '';
-    let fb; try{ fb = r13FootBox(o); }catch(e){ continue; } if(fb.b.isEmpty()) continue;
+function r13Pieces(groups){ const out = [], R17on = window.R17 && R17.on;
+  for(const gn of groups) for(const o of GROUPS[gn].children){ if(o.userData.r13) continue;
+    if(gn === 'yard'){   // r17 R17-3: outdoor staging; site meshes, the pergola and lights are not pieces; a kind-less set (dining23, outdoorKitchen27) is its parts
+      if(!o.isGroup || /^site\||pergola|fence|gate|screen/i.test(o.name || '')) continue;
+      if(!o.userData.kind && o.children.length > 1){ for(const c of o.children) if(c.isGroup || c.isMesh) out.push({o: c, gn, sub: true}); continue; } }
+    out.push({o, gn}); }
+  return out; }
+function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].concat(window.R17 && R17.on ? ['yard'] : []).filter(g => GROUPS[g]), items = [], rugs = [], rep = {pieces: 0, floor: 0, onTop: 0, skipped: 0, outdoor: 0};
+  for(const {o, gn, sub} of r13Pieces(groups)){ const kind = o.userData.kind || o.name || '';
+    let fb; try{ if(sub){ o.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(o), c = b.getCenter(new THREE.Vector3()); fb = {b, ry: 0, px: c.x, pz: c.z}; } else fb = r13FootBox(o); }catch(e){ continue; } if(fb.b.isEmpty()) continue;
     const it = {o, gn, kind, fb, w: fb.b.max.x - fb.b.min.x, d: fb.b.max.z - fb.b.min.z, y0: fb.b.min.y, y1: fb.b.max.y,
       cx: (fb.b.min.x + fb.b.max.x) / 2 - fb.px, cz: (fb.b.min.z + fb.b.max.z) / 2 - fb.pz};
     const c = Math.cos(fb.ry), s = Math.sin(fb.ry); it.wx = fb.px + it.cx * c + it.cz * s; it.wz = fb.pz - it.cx * s + it.cz * c;   // footprint centre in the world (yaw about Y)
@@ -20040,7 +20068,9 @@ function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].filter(g
   for(const it of items){ if(R13C.skip.test(it.kind) || it.w * it.d > 90 || Math.max(it.w, it.d) < .15 || it.y1 - it.y0 < .08){ rep.skipped++; continue; }
     const sp = BIM2S && BIM2S.spaceUnderFeet(it.wz, it.wx, it.y0 + .3);   // BIM plan (x, y) = world (z, x)
     let y = null, k = R13C.kFloor;
-    if(sp && Math.abs(it.y0 - sp.floorZ) < .25){ y = sp.floorZ; for(const r of rugs){ const B = r.world; if(it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z && B.max.y > y && B.max.y < it.y0 + .2) y = B.max.y; } rep.floor++; }
+    let ws = null; if(!sp && window.R17 && R17.on && typeof walkSurfaceAt === 'function'){ try{ ws = walkSurfaceAt(it.wx, it.wz, it.y0 + .3); }catch(e){} }   // r17 R17-3: outdoors the support is the walking surface (pavers, deck, ground)
+    if(ws != null && Math.abs(it.y0 - ws) < .3){ y = Math.max(ws, it.y0 - .02); k = R17CO.k; rep.outdoor++; }
+    else if(sp && Math.abs(it.y0 - sp.floorZ) < .25){ y = sp.floorZ; for(const r of rugs){ const B = r.world; if(it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z && B.max.y > y && B.max.y < it.y0 + .2) y = B.max.y; } rep.floor++; }
     else { for(const o of items){ if(o === it || R13C.skip.test(o.kind) && !/Cabinet|vanity/.test(o.kind)) continue; const B = o.world;
         if(Math.abs(B.max.y - it.y0) < .12 && it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z){ y = Math.max(y == null ? -1e9 : y, B.max.y); } }
       if(y == null && window.R14 && R14.on && R14.tops) for(const t of R14.tops){ if(t.o === it.o) continue; const B = t.B;   // r14 R14-3: a supporting mesh (counter slab), not the piece's whole box
@@ -20255,6 +20285,144 @@ vec3 CustomToneMapping( vec3 color ) {
 }catch(e){ R16.on = false; console.warn('[r16] phonegrade', e); } }
 BIM3.report.r16 = R16.report;
 window.__r16warm = () => (typeof GOV !== 'undefined' ? [GOV.warmMs, GOV.warmProgs] : null);   // read-only probe for the r16 compile-time check
+/* ===== EXTERIOR TELLS r17 (11/4: fresh-eyes exterior critique; bim3_work/r17) ===== ?r17-off turns the block off. Built once after
+   load from model data (meta exteriorFaces, openings, the page's walking surface); r13's multiply-decal machinery; no textures,
+   passes or per-frame scene work beyond one uniform write. */
+const R17 = window.R17 = {on: !/[?&]r17-off\b/.test(location.search), report: {}, k: {value: 0}};
+const R17CO = {k: .62};   // R17-3 outdoor contact strength (pieces in open shade read as floating without it)
+/* R17-1 rule:grade-occlusion - every exterior wall met its pavers / mulch / deck with a ruler-straight clean line: no darkening of the
+   ground in the wall's sky shadow and no splash-zone grime on the bottom courses (every photo shows both). Along each exterior face
+   (meta exteriorFaces: origin, u, outward n, its bands' z range) a soft band is laid on the walking surface outside (walkSurfaceAt:
+   pavers, deck, ground; 1.6 ft) and up the wall from that surface (1.1 ft), wherever the face reaches down to the surface and no
+   opening (door) cuts it.
+   R17-2 rule:eave-occlusion - the top of every exterior wall meets its soffit / rake with no shadow line; real walls darken softly in
+   the last foot under the overhang. The same faces get a band down from the face top (1.0 ft), skipped where a window or door head
+   reaches into it. Both fade with 1 - EXPO_IN (outdoor views), in Tour, Walk and Dollhouse. */
+const R17E = {step: .75, gW: 1.8, wW: 1.2, eW: 1.1, sG: .5, sW: .62, sE: .66, lift: .02};   // outdoors (sun + sky) needs a deeper band than r13's indoor corners to read
+function r17Bands(){ if(!BIM2S || typeof walkSurfaceAt !== 'function' || typeof r13Band !== 'function') return null;
+  const F = BIM2S.exteriorFaces || (BIM2S.meta && BIM2S.meta.exteriorFaces) || [], OP = BIM2S.openings || [], E = R17E, P = {}, C = {}, rep = {faces: 0, base: 0, eave: 0, tris: 0};
+  const opening = (x, y, z0, z1) => { for(const o of OP){ const ax = o.axis || [1, 0], nn = o.normal || [-ax[1], ax[0]], dx = x - o.center[0], dy = y - o.center[1];
+      if(Math.abs(dx * ax[0] + dy * ax[1]) < o.width / 2 + .1 && Math.abs(dx * nn[0] + dy * nn[1]) < (o.thickness || .5) / 2 + .5 && o.sill < z1 && o.head > z0) return true; } return false; };
+  const V = (x, y, z) => { const w = W2(x, y); return [w[0], z, w[1]]; };
+  const prof = R13U.map(u => (1 - u) * (1 - u));
+  for(const f of F){ if(!f.origin || !f.u || !f.n || !f.s || !f.bands) continue; const s0 = f.s[0], s1 = f.s[1], L = s1 - s0; if(L < .8) continue; rep.faces++;
+    const key = f.storey === 'L2' ? 'upper' : 'main', N = Math.max(1, Math.ceil(L / E.step)), mk = () => R13U.map(() => []), gr = mk(), wb = mk(), eb = mk();
+    for(let k = 0; k <= N; k++){ const s = s0 + Math.min(L - .02, Math.max(.02, L * k / N)), x = f.origin[0] + f.u[0] * s, y = f.origin[1] + f.u[1] * s;
+      let z0 = Infinity, z1 = -Infinity; for(const b of f.bands){ if(s >= b.s[0] - 1e-3 && s <= b.s[1] + 1e-3){ z0 = Math.min(z0, b.z[0]); z1 = Math.max(z1, b.z[1]); } }
+      const ox = x + f.n[0] * .45, oy = y + f.n[1] * .45, wo = W2(ox, oy); let g = null; try{ g = walkSurfaceAt(wo[0], wo[1], z0 + .5); }catch(e){}
+      const okB = isFinite(z0) && g != null && z0 <= g + .3 && z1 >= g + E.wW + .3 && !opening(x, y, g - .1, g + E.wW);
+      R13U.forEach((u, r) => { if(!okB){ gr[r].push(null); wb[r].push(null); return; }
+        const d = u * E.gW, q = W2(x + f.n[0] * (d + .01), y + f.n[1] * (d + .01)); let gz = g; try{ gz = walkSurfaceAt(q[0], q[1], g + .4); }catch(e){}
+        gr[r].push(Math.abs(gz - g) < .35 ? V(x + f.n[0] * (d + .01), y + f.n[1] * (d + .01), gz + E.lift) : null);
+        wb[r].push(V(x + f.n[0] * .012, y + f.n[1] * .012, g + .01 + u * E.wW)); });
+      const okE = isFinite(z1) && z1 - z0 > 3 && !opening(x, y, z1 - E.eW, z1 + .2);
+      R13U.forEach((u, r) => eb[r].push(okE ? V(x + f.n[0] * .012, y + f.n[1] * .012, z1 - .02 - u * E.eW) : null)); }
+    for(let k = 0; k <= N; k++) if(gr.some(r => !r[k])) for(const r of gr) r[k] = null;
+    const p = P[key] = P[key] || [], c = C[key] = C[key] || [];
+    r13Band(p, c, gr, r13Shade(gr, E.sG)); r13Band(p, c, wb, r13Shade(wb, E.sW)); r13Band(p, c, eb, r13Shade(eb, E.sE));
+    if(gr[0].some(v => v)) rep.base++; if(eb[0].some(v => v)) rep.eave++; }
+  const meshes = []; R17.mat = R17.mat || r13DecalMat(R17.k);
+  for(const k in P){ if(!P[k].length || !GROUPS[k]) continue; const m = r13Mesh(P[k], C[k], R17.mat, 'r17-ext-ao-' + k); GROUPS[k].add(m); meshes.push(m); rep.tris += P[k].length / 9; }
+  R17.report.bands = rep; return meshes; }
+if(R17.on){
+  const poll17 = setInterval(() => { try{ const L = document.querySelector('#loading'); if(!(L && L.classList.contains('done')) || !BIM2S) return; clearInterval(poll17);
+      (window.requestIdleCallback || setTimeout)(() => { const t0 = performance.now(); try{ R17.meshes = r17Bands(); }catch(e){ console.warn('[r17] bands', e); } R17.report.buildMs = +(performance.now() - t0).toFixed(1); }, {timeout: 1500}); }catch(e){} }, 1000);
+  const tick17 = () => { try{ const on = (mode === 'tour' || mode === 'walk' || mode === 'doll'), k = on ? 1 - Math.max(0, Math.min(1, typeof EXPO_IN === 'number' ? EXPO_IN : 0)) : 0; R17.k.value = k;
+      if(R17.meshes) for(const m of R17.meshes) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick17); };
+  requestAnimationFrame(tick17); }
+BIM3.report.r17 = R17.report;
+/* NAV r18 (owner 11/4) =====================================================================================================
+   1 rule:eye-five-feet - walking eye = the floor under the eye (tread, deck, terrain: walkSurfaceAt) + 5.0 ft. The page's EYE is 5.0
+     (patch_bim3_v33 NAV r18 callsite), so walk mode, click-to-move, waypoints and entering walk all stand at 5 ft. Tour stops: a stop
+     framed at walking height (eye 3.5-7.5 ft over its floor; not the aerial / dollhouse / orbit framings) is snapped to floor + 5.0,
+     its look target moved by the same amount, so the view direction is kept.
+   2 rule:grab-the-world - look-drag (tour look-around and walk, mouse and one-finger touch) turns the view so the world point that
+     was under the pointer stays under it: the exact rays through the previous and current pointer positions (projection incl. the
+     lens shift) give the yaw and pitch change, instead of a fixed 1.1 x vfov/height gain (that overshot ~6 % on desktop and
+     undershot ~15 % on phones). Sign (owner 11/4, via lead): MOUSELOOK - drag right -> the view turns right, drag up -> look up; the
+     scene moves opposite to the pointer by the same angle. ?drag=grab keeps grab-the-world (the old sign). Orbit modes untouched.
+   ?nav18-off restores both. */
+const NAV18 = window.NAV18 = {on: !/[?&]nav18-off\b/.test(location.search), eye: 5.0, band: [3.5, 7.5], pinv: new THREE.Matrix4(), grab: /[?&]drag=grab\b/.test(location.search), report: {snapped: [], left: []}};
+function navRay(x, y){ const r = canvas.getBoundingClientRect(), v = new THREE.Vector3((x - r.left) / r.width * 2 - 1, -(y - r.top) / r.height * 2 + 1, .5);
+  v.applyMatrix4(NAV18.pinv.copy(camera.projectionMatrix).invert()).normalize().applyQuaternion(camera.quaternion); return v; }   // the inverse of the live matrix: the lens code shifts projectionMatrix directly
+function navGrabLook(x, y, dx, dy){ if(!NAV18.on) return false;
+  try{ camera.updateMatrixWorld(); const a = navRay(x - dx, y - dy), b = navRay(x, y);
+    let dyaw = Math.atan2(-a.x, -a.z) - Math.atan2(-b.x, -b.z); dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
+    const dp = Math.asin(clamp(a.y, -1, 1)) - Math.asin(clamp(b.y, -1, 1));
+    const sg = NAV18.grab ? 1 : -1;   // owner 11/4: mouselook - the view turns toward the drag (scene moves opposite, 1:1); ?drag=grab = grab-the-world
+    yaw += sg * dyaw; pitch = clamp(pitch + sg * dp, -1.3, 1.3); NAV18.report.grab = (NAV18.report.grab || 0) + 1; return true; }catch(e){ return false; } }
+if(NAV18.on && typeof FRAME_FOR === 'function'){ const _ff18 = FRAME_FOR; FRAME_FOR = function(st){ const f = _ff18.apply(this, arguments);
+    try{ if(!f || !f.pos || typeof st !== 'object' || !st || st.aerial || st.nav === 'orbit') return f;
+      const p = f.pos, fl = walkSurfaceAt(p[0], p[2], p[1] - 5.3 + .6), h = p[1] - fl, id = st.id || f.key;
+      if(!(h >= NAV18.band[0] && h <= NAV18.band[1])){ if(!NAV18.report.left.includes(id)) NAV18.report.left.push(id + ' (eye ' + h.toFixed(2) + ' ft)'); return f; }
+      const d = fl + NAV18.eye - p[1]; if(Math.abs(d) < .005) return f;
+      const out = Object.assign({}, f, {pos: [p[0], p[1] + d, p[2]], look: f.look ? [f.look[0], f.look[1] + d, f.look[2]] : f.look});
+      if(!NAV18.report.snapped.some(s => s.startsWith(id + ' '))) NAV18.report.snapped.push(id + ' ' + h.toFixed(2) + '->' + NAV18.eye.toFixed(2));
+      return out; }catch(e){ return f; } }; window.FRAME_FOR = FRAME_FOR; }
+/* r18 rule:furnishing-inside-room (agentA, owner r18: 'a couple of inside plants are busting through the outside walls'). A staged plant's
+   origin is its pot's back edge and its canopy reaches ~1.5 ft round the trunk, so a plant set against a wall, or standing on a
+   sideboard / desk against one (primary-suite olive, middle-bedroom succulent), put leaves through the wall. Every plant (kinds in
+   B3FC.kinds, or userData.clearRoom) is fitted: 16 rays from the trunk at three canopy heights; a ray that meets a wall body or a door /
+   window opening before canopy radius + clearance pushes it back into the room. A plant on a host piece only slides on the host's top
+   (pot kept on it), and if that is not enough it is scaled down about its trunk (not below 55 %). rule:furnishing-wall-check: every
+   staged furnishing whose footprint core (inset 2") crosses a wall body is listed in BIM3.report.furnWall (count furnWallN). */
+const B3FC = {clear: .2, kinds: new Set(['plantPot', 'succulent', 'orchid', 'plant']), moved: [], scaled: [], off: /[?&]b3fit=0\b/.test(location.search)};   // ?b3fit=0: A/B view without the fit
+function b3Blocked(x, z, h){ const OR = (typeof OPENRECTS !== 'undefined' ? OPENRECTS : []);
+  return inWallBody(x, z, h) || OR.some(r => x > r[0] && x < r[2] && z > r[1] && z < r[3] && h > r[4] && h < r[5]); }
+function b3PlantGeom(o){ const V = new THREE.Vector3(); o.updateWorldMatrix(true, true); const bb = new THREE.Box3().setFromObject(o); if(bb.isEmpty()) return null;
+  let cx = 0, cz = 0, n = 0, R = 0; const yLow = bb.min.y + (bb.max.y - bb.min.y) * .15, pts = [];
+  // the piece itself only: no contact-shadow decal (v33contact, transparent, flat) - it is ~2x the canopy
+  const solid = m => m.isMesh && m.geometry && m.geometry.attributes.position && !(m.material && (m.material.transparent || /contact|shadow/i.test(m.material.name || ''))) && !/contact|shadow/i.test(m.name || '');
+  o.traverse(m => { if(!solid(m)) return; const P = m.geometry.attributes.position, st = Math.max(1, Math.floor(P.count / 400));
+    for(let i = 0; i < P.count; i += st){ V.fromBufferAttribute(P, i).applyMatrix4(m.matrixWorld); pts.push([V.x, V.z]); if(V.y < yLow){ cx += V.x; cz += V.z; n++; } } });
+  if(n){ cx /= n; cz /= n; } else { cx = (bb.min.x + bb.max.x) / 2; cz = (bb.min.z + bb.max.z) / 2; }
+  for(const p of pts) R = Math.max(R, Math.hypot(p[0] - cx, p[1] - cz));
+  return {cx, cz, R, H: [bb.min.y + Math.min(.4, (bb.max.y - bb.min.y) * .3), (bb.min.y + bb.max.y) / 2, bb.max.y - Math.min(.25, (bb.max.y - bb.min.y) * .15)]}; }
+function b3PlantPush(g, ox, oz, R){ let dx = 0, dz = 0, worst = 0;   // world push that clears radius R (+clearance) about trunk (cx+ox, cz+oz)
+  for(let it = 0; it < 8; it++){ let px = 0, pz = 0, hit = 0; worst = 0;
+    for(let k = 0; k < 16; k++){ const a = k / 16 * Math.PI * 2, ux = Math.cos(a), uz = Math.sin(a);
+      for(let d = .05; d <= R + B3FC.clear; d += .05){ if(g.H.some(h => b3Blocked(g.cx + ox + dx + ux * d, g.cz + oz + dz + uz * d, h))){ const pen = R + B3FC.clear - d; worst = Math.max(worst, pen); px -= ux * pen; pz -= uz * pen; hit++; break; } } }
+    if(!hit) return {dx, dz, pen: 0}; dx += px / hit * 1.2; dz += pz / hit * 1.2; }
+  return {dx, dz, pen: worst}; }
+function b3FitPlant(o, host){
+  if(B3FC.off) return;
+  // a plant on a host stands ON its top: plantPot ignores mountY, so the primary-suite olive stood on the floor inside the sideboard
+  if(host && host.userData.size){ o.updateWorldMatrix(true, true); const bb0 = new THREE.Box3().setFromObject(o), top = host.userData.size[2] + .005;
+    const hy = new THREE.Vector3(0, top, 0).applyMatrix4(host.matrixWorld).y; if(!bb0.isEmpty() && bb0.min.y < hy - .05){ o.position.y += hy - bb0.min.y; B3FC.moved.push((o.userData.kind || 'plant') + ' lifted onto ' + (host.userData.kind || 'host')); } }
+  const g = b3PlantGeom(o); if(!g || g.R < .05) return; const tag = (o.userData.el || o.userData.kind) + (host ? ' on ' + (host.userData.kind || 'host') : '');
+  let push = b3PlantPush(g, 0, 0, g.R);
+  if(Math.hypot(push.dx, push.dz) < .01 && push.pen < .01) return;
+  if(!host){ o.position.x += push.dx; o.position.z += push.dz; B3FC.moved.push(tag + ' ' + Math.hypot(push.dx, push.dz).toFixed(2) + 'ft');
+    try{ const it = FURN.items().find(q => q.obj === o); if(it){ it.base.x += push.dx; it.base.z += push.dz; } }catch(e){} return; }
+  // on a host: slide in the host frame, pot kept on the host top
+  const hs = host.userData.size || [2, 2, 2], inv = new THREE.Matrix4().copy(host.matrixWorld).invert(), wl = (x, z) => new THREE.Vector3(x, 0, z).applyMatrix4(inv);
+  const t0 = wl(g.cx, g.cz), t1 = wl(g.cx + push.dx, g.cz + push.dz), pr = Math.min(.5, (o.userData.size ? o.userData.size[0] : 1) / 4);
+  const nx = Math.max(-hs[0] / 2 + pr, Math.min(hs[0] / 2 - pr, t1.x)), nz = Math.max(pr, Math.min(hs[1] - pr, t1.z));
+  o.position.x += nx - t0.x; o.position.z += nz - t0.z; o.updateWorldMatrix(true, true);
+  const g2 = b3PlantGeom(o), rest = b3PlantPush(g2, 0, 0, g2.R);
+  if(rest.pen > .02 || Math.hypot(rest.dx, rest.dz) > .02){   // scale about the trunk until it clears
+    let f = 1; for(let k = 0; k < 9; k++){ f *= .92; if(f < .55) break; const pp = b3PlantPush(g2, 0, 0, g2.R * f); if(pp.pen < .01 && Math.hypot(pp.dx, pp.dz) < .01) break; }
+    f = Math.max(.55, f); const tl = wl(g2.cx, g2.cz), ol = o.position.clone();
+    o.scale.multiplyScalar(f); o.position.x = tl.x + (ol.x - tl.x) * f; o.position.z = tl.z + (ol.z - tl.z) * f; B3FC.scaled.push(tag + ' x' + f.toFixed(2)); }
+  B3FC.moved.push(tag + ' slid ' + Math.hypot(nx - t0.x, nz - t0.z).toFixed(2) + 'ft'); }
+// decor plants: fitted before the host's decor is merged into one mesh
+if(typeof stageMergeDecor === 'function'){ const _b3md = stageMergeDecor; stageMergeDecor = function(h){
+    try{ if(typeof inWallBody === 'function') for(const c of h.children.slice()) if(c.userData && c.userData.decor && (B3FC.kinds.has(c.userData.kind) || c.userData.clearRoom)) b3FitPlant(c, h); }catch(e){ console.warn('[bim3] decor plant fit', e); }
+    return _b3md.apply(this, arguments); }; }
+function bim3FurnClear(){
+  if(typeof inWallBody !== 'function' || typeof GROUPS === 'undefined') return null; const wall = [];
+  for(const k of Object.keys(GROUPS)){ if(!/^(furn|furnU)(@|$)/.test(k)) continue;
+    for(const o of GROUPS[k].children){ const kind = o.userData && o.userData.kind; if(!kind) continue;
+      if(B3FC.kinds.has(kind) || o.userData.clearRoom){ if(!o.userData.b3fit){ o.userData.b3fit = true; b3FitPlant(o, null); } continue; }
+      if(o.userData.wall || /art|mirror|tvWall|curtain|blind|sconce|shelf|towel/i.test(kind)) continue;
+      o.updateWorldMatrix(true, true); const bb = new THREE.Box3().setFromObject(o); if(bb.isEmpty()) continue;
+      const x0 = bb.min.x + .17, x1 = bb.max.x - .17, z0 = bb.min.z + .17, z1 = bb.max.z - .17; if(x1 <= x0 || z1 <= z0) continue;
+      const h = Math.min(bb.max.y - .1, bb.min.y + 1.2);
+      if([[x0, z0], [x1, z0], [x0, z1], [x1, z1], [(x0 + x1) / 2, (z0 + z1) / 2]].some(([x, z]) => inWallBody(x, z, h))) wall.push(o.userData.el || kind); } }
+  if(window.BIM3 && BIM3.report){ BIM3.report.furnClear = B3FC.moved.slice(); BIM3.report.furnScaled = B3FC.scaled.slice(); BIM3.report.furnWall = wall; BIM3.report.furnWallN = wall.length; }
+  if(wall.length) console.info('[bim3] furnishings crossing a wall body:', wall.join(', '));
+  return wall; }
+if(typeof settleStaging === 'function'){ const _b3ss = settleStaging; settleStaging = function(){ const r = _b3ss.apply(this, arguments); try{ bim3FurnClear(); }catch(e){ console.warn('[bim3] furn clear', e); } return r; }; }
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
