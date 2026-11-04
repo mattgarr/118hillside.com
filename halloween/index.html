@@ -19202,19 +19202,59 @@ BIM2_MATKEY['wire-deck'] = 'bim3WireDeck';
       g.fillRect(0, 0, 64, 7); g.fillRect(0, 0, 7, 128); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 3); t.anisotropy = 4;
       M.bim3WireDeck = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, alphaTest: .35, transparent: false, side: THREE.DoubleSide, roughness: .5, metalness: .3}); M.bim3WireDeck.name = 'bim3WireDeck'; }
     return _bl3.apply(this, arguments); }; }
-/* bar sconces (model lights render.kind barSconce): a 4" x 24" vertical bar on the wall at `at` (centre), facing into the light's space */
+/* r5 agentB (owner 11/3 late: primary-bath sconces / round mirrors "not very realistic ... make the glow around the mirrors soft and
+   diffuse"): soft light is drawn as additive planes whose alpha is a smooth gaussian falloff (computed per pixel, dithered, so there is no
+   ring or 8-bit banding) - static meshes, no per-frame work. B3GLOW.mats lists them with their day / dusk strength (applyLightingState). */
+const B3GLOW = {tex: {}, mats: []};
+function bim3GlowTex(kind){
+  if(B3GLOW.tex[kind]) return B3GLOW.tex[kind];
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), im = g.createImageData(N, N), D = im.data;
+  for(let j = 0; j < N; j++) for(let i = 0; i < N; i++){ const u = (i + .5) / N * 2 - 1, v = (j + .5) / N * 2 - 1; let f;
+    if(kind === 'halo'){ const r = Math.hypot(u, v), r0 = 1 / 1.6, s = (1 - r0) / 2.3; f = r <= r0 ? 1 : Math.exp(-Math.pow((r - r0) / s, 2)); }   // r0 = the mirror edge (plane = 1.6 x dia)
+    else { const dv = Math.max(0, Math.abs(v) - .5) / .5; f = Math.exp(-Math.pow(u / .42, 2)) * Math.exp(-Math.pow(dv / .42, 2)); }          // 'wash': vertical bar on a wall
+    const k = 4 * (j * N + i); D[k] = D[k + 1] = D[k + 2] = 255; D[k + 3] = Math.max(0, Math.min(255, Math.floor(f * 255 + Math.random()))); }
+  g.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; return (B3GLOW.tex[kind] = t); }
+function bim3GlowMat(kind, cct, day, dusk){
+  const col = cct <= 2700 ? 0xffc98f : cct <= 3000 ? 0xffd6a6 : 0xffe6c8;
+  const m = new THREE.MeshBasicMaterial({color: col, map: bim3GlowTex(kind), transparent: true, opacity: (typeof DUSK !== 'undefined' && DUSK) ? dusk : day, blending: THREE.AdditiveBlending,
+    depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4}); m.name = 'b3glow_' + kind; B3GLOW.mats.push({m, day, dusk}); return m; }
+{ const _als = applyLightingState; applyLightingState = function(){ const r = _als.apply(this, arguments); for(const q of B3GLOW.mats) q.m.opacity = DUSK ? q.dusk : q.day; return r; }; }
+/* backlit mirror (model furnishings params.backlight {scale, cct, day, dusk}): the halo plane sits between the wall and the mirror, 1.6 x
+   its diameter, so only the soft falloff past the frame shows (v33 drew two hard rings) */
+if(window.FIX && FIX.make && !FIX.__b3halo){ FIX.__b3halo = true; const _mk = FIX.make;
+  FIX.make = function(kind, o){ const r = _mk.apply(this, arguments);
+    try{ const bl = o && o.backlight; if(kind === 'mirror' && bl && r){ const w = o.w || 2.5, h = o.shape === 'round' ? w : (o.h || 3.25), k = 1.6;
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(w * k, (o.shape === 'round' ? w * k : h + w * (k - 1))), bim3GlowMat('halo', bl.cct || 3000, bl.day != null ? bl.day : .3, bl.dusk != null ? bl.dusk : .6));
+      pl.position.set(0, (o.mountY || 3.75) + h / 2, .006); pl.renderOrder = 3; pl.castShadow = pl.receiveShadow = false; pl.name = 'b3halo'; pl.userData.noPick = true; r.add(pl); } }catch(e){ console.warn('[bim3] halo', e); }
+    return r; }; }
+/* bar sconces (model lights render.kind barSconce, type render.opts from the library: photos IMG_0596 / IMG_0603): a round matte black
+   backplate, a short stem, a vertical opal tube with satin nickel end caps centred in front of it, and a soft vertical wall wash
+   (lit at dusk with the other fixture lenses) */
 function bim3BarSconces(){
   const L = (BIM2S.meta.lights || []).filter(l => l.render && l.render.kind === 'barSconce' && l.at); if(!L.length) return;
-  if(!M.bim3SconceLens){ M.bim3SconceLens = new THREE.MeshStandardMaterial({color: 0xfff6e8, emissive: 0xffd9a8, emissiveIntensity: 0, roughness: .4}); LIGHTS.emit.push(M.bim3SconceLens);
-    M.bim3SconceBody = new THREE.MeshStandardMaterial({color: 0x1b1b1b, roughness: .45, metalness: .6}); }
-  for(const l of L){ const p = l.params || {}, w = p.w || .33, h = p.h || 2.0, sp = l.space && BIM2S.spaceById[l.space]; let dir = [1, 0];
+  if(!M.bim3SconceLens){ M.bim3SconceLens = new THREE.MeshStandardMaterial({color: 0xf4f1ea, emissive: 0xffd9a8, emissiveIntensity: 0, roughness: .32}); M.bim3SconceLens.name = 'sconceOpal'; LIGHTS.emit.push(M.bim3SconceLens);
+    M.bim3SconceBody = new THREE.MeshStandardMaterial({color: 0x1a1a1a, roughness: .62, metalness: .35}); M.bim3SconceBody.name = 'sconcePlate';
+    M.bim3SconceCap = (window.FIX && FIX.mat && FIX.mat('nickelBrushed')) || new THREE.MeshStandardMaterial({color: 0xbfbcb5, roughness: .32, metalness: .9}); }
+  let n = 0;
+  for(const l of L){ const p = Object.assign({}, l.render.opts || {}, l.params || {}), I = v => v / 12, sp = l.space && BIM2S.spaceById[l.space]; let dir = [1, 0];
     for(const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if(sp && BIM2.inPoly(sp.poly, l.at[0] + d[0] * .6, l.at[1] + d[1] * .6)){ dir = d; break; }
+    const bl = I(p.barLenIn || 24), br = I(p.barDiaIn || 1.25) / 2, cap = I(p.capIn || .75), pr = I(p.plateDiaIn || 5.5) / 2, pt = I(p.plateThkIn || .9), so = I(p.standoffIn || .6), zc = pt + so + br;
     const g = new THREE.Group(); g.userData.el = l.id; const [wx, wz] = W2(l.at[0], l.at[1]); g.position.set(wx, l.at[2], wz); g.rotation.y = Math.atan2(dir[1], dir[0]);   // local +z = BIM dir (world x = BIM y)
-    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, .12), M.bim3SconceBody); body.position.z = .06; g.add(body);
-    const lens = new THREE.Mesh(new THREE.BoxGeometry(w * .62, h * .92, .02), M.bim3SconceLens); lens.position.z = .125; g.add(lens);
-    g.traverse(o => { if(o.isMesh){ o.castShadow = false; o.receiveShadow = true; } }); grp(l.storey === 'L2' ? 'upper' : 'main').add(g); }
-  BIM3.report.sconces = L.length;
+    const plate = new THREE.Mesh(new THREE.CylinderGeometry(pr, pr, pt, 48), M.bim3SconceBody); plate.rotation.x = Math.PI / 2; plate.position.z = pt / 2; g.add(plate);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(br * .45, br * .45, so + .01, 16), M.bim3SconceCap); stem.rotation.x = Math.PI / 2; stem.position.z = pt + so / 2; g.add(stem);
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(br, br, bl - 2 * cap, 32), M.bim3SconceLens); tube.position.z = zc; g.add(tube);
+    for(const s of [-1, 1]){ const c = new THREE.Mesh(new THREE.CylinderGeometry(br * 1.02, br * 1.02, cap, 32), M.bim3SconceCap); c.position.set(0, s * (bl - cap) / 2, zc); g.add(c); }
+    const cct = (l.photometry && l.photometry.cct) || 2700;
+    const wash = new THREE.Mesh(new THREE.PlaneGeometry(p.washW || 1.4, p.washH || 3.4), bim3GlowMat('wash', cct, 0, .85)); wash.position.z = .006; wash.renderOrder = 3; wash.name = 'b3wash'; g.add(wash);
+    g.traverse(o => { if(o.isMesh){ o.castShadow = false; o.receiveShadow = o.material !== M.bim3SconceLens && !/^b3/.test(o.name); } }); grp(l.storey === 'L2' ? 'upper' : 'main').add(g); n++; }
+  BIM3.report.sconces = n;
 }
+/* r5 agentB: a large mirror (>= 2.4 ft, desktop) captures its room at 512 px a face instead of 256: at 256 the 32" bath mirrors read as a
+   soft blur from the vanity. Capture-time cost only (once per probe / light change), no per-frame cost; phones keep 256. */
+{ const _pr = GLASS20.probeRes, big = { on: false }, ph = () => document.documentElement.classList.contains('ph') || matchMedia('(max-width: 720px)').matches;
+  GLASS20.probeRes = function(){ return big.on && !ph() ? 512 : _pr.apply(this, arguments); };
+  const wrap = f => function(mesh){ let s = 0; try{ const v = new THREE.Box3().setFromObject(mesh).getSize(new THREE.Vector3()); s = Math.max(v.x, v.y, v.z); }catch(e){} big.on = s >= 2.4; try{ return f.apply(this, arguments); } finally { big.on = false; } };
+  if(typeof BOOT22 !== 'undefined' && BOOT22.probeFn) BOOT22.probeFn = wrap(BOOT22.probeFn); glass20Probe = wrap(glass20Probe); }
 { const _b3h4 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3h4.apply(this, arguments); try{ bim3BarSconces(); }catch(e){ console.warn('[bim3] sconces', e); } return r; }; }
 /* finishes: the model paints every face (accent walls are boundaries with their own colour, e.g. SW 6227 Meditative in the office), so
    the v33 accent overlay (legacy accentWalls) is off; cantilever bands are not in the model yet -> legacy page fallback, reported */
@@ -19344,7 +19384,25 @@ function bim3WellTops(){
         let best = -1, bf = -1e9, bt = -1e9; for(let ch = 0; ch < 4; ch++){ const k = D[(j * W + i) * 4 + ch]; if(!k) continue; const f = R.rooms[k].floor, tp = f + D[((j + H) * W + i) * 4 + ch] / 10; if(f < b.min.y && (tp > bt + 1e-3 || (Math.abs(tp - bt) <= 1e-3 && f > bf))){ bf = f; bt = tp; best = ch; } }
         if(best < 0) continue; const o = ((j + H) * W + i) * 4 + best, top = Math.max(1, Math.min(255, Math.round((b.max.y + .5 - bf) * 10)));
         if(top > D[o]){ D[o] = top; n++; } } }
-  R.tex.needsUpdate = true; BIM3.report.wellTops = {wells: box.size, cells: n}; return n; }
+  // r5 rule:open-volume-shared-top (agentA, lead r5 vault patchwork): in a cell where a LOWER-floor room's ceiling is above an
+  // upper-floor room's ceiling, no floor separates them (stair hall open to the loft vault) - the upper room's lamps reach that ceiling too
+  let nv = 0; const pairs = new Map(); for(let j = 0; j < H; j++) for(let i = 0; i < W; i++){ const b0 = (j * W + i) * 4, t0 = ((j + H) * W + i) * 4;
+    for(let a = 0; a < 4; a++){ const ka = D[b0 + a]; if(!ka) continue; const fa = R.rooms[ka].floor, ta = fa + D[t0 + a] / 10;
+      for(let b = 0; b < 4; b++){ const kb = D[b0 + b]; if(!kb || b === a) continue; const fb = R.rooms[kb].floor;
+        if(fa < fb - .5 && ta > fb + D[t0 + b] / 10 + .05){ D[t0 + b] = Math.max(1, Math.min(255, Math.round((ta - fb) * 10))); nv++; pairs.set(ka + ':' + kb, [ka, kb]); } } } }
+  // ... and over the WHOLE open part of the lower room (cells whose ceiling is above the upper room's floor), not only where the two
+  // outlines overlap - otherwise the vault shows a 1-ft-stepped lit / unlit edge where the upper room's outline ends
+  for(const [, [ka, kb]] of pairs){ const fa = R.rooms[ka].floor, fb = R.rooms[kb].floor, chb = R.rooms[kb].ch;
+    for(let j = 0; j < H; j++) for(let i = 0; i < W; i++){ const b0 = (j * W + i) * 4, t0 = ((j + H) * W + i) * 4;
+      for(let a = 0; a < 4; a++){ if(D[b0 + a] !== ka) continue; const ta = fa + D[t0 + a] / 10; if(ta < fb + 1 || D[b0 + chb]) continue;
+        D[b0 + chb] = kb; D[t0 + chb] = Math.max(1, Math.min(255, Math.round((ta - fb) * 10))); nv++; } } }
+  // ... and the upper room of an open volume reaches the volume's highest ceiling in every one of its cells: the page's legacy outline
+  // gives it a flat 8 ft lid (13.57) over parts of the shared vault (over the up-stair), which left those vault cells unlit (dark band)
+  for(const [, [ka, kb]] of pairs){ const fa = R.rooms[ka].floor, fb = R.rooms[kb].floor, chb = R.rooms[kb].ch; let tmax = -1e9;
+    for(let c = 0; c < W * H; c++) for(let a = 0; a < 4; a++) if(D[c * 4 + a] === ka) tmax = Math.max(tmax, fa + D[(c + W * H) * 4 + a] / 10);
+    const tv = Math.max(1, Math.min(255, Math.round((tmax - fb) * 10)));
+    for(let c = 0; c < W * H; c++) if(D[c * 4 + chb] === kb && D[(c + W * H) * 4 + chb] < tv){ D[(c + W * H) * 4 + chb] = tv; nv++; } }
+  R.tex.needsUpdate = true; BIM3.report.wellTops = {wells: box.size, cells: n, openVolumeCells: nv}; return n; }
 { const R = RM29; if(R && R.build && !R.b3wells){ const _rb = R.build; R.b3wells = true; R.build = function(){ const ok = _rb.apply(this, arguments); if(ok){ try{ bim3WellTops(); }catch(e){ console.warn('[bim3] well tops', e); } } return ok; }; } }
 { const _b3w = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3w.apply(this, arguments); try{ if(RM29 && RM29.ok) bim3WellTops(); }catch(e){ console.warn('[bim3] well tops', e); } return r; }; }
 /* FX-3 rule:curb-above-grade (owner 11/3 afternoon; site.json grade): exposed concrete foundation/curb shows only ~6" above finished grade,
@@ -19520,10 +19578,14 @@ const B3MR = {floor: .34, dusk: .22, n: 0, U: {value: .34}};   // floor follows 
 { const _gmm = glass20MirrorMat; glass20MirrorMat = function(q){ _gmm.apply(this, arguments); const m = q.mesh.material;
     if(!m || !m.onBeforeCompile || m.userData.b3mr === m.onBeforeCompile) return;   // re-wrap whenever glass20MirrorMat installed a new hook (probe ready)
     const obc = m.onBeforeCompile, key = m.customProgramCacheKey;
-    m.onBeforeCompile = function(sh){ obc.apply(this, arguments); sh.uniforms.gFloor = B3MR.U;
+    /* r5 agentB (owner: bath mirrors "not very realistic"): glass20MirrorMat's own edits (box-projected reflection, mip 0 = optically
+       flat) look for text inside envmap_physical_pars_fragment, but onBeforeCompile sees the shader before r128 resolves its #includes,
+       so they never applied and every mirror sampled its capture ~2 mips down (soft blur, no parallax). The chunk is inlined first. */
+    m.onBeforeCompile = function(sh){ sh.fragmentShader = sh.fragmentShader.replace('#include <envmap_physical_pars_fragment>', THREE.ShaderChunk.envmap_physical_pars_fragment);
+      obc.apply(this, arguments); sh.uniforms.gFloor = B3MR.U;
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float gFloor;')
         .replace('#include <lights_fragment_maps>', '#include <lights_fragment_maps>\n#if defined( RE_IndirectSpecular )\n radiance = max(radiance, vec3(gFloor));\n#endif'); };
-    m.customProgramCacheKey = () => key() + 'f'; m.userData.b3mr = m.onBeforeCompile; m.needsUpdate = true; B3MR.n++; }; }
+    m.customProgramCacheKey = () => key() + 'fi'; m.userData.b3mr = m.onBeforeCompile; m.needsUpdate = true; B3MR.n++; }; }
 window.__b3mr = B3MR;
 /* PERF r5 (perf agent, 11/3 night) ================================================================================================
    Owner: movement "seems choppy sometimes". Measured (r5/perf/REPORT.md): the steady frame is fine on a fast Mac; the chop is
