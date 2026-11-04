@@ -558,7 +558,7 @@ function rows(h) {
     ['stairs', 'vase2', { style: 'round', h: 1.25, dia: 0.75, n: 2, gap: 0.1, mat: 'ceramicWhite', hs: [1, 0.8] }, 0, 'n', { on: 'sc', dx: -1.2 }],
     ['stairs', 'books', { n: 3 }, 0, 'n', { on: 'sc', dx: 1.3 }],
     ['stairs', 'art', { w: 4.6, h: 3.6, mountY: 5.6, style: 'swirlWhite', seed: 7, frame: 'frameOak', fw: 0.06 }, [870, 1884], 'n', { back: true }],
-    ['stairs', 'basket', { dia: 1.6, h: 1.2 }, [985, 1688], 's', { key: 'sb' }],
+    ['stairs', 'basket', { dia: 1.6, h: 1.2 }, [951, 1761], 's', { key: 'sb' }],   // r5 (agentA, owner r5 #4; photos IMG_0535/IMG_0572): on the main landing at the foot of the up-flight, against the down-stair rail - [985, 1688] put it on the ST-UP1 treads (only its throw showed, as a pad on a tread)
     ['stairs', 'throwDrape', { w: 1.2, len: 0.9, drop: 1.0, mountY: 1.2, mat: 'linenOat33', fringe: true }, 0, 's', { on: 'sb', z: 0.4 }]);
   // LOWER LOUNGE (model room 'rec'; p538, p539, p540, p547): round glass bistro table + four black wishbone chairs by the slider, striped vases
   // and a tic-tac-toe tray, two black / cream geometric cube poufs under the large ensō canvas, round grid mirror, jar tray on the wet bar.
