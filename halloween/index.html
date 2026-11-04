@@ -20043,6 +20043,8 @@ function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].filter(g
     if(sp && Math.abs(it.y0 - sp.floorZ) < .25){ y = sp.floorZ; for(const r of rugs){ const B = r.world; if(it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z && B.max.y > y && B.max.y < it.y0 + .2) y = B.max.y; } rep.floor++; }
     else { for(const o of items){ if(o === it || R13C.skip.test(o.kind) && !/Cabinet|vanity/.test(o.kind)) continue; const B = o.world;
         if(Math.abs(B.max.y - it.y0) < .12 && it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z){ y = Math.max(y == null ? -1e9 : y, B.max.y); } }
+      if(y == null && window.R14 && R14.on && R14.tops) for(const t of R14.tops){ if(t.o === it.o) continue; const B = t.B;   // r14 R14-3: a supporting mesh (counter slab), not the piece's whole box
+          if(Math.abs(B.max.y - it.y0) < .12 && it.wx > B.min.x && it.wx < B.max.x && it.wz > B.min.z && it.wz < B.max.z) y = Math.max(y == null ? -1e9 : y, B.max.y); }
       if(y != null){ k = R13C.kTop; rep.onTop++; } }
     if(y == null){ rep.skipped++; continue; }
     y += .014; const w = it.w / 2, d = it.d / 2, m = Math.max(.1, Math.min(.5, .12 + .14 * Math.min(it.w, it.d))), c = Math.cos(it.fb.ry), s = Math.sin(it.fb.ry);
@@ -20103,6 +20105,82 @@ if(R13.on){
       if(R13.edges) for(const m of R13.edges) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick13); };
   requestAnimationFrame(tick13); }
 BIM3.report.r13 = R13.report;
+/* ===== EASED EDGES r14 (11/4: r13 tells #6 / #7; bim3_work/r14) ===== ?r14-off turns the block off. */
+const R14 = window.R14 = {on: !/[?&]r14-off\b/.test(location.search), report: {boxes: 0, eased: 0, edges: 0, trisAdded: 0, counters: 0}, depth: 0};
+/* R14-1 rule:eased-edge (casework) - FIX casework carcasses, kicks, shelves and panels (frozen v33 fixtures.js: Builder.bb without a
+   radius) were razor-sharp boxes; their door and drawer fronts already carry a 0.006 ft round (shakerFront rbox). Inside a casework
+   make, plain boxes are collected and, at build, every EXPOSED convex edge gets a 1/16" 45-degree ease: an edge is eased only when
+   neither of its two faces touches another box of the same piece (a carcass side against its neighbour, a shelf into a side, a
+   carcass back on the wall line stays square), so joins stay tight. Same material, same UV rule (FIX box projection when the
+   material has one, BoxGeometry's per-face 0..1 otherwise). <= 44 triangles a box instead of 12. */
+const R14K = /^(baseCabinet|upperCabinet|tallCabinet|vanity|builtinBookcase|finishedPanel|counter)$/, R14E = {c: 1 / 192, eps: .004};
+function r14EasedBox(w, h, d, ex){   // centred box; ex[f] = face f exposed (f: 0 +x, 1 -x, 2 +y, 3 -y, 4 +z, 5 -z); returns non-indexed BufferGeometry
+  const H = [w / 2, h / 2, d / 2], c = Math.min(R14E.c, w / 3, h / 3, d / 3), P = [], N = [], UV = [];
+  const ax = f => f >> 1, sg = f => (f & 1) ? -1 : 1;
+  const ch = (f, g) => ax(f) !== ax(g) && ex[f] && ex[g] ? c : 0;   // chamfer on the edge between faces f and g
+  // the corner point of face f at the box corner with signs s (array of 3): inset along each other axis by that edge's chamfer
+  const fc = (f, s) => { const q = [0, 0, 0], a = ax(f); for(let k = 0; k < 3; k++){ if(k === a){ q[k] = s[k] * H[k]; continue; } const g = 2 * k + (s[k] > 0 ? 0 : 1); q[k] = s[k] * (H[k] - ch(f, g)); } return q; };
+  const tri = (a, b, cc, n0) => { const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [cc[0] - a[0], cc[1] - a[1], cc[2] - a[2]];
+    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]; const L = Math.hypot(...n); if(L < 1e-12) return; n = n.map(x => x / L);
+    const m = [(a[0] + b[0] + cc[0]) / 3, (a[1] + b[1] + cc[1]) / 3, (a[2] + b[2] + cc[2]) / 3]; let A = a, B = b, Cc = cc;
+    if(n[0] * m[0] + n[1] * m[1] + n[2] * m[2] < 0){ B = cc; Cc = b; n = n.map(x => -x); }
+    for(const p of [A, B, Cc]){ P.push(...p); N.push(...n);
+      // BoxGeometry-style per-face UVs (0..1 over the box face) by the dominant normal axis
+      const k = Math.abs(n[0]) >= Math.abs(n[1]) && Math.abs(n[0]) >= Math.abs(n[2]) ? 0 : Math.abs(n[1]) >= Math.abs(n[2]) ? 1 : 2, s = n[k] >= 0 ? 1 : -1, nx = (i) => (p[i] + H[i]) / (2 * H[i]);
+      if(k === 0) UV.push(s > 0 ? 1 - nx(2) : nx(2), nx(1)); else if(k === 1) UV.push(nx(0), s > 0 ? 1 - nx(2) : nx(2)); else UV.push(s > 0 ? nx(0) : 1 - nx(0), nx(1)); } };
+  const S = [-1, 1];
+  for(let f = 0; f < 6; f++){ const a = ax(f), s0 = sg(f), o = [0, 1, 2].filter(k => k !== a), Q = [];   // face quads
+    for(const [i, j] of [[0, 0], [1, 0], [1, 1], [0, 1]]){ const s = [0, 0, 0]; s[a] = s0; s[o[0]] = S[i]; s[o[1]] = S[j]; Q.push(fc(f, s)); }
+    tri(Q[0], Q[1], Q[2]); tri(Q[0], Q[2], Q[3]); }
+  for(let a = 0; a < 3; a++) for(let b = a + 1; b < 3; b++){ const k = 3 - a - b;   // 12 edge strips
+    for(const sa of S) for(const sb of S){ const f = 2 * a + (sa > 0 ? 0 : 1), g = 2 * b + (sb > 0 ? 0 : 1); if(!ch(f, g)) continue; const s0 = [0, 0, 0], s1 = [0, 0, 0];
+      s0[a] = s1[a] = sa; s0[b] = s1[b] = sb; s0[k] = -1; s1[k] = 1; const A0 = fc(f, s0), A1 = fc(f, s1), B0 = fc(g, s0), B1 = fc(g, s1); tri(A0, A1, B1); tri(A0, B1, B0); R14.report.edges++; } }
+  for(const sx of S) for(const sy of S) for(const sz of S){ const s = [sx, sy, sz], fs = [0, 1, 2].map(k => 2 * k + (s[k] > 0 ? 0 : 1)); tri(fc(fs[0], s), fc(fs[1], s), fc(fs[2], s)); }   // 8 corners (degenerate ones drop out)
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); return g; }
+if(R14.on && window.FIX && FIX.helpers && FIX.helpers.Builder){ const BP = FIX.helpers.Builder.prototype, _box = BP.box, _build = BP.build;
+  BP.box = function(mat, w, h, d, x, y, z, ry, o){ if(!(R14.depth > 0) || ry || (o && (o.keepUV || o.m)) || Math.min(w, h, d) < 4 * R14E.c) return _box.apply(this, arguments);
+    const mm = this.top().clone().multiply(FIX.helpers.M(x, y, z, 0, 0, 0)); (this.__r14 = this.__r14 || []).push({mat, w, h, d, mm, o}); R14.report.boxes++;
+    return new THREE.BoxGeometry(w, h, d); };   // placeholder: the real part is added at build
+  BP.build = function(){ const L = this.__r14; if(L && L.length){ this.__r14 = null; try{ r14Resolve(this, L); }catch(e){ console.warn('[r14] ease', e); for(const q of L){ const st = this.stack; this.stack = [new THREE.Matrix4()]; this.add(q.mat, new THREE.BoxGeometry(q.w, q.h, q.d), q.mm, q.o); this.stack = st; } } }
+    return _build.apply(this, arguments); };
+  const _mk14 = FIX.make; FIX.make = function(kind){ const on = R14K.test(kind); if(on) R14.depth++; try{ return _mk14.apply(this, arguments); } finally{ if(on) R14.depth--; } }; }
+function r14Resolve(b, L){ const t14 = performance.now(); try{ r14Resolve0(b, L); } finally{ R14.report.ms = +((R14.report.ms || 0) + performance.now() - t14).toFixed(2); } }
+function r14Resolve0(b, L){
+  const V = new THREE.Vector3(), E = R14E.eps;
+  for(const q of L){ const bb = new THREE.Box3(); for(const sx of [-1, 1]) for(const sy of [-1, 1]) for(const sz of [-1, 1]) bb.expandByPoint(V.set(sx * q.w / 2, sy * q.h / 2, sz * q.d / 2).applyMatrix4(q.mm)); q.bb = bb;
+    q.e = new THREE.Matrix4().extractRotation(q.mm); }
+  const st = b.stack; b.stack = [new THREE.Matrix4()];
+  for(const q of L){ const ex = [];
+    for(let f = 0; f < 6; f++){ const a = f >> 1, s = (f & 1) ? -1 : 1;   // the face's world axis / side (boxes are axis-aligned up to 90-degree turns)
+      const n = new THREE.Vector3(a === 0 ? s : 0, a === 1 ? s : 0, a === 2 ? s : 0).applyMatrix4(q.e); const A = Math.abs(n.x) > .9 ? 'x' : Math.abs(n.y) > .9 ? 'y' : 'z', sg = n[A] > 0 ? 1 : -1;
+      const plane = sg > 0 ? q.bb.max[A] : q.bb.min[A], O = ['x', 'y', 'z'].filter(k => k !== A); let covered = false;
+      for(const r of L){ if(r === q) continue; const R = r.bb;
+        if(sg > 0 ? !(R.max[A] > plane + E && R.min[A] < plane + E) : !(R.min[A] < plane - E && R.max[A] > plane - E)) continue;   // r reaches across / onto this face plane from outside
+        const ov = O.map(k => Math.min(R.max[k], q.bb.max[k]) - Math.max(R.min[k], q.bb.min[k])); if(ov[0] > E && ov[1] > E){ covered = true; break; } }
+      ex.push(!covered); }
+    const g = ex.some(v => v) ? r14EasedBox(q.w, q.h, q.d, ex) : new THREE.BoxGeometry(q.w, q.h, q.d); if(ex.some(v => v)){ R14.report.eased++; R14.report.trisAdded += g.attributes.position.count / 3 - 12; }
+    b.add(q.mat, g, q.mm, q.o); }
+  b.stack = st; }
+/* R14-2 rule:eased-edge (counters) - the run counters (buildCounterTop: KX-COUNTER, FX-L0-COUNTER, KX-BICT) had a 0.008 ft one-step
+   chamfer, under a pixel at tour distance, so the quartz fronts read as razor edges. Quartz is supplied eased: 3/16" round (two
+   bevel segments) on every exposed edge; the edge that sits on a wall is inside the backsplash / wall and does not show. */
+const R14C = {ease: 3 / 192, seg: 2};
+if(R14.on && typeof buildCounterTop === 'function'){ const _bct = buildCounterTop; buildCounterTop = function(f, gname){ const r = _bct.apply(this, arguments);
+    try{ const it = FIXOBJ[FIXOBJ.length - 1]; if(it && it.id === f.id) it.obj.traverse(m => { const p = m.isMesh && m.geometry && m.geometry.parameters; if(!p || !p.shapes || !p.options || !p.options.bevelEnabled) return;
+        const op = Object.assign({}, p.options, {bevelThickness: R14C.ease, bevelSize: R14C.ease, bevelSegments: R14C.seg, depth: Math.max(.02, p.options.depth - 2 * (R14C.ease - p.options.bevelThickness))});
+        const g = new THREE.ExtrudeGeometry(p.shapes, op); g.rotateX(Math.PI / 2); g.scale(1, -1, 1); unmirror(g); g.translate(0, R14C.ease - p.options.bevelThickness, 0);   // same overall top and bottom as before
+        m.geometry.dispose(); m.geometry = g; R14.report.counters++; R14.report.counterTris = (R14.report.counterTris || 0) + g.attributes.position.count / 3; }); }catch(e){ console.warn('[r14] counter', e); }
+    return r; }; }
+/* R14-3 rule:contact-on-counters (r13 #7) - decor on a counter run got no contact shadow: R13-2 tested the support's whole box, and
+   a counter's box top is its backsplash (1.55 ft above the slab). A support is now any MESH of a piece whose own box top is within
+   1.5" under the decor's base and whose box contains it in plan (slab, cabinet top, table top). */
+if(R14.on && typeof r13Contact === 'function'){
+  const _r13c = r13Contact; r13Contact = function(){
+    // stand-in world boxes per piece: the topmost mesh box under each point is chosen by the R13 'onTop' test through r14Tops
+    R14.tops = []; for(const gn of ['furn', 'furnU', 'furn@asbuilt']) if(GROUPS[gn]) for(const o of GROUPS[gn].children){ if(o.userData.r13) continue; o.updateMatrixWorld(true);
+      o.traverse(m => { if(m.isMesh && m.geometry && !(m.material && m.material.transparent)){ if(!m.geometry.boundingBox) m.geometry.computeBoundingBox(); const B = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld); if(B.max.y - B.min.y < 2.5) R14.tops.push({B, o}); } }); }
+    return _r13c.apply(this, arguments); }; }
+BIM3.report.r14 = R14.report;
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
