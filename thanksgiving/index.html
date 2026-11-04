@@ -19876,6 +19876,68 @@ if(R10.on && typeof lightMeterInit === 'function'){
       const dt = .016 * R10WB.rate; for(let c = 0; c < 3; c++) C[c] += (tgt[c] - C[c]) * Math.min(1, dt);
       const g = (LOOK.grade && LOOK.grade.wb) || [1, 1, 1]; GRADE_PASS.uniforms.wb.value.set(g[0] * C[0], g[1] * C[1], g[2] * C[2]); R10.report.awb = C.map(v => +v.toFixed(3)); }catch(e){} }; }
 BIM3.report.r10 = R10.report;
+/* ===== PHOTOREAL r11 (11/4; r11/REPORT.md) ===== */
+const R11 = window.R11 = {on: !/[?&]r11-off\b/.test(location.search), report: {}};
+/* R11-3 rule:light-white-balance-without-grade - the phone page has no composer, so no grade pass and no white balance: its
+   interiors rendered warm (R/B 1.06-1.17 vs desktop ~1.0-1.04 after r10's AWB). Without a new pass or a shader change, the indoor
+   white balance is folded into the light colours: while indoors (EXPO_IN), golden/day, no holiday, and only when there is no grade
+   pass, the sun, hemisphere (sky + ground), ambient and lamp colours are multiplied by gains. Applied once per frame from a saved
+   base (a colour someone else set since is taken as the new base), so nothing drifts. Uniform values only: no recompiles. */
+const R11WB = {gains: [.82, .965, 1.22], frame: -1, base: new Map(), set: new Map()};
+try{ const m = /[?&]r11g=([0-9.,]+)/.exec(location.search); if(m){ const g = m[1].split(',').map(Number); if(g.length === 3 && g.every(v => v > .5 && v < 1.5)) R11WB.gains = g; } }catch(e){}   // tuning hook (test only)
+function r11Lights(){ const L = []; try{ if(sun) L.push([sun, 'color']); if(hemi){ L.push([hemi, 'color']); L.push([hemi, 'groundColor']); } if(typeof amb !== 'undefined' && amb) L.push([amb, 'color']);
+    for(const l of (DUSK_LIGHTS || [])) if(l && l.color) L.push([l, 'color']); }catch(e){} return L; }
+if(R11.on){ const prev11 = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prev11) prev11.apply(this, arguments);
+    const t11 = performance.now(); try{ const fr = renderer.info.render.frame; if(fr === R11WB.frame) return; R11WB.frame = fr;
+      const L = r11Lights();
+      for(const [o, k] of L){ const key = o.uuid + k, cur = o[k], was = R11WB.set.get(key);   // restore last frame's base unless someone changed the colour since
+        if(was && cur.r === was[0] && cur.g === was[1] && cur.b === was[2]){ const b = R11WB.base.get(key); cur.setRGB(b[0], b[1], b[2]); } }
+      const on = !(typeof GRADE_PASS !== 'undefined' && GRADE_PASS) && !DUSK && !(typeof HW !== 'undefined' && HW.on) && !(typeof TG !== 'undefined' && TG.on);
+      const kIn = on && typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0;
+      R11WB.set.clear();
+      if(kIn > 0){ const g = R11WB.gains.map(v => 1 + (v - 1) * kIn);
+        for(const [o, k] of L){ const key = o.uuid + k, c = o[k]; R11WB.base.set(key, [c.r, c.g, c.b]); c.setRGB(c.r * g[0], c.g * g[1], c.b * g[2]); R11WB.set.set(key, [c.r, c.g, c.b]); }
+        R11.report.phoneWB = g.map(v => +v.toFixed(3)); } }catch(e){} finally{ R11WB.n = (R11WB.n || 0) + 1; R11WB.ms = (R11WB.ms || 0) + performance.now() - t11; R11.report.wbUsPerFrame = +(1000 * R11WB.ms / R11WB.n).toFixed(1); } }; }
+/* R11-4 rule:meter-trimmed-mean - the light meter's weighted mean luminance was pulled down by small dark objects (the entry's black
+   steel doors and frames, the TV, black counters), so the camera raised exposure and white floors clipped (entry gain 1.27, floor
+   225 vs p59 196). The meter now drops the darkest 15 % of its (centre-weighted) samples before averaging - a trimmed mean, like a
+   camera's evaluative metering ignoring small dark areas - normalised by the median trimmed/raw ratio so a typical scene keeps
+   its exposure and only scenes dominated by small dark objects move. Same 16x16 readback. */
+const R11M = {on: /[?&]r11meter=1\b/.test(location.search), trim: .15, comp: {in: 1.07, out: 1.09}};   // OFF by default: measured against the 19 photos it moved 7 stops closer but 12 slightly further (r11/REPORT.md)   // comp = the median trimmed/raw ratio over the 19 stops (in / out): a typical scene keeps its exposure; only scenes with unusually large dark areas move
+if(R11.on && R11M.on && typeof lightMeterPoll === 'function'){ const _lp11 = lightMeterPoll; lightMeterPoll = function(){
+    const had = !!METER.sync; _lp11.apply(this, arguments); if(!had || METER.sync) return;   // only when a new reading was just taken
+    try{ const B = METER.buf, S = []; let ws = 0;
+      for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
+        const v = (.2126 * B[o] + .7152 * B[o + 1] + .0722 * B[o + 2]) / 255; S.push([v, w]); ws += w; }
+      S.sort((a, b) => a[0] - b[0]); let cut = ws * R11M.trim, s = 0, w2 = 0;
+      for(const [v, w] of S){ if(cut > 0){ const d = Math.min(cut, w); cut -= d; const rest = w - d; if(rest > 0){ s += v * rest; w2 += rest; } continue; } s += v * w; w2 += w; }
+      if(w2 > 0){ R11.report.meterRaw = +METER.m.toFixed(3); const c = (typeof EXPO_IN === 'number' && EXPO_IN > .5) ? R11M.comp.in : R11M.comp.out; METER.m = s / w2 / c; R11.report.meterTrim = +METER.m.toFixed(3); } }catch(e){} }; }
+/* R11-5 rule:frontage-screening - from the front bedroom (stop 9) the street side showed bare lots: the neighbourhood scatter keeps
+   every tree out of a 90 ft circle under the aerial-overview camera and out of the street band, which emptied the across-street
+   lots. IMG_0512 / IMG_0513 (front bedroom, 10/31) show tall conifers and oaks behind the house across Hillside Dr, plain asphalt
+   with no centre line, and a planting bed under the windows. Added: a frontage screen of the library's instanced trees on the far
+   side of the street (redwood / pine / live oak mix), kept off roads, drives, paving and buildings (SITE_RULES.treeBad) and below the
+   aerial camera's sight line to the house; and Hillside Dr's centre stripe off (owner photos beat the OSM tag). */
+const R11T = {band: [64, 150], ylim: [-70, 95], step: 17, keep: .62, cam: [96, 58, 104], tgt: [-10, -6, -6]};
+function r11Frontage(){ if(!window.TREES || typeof SITE_RULES === 'undefined') return []; const pts = []; let s = 911; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const DEF = Object.fromEntries((TREES.kinds || []).map(k => [k.kind, k.defaults || {}])), C = R11T.cam, T = R11T.tgt;
+  for(let bx = R11T.band[0]; bx <= R11T.band[1]; bx += R11T.step) for(let by = R11T.ylim[0]; by <= R11T.ylim[1]; by += R11T.step){
+    if(R() > R11T.keep) continue; const x0 = bx + (R() - .5) * R11T.step * .8, y0 = by + (R() - .5) * R11T.step * .8; const [x, z] = W2(x0, y0);
+    if(SITE_RULES.treeBad(x, z, 1.5, 3)) continue;
+    const u = R(), kind = u < .38 ? 'coastRedwood' : u < .62 ? 'pine' : u < .9 ? 'coastLiveOak' : 'broadleaf', base = DEF[kind] && DEF[kind].height || 45;
+    const sc = kind === 'coastRedwood' ? .6 + R() * .35 : .55 + R() * .45, h = base * sc + ground(x, z);
+    // sight line from the aerial camera to the house: height of the line over this plan point (if it lies between them)
+    const dx = T[0] - C[0], dy = T[1] - C[1], L2 = dx * dx + dy * dy, t = ((x0 - C[0]) * dx + (y0 - C[1]) * dy) / L2;
+    if(t > 0 && t < 1){ const px = C[0] + dx * t, py = C[1] + dy * t, lat = Math.hypot(x0 - px, y0 - py), zl = C[2] + (T[2] - C[2]) * t; if(lat < 35 && h > zl - 8) continue; }
+    pts.push({kind, x, z, scale: sc, seed: 700 + pts.length, ry: R() * Math.PI * 2}); }
+  return pts; }
+if(R11.on){
+  { const _bs11 = buildSite; buildSite = function(){ try{ if(typeof TERR !== 'undefined' && TERR && TERR.roads) for(const r of TERR.roads) if(r.name === 'Hillside Dr' && r.stripe){ r.stripe = false; R11.report.stripeOff = true; } }catch(e){} return _bs11.apply(this, arguments); }; }
+  // the frontage points join the neighbourhood forest's own build (same instanced meshes, same LOD / culling): no second forest
+  if(window.TREES && TREES.forest){ const _tf = TREES.forest; TREES.forest = function(points, opts){
+      try{ if(!R11.frontDone && Array.isArray(points) && opts && opts.variants){ R11.frontDone = true; const t0 = performance.now(), add = r11Frontage(); points.push(...add); R11.report.frontageTrees = add.length; R11.report.frontageMs = +(performance.now() - t0).toFixed(1); } }catch(e){ console.warn('[r11] frontage', e); }
+      return _tf.apply(this, arguments); }; } }
+BIM3.report.r11 = R11.report;
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
