@@ -19820,6 +19820,62 @@ BIM3.report.r8 = R8.report;
    linear, neutral. Material colour only. */
 { const _at8 = antiTileAll; antiTileAll = function(){ const r = _at8.apply(this, arguments);
     try{ if(R8.on && M.deck){ M.deck.color.setRGB(1.12, 1.12, 1.08); R8.report.deck = true; } }catch(e){ console.warn('[r8] deck', e); } return r; }; }
+/* ===== PHOTOREAL r10 (11/4 desk + phone sweep; r10/REPORT.md) ===== */
+const R10 = window.R10 = {on: !/[?&]r10-off\b/.test(location.search), report: {}};
+/* R10-1 rule:stone-tile-module - the entry / lounge / laundry / landing / balcony floor (CV-FLR-STONE-ENTRY: Mirage Quartziti 2.0
+   Glacier, 'grid 12x24', grout #642 Ash) was a 2 ft x 2 ft warm canvas with hairline joints; under the bright entry it read as a blank
+   white sheet (stop 5 vs p59; stop 16 vs p65 / IMG_0547 show 12x24 rectangles, visible mid-grey joints, a cool light-grey quartzite
+   with soft drift). The canvas is redrawn from the covering type's record: 12" x 24" stacked grid, 1/8" Ash joints, Glacier tone
+   with low-contrast veining and +-2 % per-tile shade. Same 1024 px / 4 ft canvas (one-time draw at load). */
+function r10StoneTex(){ const W = 1024, PX = W / 4, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'); let s = 61; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const base = [198, 194, 187], tw = PX, th = 2 * PX;   // 1 ft across x 2 ft along the canvas v
+  for(let i = 0; i < W / tw; i++) for(let j = 0; j < W / th; j++){ const v = (R() - .5) * 8, x0 = i * tw, y0 = j * th;
+    g.fillStyle = `rgb(${base[0] + v | 0},${base[1] + v | 0},${base[2] + v | 0})`; g.fillRect(x0, y0, tw, th);
+    g.save(); g.beginPath(); g.rect(x0, y0, tw, th); g.clip();
+    for(let k = 0; k < 7; k++){ const y = y0 + R() * th, a = .03 + R() * .05; g.strokeStyle = R() < .6 ? `rgba(170,166,160,${a})` : `rgba(240,238,233,${a})`; g.lineWidth = 2 + R() * 10;   // quartzite drift: long soft streaks along the plank
+      g.beginPath(); g.moveTo(x0 - 20, y); for(let x = 0; x <= tw + 40; x += 16) g.lineTo(x0 - 20 + x, y + Math.sin(x / 60 + k) * 8 + (R() - .5) * 4); g.stroke(); }
+    for(let k = 0; k < 220; k++){ const q = 160 + R() * 80 | 0; g.fillStyle = `rgba(${q},${q},${q - 4},.10)`; g.fillRect(x0 + R() * tw, y0 + R() * th, 1.3, 1.3); }
+    g.restore(); }
+  g.fillStyle = '#8e8a83'; const jw = 6;   // drawn ~1/4": the 1/8" joint plus its eased tile edges (it must survive mipmapping at tour distance, as in p59)
+   for(let x = 0; x <= W; x += tw){ g.fillRect(x - jw / 2, 0, jw, W); } for(let y = 0; y <= W; y += th){ g.fillRect(0, y - jw / 2, W, jw); }   // 1/8" Ash grout
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; t.anisotropy = typeof ANISO !== 'undefined' ? ANISO : 8;
+  const old = M.entryStone && M.entryStone.map; if(old && old.repeat) t.repeat.copy(old.repeat); else t.repeat.set(.25, .25); return t; }
+if(R10.on){ try{ if(M.entryStone){ const old = M.entryStone.map; M.entryStone.map = r10StoneTex(); M.entryStone.needsUpdate = true; if(old && old.dispose) old.dispose();
+      if(typeof V29R !== 'undefined'){ V29R.entryMean = [198, 194, 187]; V29R.stoneMean = [198, 194, 187]; } M.entryStone.color.setRGB(1, 1, 1); R10.report.stone = true; } }catch(e){ console.warn('[r10] stone', e); } }
+/* R10-2 rule:camera-auto-white-balance - r6's fixed indoor white balance ([.965,.99,1.045]) neutralised the warm living rooms but
+   overshot rooms that were not warm: the primary bath's cream porcelain read cool grey (R/B .97 vs p45 1.08), the lounge and the
+   garage blue-white (.97 vs p65 / p29 1.01-1.02). A camera's AWB measures each scene. The page's light meter already reads the
+   pre-grade frame back (16x16, async, every few frames); it now keeps the mean colour of the mid-tones too, and indoors the grade's
+   white balance is a partial grey-world correction toward a slightly warm neutral (R/B 1.03, strength .6, gains clamped to +-7 %,
+   smoothed). Outdoors, dusk, Halloween and Thanksgiving untouched. Same readback, no extra pass (phone has no composer: unchanged). */
+const R10WB = {strength: .85, rb: 1.02, clamp: .09, rate: 2.0, cur: [1, 1, 1], mean: null};
+if(R10.on && typeof lightMeterInit === 'function'){
+  const _mi = lightMeterInit; lightMeterInit = function(){ const ok = _mi.apply(this, arguments);
+    try{ if(ok && METER.mat){ METER.mat.fragmentShader = `uniform sampler2D tDiffuse; varying vec2 vUv;
+      void main(){ vec2 cell = floor(vUv * 16.0); vec3 s = vec3(0.0);
+        for(int j = 0; j < 4; j++) for(int i = 0; i < 4; i++){ vec2 uv = (cell + (vec2(float(i), float(j)) + .5) / 4.0) / 16.0; s += clamp(LinearTosRGB(texture2D(tDiffuse, uv)).rgb, 0.0, 1.0); }
+        gl_FragColor = vec4(s / 16.0, 1.0); }`; METER.mat.needsUpdate = true; R10.report.awbMeter = true; } }catch(e){ console.warn('[r10] awb meter', e); }
+    return ok; };
+  lightMeterPoll = function(){   // as v33 (luminance from the cell colours now) + the mid-tone colour mean for R10-2
+    const gl = renderer.getContext(); if(!METER.sync) return;
+    const st = gl.clientWaitSync(METER.sync, 0, 0); if(st !== gl.ALREADY_SIGNALED && st !== gl.CONDITION_SATISFIED) return;
+    gl.deleteSync(METER.sync); METER.sync = null;
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    let s = 0, ws = 0, hi = 0, cr = 0, cg = 0, cb = 0, cw = 0; const B = METER.buf;
+    for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
+      const r = B[o] / 255, g = B[o + 1] / 255, b = B[o + 2] / 255, v = .2126 * r + .7152 * g + .0722 * b; s += w * v; ws += w; if(v > .88) hi++;
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b); if(v > .12 && v < .9 && (mx - mn) < .25){ cr += w * r; cg += w * g; cb += w * b; cw += w; } }   // mid-tones, not strongly coloured (paint accents, sky)
+    METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; R10WB.mean = cw > 4 ? [cr / cw, cg / cw, cb / cw] : null; };
+  const prev10 = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prev10) prev10.apply(this, arguments);
+    try{ if(DUSK || (typeof HW !== 'undefined' && HW.on) || (typeof TG !== 'undefined' && TG.on) || !GRADE_PASS || !GRADE_PASS.uniforms.wb) return;
+      const k = typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0, m = R10WB.mean, C = R10WB.cur;
+      let tgt = [1, 1, 1];
+      if(k > 0 && m){ const Y = (m[0] + m[1] + m[2]) / 3, want = [Y * Math.sqrt(R10WB.rb), Y, Y / Math.sqrt(R10WB.rb)];
+        tgt = [0, 1, 2].map(c => Math.max(1 - R10WB.clamp, Math.min(1 + R10WB.clamp, Math.pow(want[c] / Math.max(.02, m[c]), R10WB.strength))));
+        const n = (.2126 * tgt[0] + .7152 * tgt[1] + .0722 * tgt[2]); tgt = tgt.map(v => 1 + (v / n - 1) * k); }
+      const dt = .016 * R10WB.rate; for(let c = 0; c < 3; c++) C[c] += (tgt[c] - C[c]) * Math.min(1, dt);
+      const g = (LOOK.grade && LOOK.grade.wb) || [1, 1, 1]; GRADE_PASS.uniforms.wb.value.set(g[0] * C[0], g[1] * C[1], g[2] * C[2]); R10.report.awb = C.map(v => +v.toFixed(3)); }catch(e){} }; }
+BIM3.report.r10 = R10.report;
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
