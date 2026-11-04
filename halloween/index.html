@@ -19827,8 +19827,13 @@ const R10 = window.R10 = {on: !/[?&]r10-off\b/.test(location.search), report: {}
    white sheet (stop 5 vs p59; stop 16 vs p65 / IMG_0547 show 12x24 rectangles, visible mid-grey joints, a cool light-grey quartzite
    with soft drift). The canvas is redrawn from the covering type's record: 12" x 24" stacked grid, 1/8" Ash joints, Glacier tone
    with low-contrast veining and +-2 % per-tile shade. Same 1024 px / 4 ft canvas (one-time draw at load). */
+/* R12 (11/4): tile tone. Measured floor-to-back-wall luma: entry 1.12 vs p59 1.19, lounge 0.93 vs p65 0.95 - the r10 tile is NOT too
+   bright relative to its rooms (the entry floor reads bright because the whole interior side of that frame is brighter than the HDR
+   photo's), so darkening it ~11-15 % moved both ratios away from the photos (1.09 / 0.92; ?r12dark=1). What the photos do show is a
+   warmer greige (floor R/B p59 1.09, p65 1.05 vs render 1.01-1.07): the base keeps its luma and is warmed (201,194,183). */
+const R12T = {base: /[?&]r12-off\b/.test(location.search) ? [198, 194, 187] : (/[?&]r12dark=1\b/.test(location.search) ? [178, 173, 165] : [201, 194, 183])};
 function r10StoneTex(){ const W = 1024, PX = W / 4, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'); let s = 61; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  const base = [198, 194, 187], tw = PX, th = 2 * PX;   // 1 ft across x 2 ft along the canvas v
+  const base = R12T.base, tw = PX, th = 2 * PX;   // 1 ft across x 2 ft along the canvas v
   for(let i = 0; i < W / tw; i++) for(let j = 0; j < W / th; j++){ const v = (R() - .5) * 8, x0 = i * tw, y0 = j * th;
     g.fillStyle = `rgb(${base[0] + v | 0},${base[1] + v | 0},${base[2] + v | 0})`; g.fillRect(x0, y0, tw, th);
     g.save(); g.beginPath(); g.rect(x0, y0, tw, th); g.clip();
@@ -19841,7 +19846,7 @@ function r10StoneTex(){ const W = 1024, PX = W / 4, c = document.createElement('
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; t.anisotropy = typeof ANISO !== 'undefined' ? ANISO : 8;
   const old = M.entryStone && M.entryStone.map; if(old && old.repeat) t.repeat.copy(old.repeat); else t.repeat.set(.25, .25); return t; }
 if(R10.on){ try{ if(M.entryStone){ const old = M.entryStone.map; M.entryStone.map = r10StoneTex(); M.entryStone.needsUpdate = true; if(old && old.dispose) old.dispose();
-      if(typeof V29R !== 'undefined'){ V29R.entryMean = [198, 194, 187]; V29R.stoneMean = [198, 194, 187]; } M.entryStone.color.setRGB(1, 1, 1); R10.report.stone = true; } }catch(e){ console.warn('[r10] stone', e); } }
+      if(typeof V29R !== 'undefined'){ V29R.entryMean = R12T.base.slice(); V29R.stoneMean = R12T.base.slice(); } M.entryStone.color.setRGB(1, 1, 1); R10.report.stone = true; } }catch(e){ console.warn('[r10] stone', e); } }
 /* R10-2 rule:camera-auto-white-balance - r6's fixed indoor white balance ([.965,.99,1.045]) neutralised the warm living rooms but
    overshot rooms that were not warm: the primary bath's cream porcelain read cool grey (R/B .97 vs p45 1.08), the lounge and the
    garage blue-white (.97 vs p65 / p29 1.01-1.02). A camera's AWB measures each scene. The page's light meter already reads the
