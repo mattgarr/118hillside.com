@@ -19010,7 +19010,7 @@ function bim3Doors(){
       const parent = ms[0].parent || grp('main'); parent.add(piv); const box = new THREE.Box3();
       for(const m of ms){ m.geometry.translate(-pw[0], -pw[1], -pw[2]); m.geometry.computeBoundingBox(); m.geometry.computeBoundingSphere(); box.union(m.geometry.boundingBox); piv.add(m); B3D.report.meshes++; }
       const part = {piv, box, base: piv.position.clone(), k, lf, quat0: piv.quaternion.clone()};
-      if(isSwing){ const ang0 = (lf.openAngle || 0) * D2R, open = (exterior ? 100 : 90) * D2R;
+      if(isSwing){ const ang0 = (lf.openAngle || 0) * D2R, open = (lf.maxOpenDeg || (exterior ? 100 : 90)) * D2R;   /* rule:door-max-open: the type's own swing limit (Pinky's entry 172) */
         // closed leaf vector (plan): from the hinge toward the centre along the axis; the free edge moves toward the swing side
         const v = [c[0] - h[0], c[1] - h[1]], s = bim3SideDir(o, lf.swingSide || 'B');
         const vw = [v[1], v[0]], sw = [s[1], s[0]], e = 1e-3, vx = vw[0] * Math.cos(e) + vw[1] * Math.sin(e), vz = -vw[0] * Math.sin(e) + vw[1] * Math.cos(e);
