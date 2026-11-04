@@ -19761,6 +19761,65 @@ function r7Cushion(){ if(!(window.FIX && FIX.mat)) return false; const m = FIX.m
   m.bumpMap = r7Weave(); m.bumpScale = .014; m.color.set(0xe9e3d6).convertSRGBToLinear(); m.roughness = .92; m.needsUpdate = true; return true; }
 { const _b7 = bim2BuildHouse; bim2BuildHouse = function(){ if(R7.on){ try{ R7.report.cushion = r7Cushion(); }catch(e){ console.warn('[r7] cushion', e); } } return _b7.apply(this, arguments); }; }
 BIM3.report.r7 = R7.report;
+/* ===== PHOTOREAL r8 (11/4: r8 list; r8/REPORT.md) ===== */
+const R8 = window.R8 = {on: !/[?&]r8-off\b/.test(location.search), report: {}};
+/* R8-1 rule:cooler-reads-as-appliance - the frozen v33 FIX 'beverageCooler' builder is an open black cabinet (black side, top and
+   bottom bars around a set-back rack) behind a thin door frame, so the lounge cooler read as a black wine rack in a hole. p65 /
+   IMG_0547 show a stainless-framed full-height glass door that fills the bay flush with the cabinet doors, a vertical bar handle,
+   a louvred stainless kick grille, and a dark interior with faint shelf fronts. This builder replaces the kind (same options, same
+   origin and size convention: x across, y up from the floor, z toward the room, door face at d - .12); the v33 file stays frozen. */
+function r8Cooler(o){
+  const H = FIX.helpers, b = new H.Builder(), w = o.w, h = o.h, d = o.d, zf = d - 0.12, t = 0.09, y0 = 0.36, y1 = h - 0.01;
+  const sF = .17, sB = .2, sT = .15, gl = o.glass === 'smoked' ? r7SmokedGlass() : FIX.mat('glassTint');
+  if(o.glass === 'smoked') gl.opacity = .35;   // the smoke is carried by the interior tones below (seen-through values), the pane adds the sheen   // p65: dark smoked, shelf fronts and the top LED still read through it
+  b.useMaterial('r8glass', gl);
+  const dm = (hex, r, me, nm) => { const m = new THREE.MeshStandardMaterial({color: new THREE.Color(hex).convertSRGBToLinear(), roughness: r, metalness: me}); m.name = nm; return m; };
+  const smoked = o.glass === 'smoked';   // behind smoked glass the interior is drawn at its seen-through value (p65: near-black liner, faint shelf fronts)
+  b.useMaterial('r8inner', dm(smoked ? 0x141617 : 0x34383a, .6, .3, 'coolerInner')); b.useMaterial('r8shelf', smoked ? dm(0x3a3e40, .4, .6, 'coolerShelf') : FIX.mat('stainless'));
+  b.useMaterial('r8front', smoked ? dm(0x4a3a2e, .6, 0, 'coolerShelfFront') : FIX.mat('wood'));
+  // the cabinet box behind the door (only visible through the glass): dark liner, back LED strip, shelf fronts
+  { const X0 = -w / 2 + 0.02, X1 = w / 2 - 0.02, Z1 = zf - t, e = 0.04;   // hollow liner: back, sides, top, floor (a solid box hid the shelves)
+    b.bb('r8inner', X0, y0, 0.05, X1, y1 - 0.02, 0.05 + e); b.bb('r8inner', X0, y0, 0.05, X0 + e, y1 - 0.02, Z1); b.bb('r8inner', X1 - e, y0, 0.05, X1, y1 - 0.02, Z1);
+    b.bb('r8inner', X0, y1 - 0.02 - e, 0.05, X1, y1 - 0.02, Z1); b.bb('r8inner', X0, y0, 0.05, X1, y0 + e, Z1); }
+  b.bb('lightDisk', -w / 2 + 0.1, y1 - 0.12, zf - t - 0.25, w / 2 - 0.1, y1 - 0.1, zf - t - 0.2);
+  const ns = 4; for(let i = 0; i < ns; i++){ const ys = y0 + 0.35 + i * (y1 - y0 - 0.6) / (ns - 1);
+    b.bb('r8shelf', -w / 2 + sF, ys, 0.2, w / 2 - sF, ys + 0.015, zf - t - 0.06); b.bb('r8front', -w / 2 + sF, ys - 0.03, zf - t - 0.09, w / 2 - sF, ys + 0.03, zf - t - 0.06); }
+  if(o.bottles) for(let i = 0; i < ns; i++){ const ys = y0 + 0.35 + i * (y1 - y0 - 0.6) / (ns - 1);
+    for(let k = 0; k < 3; k++) b.cyl('bottleGlass', .12, .12, .9, -w / 2 + .3 + k * (w - .6) / 2, ys + .14, zf - t - .55, 12, {rx: Math.PI / 2}); }
+  // door: full bay width and height, stainless frame (photo stiles ~2"), smoked glass inset
+  b.bb('stainless', -w / 2, y0, zf - t, -w / 2 + sF, y1, zf); b.bb('stainless', w / 2 - sF, y0, zf - t, w / 2, y1, zf);
+  b.bb('stainless', -w / 2 + sF, y1 - sT, zf - t, w / 2 - sF, y1, zf); b.bb('stainless', -w / 2 + sF, y0, zf - t, w / 2 - sF, y0 + sB, zf);
+  b.bb('r8glass', -w / 2 + sF, y0 + sB, zf - t / 2 - 0.01, w / 2 - sF, y1 - sT, zf - t / 2 + 0.01);
+  // vertical bar handle on the free stile
+  const hx = (o.hinge === 'left' ? 1 : -1) * (w / 2 - 0.085), hl = Math.min(1.9, y1 - y0 - 0.6), hy = (y0 + y1) / 2;
+  b.cyl('stainless', 0.03, 0.03, hl, hx, hy, zf + 0.1, 16); [hl / 2 - 0.08, -hl / 2 + 0.08].forEach(dy => b.cyl('stainless', 0.02, 0.02, 0.1, hx, hy + dy, zf + 0.05, 10, {rx: Math.PI / 2}));
+  // kick: stainless louvred grille flush with the door face, dark slots
+  b.bb('stainless', -w / 2, 0.02, zf - 0.06, w / 2, y0 - 0.01, zf - 0.02);
+  for(let k = 0; k < 16; k++){ const x = -w / 2 + 0.14 + k * (w - 0.28) / 15; b.bb('r8inner', x - 0.016, 0.11, zf - 0.019, x + 0.016, y0 - 0.1, zf - 0.015); }   // fine louvres (p65)
+  const g = b.build('beverageCooler'); return g; }
+if(window.FIX && FIX.make){ const _mk8 = FIX.make; FIX.make = function(kind, o){
+    if(!(R8.on && kind === 'beverageCooler')) return _mk8.apply(this, arguments);
+    try{ const K = (FIX.kinds || []).find(k => k.kind === kind), oo = Object.assign({}, (K && K.defaults) || {}, o || {});
+      const g = r8Cooler(oo); g.userData = {kind, category: K ? K.category : 'laundry', opts: oo, size: [oo.w, oo.d + 0.15, oo.h]}; R8.report.cooler = (R8.report.cooler || 0) + 1; return g; }
+    catch(e){ console.warn('[r8] cooler', e); return _mk8.apply(this, arguments); } }; }
+/* R8-3 rule:brushed-steel-scale - FIX 'stainless' used a 256 px/ft brushed map whose lines spanned 205-250 grey at 30 %: at tour
+   distance the island-hood chimney (stop 7) showed coarse horizontal bands; p01 / IMG_0503 show a satin chimney whose grain is
+   invisible beyond a metre, with the tone coming from reflections. New map: 512 px tile over .5 ft (~0.01" grain), +-3 % tone,
+   anisotropic filtering - reads as fine satin up close and smooth at range. Same material for every FIX stainless part. */
+function r8Brushed(){ const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const x = c.getContext('2d'); let s = 7; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  x.fillStyle = 'rgb(232,233,234)'; x.fillRect(0, 0, W, W);
+  for(let i = 0; i < 2600; i++){ const v = 224 + R() * 18 | 0; x.fillStyle = `rgba(${v},${v},${v + 1},.35)`; x.fillRect(0, R() * W, W, .5 + R() * .7); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; t.anisotropy = typeof ANISO !== 'undefined' ? ANISO : 8; t.repeat.set(2, 2); return t; }
+function r8Stainless(){ if(!(window.FIX && FIX.mat)) return false; const m = FIX.mat('stainless'); if(!m || m.userData.r8brushed) return false; m.userData.r8brushed = true;
+  m.map = r8Brushed(); m.needsUpdate = true; return true; }
+{ const _b8 = bim2BuildHouse; bim2BuildHouse = function(){ if(R8.on){ try{ R8.report.stainless = r8Stainless(); }catch(e){ console.warn('[r8] stainless', e); } } return _b8.apply(this, arguments); }; }
+BIM3.report.r8 = R8.report;
+/* R8-5 rule:deck-albedo - the front porch composite deck (SL-DK-FRONT, deck-composite-grey -> page M.deck, tex deck_front x raw
+   0xb4ada5 = linear albedo ~.24) read about 0.63 x the siding beside it at the porch stop, darker and purple in the porch shade;
+   p71 (same porch, same shade) shows the light grey boards about as bright as the wall (deck/siding ~1.0). Albedo raised to ~.38
+   linear, neutral. Material colour only. */
+{ const _at8 = antiTileAll; antiTileAll = function(){ const r = _at8.apply(this, arguments);
+    try{ if(R8.on && M.deck){ M.deck.color.setRGB(1.12, 1.12, 1.08); R8.report.deck = true; } }catch(e){ console.warn('[r8] deck', e); } return r; }; }
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
