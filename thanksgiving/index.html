@@ -7709,9 +7709,9 @@ const DESIGN = (() => {
     if(mode !== 'design') return;
     const d = defOf(sel);
     $('#eyebrow').textContent = 'Design ideas'; $('#lvl').textContent = 'Original home';
-    $('#title').textContent = sel === 'asbuilt' ? 'The house today' : sel === 'custom' ? 'My design' : d.name + ' · ' + d.short;
+    $('#title').textContent = sel === 'asbuilt' ? 'The house today' : sel === 'custom' ? 'My design' : d.name;   /* r20: no date */
     $('#dims').textContent = ''; $('#blurb').hidden = false; strip([], '');
-    $('#blurb').textContent = sel === 'asbuilt' ? 'See two 2024 remodel concepts for the original part of the home, walk through any of them, rearrange the furniture, or try the outside in a new colour.'
+    $('#blurb').textContent = sel === 'asbuilt' ? 'See two remodel concepts for the original part of the home, walk through any of them, rearrange the furniture, or try the outside in a new colour.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
     $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'Ideas only: not engineered, permitted or priced.'
       : 'Concept sketches from 2024, for ideas only: not engineered, permitted or priced.';
@@ -18838,7 +18838,7 @@ const B2OPT = {busy: {}, built: {}, hideFx: [], absent: {}};
 function bim2DesignOptions(){                                         // the Design tab's concept list: meta options, legacy text only for the card copy
   const leg = (BIM && BIM.options) || [], M = (BIM2S && BIM2S.meta.options) || []; if(!M.length) return leg;
   return M.map(o => { const id = o.legacyId || o.id, d = leg.find(q => q.id === id) || {};
-    return Object.assign({}, d, {id, name: o.name || d.name || id, short: d.short || o.note || '', region: d.region || null, elements: d.elements || [], removes: d.removes || [], bim2: o.id}); }); }
+    return Object.assign({}, d, {id, name: o.name || d.name || id, short: 'Remodel concept',   /* owner 11/7: no dates on the concepts */ region: d.region || null, elements: d.elements || [], removes: d.removes || [], bim2: o.id}); }); }
 function bim2BuildVariant(id, def){
   if(BIM2S && BIM2.option(id)){ bim2EnsureOption(id); return []; }
   VARGEO[id] = {list: WALLGEO, opens: OPENRECTS}; if(!bim2BuildVariant.told){ bim2BuildVariant.told = true; console.info('[bim2] design', id, 'has no compiled package: it shows the as-built house'); } return []; }
@@ -18861,9 +18861,10 @@ function bim2OptionData(o){                                            // walls 
   const baseF = new Set(base.FLOORS.map(f => f.bim2));
   for(const f of C.FLOORS) if(!baseF.has(f.bim2)) FLOORS.push(Object.assign({}, f, {v}));
   // furnishings: as-built pieces the option removes hide while it shows; pieces only the option has are built for it
-  const D = o.data || {}, keep = new Set((D.furnishings || []).map(f => f.id)), baseIds = new Set((BIM2S.meta.furnishings || []).map(f => f.id));
+  const D = o.data || {}, keep = new Set((D.furnishings || []).map(f => f.id)), baseIds = new Set((BIM2S.meta.furnishings || []).concat(BIM2S.meta.builtins || []).map(f => f.id)),
+    biKinds = new Set((BIM2S.meta.builtins || []).map(b => b.kind));   // rule:option-skips-builtins - built-ins (downspouts, hatch, racks, closets, blinds) come from the kernel; the page drew them as 2-ft white placeholder cubes (owner 11/7)
   for(const F of FIXOBJ){ if(!F.id || !baseIds.has(F.id) || keep.has(F.id) || F.v) continue; let e = B2OPT.hideFx.find(q => q.o === F.obj); if(!e) B2OPT.hideFx.push(e = {o: F.obj, vars: new Set()}); e.vars.add(v); }
-  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
+  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN').map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
   if(add.length){ const n0 = FIXOBJ.length; try{ buildFixturesBIM(add); }catch(e){ console.warn('[bim2] option furnishings', v, e); } for(let i = n0; i < FIXOBJ.length; i++){ FIXOBJ[i].v = v; if(window.__c22OnlyVar) __c22OnlyVar(FIXOBJ[i].obj, v); } }
   window.__B2OPT = Object.assign(window.__B2OPT || {}, {[v]: {walls: C.WALLGEO.length, opens: C.OPENRECTS.length, collidersAbsent: COLLIDERS.filter(c => c.__absent && c.__absent.has(v)).length, floorsAdded: C.FLOORS.filter(f => !baseF.has(f.bim2)).length,
     furnHidden: B2OPT.hideFx.filter(e => e.vars.has(v)).length, furnAdded: add.length}}); }
