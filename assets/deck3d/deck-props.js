@@ -199,8 +199,8 @@
       return lightSet(g, along(pts, .34, .1).map((s, i) => ({p: new V3(s.p.x + Math.sin(i * 2.1) * rad * .8, s.p.y + Math.cos(i * 1.7) * rad * .7, s.p.z + Math.cos(i * 2.6) * rad * .8), c: o.c || '#ffdca8', s: .48})), {mode: 1, seq: o.seq == null ? 2 : o.seq, seed: o.seed}); }
     function buildPath(S){ const P = S.path || []; if(!P.length) return null; const g = grp('path');
       if(P.includes('diyas')){ const at = []; for(let z = 15.95; z < 20.2; z += .82){ [-9.45, -.6].forEach(x => { const h = down(x, z, 3, 9); if(h && h.point.y < .2) at.push(new V3(x, h.point.y + .005, z)); }); } [-9.45, -.6].forEach(x => at.push(new V3(x, .005, 15.1))); diyas(g, at, 1); }
-      if(P.includes('luminarias')){ const at = []; for(let i = 0; i < 7; i++){ const z = 21.4 + i * 3.1; [-10.3, .5].forEach(x => at.push(new V3(x + (i > 3 ? (i - 3) * (x < -5 ? -.5 : .9) : 0), floorY(x, z, 2, -3.5) + .01, z))); }
-        for(let i = 0; i < 5; i++){ const t = (i + 1) / 5; [[-12.4 + t * 6.4, 43.2 + t * 14], [3.2 + t * 6.2, 43.2 + t * 14]].forEach(q => at.push(new V3(q[0], floorY(q[0], q[1], 2, -3.5) + .01, q[1]))); } luminarias(g, at, 2); }
+      if(P.includes('luminarias')){ const at = []; for(let i = 0; i < 7; i++){ const z = 21.4 + i * 3.1; [-10.3, .5].forEach(x => { const lx = i > 3 ? (x < -5 ? [-3.1, -2.4, -2.1][i - 4] : x + (i - 3) * .9) : x; at.push(new V3(lx, floorY(lx, z, 2, -3.5) + .01, z)); }); }   /* r35: past the steps the left row follows the walk on the house side of the oak */
+        for(let i = 0; i < 5; i++){ const t = (i + 1) / 5; [[-2.1 + t * 3.4, 43.2 + t * 14], [3.2 + t * 6.2, 43.2 + t * 14]].forEach(q => at.push(new V3(q[0], floorY(q[0], q[1], 2, -3.5) + .01, q[1]))); } luminarias(g, at, 2); }
       if(P.includes('garland')){ const a = new V3(3.75, 3.12, 15.56), b = new V3(.06, 3.12, 15.6), c = new V3(.06, .22, 19.82); garland(g, swag(a, b, .22, 12).concat(swag(b, c, .28, 14).slice(1)), {seq: 2}); bow(g, '#b3141f', .06, 3.05, 15.74, 1); bow(g, '#b3141f', 3.7, 3.05, 15.7, 1); }
       if(P.includes('rangoli')) rangoli(g, -5, floorY(-5, 23.4, 2, -3.5), 23.4, 2.3, 1);
       return g; }
