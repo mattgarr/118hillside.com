@@ -17,7 +17,7 @@
      {step, k: 0..1, ready}) adds its steps to the same bar, and the pictures stay until its start card is under them; that card is the next
      button, so there is no "Start playing" in between. */
   var gline = {snowball: 'He’s hiding somewhere in the house, and he’s very good at it.', escape: 'Snowball locked something nice in a drinks fridge. He thinks you can\u2019t get it out.',
-    deck: 'Snowball has the lights out. The house is yours to dress.', room: 'Snowball\u2019s friends are coming to stay, and every one of them wants a room.', feast: 'Snowball hid dinner all over the house. Biscuit helped.'}[gid];
+    deck: 'Snowball got the decorations out. The house is yours to dress.', room: 'Snowball\u2019s friends are coming to stay, and every one of them wants a room.', feast: 'Snowball hid dinner all over the house. Biscuit helped.'}[gid];
   var reports = gid === 'feast';
   var S = [
     ['front-exterior-1600.jpg', '118 Hillside Drive', 'A house in Woodside Glens, about a mile from the market, the bakery and the library in Town Center.'],
