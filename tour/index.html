@@ -2528,8 +2528,9 @@ function buildCounterTop(f, gname){
     geo.rotateX(Math.PI / 2); geo.scale(1, -1, 1); unmirror(geo);   // shape (u,v) -> world (x = u, z = v), extruded up in y; winding restored
     const m = new THREE.Mesh(geo, mat); m.position.y = o.mountY; m.castShadow = m.receiveShadow = true; g.add(m);
     // backsplash: the counter edge that lies on a wall face, 4" up (full-height slab per photos is drawn as tile on the wall)
+    const run4 = out.length === 4, longest = run4 ? Math.max(...out.map((p, i) => Math.hypot(out[(i + 1) % 4][0] - p[0], out[(i + 1) % 4][1] - p[1]))) : 0;   // r28: straight runs splash on the back wall only
     if(!o.noSplash) for(let i = 0; i < out.length; i++){ const a = out[i], b2 = out[(i + 1) % out.length], mx = (a[0] + b2[0]) / 2, my = (a[1] + b2[1]) / 2, L = Math.hypot(b2[0] - a[0], b2[1] - a[1]);
-      if(L < .4 || o.noSplash) continue; const nx = (b2[1] - a[1]) / L, ny = -(b2[0] - a[0]) / L;
+      if(L < .4 || o.noSplash || (run4 && L < longest - .01)) continue; const nx = (b2[1] - a[1]) / L, ny = -(b2[0] - a[0]) / L;
       for(const sg of [1, -1]){ const [wx, wz] = W2(mx + nx * sg * .2, my + ny * sg * .2); if(!inWallBody(wx, wz, 3.5)) continue;
         const A = W2(a[0], a[1]), Bp = W2(b2[0], b2[1]), up = o.mountY + o.t, hgt = 1.55;
         const geo2 = new THREE.BufferGeometry(); const P = [A[0], up, A[1], Bp[0], up, Bp[1], Bp[0], up + hgt, Bp[1], A[0], up + hgt, A[1]];
@@ -8684,6 +8685,7 @@ async function boot(){
       if(si > 0){ stopIdx = si; const q = STOPS[si]; camera.position.set(...q.pos); target.set(...q.look); showStop(si, false); } else showStop(0,false); }
     applyVisibility(); updateLegend();
     const h=(location.hash||'').slice(1); if(h && ['walk','doll','design','photos'].includes(h)) setMode(h);
+    if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = {camera, target, scene, STOPS, flyTo, setMode, showStop, look(pos, at){ anim = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); }};   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
   }catch(err){ console.error(err); $('#loadtxt').innerHTML='<span class="err">Could not load the 3D tour ('+String(err.message||err)+'). Reload to try again.</span>'; }
@@ -19843,7 +19845,17 @@ function r8Cooler(o){
   b.bb('r8glass', -w / 2 + sF, y0 + sB, zf - t / 2 - 0.01, w / 2 - sF, y1 - sT, zf - t / 2 + 0.01);
   // vertical bar handle on the free stile
   const hx = (o.hinge === 'left' ? 1 : -1) * (w / 2 - 0.085), hl = Math.min(1.9, y1 - y0 - 0.6), hy = (y0 + y1) / 2;
-  b.cyl('stainless', 0.03, 0.03, hl, hx, hy, zf + 0.1, 16); [hl / 2 - 0.08, -hl / 2 + 0.08].forEach(dy => b.cyl('stainless', 0.02, 0.02, 0.1, hx, hy + dy, zf + 0.05, 10, {rx: Math.PI / 2}));
+  if(o.display){   // kitchen cooler (p48): a bowed stainless handle on the stile and a blue LED temperature readout on the glass
+    const pts = []; for(let k = 0; k <= 12; k++){ const u = k / 12; pts.push([hx, hy - hl / 2 + u * hl, zf + 0.03 + Math.sin(u * Math.PI) * 0.11]); }
+    b.tube('stainless', pts, 0.026, 24, 10);
+    b.useMaterial('r8led', (() => { const m = new THREE.MeshStandardMaterial({color: 0x123a66, emissive: 0x2f86ff, emissiveIntensity: .7, roughness: .4}); m.name = 'coolerLed'; return m; })());
+    { const c = document.createElement('canvas'); c.width = 64; c.height = 256; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 0, 64, 256);   // the reflection streaks that make glass read as glass
+      gr.addColorStop(0, 'rgba(255,255,255,.16)'); gr.addColorStop(.28, 'rgba(255,255,255,.05)'); gr.addColorStop(.42, 'rgba(255,255,255,.2)'); gr.addColorStop(.5, 'rgba(255,255,255,.04)'); gr.addColorStop(1, 'rgba(255,255,255,.1)');
+      x.fillStyle = gr; x.fillRect(0, 0, 64, 256); const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding;
+      const sm = new THREE.MeshBasicMaterial({map: tx, transparent: true, depthWrite: false, toneMapped: false}); sm.name = 'coolerSheen'; b.useMaterial('r8sheen', sm);
+      b.bb('r8sheen', -w / 2 + sF, y0 + sB, zf - t / 2 + 0.013, w / 2 - sF, y1 - sT, zf - t / 2 + 0.014); }
+    const dx = -hx * 0.18, dy = y0 + (y1 - y0) * 0.36; for(let k = 0; k < 4; k++) b.bb('r8led', dx - 0.1 + k * 0.05 + (k > 1 ? 0.03 : 0), dy, zf - t / 2 + 0.012, dx - 0.1 + k * 0.05 + 0.032 + (k > 1 ? 0.03 : 0), dy + 0.045, zf - t / 2 + 0.016); }
+  else { b.cyl('stainless', 0.03, 0.03, hl, hx, hy, zf + 0.1, 16); [hl / 2 - 0.08, -hl / 2 + 0.08].forEach(dy => b.cyl('stainless', 0.02, 0.02, 0.1, hx, hy + dy, zf + 0.05, 10, {rx: Math.PI / 2})); }
   // kick: stainless louvred grille flush with the door face, dark slots
   b.bb('stainless', -w / 2, 0.02, zf - 0.06, w / 2, y0 - 0.01, zf - 0.02);
   for(let k = 0; k < 16; k++){ const x = -w / 2 + 0.14 + k * (w - 0.28) / 15; b.bb('r8inner', x - 0.016, 0.11, zf - 0.019, x + 0.016, y0 - 0.1, zf - 0.015); }   // fine louvres (p65)

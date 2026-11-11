@@ -298,27 +298,77 @@ def('builtinBookcase', {
 /* ------------------------------------------------------------ kitchen pieces the photos show that FIX lacks */
 // island glass-canopy hood (p00 / p01 / p11 / p49): slim square stainless chimney, thin stainless body with LED cans,
 // and a wider flat tempered-glass canopy around it. Origin: centre of the back edge of the canopy, bottom at mountY.
-def('hoodGlassCanopy', { w: 3, d: 2, mountY: 6.0, toCeiling: 9.6, bodyW: 2.4, bodyD: 1.5, bodyH: 0.22, chimney: 0.72 }, function (b, o) {
-  var zc = o.d / 2, y0 = o.mountY, yb = y0 + 0.05;
-  b.rbox('stainless', o.bodyW, o.bodyH, o.bodyD, 0.02, 0, yb + o.bodyH / 2, zc, { seg: 2 });
-  b.bb('stainless', -o.chimney / 2, yb + o.bodyH, zc - o.chimney / 2, o.chimney / 2, o.toCeiling, zc + o.chimney / 2);
-  b.box('glassCanopy', o.w, 0.03, o.d, 0, y0 + 0.13, zc);   // the canopy floats on the body's edge clips
-  [-1, 1].forEach(function (s) { b.box('stainless', 0.12, 0.05, 0.08, s * (o.bodyW / 2 + 0.05), y0 + 0.13, zc); });
-  b.bb('blackMetal', -o.bodyW / 2 + 0.12, yb - 0.004, zc - o.bodyD / 2 + 0.12, o.bodyW / 2 - 0.12, yb + 0.004, zc + o.bodyD / 2 - 0.12);   // grease filters
-  [-1, 1].forEach(function (s) { b.cyl('lightDisk', 0.07, 0.07, 0.01, s * (o.bodyW / 2 - 0.3), yb - 0.008, zc + o.bodyD / 2 - 0.22, 18); });
-  for (var i = 0; i < 4; i++) b.cyl('blackMetal', 0.018, 0.018, 0.01, -0.3 + i * 0.13, yb + o.bodyH / 2, zc + o.bodyD / 2 + 0.004, 12, { rx: HALF });
-}, function (o) { return [o.w, o.d, o.toCeiling]; }, 'Island hood: stainless chimney + body under a flat glass canopy (bottom of glass ~ mountY + 0.12).');
-// over-the-counter microwave set into the wall cabinets (p48): stainless body, dark glass door, push-button panel
-def('upperMicrowave', { w: 2.5, h: 1.4, d: 1.33, mountY: 4.6 }, function (b, o) {
-  var w = o.w, y0 = o.mountY, y1 = y0 + o.h, d = o.d;
-  b.rbox('stainless', w, o.h, d - 0.02, 0.02, 0, y0 + o.h / 2, (d - 0.02) / 2, { seg: 2 });
-  b.bb('darkGlass', -w / 2 + 0.06, y0 + 0.2, d - 0.02, w / 2 - 0.62, y1 - 0.08, d + 0.004);
-  b.bb('blackMetal', w / 2 - 0.55, y0 + 0.2, d - 0.02, w / 2 - 0.06, y1 - 0.08, d + 0.003);
-  for (var i = 0; i < 12; i++) b.box('plasticGrey', 0.1, 0.05, 0.01, w / 2 - 0.42 + (i % 3) * 0.13, y1 - 0.35 - ((i / 3) | 0) * 0.1, d + 0.005);
-  b.rod('stainless', [-w / 2 + 0.62 + 1.0, y0 + 0.3, d + 0.09], [-w / 2 + 0.62 + 1.0, y1 - 0.15, d + 0.09], 0.025, 10);
-  b.bb('blackMetal', -w / 2 + 0.05, y0 + 0.02, d - 0.06, w / 2 - 0.05, y0 + 0.14, d - 0.01);   // vent grille strip
-  b.bb('stainless', -w / 2 + 0.03, y0 - 0.002, 0.05, w / 2 - 0.03, y0 + 0.004, d - 0.08);
-}, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Over-the-counter microwave in the wall cabinets; bottom at mountY.');
+// island hood after p00 / p01 / x01 (owner 11/10: 'make the hood realistic'): a sloped stainless body (a shallow frustum, mesh filters and
+// two LED lights underneath, a push-button strip on the front slope), a tempered-glass canopy bent into a shallow arch across its width with
+// visible green edges, a stainless collar where the chimney passes through, and a two-piece telescoping chimney (the upper cover is a
+// touch larger and overlaps the lower one, so a fine shadow line shows at the joint).
+def('hoodGlassCanopy', { w: 3, d: 2, mountY: 6.0, toCeiling: 9.6, bodyW: 2.5, bodyD: 1.62, bodyH: 0.2, taper: 0.86, chW: 0.78, chD: 0.62, sag: 0.13, lift: 0.06, glassT: 0.028 }, function (b, o) {
+  var zc = o.d / 2, y0 = o.mountY, y1 = y0 + o.bodyH, k = Math.SQRT1_2;
+  // body: four flat sloped faces (a 4-sided frustum, flat shaded)
+  var fr = new THREE.CylinderGeometry(k * o.taper, k, o.bodyH, 4, 1, false); fr.rotateY(PI / 4); fr.scale(o.bodyW, 1, o.bodyD);
+  fr = fr.toNonIndexed(); fr.computeVertexNormals(); b.add('stainless', fr, M(0, y0 + o.bodyH / 2, zc));
+  var bw = o.bodyW, bd = o.bodyD;
+  b.bb('stainless', -bw / 2 + 0.02, y0 - 0.03, zc - bd / 2 + 0.02, bw / 2 - 0.02, y0, zc + bd / 2 - 0.02);                     // rolled bottom rim
+  [-1, 1].forEach(function (s) {                                                                                                // two mesh filters in a stainless frame
+    var fx0 = s < 0 ? -bw / 2 + 0.1 : 0.05, fx1 = s < 0 ? -0.05 : bw / 2 - 0.1;
+    b.bb('hoodFilter', fx0, y0 - 0.036, zc - bd / 2 + 0.1, fx1, y0 - 0.031, zc + bd / 2 - 0.26);
+    b.bb('stainless', (fx0 + fx1) / 2 - 0.12, y0 - 0.045, zc + bd / 2 - 0.33, (fx0 + fx1) / 2 + 0.12, y0 - 0.034, zc + bd / 2 - 0.29);   // filter pull tab
+    b.cyl('lightDisk', 0.075, 0.075, 0.012, s * (bw / 2 - 0.34), y0 - 0.036, zc + bd / 2 - 0.15, 22);                          // LED spots near the front
+    b.torus('stainless', 0.082, 0.009, s * (bw / 2 - 0.34), y0 - 0.034, zc + bd / 2 - 0.15, 8, 22, { rx: HALF });
+  });
+  var tilt = Math.atan2(bd / 2 * (1 - o.taper), o.bodyH), zf = zc + bd / 2 - (bd / 2 * (1 - o.taper)) * 0.45, yf = y0 + o.bodyH * 0.45;
+  b.boxR('blackMetal', 0.62, 0.075, 0.006, -bw * 0.22, yf, zf + 0.004, -tilt, 0, 0);                                            // control strip
+  for (var i = 0; i < 4; i++) b.cyl('chrome', 0.022, 0.022, 0.012, -bw * 0.22 - 0.22 + i * 0.12, yf, zf + 0.01, 14, { rx: HALF - tilt });
+  b.boxR('ledBlue', 0.05, 0.022, 0.004, -bw * 0.22 + 0.25, yf, zf + 0.009, -tilt, 0, 0);
+  // the glass: an arch across the width (ends lower than the middle), with a hole for the chimney collar
+  var hw = o.chW / 2 + 0.07, hd = o.chD / 2 + 0.07, yc = y1 + o.lift, gw = o.w / 2;
+  var ya = function (x) { return yc - o.sag * (x / gw) * (x / gw); };
+  var xs = [], zs = [0, zc - hd, zc + hd, o.d], N = 28, j;
+  for (j = 0; j <= N; j++) xs.push(-gw + 2 * gw * j / N); xs.push(-hw, hw); xs.sort(function (p, q) { return p - q; });
+  var pos = [], idx = [], quad = function (a, c, e2, f) { var n = pos.length / 3; pos.push.apply(pos, a.concat(c, e2, f)); idx.push(n, n + 1, n + 2, n, n + 2, n + 3); };
+  for (j = 0; j < xs.length - 1; j++) for (var q2 = 0; q2 < 3; q2++) {
+    var xa = xs[j], xb = xs[j + 1], za = zs[q2], zb = zs[q2 + 1];
+    if (q2 === 1 && xa >= -hw - 1e-6 && xb <= hw + 1e-6) continue;                                                               // the collar hole
+    quad([xa, ya(xa), za], [xb, ya(xb), za], [xb, ya(xb), zb], [xa, ya(xa), zb]);
+  }
+  var gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gg.setIndex(idx); gg.computeVertexNormals();
+  b.add('glassCanopy', gg, null, { keepUV: true });   // the page's glass pass (glass20) gives 'glassCanopy' its thick-glass look
+  // the green edges a viewer actually sees on tempered glass: thin ribbons around the rim
+  var ep = [], ei = [], t = o.glassT, rib = function (pts) {
+    for (var r = 0; r < pts.length - 1; r++) { var A = pts[r], B = pts[r + 1], n = ep.length / 3;
+      ep.push(A[0], A[1] - t / 2, A[2], B[0], B[1] - t / 2, B[2], B[0], B[1] + t / 2, B[2], A[0], A[1] + t / 2, A[2]); ei.push(n, n + 1, n + 2, n, n + 2, n + 3); } };
+  var front = [], back = []; for (j = 0; j <= N; j++){ var xx = -gw + 2 * gw * j / N; front.push([xx, ya(xx), o.d]); back.push([xx, ya(xx), 0]); }
+  rib(front); rib(back); rib([[-gw, ya(-gw), 0], [-gw, ya(-gw), o.d]]); rib([[gw, ya(gw), 0], [gw, ya(gw), o.d]]);
+  var eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.Float32BufferAttribute(ep, 3)); eg.setIndex(ei); eg.computeVertexNormals();
+  b.add('glassEdge', eg, null, { keepUV: true });
+  // collar that clamps the glass, then the telescoping chimney to the ceiling
+  b.rbox('stainless', o.chW + 0.1, 0.1, o.chD + 0.1, 0.012, 0, yc + 0.02, zc, { seg: 2 });
+  b.rbox('stainless', o.chW + 0.06, 0.05, o.chD + 0.06, 0.008, 0, yc - 0.06, zc, { seg: 2 });
+  var yj = yc + 0.07 + (o.toCeiling - yc) * 0.48;
+  b.bb('stainless', -o.chW / 2, y1 - 0.02, zc - o.chD / 2, o.chW / 2, yj + 0.05, zc + o.chD / 2);                                  // lower section
+  b.bb('stainless', -o.chW / 2 - 0.018, yj, zc - o.chD / 2 - 0.018, o.chW / 2 + 0.018, o.toCeiling, zc + o.chD / 2 + 0.018);       // upper cover
+  b.bb('blackMetal', -o.chW / 2 - 0.004, yj - 0.006, zc - o.chD / 2 - 0.004, o.chW / 2 + 0.004, yj, zc + o.chD / 2 + 0.004);       // shadow line at the joint
+  b.bb('stainless', -o.chW / 2 - 0.05, o.toCeiling - 0.04, zc - o.chD / 2 - 0.05, o.chW / 2 + 0.05, o.toCeiling, zc + o.chD / 2 + 0.05);   // ceiling trim
+}, function (o) { return [o.w, o.d, o.toCeiling]; }, 'Island hood: sloped stainless body, arched glass canopy with green edges, telescoping chimney (bottom of body = mountY).');
+// over-the-counter microwave set into the wall cabinets (p48, r28): a GE unit in a stainless trim kit. Stainless case with softened edges,
+// a black-glass door over about three quarters of the face (no bar handle: it is a push-to-open door), a black control panel with a
+// small green-white readout and a faint keypad, and the trim kit's vent band below with fine slots.
+def('upperMicrowave', { w: 2.5, h: 1.4, d: 1.33, mountY: 4.6, kit: 0.14 }, function (b, o) {
+  var w = o.w, k = o.kit, y0 = o.mountY + k, h = o.h - k, y1 = y0 + h, d = o.d, zf = d - 0.02, i;
+  b.rbox('stainless', w, h, d - 0.04, 0.03, 0, y0 + h / 2, (d - 0.04) / 2, { seg: 3 });                            // case
+  var dw = (w - 0.12) * 0.74, x0 = -w / 2 + 0.06, x1 = x0 + dw;
+  b.bb('stainless', x0 - 0.012, y0 + 0.05, zf - 0.012, x1 + 0.012, y1 - 0.05, zf + 0.004);                      // door frame lip
+  b.bb('darkGlass', x0, y0 + 0.07, zf, x1, y1 - 0.07, zf + 0.012);                                              // door glass
+  b.bb('mwWindow', x0 + 0.16, y0 + 0.2, zf + 0.008, x1 - 0.16, y1 - 0.2, zf + 0.013);                            // the see-through window, a shade lighter
+  var cx0 = x1 + 0.05, cx1 = w / 2 - 0.06;
+  b.bb('darkGlass', cx0, y0 + 0.07, zf, cx1, y1 - 0.07, zf + 0.01);                                             // control panel
+  b.bb('mwDisplay', cx0 + 0.07, y1 - 0.24, zf + 0.008, cx1 - 0.07, y1 - 0.15, zf + 0.012);                       // readout
+  for (i = 0; i < 12; i++) b.bb('mwKey', cx0 + 0.07 + (i % 3) * (cx1 - cx0 - 0.14) / 3 + 0.012, y1 - 0.38 - ((i / 3) | 0) * 0.1, zf + 0.008, cx0 + 0.07 + ((i % 3) + 1) * (cx1 - cx0 - 0.14) / 3 - 0.012, y1 - 0.32 - ((i / 3) | 0) * 0.1, zf + 0.011);
+  b.bb('stainless', -w / 2, o.mountY, 0.02, w / 2, y0, zf);                                                     // trim kit band
+  b.bb('blackMetal', -w / 2 + 0.12, o.mountY + 0.035, zf - 0.006, w / 2 - 0.12, y0 - 0.035, zf + 0.001);         // vent recess
+  for (i = 0; i < 34; i++) { var vx = -w / 2 + 0.16 + i * (w - 0.32) / 33; b.bb('stainless', vx - 0.012, o.mountY + 0.04, zf - 0.003, vx + 0.012, y0 - 0.04, zf + 0.003); }   // slots
+  b.bb('stainless', -w / 2 + 0.03, o.mountY - 0.002, 0.05, w / 2 - 0.03, o.mountY + 0.004, zf - 0.04);
+}, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Over-the-counter microwave in a trim kit; bottom of the kit at mountY.');
 // open end cubby on a run of wall cabinets (p48: plates on two shelves), no doors
 def('upperCubby', { w: 1.1, h: 2.6, d: 13 * IN, mountY: 4.6, shelves: 2, finish: 'cabinetWhite', dishes: true }, function (b, o) {
   var w = o.w, y0 = o.mountY, y1 = y0 + o.h, d = o.d, t = 0.06, fin = o.finish;
@@ -332,6 +382,17 @@ def('upperCubby', { w: 1.1, h: 2.6, d: 13 * IN, mountY: 4.6, shelves: 2, finish:
   }
 }, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Open end cubby for a run of wall cabinets (shelves, stacked plates).');
 MATS.glassCanopy = function () { return std({ color: 0xe8f2ee, metalness: 0.1, roughness: 0.04, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }); };
+MATS.mwWindow = function () { return std({ color: 0x23272a, metalness: 0.2, roughness: 0.08 }); };
+MATS.mwDisplay = function () { return std({ color: 0x0d1210, emissive: 0x9ce8c6, emissiveIntensity: 0.35, roughness: 0.3 }); };
+MATS.mwKey = function () { return std({ color: 0x2a2d30, metalness: 0.2, roughness: 0.35 }); };
+MATS.ledBlue = function () { return std({ color: 0x9fd2ff, emissive: 0x6fb8ff, emissiveIntensity: 1.1, roughness: 0.4 }); };
+MATS.hoodFilter = function () {   // aluminium mesh filter: a fine diamond weave, satin grey
+  var W = 128, c = canvas(W), x = c.getContext('2d'), i; x.fillStyle = '#9c9fa1'; x.fillRect(0, 0, W, W);
+  x.strokeStyle = 'rgba(215,218,220,.55)'; x.lineWidth = 1.2;
+  for (i = -W; i < 2 * W; i += 8) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + W, W); x.stroke(); x.beginPath(); x.moveTo(i, W); x.lineTo(i + W, 0); x.stroke(); }
+  var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 4); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+  return std({ color: 0xffffff, map: t, metalness: 0.7, roughness: 0.45 });
+};
 // satin-nickel hardware for FIX cabinets too (kitchen photos: knobs on doors, bar pulls on drawers, all satin nickel)
 FIX.setMaterials({ satinNickel: mat('satinNickel') });
 // Cambria Brittanicca quartz (the owner's counters): warm-white ground, bold sweeping taupe-grey veins, polished.
