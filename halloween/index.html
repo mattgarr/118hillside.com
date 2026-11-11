@@ -19918,7 +19918,8 @@ function bl35Hit(cx, cy){
   // a skylight sits up a well: a tap on the well's sides, seen from below, is a tap on its shade
   if(h && h.point && h.distance <= 25) for(const it of BL35.items){ if(it.kind !== 'sky' || !bl35Live(it)) continue; const R = it.rects[0];
     if(BL35P.subVectors(O, R.c).dot(R.n) <= 0) continue; BL35Q.copy(h.point).sub(R.c); const z = BL35Q.dot(R.n);
-    if(z > -.4 && z < 2.1 && Math.abs(BL35Q.dot(R.u)) < R.hu + .2 && Math.abs(BL35Q.dot(R.v)) < R.hv + .2) return it; }
+    if(z > -.4 && z < 2.1 && Math.abs(BL35Q.dot(R.u)) < R.hu + .2 && Math.abs(BL35Q.dot(R.v)) < R.hv + .2) return it;
+    const K = it.col; if(K && K.dv > .5 && O.y < h.point.y && Math.abs(h.point.x - K.x) < K.hx + .15 && Math.abs(h.point.z - K.z) < K.hz + .15 && h.point.y < K.y + .3 && h.point.y > K.y - K.dv - .3) return it; }   // a deep shaft straight under the pane
   return null;
 }
 function bl35Pose(it){ try{ it.pose(bl35Ease(it.t)); }catch(e){} }
@@ -19927,7 +19928,7 @@ function bl35Pose(it){ try{ it.pose(bl35Ease(it.t)); }catch(e){} }
 const BL35RD = new THREE.Raycaster();
 function bl35Fit(it){
   if(it.fitted || !it.fit || !it.F || !it.cols) return; it.fitted = true;
-  try{ const F = it.F, y = it.y0 + (it.y1 - it.y0) * .36, objs = withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible), dn = new THREE.Vector3(0, -1, 0), P = new THREE.Vector3();
+  try{ const F = it.F, y = it.y0 + (it.y1 - it.y0) * .36, objs = withVar(['main', 'upper']).filter(g => g.visible), dn = new THREE.Vector3(0, -1, 0), P = new THREE.Vector3();
     const own = o => { for(; o; o = o.parent) if(o === it.g) return true; return false; }; let lo = it.y0;
     const df = it.d + (it.fd || 0);   // down the shade's room-side face: a sash rail that reaches into the shade's depth is not a sill
     for(const a of it.cols){ P.set(F.cx + F.u[0] * a + F.inn[0] * df, y, F.cz + F.u[1] * a + F.inn[1] * df); BL35RD.set(P, dn); BL35RD.far = y - it.y0 + .02;
@@ -20013,14 +20014,20 @@ function r35Skylights(){
       const g = new THREE.Group(), rg = ranges.find(q => T.some(t => t.i >= q[2] && t.i < q[2] + q[3])), id = (rg && rg[0]) || ('SK-' + (R28W.sky.length + 1));
       g.name = 'r35sky:' + id; g.applyMatrix4(new THREE.Matrix4().makeBasis(u, vv, n).setPosition(c)); g.applyMatrix4(inv); M.parent.add(g);
       const box = (mat, x, y, z, sx, sy, sz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat); m.position.set(x, y, z); g.add(m); return m; };
+      // how far the shaft drops straight below the pane (the primary bath's second skylight sits at the top of a 4 ft shaft): the lowest shaft wall met inside the pane's footprint
+      const col = {x: c0.x, y: c0.y, z: c0.z, hx: Math.abs(u.x) * hu + Math.abs(w.x) * hw + .12, hz: Math.abs(u.z) * hu + Math.abs(w.z) * hw + .12, dv: 0};
+      try{ const rc = new THREE.Raycaster(), o = c0.clone().addScaledVector(n, .06), objs = withVar(['main', 'upper', 'roof', 'vault', 'vaultUp', 'ceil', 'lowerRoof']);
+        for(const ang of [6, 10, 15, 25]) for(let q = 0; q < 8; q++){ const a = ang * Math.PI / 180, az = q * Math.PI / 4; rc.set(o, new V3(Math.sin(a) * Math.cos(az), -Math.cos(a), Math.sin(a) * Math.sin(az))); rc.far = 9;
+          for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if((m && m.transparent) || !h.object.isMesh) continue; const p = h.point;
+            if(Math.abs(p.x - col.x) <= col.hx && Math.abs(p.z - col.z) <= col.hz && !(h.face && h.face.normal.y > .7)) col.dv = Math.max(col.dv, col.y - p.y); break; } } }catch(e){}
       const CAS = .15, full = 2 * hw - CAS - .05;
       box(r28Mat('cassette'), 0, hw - CAS / 2, .01, 2 * hu, CAS, .13);                                                    // cassette at the up-slope end
       for(const s of [-1, 1]) box(r28Mat('cassette'), s * (hu - .02), -CAS / 2, .01, .04, 2 * hw - CAS, .06);            // side tracks
       const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * hu - .07, 1), cloth); f.geometry.translate(0, -.5, 0); f.position.set(0, hw - CAS, .01); g.add(f);
       const hem = box(r28Mat('cassette'), 0, 0, .01, 2 * hu - .07, .05, .045);
-      bl35Add({id, kind: 'sky', fab: 'filter', g, dur: .65, pose(e){ const len = full * e; f.visible = len > .012; f.scale.y = Math.max(.012, len); hem.position.y = hw - CAS - len - .025; },
+      bl35Add({id, kind: 'sky', fab: 'filter', g, dur: .65, col, pose(e){ const len = full * e; f.visible = len > .012; f.scale.y = Math.max(.012, len); hem.position.y = hw - CAS - len - .025; },
         rects: [{c: c.clone(), u: u.clone(), v: vv.clone(), n: n.clone(), hu: hu + .01, hv: hw + .01}]});
-      R28W.sky.push({id, at: c.toArray().map(q => +q.toFixed(2)), size: [+(2 * hu).toFixed(2), +(2 * hw).toFixed(2)], slope: +(Math.acos(Math.min(1, -n.y)) * 180 / Math.PI).toFixed(0)}); } }
+      R28W.sky.push({id, at: c.toArray().map(q => +q.toFixed(2)), size: [+(2 * hu).toFixed(2), +(2 * hw).toFixed(2)], slope: +(Math.acos(Math.min(1, -n.y)) * 180 / Math.PI).toFixed(0), shaft: +col.dv.toFixed(2)}); } }
 }
 { const _sp35 = skylightPanes; skylightPanes = function(){ const r = _sp35.apply(this, arguments); try{ r35Skylights(); }catch(e){ console.warn('[r35] skylight shades', e); R28W.err.push(String(e)); } return r; }; }
 // QA / tests
