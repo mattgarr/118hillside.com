@@ -19941,7 +19941,9 @@ function bl35Step(){
 }
 { const _rf35 = renderFrame; renderFrame = function(){ if(BL35.moving.size) try{ bl35Step(); }catch(e){ console.warn('[blinds35] step', e); BL35.moving.clear(); } return _rf35.apply(this, arguments); }; }
 // a tap on a covering works it and goes no further (no walking). A white walk-to circle under the pointer keeps its tap.
-function bl35At(cx, cy){ if(mode === 'design') return null; try{ if(nav === 'look' && pickWaypoint(cx, cy)) return null; return bl35Hit(cx, cy); }catch(e){ return null; } }
+function bl35At(cx, cy){ if(mode === 'design') return null;
+  try{ if((window.HWGAMES && HWGAMES.active) || /\b(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)\b/.test(document.documentElement.className)) return null;   // a seasonal mini-game is running: every tap is its own
+    if(nav === 'look' && pickWaypoint(cx, cy)) return null; return bl35Hit(cx, cy); }catch(e){ return null; } }
 { const _ca35 = clickAt; clickAt = function(cx, cy, dbl){ const it = bl35At(cx, cy); if(it){ bl35Toggle(it); return; } return _ca35.apply(this, arguments); }; }
 function bl35Label(it){ const down = (it.t > .5 && it.dir >= 0) || it.dir > 0;
   return it.kind === 'vblind' ? (down ? 'Open the blinds' : 'Close the blinds') : it.kind === 'sky' ? (down ? 'Open the skylight shade' : 'Close the skylight shade') : (down ? 'Raise the shade' : 'Lower the shade'); }
