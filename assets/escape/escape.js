@@ -109,7 +109,7 @@
       intro: `<p class="lede">Elena designs escape rooms for a living. For her housewarming, she made one out of the house.</p>
         <div class="note"><p>Welcome! The champagne is locked in the little fridge at the coffee bar. The code is somewhere in the house. I'm out getting the cake.</p><p class="sig">— Elena</p><p class="ps">P.S. Snowball watched me hide everything. Ask him.</p></div>`,
       goal: 'Open the coffee-bar fridge',
-      views: {coffee: {label: 'Kitchen', pos: [10.6, 5.2, 9.7], look: [22.0, 3.4, 9.6]}, dining: {label: 'Dining room', pos: [16.6, 5.2, 31.0], look: [8.6, 1.2, 22.4]}},
+      views: {coffee: {label: 'Kitchen', pos: [10.6, 5.2, 9.7], look: [22.0, 3.4, 9.6]}, dining: {label: 'Dining room', pos: [15.4, 5.6, 31.4], look: [8.4, .6, 23.6]}},
       startView: 'coffee'},
   };
   const L = LEVELS[LEVEL] || LEVELS.easy;
@@ -127,8 +127,8 @@
     // the roller shade on this window is down a quarter of the way; its bottom edge is the top of the light
     const shadeTop = win.head - .28 - (win.head - .28 - win.sill) * .26;
     const [cx] = W2(win.center[0], win.center[1]), nrm = W2(win.normal[0], win.normal[1]), xw = cx - nrm[0] * (win.thickness || .4) / 2;
-    // read from the kitchen side, facing the windows: up = toward the glass (-x), right = toward the front of the house (-z)
-    const frame = {o: [9.95, 23.7], right: [0, -1], up: [-1, 0], size: 1.0, gap: 1.5, stroke: .28, floorY: .02};
+    // on the clear strip of floor between the dining table and the sofa, read from the sofa side: right = away from the glass (+x), up = toward the table (-z)
+    const frame = {o: [8.5, 25.2], right: [1, 0], up: [0, -1], size: .98, gap: 1.5, stroke: .27, floorY: .02};
     const polys = cutoutsFor(CODE, frame, T, {xw});
     PATCH.list.push(makePatch({win: 'WN-L1-03', room: 'SP-L1-GREAT', ppf: 40, shadeTop, mullions: [0], cutouts: polys}));
     paperMesh(polys, .03);
@@ -144,8 +144,7 @@
       for(let i = 0; i < 12; i++){ const a = i / 12 * Math.PI * 2; chalkLine(x, [[206 + Math.cos(a) * 52, 470 + Math.sin(a) * 52], [206 + Math.cos(a) * 58, 470 + Math.sin(a) * 58]], 3); }
       chalkLine(x, [[206, 470], [206, 434]], 5); const a4 = (4 / 12) * Math.PI * 2 - Math.PI / 2; chalkLine(x, [[206, 470], [206 + Math.cos(a4) * 30, 470 + Math.sin(a4) * 30]], 6);
       x.font = 'italic 34px Georgia, serif'; x.fillText('— E.', 280, 600);
-      chalkLine(x, [[60, 640], [96, 600], [132, 640]], 3); chalkLine(x, [[78, 620], [114, 620]], 3);
-    }, 380, 680);
+          }, 380, 680);
     const chalk = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 3.13), new THREE.MeshStandardMaterial({map: tex, transparent: true, roughness: .95}));
     chalk.name = 'esc-chalk'; chalk.renderOrder = 3; chalk.rotation.y = -Math.PI / 2;
     const leaf = pd && pd.parts && pd.parts.find(q => q.k === 0);
@@ -157,7 +156,7 @@
       {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [18.8, 4.4, 6.6], look: [19.6, 1.6, 11.6]}, open: openFridge},
       {id: 'pocket', label: 'Pocket door', p: [22.0, 3.6, 9.5], view: {pos: [17.2, 4.6, 9.6], look: [22.0, 3.7, 9.5]}, open: openPocket},
       {id: 'paper', label: 'Paper on the glass', p: [5.0, 3.8, 22.0], view: {pos: [9.6, 4.4, 21.0], look: [4.8, 3.8, 21.6]}, open: openPaper},
-      {id: 'floor', label: 'Dining floor', p: [9.0, .3, 21.6], hidden: true, view: {pos: [15.6, 6.2, 21.6], look: [9.0, 0, 21.6]}, open: () => {}}];
+      {id: 'floor', label: 'Dining floor', p: [10.4, .3, 24.4], hidden: true, view: {pos: [10.4, 6.2, 31.4], look: [10.4, 0, 24.3]}, open: () => {}}];
     S.code = CODE; S.T = T;
     // hints, by stage
     S.hint = () => {
@@ -167,11 +166,11 @@
         ['Tap the pocket door and slide it closed. Elena taped a drawing to its face.', () => { goView('coffee'); catAt([20.6, 0, 10.6]); }]];
       if(!S.sawDigits) return [
         ['The drawing shows a low sun, the two big dining windows and a clock. Something happens in that room at a certain time.'],
-        ['Snowball pads into the dining room and lies down right where the sun will land.', () => { goView('dining'); catAt([9.6, 0, 26.6]); }],
+        ['Snowball pads into the dining room and lies down in the gap between the table and the sofa, where the sun will land.', () => { goView('dining'); catAt([13.4, 0, 24.6]); }],
         ['Drag the sun to 4:00 PM, then look at the dining floor in front of the windows.', () => { goView('dining'); setSlider(16); }]];
       return [
-        ['The shadows only make sense from one side of the room. Stand where you would to cook.'],
-        ['Snowball walks around to the kitchen side and looks toward the windows.', () => { flyView({pos: [15.6, 6.2, 21.6], look: [9.0, 0, 21.6]}); catAt([13.2, 0, 19.2]); }],
+        ['The shadows only read the right way up from one side. Try looking from the sofa.'],
+        ['Snowball hops up by the sofa and stares at the floor.', () => { flyView({pos: [10.4, 6.2, 31.4], look: [10.4, 0, 24.3]}); catAt([12.6, 0, 27.6]); }],
         ['The code is ' + CODE.split('').join(' ') + '.']]; };
   }
   /* ------------------------------------------------------------------ camera */
