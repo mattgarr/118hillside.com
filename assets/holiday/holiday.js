@@ -289,7 +289,7 @@
 
   /* ---------- ?holiday=winter|thanksgiving|halloween (&dusk=1): open the tour already dressed, once the first view is up ---------- */
   { const m = /[?&]holiday=(winter|thanksgiving|halloween)\b/.exec(location.search), wantDusk = /[?&]dusk=1\b/.test(location.search);
-    if(m){ const kind = m[1], t0 = performance.now(); (function wait(){ const L = document.getElementById('loading'), up = (L && !L.classList.contains('done')) || !!document.getElementById('intro28');   // the loading pictures stay up until a first-time visitor taps "Step inside"
+    if(m){ const kind = m[1], t0 = performance.now(); (function wait(){ const L = document.getElementById('loading'), up = (L && (!L.classList.contains('done') || +getComputedStyle(L).opacity > .05)) || !!document.getElementById('intro28');   // the loading photo has faded out, and the loading pictures are gone (they stay up until a first-time visitor taps "Step inside")
         if((up || !H.ready) && performance.now() - t0 < 600000) return setTimeout(wait, 300);
         setTimeout(async () => { if(current() !== 'none' || H.mode === 'design') return; const ok = await set(kind, {from: 'link'}); if(!ok) return;
           if(kind === 'winter' && wantDusk) dusk(true);
