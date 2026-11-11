@@ -42,6 +42,16 @@
   addEventListener('error', e => { if(/feast/.test(String(e.filename || ''))) ERRS.push('error: ' + String(e.message).slice(0, 200) + ' @' + e.lineno); });
   addEventListener('unhandledrejection', e => { const t = String(e.reason && e.reason.stack || e.reason); if(/feast/.test(t)) ERRS.push('rejection: ' + t.slice(0, 200)); });
 
+  /* r38 loading (owner on a phone: "slow to load, and it's not clear anything is happening"). The loading card (assets/intro28.js) shows
+     this game's steps from window.__game28 and keeps the pictures up until the start card is under them. The game's own files and fonts
+     start loading the moment this script runs, in parallel with the house finishing, instead of one after another once it has finished. */
+  const G28 = window.__game28 = {id: 'feast', step: 'Loading the game', k: .05, ready: false, t0: performance.now(), marks: {}};
+  const prog = (step, k) => { G28.step = step; G28.k = Math.max(G28.k, k); G28.marks[step] = Math.round(performance.now()); };
+  const need = (src, has) => has ? Promise.resolve() : new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { oops('could not load ' + src); res(); }; document.head.appendChild(s); });
+  const DEPS = Promise.all([need('../assets/snowball.js?v=37', !!window.SNOWBALL), need('../assets/feast3d/feast-props.js?v=2', !!window.FEASTPROPS)]).then(() => prog('Fetching Snowball', .25));
+  if(!document.querySelector('link[href*="Caveat+Brush"]')) document.head.appendChild(el('link', {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@300;400;500&display=swap'}));
+  const paint = () => new Promise(r => { let k = 0; const go = () => { if(!k++) setTimeout(r, 0); }; requestAnimationFrame(go); setTimeout(go, 120); });   // let the loading card show the new step before a long piece of work
+
   /* ================================================================== which clue set */
   let HUNT = ((/[?&]hunt=([ab])\b/i.exec(location.search) || [])[1] || '').toLowerCase();
   if(!HUNT){ const last = store.get('feast3d.last'); HUNT = last === 'a' ? 'b' : last === 'b' ? 'a' : (new Date().getDate() % 2 ? 'a' : 'b'); }
@@ -667,6 +677,9 @@
   #feVoice b{font-weight:500;font-size:16px}#feVoice small{color:#6a7282;font-size:13px;margin-left:6px}#feVoice p{margin:2px 0 0;font-size:16.5px;line-height:1.3}
   #feFade{position:fixed;inset:0;z-index:58;background:#0d111f;opacity:0;pointer-events:none;transition:opacity .32s ease}
   #feFade.on{opacity:1;pointer-events:auto}
+  #feFade[data-say]::after{content:attr(data-say);position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:#f3ead9;font:600 30px/1.1 "Cormorant Garamond",Georgia,serif;letter-spacing:.01em}
+  .feBtn.wait{cursor:progress;opacity:1}.feBtn.wait::before{content:'';flex:none;width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:feSpin .8s linear infinite}
+  @keyframes feSpin{to{transform:rotate(360deg)}}
   #feFlash{position:fixed;inset:0;z-index:95;background:#fff;opacity:0;pointer-events:none}#feFlash.on{animation:feFl .5s}@keyframes feFl{10%{opacity:.85}100%{opacity:0}}
   #feCard{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(14,19,34,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);font-family:Jost,"Avenir Next",Arial,sans-serif;padding:16px;overflow:auto;animation:feIn .45s ease;color:#1f2a3a}
   #feCard.side{background:none;backdrop-filter:none;-webkit-backdrop-filter:none;place-items:center end;pointer-events:none;padding-right:max(18px,env(safe-area-inset-right))}#feCard.side .c{pointer-events:auto;max-width:430px;max-height:calc(100% - 8px);overflow:auto}
@@ -1004,7 +1017,7 @@
     if(ex.state !== 'tag') return sheet(`<h3>The table under the oak</h3><p>${S.carry ? 'Setting it down.' : 'Eight places, a linen runner and a few small pumpkins. The middle of the table is waiting for dinner.'}</p>`, {noBack: !!S.carry});
     const last = i === STEPS.length - 1, nx = STEPS[i + 1];
     if(last) return sheet(`<h3>${esc(DISHCAP[st.dish])}, and the last tag</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('P.S. from Snowball and Biscuit', 'We did not lose dinner. We wanted you to see the whole house before everyone sits down. Happy Thanksgiving. P.P.S. Biscuit says the turkey is ready, and his nose is never wrong. Lift the lid.')}`,
-      {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => { tidy(STEPS.length - 1); S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; setGoal(); SND.spell(); setTod('golden'); P.setLift(.9); back(() => later(300, () => { say('It spells THANKS. I knew that.', 4600, true); examine('smoker'); })); }}]});
+      {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => toSmoker()}]});
     return sheet(`<h3>${esc(DISHCAP[st.dish])} ${PLURAL[st.dish] ? 'are' : 'is'} on the table.</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('Clue ' + (i + 2) + ' of 6, from ' + nx.who, nx.clue)}`,
       {noBack: true, acts: [nx.map ? {label: 'Look at the map', cls: 'primary', go: () => { nextStep(); later(900, openClue); }} : {label: 'Start looking', cls: 'primary', go: () => nextStep()}]}); }
   function tidy(i){ const st = STEPS[i]; if(!st) return; for(const id of st.spots){ try{ if(COOL[id]) COOL[id].set(0); for(const k of [id, id + ':decoy']){ const g = PROP[k]; if(g && g.visible){ const s0 = g.scale.x; tween(260, u => g.scale.setScalar(Math.max(.001, s0 * (1 - u))), () => { g.visible = false; }); } } }catch(e){ oops('tidy', e); } } }
@@ -1012,6 +1025,19 @@
     back(() => { const n = S.step; if(n === 1) later(600, () => say('The sun moved while you were carrying that.', 4600, true)); else if(n === 3) later(600, () => say('Half of dinner is found. The other half is still clever.', 4800, true)); else if(n === 5) later(600, () => say('One more, and the sun is getting low.', 4600, true)); }); }
 
   /* ---- the smoker and the turkey */
+  // r38: from the last tag straight to the smoker. The button answers at once (pressed, a spinner, "Out to the smoker…"); the clock moves to
+  // golden hour once that frame is on screen, and the camera turns from the table to the smoker in one move (it used to go back to the
+  // standing point, wait, and set off again: two seconds of travel after the stall). If the lamp shaders are not warm yet (a very quick
+  // hunt), a short fade with the same words covers the compile instead of a frozen picture.
+  const TIMING = {};
+  function toSmoker(){ if(S.phase === 'turkey' || !S.ex) return; const b = sheetE.querySelector('[data-i="0"]'), t0 = performance.now(), T = TIMING.smoker = {warm: !!WARM.end};
+    if(b){ b.disabled = true; b.classList.add('wait'); b.textContent = 'Out to the smoker…'; }
+    tidy(STEPS.length - 1); S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; S.busy = true; setGoal(); SND.spell(); ga('feast3d_smoker', {warm: !!WARM.end});
+    const pose = () => { const p = standPose('table'); S.ex = {id: 'smoker', back: {yaw: p.yaw, pitch: p.pitch}, mode: 'look'}; setMarks(); sheetFor(S.ex); sheetE.classList.remove('on'); };
+    const there = () => { S.busy = false; sheetE.classList.add('on'); T.framed = Math.round(performance.now() - t0); say('It spells THANKS. I knew that.', 4600, true); };
+    if(WARM.end) paint().then(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); T.tod = Math.round(performance.now() - t0); pose(); frameExamine(.85, there); });
+    else { fadeE.dataset.say = 'Out to the smoker…'; fadeThrough(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); pose(); frameExamine(.05, there); }, 650);
+      const clr = () => fadeE.classList.contains('on') ? later(150, clr) : later(400, () => { delete fadeE.dataset.say; }); later(900, clr); } }
   function sheetSmoker(ex){ const sp = SPOTS.smoker;
     if(S.phase !== 'turkey') return sheet(`<h3>${esc(sp.title)}</h3><p>${esc(sp.text)}</p>`);
     if(ex.state === 'open') return sheet(`<h3>The turkey</h3><p>All day over oak and apple wood, and it is the color of a good violin. It has been here the whole time, and you could smell it from the balcony.</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => { const t = DISHOBJ.turkey; dress(t, true); S.carry = 'turkey'; HELD.g = t; HELD.s = heldScale(t); setGoal(); if(SMK.emit) SMK.emit.rate = 1.2; back(() => { tween(1100, u => SMK.set(1 - ease(u))); setDown(); }); }}]});
@@ -1022,12 +1048,12 @@
     tween(1500, u => SMK.set(ease(u)), () => { P.sparkle(new V3(SMK.c[0], SMK.seam + .6, SMK.c[1]), 12); SND.find(); later(500, () => { S.busy = false; if(S.ex){ S.ex.state = 'open'; sheetFor(S.ex); } }); }); }
 
   /* ---- candles, dusk, what the animals think of it, the end */
-  function lightCandles(){ if(S.lit || S.busy || rig.move) return; S.lit = true; S.busy = true; S.phase = 'end'; ga('feast3d_candles'); const c = DISHOBJ.candles;
+  function lightCandles(){ if(S.lit || S.busy || rig.move) return; S.lit = true; S.busy = true; S.phase = 'end'; ga('feast3d_candles'); const c = DISHOBJ.candles, ct0 = performance.now(), CT = TIMING.candles = {warm: !!WARM.end};
     sheetE.classList.remove('on'); document.documentElement.classList.add('fe-cine'); for(const m of marks) m.b.classList.remove('on'); sayE.classList.remove('on');
     c.userData.sticks.forEach((st, i) => { const at = new V3(); st.getWorldPosition(at); at.y += st.userData.top; const f = P.flame(at, 1); flames.push(f); later(500 + i * 420, () => { SND.flame(i); tween(500, u => f.on(u)); }); });
     later(500, () => tween(2600, u => { candleLight.intensity = 1.5 * u; }));
     // the sun goes: the model's own dusk, with the house lights on
-    later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt(CHAIR); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
+    later(2500, () => fadeThrough(() => { CT.dusk = Math.round(performance.now() - ct0); setTod('dusk'); requestAnimationFrame(() => requestAnimationFrame(() => { CT.duskDrawn = Math.round(performance.now() - ct0); })); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt(CHAIR); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
     later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.3] : [-.17, 0]}, {dur: 9}); });
     later(4600, () => { SND.bell(); voices(() => finish()); }); }
   const SHOT = () => aspect() < 1 ? {pos: [8.4, .7, -46.6], pos2: [7.2, .6, -46.2], look: [-2.4, -1.5, -43.3], fov: 80} : {pos: [8.3, .55, -47.1], pos2: [7.3, .5, -46.7], look: [-2.6, -1.3, -43.0], fov: 56};
@@ -1103,6 +1129,45 @@
     const run = () => { if(t[1]) t[1](); say(t[0], 7500); }; S.hintAt = performance.now();
     if(S.ex && t[1] && !(S.phase === 'turkey' && S.ex.id === 'smoker')) back(run); else run(); }
 
+  /* ================================================================== shader warm-up
+     r38 (owner on a phone: "it's slow when it goes to the smoker at the end, that was very slow"). By day every house lamp is at zero and
+     the engine keeps zero-intensity lamps out of the shader light loop. "Go to the smoker" turns the clock to golden hour, the lamps come
+     on (14 lights), and every material in view needed a new program at once: about 12 for the view itself and 56 more for the two mirror
+     probes by the lounge, which re-capture for the new light in linear output. Measured on a desktop GPU: 330 + 370 + 140 ms of compiles
+     before the camera moved; several seconds on a phone, with the button showing nothing. The candles (dusk) use the same lamp set.
+     So the hunt compiles those programs ahead, in small slices while nothing is moving, with the lamps counted in and nothing drawn: the
+     engine's own idle warm-up trick (a scene proxy that hands compile() a few objects at a time, the real lights in their loop). */
+  const WARM = {load: null, end: null, endOn: false};
+  // one object per distinct material set (and the geometry features that change a program), nearest the dinner table first
+  function warmList(root, pick){ const seen = new Set(), out = [], T = v3(TABLE), w = new V3();
+    root.traverse(o => { const m = o.material; if(!m || !(o.isMesh || o.isPoints || o.isLine || o.isSprite) || (pick && !pick(o))) return; const g = o.geometry, at = g && g.attributes || {};
+      const k = (Array.isArray(m) ? m.map(x => x.uuid).join('+') : m.uuid) + (o.isInstancedMesh ? 'i' : '') + (o.isSkinnedMesh ? 's' : '') + (at.tangent ? 't' : '') + (at.color ? 'c' : '') + (g && g.morphAttributes && g.morphAttributes.position ? 'm' : '');
+      if(seen.has(k)) return; seen.add(k); o.getWorldPosition(w); out.push([w.distanceTo(T), o]); });
+    return out.sort((a, b) => a[0] - b[0]).map(x => x[1]); }
+  const feastObjs = () => warmList(H.scene, o => { for(let p = o; p; p = p.parent) if(/^feast/.test(p.name || '') || p === (P && P.root)) return true; return false; });
+  function warm(objs, encs, lamps, ok, budget, step){ return new Promise(done => {
+    const R = H.renderer, sc = H.scene, proxy = Object.create(sc); let batch = []; proxy.traverseVisible = cb => sc.traverseVisible(cb); proxy.traverse = cb => { for(const o of batch) cb(o); };
+    const rts = [...new Set(encs)].map(enc => { const rt = new THREE.WebGLRenderTarget(1, 1); rt.texture.encoding = enc; rt.texture.generateMipmaps = false; return rt; });
+    let e = 0, i = 0, n = 4; const t0 = performance.now(), p0 = R.info.programs.length, total = objs.length * rts.length || 1;
+    const slice = () => {
+      if(!ok()) return setTimeout(slice, 400);
+      const flips = []; if(lamps) sc.traverse(o => { if(o.isLight && !o.visible && o.userData.perfOff && (o.isPointLight || o.isSpotLight || o.isRectAreaLight)){ o.visible = true; flips.push(o); } });
+      const prev = R.getRenderTarget(), ts = performance.now();
+      try{ while(e < rts.length && performance.now() - ts < budget){
+          if(i >= objs.length){ e++; i = 0; continue; }
+          R.setRenderTarget(rts[e]); batch = objs.slice(i, i + n); i += batch.length; const tb = performance.now(); R.compile(proxy, camera); const d = performance.now() - tb;
+          n = d < 4 ? Math.min(64, n * 2) : d > 12 ? Math.max(1, n >> 1) : n; } }   // few objects per call while programs are being built, many once they are all cached
+      catch(err){ oops('warm', err); e = rts.length; }
+      finally{ batch = []; for(const l of flips) l.visible = false; R.setRenderTarget(prev); }
+      if(step) step(Math.min(1, (e * objs.length + i) / total));
+      if(e < rts.length) return setTimeout(slice, lamps ? 40 : 0);
+      rts.forEach(rt => rt.dispose()); done({ms: Math.round(performance.now() - t0), progs: R.info.programs.length - p0, objs: objs.length}); };
+    slice(); }); }
+  // the end of the hunt: everything (the probes see the whole house), lamps on, for the screen and for the probes, only while the camera rests
+  function warmEnd(){ if(WARM.endOn) return; WARM.endOn = true; const t0 = performance.now();
+    later(1500, () => warm(warmList(H.scene), [H.renderer.outputEncoding, THREE.LinearEncoding], true, () => S.started && !rig.move && !S.busy && !document.hidden && !TW.length, 10)
+      .then(r => { WARM.end = Object.assign(r, {after: Math.round(performance.now() - t0)}); }).catch(e => oops('warm end', e))); }
+
   /* ================================================================== start */
   function startCard(){ const best = store.get('feast3d.best.' + HUNT);
     const c = el('div', {id: 'feCard'}, `<div class="c" role="dialog" aria-labelledby="feH"><p class="k">A game in the real house</p><h2 id="feH">Thanksgiving at Hillside</h2>
@@ -1115,7 +1180,7 @@
     s0.onclick = () => { SND.setMuted(!SND.muted); d0(); UI.drawSnd(); if(!SND.muted) SND.goal(); }; d0(); try{ $('#feGo').focus({preventScroll: true}); }catch(e){}
     $('#feGo').onclick = () => { SND.unlock(); SND.tap(); $('#feGo').disabled = true; fadeThrough(() => { c.remove(); begin(); }, 420); }; }
   function begin(){ document.documentElement.classList.remove('fe-pre'); const p = standPose('table'); rigCut(PLACES.table.pos, p.yaw, p.pitch, p.fov); S.started = true; S.phase = 'intro'; S.t0 = S.lastProgress = performance.now(); ga('feast3d_start');
-    setGoal(true); arrive('table', true); catAt(CHAIR); }
+    setGoal(true); arrive('table', true); catAt(CHAIR); warmEnd(); }
 
   /* ================================================================== frame loop */
   let lastT = performance.now();
@@ -1128,19 +1193,24 @@
     }catch(e){ if(!frame.err){ frame.err = true; oops('frame', e); } } }
 
   /* ================================================================== boot: after the house is ready */
-  function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} S.staged = asStaged();
-    let need = 2; const go = () => { if(--need > 0) return;
-      const fonts = () => { try{ return Promise.race([Promise.all([document.fonts.load('40px "Caveat Brush"'), document.fonts.load('600 40px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2500))]); }catch(e){ return Promise.resolve(); } };
-      try{ buildUI(); }catch(e){ oops('ui', e); }
-      fonts().then(() => { try{ buildWorld(); setHour(HOURS[0]);
-          const a = yp([12.5, .9, -38.5], [-2.6, -1.6, -44]); rigCut([12.5, .9, -38.5], a[0], a[1], aspect() < 1 ? 80 : 58); UI.live = true; }catch(e){ oops('build', e); }
-        requestAnimationFrame(frame);
-        const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
-            if(o < .03 || n++ > 40){ document.documentElement.classList.add('fe-up'); startCard(); } else setTimeout(w, 120); })(); };
-        const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); clear(); } }); mo.observe(document.body, {childList: true}); } else clear(); }); };
-    loadScript('../assets/snowball.js?v=36', !!window.SNOWBALL, go); loadScript('../assets/feast3d/feast-props.js?v=2', !!window.FEASTPROPS, go); }
+  async function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} S.staged = asStaged();
+    const fonts = () => { try{ return Promise.race([Promise.all([document.fonts.load('40px "Caveat Brush"'), document.fonts.load('600 40px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2500))]); }catch(e){ return Promise.resolve(); } };
+    prog('Fetching Snowball', .1); await DEPS; await fonts(); prog('Hiding the dishes', .3); await paint();
+    try{ buildUI(); }catch(e){ oops('ui', e); }
+    try{ buildWorld(); setHour(HOURS[0]);
+      const a = yp([12.5, .9, -38.5], [-2.6, -1.6, -44]); rigCut([12.5, .9, -38.5], a[0], a[1], aspect() < 1 ? 80 : 58); UI.live = true; }catch(e){ oops('build', e); }
+    requestAnimationFrame(frame);
+    // the table's shaders, compiled now behind the pictures instead of on the first frame of the start card
+    prog('Setting the table', .55); await paint();
+    try{ const r = await warm(feastObjs(), [H.renderer.outputEncoding, THREE.LinearEncoding], false, () => true, 24, k => prog('Setting the table', .55 + .4 * k)); WARM.load = r; }catch(e){ oops('warm', e); }
+    G28.k = 1; G28.ready = true; G28.at = Math.round(performance.now());
+    // the start card goes up under the pictures as they lift (it used to wait until they had gone, which left the house bare for a moment)
+    const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
+        if(o < .03 || n++ > 40){ document.documentElement.classList.add('fe-up'); startCard(); } else setTimeout(w, 120); })(); };
+    const intro = document.getElementById('intro28'), lifting = () => { const i = document.getElementById('intro28'); return !i || i.classList.contains('out'); };
+    if(intro && !lifting()){ const mo = new MutationObserver(() => { if(lifting()){ mo.disconnect(); clear(); } }); mo.observe(document.body, {childList: true}); mo.observe(intro, {attributes: true, attributeFilter: ['class']}); } else clear(); }
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
-    if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
+    if((fr > 8 && !up) || n > 240) setTimeout(() => boot().catch(e => oops('boot', e)), 150); else setTimeout(() => wait(n + 1), 120); })(0);
 
   /* ================================================================== QA hook */
   const rc = new THREE.Raycaster();
@@ -1149,7 +1219,7 @@
   function ray(o, d, far){ rc.set(v3(o), v3(d).normalize()); rc.far = far || 40; let hs = []; try{ hs = rc.intersectObjects(H.scene.children, true); }catch(e){} for(const h of hs) if(solid(h)) return h; return null; }
   function clearAt(p, hs){ let min = 99, who = ''; for(const dy of (hs || [0, -2, -3.8])) for(let i = 0; i < 12; i++){ const a = i / 12 * Math.PI * 2, h = ray([p[0], p[1] + dy, p[2]], [Math.cos(a), 0, Math.sin(a)], 10); if(h && h.distance < min){ min = h.distance; who = (h.object.name || h.object.parent.name) + '@' + dy; } } return {min: +min.toFixed(2), who}; }
   function clearSeg(a, b){ const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], len = Math.hypot(d[0], d[1], d[2]); let worst = null; for(const dy of [0, -1.6, -3.4, -4.7]) for(const s of [-.5, 0, .5]){ const nx = -d[2] / len * s, nz = d[0] / len * s, h = ray([a[0] + nx, a[1] + dy, a[2] + nz], d, len); if(h && (!worst || h.distance < worst.d)) worst = {d: +h.distance.toFixed(2), who: h.object.name || h.object.parent.name, dy}; } return worst; }
-  window.FEAST3D = {errors: ERRS, S, rig, SITE, HELD, PLACES, SPOTS, STEPS, HUNTS, LIGHT, COOL, SMK, PROP, DISHOBJ, get hunt(){ return HUNT; }, get P(){ return P; }, sound: SND, goTo, examine, back, hint, openSpot, knock, carryNow, setDown, liftLid, lightCandles, setHour, setTod, catAt, say, snap, finish, ray, clearAt, clearSeg, sunDir,
+  window.FEAST3D = {errors: ERRS, S, rig, WARM, TIMING, G28, SITE, HELD, PLACES, SPOTS, STEPS, HUNTS, LIGHT, COOL, SMK, PROP, DISHOBJ, get hunt(){ return HUNT; }, get P(){ return P; }, sound: SND, goTo, examine, back, hint, openSpot, knock, carryNow, setDown, liftLid, lightCandles, setHour, setTod, catAt, say, snap, finish, ray, clearAt, clearSeg, sunDir,
     state: () => ({phase: S.phase, step: S.step, place: S.place, ex: S.ex && {id: S.ex.id, state: S.ex.state, mode: S.ex.mode}, busy: S.busy, move: !!rig.move, carry: S.carry, onTable: S.onTable.slice(), hints: S.hints, peeks: S.peeks, tod: S.tod, hour: S.hour, done: S.done, tw: TW.length,
       marks: marks.filter(m => m.on).map(m => { const q = m.b.getBoundingClientRect(); return {k: m.kind, key: m.key, label: m.label, x: Math.round(q.left + q.width / 2), y: Math.round(q.top + q.height / 2), edge: /edge/.test(m.b.className)}; })}),
     view(pos, look, fov){ const a = yp(pos, look); rigCut(pos, a[0], a[1], fov || 62); },

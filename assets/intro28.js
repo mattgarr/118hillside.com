@@ -10,7 +10,15 @@
   var seen = store.get('intro28.seen') === '1', t0 = performance.now(), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(L.classList.contains('done')) return;
   var game = /\/(thanksgiving|halloween)\//.test(location.pathname) || /[?&](snowball|escape|deck|room|feast)=/.test(q);
-  var gname = {snowball: 'Where\u2019s Snowball?', escape: 'Locked In at Hillside', deck: 'Deck the House with Snowball', room: 'Room for Everyone', feast: 'Thanksgiving at Hillside'}[(/[?&](snowball|escape|deck|room|feast)=/.exec(q) || [])[1]];   // the game this visit is loading, named on the loading card
+  var gid = (/[?&](snowball|escape|deck|room|feast)=/.exec(q) || [])[1];
+  var gname = {snowball: 'Where\u2019s Snowball?', escape: 'Locked In at Hillside', deck: 'Deck the House with Snowball', room: 'Room for Everyone', feast: 'Thanksgiving at Hillside'}[gid];   // the game this visit is loading, named on the loading card
+  /* r38 (owner 11/11, Thanksgiving on a phone: "not clear anything is happening when it's loading"): a game gets its own loading card over the
+     photos, with its name, Snowball and one line, instead of the house captions. A game that reports its own loading (window.__game28 =
+     {step, k: 0..1, ready}) adds its steps to the same bar, and the pictures stay until its start card is under them; that card is the next
+     button, so there is no "Start playing" in between. */
+  var gline = {snowball: 'He’s hiding somewhere in the house, and he’s very good at it.', escape: 'Snowball locked something nice in a drinks fridge. He thinks you can\u2019t get it out.',
+    deck: 'Snowball has the lights out. The house is yours to dress.', room: 'Snowball\u2019s friends are coming to stay, and every one of them wants a room.', feast: 'Snowball hid dinner all over the house. Biscuit helped.'}[gid];
+  var reports = gid === 'feast';
   var S = [
     ['front-exterior-1600.jpg', '118 Hillside Drive', 'A house in Woodside Glens, about a mile from the market, the bakery and the library in Town Center.'],
     ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a foyer with a cathedral ceiling. The heritage oak is framed in the glass at the far end.'],
@@ -51,17 +59,34 @@
     '#intro28 .dots{display:flex;gap:5px}#intro28 .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}#intro28 .dots i.on{background:#fff}' +
     '@media (max-width:640px){#intro28 .go{left:18px;right:18px;align-items:stretch;bottom:calc(24px + env(safe-area-inset-bottom,0px))}#intro28 .go button{width:100%}#intro28.ready .cap{bottom:120px}#intro28 .dots{display:none}}' +
     '@media (prefers-reduced-motion:reduce){#intro28 .sl img,#intro28 .sl.on img{transform:none;transition:none}}' +
-    '@media (min-width:641px) and (max-width:1100px){#intro28 .ld,#intro28 .go{bottom:24px}#intro28 .cap{bottom:128px}}';   // r35: between phone and wide desktop the status card sat on top of the caption
+    '@media (min-width:641px) and (max-width:1100px){#intro28 .ld,#intro28 .go{bottom:24px}#intro28 .cap{bottom:128px}}' +   // r35: between phone and wide desktop the status card sat on top of the caption
+    /* r38 game card: the caption becomes the game's title card (kicker, name, one line) with Snowball beside it, on a soft dark plate so it reads over any photo */
+    '#intro28.gm .cap{display:flex;align-items:flex-end;gap:clamp(12px,2vw,22px);max-width:min(680px,calc(100% - 420px))}' +
+    '#intro28.gm .cap .sb{flex:none;width:clamp(78px,9vw,116px);aspect-ratio:304/462;filter:drop-shadow(0 6px 16px rgba(0,0,0,.45));animation:i28bob 2.6s ease-in-out infinite;transform-origin:50% 100%}' +
+    '#intro28.gm .cap .sb svg{display:block;width:100%;height:100%}#intro28.gm .cap .sb .paw{width:70%;height:auto;margin:30% auto 0;color:#e8d3b0}' +
+    '#intro28.gm .cap .tx{min-width:0;padding-bottom:4px}#intro28.gm .cap small{display:block;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.9;margin:0 0 8px;text-shadow:0 1px 8px rgba(0,0,0,.5)}' +
+    '#intro28.gm .cap h2{font-size:clamp(34px,4.6vw,58px)}#intro28.gm .dots{display:none}' +
+    '#intro28.gm .sh{background:linear-gradient(180deg,rgba(10,12,14,.38) 0%,rgba(10,12,14,0) 26%,rgba(10,12,14,0) 42%,rgba(10,12,14,.84) 100%)}' +
+    '@keyframes i28bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-1.5deg)}}' +
+    '@media (max-width:1100px){#intro28.gm .cap{max-width:none}}' +
+    '@media (max-width:640px){#intro28.gm .cap{flex-direction:column;align-items:flex-start;gap:10px}#intro28.gm .cap .sb{width:84px}#intro28.gm .cap h2{font-size:38px}}' +
+    '@media (prefers-reduced-motion:reduce){#intro28.gm .cap .sb{animation:none}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
-  var el = document.createElement('div'); el.id = 'intro28'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Introducing 118 Hillside Drive while the 3D house loads');
+  var el = document.createElement('div'); el.id = 'intro28'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', gname ? gname + ' is loading' : 'Introducing 118 Hillside Drive while the 3D house loads');
+  var gm = !!(gname && gline); if(gm) el.className = 'gm';
+  var PAW = '<svg class="paw" viewBox="0 0 44 44" aria-hidden="true"><g fill="currentColor"><ellipse cx="22" cy="29" rx="10" ry="8.4"/><ellipse cx="8.6" cy="18" rx="4" ry="5.2" transform="rotate(-24 8.6 18)"/><ellipse cx="16.6" cy="10" rx="4" ry="5.4" transform="rotate(-8 16.6 10)"/><ellipse cx="27.4" cy="10" rx="4" ry="5.4" transform="rotate(8 27.4 10)"/><ellipse cx="35.4" cy="18" rx="4" ry="5.2" transform="rotate(24 35.4 18)"/></g></svg>';
   var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 1 ? 'src' : 'data-src') + '="../images/' + s[0] + '"></div>'; }).join('');
   el.innerHTML = slides + '<div class="sh"></div>' +
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
-    '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
+    (gm ? '<div class="cap"><div class="sb" aria-hidden="true">' + PAW + '</div><div class="tx"><small>A game in the real house</small><h2></h2><p></p></div></div>' : '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>') +
     '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>' + (game ? 'The house is ready.' : 'You start at the street. Use Next to go through the house.') + '</small></div>' +
-    '<div class="ld" role="status" aria-live="polite"><i aria-hidden="true"></i><div><b id="i28pct">Loading ' + (game ? 'the game' : 'the 3D house') + '…</b><span>' + (gname ? gname + ' is loading. ' : '') + 'Enjoy a few pictures of the house while it gets ready.</span></div></div>' +
+    '<div class="ld" role="status" aria-live="polite"><i aria-hidden="true"></i><div><b id="i28pct">Loading ' + (game ? 'the game' : 'the 3D house') + '…</b><span>' + (gm ? 'Meanwhile, a few photos of the real house.' : (gname ? gname + ' is loading. ' : '') + 'Enjoy a few pictures of the house while it gets ready.') + '</span></div></div>' +
     '<div class="bar" aria-hidden="true"><i></i></div>';
   document.body.appendChild(el);
+  /* Snowball on the game card: the shared drawing (the games load the same file next), blinking now and then; a paw until it arrives */
+  if(gm){ var sb = el.querySelector('.cap .sb'), drawCat = function(eyes){ try{ sb.innerHTML = window.SNOWBALL.svg({id: 'i28sb' + (eyes ? 'c' : ''), seed: 7, eyes: eyes}); }catch(e){} };
+    var catUp = function(){ if(!window.SNOWBALL || !sb) return; drawCat(); if(!reduce) (function blink(){ setTimeout(function(){ if(!document.getElementById('intro28')) return; drawCat('closed'); setTimeout(function(){ drawCat(); blink(); }, 160); }, 2600 + Math.random() * 2200); })(); };
+    if(window.SNOWBALL) catUp(); else { var cs = document.createElement('script'); cs.src = '../assets/snowball.js?v=37'; cs.onload = catUp; document.head.appendChild(cs); } }
   var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');
   var k = 0, timer = null, done = false, readyAt = 0;
   /* r38 (phone audit): a photo fades in only once it has arrived (the smaller front photo waits underneath, so the screen is never an empty dark box),
@@ -72,9 +97,9 @@
   function warm(i){ var im = sl[i % S.length].querySelector('img'); if(im && !im.getAttribute('src') && im.dataset.src) im.src = im.dataset.src; }
   function show(i){ var nimg = sl[i % S.length].querySelector('img'); warm(i); if(!(nimg.complete && nimg.naturalWidth)) return; nimg.classList.add('in');   // hold the current slide until the next photo is in
     sl[k].classList.remove('on'); if(dots[k]) dots[k].classList.remove('on'); k = i % S.length; sl[k].classList.add('on'); if(dots[k]) dots[k].classList.add('on');
-    warm(k + 1); warm(k + 2);
+    warm(k + 1); warm(k + 2); if(gm) return;   // a game card keeps its words; only the photo behind it changes
     cap.classList.add('swap'); setTimeout(function(){ h2.textContent = S[k][1]; p.textContent = S[k][2]; cap.classList.remove('swap'); }, reduce ? 0 : 320); }
-  h2.textContent = S[0][1]; p.textContent = S[0][2];
+  if(gm){ h2.textContent = gname; p.textContent = gline; } else { h2.textContent = S[0][1]; p.textContent = S[0][2]; }
   timer = setInterval(function(){ show(k + 1); }, 3600);
   /* r35 progress (owner 11/10: "the rendering first view sits there for a long time"): the page writes its phase and a percentage into
      #loadtxt ("Furnishing the rooms... 55%"), then "Rendering the first view... 95%" while a gate (window.__reveal) waits for textures, shaders
@@ -91,11 +116,15 @@
     for(i = 0; i < PH.length; i++) if(PH[i][0].test(txt)){ lab = PH[i][1]; break; }
     if(lifted){ var left = (B && B.left) || {}; lab = left.trees ? 'Planting the trees' : left.probes ? 'Polishing the reflections' : 'Opening the doors'; pct = Math.max(pct, 97); }
     else if(lab === PH[0][1] && R && R.unmet){ var u = R.unmet; lab = u.tex ? 'Loading the textures' : u.env ? 'Setting up the sky' : u.compile ? 'Preparing the graphics' : (u.meter != null || u.meterSettling != null) ? 'Balancing the light' : u.dark != null ? 'Letting the light in' : lab; }
+    var to = pct, cap = lifted ? 99.4 : pct >= 95 ? 98.4 : Math.min(94, pct + 9), GR = reports ? window.__game28 : null;
+    if(reports){   // the house is the first 82%, the game's own steps the rest
+      var gk = GR ? Math.max(0, Math.min(1, +GR.k || 0)) : 0; to = lifted ? 82 + 17 * gk : Math.min(80, pct * .84); cap = lifted ? Math.min(99.4, 86 + 17 * gk) : pct >= 95 ? 81 : Math.min(79, to + 8);
+      if(lifted && GR && !GR.ready && GR.step) lab = GR.step; }
     if(lab && lab !== label){ label = lab; stageAt = now; }
-    var cap = lifted ? 99.4 : pct >= 95 ? 98.4 : Math.min(94, pct + 9), dt = Math.min(1000, now - lastT); lastT = now;
-    shown = Math.max(shown, pct); if(shown < cap) shown += (cap - shown) * (1 - Math.exp(-dt / 5000));
+    var dt = Math.min(1000, now - lastT); lastT = now;
+    shown = Math.max(shown, to); if(shown < cap) shown += (cap - shown) * (1 - Math.exp(-dt / 5000));
     var say = label, held = now - stageAt; if(!done && held > 4500 && Math.floor(held / 3500) % 2) say = 'Nearly there';   // a long phase: the words still change
-    bar.style.width = (done ? 100 : shown) + '%'; if(pe) pe.textContent = (done ? what : say) + '… ' + Math.round(done ? 100 : shown) + '%'; }
+    bar.style.width = (done ? 100 : shown) + '%'; if(pe) pe.textContent = done && reports ? 'Ready' : (done ? what : say) + '… ' + Math.round(done ? 100 : shown) + '%'; }
   var pi = setInterval(prog, 250), wi = 0; prog();
   if(lt && window.MutationObserver) new MutationObserver(function(){ if(!done) prog(); }).observe(lt, {childList: true, characterData: true, subtree: true});
   function leave(){ if(el.classList.contains('out')) return; store.set('intro28.seen', '1'); clearInterval(timer); clearInterval(pi); clearInterval(wi); el.classList.add('out');
@@ -103,9 +132,10 @@
     setTimeout(function(){ el.remove(); }, 800); }
   el.querySelector('.go button').addEventListener('click', leave);
   document.addEventListener('keydown', function(e){ if(done && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') && document.getElementById('intro28')){ e.preventDefault(); leave(); } }, true);
-  function ready(){ if(done) return; done = true; readyAt = performance.now(); prog(); el.classList.add('ready');
+  function ready(){ if(done) return; done = true; readyAt = performance.now(); prog(); if(!reports) el.classList.add('ready');
     var waited = readyAt - t0;
-    if(waited < 1400 || seen) setTimeout(leave, seen ? 350 : 200);   // quick loads and returning visitors walk straight in
+    if(reports) setTimeout(leave, 250);   // the game's own start card is the next button
+    else if(waited < 1400 || seen) setTimeout(leave, seen ? 350 : 200);   // quick loads and returning visitors walk straight in
     else el.querySelector('.go button').focus({preventScroll: true}); }
   /* r35: "ready" is the view, not the flag. #loading.done only starts the loading card's fade, and it can be set by a timeout before a frame
      has been drawn (a background tab). The pictures stay until the card has faded out, frames are really being drawn after that, and the
@@ -117,7 +147,8 @@
     if(document.hidden) return; liftedVis += 200;
     var faded = +getComputedStyle(L).opacity < .05, r = renders(), drawn = r >= 0 && G0 >= 0 ? r - G0 >= 3 : rafN >= 8, B = window.__boot22, refined = !B || B.done || B.off;
     if(seen && B && B.settled) refined = true;   // a returning visitor goes in as soon as the view is drawn and the rooms have settled; the page's own "Refining the view" covers the trees
-    if((faded && drawn && (refined || liftedVis > 6000)) || liftedVis > 15000) ready(); }
+    var game0 = !reports || (window.__game28 && __game28.ready) || liftedVis > 30000;   // a game that reports: its start card is ready under the pictures
+    if(game0 && ((faded && drawn && (refined || liftedVis > 6000)) || liftedVis > 15000)) ready(); }
   wi = setInterval(watch, 200);
   new MutationObserver(watch).observe(L, {attributes: true, attributeFilter: ['class']});
   watch();
