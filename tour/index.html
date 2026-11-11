@@ -22288,7 +22288,11 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
   } finally { doors.forEach((it, q) => { it.coll.pass = was[q]; }); } }
 function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
   const key = [from.x, from.y, from.z, to.x, to.y, to.z].map(v => v.toFixed(1)).join(',') + R36N.key; if(R36N.cache.has(key)) return R36N.cache.get(key);
-  let res = null; try{ const way = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
+  let res = null; try{ let way = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
+    /* r37: a route through the garage door goes through the middle of it, not past a jamb */
+    if(way && !R36N.noClear) for(const it of r36Doors()){ if(!/SECTIONAL/.test(it.b3kind || '') || !it.c0) continue; const q = it.coll; let hit = false;
+      for(let i = 0; i < way.length - 1 && !hit; i++){ const a = way[i], b = way[i + 1], k = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .4)); for(let u = 0; u <= k; u++){ const x = a.x + (b.x - a.x) * u / k, z = a.z + (b.z - a.z) * u / k; if(x > q.x0 - .3 && x < q.x1 + .3 && z > q.z0 - .3 && z < q.z1 + .3 && Math.abs(a.f - q.y0) < 2.5){ hit = true; break; } } }
+      if(hit){ const C = {x: it.c0[0], z: it.c0[1], f: q.y0}, w1 = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, C), w2 = w1 && r36Plan(C, {x: to.x, z: to.z, f: tf, rooms: rooms || null}); if(w1 && w2) way = w1.concat(w2.slice(1)); break; } }
     if(way){ // round the corners (two passes of corner cutting keep the line inside the pulled corridor), then sample every 0.5 ft and set the eye over the floor
       let P = way.map(n => [n.x, n.z, n.f]); for(let pass = 0; pass < 2; pass++){ const Q = [P[0]]; for(let i = 1; i < P.length - 1; i++){ const a = P[i - 1], b = P[i], d = P[i + 1], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lb = Math.hypot(d[0] - b[0], d[1] - b[1]), ka = Math.min(.25, 1.2 / Math.max(la, .01)), kb = Math.min(.25, 1.2 / Math.max(lb, .01));
           Q.push([b[0] + (a[0] - b[0]) * ka, b[1] + (a[1] - b[1]) * ka, b[2] + (a[2] - b[2]) * ka], [b[0] + (d[0] - b[0]) * kb, b[1] + (d[1] - b[1]) * kb, b[2] + (d[2] - b[2]) * kb]); } Q.push(P[P.length - 1]); P = Q; }
@@ -22297,9 +22301,9 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
       pts.push(to.clone());
       /* r37: keep a shoulder's width off a wall that runs beside the route (the line used to brush siding and door jambs). Each point is nudged away from an obstacle on one side only, the nudges are smoothed, and a nudge is kept only where the ground is still walkable */
       if(!R36N.noClear) try{ const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
-        try{ const n = pts.length, D = [], fr = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; }, DIR = [[1, 0], [.7071, .7071], [0, 1], [-.7071, .7071]], near = (x, z, f, dx, dz) => { for(const r of [.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]) if(!fr(x + dx * r, z + dz * r, f)) return r - .5; return 4; };
-          for(let i = 0; i < n; i++){ const q = pts[i], f = q.y - EYE; let sx = 0, sz = 0; if(i > 2 && i < n - 3 && Math.abs(pts[i + 1].y - pts[i - 1].y) < .12) for(const [dx, dz] of DIR){ const a = near(q.x, q.z, f, dx, dz), b = near(q.x, q.z, f, -dx, -dz); const m = a < 4 && b < 4 ? (a - b) / 2 : a - b; sx += dx * m; sz += dz * m; }
-            const L = Math.hypot(sx, sz), k = L > 3 ? 3 / L : 1; D.push([sx * k, sz * k]); }
+        try{ const n = pts.length, D = [], fr = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; }, DIR = [[1, 0], [.7071, .7071], [0, 1], [-.7071, .7071]], near = (x, z, f, dx, dz) => { for(const r of [.5, 1, 1.5, 2, 2.5]) if(!fr(x + dx * r, z + dz * r, f)) return r - .5; return 2.5; };
+          for(let i = 0; i < n; i++){ const q = pts[i], f = q.y - EYE; let sx = 0, sz = 0; if(i > 2 && i < n - 3 && Math.abs(pts[i + 1].y - pts[i - 1].y) < .12) for(const [dx, dz] of DIR){ const a = near(q.x, q.z, f, dx, dz), b = near(q.x, q.z, f, -dx, -dz); const m = a < 2.5 && b < 2.5 ? (a - b) / 2 : a - b; sx += dx * m; sz += dz * m; }
+            const L = Math.hypot(sx, sz), k = L > 2 ? 2 / L : 1; D.push([sx * k, sz * k]); }
           const sm = k => { for(let pass = 0; pass < k; pass++){ const E = D.map(d => d.slice()); for(let i = 1; i < n - 1; i++){ D[i][0] = (E[i - 1][0] + E[i][0] * 2 + E[i + 1][0]) / 4; D[i][1] = (E[i - 1][1] + E[i][1] * 2 + E[i + 1][1]) / 4; } } };
           const ok = i => { const q = pts[i], f = q.y - EYE, x = q.x + D[i][0], z = q.z + D[i][1]; if(Math.hypot(D[i][0], D[i][1]) < .04) return true; return !!r36At(x, z, f) && fr(x, z, f) && Math.abs(navSupport(x, z, f + .3) - f) < .2; };
           for(let i = 0; i < n; i++){ const w = Math.max(0, Math.min(1, (i - 2) / 6, (n - 3 - i) / 6)); D[i][0] *= w; D[i][1] *= w; }
