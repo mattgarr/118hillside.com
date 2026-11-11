@@ -8990,7 +8990,7 @@ async function boot(){
       if(si > 0){ navOpenAt(si); } else showStop(0,false); }
     applyVisibility(); updateLegend();
     const h=(location.hash||'').slice(1); if(h && ['walk','doll','design','photos'].includes(h)) setMode(h);
-    if(/[?&](escape|snowball|deck)=/.test(location.search)){   // r30 escape room: a small host API for assets/escape/escape.js (loaded only on ?escape=...)
+    if(/[?&](escape|snowball|deck|room)=/.test(location.search)){   // r30 escape room: a small host API for assets/escape/escape.js (loaded only on ?escape=...)
       const HX = window.HILLSIDE = {THREE, camera, target, scene, canvas, renderer, STOPS, ROOM, GROUPS, LV, TOD, flyTo, showStop, setMode, setTOD, pick, grp, sunPosition, SUN_DIR,
         get mode(){ return mode; }, get nav(){ return nav; }, set nav(v){ nav = v; }, get anim(){ return anim || glide || (performance.now() - flightAt < 250 ? {kind: 'look', settling: true} : null); }, set anim(v){ if(v == null && anim && anim.kind === 'look'){ nav = 'look'; lookFromCamera(); navGlide(); } anim = v; },   // r34: a game cancelling a flight (to turn in place) no longer strands the camera mid-flight; a flight counts as in progress for a quarter second after it starts, so a game's camera hold always sees it (also one that ends within a frame: reduced motion)
         get flights(){ return flightN; },
@@ -9001,7 +9001,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=36' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=1' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=36' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
