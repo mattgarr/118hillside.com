@@ -6654,6 +6654,45 @@ function navQA(){
       else if(A && A.cut){ cut++; R.note('moves', id, 'cut'); } else if(A){ flown++; if(A.kind === 'look' && A.from.distanceTo(A.to) > 3) R.fail('moves', id, 'a straight flight of ' + r2(A.from.distanceTo(A.to)) + ' ft'); else R.note('moves', id, A.kind === 'orbit' ? 'orbit flight outdoors' : 'turn'); }
       finish(); const m = probe(); if(dist(m, FRAME_FOR(b).pos) > (look(b) ? .05 : .8)) R.fail('moves', id, 'ended at ' + m.pos + ', not at the stop'); }
     R.note('moves', 'summary', walked + ' walked, ' + cut + ' cut, ' + flown + ' flown / turned'); tour(0); };
+  /* r37 (owner 11/11: "smooth out the walking view... the head spins are jarring... in reality people keep their heads pointed without a ton of
+     turning"): every tour move in order, forward and back, stepped with a fixed simulated frame time (the page clock is replaced while it runs and
+     nothing is drawn, so a hidden or throttled window measures the same). Per walked move: the largest yaw rate (deg/s) and yaw acceleration
+     (deg/s2), the yaw turned in all against the net change (excess = turning that was undone), yaw reversals (a turn back of more than 1.5 deg
+     after turning the other way), the top speed and acceleration (ft/s, ft/s2), the vertical acceleration, the smallest clearance (ft, horizontal
+     rays to 3 ft) and the duration. A move fails over the caps (R37S.CHK) or with more than one reversal. {smoothDt: 1/30} steps at another frame
+     rate; {smoothFps: true} also replays the five worst moves at 30 and 120 fps and fails if their head turns differ from the 60 fps run. The
+     table is kept in window.__SMOOTH. */
+  SEC.smooth = async R => { const dt0 = o.smoothDt || 1 / 60, CHK = R37S.CHK, D = 180 / Math.PI;
+    const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)), rows = [], realNow = performance.now.bind(performance), V = new V3();
+    let vt = realNow(); const yawOf = () => { camera.getWorldDirection(V); return Math.atan2(-V.x, -V.z); };
+    const run = (A, dt, keepTrace) => { const m = {dur: 0, rate: 0, acc: 0, total: 0, net: 0, rev: 0, v: 0, a: 0, ay: 0, clr: 99, trace: keepTrace ? [] : null};
+      let py = yawOf(), uw = 0, pr = null, dir = 0, opp = 0, P1 = camera.position.clone(), P2 = null, t = 0, n = 0;
+      while(anim === A && t < 25){ vt += dt * 1000; tick0(true); t += dt; n++; camera.updateMatrixWorld();
+        const y = yawOf(), d = angDiff(py, y); py = y; uw += d; m.total += Math.abs(d); const rate = d / dt * D; m.rate = Math.max(m.rate, Math.abs(rate)); if(pr != null) m.acc = Math.max(m.acc, Math.abs(rate - pr) / dt); pr = rate;
+        if(Math.abs(d) * D > 1e-4){ const sg = Math.sign(d); if(!dir){ if(Math.abs(uw) * D > 1.5) dir = Math.sign(uw); } else if(sg !== dir){ opp += Math.abs(d) * D; if(opp > 1.5){ m.rev++; dir = sg; opp = 0; } } else opp = 0; }
+        const P = camera.position; m.v = Math.max(m.v, P.distanceTo(P1) / dt);
+        if(P2){ const ax = (P.x - 2 * P1.x + P2.x) / dt / dt, ay = (P.y - 2 * P1.y + P2.y) / dt / dt, az = (P.z - 2 * P1.z + P2.z) / dt / dt; m.a = Math.max(m.a, Math.hypot(ax, ay, az)); m.ay = Math.max(m.ay, Math.abs(ay)); }
+        P2 = P1.clone(); P1.copy(P);
+        if(keepTrace) m.trace.push([t, uw]); if(n % 6 === 0 && anim === A) m.clr = Math.min(m.clr, probe().clr); }
+      m.dur = t; m.net = Math.abs(uw); return m; };
+    const rr = v => +(+v).toFixed(1), fps = [];
+    R37S.qaNoDraw = true; performance.now = () => vt;
+    try{ tour(seq[0]);
+      for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
+        if(!A || !A.path){ finish(); continue; } const L = A.path.L, m = run(A, dt0, true), row = {id, L: rr(L), dur: +m.dur.toFixed(2), rate: rr(m.rate), acc: rr(m.acc), total: rr(m.total * D), net: rr(m.net * D), excess: rr((m.total - m.net) * D), rev: m.rev, v: rr(m.v), a: rr(m.a), ay: rr(m.ay), clr: +m.clr.toFixed(2), from: seq[q - 1], to: seq[q], trace: m.trace};
+        rows.push(row); finish();
+        const bad = []; if(m.rate > CHK.rate) bad.push('yaw rate ' + row.rate + ' deg/s'); if(m.acc > CHK.acc) bad.push('yaw acceleration ' + row.acc + ' deg/s2'); if(m.rev > CHK.rev) bad.push(m.rev + ' turning reversals'); if(m.dur > CHK.dur) bad.push('takes ' + row.dur + ' s');
+        if(bad.length) R.fail('smooth', id, bad.join(', ')); R.note('smooth', id, L.toFixed(1) + ' ft ' + row.dur + ' s; yaw max ' + row.rate + ' deg/s, ' + row.acc + ' deg/s2, turned ' + row.total + ' for net ' + row.net + ' deg (' + row.rev + ' reversals); speed max ' + row.v + ' ft/s, accel ' + row.a + ' ft/s2 (vertical ' + row.ay + '); clearance ' + row.clr + ' ft'); }
+      if(o.smoothFps){ const worst = rows.slice().sort((x, y) => y.rate + y.excess / 4 - x.rate - x.excess / 4).slice(0, 5);
+        for(const w of worst){ for(const dt of [1 / 30, 1 / 120]){ await pause(); tour(w.from); showStop(w.to); const A = anim; if(!A || !A.path){ finish(); continue; } const m = run(A, dt, true); finish();
+            let dev = 0; for(const [t, y] of m.trace){ const tr = w.trace; let k = 0; while(k < tr.length - 1 && tr[k + 1][0] < t) k++; if(k >= tr.length - 1) continue; const u = (t - tr[k][0]) / Math.max(1e-6, tr[k + 1][0] - tr[k][0]); if(u < 0 || u > 1) continue; dev = Math.max(dev, Math.abs(y - (tr[k][1] + (tr[k + 1][1] - tr[k][1]) * u)) * D); }
+            fps.push({id: w.id, fps: Math.round(1 / dt), rate: rr(m.rate), acc: rr(m.acc), dur: +m.dur.toFixed(2), dev: +dev.toFixed(2)});
+            if(dev > 2.5 || m.rate > CHK.rate * 1.04) R.fail('smooth', w.id + ' @' + Math.round(1 / dt) + 'fps', 'differs from 60 fps by ' + dev.toFixed(1) + ' deg (yaw max ' + rr(m.rate) + ' deg/s)');
+            R.note('smooth', w.id + ' @' + Math.round(1 / dt) + 'fps', 'yaw max ' + rr(m.rate) + ' deg/s, ' + rr(m.acc) + ' deg/s2, ' + m.dur.toFixed(2) + ' s, largest heading difference from 60 fps ' + dev.toFixed(2) + ' deg'); } } } }
+    finally{ performance.now = realNow; R37S.qaNoDraw = false; try{ clock.oldTime = realNow(); for(const it of DOOR28.moving) it.lt = 0; if(anim) anim.t0 = -1e9; }catch(e){} }
+    for(const r of rows) delete r.trace; window.__SMOOTH = {rows, fps, dt: dt0}; const s = k => rows.reduce((x, r) => Math.max(x, r[k]), 0);
+    R.note('smooth', 'summary', rows.length + ' walked moves at ' + Math.round(1 / dt0) + ' fps: yaw max ' + s('rate') + ' deg/s, ' + s('acc') + ' deg/s2; most reversals ' + s('rev') + '; most excess turning ' + s('excess') + ' deg; longest ' + s('dur') + ' s');
+    tour(0); };
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
     const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
@@ -22458,6 +22497,9 @@ function r36WhereAt(x, z, f){
    reads as grey paving, as it does in life; at dusk nothing changes (the Dusk look is left exactly as it was). */
 function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golden' ? .045 : .08, g = GROUPS.terrain; if(!g) return; g.traverse(o => { if(o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(k, k, k * .96); }); }
 { const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
+/* r37 smooth walking: the caps the ?qa=1 'smooth' check holds every walked move to; qaNoDraw lets that check step frames without drawing them */
+const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false};
+{ const _rf37 = renderFrame; renderFrame = function(){ if(R37S.qaNoDraw){ if(DOOR28.moving.size) try{ door28Step(); }catch(e){} return; } return _rf37.apply(this, arguments); }; }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 { let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)
 boot();
