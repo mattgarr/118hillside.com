@@ -1929,7 +1929,7 @@ const STOPS = [
   p:'The middle bedroom is at the end of the bedroom hall, with a vaulted ceiling and a wide window.'},
  {id:'hallbath', t:'Hall bath', level:'main', rooms:['mainbath'], pos:[31.0,EYE,9.6], look:[25.8,EYE,5.8],
   p:'The full bath on the bedroom hall has a Carrara marble-topped vanity and a tub with a shower.'},
- {id:'backbed', t:'Back bedroom', dims:'9′9″ × 11′6″', ph:[73,64,'x04'], photo:73, level:'main', rooms:['mainbeds'], pos:[19.4,EYE,3.8], look:[25.6,EYE,-6.4],
+ {id:'backbed', t:'Back bedroom', dims:'9′9″ × 11′6″', ph:[73,64,'x04'], photo:73, level:'main', rooms:['mainbeds'], pos:[21.0,EYE,3.7], look:[24.4,EYE,-6.6],
   p:'The back bedroom, at the other end of the hall, is staged here as a gym and office.'},
  {id:'stairs', t:'Stairs', photo:36, level:'main', rooms:['stairs'], pos:S(1150,1790,EYE), look:S(820,1650,7.4),
   p:'Back through the kitchen and living room to the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'},
@@ -1943,7 +1943,7 @@ const STOPS = [
   p:'The balcony is off the primary bedroom. It faces west, toward the hills and the sunset.'},
  {id:'lower', t:'Lower-level bedroom 1', photo:63, level:'lower', rooms:['lbed1'], pos:S(1000,890,LV.lower+EYE), look:S(820,640,LV.lower+3.4),
   p:'Two flights down, this is the first of two bedrooms on the lower level, at the end of the hall. It has windows on two walls.'},
- {id:'lbath', t:'Lower-level bath', photo:60, level:'lower', rooms:['lbath'], pos:[-14.3,LV.lower+EYE,-32.0], look:[-10.9,LV.lower+EYE,-35.3],
+ {id:'lbath', t:'Lower-level bath', photo:60, level:'lower', rooms:['lbath'], pos:[-14.2,LV.lower+EYE,-32.65], look:[-10.6,LV.lower+EYE,-35.6],
   p:'The full bath on the lower hall has a dual-sink vanity and heated floors.'},
  {id:'lbed2', t:'Lower-level bedroom 2', photo:58, level:'lower', rooms:['lbed2'], pos:[-24.6,LV.lower+EYE,-27.2], look:[-28.0,LV.lower+EYE,-39.5],
   p:'The second bedroom on the lower level is across the hall from the bath, with skylights overhead.'},
@@ -6350,8 +6350,8 @@ const STOP_CAMS = window.STOP_CAMS = {
   primary:  {photo:'p06', pos:[-12.66, 9.25, -28.22], dir:[-0.7021, 0, -0.7121], hfov:102.1, sy:0.002, err:19},        // NE corner: bed, slider, glazed gable
   pbath:    {photo:'p45', pos:[-14.24, 9.49, -22.88], dir:[0.6625, 0, 0.7491], hfov:97.7, sy:-0.014, err:24},          // windows + curbless shower
   balcony:  {photo:'p19', pos:[-17.73, 9.57, -39.60], dir:[-0.0464, 0, -0.9989], hfov:80.9, sy:-0.026, err:1},         // from the slider: parapet, chairs, western hills
-  backbed:  {photo:'p73', pos:[19.40, 5.00, 3.80], dir:[0.5194, 0, -0.8545], hfov:100, sy:0, err:null},   // r38: SW corner of the back bedroom: window left, leaning mirrors right (the gym in p73)
-  lbath:    {photo:'p60', pos:[-14.30, 0.44, -32.00], dir:[0.7176, 0, -0.6965], hfov:98, sy:0, err:null},   // r38: past the open door: vanity, mirror and blue tile left, window and towel rings ahead
+  backbed:  {photo:'p73', pos:[21.00, 5.00, 3.70], dir:[0.3135, 0, -0.9496], hfov:100, sy:0, err:null},   // r38: south wall of the back bedroom: closet left, window, leaning mirror right (the gym in p73)
+  lbath:    {photo:'p60', pos:[-14.20, 0.44, -32.65], dir:[0.7735, 0, -0.6338], hfov:98, sy:0, err:null},   // r38: past the open door: vanity, mirror and blue tile left, window and towel rings ahead
   lbed2:    {photo:'p58', pos:[-24.60, 0.44, -27.20], dir:[-0.2664, 0, -0.9639], hfov:100, sy:0, err:null},   // r38: closet end: art wall left, bed under the window
   laundry:  {photo:'p04', pos:[-25.30, 0.44, -17.60], dir:[-0.3162, 0, -0.9487], hfov:77, sy:0, ar:0.667, err:null},   // r38: doorway: window left (portrait photo)
   office:   {photo:'p20', pos:[-28.10, 0.44, -10.10], dir:[0.2730, 0, 0.9620], hfov:77, sy:0, ar:0.667, err:null},   // r38: beside the cube shelf: desk wall left, corner windows ahead-right (portrait photo)
@@ -6441,14 +6441,14 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   mainbeds: {at: [18.5, 35.0], to: [26.4, 28.8], hf: 100, eye: 4.8, rise: -.12},   // r36: just inside the door, where photo p74 was taken and facing the same way: bed, closet doors, window. Was over the bed facing a corner:     // headboard corner, low with a falling front (rise) -> bed in front, both windows leading, closet doors to the side
   middlebed: {at: [24.6, 15.4], to: [30.5, 22.6], hf: 100},   // r38: just inside the door from the hall, past its open leaf: the bed on the far wall, the wide window left
   hallbath: {at: [31.0, 9.6], to: [25.8, 5.8], hf: 100},   // r38: the window corner by the tub, looking back past the open door's edge to the marble-topped vanity and the hall (photo p57's spot, by the door, has the open leaf in front of the vanity)
-  backbed: {at: [19.4, 3.8], to: [25.6, -6.4], hf: 100},   // r38: SW corner, the way photo p73 faces: window left, leaning mirrors right, the oval desk
+  backbed: {at: [21.0, 3.7], to: [24.4, -6.6], hf: 100},   // r38: by the south wall, the way photo p73 faces: closet left, window, leaning mirror right, the oval desk. Two feet further from the door than this, the walk on to the stairs plans 10.1-10.5 s (here 8.2 s)
   stairs: {at: [-9.5, -3], to: [-18.5, -8], hf: 100, rise: .08},   // foyer edge, square to the stair hall -> open treads and cable rails of both flights as one sculptural run, landing bench, loft rail and window light above
   loft: {at: [-13.5, -10.8], to: [-24.7, -2.8], rise: .2},   // stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
   primary: {at: [-10.2, -27.5], to: [-24, -40]},   // loft-side corner -> bed, skylights, glazed gable, slider to the balcony
   pbath: {at: [-14.4, -23.0], to: [-7.76, -15.52], hf: 100},   // r36: photo p45's own spot and direction: window, curbless shower behind its glass. Was turned 60 degrees from the photo:     // just inside the door -> double vanity + round mirrors, window, curbless shower glass
   balcony: {at: [-14.5, -41.1], to: [-28, -54], rise: -.18, ph: [-24, -56], riseP: .08},   // balcony corner by the house wall (downspout + siding frame the left edge) -> chairs and deck, parapet, oak, the valley and hills at golden hour; the frame falls (rise) to trade sky for deck
   lower: {at: [-18.75, -38.5], to: [-12.65, -47.0], hf: 100, rise: -.14},   // r36: in the doorway, wider and with the frame lowered so the whole bed, the floor and both windows show (photo p63's direction):     // doorway corner -> bed, both windows
-  lbath: {at: [-14.3, -32.0], to: [-10.9, -35.3], hf: 100},   // r38: past the open door's edge (it stands in front of the vanity's west end): mirror, blue tile and sink left, window and towel rings ahead (photo p60)
+  lbath: {at: [-14.2, -32.65], to: [-10.6, -35.6], hf: 100},   // r38: past the open door's edge (it stands in front of the vanity's west end): mirror, blue tile and sink left, window and towel rings ahead (photo p60)
   lbed2: {at: [-24.6, -27.2], to: [-28.0, -39.5], hf: 100},   // r38: closet end, beside the open door: art wall left, bed under the window, a skylight overhead (photo p58)
   laundry: {at: [-25.3, -17.6], to: [-27.2, -23.3], hf: 100},   // r38: in the doorway: window left, washer and dryer under it (photo p04)
   office: {at: [-28.1, -10.1], to: [-26.0, -2.7], hf: 100, rise: .12},   // r38: by the cube shelf, past the open door: desk wall left, corner windows ahead, the frame risen for the skylit ceiling (photo p20)

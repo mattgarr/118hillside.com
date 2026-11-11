@@ -620,13 +620,13 @@ function rows(h) {
   // SKYLIT OFFICE (p542-p546): white X desk on the right-hand wall under the green / blue abstract, clear lamp, toy blocks, acrylic chair with
   // a navy pillow, white 2x2 cube unit under the alphabet + days posters and a blank oak frame, jute rug. Walls stay Serenely (owner).
   add(['office', 'rug2', { w: 5, d: 7, pattern: 'jute' }, [585, 1700], 's'],
-    ['office', 'deskX', { style: 'white', w: 4.2, d: 2.0 }, [654, 1700], 'w', { key: 'oD' }],
+    ['office', 'deskX', { style: 'white', w: 3.4, d: 2.0 }, [654, 1756], 'w', { key: 'oD' }],   // r38: 3.4 ft and 2 ft further in (was 4.2 at py 1700): with the door open, the desk closed the only way in past the leaf, so the office could not be walked into
     ['office', 'lamp', { style: 'clear', h: 2.3 }, 0, 'w', { on: 'oD', dx: 1.4 }],
     ['office', 'toyBlocks', {}, 0, 'w', { on: 'oD', dx: -0.9 }],
     ['office', 'books', { n: 2 }, 0, 'w', { on: 'oD', dx: 0.2 }],
-    ['office', 'ghostChair', {}, [608, 1700], 'e', { key: 'oC' }],
+    ['office', 'ghostChair', {}, [608, 1756], 'e', { key: 'oC' }],
     ['office', 'pillows', { mountY: 1.6, lean: -0.25, items: [['pillowNavy33', 0, 1.2, 1.1]] }, 0, 'e', { on: 'oC', z: 0.3 }],
-    ['office', 'art', { w: 3.2, h: 3.4, mountY: 5.6, style: 'kidsLoops', seed: 11, frame: 'frameOak', fw: 0.05 }, [680, 1700], 'w', { back: true }],
+    ['office', 'art', { w: 3.2, h: 3.4, mountY: 5.6, style: 'kidsLoops', seed: 11, frame: 'frameOak', fw: 0.05 }, [680, 1756], 'w', { back: true }],
     ['office', 'cubeShelf', {}, [497, 1640], 'e', { key: 'oS' }],
     ['office', 'vase2', { style: 'cylinder', h: 0.6, dia: 0.4, n: 2, gap: 0.1, mat: 'glassClear' }, 0, 'e', { on: 'oS' }],
     ['office', 'art', { w: 1.8, h: 2.3, mountY: 5.0, style: 'letters', seed: 12, frame: 'frameOak', fw: 0.05 }, [466, 1615], 'e', { back: true }],
