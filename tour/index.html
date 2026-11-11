@@ -22303,7 +22303,7 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
           const sm = k => { for(let pass = 0; pass < k; pass++){ const E = D.map(d => d.slice()); for(let i = 1; i < n - 1; i++){ D[i][0] = (E[i - 1][0] + E[i][0] * 2 + E[i + 1][0]) / 4; D[i][1] = (E[i - 1][1] + E[i][1] * 2 + E[i + 1][1]) / 4; } } };
           const ok = i => { const q = pts[i], f = q.y - EYE, x = q.x + D[i][0], z = q.z + D[i][1]; if(Math.hypot(D[i][0], D[i][1]) < .04) return true; return !!r36At(x, z, f) && fr(x, z, f) && Math.abs(navSupport(x, z, f + .3) - f) < .2; };
           for(let i = 0; i < n; i++){ const w = Math.max(0, Math.min(1, (i - 2) / 6, (n - 3 - i) / 6)); D[i][0] *= w; D[i][1] *= w; }
-          sm(10); for(let round = 0; round < 5; round++){ let bad = 0; for(let i = 0; i < n; i++) if(!ok(i)){ D[i][0] *= .4; D[i][1] *= .4; bad++; } if(!bad) break; sm(3); }
+          sm(80); for(let round = 0; round < 5; round++){ let bad = 0; for(let i = 0; i < n; i++) if(!ok(i)){ D[i][0] *= .4; D[i][1] *= .4; bad++; } if(!bad) break; sm(3); }
           D[0] = [0, 0]; D[n - 1] = [0, 0]; for(let i = 1; i < n - 1; i++) if(ok(i) && Math.hypot(D[i][0], D[i][1]) >= .04){ const q = pts[i], f = q.y - EYE; q.x += D[i][0]; q.z += D[i][1]; q.y = navSupport(q.x, q.z, f + .3) + EYE; }
           for(let pass = 0; pass < 5; pass++) for(let i = 2; i < n - 2; i++){ const q = pts[i], f = q.y - EYE, x = (pts[i - 1].x + q.x * 2 + pts[i + 1].x) / 4, z = (pts[i - 1].z + q.z * 2 + pts[i + 1].z) / 4; if(Math.hypot(x - q.x, z - q.z) < .01 || !r36At(x, z, f) || !fr(x, z, f)) continue; const y = navSupport(x, z, f + .3); if(Math.abs(y - f) < .3){ q.x = x; q.z = z; q.y = y + EYE; } }   // and no kinks left in the line
         } finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }catch(e){ console.warn('[r37 nav] clearance', e); }
@@ -22364,7 +22364,7 @@ function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
-        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 92};
+        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 96};
         if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
         else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
         else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
