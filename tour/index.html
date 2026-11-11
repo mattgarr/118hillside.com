@@ -22209,6 +22209,7 @@ function r36Grids(){
         for(let q = 0; q < 3; q++){ const a = V[q], b = V[(q + 1) % 3]; mark(g, a.x, a.z); const len = Math.hypot(b.x - a.x, b.z - a.z); if(len > .45){ const k = Math.ceil(len / .4); for(let s = 1; s < k; s++) mark(g, a.x + (b.x - a.x) * s / k, a.z + (b.z - a.z) * s / k); } } } } };
   try{ for(const g of withVar(['furn', 'furnU', 'yard'])) if(g.visible) g.traverseVisible(doMesh);
     for(const F of FIXOBJ){ if(!F.obj || (F.v && F.v !== ACTIVE_VAR)) continue; let vis = true; for(let o = F.obj; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) F.obj.traverseVisible(doMesh); }
+    for(const it of DOOR28.items) if(it.t > .3 && door28Live(it)) for(const pt of it.parts) if(pt.sign != null && pt.piv) pt.piv.traverse(doMesh);   // a door leaf that stands open is in the way like furniture
     for(const m of (BIM2S.meshes || [])) if(/^builtins\|/.test(m.name || '')){ let vis = true; for(let o = m; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) doMesh(m); } }catch(e){ console.warn('[r36 nav] furniture', e); }
   const rr = Math.ceil(R36N.RF / c), disc = []; for(let dj = -rr; dj <= rr; dj++) for(let di = -rr; di <= rr; di++) if((di * di + dj * dj) * c * c <= R36N.RF * R36N.RF + .01) disc.push([di, dj]);
   for(const g of LVS){ for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++) if(g.fb[j * NX + i]) for(const [di, dj] of disc){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ){ g.blk[b * NX + a] = 1; if(Math.abs(di) + Math.abs(dj) <= 1) g.f1[b * NX + a] = 1; } }
@@ -22334,7 +22335,10 @@ function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES
     try{ const q = r36Nearest(x, z, f, 9); if(q && q.d > 0){ x = q.x; z = q.z; snapped = q.d > 1; } }catch(e){}
     if(!face){ if(snapped) face = [tx, tz]; else { const dx = x - P0.x, dz = z - P0.z, d = Math.hypot(dx, dz); auto = d > 1.5; face = auto ? [x + dx / d * 10, z + dz / d * 10] : [x - Math.sin(yaw) * 10, z - Math.cos(yaw) * 10]; } }
     const r = _mt36.call(this, x, z, f, face);
-    try{ const a = anim; if(a && a.kind === 'look'){ const k = r36Pathify(a, {faceTravel: auto, pitch: pitch}); if(k === 0 && (Math.hypot(a.to.x - P0.x, a.to.z - P0.z) > 3 || Math.abs(a.to.y - P0.y) > 1.5 || !r36LineClear(P0, a.to))) r36Cut(a, r36WhereAt(a.to.x, a.to.z, feet).name); } }catch(e){ console.warn('[r36 nav] move', e); }
+    try{ const a = anim; if(a && a.kind === 'look'){
+        { const fl = walkSurfaceAt(a.to.x, a.to.z, f + .6); if(Math.abs(fl - f) > 1 || r36At(a.to.x, a.to.z, f) === 0){ const q = r36Nearest(x, z, f, 9) || r36Nearest(a.to.x, a.to.z, f, 9);   // the older clearance nudges pushed the spot off the floor or out of the area: stand at the nearest allowed place instead
+            if(q){ const dx = q.x - a.to.x, dz = q.z - a.to.z; a.to.x = q.x; a.to.z = q.z; a.to.y = f + EYE; a.toT.x += dx; a.toT.z += dz; feet = f; } } }
+        const k = r36Pathify(a, {faceTravel: auto, pitch: pitch}); if(k === 0 && (Math.hypot(a.to.x - P0.x, a.to.z - P0.z) > 3 || Math.abs(a.to.y - P0.y) > 1.5 || !r36LineClear(P0, a.to))) r36Cut(a, r36WhereAt(a.to.x, a.to.z, feet).name); } }catch(e){ console.warn('[r36 nav] move', e); }
     return r; }; }
 /* walk: 'Walk to' a room = its guided-tour view, level, standing in the walkable area */
 function r36GoRoom(r){
