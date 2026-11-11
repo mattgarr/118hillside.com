@@ -232,8 +232,8 @@
      (or strung from it) until it is there; then the house is dressed again. */
   let OAK_IN = false; const oakT0 = performance.now();
   const oakIn = () => { if(OAK_IN) return true; let ok = false; try{ H.scene.traverse(o => { if(o.name === 'tree:OAK-BACK' && o.children.some(c => c.name === 'bark')) ok = true; }); }catch(e){} if(ok || performance.now() - oakT0 > 45000) OAK_IN = true; return OAK_IN; };
-  const dressed = () => oakIn() ? S : Object.assign({}, S, {oak: 'none', ter: []});
-  function oakWatch(){ if(oakIn()){ if(P && PHASE !== 'boot') try{ P.apply(S, {inside: INSIDE}); if(PLACE && PHASE !== 'start') reframe(.4); }catch(e){} return; } setTimeout(oakWatch, 500); }
+  const dressed = () => Object.assign({menorahLit: 9}, S, oakIn() ? null : {oak: 'none', ter: []});   // every candle of the window menorah is lit: the game has no story about which night it is
+  function oakWatch(){ if(oakIn()){ if(P && PHASE !== 'boot') try{ P.apply(dressed(), {inside: INSIDE}); if(PLACE && PHASE !== 'start') reframe(.4); }catch(e){} return; } setTimeout(oakWatch, 500); }
   /* the panels changed (a card opened, the choices were folded away, the window was resized): frame the same place for the room there is now */
   function reframe(dur){ if(CUT || PHASE === 'boot' || !P || !PLACE) return; const v = view(PLACE); if(FLY){ FLY.l1.set(...v.look); FLY.z1 = v.zoom; return; } fly(v, dur || .6, null); }
   const _l = new V3();
@@ -519,7 +519,7 @@
       const open = () => { if(shared) sharedStart(); else startCard(); };
       const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); open(); } }); mo.observe(document.body, {childList: true}); } else open(); };
     let need = 0; const done = () => { if(--need <= 0) go(); }; const load = (src, has) => { if(has) return; need++; const s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = () => { console.warn('[deck3d] could not load ' + src); done(); }; document.head.appendChild(s); };
-    load('../assets/snowball.js?v=34', !!window.SNOWBALL); load('../assets/deck3d/deck-props.js?v=35', !!window.DECKPROPS); load('../assets/deck3d/deck-sfx.js?v=34', !!window.DECKSFX); if(!need) go(); }
+    load('../assets/snowball.js?v=37', !!window.SNOWBALL); load('../assets/deck3d/deck-props.js?v=37', !!window.DECKPROPS); load('../assets/deck3d/deck-sfx.js?v=34', !!window.DECKSFX); if(!need) go(); }
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
 

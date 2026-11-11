@@ -1249,6 +1249,9 @@ html.dn33on .wpl,html.dn33on #cv27,html.dn33on #toggles,html.dn33on #pad,html.dn
 
 /* photos (gallery) under the slim bar */
 .ph .gallery{padding-top:calc(max(6px, env(safe-area-inset-top,0px)) + 66px)}
+/* r36: Photos on a desktop covered the header it leaves room for (the photo page sits at z-index 8, the header at 5), so the tabs, Games and View could not be
+   reached from Photos. While the photo page is open the header sits above it, as it already does on phones. */
+#app:has(> .gallery:not([hidden])) > .bar{z-index:9}
 .ph .gallery header h1{font-family:var(--sf);font-size:22px;font-weight:600}
 .ph .gallery header p{font-size:14px}
 .ph .gsec h3{font-family:var(--sf);font-style:normal;font-size:17px;font-weight:600}
@@ -1371,7 +1374,7 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     </nav>
     <div class="spacer"></div>
     <button type="button" class="phonly phmore" id="phMore" aria-haspopup="true" aria-expanded="false" aria-controls="phMenu" aria-label="More options"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
-    <!-- v27 ui27 --><button type="button" class="tod vbtn27" id="viewBtn" aria-haspopup="true" aria-expanded="false" aria-controls="phMenu" title="View options: trees, furniture, landscape, colors, quality, time of day, Halloween"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 6h8M15 6h2M3 14h2M9 14h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="13" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="14" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>View</span><svg class="car" viewBox="0 0 10 10" width="9" height="9" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="tod" id="navHelp" aria-label="How to move around" title="How to move around"><b aria-hidden="true">?</b></button><button type="button" class="tod fsbtn27" id="fsBtn" aria-label="Full screen (F)" title="Full screen, hides the controls (F)"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="qrow" id="phMenu" role="group" aria-label="View options">
+    <!-- v27 ui27 --><button type="button" class="tod vbtn27" id="viewBtn" aria-haspopup="true" aria-expanded="false" aria-controls="phMenu" title="View options: trees, furniture, landscape, colors, quality, time of day"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 6h8M15 6h2M3 14h2M9 14h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="13" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="14" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>View</span><svg class="car" viewBox="0 0 10 10" width="9" height="9" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="tod" id="navHelp" aria-label="How to move around" title="How to move around"><b aria-hidden="true">?</b></button><button type="button" class="tod fsbtn27" id="fsBtn" aria-label="Full screen (F)" title="Full screen, hides the controls (F)"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="qrow" id="phMenu" role="group" aria-label="View options">
     <button type="button" class="tod phonly phit" id="phDoll"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 9.5L10 4l7 5.5M5 8.2V16h10V8.2M5 12h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Dollhouse view</span></button>
     <button class="tod" id="treesBtn" aria-pressed="true" aria-label="Show or hide trees" title="Show or hide trees"><svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M10 18v-5M10 13c-4 0-6-2.2-6-5a4.5 4.5 0 0 1 3-4.2A4 4 0 0 1 13.4 4 4.5 4.5 0 0 1 16 8c0 2.8-2 5-6 5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Trees</span></button>
     <button class="tod" id="furnBtn" aria-pressed="true" aria-label="Show or hide the furniture" title="Furniture on or off"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 15v-4.5a1.5 1.5 0 0 1 3 0V12h8v-1.5a1.5 1.5 0 0 1 3 0V15H3zM5 9V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M4.5 15v2M15.5 15v2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Furniture</span></button>
@@ -1381,7 +1384,7 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     <button class="tod" id="tod" data-dusk="1" aria-label="Change the time of day" title="Time of day: morning, midday, afternoon, golden hour, dusk"><i></i><span id="todtxt">Dusk</span></button><button class="tod" id="hwBtn" aria-pressed="false" aria-label="Halloween decorations on or off" title="Halloween: decorate the house for the Deja Boo party"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 5.6c-1-.1-1.4-1.3-1-2.6M10 5.6c3.4-1.4 7 .6 7 5.2S13.6 17 10 16.2C6.4 17 3 15.4 3 10.8s3.6-6.6 7-5.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.6 9.4l1.4 1.2-1.6.4zM13.4 9.4l-1.4 1.2 1.6.4zM7 13c1.8 1.2 4.2 1.2 6 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg><span>Halloween</span></button><button class="tod" id="tgBtn" aria-pressed="false" aria-label="Thanksgiving decorations on or off" title="Thanksgiving: set the table and dress the house for fall"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 2.5l1.6 3.4 2.6-1.6-.4 3.4 3.4-.2-2 2.8 2.6 1.6-3.4 1-.2 3.2-2.8-2-1.4 3.4-1.4-3.4-2.8 2-.2-3.2-3.4-1 2.6-1.6-2-2.8 3.4.2-.4-3.4 2.6 1.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M10 11v7" stroke="currentColor" stroke-width="1.3"/></svg><span>Thanksgiving</span></button>
     <button type="button" class="tod phonly phit phsep" id="phClean"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Full screen</span></button><button type="button" class="tod phonly phit" id="phGest"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M7 11V4.8a1.3 1.3 0 0 1 2.6 0V10m0-1.2V3.6a1.3 1.3 0 0 1 2.6 0V10m0-4.4a1.3 1.3 0 0 1 2.6 0V12c0 3.3-2 5.5-5 5.5-2.3 0-3.4-1.2-4.6-3.2L3.6 11.6a1.3 1.3 0 0 1 2.1-1.5L7 11.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Touch gestures</span></button>
     <button type="button" class="tod phonly phit" id="phAbout"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5M10 6.2v.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>About this tour</span></button>
-    <p class="phonly phnote">Pick a remodel idea to open the design tools: layouts, furniture, paint and landscape.</p>
+    <p class="phonly phnote">Pick a layout under Design to open the design tools: layouts, furniture, paint and landscape.</p>
     </div>
   </header>
 
@@ -1488,15 +1491,18 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     <div class="thumbs" id="lbThumbs"></div>
   </div>
 
-  <div class="loading" id="loading"><div><b>118 Hillside Drive</b><span id="loadtxt">Loading the 3D tour…</span><small class="loadnote">An illustrative visual aid, not to scale. Sizes are approximate.</small><small class="loadnote loadtips" aria-label="How to move around"><span class="ng-tips ng-d"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Drag</b> to look around or turn the model</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Scroll</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Shift</b>-drag to slide · <b>Ctrl/⌘</b>-drag to tilt</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click a white circle or <b>Next ›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>F</b> for full screen · controls fade when idle</span></span></span><span class="ng-tips ng-p"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>One finger</b> to look around</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Two fingers</b> to slide</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Pinch</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a circle or <b>›</b> to move</span></span></span></small></div></div>
+  <div class="loading" id="loading"><div><b>118 Hillside Drive</b><span id="loadtxt">Loading the 3D tour…</span><small class="loadnote">An illustrative visual aid, not to scale. Sizes are approximate.</small><small class="loadnote loadtips" aria-label="How to move around"><span class="ng-tips ng-d"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Drag</b> to look around or turn the model</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Scroll</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Shift</b>-drag to slide · <b>Ctrl/⌘</b>-drag to tilt</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click a white circle or <b>Next ›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>F</b> for full screen</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4 14V2.5h8V14M2.5 14h11M9.6 8.2v.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Click</b> a door, a window shade or a skylight shade to open or close it</span></span></span><span class="ng-tips ng-p"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>One finger</b> to look around</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Two fingers</b> to slide</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Pinch</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a circle or <b>›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4 14V2.5h8V14M2.5 14h11M9.6 8.2v.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a door or a shade to open or close it</span></span></span></small></div></div>
   <script src="../assets/intro28.js"></script>
-  <dialog id="aboutDlg" class="aboutdlg" aria-labelledby="aboutH"><h2 id="aboutH">About this 3D tour</h2><p>This 3D tour is an illustrative visual aid only. It was drawn from the approved plans and the listing photos. It is not a survey, an appraisal or a construction document, and it is not drawn to scale.</p><p>Dimensions, room sizes, materials, finishes, colors, lighting, landscaping, neighboring homes and terrain are approximate and may differ from the property as it is today. Staging furniture is shown for illustration and is not included in the sale. Remodel concepts, paint colors and landscape ideas are suggestions only. They are not designed, engineered, permitted or priced.</p><p>Square footage and room counts are approximate and based on the approved plans. County records differ. Buyers should review the seller’s disclosures, available from the listing agent, and verify all information, including school assignment.</p><p class="navkeys"><b>Walking with a keyboard:</b> <kbd>↑</kbd>/<kbd>↓</kbd> (or <kbd>W</kbd>/<kbd>S</kbd>) walk forward and back, <kbd>Shift</kbd> to hurry · <kbd>←</kbd>/<kbd>→</kbd> turn · drag the view (or <kbd>PgUp</kbd>/<kbd>PgDn</kbd>) to look up and down · <kbd>U</kbd>/<kbd>D</kbd> raise or lower your eye height · <kbd>Home</kbd> level the view · <kbd>F</kbd> full screen, <kbd>Esc</kbd> to leave it. Stairs climb on their own as you walk onto them.</p><form method="dialog"><button class="btn primary" value="ok">OK</button></form></dialog><style id="v33discCss">/* r35 owner 11/10: the notice sits in the bottom right corner, lifted clear of whatever is there (floor-plan button, tour card, game controls) by the script below; top right when the bottom is taken */#v33disc{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + var(--v33up,0px));z-index:60;width:fit-content;height:fit-content;max-width:calc(100vw - 48px);font:500 11px/1.3 Jost,system-ui,sans-serif;color:#fff;background:rgba(0,0,0,.5);padding:4px 9px;border-radius:999px;border:0;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent}#v33disc.v33top{bottom:auto;top:calc(max(12px,env(safe-area-inset-top,0px)) + var(--v33dn,0px))}#v33disc:hover{background:rgba(0,0,0,.65)}html.v33game #v33disc,html.hs28on #v33disc,html.mz28on #v33disc,html.tt28on #v33disc,html.tt31on #v33disc,html.cn31on #v33disc,html.dn33on #v33disc,html.lp33on #v33disc,html.th33on #v33disc{display:none}@media (max-width:600px){#v33disc{font-size:10px;right:max(12px,env(safe-area-inset-right,0px));max-width:calc(100vw - 24px)}#v33disc .v33dl{display:none}}</style><button id="v33disc" type="button" aria-label="About this 3D tour: illustrative model, not to scale" onclick="var d=document.getElementById('aboutDlg');if(d&&d.showModal)d.showModal();">ⓘ Illustrative model, not to scale<span class="v33dl">. Verify all details.</span></button><script>(function w(n){var H=window.HWGAMES;if(!H||!H.start||!H.stop){if(n<120)setTimeout(function(){w(n+1)},500);return}if(H.__v33d)return;H.__v33d=1;var R=document.documentElement,s=H.start,t=H.stop;H.start=function(){R.classList.add("v33game");return s.apply(this,arguments)};H.stop=function(){try{return t.apply(this,arguments)}finally{R.classList.remove("v33game")}}})(0)</script><script>/* r35: keep the notice clear of the page's controls. It starts in the bottom right corner and is lifted above anything it would touch there (the floor-plan button, the tour card, a game's dock); if that would carry it past mid-screen it goes to the top right corner, below the header. */
+  <dialog id="aboutDlg" class="aboutdlg" aria-labelledby="aboutH"><h2 id="aboutH">About this 3D tour</h2><p>This 3D tour is an illustrative visual aid only. It was drawn from the approved plans and the listing photos. It is not a survey, an appraisal or a construction document, and it is not drawn to scale.</p><p>Dimensions, room sizes, materials, finishes, colors, lighting, landscaping, neighboring homes and terrain are approximate and may differ from the property as it is today. Staging furniture is shown for illustration and is not included in the sale. Remodel concepts, paint colors and landscape ideas are suggestions only. They are not designed, engineered, permitted or priced.</p><p>Square footage is approximate, from a 2025 floor plan measured to the exterior walls. Room counts and sizes are approximate. Buyers should review the seller’s disclosures, available from the listing agent, and verify all information, including school assignment.</p><p class="navkeys"><b>Walking with a keyboard:</b> <kbd>↑</kbd>/<kbd>↓</kbd> (or <kbd>W</kbd>/<kbd>S</kbd>) walk forward and back, <kbd>Shift</kbd> to hurry · <kbd>←</kbd>/<kbd>→</kbd> turn · drag the view (or <kbd>PgUp</kbd>/<kbd>PgDn</kbd>) to look up and down · <kbd>U</kbd>/<kbd>D</kbd> raise or lower your eye height · <kbd>Home</kbd> level the view · <kbd>F</kbd> full screen, <kbd>Esc</kbd> to leave it. Stairs climb on their own as you walk onto them.</p><form method="dialog"><button class="btn primary" value="ok">OK</button></form></dialog><style id="v33discCss">/* r35 owner 11/10: the notice sits in the bottom right corner, lifted clear of whatever is there (floor-plan button, tour card, game controls) by the script below; top right when the bottom is taken */#v33disc{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + var(--v33up,0px));z-index:60;width:fit-content;height:fit-content;max-width:calc(100vw - 48px);font:500 11px/1.3 Jost,system-ui,sans-serif;color:#fff;background:rgba(0,0,0,.5);padding:4px 9px;border-radius:999px;border:0;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent}#v33disc.v33top{bottom:auto;top:calc(max(12px,env(safe-area-inset-top,0px)) + var(--v33dn,0px))}#v33disc:hover{background:rgba(0,0,0,.65)}html.real36 #wplabels{visibility:hidden}html.ph #v33disc{pointer-events:none}html.ph.phm #v33disc{display:none}/* r36: on a phone the notice is a label, not a button (taps go to whatever is under it; About this tour is in the menu), and it steps aside for the open menu */html.v33game #v33disc,html.hs28on #v33disc,html.mz28on #v33disc,html.tt28on #v33disc,html.tt31on #v33disc,html.cn31on #v33disc,html.dn33on #v33disc,html.lp33on #v33disc,html.th33on #v33disc{display:none}@media (max-width:600px){#v33disc{font-size:10px;right:max(12px,env(safe-area-inset-right,0px));max-width:calc(100vw - 24px)}#v33disc .v33dl{display:none}}</style><button id="v33disc" type="button" aria-label="About this 3D tour: illustrative model, not to scale" onclick="var d=document.getElementById('aboutDlg');if(d&&d.showModal)d.showModal();">ⓘ Illustrative model, not to scale<span class="v33dl">. Verify all details.</span></button><script>(function w(n){var H=window.HWGAMES;if(!H||!H.start||!H.stop){if(n<120)setTimeout(function(){w(n+1)},500);return}if(H.__v33d)return;H.__v33d=1;var R=document.documentElement,s=H.start,t=H.stop;H.start=function(){R.classList.add("v33game");return s.apply(this,arguments)};H.stop=function(){try{return t.apply(this,arguments)}finally{R.classList.remove("v33game")}}})(0)</script><script>/* r35: keep the notice clear of the page's controls. It starts in the bottom right corner and is lifted above anything it would touch there (the floor-plan button, the tour card, a game's dock); if that would carry it past mid-screen it goes to the top right corner, below the header. */
 (function(){ var b = document.getElementById('v33disc'); if(!b || !b.getBoundingClientRect) return; var sig = '';
-  var SEL = '.bar,#card,#mini,#pad,#peek27,.navguide,.phlvbar,.ideas35';
+  var SEL = '.bar,#card,#mini,#pad,#peek27,.navguide,.phlvbar,.ideas35,#realSeg,#ovtag,#bks36,#fin36,.qhint,.phtoast,#holShow';   // r36: + the 3D model / Photo switch (it sits outside the card on a phone), the photo tag, the booking line, the finale card, hints
+  var still = new WeakMap(), G = document.getElementById('gallery'), LBX = document.getElementById('lb'), OV = document.getElementById('ov');
   function box(e, strict){ var cs = getComputedStyle(e); if(cs.display === 'none') return null; if(strict && (cs.visibility === 'hidden' || +cs.opacity < .05)) return null;
     var r = e.getBoundingClientRect(); if(r.width < 6 || r.height < 6 || (r.width > innerWidth * .9 && r.height > innerHeight * .8)) return null; return r; }
   function obstacles(){ var out = [], L = document.querySelectorAll(SEL), i, e, r, cs, z;
-    for(i = 0; i < L.length; i++){ r = box(L[i], true); if(r) out.push(r); }   // only what is on screen: when the controls fade away the notice settles into the corner
+    for(i = 0; i < L.length; i++){ r = box(L[i], true); if(r) out.push(r); }   // only what is on screen
+    L = document.querySelectorAll('#wplabels .wpl,#labels .lbl');   // r36: room and walk-to labels, once they have stopped moving (the notice does not chase them while the view turns)
+    for(i = 0; i < L.length; i++){ e = L[i]; if(e.style.display === 'none') continue; r = box(e, true); if(!r) continue; z = Math.round(r.left) + ',' + Math.round(r.top); if(still.get(e) === z) out.push(r); still.set(e, z); }
     for(e = document.body.firstElementChild; e; e = e.nextElementSibling){ if(e === b || e.id === 'intro28') continue; cs = getComputedStyle(e); if(cs.position !== 'fixed') continue;
       z = parseInt(cs.zIndex, 10); if(!(z >= 56 && z <= 79)) continue; r = box(e, true); if(r) out.push(r); }   // a game's HUD and docks (its markers sit lower, its dialogs higher)
     return out; }
@@ -1511,9 +1517,11 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     if(y + h <= H * .5){ b.style.setProperty('--v33dn', Math.round(y - r.top) + 'px'); return true; }
     b.classList.remove('v33top'); return false; }
   var covers = [];   // things found lying over the pill (a game's bottom sheet): it steps out from under them too
-  function over(){ var r = b.getBoundingClientRect(), t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return (!t || t === b || b.contains(t)) ? null : t; }
+  function over(){ if(getComputedStyle(b).pointerEvents === 'none') return null; var r = b.getBoundingClientRect(), t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return (!t || t === b || b.contains(t)) ? null : t; }
   function key(O){ var s = innerWidth + 'x' + innerHeight, i; for(i = 0; i < O.length; i++) s += '|' + Math.round(O[i].left) + ',' + Math.round(O[i].top) + ',' + Math.round(O[i].right) + ',' + Math.round(O[i].bottom); return s; }
   function place(){ try{
+    var real = !!((G && !G.hidden) || (LBX && !LBX.hidden) || (OV && OV.classList.contains('on')));   // r36: a real photograph is on screen (gallery, photo viewer, a stop's photo): no 'illustrative model' label over it
+    if(real !== b.hidden){ b.hidden = real; sig = ''; } document.documentElement.classList.toggle('real36', !!(OV && OV.classList.contains('on')));
     if(getComputedStyle(b).display === 'none'){ sig = ''; return; }
     var O = obstacles(), base = O.slice(), live = [], i, r, t, e, A, pass, ok = true;
     for(i = 0; i < covers.length; i++){ r = covers[i].isConnected ? box(covers[i], true) : null; if(r){ live.push(covers[i]); O.push(r); } }
@@ -1526,6 +1534,7 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     sig = key(O); }catch(e){} }
   place(); setInterval(place, 600); addEventListener('resize', function(){ sig = ''; place(); }); addEventListener('load', place);
   try{ new MutationObserver(function(){ setTimeout(place, 80); setTimeout(place, 640); }).observe(document.documentElement, {attributes: true, attributeFilter: ['class']}); }catch(e){}   // the controls show and hide with a class on <html>
+  try{ var mo36 = new MutationObserver(function(){ sig = ''; place(); }); if(G) mo36.observe(G, {attributes: true, attributeFilter: ['hidden']}); if(LBX) mo36.observe(LBX, {attributes: true, attributeFilter: ['hidden']}); if(OV) mo36.observe(OV, {attributes: true, attributeFilter: ['class']}); }catch(e){}
   window.__v33discPlace = function(){ sig = ''; place(); var r = b.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)]; };
 })();</script>
 </div>
@@ -1533,6 +1542,14 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
 <style>/* perf: poster behind the loading text */
 .loading.poster::before{content:'';position:absolute;inset:-12px;background:var(--poster) center/cover no-repeat;filter:blur(3px) saturate(.92);opacity:.5}
 .loading.poster>div{position:relative;background:var(--paper);padding:18px 26px 16px;border-radius:14px;box-shadow:0 6px 30px rgba(0,0,0,.18)}
+/* r36 owner: the old instruction card never shows. If the photo slideshow is absent, the wait is the house photo with one small status pill */
+.loading.poster::before{inset:0!important;filter:none!important;opacity:1!important}
+.loading>div{position:absolute!important;right:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;padding:10px 16px!important;border-radius:999px!important;background:rgba(20,20,18,.78)!important;box-shadow:0 6px 24px rgba(0,0,0,.28)!important;text-align:left}
+.loading>div>b,.loading .loadnote{display:none!important}
+.loading>div::before{content:'';flex:0 0 auto;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:ld36 1s linear infinite}
+@keyframes ld36{to{transform:rotate(360deg)}}
+.loading #loadtxt{color:#fff!important;font:500 13px/1.2 "Jost","Avenir Next",Arial,sans-serif!important;letter-spacing:.01em!important;text-transform:none!important}
+@media (prefers-reduced-motion: reduce){.loading>div::before{animation:none}}
 html.hwload .loading{background:#110a1d}
 html.hwload .loading.poster::before{inset:0;filter:none;opacity:1}
 html.hwload .loading>div{background:rgba(17,10,29,.82);color:#f3e6d0;box-shadow:0 6px 30px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,122,26,.35)}
@@ -1688,14 +1705,14 @@ html:not(.ph) .mini.open27 #miniLvl + .x27{margin-left:6px}
 
 /* ---- U1 auto-hide + U2 clean view ---- */
 .bar,.card,.mini,.pad,.qhint,.phlvbar,#wplabels,#labels{transition:opacity .18s ease,visibility 0s linear 0s}
-html.uidle27 :is(.bar,.card,.mini,.pad,.qhint,.phlvbar){opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .5s ease,visibility 0s linear .5s}
+/* r36: nothing hides when the viewer pauses. Next / Back, the stop title, the tabs and the booking control stay put, and on a touch screen nothing fades at all. With a
+   mouse the zoom pad and the plan chip dim, and still take the first click (they are never hit-test dead). Was: everything gone after 3.5 s, and the next tap only brought it back. */
+@media (hover:hover) and (pointer:fine){html.uidle27:not(.ph) .mini,html.uidle27:not(.ph):not(.m27-tour) .pad{opacity:.45;transition:opacity .5s ease}html.uidle27:not(.ph) :is(.mini,.pad):hover{opacity:1}}
 html.clean27 :is(.bar,.card,.mini,.pad,.qhint,.phlvbar,#wplabels,#labels,.navguide,.phtoast){opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .25s ease,visibility 0s linear .25s}
 .peek27{position:absolute;z-index:8;left:max(16px, env(safe-area-inset-left,0px));bottom:max(16px, env(safe-area-inset-bottom,0px));width:34px;height:22px;padding:0;border-radius:999px;
   display:flex;align-items:center;justify-content:center;gap:3px;background:var(--glass);-webkit-backdrop-filter:var(--bfp27);backdrop-filter:var(--bfp27);border:1px solid var(--rim27);
   box-shadow:0 2px 10px rgba(0,0,0,.12);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility 0s linear .18s}
 .peek27 i{width:4px;height:4px;border-radius:50%;background:var(--ink);opacity:.7}
-html.uidle27 .peek27{opacity:.75;visibility:visible;pointer-events:auto;transition:opacity .6s ease .3s,visibility 0s}
-html.uidle27 .peek27:hover{opacity:1}
 .cv27{position:absolute;z-index:26;left:50%;bottom:max(18px, calc(env(safe-area-inset-bottom,0px) + 10px));transform:translateX(-50%);display:flex;align-items:center;gap:2px;
   max-width:calc(100vw - 24px);box-sizing:border-box;padding:4px;border-radius:999px;transition:opacity .18s ease,visibility 0s}
 .cv27[hidden]{display:none}
@@ -1710,7 +1727,7 @@ html.uidle27 .peek27:hover{opacity:1}
 .cv27 .cvt{padding:0 10px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--f-display);font-style:italic;font-size:16px;color:var(--ink)}
 .cv27 .cvt small{font-family:var(--f-data);font-style:normal;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:8px}
 .cv27.nonav #cvPrev,.cv27.nonav #cvNext{display:none}
-html.uidle27.clean27 .cv27{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .5s ease,visibility 0s linear .5s}
+@media (hover:hover) and (pointer:fine){html.uidle27.clean27 .cv27{opacity:.5;transition:opacity .5s ease}html.uidle27.clean27 .cv27:hover{opacity:1}}   /* r36: full screen keeps its controls too */
 html.ph .cv27{bottom:max(14px, calc(env(safe-area-inset-bottom,0px) + 8px));font-family:var(--sf)}
 html.ph .cv27 em,html.ph .cv27 .cvt small{display:none}
 html.ph .cv27 .cvt{font-family:var(--sf);font-style:normal;font-weight:600;font-size:14px;max-width:52vw}
@@ -1848,8 +1865,8 @@ const ROOMS = [
  {id:'mainbath', name:'Hall bath', dims:'6′4″ × 8′6″', level:'main', at:wp(2065,2160), ph:[57,22]},
  {id:'stairs',   name:'Stairs', level:'main', at:wp(960,1700), ph:[36,40]},
  {id:'rec',      name:'Bonus lounge', dims:'12′1″ × 13′3″', level:'lower', at:wp(855,1390), ph:[65,56,72]},
- {id:'lbed1',    name:'Lower-level bedroom', dims:'11′3″ × 12′5″', level:'lower', at:wp(865,740), ph:[63,58]},
- {id:'lbed2',    name:'Lower-level bedroom', dims:'11′3″ × 14′9″', level:'lower', at:wp(610,1000), ph:[64,'x04']},
+ {id:'lbed1',    name:'Lower-level bedroom 1', dims:'11′3″ × 12′5″', level:'lower', at:wp(865,740), ph:[63,58]},
+ {id:'lbed2',    name:'Lower-level bedroom 2', dims:'11′3″ × 14′9″', level:'lower', at:wp(610,1000), ph:[64,'x04']},
  {id:'office',   name:'Skylit office', dims:'7′7″ × 9′3″', level:'lower', at:wp(585,1710), ph:[20]},
  {id:'lbath',    name:'Lower-level bath', dims:'5′7″ × 9′9″', level:'lower', at:wp(945,1050), ph:[60,68,55,'x05']},
  {id:'laundry',  name:'Laundry room', dims:'6′8″ × 6′3″', level:'lower', at:wp(555,1385), ph:[4]},
@@ -1866,44 +1883,51 @@ const ROOM = Object.fromEntries(ROOMS.map(r => [r.id, r]));
 const S = (px,py,y) => { const [x,z] = wp(px,py); return [x,y,z]; };
 const SU = (px,py,y) => { const [x,z] = up(px,py); return [x,y,z]; };
 const STOPS = [
- {id:'intro', t:'118 Hillside Drive', lvl:'Woodside, CA', dims:'6 bedrooms · 3 full baths · skylit office · bonus lounge', level:'outside', nav:'orbit', rooms:['street'], pos:[58,104,96], look:[-6,-6,-10], aerial:true,
-  p:'A light-filled six-bedroom home in Woodside Glens. Walk in from the street, through all three levels, and out to the heritage oak.'},
- {id:'street', t:'From the street', photo:69, level:'outside', nav:'orbit', rooms:['street'], pos:S(1168,2975,2.0), look:S(1168,2150,1.6),
-  p:'A paver walk leads past the front oak to the porch steps, with the oversized garage at the end of the drive on the left.'},
- {id:'garage', t:'Garage', photo:29, level:'garage', rooms:['garage'], pos:S(822,2200,LV.garage+5), look:S(822,2600,LV.garage+5),
-  p:'The oversized garage has a tall ceiling with overhead storage racks, four recessed lights, a pull-down attic ladder, and a 50-amp outlet for EV charging.'},
+ /* r36 (owner 11/11: "all moves should feel continuous so you can build a mental model of how it all fits together"): the stops are a route a
+    person can walk, each reached from the one before through a real doorway or stair, and the garage comes near the end, entered from the house:
+    street -> up the front steps -> porch -> through the front doors -> entry foyer -> (open to it) living room -> (pocket door) kitchen
+    -> (open plan) dining and sitting area -> (bedroom hall) main-level bedrooms -> back to the foyer -> stairs -> up one flight -> loft
+    -> (upper hall) primary bath and closet -> primary bedroom -> (stacking doors) balcony -> down both flights -> (lower hall) lower-level bedrooms
+    -> bonus lounge -> (stacking doors) terrace -> backyard -> back in through the lounge and along the hall -> (the house door, D-L0-03) garage
+    -> out the garage door to the driveway -> the front of the house at dusk, where the closing card comes up (SELL36).
+    The opening aerial is gone: the tour starts on the street view, which matches the listing's first photo. Everything finds a stop by its id.
+    Titles are the rooms' own names (ROOMS), and each caption says what is in view, in the landing page's plain voice. */
+ {id:'street', t:'From the street', lvl:'Woodside, California', dims:'Six bedrooms · three full baths · about 3,087 sq. ft.', photo:69, level:'outside', nav:'orbit', rooms:['street'], pos:S(1168,2975,2.0), look:S(1168,2150,1.6),
+  p:'The paver driveway runs up to the garage on the left. Beside it, the front steps climb to the porch and the iron-and-glass front doors. The large windows on the right are the dining and sitting area.'},
  {id:'porch', t:'Front porch', photo:71, level:'main', rooms:['frontdeck'], pos:S(1170,2480,2.4), look:S(1166,1900,4.6),
-  p:'Relax on the front porch, then step through the iron-and-glass front doors: your eye goes straight through the house to the heritage oak in the backyard.'},
- {id:'entry', t:'Dramatic entry', photo:59, level:'main', rooms:['entry'], pos:S(990,1832,EYE), look:S(1650,1832,6.4),
-  p:'Part of the 2024 addition, the entry foyer has a cathedral ceiling, a starburst fixture, and a matching set of glass doors on the far wall.'},
+  p:'The porch is at the top of the front steps. From here you can see through the iron-and-glass front doors, across the foyer, to the heritage oak in the backyard.'},
+ {id:'entry', t:'Entry foyer', photo:59, level:'main', rooms:['entry'], pos:S(990,1832,EYE), look:S(1650,1832,6.4),
+  p:'The foyer stands between two pairs of iron-and-glass doors, under a cathedral ceiling with a starburst light fixture. It is part of the 2024 addition. The living room is straight ahead.'},
  {id:'living', t:'Living room', photo:44, level:'main', rooms:['living'], pos:S(1330,1995,EYE), look:S(1640,1660,5.4),
-  p:'In the original 1920s home, exposed wood beams cross the living room’s vaulted ceiling, and large windows look out to the trees.'},
+  p:'Exposed wood beams cross the vaulted ceiling, and large windows look out to the trees. The living room is in the original part of the house.'},
  {id:'kitchen', t:'Kitchen', photo:1, level:'main', rooms:['kitchen'], pos:S(1590,2520,EYE), look:S(1610,2130,4.4),
-  p:'An all-white kitchen with Cambria Brittanicca quartz counters, a large peninsula for homework and casual meals, and a Bosch gas range and dishwasher.'},
- {id:'great', t:'Great room & dining', photo:15, level:'main', rooms:['great'], pos:S(1626,2420,EYE), look:S(1585,2860,4.2),
-  p:'The great room joins the kitchen to a sitting area and a dining room, with butcher-block shelves over built-in cabinets and a wall of glass to the terrace.'},
+  p:'The kitchen is all white, with Cambria Brittanicca quartz counters, a large peninsula, and a Bosch gas range and dishwasher.'},
+ {id:'great', t:'Dining & sitting area', photo:15, level:'main', rooms:['great'], pos:S(1626,2420,EYE), look:S(1585,2860,4.2),
+  p:'The kitchen opens to the dining table and a sitting area. Together they are the great room. A wall of glass faces the front of the house, and butcher-block shelves sit over built-in cabinets on the left.'},
  {id:'mainbeds', t:'Main-level bedrooms', photo:74, level:'main', rooms:['mainbeds','mainbath'], pos:S(2065,2865,EYE), look:S(1850,2600,3.6),
-  p:'A quiet hall holds three bedrooms, a full bath with a Carrara marble vanity, and a closet ready for a second stacked washer and dryer.'},
+  p:'This is one of three bedrooms on the main level. They share a hall with a full bath that has a Carrara marble-topped vanity, and a hall closet has hookups for a second washer and dryer.'},
  {id:'stairs', t:'Stairs', photo:36, level:'main', rooms:['stairs'], pos:S(1150,1790,EYE), look:S(820,1650,7.4),
-  p:'Back by the entry, one flight climbs to the loft and primary suite, and the other leads down to the lower level.'},
+  p:'Back at the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'},
  {id:'loft', t:'Loft', photo:37, cam:'loft', level:'upper', rooms:['loft'], pos:SU(1900,1262,LV.upper+EYE), look:SU(2090,1545,LV.upper+6.0),
-  p:'Start the day with coffee in the loft under the skylights. The sitting area, with modern cable railings, leads to the primary bedroom.'},
- {id:'primary', t:'Primary suite', photo:6, level:'upper', rooms:['primary'], fixed:true, pos:[-10.0,LV.upper+4.9,-27.3], look:[-24.2,LV.upper+5.6,-38.6],
-  p:'A cathedral ceiling with four skylights, each with a remote-controlled shade, and stacking glass doors to a private balcony.'},
+  p:'The loft is a sitting area at the top of the stairs, with a window seat and cable railings over the stairwell. The primary suite is through the door.'},
  {id:'pbath', t:'Primary bath & closet', photo:45, level:'upper', rooms:['pbath','closet'], pos:SU(2092,1198,LV.upper+EYE), look:SU(2140,925,LV.upper+4.4),
-  p:'Heated floors, a dual-sink quartz vanity, a private skylit water closet, and a curbless shower for two, plus a custom walk-in closet.'},
- {id:'balcony', t:'Balcony at sunset', photo:19, tod:'golden', level:'upper', rooms:['balcony'], fixed:true, pos:[-17.9,LV.upper+5.2,-39.5], look:[-17.4,LV.upper+1.4,-60],
-  p:'A private balcony for watching sunsets over the western hills.'},
- {id:'lower', t:'Lower bedrooms & office', photo:63, level:'lower', rooms:['lbed1','lbed2','office','lbath','laundry'], pos:S(1000,890,LV.lower+EYE), look:S(820,640,LV.lower+3.4),
-  p:'Downstairs are two more bedrooms, the skylit office, a full bath with a dual-sink vanity and heated floors, and the main laundry room with washer and dryer.'},
+  p:'The primary bath has heated floors, a dual-sink quartz vanity, a skylit water closet and a curbless shower for two. The custom walk-in closet is across the hall.'},
+ {id:'primary', t:'Primary bedroom', photo:6, level:'upper', rooms:['primary'], fixed:true, pos:[-10.0,LV.upper+4.9,-27.3], look:[-24.2,LV.upper+5.6,-38.6],
+  p:'The primary bedroom has a cathedral ceiling with four skylights, each with a remote-controlled shade. Stacking glass doors open to the balcony.'},
+ {id:'balcony', t:'Balcony', photo:19, tod:'golden', level:'upper', rooms:['balcony'], fixed:true, pos:[-17.9,LV.upper+5.2,-39.5], look:[-17.4,LV.upper+1.4,-60],
+  p:'The balcony is off the primary bedroom. It faces west, toward the hills and the sunset.'},
+ {id:'lower', t:'Lower-level bedrooms & office', photo:63, level:'lower', rooms:['lbed1','lbed2','office','lbath','laundry'], pos:S(1000,890,LV.lower+EYE), look:S(820,640,LV.lower+3.4),
+  p:'Two flights down, this is one of two bedrooms on the lower level. The skylit office, a full bath with a dual-sink vanity and heated floors, and the main laundry room with its washer and dryer are along the same hall.'},
  {id:'lounge', t:'Bonus lounge', photo:65, level:'lower', rooms:['rec'], pos:S(740,1545,LV.lower+EYE), look:S(1010,1290,LV.lower+4.8),
-  p:'Made for movie nights: a refreshment counter, beverage cooler, in-wall surround audio, and a large Samsung TV, with stacking doors to the terrace.'},
+  p:'The bonus lounge has a refreshment counter with a beverage cooler, in-wall surround audio and a 65-inch Samsung TV. The glass door on the left leads outside, and stacking glass doors on the other side of the room open to the terrace.'},
  {id:'terrace', t:'Terrace & outdoor kitchen', photo:8, level:'outside', rooms:['terrace'], pos:S(1580,1010,1.0), look:S(1035,1210,2.4),
-  p:'Out through the stacking doors, a paver-stone terrace has an outdoor kitchen, barbecue, and ceramic smoker under a pergola.'},
+  p:'Outside the lounge, the paver-stone terrace has an outdoor kitchen with a barbecue and a ceramic smoker under a pergola.'},
  {id:'yard', t:'Backyard & heritage oak', photo:18, level:'outside', nav:'orbit', rooms:['yard'], pos:S(2060,610,3.4), look:S(1300,1350,0.5),
-  p:'The heritage oak, the same tree you saw through the front doors, anchors the backyard. RV hookups wait at the side of the home.'},
+  p:'The heritage oak stands over the terrace. It is the tree you can see from the front porch, through both pairs of doors. The RV hookups are at the side of the house.'},
+ {id:'garage', t:'Garage', lvl:'Driveway level', photo:29, level:'garage', rooms:['garage'], pos:S(822,2200,LV.garage+5), look:S(822,2600,LV.garage+5),
+  p:'A door on the lower level opens into the oversized one-car garage. It has a high ceiling with overhead storage racks, a pull-down attic ladder, and a 50-amp, 240-volt outlet.'},
  {id:'dusk', t:'Evening in Woodside Glens', photo:2, tod:'dusk', level:'outside', nav:'orbit', rooms:['street'], pos:S(1290,3000,2.6), look:S(1000,2300,3.6),
-  p:'At dusk the entry glows behind the iron-and-glass doors. Woodside’s Town Center is about a mile away, in the Woodside Elementary School District.'},
+  p:'Out through the garage door and back to the front walk. At dusk the lights are on behind the iron-and-glass front doors. The house is in Woodside Glens, about a mile from Town Center, and in the Woodside Elementary School District.'},
 ];
 /* v20 story: rooms (gallery sections, Walk-to menu) follow the tour - each room sits with the first stop that visits it */
 { const ord = []; for(const st of STOPS) for(const id of st.rooms) if(!ord.includes(id)) ord.push(id);
@@ -5644,7 +5668,7 @@ function navWalkStart(prev, far){   // where Walk begins when the camera is not 
       if(navStandable(new THREE.Vector3(...fr.pos))) return {pos: fr.pos, look: fr.look, feet: walkSurfaceAt(fr.pos[0], fr.pos[2], fr.pos[1] - EYE + .6)};
       const q = navStandNear(fr.pos[0], fr.pos[2], y0, s.rooms);
       if(q){ const dx = fr.look[0] - fr.pos[0], dz = fr.look[2] - fr.pos[2]; return {pos: [q.x, y0 + EYE, q.z], look: [q.x + dx, y0 + EYE, q.z + dz], feet: y0}; } } }catch(e){}
-  const s = STOPS[1]; return {pos: s.pos, look: s.look, feet: LV.outside}; }
+  const s = STOPS.find(q => q.id === 'street') || STOPS[0]; return {pos: s.pos, look: s.look, feet: LV.outside}; }   /* r36: by id (the street is the first stop now) */
 function flyTo(pos, look, kind='look', dur, lens){
   if(![pos[0], pos[1], pos[2], look[0], look[1], look[2]].every(Number.isFinite)) return;   // r36: never fly to a pose that is not a number (a zero-size window makes the fitted views NaN, and the camera never recovered)
   flightN++; flightAt = performance.now();
@@ -6353,20 +6377,20 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   SPEC: {
   intro: {at: [45, 70], y: 24, eye: 0, to: [-10, 8], toY: 0, hf: 64, atP: [36, 58], yP: 20, ph: [-6, 10], riseP: .12},   // R8 opening hero: ~27 ft up over the street, front-right 3/4, in the one corridor clear of the front oak's canopy -> street gable wing and roof, oak, entry court and garage, upper addition beyond; portrait stands closer
   street: {at: [-3.5, 44], to: [-10, 0]},   // paver walk beside the front oak (trunk behind-left) -> garage, porch steps, addition windows
-  garage: {at: [-12, 20.7], to: [-24, 3], lv: 'garage', hf: 100, rise: .35},   // door-side corner looking back down the bay: vaulted ceiling with overhead rack 2, the fir beam and storage-loft front with rack 1 below it, side window, door to the house; frame risen (no tilt) for the vault
+  garage: {at: [-19.8, 2.4], to: [-16.6, 22], lv: 'garage', hf: 100},   // r36: just inside the door from the house, level, looking down the bay to the garage door (the way photo p29 faces): both side windows, the racks overhead. Was the door-side corner tilted up at the racks:     // door-side corner looking back down the bay: vaulted ceiling with overhead rack 2, the fir beam and storage-loft front with rack 1 below it, side window, door to the house; frame risen (no tilt) for the vault
   porch: {at: [-8.5, 16.5], to: [-4, 3]},   // porch corner -> iron-and-glass doors, bench, gable; through the doors to the entry
   entry: {at: [-12.25, -4.07], to: [-2.38, -3.15]},   // foyer, between the two glass door sets -> living room beams
   living: {at: [13.0, 2.9], to: [-1.5, -10]},   // SE corner, opposite the window wall -> beams, window wall + oak, entry doors
   kitchen: {at: [16.0, 20.5], to: [6, 8]},   // from the hall end across the island -> range hood, cabinets, fridge, front window
-  great: {at: [13.5, 35.3], to: [5, 16], ph: [6, 24], riseP: .05},   // sitting-area corner down the long axis -> dining, glass wall, kitchen beyond
-  mainbeds: {at: [18.7, 27.1], to: [28.5, 37], eye: 4.6, rise: -.2, ph: [27, 37]},   // headboard corner, low with a falling front (rise) -> bed in front, both windows leading, closet doors to the side
+  great: {at: [15.2, 17.6], to: [11.2, 31.5], ph: [8.6, 31]},   // r36: where the kitchen meets the room, in the clear aisle by the built-ins, facing the way photo p15 faces: shelves and cabinets left, dining table, sitting area, the wall of glass right. Was over the coffee table looking back at the kitchen:     // sitting-area corner down the long axis -> dining, glass wall, kitchen beyond
+  mainbeds: {at: [18.5, 35.0], to: [26.4, 28.8], hf: 100, eye: 4.8, rise: -.12},   // r36: just inside the door, where photo p74 was taken and facing the same way: bed, closet doors, window. Was over the bed facing a corner:     // headboard corner, low with a falling front (rise) -> bed in front, both windows leading, closet doors to the side
   stairs: {at: [-9.5, -3], to: [-18.5, -8], hf: 100, rise: .08},   // foyer edge, square to the stair hall -> open treads and cable rails of both flights as one sculptural run, landing bench, loft rail and window light above
   loft: {at: [-13.5, -10.8], to: [-24.7, -2.8], rise: .2},   // stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
   primary: {at: [-10.2, -27.5], to: [-24, -40]},   // loft-side corner -> bed, skylights, glazed gable, slider to the balcony
-  pbath: {at: [-16.05, -21.85], to: [-8.7, -23.2], hf: 100},   // just inside the door -> double vanity + round mirrors, window, curbless shower glass
+  pbath: {at: [-14.4, -23.0], to: [-7.76, -15.52], hf: 100},   // r36: photo p45's own spot and direction: window, curbless shower behind its glass. Was turned 60 degrees from the photo:     // just inside the door -> double vanity + round mirrors, window, curbless shower glass
   balcony: {at: [-14.5, -41.1], to: [-28, -54], rise: -.18, ph: [-24, -56], riseP: .08},   // balcony corner by the house wall (downspout + siding frame the left edge) -> chairs and deck, parapet, oak, the valley and hills at golden hour; the frame falls (rise) to trade sky for deck
-  lower: {at: [-18.2, -38.79], to: [-12.35, -46.9]},   // doorway corner -> bed, both windows
-  lounge: {at: [-11.4, -15.8], to: [-22.5, -23.5], ph: [-22.5, -20]},   // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
+  lower: {at: [-18.75, -38.5], to: [-12.65, -47.0], hf: 100, rise: -.14},   // r36: in the doorway, wider and with the frame lowered so the whole bed, the floor and both windows show (photo p63's direction):     // doorway corner -> bed, both windows
+  lounge: {at: [-14.4, -15.4], to: [-23.5, -21.0], hf: 100},   // r36: three feet further in than photo p65, same direction, so the cafe table is no longer in the foreground: the glass door, TV, refreshment counter and beverage cooler:     // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
   terrace: {at: [8, -20], to: [-8, -36]},   // out on the gravel under the oak -> rear facade, lounge set, outdoor kitchen + pergola, hills
   yard: {at: [31.21, -12.08], to: [23.69, -18.67]},   // NE corner of the yard -> heritage oak, house, pergola
   dusk: {at: [-4.5, 43], to: [-7.5, 0]},   // front walk at dusk -> lit garage, entry glow, kitchen window
@@ -6699,7 +6723,7 @@ function focusRoom(r){
 /* gallery */
 function openGallery(){
   const w=$('#gwrap'); if(!w.dataset.built){ w.dataset.built='1';
-    const head=document.createElement('header'); head.innerHTML='<h1>Photos by room</h1><p>Browse the home room by room. Tap “Show in 3D” to see where each room is.</p><p>The 3D model is an illustrative visual aid; sizes are approximate. <a href="#" onclick="document.getElementById(\'aboutDlg\').showModal();return false">About this tour</a></p>'; w.appendChild(head);
+    const head=document.createElement('header'); head.innerHTML='<button type="button" class="btn gx36">Back to the 3D tour</button><h1>Photos by room</h1><p>Browse the home room by room. Tap “Show in 3D” to see where each room is.</p><p>The 3D model is an illustrative visual aid; sizes are approximate. <a href="#" onclick="document.getElementById(\'aboutDlg\').showModal();return false">About this tour</a></p>'; w.appendChild(head); head.querySelector('.gx36').onclick=()=>closeGallery();   /* r36 */
     const order=ROOMS.map(r=>r.id);
     for(const id of order){ const r=ROOM[id]; const sec=document.createElement('section'); sec.className='gsec';
       sec.innerHTML=`<div class="gh"><h3></h3><span class="gm"></span><button class="btn go">Show in 3D</button></div><div class="grid"></div>`;
@@ -6887,7 +6911,7 @@ function buildWaypoints(){
     g.userData.el=el; g.userData.occ=false;
     wpGroup.add(g); WPS.push(g); }
   const sel=$('#goto'); sel.innerHTML='<option value="">Choose a room…</option>';
-  ROOMS.forEach((r,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=r.name+(r.level==='outside'?'':' · '+({lower:'lower level',main:'main level',upper:'upper level',garage:'garage'})[r.level]); sel.appendChild(o); });
+  ROOMS.forEach((r,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=r.name+((r.level==='outside'||r.level==='garage'||/level/i.test(r.name))?'':' · '+({lower:'lower level',main:'main level',upper:'upper level'})[r.level]);   /* r36: the level is said once */ sel.appendChild(o); });
   sel.onchange=()=>{ const r=ROOMS[+sel.value]; if(!r) return; const [x,z]=r.id==='street'? wp(1165,2700) : r.at; const base=r.level==='outside'?ground(x,z):LV[r.level];
     interrupt(); if(nav!=='look'){ nav='look'; lookFromCamera(); } moveTo(x,z,walkSurfaceAt(x,z,base+.3)); sel.value=''; };
 }
@@ -6897,6 +6921,9 @@ function pickWaypoint(cx,cy){
   wpRay.setFromCamera(v,camera); const hits=wpRay.intersectObjects(WPS.filter(g=>g.visible).map(g=>g.userData.hit),false); return hits.length? hits[0].object.userData.wp : null;
 }
 let wpFrame=0; const occRay=new THREE.Raycaster(); const wpV=new THREE.Vector3();
+function wpHere36(label){   // r36: the pill that names the room you are already in ("Garage ›" in the garage) is not shown; its circle stays
+  try{ if(mode === 'walk') return !!curRoom && curRoom.id !== 'mainbeds' && curRoom.name === label;
+    if(mode === 'tour') return STOPS[stopIdx].rooms.some(id => id !== 'mainbeds' && ROOM[id] && ROOM[id].name === label); }catch(e){} return false; }
 function updateWaypoints(){
   const show = nav==='look' && !isDoll() && !anim; wpGroup.visible=show;
   if(!show){ for(const g of WPS){ g.userData.el.style.display='none'; g.userData.on=false; } return; }
@@ -6910,7 +6937,7 @@ function updateWaypoints(){
       const o = P22OCC.on() ? P22OCC.hit(occRay, blockers, wpFrame) : occRay.intersectObjects(blockers,true).filter(h=>!(h.object.material&&h.object.material.transparent)).length>0;
       if(u.occ===undefined) u.occ=o; else if(o!==u.occ){ u.occC=(u.occC||0)+1; if(u.occC>=2){ u.occ=o; u.occC=0; } } else u.occC=0; }
     wpV.set(u.x,u.y+2.4,u.z).project(camera);
-    if(u.occ || wpV.z>1 || Math.abs(wpV.x)>1.05 || Math.abs(wpV.y)>1.05){ u.el.style.display='none'; u.on=false; continue; }
+    if(u.occ || wpV.z>1 || Math.abs(wpV.x)>1.05 || Math.abs(wpV.y)>1.05 || wpHere36(u.label)){ u.el.style.display='none'; u.on=false; continue; }
     cand.push([d,u,(wpV.x+1)/2*W,(1-wpV.y)/2*H]); }
   // labels on screen last frame keep priority, so nearby labels don't trade places as you move
   cand.sort((a,b)=>((a[1].on?0:1)-(b[1].on?0:1)) || a[0]-b[0]); const placed=[]; let n=0;
@@ -6929,7 +6956,7 @@ const NAVG = (() => {
   const mark = () => { mem = true; try{ localStorage.setItem(KEY, '1'); }catch(e){} };
   const tipsSeen = () => (revealAt != null ? revealAt : performance.now()) >= FAST;
   function build(){ if(card) return card; card = document.createElement('div'); card.className = 'navguide'; card.hidden = true; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'How to move around');
-    card.innerHTML = '<div class="ng-h"><span class="ng-g" aria-hidden="true"></span>How to move around<button type="button" class="ng-x" aria-label="Close">×</button></div><span class="ng-m"></span>' + '<span class="ng-tips ng-d"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Drag</b> to look around or turn the model</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Scroll</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Shift</b>-drag to slide · <b>Ctrl/⌘</b>-drag to tilt</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click a white circle or <b>Next ›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>F</b> for full screen · controls fade when idle</span></span></span><span class="ng-tips ng-p"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>One finger</b> to look around</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Two fingers</b> to slide</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Pinch</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a circle or <b>›</b> to move</span></span></span>';
+    card.innerHTML = '<div class="ng-h"><span class="ng-g" aria-hidden="true"></span>How to move around<button type="button" class="ng-x" aria-label="Close">×</button></div><span class="ng-m"></span>' + '<span class="ng-tips ng-d"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Drag</b> to look around or turn the model</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Scroll</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Shift</b>-drag to slide · <b>Ctrl/⌘</b>-drag to tilt</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click a white circle or <b>Next ›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>F</b> for full screen</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4 14V2.5h8V14M2.5 14h11M9.6 8.2v.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Click</b> a door, a window shade or a skylight shade to open or close it</span></span></span><span class="ng-tips ng-p"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>One finger</b> to look around</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Two fingers</b> to slide</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Pinch</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a circle or <b>›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4 14V2.5h8V14M2.5 14h11M9.6 8.2v.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a door or a shade to open or close it</span></span></span>';
     card.querySelector('.ng-x').onclick = () => hide(); document.body.appendChild(card); return card; }
   function show(auto, keepM){ build(); if(!keepM){ const mm = card.querySelector('.ng-m'); if(mm) mm.innerHTML = ''; } card.classList.toggle('ng-ph', document.documentElement.classList.contains('ph')); card.hidden = false; clearTimeout(timer); timer = setTimeout(hide, auto ? 8000 : 12000); mark(); }
   function hide(){ clearTimeout(timer); if(card) card.hidden = true; }
@@ -7834,7 +7861,7 @@ window.__c22Removed = function(v){
 const FURN = (() => {
   const LSO = 'hillside.furniture', LSE = 'hillside.furniture.edits.v1', LOOSE = new Set(['barStool']), WALLHUNG = new Set(['art', 'floorMirror', 'tvWall', 'mirror', 'wallMirror']);
   const items = []; let on = true, edits = {mv: {}, rm: []}, undo = [], sel = null, drag = null, tap = null;
-  try{ on = localStorage.getItem(LSO) !== '0'; }catch(e){}
+  try{ on = sessionStorage.getItem(LSO) !== '0'; }catch(e){}   /* r36: Furniture off lasts for this visit only. It used to be remembered for good, so a returning visitor could land in bare rooms with nothing on screen saying why */
   try{ const v = JSON.parse(localStorage.getItem(LSE) || 'null'); if(v && v.mv && typeof v.mv === 'object' && Array.isArray(v.rm)) edits = v; }catch(e){}
   const save = () => { try{ localStorage.setItem(LSE, JSON.stringify(edits)); }catch(e){} };
   const isLoose = o => !!(o && o.userData && (o.userData.category === 'furniture' || LOOSE.has(o.userData.kind)));
@@ -7864,7 +7891,7 @@ const FURN = (() => {
         add(o, 'x:' + key + ':' + seen[key], v, o.position.y, {outdoor: base === 'yard' || base === 'land'}); } }
   }
   const shown = it => { for(let o = it.obj; o; o = o.parent) if(!o.visible) return false; return true; };
-  function setOn(v){ on = !!v; try{ localStorage.setItem(LSO, on ? '1' : '0'); }catch(e){} scan(); items.forEach(show); if(!on) select(null); ui(); try{ builtinContents(on); }catch(e){}
+  function setOn(v){ on = !!v; try{ sessionStorage.setItem(LSO, on ? '1' : '0'); }catch(e){} scan(); items.forEach(show); if(!on) select(null); ui(); try{ builtinContents(on); }catch(e){}
     try{ if(window.R13 && R13.sync) R13.sync(); PERF.shadowDirty = true; }catch(e){} }   // r35: the contact shadows and the sun's shadow map follow the switch in the same frame
 
   // collisions: sample the footprint; any sample inside a wall body (knee or chest height) blocks the move; indoors it must stay over a floor of its level
@@ -8101,7 +8128,7 @@ const DESIGN = (() => {
   function card(){
     if(mode !== 'design') return;
     const d = defOf(sel);
-    $('#eyebrow').textContent = 'Design ideas'; $('#lvl').textContent = sel === 'asbuilt' ? 'As built' : 'Remodel idea';
+    $('#eyebrow').textContent = 'Design'; $('#lvl').textContent = sel === 'asbuilt' ? 'As built' : 'Remodel idea';
     $('#title').textContent = sel === 'asbuilt' ? 'The house today' : sel === 'custom' ? 'My design' : nameOf(sel);   /* r20: no date */
     $('#dims').textContent = ''; $('#blurb').hidden = false; strip([], '');
     $('#blurb').textContent = sel === 'asbuilt' ? 'This is the house as it stands. Try a remodel idea for the original part of the home, move the furniture, or see the outside in another color or with a new garden.'
@@ -9027,7 +9054,7 @@ function applyLightingState(){
 /* ---------------- landscape concepts ---------------- */
 // Concept plans, rules and plant models live in landscape.js (src/86_concepts_kinds.js, src/87_concepts_plans.js); the page hands the
 // planner the real site in the BIM plan frame and shows the buyer-facing description + plant list.
-const LS_CONCEPTS = [['today', 'As it is today'], ['oak', 'Oak woodland garden'], ['med', 'Mediterranean courtyard'], ['family', 'Family garden']];
+const LS_CONCEPTS = [['today', 'As it is today'], ['oak', 'Oak woodland garden'], ['med', 'Mediterranean courtyard'], ['family', 'Lawn and vegetable beds']];
 let LS = {front: 'today', back: 'today', fire: false, tub: false, boulders: false, lights: false};
 try{ Object.assign(LS, JSON.parse(localStorage.getItem('hillside.landscape') || '{}')); }catch(e){}
 for(const k of ['front', 'back']) if(!LS_CONCEPTS.some(c => c[0] === LS[k])) LS[k] = 'today';
@@ -9246,7 +9273,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=1' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=1' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=36' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=1' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=1' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=37' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
@@ -9415,9 +9442,9 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
 /* ---------------- v19 header quick controls: Landscape + Colors (patch_v19_ui) ---------------- */
 (function quickMenus(){
   const LAND_DOT = {today: '#8c9478', oak: '#6f7a45', med: '#b9a77a', family: '#79a85a'};
-  const LAND_SUB = {today: 'The yard as it is now', oak: 'Native, low-water, under the oaks', med: 'Gravel, olive, lavender, terraces', family: 'Play lawn, raised beds, shade'};
-  const LAND_SHORT = {today: 'Today', oak: 'Oak', med: 'Med.', family: 'Family'};
-  const LAND_NAME = {today: 'As it is today', oak: 'Oak woodland', med: 'Mediterranean courtyard', family: 'Family garden'};
+  const LAND_SUB = {today: 'The yard as it is now', oak: 'Native, low-water, under the oaks', med: 'Gravel, olive, lavender, terraces', family: 'Lawn, raised beds, shade'};
+  const LAND_SHORT = {today: 'Today', oak: 'Oak', med: 'Med.', family: 'Lawn'};
+  const LAND_NAME = {today: 'As it is today', oak: 'Oak woodland', med: 'Mediterranean courtyard', family: 'Lawn and vegetable beds'};
   const P = () => (typeof PAINT_EXT !== 'undefined' ? PAINT_EXT : null);
   const landKey = () => (LS.front === LS.back ? LS.front : 'mixed');
   const palKey = () => { const p = P(); return p ? p.state().pal : 'asbuilt'; };
@@ -9575,7 +9602,7 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   const toast = document.createElement('div'); toast.className = 'phtoast'; toast.hidden = true; toast.setAttribute('role', 'status');
   card.before(toast);
   const TIPS = {
-    tour: ['Explore', 'Drag to look around · pinch to zoom<br>Tap › for the next room'],
+    tour: ['Explore', 'Drag to look around · pinch to zoom<br>Tap › for the next room<br>Tap a door or a shade to open or close it'],
     walk: ['Walk', 'Drag on the left side to walk<br>Drag on the right to look around<br>Tap the floor to go there'],
     doll: ['Dollhouse', 'Drag to turn · pinch to zoom<br>Two fingers to move · tap a room name to go there']};
   let toastT = 0;
@@ -11431,12 +11458,12 @@ function hwPumpkin(size = 1, face = 0, opts = {}){ const g = new THREE.Group(), 
   g.userData.hwPumpkin = {size, face}; g.userData.hwR = size * 1.02; g.name = 'pumpkin'; return g; }
 function hwPumpkinGlow(obj){ const d = obj && obj.userData.hwPumpkin; if(!d || d.face == null || !obj.parent) return; const s = d.size, c = Math.cos(obj.rotation.y), si = Math.sin(obj.rotation.y);
   hwGlow(obj.parent, obj.position.x + si * s * 1.05, obj.position.y + .74 * s, obj.position.z + c * s * 1.05, s * 2.6, HW.pal.pumpkin, d.face % 3); }
-// ---- black cats (sitting, facing +z)
+// ---- cats (sitting, facing +z), in Snowball's orange coat
 function hwCat(scale = 1){ const g = new THREE.Group(); const G = HW.G;
   G.sph = G.sph || new THREE.SphereGeometry(1, 16, 12); G.ear = G.ear || new THREE.ConeGeometry(.09, .22, 4); G.leg = G.leg || new THREE.CylinderGeometry(.045, .05, .5, 6);
   if(!G.tail){ const c = new THREE.CatmullRomCurve3([new THREE.Vector3(0, .12, -.38), new THREE.Vector3(.28, .06, -.45), new THREE.Vector3(.48, .1, -.2), new THREE.Vector3(.52, .4, .02), new THREE.Vector3(.42, .62, .05)]);
     G.tail = new THREE.TubeGeometry(c, 20, .045, 6, false); }
-  const fur = HW.M.fur || (HW.M.fur = hwStd(0x0d0a12, {roughness: .45, metalness: .1})), eye = HW.M.eye || (HW.M.eye = hwBasic(0xc8ff5a));
+  const fur = HW.M.fur || (HW.M.fur = hwStd(0xd8802c, {roughness: .8, metalness: 0})), eye = HW.M.eye || (HW.M.eye = hwBasic(0xffcf3a));
   const add = (geo, mat, x, y, z, sx, sy, sz) => { const m = hwMesh(geo, mat, g, x, y, z); if(sx) m.scale.set(sx, sy, sz); m.castShadow = true; return m; };
   add(G.sph, fur, 0, .42, -.05, .36, .44, .42); add(G.sph, fur, 0, .66, .1, .26, .34, .26); add(G.sph, fur, 0, 1.06, .16, .25, .22, .23);
   add(G.sph, fur, 0, 1.0, .33, .12, .09, .1);
@@ -11754,7 +11781,7 @@ function hwInterior(inn, L){
       const thin = Math.abs(a.x - b2.x) < Math.abs(a.z - b2.z) ? 'x' : 'z'; const nn = thin === 'x' ? new THREE.Vector3(Math.sign(n.x), 0, 0) : new THREE.Vector3(0, 0, Math.sign(n.z));
       const y = hwDrop(mid.x + nn.x * 1, mid.z + nn.z * 1, 6, 8); o.position.set(mid.x + nn.x * .65, y != null ? y : 0, mid.z + nn.z * .65); o.rotation.y = Math.atan2(nn.x, nn.z); inn.add(o);
       HW.G.shelfAt = o.position.clone(); } }
-  // black cat on the stairs (ST-UP1 second tread), witch hat on the entry bench
+  // cat on the stairs (ST-UP1 second tread), witch hat on the entry bench
   { const s1 = hwBIM('ST-UP1'); if(s1){ const bx = s1.start[0] + (s1.end[0] - s1.start[0]) * .5, by = (s1.start[1] + s1.end[1]) / 2 + .6; const [x, z] = W2(bx, by); hwPut(hwCat(1), inn, x, z, 6, Math.atan2(...(([dx, dz]) => [dx, dz])(W2(s1.start[0] - s1.end[0], 0))), 6, 'stair cat'); } }
   for(const it of FURN.items()){ if(it.obj.userData.kind !== 'shoeBench') continue; const b = box(it), c = ctr(b); const p = hwPumpkin(.5, 2); p.position.set(c.x, b.max.y, c.z); p.rotation.y = Math.atan2(ROOM.entry.at[0] - c.x, ROOM.entry.at[1] - c.z); inn.add(p); hwPumpkinGlow(p);   // FURN bench: its own top (rays skip furniture)
     const pl = hwPumpkin(.35, null); pl.position.set(c.x + .7, b.max.y, c.z + .1); inn.add(pl); }
@@ -12641,6 +12668,19 @@ function v27Flagstones(){
   const ms = new THREE.Mesh(g, mat); ms.name = 'v27-flagstones'; ms.receiveShadow = true; ms.castShadow = false; grp('land').add(ms); window.__V27FLAG = n; window.__V26FLAG = n; }
 
 /* ===== v28 GAME (patch_v28_game.py): Snowball's potion hunt (Tonight version) + the shared games menu ===== */
+/* r36: the Halloween and Thanksgiving mini-games (potion hunt, pumpkin maze, hide and seek, turkey trot and the rest) are retired. Their code stays below, because
+   it is woven through this file, but every way in is closed here, before any of it runs: nothing draws the old "Games" pill or its View-menu row, nothing opens the
+   old "Choose your game" card, and nothing can start a mini-game. An old link (?game=maze) or a stray "Other games" button opens the picker of the current games
+   instead (assets/games-menu.js). Every later `window.HWGAMES = window.HWGAMES || ...` below keeps this object. */
+window.HWGAMES = (function(){ var noop = function(){}, G = {games: [], active: null, retired: true};
+  var current = function(){ try{ window.GAMESMENU && GAMESMENU.open(document.querySelector('.v31games')); }catch(e){} };
+  G.register = function(g){ if(g && !G.games.some(function(x){ return x.id === g.id; })) G.games.push(g); };
+  G.loadSfx = function(cb){ cb && cb(); }; G.sfx = noop; G.track = noop;
+  var stop = function(){ G.active = null; }, fixed = function(k, v){ Object.defineProperty(G, k, {get: function(){ return v; }, set: noop}); };   // fixed: later code that wraps or replaces these is ignored
+  fixed('start', current); fixed('stop', stop);   // (the notice's old wrapper marked "a mini-game is running" on start, which hid the 'Illustrative model' notice for good)
+  fixed('_renderMenu', noop);                     // the old menu, its pill and its row are never built
+  fixed('openMenu', current);
+  return G; })();
 window.HWGAMES = window.HWGAMES || (function(){
   var G = {games: [], active: null};
   G.register = function(g){ if (!G.games.some(function(x){return x.id===g.id;})) G.games.push(g); G._renderMenu && G._renderMenu(); };
@@ -12827,7 +12867,7 @@ const GAME = (() => {
   const toast = (msg, ms = 1700) => { if(!toastE){ toastE = el('div'); toastE.id = 'g28toast'; toastE.setAttribute('role', 'status'); toastE.setAttribute('aria-live', 'polite'); document.body.appendChild(toastE); }
     toastE.textContent = msg; toastE.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastE.classList.remove('on'), ms); };
   const scr = p => { const v = _v.copy(p).project(camera), r = canvas.getBoundingClientRect(); return v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 ? [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height] : null; };
-  const CAT = (hat) => `<svg viewBox="0 0 84 84" width="84" height="84" aria-hidden="true"><ellipse cx="42" cy="78" rx="22" ry="4" fill="rgba(0,0,0,.35)"/><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#0d0b10" stroke="#3d3550" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#0d0b10" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#2a2630" stroke-width="1.6" fill="none"/>${hat ? '<path d="M22 30l20-28 20 28z" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><ellipse cx="42" cy="30" rx="26" ry="5" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><rect x="31" y="22" width="22" height="5" fill="#ff7a1a"/>' : ''}</svg>`;
+  const CAT = (hat) => `<svg viewBox="0 0 84 84" width="84" height="84" aria-hidden="true"><ellipse cx="42" cy="78" rx="22" ry="4" fill="rgba(0,0,0,.35)"/><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#e58f3a" stroke="#a9541a" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#e08a36" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M62 70c10 0 14-8 10-16" stroke="#a64c15" stroke-width="5" fill="none" stroke-dasharray="3 5"/><ellipse cx="42" cy="68" rx="8" ry="8" fill="#fff5e4"/><ellipse cx="42" cy="57" rx="6.5" ry="4.5" fill="#fff5e4"/><path d="M38 36v5M42 35v6M46 36v5M22 62l6 2M21 69l6 1M62 62l-6 2M63 69l-6 1" stroke="#a64c15" stroke-width="1.8" stroke-linecap="round" fill="none"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#5a2a14" stroke-width="1.6" fill="none"/>${hat ? '<path d="M22 30l20-28 20 28z" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><ellipse cx="42" cy="30" rx="26" ry="5" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><rect x="31" y="22" width="22" height="5" fill="#ff7a1a"/>' : ''}</svg>`;
   function cameo(next, hat, ms = 1800){ const c = el('div', 'g28cat', CAT(hat)); let at = next && next.p ? scr(next.p) : null; if(!at) at = [Math.max(60, innerWidth * .18), innerHeight * .62];
     c.style.left = at[0] + 'px'; c.style.top = (at[1] - 30) + 'px'; document.body.appendChild(c); requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('on')));
     setTimeout(() => { c.classList.remove('on'); setTimeout(() => c.remove(), 400); }, ms); return c; }
@@ -12855,7 +12895,7 @@ const GAME = (() => {
     if(!(typeof MODEL !== 'undefined' && MODEL && BIM)) { toast('One moment, the house is still loading…'); return; }
     const st = store.get(), n = st ? (st.found || []).length : 0;
     if(n > 0 && n < N) { G.start(how, true); return; }
-    G.intro = card('<div style="font-size:34px;line-height:1" aria-hidden="true">🐈‍⬛🧪</div><h2>Snowball’s potion hunt</h2><p>Snowball knocked over the potions! Find all 10 glowing bottles.</p>',
+    G.intro = card('<div style="font-size:34px;line-height:1" aria-hidden="true">🐈🧪</div><h2>Snowball’s potion hunt</h2><p>Snowball knocked over the potions! Find all 10 glowing bottles.</p>',
       [["Let's go!", 'go', () => G.start(how, false)]]); };
   G.start = (how, resume) => {
     sndInit(); entry = how || entry; const st = resume ? store.get() : null;
@@ -12891,7 +12931,7 @@ const GAME = (() => {
     snd('bubble'); setTimeout(() => snd('fanfare'), 500); setTimeout(() => snd('bats'), 900); setTimeout(() => snd('meow'), 1700); fx('bubbles'); setTimeout(() => fx('bats'), 600);
     store.set({v: 1, found: [], t0: 0, hints: 0, muted: G.muted, best: ms});
     setTimeout(() => {
-      G.winCard = card(`<div aria-hidden="true">${CAT(true)}</div><h2>You fixed the potion!</h2><p>🐈‍⬛ Snowball says MEOW. Happy Halloween! 🎃</p><div class="st">${N}/${N} · ${fmt(ms)} · 🦉 x${hints}</div>`,
+      G.winCard = card(`<div aria-hidden="true">${CAT(true)}</div><h2>You fixed the potion!</h2><p>🐈 Snowball says MEOW. Happy Halloween! 🎃</p><div class="st">${N}/${N} · ${fmt(ms)} · 🦉 x${hints}</div>`,
         [['Beat your time?', 'go', () => { G.stop(); HWGAMES.active = POTION; G.start('replay', false); }], ['🎃 More games', '', () => { G.stop(); menuCard(); }], ['Keep exploring', '', () => G.stop()]]); }, reduceMotion ? 0 : 1300); };
   G.check = () => { const out = {ok: true, items: []}; targets();
     for(const it of G.items){ const st = STOPS[stopIx(it.stop)], P = new THREE.Vector3(...st.pos); const r = {id: it.id, placed: !!it.p, sight: false, support: null};
@@ -13311,15 +13351,15 @@ const MAZE = (() => {
     const cell = (k, fn) => { x.save(); x.translate((k % 4) * 128, ((k / 4) | 0) * 128); fn(); x.restore(); };
     const emo = (k, e, size = 92) => cell(k, () => { x.font = size + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 6; x.fillText(e, 64, 70); });
     emo(SL.kid, '🧙'); CANDY_E.forEach((e, i) => emo(SL.candy + i, e, 78)); emo(SL.feet, '👣', 70); emo(SL.mallow, '🍡', 80);
-    cell(SL.cat, () => {   // Snowball: all black, yellow eyes, with a soft moon rim so she reads at night
-      x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+    cell(SL.cat, () => {   // Snowball: orange tabby, amber eyes, with a soft moon rim so she reads at night
+      x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
       x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill();
       x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
       x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-      x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-      x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+      x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+      x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
       x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-      x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); });
+      x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); });
     const ghost = (k, sleep) => cell(k, () => { x.shadowColor = 'rgba(190,220,255,.9)'; x.shadowBlur = 12; x.fillStyle = 'rgba(246,248,255,.96)';
       x.beginPath(); x.moveTo(30, 112); x.lineTo(30, 58); x.arc(64, 58, 34, Math.PI, 0); x.lineTo(98, 112);
       for(let i = 0; i < 4; i++){ const x0 = 98 - i * 17; x.quadraticCurveTo(x0 - 4, 100, x0 - 8.5, 112); x.quadraticCurveTo(x0 - 13, 100, x0 - 17, 112); } x.fill(); x.shadowBlur = 0;
@@ -13820,7 +13860,7 @@ const HAUNTED = (() => {
   const live = tok => { if(!H.active || tok !== H.tok) throw STOP; };
   const wait = (ms, tok) => new Promise(r => { later(r, reduceMotion ? Math.min(ms, 400) : ms); }).then(() => live(tok));
   // ---------------------------------------------------------------- cast (inline SVG)
-  const CAT = (w = 84) => `<svg viewBox="0 0 84 84" width="${w}" height="${w}" aria-hidden="true"><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#0d0b10" stroke="#3d3550" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#0d0b10" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#2a2630" stroke-width="1.6" fill="none"/></svg>`;
+  const CAT = (w = 84) => `<svg viewBox="0 0 84 84" width="${w}" height="${w}" aria-hidden="true"><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#e58f3a" stroke="#a9541a" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#e08a36" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M62 70c10 0 14-8 10-16" stroke="#a64c15" stroke-width="5" fill="none" stroke-dasharray="3 5"/><ellipse cx="42" cy="68" rx="8" ry="8" fill="#fff5e4"/><ellipse cx="42" cy="57" rx="6.5" ry="4.5" fill="#fff5e4"/><path d="M38 36v5M42 35v6M46 36v5M22 62l6 2M21 69l6 1M62 62l-6 2M63 69l-6 1" stroke="#a64c15" stroke-width="1.8" stroke-linecap="round" fill="none"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#5a2a14" stroke-width="1.6" fill="none"/></svg>`;
   const GHOST = (w = 110, lantern) => `<svg viewBox="0 0 110 120" width="${w}" height="${w * 120 / 110}" aria-hidden="true"><path d="M20 112V52a35 35 0 0170 0v60l-12-9-11 9-12-9-12 9-11-9z" fill="#f4f7ff" stroke="#c9d3ff" stroke-width="2"/><ellipse cx="42" cy="52" rx="6" ry="8" fill="#1d1830"/><ellipse cx="68" cy="52" rx="6" ry="8" fill="#1d1830"/><path d="M46 72q9 8 18 0" stroke="#1d1830" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="64" rx="5" ry="3" fill="#ffb3c7" opacity=".7"/><ellipse cx="76" cy="64" rx="5" ry="3" fill="#ffb3c7" opacity=".7"/>${lantern ? '<g><line x1="96" y1="58" x2="96" y2="70" stroke="#3a2a1a" stroke-width="2"/><rect x="88" y="70" width="16" height="20" rx="3" fill="#ffcf5a" stroke="#3a2a1a" stroke-width="2"/><circle cx="96" cy="80" r="11" fill="#ffd96a" opacity=".35"/></g>' : ''}</svg>`;
   const EYES = `<svg viewBox="0 0 120 40" width="150" height="50" aria-hidden="true"><ellipse cx="30" cy="20" rx="13" ry="15" fill="#ffd23a"/><ellipse cx="90" cy="20" rx="13" ry="15" fill="#ffd23a"/><ellipse cx="30" cy="20" rx="4" ry="12" fill="#0d0b10"/><ellipse cx="90" cy="20" rx="4" ry="12" fill="#0d0b10"/></svg>`;
   // ---------------------------------------------------------------- DOM (made on first Play)
@@ -13938,7 +13978,7 @@ const HAUNTED = (() => {
     // S1 street: dusk -> night, Snowball's eyes on the roof
     say('🐱 Psst. All the lights went out. Come help?', 0); setDark('soft'); H.dimT = houseDim();
     await fly('street', tok); sfx('thunderSoft', {volume: .5});
-    await tgt({id: 's1', icon: '🐈‍⬛', label: 'Tap Snowball on the roof', at: [.5, .3], size: 54, nudge: '👆 Tap me! Up on the roof!'}, tok);
+    await tgt({id: 's1', icon: '🐈', label: 'Tap Snowball on the roof', at: [.5, .3], size: 54, nudge: '👆 Tap me! Up on the roof!'}, tok);
     sfx('meow'); fx('dust', 10); say("🐱 Mrrow! That's me. Let's go!", 2600); await wait(1800, tok);
     // S2 porch: three pumpkin candles pop on, knock, the door opens itself
     say('🚪 Knock knock…', 0); await fly('porch', tok);
@@ -14008,7 +14048,7 @@ const HAUNTED = (() => {
     try{ window.HWSFX && HWSFX.music('skeletonGroove', {loop: true, fade: 1}); }catch(e){}
     const big = el('div', 'big', '🎉 PARTY!'); big.classList.add('hh28big'); document.body.appendChild(big); PROPS.push(big); fx('party', 22); say('🎉 PARTY!', 2400);
     await wait(1600, tok); await fly('terrace', tok); fx('bats', 12);
-    const party = el('div', 'party', ['👻', '🖼️', '🦇', '🐈‍⬛', '🎃', '👻'].map((c, k) => `<span style="animation-delay:${k * .08}s">${c}</span>`).join('')); party.classList.add('hh28party'); document.body.appendChild(party); PROPS.push(party);
+    const party = el('div', 'party', ['👻', '🖼️', '🦇', '🐈', '🎃', '👻'].map((c, k) => `<span style="animation-delay:${k * .08}s">${c}</span>`).join('')); party.classList.add('hh28party'); document.body.appendChild(party); PROPS.push(party);
     sfx('kazoo'); await wait(2600, tok); await fly('yard', tok); fx('party', 16); sfx('win'); await wait(2200, tok);
     big.remove(); end(); }
   // ---------------------------------------------------------------- end card
@@ -14025,14 +14065,14 @@ const HAUNTED = (() => {
     const n = st.routes.length, left = Object.keys(ROUTES).filter(r => !st.routes.includes(r));
     const btns = [[n < 4 ? '🔁 Try the other way?' : '🔁 Again!', 'go', () => H.begin(true), 'Play again a different way']];
     if(HWGAMES.games.length > 1) btns.push(['🎃 Other games', '', () => { H.stop(); setTimeout(() => { const p = document.getElementById('hwGamesPill'); p && p.click(); }, 60); }, 'Choose another game']);
-    card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈‍⬛👻</div><h2>🏚️ You made it!</h2><div class="st">🗺️ Route ${n} of 4 ${ROUTES[H.route] || ''}<br>⏱ ${fmt(ms)} · 🦉 ${H.hints}</div>` +
+    card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈👻</div><h2>🏚️ You made it!</h2><div class="st">🗺️ Route ${n} of 4 ${ROUTES[H.route] || ''}<br>⏱ ${fmt(ms)} · 🦉 ${H.hints}</div>` +
       (left.length ? `<p>👀 Next time try ${ROUTES[left[0]]}</p>` : '<p>🏆 All 4 ways! You are brave.</p>'), btns); }
   // ---------------------------------------------------------------- flow
   let saved = null, wasHW = false;
   H.open = () => { document.querySelectorAll('.hh28card').forEach(c => c.remove());
     if(!(typeof MODEL !== 'undefined' && MODEL && typeof BIM !== 'undefined' && BIM)){ return; }
     const st = store.get(); H.brave = !!st.brave;
-    const c = card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈‍⬛</div><h2>🏚️ Snowball's Haunted House</h2><p>🐱 The lights went out! Walk with me?</p>` +
+    const c = card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈</div><h2>🏚️ Snowball's Haunted House</h2><p>🐱 The lights went out! Walk with me?</p>` +
       `<label class="brave"><input type="checkbox" ${H.brave ? 'checked' : ''}> 🦁 Brave mode (8+)</label>`,
       [['▶ Play', 'go', () => { H.brave = c.querySelector('.brave input').checked; H.begin(false); }, 'Play']], () => H.stop()); };
   H.begin = (again) => {
@@ -14144,13 +14184,13 @@ const HIDESEEK = (() => {
   const sfx = (n, o) => HWGAMES.sfx(n, o);
   const store = {get(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; }catch(e){ return {}; } }, set(v){ try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){} }};
   let st = null;   // live game state (null while idle)
-  // ---------------------------------------------------------------- 3D: Snowball (all black, yellow eyes), built on first start
+  // ---------------------------------------------------------------- 3D: Snowball (orange tabby, amber eyes), built on first start
   let CAT = null, FUR = null, EYE = null, GEO = null;
   function mkCat(){
     if(!GEO){ GEO = {sph: new THREE.SphereGeometry(1, 16, 12), ear: new THREE.ConeGeometry(.09, .22, 4), leg: new THREE.CylinderGeometry(.045, .05, .5, 6)};
       const c = new THREE.CatmullRomCurve3([new THREE.Vector3(0, .12, -.38), new THREE.Vector3(.28, .06, -.45), new THREE.Vector3(.48, .1, -.2), new THREE.Vector3(.52, .4, .02), new THREE.Vector3(.42, .62, .05)]);
       GEO.tail = new THREE.TubeGeometry(c, 20, .05, 6, false); }
-    FUR = new THREE.MeshStandardMaterial({color: 0x0b0a0e, roughness: .45, metalness: .08}); EYE = new THREE.MeshBasicMaterial({color: 0xffd21a, toneMapped: false});
+    FUR = new THREE.MeshStandardMaterial({color: 0xd8802c, roughness: .8, metalness: 0}); EYE = new THREE.MeshBasicMaterial({color: 0xffd21a, toneMapped: false});
     const g = new THREE.Group(), body = [];
     const add = (geo, mat, x, y, z, sx, sy, sz) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if(sx) m.scale.set(sx, sy, sz); m.userData.hw = true; m.userData.noAO = true; g.add(m); return m; };
     body.push(add(GEO.sph, FUR, 0, .42, -.05, .36, .44, .42), add(GEO.sph, FUR, 0, .66, .1, .26, .34, .26), add(GEO.sph, FUR, 0, 1.06, .16, .25, .22, .23), add(GEO.sph, FUR, 0, 1.0, .33, .12, .09, .1));
@@ -14321,7 +14361,7 @@ const HIDESEEK = (() => {
     { const v = dollCamFor('roof'), D = new THREE.Vector3(...v.pos).sub(new THREE.Vector3(...v.look)).normalize(); CAT.root.rotation.y = Math.atan2(D.x, D.z);
       flyTo(v.pos, v.look, 'orbit', 1.4); }
     // the moment: Snowball on a big moon over the roof (DOM, always readable at night)
-    el.moon = mk('div', 'moon', '<span class="m">🌕</span><span class="c">🐈‍⬛</span>');
+    el.moon = mk('div', 'moon', '<span class="m">🌕</span><span class="c">🐈</span>');
     say('🌙', 'My favorite spot. Happy Halloween!'); sfx('bats'); later(() => sfx('meow', {pitch: .8}), 700); later(() => sfx('win'), 1400);
     later(() => burst('🦇', innerWidth / 2, innerHeight * .4, 12), 500); later(() => burst('🦇🌙⭐', innerWidth / 2, innerHeight * .4, 14), 1600);
     later(endCard, 3800); }
@@ -14459,13 +14499,13 @@ const MIDNIGHT28 = (() => {
   const stopIx = id => STOPS.findIndex(q => q.id === id);
   const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
   // ---------------------------------------------------------------- art (inline SVG, no textures)
-  const CAT = (w = 90, cls = '') => `<svg class="${cls}" width="${w}" height="${w}" viewBox="0 0 100 100" aria-label="Snowball the black cat" role="img">
-    <path d="M70 78c14 0 22-10 18-22-2-6-8-6-8-1 2 8-3 14-10 14" fill="none" stroke="#0b0b0f" stroke-width="7" stroke-linecap="round"/>
-    <ellipse cx="50" cy="72" rx="24" ry="20" fill="#0b0b0f"/><circle cx="50" cy="42" r="20" fill="#0b0b0f"/>
-    <path d="M33 33l-4-20 16 11zM67 33l4-20-16 11z" fill="#0b0b0f"/>
-    <ellipse cx="42" cy="42" rx="5.5" ry="6.5" fill="#ffd21f"/><ellipse cx="58" cy="42" rx="5.5" ry="6.5" fill="#ffd21f"/>
+  const CAT = (w = 90, cls = '') => `<svg class="${cls}" width="${w}" height="${w}" viewBox="0 0 100 100" aria-label="Snowball the orange tabby cat" role="img">
+    <path d="M70 78c14 0 22-10 18-22-2-6-8-6-8-1 2 8-3 14-10 14" fill="none" stroke="#e08a36" stroke-width="7" stroke-linecap="round"/><path d="M70 78c14 0 22-10 18-22-2-6-8-6-8-1 2 8-3 14-10 14" fill="none" stroke="#a64c15" stroke-width="7" stroke-dasharray="4 6"/>
+    <ellipse cx="50" cy="72" rx="24" ry="20" fill="#e58f3a"/><ellipse cx="50" cy="77" rx="11" ry="14" fill="#fff5e4"/><circle cx="50" cy="42" r="20" fill="#e58f3a"/><ellipse cx="50" cy="52.5" rx="8" ry="5.5" fill="#fff5e4"/><path d="M45 24v6M50 23v7M55 24v6M31 46l6 2M69 46l-6 2M28 68l7 2M27 78l7 1M72 68l-7 2M73 78l-7 1" stroke="#a64c15" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <path d="M33 33l-4-20 16 11zM67 33l4-20-16 11z" fill="#e58f3a"/><path d="M34 29l-2-10 8 6zM66 29l2-10-8 6z" fill="#f0b6a0"/>
+    <ellipse cx="42" cy="42" rx="5.5" ry="6.5" fill="#f6c132" stroke="#3d1c08" stroke-width="1.3"/><ellipse cx="58" cy="42" rx="5.5" ry="6.5" fill="#f6c132" stroke="#3d1c08" stroke-width="1.3"/>
     <ellipse cx="42" cy="42" rx="1.6" ry="5" fill="#0b0b0f"/><ellipse cx="58" cy="42" rx="1.6" ry="5" fill="#0b0b0f"/>
-    <path d="M47 51l3 2 3-2" fill="none" stroke="#40303a" stroke-width="1.6"/></svg>`;
+    <path d="M47 51l3 2 3-2" fill="none" stroke="#5a2a14" stroke-width="1.6"/></svg>`;
   const GHOST = (w = 110, acc = '', sleepy = false) => `<div style="position:relative;display:inline-block;width:${w}px"><svg width="${w}" height="${w * 1.1}" viewBox="0 0 100 110" aria-hidden="true">
     <path d="M14 100V48a36 36 0 0 1 72 0v52l-12-9-12 9-12-9-12 9-12-9z" fill="#f5f3ff" stroke="#c9c2ff" stroke-width="2"/>
     ${sleepy ? '<path d="M33 50q6 5 12 0M55 50q6 5 12 0" stroke="#2a2440" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="50" cy="66" rx="5" ry="4" fill="#2a2440"/>'
@@ -14902,13 +14942,13 @@ const STAIRDOOR = (() => {
     const cup = new THREE.Mesh(cg, cm); cup.position.copy(cupC); cup.rotation.y = Math.atan2(D.u[0], D.u[1]) - Math.PI / 2; cup.rotation.y = Math.atan2(-D.u[1], D.u[0]); cup.visible = false; add(cup);
     const spill = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 4.2), mat(THREE.MeshBasicMaterial, {map: glowTexture(), color: 0xffa040, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending}));
     spill.rotation.x = -Math.PI / 2; spill.position.copy(D.P(0, D.sill + .02, D.dF - D.sw * 1.6)); add(spill);
-    // Golden Pumpkin + Snowball (all black, yellow eyes), just inside the threshold
+    // Golden Pumpkin + Snowball (orange tabby, amber eyes), just inside the threshold
     const nest = new THREE.Group(); nest.name = 'sd28nest'; nest.position.copy(D.P(0, D.sill, D.dF + D.sw * .75)); nest.rotation.y = Math.atan2(-D.n[0] * -D.sw, -D.n[1] * -D.sw); add(nest);
     const gold = mat(THREE.MeshStandardMaterial, {color: 0xf2a516, emissive: 0x7a3c00, emissiveIntensity: .6, metalness: .55, roughness: .35});
     const pg = new THREE.SphereGeometry(.62, 28, 18); { const p = pg.attributes.position; for(let i = 0; i < p.count; i++){ const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const a = Math.atan2(z, x); const k = 1 + .09 * Math.cos(a * 8); p.setXYZ(i, x * k, y * .78, z * k); } pg.computeVertexNormals(); }
     const pump = new THREE.Mesh(pg, gold); pump.position.y = .5; nest.add(pump);
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(.05, .08, .26, 8), mat(THREE.MeshStandardMaterial, {color: 0x6b4a1a, roughness: .8})); stem.position.y = 1.0; stem.rotation.z = .2; nest.add(stem);
-    const fur = mat(THREE.MeshStandardMaterial, {color: 0x030304, roughness: .9, metalness: 0});
+    const fur = mat(THREE.MeshStandardMaterial, {color: 0xd8802c, roughness: .9, metalness: 0});
     const cat = new THREE.Group(); cat.position.set(0, .93, 0); cat.scale.setScalar(1.25); nest.add(cat);
     const body = new THREE.Mesh(new THREE.SphereGeometry(.42, 20, 14), fur); body.scale.set(1.15, .55, .95); body.position.y = .12; cat.add(body);
     const head = new THREE.Mesh(new THREE.SphereGeometry(.2, 18, 12), fur); head.position.set(.3, .2, -.2); cat.add(head);
@@ -15003,7 +15043,7 @@ const STAIRDOOR = (() => {
   function endCard(){ const t = (performance.now() - R.t0) / 1000, mm = Math.floor(t / 60), ss = String(Math.floor(t % 60)).padStart(2, '0'); const st = load(); const best = st.best && st.best < t ? st.best : t; save(Object.assign(st, {best, wins: (st.wins || 0) + 1}));
     sfx('win'); HWGAMES.track('stairdoor_win', {secs: Math.round(t), hints: R.hints + R.helped}); SD.report.win = {secs: t, hints: R.hints, helped: R.helped};
     UI.hilda.classList.remove('on');
-    card(`<div class="ic">🗝️🎃🐈‍⬛</div><h2>🚪 Door opened!</h2><div class="st">⏱️ ${mm}:${ss} · 💡 ${R.hints + R.helped}${best < t - .5 ? ' · 🏆 ' + Math.floor(best / 60) + ':' + String(Math.floor(best % 60)).padStart(2, '0') : ''}</div>`,
+    card(`<div class="ic">🗝️🎃🐈</div><h2>🚪 Door opened!</h2><div class="st">⏱️ ${mm}:${ss} · 💡 ${R.hints + R.helped}${best < t - .5 ? ' · 🏆 ' + Math.floor(best / 60) + ':' + String(Math.floor(best % 60)).padStart(2, '0') : ''}</div>`,
       [['🔁 Faster?', 'go', () => { closeCard(); teardownRun(); begin(); }], ['✅ Done', '', () => HWGAMES.stop()]]); }
   // ------------------------------------------------------------------ keyboard (desktop)
   function onKey(e){ if(!SD.active) return; if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); if(UI.card) closeCard(); HWGAMES.stop(); return; }
@@ -15114,15 +15154,15 @@ const TREAT = (() => {
   const st = () => { if(ST) return ST; try{ const v = JSON.parse(localStorage.getItem(KEY) || 'null'); ST = v && v.v === 1 ? v : {v: 1}; }catch(e){ ST = {v: 1}; } ST.met = ST.met || []; return ST; };
   const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(st())); }catch(e){} };
   const shuffle = (a, r = Math.random) => { for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  // ---- Snowball: the family's real cat, ALL black with yellow eyes (inline SVG; costume = tiny pumpkin suit, bag = tiny treat bag)
-  const CAT = (bag = true, costume = true) => `<svg viewBox="0 0 120 120" aria-label="Snowball the black cat" role="img">
-    <path d="M92 96c16-4 22-20 14-34" fill="none" stroke="#0b0b0e" stroke-width="7" stroke-linecap="round"/>
-    <ellipse cx="60" cy="88" rx="30" ry="24" fill="#0b0b0e"/>
+  // ---- Snowball: the house cat, an orange tabby with amber eyes (inline SVG; costume = tiny pumpkin suit, bag = tiny treat bag)
+  const CAT = (bag = true, costume = true) => `<svg viewBox="0 0 120 120" aria-label="Snowball the orange tabby cat" role="img">
+    <path d="M92 96c16-4 22-20 14-34" fill="none" stroke="#e08a36" stroke-width="7" stroke-linecap="round"/><path d="M92 96c16-4 22-20 14-34" fill="none" stroke="#a64c15" stroke-width="7" stroke-dasharray="4 6"/>
+    <ellipse cx="60" cy="88" rx="30" ry="24" fill="#e58f3a"/><ellipse cx="60" cy="93" rx="13" ry="17" fill="#fff5e4"/><path d="M33 80l8 3M32 92l8 1M87 80l-8 3M88 92l-8 1" stroke="#a64c15" stroke-width="2.6" stroke-linecap="round" fill="none"/>
     ${costume ? '<ellipse cx="60" cy="92" rx="22" ry="17" fill="#ff7a1a"/><path d="M48 78c-3 8-3 20 0 28M60 76v32M72 78c3 8 3 20 0 28" stroke="#c2410c" stroke-width="2.5" fill="none"/><path d="M52 98l4-4 4 4 4-4 4 4" stroke="#0b0b0e" stroke-width="2.5" fill="none"/>' : ''}
-    <path d="M30 30l6-24 18 16z M90 30l-6-24-18 16z" fill="#0b0b0e"/><path d="M35 24l3-11 8 8z M85 24l-3-11-8 8z" fill="#3a2a35"/>
-    <circle cx="60" cy="42" r="30" fill="#0b0b0e"/>
+    <path d="M30 30l6-24 18 16z M90 30l-6-24-18 16z" fill="#e58f3a"/><path d="M35 24l3-11 8 8z M85 24l-3-11-8 8z" fill="#f0b6a0"/>
+    <circle cx="60" cy="42" r="30" fill="#e58f3a"/><ellipse cx="60" cy="57" rx="12" ry="8.5" fill="#fff5e4"/><path d="M53 15v8M60 13v10M67 15v8M32 46l8 2M88 46l-8 2" stroke="#a64c15" stroke-width="2.6" stroke-linecap="round" fill="none"/>
     ${costume ? '<path d="M57 13c2-6 6-8 10-7-3 2-5 5-5 8z" fill="#3c8d2f"/>' : ''}
-    <ellipse cx="48" cy="40" rx="8" ry="9" fill="#ffd21a"/><ellipse cx="72" cy="40" rx="8" ry="9" fill="#ffd21a"/>
+    <ellipse cx="48" cy="40" rx="8" ry="9" fill="#f6c132" stroke="#3d1c08" stroke-width="1.5"/><ellipse cx="72" cy="40" rx="8" ry="9" fill="#f6c132" stroke="#3d1c08" stroke-width="1.5"/>
     <ellipse cx="48" cy="41" rx="2.6" ry="7" fill="#0b0b0e"/><ellipse cx="72" cy="41" rx="2.6" ry="7" fill="#0b0b0e"/>
     <circle cx="50" cy="37" r="1.8" fill="#fff"/><circle cx="74" cy="37" r="1.8" fill="#fff"/>
     <path d="M57 52l3 3 3-3z" fill="#e58aa0"/><path d="M60 55q-4 5-8 2M60 55q4 5 8 2" stroke="#3a2a35" stroke-width="1.6" fill="none"/>
@@ -15468,7 +15508,7 @@ const UI27 = (() => {
   function blocked(){
     if(!AUTO) return 'automation';
     if(revealAt == null || performance.now() - revealAt < CFG.GRACE) return 'grace';
-    if(root.classList.contains('vmo27') || root.classList.contains('phm') || document.querySelector('.qpop:not([hidden])')) return 'menu';
+    if(root.classList.contains('vmo27') || root.classList.contains('phm') || document.querySelector('.qpop:not([hidden]), #holPanel:not([hidden])')) return 'menu';
     if(overUI){ const el = px >= 0 ? document.elementFromPoint(px, py) : null; overUI = !!(el && el.closest && el.closest(UI_SEL)); if(overUI) return 'hover'; }   // re-checked: the UI under a still pointer may have gone (clean view)
     const ng = document.querySelector('.navguide'); if(ng && !ng.hidden) return 'guide';
     const bz = document.getElementById('busy24'); if(bz && bz.classList.contains('on')) return 'busy';
@@ -16424,14 +16464,14 @@ const TURKEY = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads indoors
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads indoors
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   let URL_TOM = '', URL_CAT = '';
   function urls(){ if(URL_TOM) return; try{ URL_TOM = canv(x => drawTom(x), 224).toDataURL(); URL_CAT = canv(drawCat, 160).toDataURL(); }catch(e){} }
@@ -17000,12 +17040,12 @@ const CORNMAZE = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill(); x.restore(); }
   // sprite atlas, 4 x 4 slots of 128 px
   const SL = {kid: 0, cat: 1, wisp: 2, wispZ: 3, candy: 4, gold: 10, feet: 11, gate: 12, mallow: 13, dot: 14, glow: 15};
@@ -17132,7 +17172,7 @@ const CORNMAZE = (() => {
   function tip(t, ms){ if(!tipE) return; tipE.textContent = t; tipE.hidden = !t; clearTimeout(Z.tipT); if(ms) Z.tipT = setTimeout(() => { tipE.hidden = true; }, ms); }
   function fx(kind, at){ const box = el('div', 'cn31fx cn31'); document.body.appendChild(box); const W = innerWidth, Hh = innerHeight, cx = at ? at[0] : W / 2, cy = at ? at[1] : Hh / 2;
     if(kind === 'bat'){ for(let i = 0; i < 3; i++){ const b = el('i', null, '🦇'); b.style.cssText = `left:${cx}px;top:${cy}px;font-size:${30 + i * 6}px;--dx:${(i - 1) * 140 + 60}px;--dy:${-220 - i * 50}px;animation:cn31fly ${1.4 + i * .2}s ease-out ${i * .12}s forwards;opacity:0`; box.appendChild(b); } }
-    else if(kind === 'snow'){ const b = el('i'); b.innerHTML = Z.snowURL ? `<img src="${Z.snowURL}" alt="" width="64" height="64">` : '🐈‍⬛'; b.style.cssText = `left:${cx}px;top:${cy}px;font-size:46px;animation:cn31pop 1.9s ease-out forwards`; box.appendChild(b); }
+    else if(kind === 'snow'){ const b = el('i'); b.innerHTML = Z.snowURL ? `<img src="${Z.snowURL}" alt="" width="64" height="64">` : '🐈'; b.style.cssText = `left:${cx}px;top:${cy}px;font-size:46px;animation:cn31pop 1.9s ease-out forwards`; box.appendChild(b); }
     else if(kind === 'squirrel'){ const b = el('i', null, '🐿️'); b.style.cssText = `left:${-60}px;top:${cy}px;font-size:44px;--dx:${W + 120}px;--dy:-20px;animation:cn31fly 1.4s linear forwards`; box.appendChild(b); }
     else if(kind === 'leaves'){ for(let i = 0; i < 14; i++){ const b = el('i', null, i % 2 ? '🍂' : '🍁'); const a = i / 14 * 6.283; b.style.cssText = `left:${cx}px;top:${cy}px;font-size:26px;--dx:${Math.cos(a) * 130}px;--dy:${Math.sin(a) * 90 - 120}px;animation:cn31fly 1.6s ease-out ${i * .03}s forwards;opacity:0`; box.appendChild(b); } }
     else if(kind === 'owl'){ const b = el('i', null, '🦉'); b.style.cssText = `left:${cx}px;top:${cy}px;font-size:46px;animation:cn31pop 1.8s ease-out forwards`; box.appendChild(b); }
@@ -17509,17 +17549,15 @@ window.CORN31 = CORNMAZE;
   // ☰ glyph
   const more = document.getElementById('phMore');
   if(more) more.innerHTML = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
-  // Games button (phone only; hidden with ?nogame=1)
+  // Games button (hidden with ?nogame=1). r36 (owner 11/11: "it brings up a picker of legacy games... also it transitions to thanksgiving mode... it also hangs
+  // a few seconds without any feedback"): one tap opens the picker of the five current games (assets/games-menu.js) at once. It no longer switches a holiday
+  // dress on and no longer opens the retired mini-games' menu. If the picker's script did not load, the games page has the same five.
   if(!/[?&]nogame=1\b/.test(location.search)){
-    const g = document.createElement('button'); g.type = 'button'; g.className = 'v31games'; g.textContent = 'Games'; g.setAttribute('aria-label', 'Games');
+    const g = document.createElement('button'); g.type = 'button'; g.className = 'v31games'; g.textContent = 'Games'; g.setAttribute('aria-label', 'Games'); g.setAttribute('aria-haspopup', 'dialog'); g.setAttribute('aria-expanded', 'false');
     tabs.appendChild(g);
-    g.addEventListener('click', () => {
-      const H = window.HALLOWEEN, T = window.THANKSGIVING, pill = () => document.getElementById('hwGamesPill'), open = () => { try { const pp = pill(); if(pp) pp.click(); else if(window.HWGAMES && HWGAMES.openMenu) HWGAMES.openMenu(); } catch(e) { console.warn(e); } };
-      if((H && H.isOn) || (T && T.isOn)) return open();
-      const now = new Date(), useT = T && now.getMonth() === 10;          // November -> Thanksgiving if built, else Halloween
-      const M = useT ? T : H; if(!M) return open();
-      M.on(); let n = 0; const wait = () => { if((M.isOn && pill()) || n++ > 80) open(); else setTimeout(wait, 100); }; wait();
-    });
+    g.addEventListener('click', e => { e.stopPropagation();
+      try{ if(window.GAMESMENU && GAMESMENU.open(g)) return; }catch(x){ console.warn('[games]', x); }
+      const p = location.pathname; location.href = p.replace(/[^\/]*$/, '').replace(/[^\/]+\/$/, '') + 'games/' + (/index\.html$/.test(p) ? 'index.html' : ''); });
   }
   // Walk / Photos into the ☰ menu (top), phone only
   const menu = document.getElementById('phMenu');
@@ -17535,8 +17573,8 @@ window.CORN31 = CORNMAZE;
       const opts = [['asbuilt', 'As built']].concat((BIM.options || []).map(o => [o.id, DESIGN.nameOf ? DESIGN.nameOf(o.id) : o.name]));
       if(opts.length > 1 && typeof DESIGN !== 'undefined'){
         const row = document.createElement('button'); row.type = 'button'; row.className = 'tod v31rm'; row.setAttribute('aria-expanded', 'false');
-        row.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 17V7l7-4 7 4v10H3zM8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Remodel ideas</span><em class="v31val"></em>';
-        const sub = document.createElement('div'); sub.className = 'v31sub'; sub.setAttribute('role', 'radiogroup'); sub.setAttribute('aria-label', 'Remodel ideas');
+        row.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 17V7l7-4 7 4v10H3zM8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Design</span><em class="v31val"></em>';   /* r36: one name, the tab's (was 'Remodel ideas' here and 'Design' on the tab) */
+        const sub = document.createElement('div'); sub.className = 'v31sub'; sub.setAttribute('role', 'radiogroup'); sub.setAttribute('aria-label', 'Design: layout of the original house');
         const val = row.querySelector('.v31val'), cur = () => (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt');
         const paint = () => { const c = cur(); val.textContent = (opts.find(o => o[0] === c) || opts[0])[1]; sub.querySelectorAll('button').forEach(x => x.setAttribute('aria-checked', x.dataset.v === c ? 'true' : 'false')); };
         for(const [id, label] of opts){ const x = document.createElement('button'); x.type = 'button'; x.setAttribute('role', 'radio'); x.dataset.v = id; x.textContent = label;
@@ -18121,14 +18159,14 @@ const LEAFPILE = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads at dusk
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads at dusk
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   function emo(e, extra){ return canv(x => { x.font = '96px ' + EMOJI_FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(255,240,200,.95)'; x.shadowBlur = 7; x.fillText(e, 64, 70); x.shadowBlur = 0; if(extra) extra(x); }, 192); }
@@ -18601,14 +18639,14 @@ const THANKFUL = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads at dusk
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads at dusk
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   function emo(e){ return canv(x => { x.font = '96px ' + EMOJI_FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(255,240,200,.95)'; x.shadowBlur = 7; x.fillText(e, 64, 70); }, 192); }
@@ -18972,14 +19010,14 @@ const DINNER = (() => {
     x.strokeStyle = '#FFF4E2'; x.lineWidth = 2; x.beginPath(); x.moveTo(56, 71); x.lineTo(57, 62); x.moveTo(72, 71); x.lineTo(71, 62); x.stroke();
     x.fillStyle = '#D9822B'; x.beginPath(); x.ellipse(64, 97, 6, 4.6, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#5c7a2e'; x.fillRect(63.2, 91.3, 1.6, 2.4);
     x.strokeStyle = '#9E2B25'; x.lineWidth = 1.4; x.beginPath(); x.moveTo(50, 86); x.lineTo(78, 86); x.stroke(); x.restore(); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads indoors
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads indoors
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   const EMO = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   const emoDraw = (e, sz = 96, glow = 'rgba(255,240,200,.95)', blur = 8) => x => { x.font = sz + 'px ' + EMO; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = glow; x.shadowBlur = blur; x.fillText(e, 64, 68); x.shadowBlur = 0; x.fillText(e, 64, 68); };
@@ -19258,7 +19296,7 @@ const DINNER = (() => {
       let cx, cy, cz; if(q < .25){ const f = q / .25; cx = C[0] + (mid[0] - C[0]) * f; cz = C[2] + (mid[2] - C[2]) * f; cy = C[1] + (top - C[1]) * f + Math.sin(f * Math.PI) * 1.4; }
       else if(q < .62){ cx = mid[0] - (q - .42) * 4 * Math.sign(C[0] - T.x || 1) * -1; cz = mid[2]; cy = top + Math.abs(Math.sin(q * 30)) * .12; }
       else { const f = (q - .62) / .38, sx = C[0] < T.x ? 1 : -1; cx = mid[0] + sx * f * 4.5; cz = mid[2] + (mid[2] < T.z ? -1 : 1) * f * 2.2; cy = f < .2 ? top + Math.sin(f / .2 * Math.PI) * .7 : Math.max(.1, top - (f - .2) * 5); }
-      g2.cat.position.set(cx, cy, cz); g2.cat.scale.set(1.6, 1.6, 1); g2.glow.visible = q < 1; g2.glow.position.set(cx, cy + .7, cz); g2.glow.scale.set(2.6, 2.6, 1); g2.glow.material.opacity = .75; g2.cat.material.opacity = 1; g2.cat.visible = q < 1; g2.stick.visible = q > .4 && q < 1; g2.stick.position.set(cx + .45, cy + .75, cz + .1); g2.stick.scale.set(1.3, 1.3, 1);   // glow: a warm halo so the black cat reads against the dark kitchen
+      g2.cat.position.set(cx, cy, cz); g2.cat.scale.set(1.6, 1.6, 1); g2.glow.visible = q < 1; g2.glow.position.set(cx, cy + .7, cz); g2.glow.scale.set(2.6, 2.6, 1); g2.glow.material.opacity = .75; g2.cat.material.opacity = 1; g2.cat.visible = q < 1; g2.stick.visible = q > .4 && q < 1; g2.stick.position.set(cx + .45, cy + .75, cz + .1); g2.stick.scale.set(1.3, 1.3, 1);   // glow: a warm halo so the cat reads against the dark kitchen
       g2.stick.material.rotation = -.5 + Math.sin(now2 / 110) * .25; }; }
   function endCard(){ if(!st || st.done) return; st.done = true; st.ph = 'end'; const ms = st.ms || (performance.now() - st.t0), s = store.get(), sec = Math.round(ms / 1000);
     const best = s.best && s.best < ms ? s.best : null, newBest = !s.best || ms < s.best; if(newBest) s.best = Math.round(ms); s.plays = (s.plays || 0) + 1; store.set(s);
@@ -20079,7 +20117,7 @@ function r28AtticCabinet(){
   const P = door28Part(it, 1, [cx, 0, cz]); P.rec.parentKey = vname('main');                         // open at rest: the leaf's leading stile in the jamb
   obox('doorPaint', P.key, O, u, n, 0, wl - d, yl, yl + H, 0, T); cupPull(P.key, O, u, n, (wl - d) / 2, yl + 36 * I, T);
   collider(xf, z0, xh, z1, 0, HEAD); it.coll = COLLIDERS[COLLIDERS.length - 1]; it.coll.pass = true;
-  it.gap = new THREE.Box3(new THREE.Vector3(xf - .05, 0, z0), new THREE.Vector3(xh + .05, HEAD - .1, z1)); it.c0 = [cx, cz]; it.n3 = new THREE.Vector3(-1, 0, 0);   // tap the open doorway from the kitchen to close it
+  it.gap = new THREE.Box3(new THREE.Vector3(xf - .05, yl, z0 - .12), new THREE.Vector3(xh + .05, HEAD - .1, z0 + jt + gap + (wl - d) + .28)); it.c0 = [cx, cz]; it.n3 = new THREE.Vector3(-1, 0, 0);   // r36 owner: an open doorway is for walking through. Only the leaf's edge in the jamb (and a hand's width beside it) closes the door
   POCKET31.items.push(it);
   // the attic cabinet, centred over the door
   if(window.FIX && FIX.make){ const cab = FIX.make('upperCabinet', {w: CW, h: CH, d: .3, mountY: CAB_Y, glass: false, style: 'raised', pull: 'none', hw: 'satinNickel', led: false, contents: false});
@@ -20591,6 +20629,208 @@ if(typeof v27TodStart === 'function'){ const _ts = v27TodStart; v27TodStart = fu
         for(const l of (DUSK_LIGHTS || [])){ l.intensity = G.lamps; } } }catch(e){ console.warn('[bim3] golden', e); }
     return r; }; }
 BIM3.report.golden = GOLDEN35;
+/* ===== r36 sell (owner 11/11: "the best house website ever built ... convince people to come and see the house") =====
+   A reviewer acting as a buyer found that the tour had no way to book a showing, no price and no link out, and that the guided tour ended on a
+   greyed-out Next. This block adds, without touching how the camera moves:
+   - a "Schedule a showing" control that never hides: a pill at the right end of the top bar on a computer, and on a phone a slim line under the
+     header with the price and the same pill. It opens a contact sheet in place (SELL36.open), so nobody is thrown out of the tour to book.
+     Every fact in it is the landing page's: agent, brokerage and licence line, number, email, price, disclaimer.
+   - the price under the address on the plate, and the address is a link to the listing page on every screen size.
+   - the finale: the last stop is at dusk with the house lights on (GH-1 above had turned every dusk stop into golden hour), and a closing card
+     comes up over it with the address, price, beds / baths / square feet, the booking control, Call / Text, and quieter links onward.
+   - Photos: the top bar stays above the gallery (it was underneath, so the only ways out were Esc and "Show in 3D").
+   Games loaded by URL (?room= ...) keep their own header and get none of this. */
+{ const f = STOPS.find(s => s.id === 'dusk'); if(f) f.tod = 'dusk'; }
+const SELL36 = window.SELL36 = (() => {
+  const root = document.documentElement, bar = document.querySelector('header.bar'), plate = bar && bar.querySelector('.plate'), app = document.getElementById('app'), card = $('#card');
+  if(!bar || !plate || !app || !card) return null;
+  const GAME = /[?&](escape|snowball|deck|room|feast|game)=/.test(location.search) || /\/(thanksgiving|halloween)\//.test(location.pathname);
+  const F = {addr: '118 Hillside Drive', town: 'Woodside, California', price: 'Offered at $4,195,000', facts: 'Six bedrooms, three full baths, about 3,087 square feet',
+    how: 'Showings are private. Call, text or email Michael Warren, the listing agent, to set one up.', agent: 'Michael Warren', firm: 'Compass, DRE 01968537',
+    tel: 'tel:+16503150224', sms: 'sms:+16503150224', telTxt: '650.315.0224', email: 'Michael@MichaelWarrenRealEstate.com',
+    mail: 'mailto:Michael@MichaelWarrenRealEstate.com?subject=Showing%20request%3A%20118%20Hillside%20Drive',
+    note: 'The seller’s disclosures and reports are available from the listing agent.'};
+  const preview = /githack/.test(location.host), up = p => '../' + p + (preview ? 'index.html' : '');   // preview hosts serve no directory index
+  const ga = (ev, o) => { try{ gtag('event', ev, Object.assign({page: location.pathname}, o || {})); }catch(e){} };
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
+  const CAL = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 8.6h14M7 2.8V6M13 2.8V6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  const JOST = '"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif', CORM = '"Cormorant Garamond",Georgia,"Times New Roman",serif';
+  const st = document.createElement('style'); st.id = 'sell36css';
+  st.textContent =
+    /* plate: the address is a link home; the price sits under it; "About this tour" is a real tap target */
+    '.plate .home36{color:inherit;text-decoration:none}.plate .home36:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}' +
+    '.plate .pr36{margin-top:5px;font-family:' + JOST + ';font-size:13px;font-weight:500;letter-spacing:.01em;text-transform:none;color:var(--ink);font-variant-numeric:lining-nums;white-space:nowrap}' +
+    'html:not(.ph) .plate .aboutlink{margin:1px 0 -5px;padding:6px 0;min-height:28px;box-sizing:border-box;text-align:left}' +
+    /* the booking pill (computer) */
+    '.bk36{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 17px 0 14px;border:0;border-radius:999px;background:#7d6038;color:#fff;font:500 14px/1 ' + JOST + ';letter-spacing:.01em;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px rgba(60,45,25,.2),0 8px 22px rgba(60,45,25,.28);-webkit-tap-highlight-color:transparent}' +
+    '.bk36:hover{background:#6a5130}.bk36:focus-visible{outline:2px solid #fff!important;outline-offset:2px;box-shadow:0 0 0 5px #7d6038}.bk36 svg{flex:none}' +
+    'html.ph .bar .bk36{display:none}.brk36{display:none}' +
+    /* 1020-1209 px: one row still fits once Holiday decor and View are icons and the gaps tighten */
+    '@media (min-width:1020px) and (max-width:1209px){html:not(.ph) .bar{gap:8px}html:not(.ph) #holBtn .hl36,html:not(.ph) #viewBtn>span{display:none}html:not(.ph) .bk36{padding:0 15px}html:not(.ph) .bk36 svg{display:none}}' +
+    /* under 1020 px: two tidy rows. The address and the booking pill on top, the tabs and view controls below */
+    '@media (max-width:1019px){html:not(.ph) .bar .plate{order:-3}html:not(.ph) .bar .bk36{order:-2;margin-left:auto;align-self:flex-start;margin-top:4px}html:not(.ph) .bar .brk36{display:block;order:-1;flex:0 0 100%;height:0;margin:-6px 0}}' +
+    'html:not(.ph) .ovtag{top:calc(var(--bar36,96px) + 6px)}' +
+    /* the booking line (phone): price on the left, the pill on the right, directly under the header */
+    '.bks36{display:none}' +
+    'html.ph.bks36on .bks36{display:flex;position:absolute;left:0;right:0;top:var(--bar36,53px);z-index:9;align-items:center;justify-content:space-between;gap:10px;min-height:42px;box-sizing:border-box;padding:5px max(10px, env(safe-area-inset-right,0px)) 5px max(12px, env(safe-area-inset-left,0px));background:rgba(244,241,234,.97);border-bottom:1px solid #e5e1d8;box-shadow:0 4px 14px rgba(60,45,25,.1);font-family:' + JOST + ';color:#1f1f1d}' +
+    '.bks36 .bkp36{min-width:0;font-size:14.5px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:lining-nums}' +
+    '.bks36 .bkb36{flex:none;height:32px;padding:0 15px;border:0;border-radius:999px;background:#7d6038;color:#fff;font:500 14.5px/1 ' + JOST + ';letter-spacing:.01em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
+    '.bks36 .bkb36:active{background:#654d2c}' +
+    /* what sat just under the phone header moves down by the height of that line */
+    'html.ph.bks36on .ovtag,html.ph.bks36on .qhint{top:calc(max(6px, env(safe-area-inset-top,0px)) + 106px)}' +
+    'html.ph.bks36on .ideas35,html.ph.bks36on .perfpill{top:calc(max(6px, env(safe-area-inset-top,0px)) + 104px)}' +
+    'html.ph.bks36on.ideas35on .qhint{top:calc(max(6px, env(safe-area-inset-top,0px)) + 166px)}' +
+    'html.ph.bks36on .qrow{top:calc(max(6px, env(safe-area-inset-top,0px)) + 96px);max-height:calc(100% - max(6px, env(safe-area-inset-top,0px)) - 96px - max(var(--gut), env(safe-area-inset-bottom,0px)))}' +
+    'html.ph.bks36on .gallery{padding-top:calc(max(6px, env(safe-area-inset-top,0px)) + 108px)}' +
+    /* full screen: a small booking button in the pill of controls */
+    '.cv27 .cvb36{display:inline-flex;align-items:center;gap:7px;padding:0 13px;color:#7d6038;font-weight:600}.cv27 .cvb36 em{font-style:normal}' +
+    /* the contact sheet */
+    '.bk36dlg{width:min(480px, calc(100vw - 24px));max-width:none;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);margin:auto;padding:0;border:0;border-radius:16px;background:#fbfaf7;color:#1f1f1d;font-family:' + JOST + ';font-size:16px;line-height:1.55;box-shadow:0 24px 80px rgba(0,0,0,.42);overflow:auto;color-scheme:light}' +
+    '.bk36dlg::backdrop{background:rgba(14,14,13,.55)}' +
+    '.bk36dlg .bkin{position:relative;padding:28px 30px 24px;text-align:center}' +
+    '.bk36dlg .bkx{position:absolute;top:8px;right:8px;width:42px;height:42px;border:0;border-radius:50%;background:none;color:#67665f;font:400 27px/1 ' + JOST + ';cursor:pointer}.bk36dlg .bkx:hover{background:#f0ece3;color:#1f1f1d}' +
+    '.bk36dlg .bke{margin:0 30px 10px;font-size:14px;font-weight:500;letter-spacing:.01em;color:#7d6038;font-variant-numeric:lining-nums}' +
+    '.bk36dlg h2{margin:0 0 12px;font-family:' + CORM + ';font-weight:500;font-size:38px;line-height:1;letter-spacing:-.01em}' +
+    '.bk36dlg .bkhow{margin:0 auto;max-width:27em;text-wrap:balance}' +
+    '.bk36dlg .bkag{margin:20px 0 0;font-family:' + CORM + ';font-weight:500;font-size:27px;line-height:1.2;font-variant-numeric:lining-nums}' +
+    '.bk36dlg .bkfirm{margin:0;color:#67665f;font-size:15.5px;font-variant-numeric:lining-nums}' +
+    '.bk36dlg dl{margin:14px 0 20px;text-align:left}' +
+    '.bk36dlg dl>div{display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #e5e1d8}' +
+    '.bk36dlg dt{font-size:14.5px;font-weight:500;color:#7d6038}' +
+    '.bk36dlg dd{margin:0;font-size:15.5px;overflow-wrap:anywhere;font-variant-numeric:lining-nums;-webkit-user-select:text;user-select:text}.bk36dlg dd a{color:inherit;text-decoration:none}.bk36dlg dd a:hover{text-decoration:underline;text-underline-offset:3px}' +
+    '.bk36dlg .bkcopy{padding:4px 12px;border:1px solid #d9d3c7;border-radius:999px;background:none;color:#67665f;font:400 14px/1.3 ' + JOST + ';cursor:pointer;white-space:nowrap}.bk36dlg .bkcopy:hover{border-color:#1f1f1d;color:#1f1f1d}' +
+    '.bk36dlg .bkacts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}' +
+    '.bk36dlg .bkbtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border:1px solid #1f1f1d;border-radius:999px;background:none;color:#1f1f1d;font:400 15.5px/1.2 ' + JOST + ';text-decoration:none;white-space:nowrap}.bk36dlg .bkbtn:hover{background:#1f1f1d;color:#fbfaf7}' +
+    '.bk36dlg .bkbtn.solid{background:#1f1f1d;color:#fbfaf7}.bk36dlg .bkbtn.solid:hover{background:#3a3a36}' +
+    '.bk36dlg .bkfull{display:inline-block;margin:18px 0 0;padding:4px 0;color:#1f1f1d;font-size:15.5px;text-underline-offset:4px;text-decoration-color:#a8865b}' +
+    '.bk36dlg .bknote{margin:12px auto 0;max-width:34em;color:#67665f;font-size:13.5px;line-height:1.5}' +
+    '.bk36dlg :is(a,button):focus-visible{outline:2px solid #4b5f68!important;outline-offset:2px}' +
+    'html.ph .bk36dlg{width:100vw;margin:auto 0 0;border-radius:18px 18px 0 0}html.ph .bk36dlg .bkin{padding:26px 18px calc(20px + env(safe-area-inset-bottom,0px))}' +
+    'html.ph .bk36dlg h2{font-size:34px}html.ph .bk36dlg dl>div{grid-template-columns:minmax(0,1fr) auto;gap:0 10px}html.ph .bk36dlg dt{grid-column:1 / -1}html.ph .bk36dlg dd{font-size:15.5px}' +
+    'html.ph .bk36dlg .bkbtn{flex:1 1 auto;padding:0 14px}' +
+    /* the finale card: a lower third over the house at dusk */
+    '.fin36{position:absolute;z-index:7;left:50%;bottom:var(--fin36b,78px);width:min(920px, calc(100% - 48px));box-sizing:border-box;padding:24px 30px 16px;border-radius:16px;background:rgba(18,17,15,.8);-webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1);border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 60px rgba(0,0,0,.42);color:#fbfaf7;font-family:' + JOST + ';font-size:15px;line-height:1.45;opacity:0;transform:translate(-50%,18px);pointer-events:none;transition:opacity .9s ease,transform 1s cubic-bezier(.2,.7,.2,1)}' +
+    '.fin36.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}' +
+    'html:not(.ph) .fin36.side{left:auto;right:max(16px, env(safe-area-inset-right,0px));width:var(--fin36w,520px);transform:translate(0,18px)}html:not(.ph) .fin36.side.on{transform:none}' +
+    'html:not(.ph) .fin36.slim .fing{grid-template-columns:minmax(0,1fr);gap:16px}html:not(.ph) .fin36.slim .fa{min-width:0}html:not(.ph) .fin36.slim h2{font-size:38px}' +
+    '.fin36 .fing{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 40px;align-items:center}' +
+    '.fin36 .fe{margin:0 0 8px;font-size:14px;font-weight:500;letter-spacing:.02em;color:#e8d3b0}' +
+    '.fin36 h2{margin:0;font-family:' + CORM + ';font-weight:500;font-style:normal;font-size:clamp(36px, 3.8vw, 52px);line-height:1;letter-spacing:-.01em;color:#fff}' +
+    '.fin36 .ft{margin:7px 0 0;font-size:15.5px;letter-spacing:.02em;color:rgba(251,250,247,.82)}' +
+    '.fin36 .fp{margin:14px 0 0;font-size:20px;letter-spacing:.02em;font-variant-numeric:lining-nums;color:#fff}' +
+    '.fin36 .ff{margin:2px 0 0;font-size:15.5px;color:rgba(251,250,247,.88);font-variant-numeric:lining-nums}' +
+    '.fin36 .fa{display:flex;flex-direction:column;gap:8px;min-width:250px}' +
+    '.fin36 .fb{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;box-sizing:border-box;padding:0 22px;border:1px solid rgba(255,255,255,.7);border-radius:999px;background:none;color:#fff;font:500 15.5px/1.2 ' + JOST + ';letter-spacing:.01em;text-decoration:none;white-space:nowrap;cursor:pointer}' +
+    '.fin36 .fb:hover{background:rgba(255,255,255,.14)}.fin36 .fb.go{background:#fff;color:#1f1f1d;border-color:#fff}.fin36 .fb.go:hover{background:#f1ece2}' +
+    '.fin36 .fb2{display:flex;gap:8px}.fin36 .fb2 .fb{flex:1 1 0;padding:0 12px}' +
+    '.fin36 .fn{margin:0;font-size:14px;text-align:center;color:rgba(251,250,247,.86);font-variant-numeric:lining-nums;-webkit-user-select:text;user-select:text}' +
+    '.fin36 .fl{display:flex;flex-wrap:wrap;gap:2px 24px;margin-top:16px;padding-top:8px;border-top:1px solid rgba(255,255,255,.16);font-size:14.5px}' +
+    '.fin36 .fl :is(a,button){display:inline-flex;align-items:center;box-sizing:border-box;min-height:36px;padding:6px 0;border:0;background:none;color:rgba(251,250,247,.88);font:400 14.5px/1.3 ' + JOST + ';text-decoration:underline;text-decoration-color:rgba(232,211,176,.6);text-underline-offset:4px;cursor:pointer}.fin36 .fl :is(a,button):hover{color:#fff;text-decoration-color:#e8d3b0}' +
+    '.fin36 .fx{position:absolute;top:6px;right:8px;width:40px;height:40px;border:0;border-radius:50%;background:none;color:rgba(251,250,247,.75);font:400 25px/1 ' + JOST + ';cursor:pointer}.fin36 .fx:hover{background:rgba(255,255,255,.12);color:#fff}' +
+    '.fin36 :is(a,button):focus-visible{outline:2px solid #e8d3b0!important;outline-offset:2px}' +
+    '.fin36 .fing>div>*,.fin36 .fl{opacity:0;transform:translateY(8px);transition:opacity .7s ease,transform .7s ease}.fin36.on .fing>div>*,.fin36.on .fl{opacity:1;transform:none}' +
+    '.fin36.on .fing>div:first-child>:nth-child(1){transition-delay:.35s}.fin36.on .fing>div:first-child>:nth-child(2){transition-delay:.5s}.fin36.on .fing>div:first-child>:nth-child(3){transition-delay:.62s}.fin36.on .fing>div:first-child>:nth-child(4){transition-delay:.85s}.fin36.on .fing>div:first-child>:nth-child(5){transition-delay:.95s}' +
+    '.fin36.on .fa>*{transition-delay:1.15s}.fin36.on .fl{transition-delay:1.4s}' +
+    'html.ph .fin36{left:max(var(--gut), env(safe-area-inset-left,0px));right:max(var(--gut), env(safe-area-inset-right,0px));width:auto;padding:18px 18px 8px;transform:translate(0,18px)}html.ph .fin36.on{transform:none}' +
+    'html.ph .fin36{padding:16px 16px 6px}html.ph .fin36 .fing{grid-template-columns:minmax(0,1fr);gap:12px}html.ph .fin36 .fe{margin-bottom:5px}html.ph .fin36 h2{font-size:34px}html.ph .fin36 .ft{margin-top:4px;font-size:15px}html.ph .fin36 .fp{margin-top:8px;font-size:19px}html.ph .fin36 .ff{font-size:15px;text-wrap:balance}html.ph .fin36 .fb{min-height:44px}html.ph .fin36 .fa{min-width:0}html.ph .fin36 .fn{display:none}html.ph .fin36 .fl{margin-top:10px;padding-top:4px;gap:0 18px}' +
+    '@media (max-height:520px){html.ph .fin36 .ft,html.ph .fin36 .ff,html.ph .fin36 .fe{display:none}html.ph .fin36 h2{font-size:28px}}' +
+    '@media (prefers-reduced-motion: reduce){.fin36 .fing>div>*,.fin36 .fl{transition:opacity .2s ease!important;transform:none!important}.fin36{transition:opacity .2s ease!important;transform:translate(-50%,0)!important}html.ph .fin36,html:not(.ph) .fin36.side{transform:none!important}}' +
+    /* Photos: the bar rides above the gallery on a computer too, on the gallery's own paper */
+    'html.g36:not(.ph) .bar{z-index:9;pointer-events:auto;background:var(--paper);border-bottom:1px solid var(--line)}' +
+    'html.g36:not(.ph) .gallery{padding-top:calc(var(--bar36,96px) + 8px)}' +
+    '.gallery header{position:relative}.gallery .gx36{float:right;margin:2px 0 10px 18px}html.ph .gallery .gx36{float:none;display:block;margin:0 0 14px;min-height:40px}';
+  document.head.appendChild(st);
+
+  /* ---- the plate: address -> the listing page, price under it */
+  { const b = plate.querySelector('b');
+    if(b && !b.querySelector('a')){ const a = document.createElement('a'); a.className = 'home36'; a.href = up(''); a.title = 'The listing page for 118 Hillside Drive'; while(b.firstChild) a.appendChild(b.firstChild); b.appendChild(a);
+      a.addEventListener('click', () => ga('tour_home_click', {})); }
+    const town = plate.querySelector('span'), pr = el('span', 'pr36'); pr.textContent = F.price; if(town) town.after(pr); else if(b) b.after(pr); }
+
+  /* ---- the contact sheet */
+  const dlg = el('dialog', 'bk36dlg'); dlg.id = 'bkDlg'; dlg.setAttribute('aria-labelledby', 'bkH');
+  dlg.innerHTML = '<div class="bkin"><button type="button" class="bkx" aria-label="Close">×</button>' +
+    '<p class="bke">' + F.addr + ' · ' + F.price + '</p><h2 id="bkH">Schedule a showing</h2><p class="bkhow">' + F.how + '</p>' +
+    '<p class="bkag">' + F.agent + '</p><p class="bkfirm">' + F.firm + '</p>' +
+    '<dl><div><dt>Phone</dt><dd><a href="' + F.tel + '">' + F.telTxt + '</a></dd><button type="button" class="bkcopy" data-copy="' + F.telTxt + '" aria-label="Copy the phone number">Copy</button></div>' +
+    '<div><dt>Email</dt><dd><a href="' + F.mail + '">' + F.email + '</a></dd><button type="button" class="bkcopy" data-copy="' + F.email + '" aria-label="Copy the email address">Copy</button></div></dl>' +
+    '<div class="bkacts"><a class="bkbtn solid" href="' + F.tel + '">Call Michael</a><a class="bkbtn" href="' + F.sms + '">Text Michael</a><a class="bkbtn" href="' + F.mail + '">Email Michael</a></div>' +
+    '<a class="bkfull" href="' + up('') + '">See the full listing page</a><p class="bknote">' + F.note + '</p></div>';
+  document.body.appendChild(dlg);
+  let from = '';
+  function open(where){ from = where || ''; ga('book_open', {where: from, stop: (STOPS[stopIdx] || {}).id || '', mode});
+    if(!dlg.showModal){ location.href = up('') + '#contact'; return; }
+    try{ if(!dlg.open) dlg.showModal(); const h = dlg.querySelector('h2'); h.setAttribute('tabindex', '-1'); h.focus({preventScroll: true}); dlg.scrollTop = 0; }catch(e){ console.warn('[sell36] sheet', e); } }
+  const close = () => { try{ if(dlg.open) dlg.close(); }catch(e){} };
+  dlg.querySelector('.bkx').addEventListener('click', close);
+  dlg.addEventListener('click', e => { if(e.target === dlg) close(); });                      // a click on the dimmed backdrop
+  dlg.addEventListener('keydown', e => { if(e.key !== 'Escape') e.stopPropagation(); });      // arrow keys and Space stay in the sheet (they drive the tour otherwise)
+  dlg.addEventListener('click', e => { const t = e.target.closest ? e.target.closest('a[href],.bkcopy') : null; if(!t) return;
+    if(t.classList.contains('bkcopy')){ const v = t.getAttribute('data-copy'), done = () => { t.textContent = 'Copied'; setTimeout(() => { t.textContent = 'Copy'; }, 1800); };
+      const old = () => { const ta = document.createElement('textarea'); ta.value = v; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0'; dlg.appendChild(ta); ta.select(); try{ if(document.execCommand('copy')) done(); }catch(x){} ta.remove(); };
+      try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done, old); else old(); }catch(x){ old(); }
+      ga('contact_copy', {what: /@/.test(v) ? 'email' : 'phone', where: 'tour'}); return; }
+    const m = /^(tel|sms|mailto):/.exec(t.getAttribute('href') || ''); if(m) ga('showing_contact', {method: {tel: 'call', sms: 'text', mailto: 'email'}[m[1]], where: 'tour-sheet', from, transport_type: 'beacon'}); });
+  if(GAME) return {open, close, dlg, facts: F};
+
+  /* ---- the booking control: a pill in the bar (computer), a line under the header (phone), a button in the full-screen pill */
+  const bk = el('button', 'bk36', CAL + '<span>Schedule a showing</span>'); bk.type = 'button'; bk.id = 'bk36'; bk.setAttribute('aria-haspopup', 'dialog');
+  { const fs = document.getElementById('fsBtn'); if(fs) fs.after(bk); else bar.appendChild(bk); const br = el('i', 'brk36'); br.setAttribute('aria-hidden', 'true'); bk.after(br); }
+  bk.addEventListener('click', e => { e.stopPropagation(); open('bar'); });
+  const strip = el('div', 'bks36', '<span class="bkp36">' + F.price + '</span><button type="button" class="bkb36" aria-haspopup="dialog">Schedule a showing</button>'); strip.id = 'bks36'; bar.after(strip);
+  strip.querySelector('button').addEventListener('click', e => { e.stopPropagation(); open('phone-header'); });
+  { const cx = document.getElementById('cvX'); if(cx){ const cb = el('button', 'cvb36', CAL + '<em>Schedule a showing</em>'); cb.type = 'button'; cb.id = 'cvBook'; cb.setAttribute('aria-label', 'Schedule a showing'); cx.before(cb);
+      cb.addEventListener('click', e => { e.stopPropagation(); open('full-screen'); }); } }
+  const inGame = () => /(^|\s)(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)(\s|$)/.test(root.className) || !!(window.HWGAMES && HWGAMES.active) || !!window.HILLSIDE;
+  function chrome(){ const on = root.classList.contains('ph') && !inGame() && !root.classList.contains('clean27'); if(on !== root.classList.contains('bks36on')) root.classList.toggle('bks36on', on);
+    const h = Math.round(bar.getBoundingClientRect().height); if(h > 0 && h + 'px' !== root.style.getPropertyValue('--bar36')) root.style.setProperty('--bar36', h + 'px'); }
+  try{ new MutationObserver(chrome).observe(root, {attributes: true, attributeFilter: ['class']}); }catch(e){}
+  if(window.ResizeObserver) new ResizeObserver(chrome).observe(bar); addEventListener('resize', chrome); chrome();
+
+  /* ---- Photos: the bar stays on top, and the finale steps aside while the gallery is open */
+  const gal = $('#gallery');
+  const galSync = () => { root.classList.toggle('g36', !gal.hidden); try{ finSync(); }catch(e){} };
+  try{ new MutationObserver(galSync).observe(gal, {attributes: true, attributeFilter: ['hidden']}); }catch(e){}
+
+  /* ---- the finale */
+  const fin = el('aside', 'fin36'); fin.id = 'fin36'; fin.hidden = true; fin.setAttribute('aria-label', 'The end of the tour');
+  fin.innerHTML = '<button type="button" class="fx" aria-label="Close this card">×</button><div class="fing">' +
+    '<div><p class="fe">The end of the tour</p><h2>' + F.addr + '</h2><p class="ft">' + F.town + '</p><p class="fp">' + F.price + '</p><p class="ff">' + F.facts + '</p></div>' +
+    '<div class="fa"><button type="button" class="fb go" data-a="book">' + CAL + 'Schedule a showing</button><div class="fb2"><a class="fb" href="' + F.tel + '">Call Michael</a><a class="fb" href="' + F.sms + '">Text Michael</a></div>' +
+    '<p class="fn">' + F.agent + ', Compass · ' + F.telTxt + '</p></div></div>' +
+    '<div class="fl"><button type="button" data-a="again">Start the tour again</button><button type="button" data-a="photos">See the photos</button><a href="' + up('games/') + '">Play the games</a></div>';
+  card.before(fin);
+  let finT = 0, finClosed = false, finWait = 0, todBack = null, finSeen = false;
+  const atEnd = () => mode === 'tour' && stopIdx === STOPS.length - 1 && gal.hidden && !inGame();
+  function finPlace(){ try{ const cr = card.getBoundingClientRect(), A = app.getBoundingClientRect(); let top = cr.top; const seg = $('#realSeg');
+      // a computer with the stop card open: the finale stands beside the card, not on top of the house above it
+      const side = !root.classList.contains('ph') && !card.classList.contains('min') && cr.height > 120, w = side ? Math.round(A.right - cr.right - 32) : Math.min(920, A.width - 48);
+      fin.classList.toggle('side', side && w >= 300); fin.classList.toggle('slim', w < 700);
+      if(side && w >= 300){ fin.style.setProperty('--fin36w', Math.min(920, w) + 'px'); fin.style.setProperty('--fin36b', '64px'); return; }
+      if(seg && root.classList.contains('ph') && !seg.hidden){ const r = seg.getBoundingClientRect(); if(r.height > 0) top = Math.min(top, r.top); }
+      fin.style.setProperty('--fin36b', Math.max(12, Math.round(A.bottom - top + 12)) + 'px'); }catch(e){} }
+  function finShow(){ if(!atEnd() || finClosed) return; if(anim && performance.now() - finWait < 9000){ finT = setTimeout(finShow, 200); return; }   // the card comes up once the camera has arrived
+    finPlace(); fin.hidden = false; void fin.offsetWidth; fin.classList.add('on'); root.classList.add('fin36on'); if(!finSeen){ finSeen = true; ga('tour_finale', {}); } }
+  function finHide(){ fin.classList.remove('on'); root.classList.remove('fin36on'); clearTimeout(finT); finT = setTimeout(() => { if(!fin.classList.contains('on')) fin.hidden = true; }, 900); }
+  function finSync(){ const end = atEnd();
+    // the last stop is at dusk with the lights on, also for a viewer who picked another time of day earlier; their own time comes back when they leave it
+    try{ if(end){ if(TOD_KEY !== 'dusk'){ todBack = TOD_KEY; setTOD('dusk'); } } else if(todBack){ const k = todBack; todBack = null; if(TOD_KEY === 'dusk' && mode === 'tour') setTOD(k); } }catch(e){ console.warn('[sell36] dusk', e); }
+    if(!end){ finClosed = false; if(!fin.hidden) finHide(); return; }
+    if(finClosed || fin.classList.contains('on')) return;
+    clearTimeout(finT); finWait = performance.now(); finT = setTimeout(finShow, 700); }
+  $('#tod').addEventListener('click', () => { todBack = null; }, true);   // a time picked at the finale is the viewer's own choice
+  fin.addEventListener('click', e => { const t = e.target.closest ? e.target.closest('[data-a],.fx,a[href]') : null; if(!t) return; e.stopPropagation();
+    if(t.classList.contains('fx')){ finClosed = true; finHide(); return; }
+    const a = t.getAttribute('data-a');
+    if(a === 'book') open('finale'); else if(a === 'again'){ ga('finale_again', {}); showStop(0); } else if(a === 'photos'){ ga('finale_photos', {}); setMode('photos'); }
+    else { const m = /^(tel|sms):/.exec(t.getAttribute('href') || ''); if(m) ga('showing_contact', {method: m[1] === 'tel' ? 'call' : 'text', where: 'tour-finale', transport_type: 'beacon'}); else ga('finale_games', {}); } });
+  for(const ev of ['pointerdown', 'wheel', 'touchstart']) fin.addEventListener(ev, e => e.stopPropagation());   // the card is not the canvas: no drag or walk through it
+  { const _ss = showStop; showStop = function(){ const r = _ss.apply(this, arguments); try{ finSync(); }catch(e){ console.warn('[sell36] finale', e); } return r; }; }
+  { const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); try{ finSync(); }catch(e){ console.warn('[sell36] finale', e); } return r; }; }
+  addEventListener('resize', () => { if(!fin.hidden) finPlace(); });
+  if(window.ResizeObserver) new ResizeObserver(() => { if(!fin.hidden) finPlace(); }).observe(card);
+  return {open, close, dlg, fin, facts: F, sync: finSync};
+})();
 /* ===== RENDER r4 (owner 11/3 night) ===== */
 /* SH-1 rule:shade-while-moving ("it doesn't really show the shading when it's moving... even some light degree of shading").
    The speed governor (v19 GOV) renders camera motion at a lower ladder level than the still frame. Levels 5-7 turned SSAO off
@@ -21734,6 +21974,26 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
     if(fresh35){ fresh35 = false; if(!REVEAL.done && REVEAL.texOK && REVEAL.reads.length === n0) REVEAL.reads.push(METER.want); }
     return r; };
 }
+/* r36 holiday decor (owner 11/11: "a 'see the house decorated for the holidays' type of thing... make that easy to find and it doesn't require going into
+   games mode"): the engine's side of assets/holiday/holiday.js, which adds the Holiday decor control (Halloween, Thanksgiving, Winter holidays, No decorations).
+   A small host object, not window.HILLSIDE: that name means "a game is running" all over this file. The Winter holidays dress is built by the Deck the House
+   props (assets/deck3d/deck-props.js) on this host; it adds no lights to the scene, so nothing recompiles when it goes up or comes down. */
+{ const HH = window.HOLIDAY_HOST = {THREE, camera, scene, renderer, STOPS, SUN_DIR, grp, busy: BUSY24, on: {mode: null, vis: null, tod: null},
+    get BIM2S(){ return typeof BIM2S !== 'undefined' ? BIM2S : null; }, get tod(){ return TOD_KEY; }, get mode(){ return mode; }, get level(){ return vis.level; }, get variant(){ return ACTIVE_VAR; },
+    get ready(){ try{ return !!(MODEL && BIM && FURN.items().length); }catch(e){ return false; } },
+    shown: k => !!(GROUPS[k] && GROUPS[k].visible),                                   // 'roof', 'trees', 'furn': what the tour is drawing now
+    inside: p => { try{ return !!bim2SpaceAt(p.x, p.z, p.y); }catch(e){ return false; } },
+    setMode: (m, o) => setMode(m, o), flyTo: (pos, look, dur) => flyTo(pos, look, 'look', dur),
+    look(pos, at){ anim = null; glide = null; flightN++; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
+    todGet: () => ({key: TOD_KEY, manual: todManual}),
+    /* a time of day chosen from the holiday control holds like one chosen from the Time of day button (manual), and is handed back exactly as it was found */
+    todSet(key, manual){ todManual = manual !== false; if(todManual) try{ window.__story && window.__story.apply(); }catch(e){} if(TOD_KEY !== key) setTOD(key); if(!todManual) try{ window.__story && window.__story.apply(); }catch(e){} }};
+  const tell = (k, v) => { try{ HH.on[k] && HH.on[k](v); }catch(e){ console.warn('[holiday] ' + k, e); } };
+  const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); tell('mode', mode); return r; };
+  const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); tell('vis'); return r; };
+  const _st = setTOD; setTOD = function(){ const r = _st.apply(this, arguments); tell('tod', TOD_KEY); return r; }; }
 boot();
 })();
 </script>
+<script src="../assets/games-menu.js?v=1" defer></script>
+<script src="../assets/holiday/holiday.js?v=1" defer></script>
