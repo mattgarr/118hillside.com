@@ -14,7 +14,7 @@
     deck: {q: 'deck=1', title: 'Deck the House with Snowball', age: 'All ages', line: 'Every animal has a wish. Decorate the house and light it up at dusk.'},
     snowball: {q: 'snowball=1', title: 'Where’s Snowball?', age: 'Ages 5 and up', line: 'Snowball’s hiding, and he’s good at it. Work out which room, then spot him.'},
     escape: {q: 'escape=easy', title: 'Locked In at Hillside', age: 'Teens and adults', line: 'Snowball locked up the champagne. Move the sun and read the light.'},
-    room: {q: 'room=1', title: 'Room for Everyone', age: 'Ages 10 and up', line: 'A logic puzzle. The house is full of visiting animals, and each one needs the right room.'}};
+    room: {q: 'room=1', title: 'Room for Everyone', age: 'Ages 10 and up', line: 'A logic puzzle. Snowball’s friends are staying over, and they all want the right room.'}};
   /* seasons as on the games page: Thanksgiving leads from 1 to 27 November, Deck the House from 28 November to 6 January and the rest of the year */
   var SEASONS = [{id: 'feast', from: '11-01', to: '11-27'}, {id: 'deck', from: '11-28', to: '01-06'}];
   function md(d){ return ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
