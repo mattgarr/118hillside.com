@@ -9873,7 +9873,7 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   // Esc in Walk: back to the tour, unless Esc is closing something else (a menu, the help card, a dialog, full screen) or a field has the keys
   const busy = () => !!(!$('#lb').hidden || galOpen() || /\b(clean27|phm|vmo27)\b/.test(root.className) || document.querySelector('dialog[open], .qpop:not([hidden]), .navguide:not([hidden]), [aria-modal="true"]:not([hidden]):not(#lb)') ||
     document.fullscreenElement || document.webkitFullscreenElement);
-  let wasBusy = false; setInterval(() => { wasBusy = busy(); if(mode === 'walk' && !btn.hidden) sync(); }, 250);   // (what a capture-phase Esc handler closes first still counts as open)
+  let wasBusy = false; setInterval(() => { wasBusy = busy(); if((mode === 'walk' && !btn.hidden) || game() !== root.classList.contains('bk38game')) sync(); }, 250);   // (what a capture-phase Esc handler closes first still counts as open)
   addEventListener('keydown', e => {
     if(e.key !== 'Escape' || e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
     if(mode !== 'walk' || DESIGN.walking() || game() || wasBusy || busy()) return;
