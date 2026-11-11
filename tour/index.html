@@ -21957,7 +21957,7 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
       const f = navSupport(x, z, fh); if(Math.abs(f - fh) > 1.05) return null; l = lvOf(k, f); if(l >= 0) return G.LVS[l].ok[k] ? {id: (l * NZ + j) * NX + i, i, j, x, z, f: G.LVS[l].L} : null;
       if(from && !navStepOK(from.x, from.z, x, z, from.f)) return null; if(!freeOK(x, z, f)) return null;
       return {id: ((4 + Math.round((f + 12) * 1.5)) * NZ + j) * NX + i, i, j, x, z, f}; };
-    const near = P => { const i0 = Math.floor((P.x - G.X0) / c), j0 = Math.floor((P.z - G.Z0) / c); let b = null, bd = 1e9; for(let dj = -10; dj <= 10; dj++) for(let di = -10; di <= 10; di++){ const d = Math.hypot((i0 + di + .5) * c + G.X0 - P.x, (j0 + dj + .5) * c + G.Z0 - P.z); if(d >= bd || d > 5) continue; const nd = mk(i0 + di, j0 + dj, P.f, null); if(nd && Math.abs(nd.f - P.f) < 1.3){ b = nd; bd = d; } } return b; };
+    const near = P => { const i0 = Math.floor((P.x - G.X0) / c), j0 = Math.floor((P.z - G.Z0) / c); let b = null, bd = 1e9; for(let dj = -18; dj <= 18; dj++) for(let di = -18; di <= 18; di++){ const d = Math.hypot((i0 + di + .5) * c + G.X0 - P.x, (j0 + dj + .5) * c + G.Z0 - P.z); if(d >= bd || d > 9) continue; const nd = mk(i0 + di, j0 + dj, P.f, null); if(nd && Math.abs(nd.f - P.f) < 1.3){ b = nd; bd = d; } } return b; };
     const S = near(A), E = near(B); if(!S || !E) return null;
     const open = [], gS = new Map(), came = new Map(), node = new Map(), h = n => Math.hypot(n.x - E.x, n.z - E.z) + Math.abs(n.f - E.f) * 1.2;
     const push = (n, pr) => { open.push([pr, n]); let k = open.length - 1; while(k > 0){ const p = (k - 1) >> 1; if(open[p][0] <= open[k][0]) break; [open[p], open[k]] = [open[k], open[p]]; k = p; } };
