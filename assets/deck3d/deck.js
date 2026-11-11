@@ -170,7 +170,7 @@
   let P = null, FLY = null, anchor = null, veil = null;
   const portrait = () => innerWidth < innerHeight * .8;
   function aim(pos, look){ const pn = $('#dkPanel'); if(!pn || pn.hidden || (PHASE !== 'decor' && PHASE !== 'fix')) return look; const W = innerWidth, Hh = innerHeight, r = pn.getBoundingClientRect(); let cx = 0, cy = 0;
-    if(W > 700) cx = -(W - r.left) / W; else cy = 1 - (118 + Hh * .54) / Hh; const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1), th = tv * cam.aspect;
+    if(W > 700) cx = -(W - r.left) / W * .55; else cy = 1 - (118 + Hh * .54) / Hh; const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1), th = tv * cam.aspect;
     const p = new V3(...pos), d = new V3(...look).sub(p), right = new V3().crossVectors(d, new V3(0, 1, 0)).normalize(), L = d.length(); return new V3(...look).addScaledVector(right, -cx * th * L).add(new V3(0, -cy * tv * L, 0)).toArray(); }
   const view = p => { const v = portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look]; return [v[0], aim(v[0], v[1])]; };
   function cut(pos, look, then){ if(reduce){ H.look(pos, look); anchor = new V3(...pos); FLY = null; then && then(); return; } veil.classList.add('on'); setTimeout(() => { H.look(pos, look); anchor = new V3(...pos); FLY = null; then && then(); setTimeout(() => veil.classList.remove('on'), 120); }, 260); }
@@ -427,12 +427,11 @@
 
   /* ---------- a house someone sent you ---------- */
   function sharedStart(){ PHASE = 'shared'; MODE = 'free'; ambience(); show('#dkTop', true); badge(); P.setOn(0); try{ H.setTOD('dusk'); }catch(e){} PLACE = PLACES[0]; const [pos, look] = view(PLACE); H.look(pos, look); anchor = new V3(...pos); afterMove(PLACE); $('#dkAv').innerHTML = catHead('dkav');
-    say('Someone decorated this one for you. Go on, switch it on.'); const who = S.name ? esc(S.name) : 'A friend';
-    const d = el('div', {id: 'dkDusk', class: 'dk'}, `<button type="button" class="dkBtn gold big" id="dkLight">Light it up</button>`); document.body.appendChild(d); $('#dkLight').onclick = lightUp;
+    say('Someone decorated this one for you. Go on, switch it on.'); const who = S.name ? esc(S.name.charAt(0).toUpperCase() + S.name.slice(1)) : 'A friend';
     card(`<div class="cat">${window.SNOWBALL.svg({id: 'dksh', seed: 7, wear: S.wear !== 'none' ? S.wear : null})}</div><h2>${who} decorated a house for you.</h2><p>It is 118 Hillside Drive in Woodside, dressed for the holidays with help from Snowball the cat. The sun is down. One switch left.</p><div class="row"><button class="dkBtn gold big" id="dkGo" type="button" data-focus>Light it up</button></div>`, {clear: true});
     $('#dkGo').onclick = () => { closeCard(); lightUp(); }; }
   function sharedDone(){ PHASE = 'result'; card(`<h2>${S.name ? 'Happy holidays from ' + esc(S.name) + '.' : 'Happy holidays.'}</h2><p>Walk around the house they decorated, then do your own. Every guest tonight is hoping for one thing.</p>
-      <div class="row"><button class="dkBtn primary" id="dkMine" type="button" data-focus>Decorate your own</button><button class="dkBtn" id="dkPc" type="button">${ICON.cam}Look around</button></div>` + ctaHTML() + `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a></div>`, {clear: true});
+      <div class="row"><button class="dkBtn primary" id="dkMine" type="button" data-focus>Decorate your own</button><button class="dkBtn" id="dkPc" type="button">${ICON.cam}Look around</button></div>` + ctaHTML() + `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a></div>`, {side: true});
     $('#dkMine').onclick = () => { ga('deck_shared_own'); shared = false; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} closeCard(); startCard(); }; $('#dkPc').onclick = () => photoMode(); $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); }
 
   /* ---------- start ---------- */
