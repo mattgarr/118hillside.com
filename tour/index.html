@@ -9814,7 +9814,7 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
     /* the compact Dollhouse row already holds the level buttons: the tab above names the view, so the row drops its 'Dollhouse' word (and, as the window narrows, the stop name and the title) to keep one line */
     'html:not(.ph) .card.min.bk38on[data-m27="doll"] .eyebrow{display:none}' +
     '@media (max-width:980px){html:not(.ph) .card.min.bk38on[data-m27="doll"] #bk38 .bk38s{display:none}}' +
-    '@media (max-width:860px){html:not(.ph) .card.min.bk38on[data-m27="doll"] .tb{display:none}}' +
+    '@media (max-width:860px){html:not(.ph) .card.min.bk38on[data-m27="doll"] .tb{display:none}html:not(.ph) .card.min.bk38on[data-m27="doll"]{max-width:calc(100% - 150px)}}' +
     /* phone: its own row across the foot of the sheet, under the thumb */
     'html.ph #card.bk38on{grid-template-areas:"prev head next" "body body body" "act act act" "bk38 bk38 bk38"}' +
     'html.ph #bk38{grid-area:bk38;width:100%;min-height:46px;padding:0 14px;border-radius:12px;background:var(--ph-hi);color:var(--ph-ink);font-size:15px;font-family:var(--sf)}' +
