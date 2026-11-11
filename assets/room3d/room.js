@@ -828,7 +828,7 @@
   function refresh(flash){ renderTray(); const prev = renderClues(flash); drawLabels(); PAWN.sync(); objective(); layoutVars(); return prev; }
   function objective(){ if(!S.L || S.done) return; const left = S.L.guests.filter(g => !S.at[g]), bad = S.status.filter(x => x.s === 'bad').length, uns = S.status.filter(x => x.s === 'unseen').length;
     if(S.view === 'room'){ const r = RINGS[S.room] || [], todo = r.filter(q => !hasNote(S.room, q.note)).length;
-      setGoal(todo ? 'Look around. Tap a gold ring to note what is here.' : !SAVE.light[S.room] ? 'Drag the sun across the day and watch the floor.' : 'You have seen this room. Put a guest here, or go back out.', true); return; }
+      setGoal(todo ? 'Look around. Tap a gold ring to note what is here.' : !SAVE.light[S.room] ? 'Drag the sun across the day and watch the floor.' : (occupant(S.room) ? 'You have seen this room. ' + NmOf(occupant(S.room)) + ' is staying here. Go back out to the whole house.' : 'You have seen this room. Put a guest here, or go back out.'), true); return; }
     if(S.sel) setGoal('Choose a room for ' + nmOf(S.sel) + '.', true);
     else if(bad) setGoal(bad === 1 ? 'One clue is broken. Move a guest.' : bad + ' clues are broken. Move a guest.', true);
     else if(!left.length && uns) setGoal('Everyone has a room, but Snowball cannot check ' + (uns === 1 ? 'one clue' : uns + ' clues') + ' yet.', true);
@@ -949,6 +949,7 @@
     $('#rfeRoom').innerHTML = `<div class="hd"><button type="button" id="rfePrev" aria-label="Previous room: ${esc(LG.SLOTS[prev].name)}">${ICO.back}</button><b>${esc(sl.name)}</b><button type="button" id="rfeNext" aria-label="Next room: ${esc(LG.SLOTS[next].name)}">${ICO.fwd}</button></div>
       <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(NmOf(occ)) : ''}</div><p class="wh">${esc(LG.WHERE[slot])}</p><ul>${li}</ul><p class="cap${cap ? ' on' : ''}">${cap ? esc(UI.cap) : ''}</p>
       <button type="button" id="rfeFace"><span class="cmp">${COMPASS}</span><span id="rfeFaceT"></span><i>Turn back</i></button>`;
+    { const wb = $('#rfeWhoBtn span'); if(wb) wb.textContent = occ ? 'Change the guest' : 'Put a guest here'; }   // r38: the room already has a guest
     UI.faceKey = ''; $('#rfeFace').onclick = () => { if(turned()) faceRoom(); }; faceStep(performance.now()); layoutVars();
     $('#rfePrev').onclick = () => { SND.unlock(); hop(prev); }; $('#rfeNext').onclick = () => { SND.unlock(); hop(next); }; if(S.view === 'room') requestAnimationFrame(reframe); }
   function openWho(){ const slot = S.room, w = $('#rfeWho'), occ = occupant(slot); let h = `<h4>${esc(LG.SLOTS[slot].name)}</h4>`;
@@ -975,8 +976,12 @@
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '';
       if(behind || x < xl - 50 || x > xr + 50 || y < r.top - 60 || y > r.top + r.height + 60){ edge = (behind ? side < 0 : x < (xl + xr) / 2) ? 'L' : 'R'; x = edge === 'L' ? xl : xr; y = r.top + Math.max(top + 24, r.height * .45); }
       else { x = clamp(x, xl, xr); y = clamp(y, r.top + top, r.top + bot); if(x < xl + 48) edge = 'L'; else if(x > xr - 48) edge = 'R'; }
-      let n = 0; const hit = q => Math.abs(q[0] - x) < 150 && Math.abs(q[1] - y) < 44; while(placed.some(hit) && n++ < 10){ y += 46; if(y > r.top + bot) y = r.top + top + 24; }
-      placed.push([x, y]); m.b.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; const cls = 'rfeMk on' + (hasNote(S.room, m.q.note) ? ' got' : '') + (edge ? ' edge ' + edge : ''); if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
+      /* r38 (phone audit): rings and their name tags are kept apart as boxes, tag included (a tag reaches sideways at the edges, below the ring elsewhere) */
+      const sp = m.b.querySelector('span'), sw = sp && sp.offsetWidth; if(sw) m.lw = sw; const lw = m.lw || m.q.label.length * 7 + 22;
+      const boxes = yy => [[x - 26, yy - 26, x + 26, yy + 26], edge === 'L' ? [x + 28, yy - 14, x + 30 + lw, yy + 14] : edge === 'R' ? [x - 30 - lw, yy - 14, x - 28, yy + 14] : [x - lw / 2, yy + 24, x + lw / 2, yy + 54]];
+      const ov = (a, b) => a[0] < b[2] + 4 && b[0] < a[2] + 4 && a[1] < b[3] + 4 && b[1] < a[3] + 4;
+      let n = 0; while(boxes(y).some(a => placed.some(b => ov(a, b))) && n++ < 12){ y += 46; if(y > r.top + bot) y = r.top + top + 24; }
+      placed.push(...boxes(y)); m.b.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; const cls = 'rfeMk on' + (hasNote(S.room, m.q.note) ? ' got' : '') + (edge ? ' edge ' + edge : ''); if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
 
   /* ---- the sun slider */
   function setClock(h){ $('#rfeClock').textContent = fmtH(h); const on = !!(SUN.cur && SUN.cur.level >= .45), e = $('#rfeSunNow'); e.textContent = on ? 'Sun in this room now' : 'No direct sun in here now'; e.className = on ? 'on' : '';
