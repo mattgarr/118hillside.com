@@ -45,7 +45,7 @@
     '@media (prefers-reduced-motion:reduce){#intro28 .sl img,#intro28 .sl.on img{transform:none;transition:none}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   var el = document.createElement('div'); el.id = 'intro28'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Introducing 118 Hillside Drive while the 3D house loads');
-  var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 2 ? '' : 'loading="lazy" ') + 'src="../images/' + s[0] + '"></div>'; }).join('');
+  var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 3 ? 'src' : 'data-src') + '="../images/' + s[0] + '"></div>'; }).join('');
   el.innerHTML = slides + '<div class="sh"></div>' +
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
     '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
@@ -54,8 +54,10 @@
   document.body.appendChild(el);
   var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');
   var k = 0, timer = null, done = false, readyAt = 0;
-  function show(i){ sl[k].classList.remove('on'); if(dots[k]) dots[k].classList.remove('on'); k = i % S.length; sl[k].classList.add('on'); if(dots[k]) dots[k].classList.add('on');
-    var nx = sl[(k + 1) % S.length].querySelector('img'); if(nx && nx.loading === 'lazy') nx.loading = 'eager';
+  function warm(i){ var im = sl[i % S.length].querySelector('img'); if(im && !im.getAttribute('src') && im.dataset.src) im.src = im.dataset.src; }
+  function show(i){ var nimg = sl[i % S.length].querySelector('img'); warm(i); if(!(nimg.complete && nimg.naturalWidth)) return;   // hold the current slide until the next photo is in
+    sl[k].classList.remove('on'); if(dots[k]) dots[k].classList.remove('on'); k = i % S.length; sl[k].classList.add('on'); if(dots[k]) dots[k].classList.add('on');
+    warm(k + 1); warm(k + 2);
     cap.classList.add('swap'); setTimeout(function(){ h2.textContent = S[k][1]; p.textContent = S[k][2]; cap.classList.remove('swap'); }, reduce ? 0 : 320); }
   h2.textContent = S[0][1]; p.textContent = S[0][2];
   timer = setInterval(function(){ show(k + 1); }, 3600);
