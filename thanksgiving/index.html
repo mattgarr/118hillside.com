@@ -5807,6 +5807,17 @@ function makeDollCut(deps){
     const e1 = at(mx + qx * .4, mz + qz * .4, y0), e2 = at(mx - qx * .95, mz - qz * .95, y0);
     if(!e1 && !e2) return cutOf(at(mx, mz, y0, true), st, mx, mz);
     return maxCut(cutOf(e1, st, mx, mz), cutOf(e2, st, mx, mz)); }
+  // r35 rule:wall-face-both-rooms - the model ties a wall face to the one room it bounds. A wall stands as high as the higher cut of
+  // the two rooms it parts (the caps already follow that), so a face is also asked what is behind it: the loft wall above the
+  // garage was removed with the garage's cut and left one sliver standing; a face bounding a porch or deck (never cut) left its
+  // stud core standing to the roof. A wall face tied to an outdoor space is cut by position, like a face with no data.
+  function wallBehind(c1, st, W, a, b, d, up){
+    const ax = W[a * 3], ay = W[a * 3 + 1], az = W[a * 3 + 2], bx = W[b * 3], by = W[b * 3 + 1], bz = W[b * 3 + 2], dx = W[d * 3], dy = W[d * 3 + 1], dz = W[d * 3 + 2];
+    if(c1 === null) return triCut(st, ax, ay, az, bx, by, bz, dx, dy, dz, up);
+    const ux = bx - ax, uy = by - ay, uz = bz - az, vx = dx - ax, vy = dy - ay, vz = dz - az, nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, L = Math.hypot(nx, ny, nz);
+    if(L < 1e-12 || Math.abs(ny) > .7 * L) return c1;
+    const h = Math.hypot(nx, nz), mx = (ax + bx + dx) / 3, mz = (az + bz + dz) / 3, e2 = at(mx - nx / h * .95, mz - nz / h * .95, Math.min(ay, by, dy)), c2 = e2 ? cutOf(e2, st, mx, mz) : null;
+    return c2 === null ? c1 : Math.max(c1, c2); }
   // ---- clip one mesh; cutFn(W, i0, i1, i2) -> plane y | null (keep) | -Infinity (drop). Returns null when nothing changes.
   function clipMesh(mesh, cutFn, segs){
     const geo = ORIG.get(mesh) || mesh.geometry; mesh.updateWorldMatrix(true, false);
@@ -5899,7 +5910,7 @@ function makeDollCut(deps){
   function* work(st, varKey){
     field(); const acts = [], segs = [];
     const triJob = (m, up) => { let c = CACHE.get(m); if(!c){ c = {}; CACHE.set(m, c); } m.updateWorldMatrix(true, false); const key = 't' + st + (m.userData && m.userData.bim2 && window.BIM2 && BIM2.state ? '|' + (BIM2.state._var || '') : '') + m.matrixWorld.elements.map(v => v.toFixed(3)).join(',');
-      if(!(key in c)){ const sg = []; let t = -1; const B2 = window.BIM2 && BIM2.state && m.userData && m.userData.bim2 ? m : null; c[key] = clipMesh(m, (W, a, b, d) => { t++; const ct = B2 && BIM2.cutTarget(B2, t); if(ct){ CUTSTAT.data++; if(ct.remove) return -Infinity; const sp = ct.space, lv = STOREY[sp.storey] || lvOfY(sp.floorZ), cx = (W[a * 3] + W[b * 3] + W[d * 3]) / 3, cz = (W[a * 3 + 2] + W[b * 3 + 2] + W[d * 3 + 2]) / 3; if(lv === 'upper' && String(sp.id).charAt(0) === '@' && !overUpper(cx, cz)) return -Infinity; return cutOf({lv, y: sp.floorZ, deck: !sp.interior}, st, cx, cz); } CUTSTAT.probe++; return triCut(st, W[a * 3], W[a * 3 + 1], W[a * 3 + 2], W[b * 3], W[b * 3 + 1], W[b * 3 + 2], W[d * 3], W[d * 3 + 1], W[d * 3 + 2], up); }, sg); c[key + 's'] = sg; }
+      if(!(key in c)){ const sg = []; let t = -1; const B2 = window.BIM2 && BIM2.state && m.userData && m.userData.bim2 ? m : null; c[key] = clipMesh(m, (W, a, b, d) => { t++; const ct = B2 && BIM2.cutTarget(B2, t); if(ct){ CUTSTAT.data++; if(ct.remove) return -Infinity; const sp = ct.space, lv = STOREY[sp.storey] || lvOfY(sp.floorZ), cx = (W[a * 3] + W[b * 3] + W[d * 3]) / 3, cz = (W[a * 3 + 2] + W[b * 3 + 2] + W[d * 3 + 2]) / 3; if(lv === 'upper' && String(sp.id).charAt(0) === '@' && !overUpper(cx, cz)) return -Infinity; const c1 = cutOf({lv, y: sp.floorZ, deck: !sp.interior}, st, cx, cz); return /^walls/.test((B2.userData.bim2.group || '') + '') ? wallBehind(c1, st, W, a, b, d, up) : c1; } CUTSTAT.probe++; return triCut(st, W[a * 3], W[a * 3 + 1], W[a * 3 + 2], W[b * 3], W[b * 3 + 1], W[b * 3 + 2], W[d * 3], W[d * 3 + 1], W[d * 3 + 2], up); }, sg); c[key + 's'] = sg; }
       if(c[key]) acts.push({m, g: c[key]}); for(const q of c[key + 's']) segs.push(q); };
     const instJob = (m, yc0) => { if(isDyn(m)) return; const I = IORIG.get(m) || m.instanceMatrix.array, hid = [];
       for(let i = 0; i < m.count; i++){ M4.fromArray(I, i * 16).premultiply(m.matrixWorld); BX.copy(gbox(ORIG.get(m) || m.geometry)).applyMatrix4(M4);
@@ -5976,7 +5987,7 @@ function makeDollCut(deps){
       const rect = p.pts.length === 4 && p.pts.every((q, i) => { const r = p.pts[(i + 1) % 4]; return Math.abs(q[0] - r[0]) < .01 || Math.abs(q[1] - r[1]) < .01; });
       const alongX = (x1 - x0) >= (z1 - z0), iv = [];
       for(let i = Math.floor((x0 - .5) / 2); i <= Math.floor((x1 + .5) / 2); i++) for(let j = Math.floor((z0 - .5) / 2); j <= Math.floor((z1 + .5) / 2); j++){ const L = H.get(key(i, j, p.y)); if(!L) continue;
-        for(const q of L){ const mx = (q[0][0] + q[1][0]) / 2, mz = (q[0][1] + q[1][1]) / 2; if(mx < x0 - .1 || mx > x1 + .1 || mz < z0 - .1 || mz > z1 + .1) continue;
+        for(const q of L){ const mx = (q[0][0] + q[1][0]) / 2, mz = (q[0][1] + q[1][1]) / 2; if(mx < x0 - .25 || mx > x1 + .25 || mz < z0 - .25 || mz > z1 + .25) continue;
           const a = alongX ? q[0][0] : q[0][1], b = alongX ? q[1][0] : q[1][1]; iv.push([Math.min(a, b) - .05, Math.max(a, b) + .05]); } }
       if(!iv.length) continue;
       if(!rect){ out.push(p); continue; }
@@ -6138,7 +6149,13 @@ function dollCamFor(lv, theta = DOLL_VIEW.theta, phi = DOLL_VIEW.phi){
   const cx = (B.min.x + B.max.x) / 2, cz = (B.min.z + B.max.z) / 2;
   const fy = lv === 'main' ? LV.lower + 1.5 : 2.4, ty = lv === 'main' ? LV.main + 1 : fy + 2.5;
   const top = lv === 'main' ? LV.main + 7.5 : lv === 'upper' ? LV.upper + 7.5 : B.max.y;
-  const pts = []; for(const x of [B.min.x, B.max.x]) for(const z of [B.min.z, B.max.z]) for(const y of [Math.max(B.min.y, fy - .5), top]) pts.push(new THREE.Vector3(x, y, z));
+  let pts = []; for(const x of [B.min.x, B.max.x]) for(const z of [B.min.z, B.max.z]) for(const y of [Math.max(B.min.y, fy - .5), top]) pts.push(new THREE.Vector3(x, y, z));
+  // r35: the house is L-shaped, so the box around it is half empty and the house sat small in the frame. Fit what is shown instead:
+  // the corners of every room on the levels in view (floor and cut height, or the ridge with the roof on), with the wall thickness.
+  if(lv !== 'lower'){ const q = [], up = LV.upper - .45;
+    for(const sp of SPACES){ if(!sp.pts || sp.pts.length < 3 || (lv === 'main' && sp.floor >= up)) continue; const y1 = lv === 'roof' ? B.max.y : Math.min(top, sp.floor + 7.5);
+      for(const p of sp.pts){ q.push(new THREE.Vector3(p[0], sp.floor, p[1]), new THREE.Vector3(p[0], y1, p[1])); } }
+    if(q.length > 16){ const c = new THREE.Vector3(cx, 0, cz); for(const p of q){ const dx = p.x - c.x, dz = p.z - c.z, d = Math.hypot(dx, dz) || 1; p.x += dx / d * 1.5; p.z += dz / d * 1.5; } pts = q; } }
   const cam = camera.clone(); cam.fov = FOV0; cam.aspect = camera.aspect; cam.updateProjectionMatrix();
   const T = new THREE.Vector3(cx, ty, cz), narrow = coarse || camera.aspect < 1;
   // fill the free part of the screen: the info card sits bottom-left on wide screens, a sheet at the bottom on phones
@@ -8105,11 +8122,16 @@ const DESIGN = (() => {
   function view(dur){
     let x0 = 4, x1 = 33, z0 = -10, z1 = 37;
     if(REG && REG.length > 2){ x0 = z0 = 1e9; x1 = z1 = -1e9; for(const p of REG){ z0 = Math.min(z0, p[0]); z1 = Math.max(z1, p[0]); x0 = Math.min(x0, p[1]); x1 = Math.max(x1, p[1]); } }
+    fit([x0, x1, z0, z1, 0, 8], -.89, .64, dur); }
+  /* fit(box, turn, tilt): the world box [x0, x1, z0, z1, y0, y1] fills the free part of the screen, seen from `th` (turn about the
+     vertical, 0 = from the street side) and `phi` (tilt from straight down) */
+  function fit(B, th, phi, dur){
+    const x0 = B[0], x1 = B[1], z0 = B[2], z1 = B[3];
     const W = canvas.clientWidth || 1, H = canvas.clientHeight || 1, ph = W < 600 || document.documentElement.classList.contains('ph');
     const fx0 = ph ? -1 : Math.min(.3, 2 * 330 / W - 1), fy1 = 1 - 2 * 70 / H, fy0 = ph ? .02 : -1;
     const wx = (fx0 + 1) / 2, wy = (fy0 + fy1) / 2, mx = (1 - fx0) / 2 * .84, my = (fy1 - fy0) / 2 * (ph ? .88 : .8);
-    const th = -.89, phi = .64, T = new THREE.Vector3((x0 + x1) / 2, 2, (z0 + z1) / 2), cam = camera.clone(); cam.fov = FOV0; cam.aspect = camera.aspect; cam.updateProjectionMatrix();
-    const pts = []; for(const x of [x0, x1]) for(const z of [z0, z1]) for(const y of [0, 8]) pts.push(new THREE.Vector3(x, y, z));
+    const T = new THREE.Vector3((x0 + x1) / 2, (B[4] + B[5]) / 2 - 2, (z0 + z1) / 2), cam = camera.clone(); cam.fov = FOV0; cam.aspect = camera.aspect; cam.updateProjectionMatrix();
+    const pts = []; for(const x of [x0, x1]) for(const z of [z0, z1]) for(const y of [B[4], B[5]]) pts.push(new THREE.Vector3(x, y, z));
     const place = r => { cam.position.set(T.x + r * Math.sin(phi) * Math.sin(th), T.y + r * Math.cos(phi), T.z + r * Math.sin(phi) * Math.cos(th)); cam.lookAt(T); cam.updateMatrixWorld(true); };
     const ext = () => { let a0 = 9, a1 = -9, b0 = 9, b1 = -9, bad = false; for(const p of pts){ const v = p.clone().project(cam); if(v.z > 1) bad = true; a0 = Math.min(a0, v.x); a1 = Math.max(a1, v.x); b0 = Math.min(b0, v.y); b1 = Math.max(b1, v.y); } return {a0, a1, b0, b1, bad}; };
     let lo = 15, hi = 320; for(let i = 0; i < 22; i++){ const r = (lo + hi) / 2; place(r); const e = ext(); if(!e.bad && e.a1 - e.a0 <= 2 * mx && e.b1 - e.b0 <= 2 * my) hi = r; else lo = r; }
@@ -8253,8 +8275,23 @@ const DESIGN = (() => {
     else if((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && selId){ rot(); }
     else if(e.key === 'Escape'){ selId = null; setTool('select'); }
   });
-  return {init, open, view, setActive, badge, labels, hidesRoom, hidesWP, walkRoom, click, hover, sel: () => sel, choose, modeVar, nameOf, walking: () => walking};
+  return {init, open, view, fit, setActive, badge, labels, hidesRoom, hidesWP, walkRoom, click, hover, sel: () => sel, choose, modeVar, nameOf, walking: () => walking};
 })();
+/* r35 rule:idea-hides-what-it-removes - anything added to the shared house groups for one as-built door or window (blinds and
+   shades, privacy film, operable door leaves: the object's name carries the opening's id, e.g. 'r35shade:roller:WN-L1-03') is
+   hidden while a layout idea that does not have that opening is showing. The idea's own list of openings decides, so pieces added
+   later are covered as long as they are named for their opening. */
+const GONE35 = {};
+function gone35(v){ if(!v || v === 'asbuilt' || typeof BIM2S === 'undefined' || !BIM2S) return null; if(GONE35[v]) return GONE35[v];
+  const o = BIM2.option(v), D = o && o.data; if(!D || !Array.isArray(D.openings) || !D.openings.length) return null;
+  const has = new Set(D.openings.map(q => q.id)); return (GONE35[v] = new Set((BIM2S.meta.openings || []).map(q => q.id).filter(id => !has.has(id)))); }
+{ const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments);
+    try{ const G = gone35(ACTIVE_VAR);
+      for(const k of Object.keys(GROUPS)){ if(k.indexOf('@') >= 0 || !/^(main|upper|roof|ceil|furn|furnU|vault|vaultUp|lowerRoof|yard)$/.test(k)) continue;
+        for(const c of GROUPS[k].children){ const u = c.userData; if(!G && !(u && u.r35gone)) continue;
+          const m = c.name && /(?:^|:)((?:D|WN|OP|SK)-[A-Z0-9]+-[A-Z0-9]+)(?::|$)/.exec(c.name), gone = !!(G && m && G.has(m[1]));
+          if(gone && c.visible){ c.visible = false; u.r35gone = true; } else if(!gone && u.r35gone){ c.visible = true; u.r35gone = false; } } } }catch(e){ console.warn('[r35] idea hides', e); }
+    return r; }; }
 /* ---------------- r35 design ideas: what is an idea, what is the house, and the way back ----------------
    The house on sale is the house as built. A layout idea shows only in Design and in the walk-through started from it; paint and
    landscape ideas last for the visit; none of them is restored on a reload. Whenever an idea is showing, the screen says which,
@@ -8288,6 +8325,14 @@ html .design .pal[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0
 html .design .lrow select{margin:0;width:100%;min-height:38px;padding:6px 8px;font-size:13px;border-radius:10px}
 .design input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--accent);flex:0 0 auto}
 .design .dnote{font-size:12px;line-height:1.45}
+.design #pSec .dnote{margin-top:8px}
+.design .lrow[hidden]{display:none}
+.design .lsgrp{margin-bottom:10px}
+.design .lssub{font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.design .lsopts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+html .design .lsopt{border:1px solid var(--line);border-radius:10px;background:var(--btn27,var(--paper));color:var(--ink);min-height:40px;padding:6px 10px;font-size:13px;font-weight:500;text-align:left;line-height:1.2}
+html .design .lsopt[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
+html.ph .design .lsopt{min-height:44px}
 .design :is(button,select,input,summary):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 html.ph .design .opt{min-height:48px}
 html.ph .design .tool,html.ph .design .seg button,html.ph .design .dact .btn{min-height:42px}
@@ -8295,7 +8340,7 @@ html.ph .design .pal{min-height:44px}
 html.ph .design .lrow select{min-height:44px}
 html.ph .design .lrow label.ck35{min-height:42px}
 .ideas35{position:absolute;left:50%;transform:translateX(-50%);top:calc(max(12px, env(safe-area-inset-top,0px)) + 58px);z-index:6;display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap;justify-content:center;
-  width:max-content;max-width:min(720px, calc(100% - 32px));box-sizing:border-box;padding:6px 6px 6px 14px;border-radius:18px;background:var(--glass-hi,var(--glass));border:1px solid var(--rim27,var(--line));box-shadow:var(--shadow);color:var(--ink);font-size:12.5px;line-height:1.35}
+  width:max-content;max-width:min(900px, calc(100% - 32px));box-sizing:border-box;padding:5px 5px 5px 14px;border-radius:20px;background:var(--glass-hi,var(--glass));border:1px solid var(--rim27,var(--line));box-shadow:var(--shadow);color:var(--ink);font-size:12.5px;line-height:1.35}
 .ideas35[hidden]{display:none}
 .ideas35 span{display:inline-flex;align-items:center;gap:8px;padding:3px 0}
 .ideas35 span::before{content:"";flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:#b9812a}
@@ -8316,18 +8361,34 @@ html.v33game .ideas35{display:none}
   $('#design').insertBefore(now, $('#design').firstChild);
   // outside Design: the same, as a small strip under the top bar, only while an idea is showing
   const chip = document.createElement('div'); chip.className = 'ideas35'; chip.id = 'ideas35'; chip.hidden = true; chip.setAttribute('role', 'status');
-  chip.innerHTML = '<span id="ideas35Txt"></span><button type="button" class="alt35" id="ideas35Back" hidden>Back to Design</button><button type="button" id="ideas35Today">Show the house as it is today</button>';
+  chip.innerHTML = '<span id="ideas35Txt"></span><button type="button" class="alt35" id="ideas35Back" hidden>Back to Design</button><button type="button" id="ideas35Today">Show the house today</button>';
   (document.querySelector('.bar') || $('#design')).after(chip);
   for(const l of document.querySelectorAll('#design .lrow label')) if(l.querySelector('input[type=checkbox]')) l.classList.add('ck35');
+  // landscape: the two drop-down menus become choices you can see (the menus stay in the page as the state the rest of the code reads)
+  function landChips(){ const f = $('#lsFront'), b = $('#lsBack'); if(!f || !b || f._r35 || !f.options.length) return; f._r35 = true;
+    const row = f.closest('.lrow'); if(!row) return; row.hidden = true;
+    for(const [sel, lab] of [[f, 'Front yard'], [b, 'Back yard']]){ const g = document.createElement('div'); g.className = 'lsgrp';
+      const h = document.createElement('div'); h.className = 'lssub'; h.id = sel.id + 'Lab'; h.textContent = lab; g.appendChild(h);
+      const box = document.createElement('div'); box.className = 'lsopts'; box.setAttribute('role', 'radiogroup'); box.setAttribute('aria-labelledby', h.id); box.dataset.for = sel.id;
+      for(const o of sel.options){ const x = document.createElement('button'); x.type = 'button'; x.className = 'lsopt'; x.setAttribute('role', 'radio'); x.dataset.v = o.value; x.textContent = o.textContent;
+        x.onclick = () => { if(sel.value !== o.value){ sel.value = o.value; sel.dispatchEvent(new Event('change', {bubbles: true})); } landSync(); }; box.appendChild(x); }
+      box.addEventListener('keydown', e => { const L = [...box.children], i = L.indexOf(document.activeElement); if(i < 0) return;
+        const j = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (i + 1) % L.length : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
+        e.preventDefault(); e.stopPropagation(); L[j].focus(); L[j].click(); });
+      g.appendChild(box); row.parentElement.insertBefore(g, row); }
+    landSync(); }
+  function landSync(){ for(const box of document.querySelectorAll('#design .lsopts')){ const sel = $('#' + box.dataset.for); if(!sel) continue;
+      for(const x of box.children){ const on = x.dataset.v === sel.value; x.setAttribute('aria-checked', String(on)); x.tabIndex = on ? 0 : -1; } } }
   const land = () => { try{ return LS.front !== 'today' || LS.back !== 'today' || !!(LS.fire || LS.tub || LS.boulders || LS.lights); }catch(e){ return false; } };
   const paintName = () => { try{ const p = PAINT_EXT.state(); if(!p || p.pal === 'asbuilt') return ''; return p.pal === 'custom' ? 'your own paint colors' : ((PAINT_EXT.PALS.find(q => q.id === p.pal) || {name: 'new'}).name.toLowerCase() + ' paint'); }catch(e){ return ''; } };
   function list(){ const L = [], s = mode === 'design' || DESIGN.walking() ? DESIGN.sel() : 'asbuilt'; if(s !== 'asbuilt') L.push(DESIGN.nameOf(s).toLowerCase() + ' layout'); const p = paintName(); if(p) L.push(p); if(land()) L.push('landscape ideas'); return L; }
   let last = null;
-  function sync(){ const L = list(), walk = DESIGN.walking(), k = mode + '|' + walk + '|' + L.join(','); if(k === last) return; last = k;
+  function sync(){ landChips(); const L = list(), walk = DESIGN.walking(); let lk = ''; try{ lk = LS.front + '/' + LS.back; }catch(e){}
+    const k = mode + '|' + walk + '|' + L.join(',') + '|' + lk; if(k === last) return; last = k; landSync();
     $('#dNowTxt').textContent = L.length ? 'Showing ideas: ' + L.join(', ') + '. These are ideas, not the house as sold.' : 'You are looking at the house as it is today.';
     now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length;
     const out = mode !== 'design' && L.length > 0; chip.hidden = !out; document.documentElement.classList.toggle('ideas35on', out);
-    if(out){ $('#ideas35Txt').textContent = walk ? 'You are walking a remodel idea: ' + DESIGN.nameOf(DESIGN.sel()).toLowerCase() + '. The house is sold as built.' : 'Showing ideas: ' + L.join(', ') + '. Not the house as sold.'; $('#ideas35Back').hidden = !walk; }
+    if(out){ $('#ideas35Txt').textContent = walk ? 'Walking a remodel idea: ' + DESIGN.nameOf(DESIGN.sel()).toLowerCase() + '. Not the house as sold.' : 'Showing ideas: ' + L.join(', ') + '. Not the house as sold.'; $('#ideas35Back').hidden = !walk; }
     try{ if(typeof window.__v33discPlace === 'function') window.__v33discPlace(); }catch(e){} }
   let quiet = false;                                    // true while the reset below presses the as-built buttons itself
   function today(){ quiet = true;
@@ -8338,8 +8399,10 @@ html.v33game .ideas35{display:none}
     const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); sync(); }
   $('#dToday').onclick = today; $('#ideas35Today').onclick = today; $('#ideas35Back').onclick = () => setMode('design');
   /* a good place to stand for each kind of idea (Design only): the outside is judged with the roof on, from the street or the yard */
-  const VIEWS = {street: [[24, 15, 66], [2, 5, 16]], front: [[40, 30, 78], [10, 0, 40]], back: [[-44, 34, -92], [-12, 0, -46]]};
-  function look(k, dur){ if(mode !== 'design' || quiet) return; try{ if(vis.level !== 'roof') setLevel('roof', {keepCam: true}); }catch(e){} const v = VIEWS[k] || VIEWS.street; flyTo(v[0], v[1], 'orbit', dur || 1.6); }
+  const VIEWS = {street: [[-27, 34, -4, 40, -3, 14], .42, 1.27],      // the front of the house, from across the street
+    front: [[-41, 34, 18, 46, 0, 9], .3, .92],                         // the front yard and the paver court
+    back: [[-14, 34, -56, -8, 0, 9], Math.PI - .62, .9]};              // the back yard, from its far corner
+  function look(k, dur){ if(mode !== 'design' || quiet) return; try{ if(vis.level !== 'roof') setLevel('roof', {keepCam: true}); }catch(e){} const v = VIEWS[k] || VIEWS.street; DESIGN.fit(v[0], v[1], v[2], dur || 1.6); }
   let lastLook = '';
   const lookOnce = k => { if(mode !== 'design' || quiet) return; if(vis.level !== 'roof' || lastLook !== k){ lastLook = k; look(k); } };
   $('#pPal').addEventListener('click', e => { if(e.target.closest && e.target.closest('.pal')){ lookOnce('street'); setTimeout(sync, 0); } });
@@ -21121,7 +21184,8 @@ if(R13.on){
   // own rAF tick (outside every render call: the SSAO normal pass hides these decals through o.visible, so visibility must never be
   // written from inside a scene render)
   const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0; R13.k.value = k;
-      if(R13.edges) for(const m of R13.edges) m.visible = k > .01; r13Sync(); }catch(e){} requestAnimationFrame(tick13); };
+      if(R13.edges) for(const m of R13.edges) m.visible = k > .01 && ACTIVE_VAR === 'asbuilt';   // r35: the corner bands are the as-built rooms' corners; in a layout idea they would hang in the air where walls were
+      r13Sync(); }catch(e){} requestAnimationFrame(tick13); };
   requestAnimationFrame(tick13); }
 BIM3.report.r13 = R13.report;
 /* ===== EASED EDGES r14 (11/4: r13 tells #6 / #7; bim3_work/r14) ===== ?r14-off turns the block off. */
