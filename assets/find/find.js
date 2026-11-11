@@ -53,7 +53,7 @@
       fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'I was keeping the bed warm.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
       spots: [{p: [22.5, 2.08, 29], n: 'on the bed', d: 1}, {p: [27, .03, 34], n: 'beside the white chair', d: 2}, {p: [27.5, .03, 29], n: 'on the far side of the bed', d: 2}, {p: [28, .03, 26], n: 'by the far bedside table', d: 2}, {p: [28, .03, 35], n: 'behind the white chair', d: 3}]},
     loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/p37.jpg', big: 'photos/p37.jpg', ar: .667, grp: 'loft', fy: 5.57, cam: [[.84, .72, 'the triangle windows'], [.62, .84, 'the triangle windows']],
-      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -15.5, 0, 180]],
+      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -16.8, 0, 180]],
       spots: [{p: [-24, 7.06, -7.5], n: 'on the window seat', d: 1}, {p: [-18, 5.6, -4.5], n: 'at the top of the stairs, behind the railing', d: 2}, {p: [-18, 5.6, -18], n: 'down the upstairs hall', d: 2},
         {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 2}]},
     primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: 'suite', fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
@@ -67,7 +67,7 @@
       fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.8, -41.3, 250, 110, 180]],
       spots: [{p: [-20.5, 6.91, -44.5], n: 'on a balcony chair', d: 1}, {p: [-21.5, 5.6, -43.5], n: 'behind a balcony chair', d: 2}, {p: [-14, 5.6, -45.5], n: 'in the corner behind a balcony chair', d: 3}]},
     lower:   {name: 'Downstairs bedroom', at: 'in the downstairs bedroom', photo: '../images/bedroom-800.jpg', ar: .68, grp: 'lower', fy: -4.56, cam: [[.75, .34, 'the picture on the green wall'], [.12, .42, 'the dark round picture']],
-      fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It is quiet down here.', v: [[-12.3, -40.5, 216, 160, 290], [-18.5, -39.8, 135, 90]],
+      fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It is quiet down here.', v: [[-12.3, -40.5, 216, 160, 290], [-18.2, -40.3, 135, 90]],
       spots: [{p: [-16, -2.55, -47], n: 'on the bed, by the pillows', d: 1}, {p: [-12.4, -4.51, -45.2], n: 'in a cardboard box by the window', d: 1, box: 1}, {p: [-20, -4.5, -43], n: 'at the far corner of the bed', d: 2}, {p: [-20, -4.5, -46], n: 'on the far side of the bed', d: 3}]},
     lounge:  {name: 'Bonus lounge', at: 'in the bonus lounge', photo: '../images/rec-room-800.jpg', ar: .644, grp: 'lounge', fy: -4.56, cam: [[.43, .32, 'the big screen'], [.2, .52, 'the black glass door']],
       fact: 'Made for movie nights, with a big TV and a refreshment counter.', say: 'I am ready for movie night.', v: [[-13, -17.5, 255, 195, 330], [-19.3, -22.5, 60, 120]],
@@ -294,12 +294,16 @@
   function pin(){ if(pinned && !H.anim && cam.position.distanceToSquared(anchor) > 1e-7){ cam.position.copy(anchor); cam.updateMatrixWorld(); } }
   const prevOBR = H.scene.onBeforeRender, myOBR = function(){ if(!dead){ try{ pin(); }catch(e){} } return prevOBR && prevOBR.apply(this, arguments); }; H.scene.onBeforeRender = myOBR;
   function turn(sign){ if(!S.on || S.mode !== 'seek' || H.anim || walk) return;   // not while travelling: a room-to-room move is never interrupted
-    const a = facing(), base = tw ? tw.y0 + tw.dy : a.yaw; turnTo(base + sign * Math.PI / 3.6, tw ? tw.p1 : a.pitch, 420); snd('tick'); S.turned = true; S.tAct = performance.now(); nudge(null); }
+    const a = facing(), base = tw ? tw.y0 + tw.dy : a.yaw, y = base + sign * Math.PI / 3.6; turnTo(y, tiltFor(y, tw ? tw.p1 : a.pitch), 420); snd('tick'); S.turned = true; S.tAct = performance.now(); nudge(null); }
+  /* a turn or a walk keeps the tilt you had, with one exception: when it brings the part of him that shows into the picture from side to side but leaves it
+     above or below the frame (he is close to your feet, or up on a counter), the tilt eases just far enough to bring him in. Small players have no way to tilt. */
+  function tiltFor(yaw, pitch){ const v = cur(); if(S.step === 0 || v.n < SEEN()) return pitch; const p = aimPt(), dx = p.x - anchor.x, dz = p.z - anchor.z; if(Math.abs(wrap(Math.atan2(dx, dz) - yaw)) > hHalf() - .12) return pitch;
+    const el = Math.atan2(p.y - anchor.y, Math.hypot(dx, dz)), reach = Math.atan(Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1)) * .55; return clamp(pitch, el - reach, el + reach); }
   /* walk to another standing place in the room. You keep looking the way you were looking; it is a short glide when the way is clear at eye height
      and a blink when something is in between, so the camera never passes through furniture. */
   function walkTo(i, then){ if(!S.on || S.mode !== 'seek' || walk || H.anim) return false; const R = ROOM[room()], n = R.v.length; if(n < 2) return false; i = ((i % n) + n) % n; if(i === S.view){ then && then(); return false; }
     const to = eyeOf(R, i), a = tw ? {yaw: tw.y0 + tw.dy, pitch: tw.p1} : facing(); tw = null; S.walked = true; S.tAct = performance.now(); snd('patter', {n: 5}); nudge(null);
-    const land = () => { anchor.copy(to); aim(a.yaw, a.pitch); S.view = i; walk = null; placeSteps(); lastWarm = -1; ui(); then && then(); };
+    const land = () => { anchor.copy(to); aim(a.yaw, a.pitch); S.view = i; walk = null; placeSteps(); lastWarm = -1; ui(); const p2 = tiltFor(a.yaw, a.pitch); if(!then && Math.abs(p2 - a.pitch) > .01) turnTo(a.yaw, p2, 350); then && then(); };
     if(!reduce && clearTo(anchor, to, .1)) walk = {t0: performance.now(), dur: clamp(anchor.distanceTo(to) * 70, 450, 900), from: anchor.clone(), to, yaw: a.yaw, pitch: a.pitch, land};
     else { walk = {}; blink.classList.add('on'); later(() => { land(); later(() => blink.classList.remove('on'), 140); }, 210); }
     return true; }
@@ -654,10 +658,10 @@
         if(!(hit(P.x, P.y + .5, P.z, 0, -1, 0, 3) < .75)) flags.push('NOTHING-UNDER-HIM'); if(b.n < 6) flags.push('TOO-HIDDEN'); if(id !== 'entry' && !!s.w !== (q.vs[0].n < 6)) flags.push(s.w ? 'W-BUT-SEEN-FROM-ARRIVAL' : 'NEEDS-WALK'); if(q.vs[0].n < 6) sum.needWalk++;
         const yaw = id === 'entry' ? yawTo(V0, P) : openingYaw(R, V0, P, q.vs[0]); pose(V0, yaw, PITCH0); let n0 = 0; for(const [u, v] of shown(V0, P)){ _b.copy(onCat(V0, P, u, v, _a)).project(pc); if(_b.z < 1 && Math.abs(_b.x) < 1 && Math.abs(_b.y) < 1) n0++; }
         if(n0 && id !== 'entry'){ sum.seenOnArrival++; flags.push('IN-OPENING-VIEW'); }
-        const c = onCat(Vb, P, b.cu, b.cv, new THREE.Vector3()), dx = c.x - Vb.x, dz = c.z - Vb.z; pose(Vb, yawTo(Vb, P), PITCH0); if(id !== 'entry' && !inPicture(c, .9)) flags.push('NEEDS-A-TILT'); pose(Vb, Math.atan2(dx, dz), clamp(Math.atan2(c.y - Vb.y, Math.hypot(dx, dz)), -.6, .35)); let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+        const c = onCat(Vb, P, b.cu, b.cv, new THREE.Vector3()), dx = c.x - Vb.x, dz = c.z - Vb.z; pose(Vb, yawTo(Vb, P), PITCH0); const tilt = id !== 'entry' && !inPicture(c, .9) ? ' (the game tilts the view to him)' : ''; if(tilt) sum.tilts = (sum.tilts || 0) + 1; pose(Vb, Math.atan2(dx, dz), clamp(Math.atan2(c.y - Vb.y, Math.hypot(dx, dz)), -.6, .35)); let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
         for(const [u, v] of [[b.u0, b.v0], [b.u1, b.v0], [b.u0, b.v1], [b.u1, b.v1]]){ _b.copy(onCat(Vb, P, u, v, _a)).project(pc); x0 = Math.min(x0, _b.x); x1 = Math.max(x1, _b.x); y0 = Math.min(y0, _b.y); y1 = Math.max(y1, _b.y); }
         const pw = (x1 - x0) / 2 * rc.width, ph = (y1 - y0) / 2 * rc.height; if(sizeOn(q) < 12) flags.push('TINY'); const note = sizeOn(q) < 22 ? ' (sneaky mode only at this screen size)' : ''; if(note) sum.sneakyOnly = (sum.sneakyOnly || 0) + 1; if(Math.abs((x0 + x1) / 2) > .94 || Math.abs((y0 + y1) / 2) > .94) flags.push('OFF-SCREEN-WHEN-SHOWN');
-        const row = `${id}.${i} ${how}${s.box ? ' box' : ''} "${s.n}" | shows ` + q.vs.map((x, j) => `${Math.round(x.f * 100)}% head ${Math.round(x.head * 100)}% @${x.d.toFixed(0)}ft`).join(', ') + ` | spot from place ${q.best} | arrive facing ${Math.round(((yaw * 180 / Math.PI) % 360 + 360) % 360)}, ${n0} pts on screen | shows ${Math.round(pw)}x${Math.round(ph)} px, tap ${Math.round(Math.max(88, pw + 44))}x${Math.round(Math.max(88, ph + 44))}` + note + (flags.length ? ' !! ' + flags.join(' ') : '');
+        const row = `${id}.${i} ${how}${s.box ? ' box' : ''} "${s.n}" | shows ` + q.vs.map((x, j) => `${Math.round(x.f * 100)}% head ${Math.round(x.head * 100)}% @${x.d.toFixed(0)}ft`).join(', ') + ` | spot from place ${q.best} | arrive facing ${Math.round(((yaw * 180 / Math.PI) % 360 + 360) % 360)}, ${n0} pts on screen | shows ${Math.round(pw)}x${Math.round(ph)} px, tap ${Math.round(Math.max(88, pw + 44))}x${Math.round(Math.max(88, ph + 44))}` + note + tilt + (flags.length ? ' !! ' + flags.join(' ') : '');
         rows.push(row); if(flags.length) bad.push(row); }); }
     setProp(null); return {ok: !bad.length, sum, bad, rows}; }
   // every clue the game can deal: each pair of rooms it is in and runs to, many shuffles; none may offer two rooms of a group, a wrong number of choices, or the room you are in
