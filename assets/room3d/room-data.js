@@ -1,19 +1,24 @@
 /* Room for Everyone: measurements baked from the 3D model, with the tools in room.js (ROOM3D.dev).
    stand: where you stand in each room (pos, eye height five feet), what you face when you arrive, and where a game piece stands.
-     Each was picked from dev.stand(), which ray-casts a grid of the room at shin and chest height and keeps the clearest spots.
+     Each was picked from dev.stand(), which ray-casts a grid of the room at shin and chest height, keeps the clearest spots and
+     throws out any that are not on open floor (a spot on a bed once read as clear). You stand where somebody would on walking
+     in, a step or two inside the door, with the windows ahead and the bed in front of you, not under you. In a room with a
+     skylight up a well you stand within about two feet of being under one, or its glass cannot be seen at all.
+     pawn is where the room's game piece stands when you are in the room (in front of you); over, where given, is where it stands
+     when the house is seen from above, because the pawn spot is behind a wall from the side the house is first seen from.
    sun: for every window, glass door and skylight of a room, how much of the sun reaches it on 21 June, half-hourly from 7:00 to
      19:30, as a digit 0 to 9 (ninths of nine rays cast from the glass toward the sun through the model's trees, eaves, hills and
      neighbours; for a skylight the ray must also get down its well into the room). Made by dev.sunScan(). */
 window.ROOM_DATA = {
   stand: {
-    primary: {pos: [-16.3, 10.57, -31.4], face: [-17.2, 9.6, -40.1], pawn: [-12.5, -37]},
+    primary: {pos: [-11.6, 10.57, -28.3], face: [-18.8, 9.3, -37.5], pawn: [-15.2, -38.2], over: [-13, -29.5]},
     loft:    {pos: [-20.5, 10.57, -11.05], face: [-19.9, 11.5, -2.5], pawn: [-22, -5.6]},
     garden:  {pos: [22.71, 5, 3.27], face: [21.8, 4.6, -6.7], pawn: [18.51, -3.73]},
-    middle:  {pos: [23.8, 5, 18.12], face: [32.3, 4.4, 19], pawn: [29.5, 16.5]},
-    front:   {pos: [23.03, 5, 28.54], face: [23.9, 4.6, 36.8], pawn: [20, 33.5]},
+    middle:  {pos: [23.8, 5, 18.12], face: [32.3, 4.4, 19], pawn: [29.5, 16.5], over: [24.5, 21]},
+    front:   {pos: [19.3, 5, 33.4], face: [25.5, 4.4, 36.2], pawn: [27.4, 31.2]},
     corner:  {pos: [-18.17, .44, -39.82], face: [-16.4, -.2, -49.9], pawn: [-20.97, -45.42]},
-    side:    {pos: [-25.65, .44, -28.74], face: [-27.6, -.2, -40], pawn: [-22.85, -35.74]},
-    office:  {pos: [-25.31, .44, -7.98], face: [-30, 0, -3.5], pawn: [-28.11, -5.18]},
+    side:    {pos: [-25.65, .44, -28.74], face: [-27.6, -.2, -40], pawn: [-22.85, -35.74], over: [-28.5, -28]},
+    office:  {pos: [-26.5, .44, -8.9], face: [-29.8, .2, -3.6], pawn: [-28.11, -5.18]},
     lounge:  {pos: [-17.25, .44, -21.4], face: [-10.5, -.4, -18.9], pawn: [-13.05, -18.6]},
     garage:  {pos: [-17.2, 1.66, 5.76], face: [-24, .4, 16.5], pawn: [-17.2, 14.56], pawnYaw: 1.5708}},
   sun: {
