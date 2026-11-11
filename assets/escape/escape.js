@@ -30,20 +30,20 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
   const el = (tag, attrs, html) => { const e = document.createElement(tag); for(const k in (attrs || {})) e.setAttribute(k, attrs[k]); if(html != null) e.innerHTML = html; return e; };
   const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
-  const phone = () => innerWidth < 720;
+  const phone = () => innerWidth < 900;   // the compact layout: phones and narrow windows
 
   /* ================================================================== the level */
   const CODE = '327', T_SUN = 16, DOY = 288, EYE = 5.3;
   const PLACES = {
-    entry:   {name: 'Entry', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-5.6, -2.3],
+    entry:   {name: 'Entry', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-7.6, -2.3],
       note: 'A cathedral ceiling, a starburst light, and iron-and-glass doors at both ends. The heritage oak is straight ahead.'},
-    living:  {name: 'Living room', pos: [1.8, EYE, -3.6], face: [10, 5.7, -2.6], map: [6.8, -2.3],
+    living:  {name: 'Living room', pos: [1.8, EYE, -3.6], face: [10, 5.7, -2.6], map: [3.4, -3.2],
       note: 'Fir beams cross the vaulted ceiling. This room is part of the original 1920s house.'},
-    kitchen: {name: 'Kitchen', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [11.2, 10.4],
+    kitchen: {name: 'Kitchen', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [12.4, 8.2],
       note: 'Quartz counters, a long peninsula and a Bosch gas range. The great room opens up past the peninsula.'},
-    coffee:  {name: 'Coffee bar', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [19.4, 9.6],
+    coffee:  {name: 'Coffee bar', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [20.6, 9.4],
       note: 'A coffee bar with its own drinks fridge, tucked in beside the kitchen.'},
-    great:   {name: 'Great room', pos: [11.3, EYE, 31.9], face: [10.9, 1.5, 24.4], map: [11.0, 26.4],
+    great:   {name: 'Great room', pos: [11.2, EYE, 31.5], face: [10.7, 3.3, 22.0], faceLight: [10.95, 1.0, 24.6], fov: 56, map: [10.4, 28.2],
       note: 'The kitchen, the dining table and this sitting area share one long room, with butcher-block shelves over the built-in cabinets and a wall of glass.'}};
   const ORDER = ['entry', 'living', 'kitchen', 'coffee', 'great'];
   // walkable graph (x, z at eye height). Plain nodes are corners of the route; every edge was checked against the furniture.
@@ -57,7 +57,7 @@
     living:  [{to: 'entry', at: [-3.4, 2.4, -1.6]}, {to: 'kitchen', at: [12.7, 3.3, 4.7]}],
     kitchen: [{to: 'living', at: [12.75, 3.2, 5.3]}, {to: 'coffee', at: [17.0, 2.6, 9.7]}, {to: 'great', at: [15.7, 2.2, 18.2]}],
     coffee:  [{to: 'kitchen', at: [12.3, 2.8, 8.6]}, {to: 'great', at: [15.8, 1.6, 15.2]}],
-    great:   [{to: 'kitchen', at: [15.5, 3.0, 16.6]}]};
+    great:   [{to: 'kitchen', at: [15.5, 3.2, 16.6]}]};
 
   /* ================================================================== state */
   const KEY = 'esc.easy.v2';
@@ -72,7 +72,7 @@
   if(!H.TOD.find(t => t.key === 'esc')) H.TOD.push({key: 'esc', label: 'Morning', h: 10, doy: DOY});
   let todAt = 0, todTimer = 0;
   function applyHour(h, force){ S.hour = h; const T = H.TOD.find(t => t.key === 'esc'); T.h = h; T.doy = DOY; T.label = fmtH(h);
-    LIGHT.update(); wake(30); clearTimeout(todTimer); const now = performance.now();
+    LIGHT.update(); wake(30); clearTimeout(todTimer); if(DRAW.mesh) DRAW.mesh.material.color.setScalar(h >= 18.55 ? .5 : .84); const now = performance.now();
     const go = () => { todAt = performance.now(); try{ H.setTOD(h >= 18.55 ? 'dusk' : 'esc'); }catch(e){ console.warn('[escape] tod', e); } wake(20); };
     if(force || now - todAt > 420) go(); else todTimer = setTimeout(go, 200); }
 
@@ -122,7 +122,7 @@
   const yp = (from, to) => { const dx = to[0] - from[0], dy = to[1] - from[1], dz = to[2] - from[2]; return [Math.atan2(-dx, -dz), Math.atan2(dy, Math.hypot(dx, dz))]; };
   const aspect = () => (canvas.clientWidth || innerWidth) / Math.max(1, canvas.clientHeight || innerHeight);
   // a place view is authored for a landscape frame; a tall phone keeps the same sideways coverage where it can
-  function placeFov(){ const a = aspect(); if(a >= 1.25) return 62; const t = Math.tan(31 * Math.PI / 180) * 1.25 / a; return Math.min(86, 2 * Math.atan(t) * 180 / Math.PI); }
+  function placeFov(base){ base = base || 62; const a = aspect(); if(a >= 1.25) return base; const t = Math.tan(base / 2 * Math.PI / 180) * 1.25 / a; return Math.min(86, 2 * Math.atan(t) * 180 / Math.PI); }
   function fitFov(fit, dist, free){ const a = aspect(), tv = (fit.h / 2 / dist) / free.fh, th = (fit.w / 2 / dist) / (free.fw * a); return clamp(2 * Math.atan(Math.max(tv, th) * 1.1) * 180 / Math.PI, 22, 86); }
   function wake(n){ rig.wakeN = Math.max(rig.wakeN, n || 20); }
   function rigDrag(dx, dy){ if(rig.move || !S.started || S.done) return; const k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05;
@@ -207,7 +207,7 @@
           tg.globalAlpha = 1; tg.shadowBlur = 0; tg.globalCompositeOperation = 'source-over';
           g.shadowBlur = 0; g.drawImage(api.tmp, 0, 0); g.restore(); }
         if(any){ g.save(); g.globalCompositeOperation = 'destination-in'; g.beginPath(); poly.forEach((p, i) => { const q = px({x: p[0], z: p[1]}); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); g.restore(); }
-        mesh.visible = any; const gain = opts.gain || 1.25; mat.color.setRGB(gain, gain * .93, gain * .78); tex.needsUpdate = true; }};
+        mesh.visible = any; const gain = opts.gain || 1.55; mat.color.setRGB(gain, gain * .94, gain * .8); tex.needsUpdate = true; }};
     LIGHT.rooms.push(api); return api; }
 
   /* ================================================================== paper strips on the glass: three boxy figures, card or tracing paper */
@@ -267,15 +267,18 @@
   const DRAW = {mesh: null, tex: null};
   function buildDrawing(){ const pd = (H.door28 && H.door28.items || []).find(it => it.id === 'R28-POCKET'); S.pocket = pd || null;
     const tex = DRAW.tex = new THREE.CanvasTexture(drawingCanvas()); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
-    const m = DRAW.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 3.13), new THREE.MeshStandardMaterial({map: tex, transparent: true, roughness: .95, metalness: 0}));
-    m.name = 'esc-drawing'; m.renderOrder = 3; m.rotation.y = -Math.PI / 2; m.raycast = () => {};
-    const leaf = pd && pd.parts && pd.parts.find(q => q.k === 0);
-    if(leaf && leaf.piv && leaf.base){ const face = leaf.base.x + leaf.box.min.x - .006; leaf.piv.add(m); m.position.set(face - leaf.base.x, 4.1 - leaf.base.y, 9.525 - leaf.base.z); DRAW.x = face; }
-    else { H.grp('main').add(m); m.position.set(22.14, 4.1, 9.525); m.visible = false; DRAW.x = 22.14; DRAW.loose = true; }
+    // unlit, so the kraft paper keeps its colour whatever the hour (the lit version washed out in the low afternoon sun)
+    const m = DRAW.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 3.13), new THREE.MeshBasicMaterial({map: tex, transparent: true, toneMapped: false}));
+    m.name = 'esc-drawing'; m.renderOrder = 3; m.rotation.y = -Math.PI / 2; m.raycast = () => {}; m.material.color.setScalar(.84);
+    if(!placeDrawing()){ H.grp('main').add(m); m.position.set(22.149, 4.1, 9.525); m.visible = false; DRAW.loose = true; }
     // the handwriting font may arrive after the first draw
     try{ document.fonts.load('600 60px Caveat').then(() => { tex.image = drawingCanvas(); tex.needsUpdate = true; wake(4); }); }catch(e){} }
-  function slideDoor(shut){ const it = S.pocket; S.doorShut = shut; SND.slide();
-    if(it && H.door28 && H.door28.moving){ it.dir = shut ? -1 : 1; it.lt = performance.now(); H.door28.moving.add(it); } else if(DRAW.mesh) DRAW.mesh.visible = shut; wake(70); }
+  // the sheet rides on the sliding leaf, a hair off its kitchen face (measured from the leaf's own geometry each time, never assumed)
+  function placeDrawing(){ const pd = S.pocket, m = DRAW.mesh, leaf = pd && pd.parts && pd.parts.find(q => q.k === 0); if(!m || !leaf || !leaf.piv) return false;
+    let minx = Infinity; for(const c of leaf.piv.children){ if(c === m || !c.geometry) continue; if(!c.geometry.boundingBox) c.geometry.computeBoundingBox(); const b = c.geometry.boundingBox; if(b && isFinite(b.min.x)) minx = Math.min(minx, b.min.x + c.position.x); }
+    if(!isFinite(minx)) minx = -.0623; if(m.parent !== leaf.piv) leaf.piv.add(m); m.position.set(minx - .006, 4.1, 0); m.visible = true; DRAW.loose = false; return true; }
+  function slideDoor(shut){ const it = S.pocket; S.doorShut = shut; SND.slide(); placeDrawing();
+    if(it && H.door28 && H.door28.moving){ it.dir = shut ? -1 : 1; it.lt = performance.now(); H.door28.moving.add(it); } else if(DRAW.mesh && DRAW.loose) DRAW.mesh.visible = shut; wake(70); }
 
   /* ================================================================== the drinks fridge: a bottle inside, a keypad lock, and a door that opens */
   const FR = {pivot: null, lock: null, lockTex: null, glow: null, open: 0, anim: null};
@@ -401,8 +404,8 @@
   /* ================================================================== UI */
   const css = `
   #escRoot{--ink:#1f2a3a;--mut:#5c6575;--navy:#1f2948;--paper:#fbfaf7;--gold:#c98a12;--wine:#9b2c3c;position:fixed;inset:0;z-index:60;pointer-events:none;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
-  #escRoot button{font:inherit;color:inherit;cursor:pointer}
-  #escRoot .escChip{pointer-events:auto;background:rgba(251,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.2)}
+  #escRoot button{font:inherit;cursor:pointer}
+  #escRoot .escChip{pointer-events:auto;color:var(--ink);background:rgba(251,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.2)}
   #escTop{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left))}
   #escGoal{padding:11px 16px 12px;max-width:380px;min-width:0;border-left:4px solid var(--gold);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
   #escGoal .k{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--mut);letter-spacing:.02em}
@@ -421,10 +424,11 @@
   #escMenu{position:absolute;right:max(14px,env(safe-area-inset-right));top:calc(max(14px,env(safe-area-inset-top)) + 60px);padding:8px;display:none;flex-direction:column;min-width:210px;z-index:5}
   #escMenu.on{display:flex}#escMenu button,#escMenu a{border:0;background:none;text-align:left;padding:11px 12px;border-radius:10px;font-size:15px;color:var(--ink);text-decoration:none}
   #escMenu button:hover,#escMenu a:hover{background:#eceae4}
-  #escSay{position:absolute;right:max(14px,env(safe-area-inset-right));top:calc(max(14px,env(safe-area-inset-top)) + 62px);max-width:min(320px,calc(100% - 28px));background:#fff;border-radius:16px 4px 16px 16px;padding:11px 15px;font:600 21px/1.2 Caveat,"Segoe Print","Bradley Hand",cursive;color:#2b2336;box-shadow:0 10px 30px rgba(15,20,35,.22);opacity:0;transform:translateY(-6px);transition:.3s;pointer-events:none}
+  #escSay{max-width:min(320px,calc(100vw - 28px));background:#fff;border-radius:16px 4px 16px 16px;padding:11px 15px;font:600 21px/1.2 Caveat,"Segoe Print","Bradley Hand",cursive;color:#2b2336;box-shadow:0 10px 30px rgba(15,20,35,.22);opacity:0;transform:translateY(-6px);transition:.3s;pointer-events:none}
   #escSay.on{opacity:1;transform:none}#escSay small{display:block;font:500 11.5px Jost,sans-serif;color:var(--mut);letter-spacing:.03em;margin-bottom:1px}
-  #escPlace{position:absolute;left:50%;top:calc(max(14px,env(safe-area-inset-top)) + 4px);transform:translate(-50%,-8px);max-width:min(430px,calc(100% - 28px));text-align:center;background:rgba(22,28,48,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;border-radius:16px;padding:10px 18px 12px;opacity:0;transition:opacity .5s,transform .5s;pointer-events:none}
-  #escPlace.on{opacity:1;transform:translate(-50%,0)}#escPlace b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:25px;line-height:1.1}#escPlace span{display:block;font-size:14px;line-height:1.35;color:#dfe3ee;margin-top:3px}
+  #escL,#escR{display:flex;flex-direction:column;gap:8px;min-width:0}#escL{align-items:flex-start}#escR{align-items:flex-end;flex:none}
+  #escPlace{max-width:380px;background:rgba(22,28,48,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;border-radius:16px;padding:10px 16px 12px;opacity:0;transform:translateY(-8px);transition:opacity .5s,transform .5s;pointer-events:none}
+  #escPlace.on{opacity:1;transform:none}#escPlace b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:25px;line-height:1.1}#escPlace span{display:block;font-size:14px;line-height:1.35;color:#dfe3ee;margin-top:3px}
   #escDock{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;gap:12px;padding:0 max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
   #escMapWrap{flex:0 0 268px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
   #escMap{padding:10px;position:relative;width:268px}
@@ -451,7 +455,7 @@
   #escSun .ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin:0 5px;font-variant-numeric:tabular-nums}
   #escSun .ticks span{width:44px;text-align:center}#escSun .ticks span:first-child{text-align:left;margin-left:-5px}#escSun .ticks span:last-child{text-align:right;margin-right:-5px}
   #escDockR{flex:0 0 268px}
-  #escCoach{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 118px);transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
+  #escCoach{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 232px);transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
   #escCoach.on{opacity:1;transform:translate(-50%,0)}#escCoach svg{width:26px;height:26px;flex:none}
   #escCoach.look svg{animation:escSwipe 1.8s ease-in-out infinite}@keyframes escSwipe{0%,100%{transform:translateX(-5px)}50%{transform:translateX(5px)}}
   .escMk{position:absolute;left:0;top:0;width:60px;height:60px;margin:-30px 0 0 -30px;border:0;background:none;padding:0;pointer-events:auto;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;will-change:transform}
@@ -507,25 +511,24 @@
   #escCard .cta{background:#1f2948;color:#f4f1e8;border-radius:18px;padding:18px 18px 16px;margin:0 0 14px}
   #escCard .cta b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;font-weight:600;line-height:1.1;margin-bottom:6px}#escCard .cta span{display:block;font-size:15px;line-height:1.45;color:#d5daE8;margin-bottom:14px}
   #escCard .more{display:flex;flex-wrap:wrap;gap:8px}
-  .escBub{position:absolute;bottom:-12px;width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(201,138,18,.55);animation:escBub 3.2s ease-in infinite}
-  @keyframes escBub{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.9}100%{transform:translateY(-190px) scale(1.2);opacity:0}}
+  .escBub{position:absolute;top:150px;width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(201,138,18,.55);animation:escBub 3.2s ease-in infinite}
+  @keyframes escBub{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.9}100%{transform:translateY(-150px) scale(1.2);opacity:0}}
   html.esc-ex #escMapWrap, html.esc-ex #escDockR{visibility:hidden}html.esc-ex #escBack{display:inline-flex}
   html.esc-cine #escRoot > *:not(#escToast){opacity:0!important;pointer-events:none!important;transition:opacity .4s}
   html.esc-pre #escRoot{display:none}
-  @media (max-width:980px){#escDockR{display:none}#escMapWrap{flex-basis:auto}}
-  @media (max-width:719px){
-    #escTop{flex-wrap:wrap;gap:8px}#escGoal{order:2;flex:1 1 100%;max-width:none;padding:9px 14px 10px}#escGoal p{font-size:18.5px}
-    #escBtns{order:1;margin-left:auto}#escHint{padding:5px;min-height:48px}#escHint .tx{display:none}.escIco{width:48px;height:48px}
-    #escTitle{order:0;align-self:center}
-    #escSay{top:calc(max(14px,env(safe-area-inset-top)) + 56px)}
-    #escPlace{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 176px);padding:8px 14px 10px}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
+  @media (max-width:1180px){#escDockR{display:none}}
+  @media (max-width:899px){
+    #escTop{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}#escL,#escR{display:contents}
+    #escBtns{order:0;align-self:flex-end}#escGoal{order:1;max-width:none;padding:9px 14px 10px}#escGoal p{font-size:18.5px}#escSay{order:2;align-self:flex-end}
+    #escHint{padding:5px 12px 5px 5px;min-height:48px}#escHint small{display:none}.escIco{width:48px;height:48px}
+    #escPlace{position:fixed;left:10px;right:10px;max-width:520px;margin:0 auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 172px);padding:8px 14px 10px;text-align:center}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
     #escDock{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}
     #escMapWrap{flex:none;order:0;flex-direction:row}#escMapBtn{display:inline-flex}
     #escMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 24px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
     #escMap.on{display:block}#escMap .plan{width:100%;height:0;padding-bottom:71%}#escMap .pl{font-size:13.5px;padding:7px 11px}#escMapX{display:grid;position:absolute;right:6px;top:4px;width:44px;height:44px;border:0;background:none;place-items:center;font-size:24px;color:var(--mut)}
     #escSun{order:1;max-width:none;margin:0;padding:8px 14px 10px}
-    #escCoach{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 178px);font-size:14.5px}
-    #escSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-height:62vh;transform:translateY(20px);padding:16px 16px 14px}
+    #escCoach{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 236px);font-size:14.5px}
+    #escSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:560px;margin:0 auto;max-height:62vh;transform:translateY(20px);padding:16px 16px 14px}
     #escSheet.on{transform:none}#escSheet h3{font-size:24px}#escSheet p{font-size:15.5px}
     html.esc-ex #escDock{visibility:hidden}html.esc-ex.esc-exsun #escSun{visibility:visible;position:fixed;left:10px;right:10px;bottom:calc(var(--sheet-h,180px) + 18px)}
     html.esc-ex #escBack{display:none}
@@ -550,16 +553,15 @@
     const cat = window.SNOWBALL ? SNOWBALL.svg({id: 'sbhud', seed: 7}).replace(/viewBox="[^"]+"/, 'viewBox="110 10 280 300"') : '';
     root = el('div', {id: 'escRoot'}, `
       <div id="escTop">
-        <div class="escChip" id="escGoal" role="status" aria-live="polite"><div class="k"><b>Pop the Cork</b><span id="escTime">0:00</span></div><p id="escGoalT"></p></div>
-        <div id="escBtns">
+        <div id="escL"><div class="escChip" id="escGoal" role="status" aria-live="polite"><div class="k"><b>Pop the Cork</b><span id="escTime">0:00</span></div><p id="escGoalT"></p></div>
+          <div id="escPlace" aria-live="polite"></div></div>
+        <div id="escR"><div id="escBtns">
           <button class="escChip" id="escHint" type="button" aria-label="Ask Snowball for a hint"><span class="av">${cat}</span><span class="tx"><b>Ask Snowball</b><small>For a hint</small></span></button>
           <button class="escChip escIco" id="escSnd" type="button" aria-label="Sound"></button>
           <button class="escChip escIco" id="escMenuBtn" type="button" aria-label="Menu" aria-expanded="false">${ICO.menu}</button>
-        </div>
+        </div><div id="escSay" aria-live="polite"></div></div>
       </div>
       <div class="escChip" id="escMenu" role="menu"><button type="button" role="menuitem" id="escRestart">Start again</button><button type="button" role="menuitem" id="escAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
-      <div id="escSay" aria-live="polite"></div>
-      <div id="escPlace" aria-live="polite"></div>
       <div id="escMarks"></div>
       <div id="escCoach" role="status"></div>
       <div id="escDock">
@@ -667,7 +669,7 @@
     if(k) coachE.innerHTML = k === 'look' ? ICO.drag + '<span>Drag to look around</span>' : k === 'walk' ? ICO.disc + '<span>Tap a white circle to walk there</span>' : ICO.ring + '<span>Tap a gold ring to look closer</span>'; }
 
   /* ================================================================== moving and examining */
-  function standPose(k){ const P = PLACES[k], a = yp(P.pos, P.face); return {yaw: a[0], pitch: a[1], fov: placeFov(), off: [0, 0]}; }
+  function standPose(k){ const P = PLACES[k], a = yp(P.pos, P.faceLight && lightOn(S.hour) ? P.faceLight : P.face); return {yaw: a[0], pitch: a[1], fov: placeFov(P.fov), off: [0, 0]}; }
   function arrive(k, first){ S.place = k; S.busy = false; mapPlace(k); setMarks(); const fresh = !S.visited[k]; S.visited[k] = true; if(fresh || first) placeCard(k);
     if(k === 'coffee' && S.stage === 'arrive'){ /* objective moves on once they look at the fridge */ }
     S.lastProgress = performance.now(); ga('esc_place', {place: k}); }
@@ -681,11 +683,11 @@
     const l = Math.min(W - 392, W * .62); return {fx: l / 2 / W, fy: .5, fw: l / W * .92, fh: .74}; }
   const SPOTS = {
     fridge: {from: ['coffee'], label: () => 'Drinks fridge', at: () => [19.64, 1.9, 11.5], pos: [19.64, 2.3, 8.3], look: [19.64, 1.72, 11.7], fit: {w: 2.5, h: 3.1}},
-    pocket: {from: ['coffee'], label: () => S.doorShut ? 'Elena’s drawing' : 'Pocket door', at: () => [22.0, 4.1, 9.55],
+    pocket: {from: ['coffee'], label: () => S.doorShut ? 'Elena’s drawing' : 'Pocket door', at: () => [22.0, S.doorShut ? 2.2 : 4.1, 9.55],
       pose: () => S.doorShut ? {pos: [18.5, 4.2, 9.525], look: [22.15, 4.1, 9.525], fit: {w: 2.05, h: 3.45}} : {pos: [17.2, 4.7, 9.55], look: [22.1, 3.7, 9.55], fit: {w: 3.6, h: 6.4}}},
     paper: {from: ['great'], label: () => 'Paper on the window', at: () => PAPER.box ? [PAPER.box.max.x + .05, (PAPER.box.min.y + PAPER.box.max.y) / 2, (PAPER.box.min.z + PAPER.box.max.z) / 2] : [4.7, 3.2, 23.4],
       pose: () => { const b = PAPER.box, cy = (b.min.y + b.max.y) / 2, cz = (b.min.z + b.max.z) / 2; return {pos: [8.9, cy + .25, cz], look: [b.max.x, cy, cz], fit: {w: b.max.z - b.min.z + .9, h: b.max.y - b.min.y + .9}}; }},
-    floor: {from: ['great'], when: () => lightOn(S.hour), label: () => 'Light on the floor', at: () => [11.0, .15, 24.5], pos: [10.95, 7.7, 29.0], look: [10.95, 0, 24.5], fit: {w: 6.4, h: 3.3}, sun: true}};
+    floor: {from: ['great'], when: () => lightOn(S.hour), label: () => 'Light on the floor', at: () => [14.5, .15, 24.9], pos: [10.95, 7.7, 29.0], look: [10.95, 0, 24.5], fit: {w: 6.4, h: 3.3}, sun: true}};
   function examine(id){ const sp = SPOTS[id]; if(!sp || S.busy || rig.move || S.done || S.ex) return; S.seen[id] = true; S.coach.tap = true; ga('esc_look', {item: id}); SND.look();
     S.ex = {id, back: {yaw: rig.yaw, pitch: rig.pitch}}; S.busy = true; setMarks(); placeE.classList.remove('on'); sayE.classList.remove('on');
     document.documentElement.classList.add('esc-ex'); document.documentElement.classList.toggle('esc-exsun', !!sp.sun);
@@ -695,7 +697,7 @@
     const free = freeArea(), pose = {yaw: a[0], pitch: a[1], fov: fitFov(po.fit, dist, free), off: [free.fx - .5, free.fy - .5]};
     rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], po.pos], pose, {dur, done: () => { rig.lim = {yaw: pose.yaw, pitch: pose.pitch, ry: .2, rp: .14}; if(done) done(); }}); }
   function back(){ if(!S.ex || rig.move || S.busy) return; const ex = S.ex; SND.back(); sheetE.classList.remove('on'); S.busy = true;
-    const P = PLACES[S.place], pose = {yaw: ex.back.yaw, pitch: ex.back.pitch, fov: placeFov(), off: [0, 0]};
+    const P = PLACES[S.place], pose = {yaw: ex.back.yaw, pitch: ex.back.pitch, fov: placeFov(P.fov), off: [0, 0]};
     rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], P.pos], pose, {dur: .85, done: () => { S.ex = null; S.busy = false; document.documentElement.classList.remove('esc-ex', 'esc-exsun'); setMarks(); }}); }
   function sheet(html){ sheetE.innerHTML = html + `<div class="row"><button class="escBtn" type="button" data-a="back">${ICO.back}<span>Back to the ${esc(PLACES[S.place].name.toLowerCase())}</span></button></div>`;
     const bk = sheetE.querySelector('[data-a=back]'); bk.onclick = () => back(); const ex = sheetE.querySelector('.row'); const extra = sheetE.querySelector('[data-a=act]'); if(extra) ex.insertBefore(extra, bk);
@@ -804,6 +806,8 @@
     const grid = [[-1.46, -1.3, 0, 9], [1.3, 1.46, 0, 9], [-4.4, 4.4, 2.8, 2.94], [-4.4, 4.4, 5.28, 5.42]];
     LIGHT.entry = floorLight('SP-L1-ENTRY', [{id: 'D-LG-02', bot: .1, top: 7.8, inset: .25, bars: grid}, {id: 'D-L0-11', bot: .1, top: 7.8, inset: .25, bars: grid}], {ppf: 30});
     const upd = LIGHT.dining.update; LIGHT.dining.update = function(){ upd(); paperLight(LIGHT.dining.wins[0].s); };
+    // the vases on the sitting-area table stand between the sofa and the floor you need to read; the table stays
+    try{ const b = new THREE.Box3(); for(const k of Object.keys(H.GROUPS)) for(const c of H.GROUPS[k].children){ if(c.name !== 'drumTable') continue; b.setFromObject(c); if(b.min.z > 27 && b.max.z < 32 && b.min.x > 8) c.children.forEach(q => { if(q.name === 'decor') q.visible = false; }); } }catch(e){}
     buildDrawing(); buildFridge(); makeCat(); }
 
   /* ================================================================== frame loop */
@@ -826,5 +830,5 @@
   // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
-  window.ESCAPE = {S, rig, PLACES, SPOTS, LIGHT, FR, goTo, examine, back, hint, win, setSlider, sunDir, catAt, padPress, say};
+  window.ESCAPE = {S, rig, PLACES, SPOTS, LIGHT, FR, sound: SND, goTo, examine, back, hint, win, setSlider, sunDir, catAt, padPress, say};
 })();
