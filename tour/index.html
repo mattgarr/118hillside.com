@@ -1406,8 +1406,8 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
         <button class="chip" id="tLabels" aria-pressed="true">Room labels</button>
       </div>
       <div class="design" id="design" hidden>
-        <div class="dsec"><div class="dlab">Original home layout</div><div class="opts" id="optChips" role="radiogroup" aria-label="Original home layout"></div></div>
-        <div class="dact"><button class="btn" id="dWalk">Walk through it</button><button class="btn" id="dEdit">Edit a copy</button></div>
+        <div class="dsec"><div class="dlab">Layout of the original house</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
+        <div class="dact"><button class="btn" id="dWalk">Walk through the house</button><button class="btn" id="dEdit">Edit a copy</button></div>
         <div class="dtools" id="dTools" hidden>
           <div class="trow" role="toolbar" aria-label="Edit tools">
             <button class="tool" data-tool="select" aria-pressed="true">Select</button>
@@ -1429,12 +1429,13 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
         <p class="dnote" id="dNote"></p>
         <div class="dsec" id="fSec"><div class="dlab">Furniture</div>
           <div class="frow"><div class="seg" role="group" aria-label="Furniture"><button id="fOn" aria-pressed="true">On</button><button id="fOff" aria-pressed="false">Off</button></div>
-            <button class="tool" id="fRot" disabled>Rotate</button><button class="tool danger" id="fDel" disabled>Remove</button><button class="tool" id="fUndo" disabled>Undo</button><button class="tool" id="fReset" disabled>Reset</button></div>
+            <button class="tool" id="fRot" disabled>Rotate</button><button class="tool danger" id="fDel" disabled>Remove</button><button class="tool" id="fUndo" disabled>Undo</button><button class="tool" id="fReset" disabled>Put it all back</button></div>
           <div class="dstat" id="fStat"></div></div>
-        <div class="dsec" id="pSec"><div class="dlab">Exterior colour</div>
-          <div class="pals" id="pPal" role="radiogroup" aria-label="Exterior colour scheme"></div>
-          <div class="prow"><label><input type="color" id="pBody" aria-label="Siding colour"> Siding</label><label><input type="color" id="pTrim" aria-label="Trim colour"> Trim</label><label><input type="color" id="pDoor" aria-label="Garage door colour"> Garage door</label><button class="tool" id="pLook">View from the street</button></div></div>
-        <div class="dsec"><div class="dlab">Landscape ideas</div>
+        <div class="dsec" id="pSec"><div class="dlab">Exterior paint</div>
+          <div class="pals" id="pPal" role="radiogroup" aria-label="Exterior paint colors"></div>
+          <div class="prow"><label><input type="color" id="pBody" aria-label="Siding color"> Siding</label><label><input type="color" id="pTrim" aria-label="Trim color"> Trim</label><label><input type="color" id="pDoor" aria-label="Garage door color"> Garage door</label><button class="tool" id="pLook">View from the street</button></div>
+          <p class="dnote">Paint ideas only. The house is sold in the colors it has today.</p></div>
+        <div class="dsec"><div class="dlab">Landscape</div>
           <div class="lrow"><label>Front yard <select id="lsFront"></select></label><label>Back yard <select id="lsBack"></select></label></div>
           <div class="lrow"><label><input type="checkbox" id="lsFire"> Fire bowl</label><label><input type="checkbox" id="lsTub"> Hot tub</label></div>
           <div class="lrow"><label><input type="checkbox" id="lsBoulders"> Boulders</label><label><input type="checkbox" id="lsLights"> Garden lighting</label></div>
@@ -5741,7 +5742,10 @@ function makeDollCut(deps){
   const V = new THREE.Vector3(), M4 = new THREE.Matrix4(), BX = new THREE.Box3();
   let SLABS = null, STORE = null;
   const isStore = f => (STORE || (STORE = storage())).some(r => Math.abs(r.y - f.y) < .05 && Math.abs(r.x0 - f.x0) < .1 && Math.abs(r.z1 - f.z1) < .1);
-  const underUpper = (x, z) => { if(!SLABS) SLABS = floors().filter(f => f.up && !f.deck && f.y > 4 && !isStore(f)).map(f => ({f, P: f.poly || [[f.x0, f.z0], [f.x1, f.z0], [f.x1, f.z1], [f.x0, f.z1]]}));
+  // r35 rule:upper-slab-is-a-room - 'under the upper storey' means under the floor of an upper-storey ROOM. The closet-top storage
+  // decks of the original house (8 ft up), their door thresholds and the upper stair treads are floors above 4 ft too, and counting
+  // them left the walls under them standing whole, as towers above the cut (owner 11/10: 'a whole bunch of weird artifacts').
+  const underUpper = (x, z) => { if(!SLABS) SLABS = floors().filter(f => f.up && !f.deck && f.y > 4 && !isStore(f) && Math.abs(f.y - LV.upper) < .6 && (f.space || f.bim2 === undefined) && f.kind !== 'THRESHOLD' && f.kind !== 'TREAD').map(f => ({f, P: f.poly || [[f.x0, f.z0], [f.x1, f.z0], [f.x1, f.z1], [f.x0, f.z1]]}));
     for(const {f, P} of SLABS){ if(x < f.x0 - .5 || x > f.x1 + .5 || z < f.z0 - .5 || z > f.z1 + .5) continue;
       if(inPoly(P, x, z) || inPoly(P, x + .45, z) || inPoly(P, x - .45, z) || inPoly(P, x, z + .45) || inPoly(P, x, z - .45)) return true; } return false; };
   // ---- level field
@@ -5779,6 +5783,11 @@ function makeDollCut(deps){
     if(st === 'upper' && underUpper(x, z)) return LV.upper + CUT_H + EPS;
     return LV[e.lv] + CUT_H + EPS; };
   const maxCut = (a, b) => a === null ? b : b === null ? a : Math.max(a, b);
+  // r35 rule:nothing-floats - a piece the model ties to the upper STOREY (not to a room: decks, rails, trims, fixtures) stays in the
+  // '+ Upper' cut only where the upper storey really is: over or within 1.5 ft of an upper room or balcony. Elsewhere (the storage
+  // deck over the back of the garage) nothing under it is left standing, so it goes with the roof instead of hanging in the air.
+  const overUpper = (x, z) => { for(const [dx, dz] of [[0, 0], [1.5, 0], [-1.5, 0], [0, 1.5], [0, -1.5]]){ const i = Math.floor((x + dx - F.x0) / F.C), j = Math.floor((z + dz - F.z0) / F.C); if(i < 0 || j < 0 || i >= F.nx || j >= F.nz) continue;
+      const L = F.core[j * F.nx + i]; if(L && L.some(k => F.E[k].lv === 'upper')) return true; } return false; };
   // a shell triangle: horizontal -> the floor under it; vertical -> the higher cut of the room it faces and the room behind
   const UPPER_E = {lv: 'upper', y: LV.upper, deck: false};
   function triCut(st, ax, ay, az, bx, by, bz, cx, cy, cz, up){
@@ -5840,7 +5849,8 @@ function makeDollCut(deps){
   const gbox = g => { if(!g.boundingBox) g.computeBoundingBox(); return g.boundingBox; };
   function instBox(m, i, out){ m.getMatrixAt(i, M4); M4.premultiply(m.matrixWorld); return out.copy(gbox(ORIG.get(m) || m.geometry)).applyMatrix4(M4); }
   function worldBox(o){ const b = new THREE.Box3(); o.updateWorldMatrix(true, true);
-    o.traverse(m => { if(!(m.isMesh || m.isLine || m.isPoints) || !m.geometry || !m.geometry.attributes.position) return; const g = ORIG.get(m) || m.geometry; if(!g.attributes.position.count) return;
+    o.traverse(m => { if(m.isSprite){ b.expandByPoint(V.setFromMatrixPosition(m.matrixWorld)); return; }   // r35: a glow / halo / hint sprite counts by where it is
+      if(!(m.isMesh || m.isLine || m.isPoints) || !m.geometry || !m.geometry.attributes.position) return; const g = ORIG.get(m) || m.geometry; if(!g.attributes.position.count) return;
       if(m.isInstancedMesh){ const I = IORIG.get(m) || m.instanceMatrix.array; for(let i = 0; i < m.count; i++){ M4.fromArray(I, i * 16).premultiply(m.matrixWorld); b.union(BX.copy(gbox(g)).applyMatrix4(M4)); } }
       else b.union(BX.copy(gbox(g)).applyMatrix4(m.matrixWorld)); });
     return b; }
@@ -5889,7 +5899,7 @@ function makeDollCut(deps){
   function* work(st, varKey){
     field(); const acts = [], segs = [];
     const triJob = (m, up) => { let c = CACHE.get(m); if(!c){ c = {}; CACHE.set(m, c); } m.updateWorldMatrix(true, false); const key = 't' + st + (m.userData && m.userData.bim2 && window.BIM2 && BIM2.state ? '|' + (BIM2.state._var || '') : '') + m.matrixWorld.elements.map(v => v.toFixed(3)).join(',');
-      if(!(key in c)){ const sg = []; let t = -1; const B2 = window.BIM2 && BIM2.state && m.userData && m.userData.bim2 ? m : null; c[key] = clipMesh(m, (W, a, b, d) => { t++; const ct = B2 && BIM2.cutTarget(B2, t); if(ct){ CUTSTAT.data++; if(ct.remove) return -Infinity; const sp = ct.space; return cutOf({lv: STOREY[sp.storey] || lvOfY(sp.floorZ), y: sp.floorZ, deck: !sp.interior}, st, (W[a * 3] + W[b * 3] + W[d * 3]) / 3, (W[a * 3 + 2] + W[b * 3 + 2] + W[d * 3 + 2]) / 3); } CUTSTAT.probe++; return triCut(st, W[a * 3], W[a * 3 + 1], W[a * 3 + 2], W[b * 3], W[b * 3 + 1], W[b * 3 + 2], W[d * 3], W[d * 3 + 1], W[d * 3 + 2], up); }, sg); c[key + 's'] = sg; }
+      if(!(key in c)){ const sg = []; let t = -1; const B2 = window.BIM2 && BIM2.state && m.userData && m.userData.bim2 ? m : null; c[key] = clipMesh(m, (W, a, b, d) => { t++; const ct = B2 && BIM2.cutTarget(B2, t); if(ct){ CUTSTAT.data++; if(ct.remove) return -Infinity; const sp = ct.space, lv = STOREY[sp.storey] || lvOfY(sp.floorZ), cx = (W[a * 3] + W[b * 3] + W[d * 3]) / 3, cz = (W[a * 3 + 2] + W[b * 3 + 2] + W[d * 3 + 2]) / 3; if(lv === 'upper' && String(sp.id).charAt(0) === '@' && !overUpper(cx, cz)) return -Infinity; return cutOf({lv, y: sp.floorZ, deck: !sp.interior}, st, cx, cz); } CUTSTAT.probe++; return triCut(st, W[a * 3], W[a * 3 + 1], W[a * 3 + 2], W[b * 3], W[b * 3 + 1], W[b * 3 + 2], W[d * 3], W[d * 3 + 1], W[d * 3 + 2], up); }, sg); c[key + 's'] = sg; }
       if(c[key]) acts.push({m, g: c[key]}); for(const q of c[key + 's']) segs.push(q); };
     const instJob = (m, yc0) => { if(isDyn(m)) return; const I = IORIG.get(m) || m.instanceMatrix.array, hid = [];
       for(let i = 0; i < m.count; i++){ M4.fromArray(I, i * 16).premultiply(m.matrixWorld); BX.copy(gbox(ORIG.get(m) || m.geometry)).applyMatrix4(M4);
@@ -5903,7 +5913,8 @@ function makeDollCut(deps){
         const o = it.obj; let oc = OBJ.get(o); if(!oc){ oc = {}; OBJ.set(o, oc); }
         const bk = st + it.bb.min.toArray().concat(it.bb.max.toArray()).map(v => v.toFixed(2)).join(','), d = oc[bk] || (oc[bk] = decide(o, it.bb, st)); d.bk = bk;
         if(d.act === 'keep') continue;
-        o.traverse(m => { if(!(m.isMesh || m.isLine || m.isPoints) || !m.geometry || !m.geometry.attributes.position) return;
+        o.traverse(m => { if(m.isSprite){ if(d.act === 'hide' || V.setFromMatrixPosition(m.matrixWorld).y > d.yc) acts.push({lay: m}); return; }   // r35: sprites above the cut go with it
+          if(!(m.isMesh || m.isLine || m.isPoints) || !m.geometry || !m.geometry.attributes.position) return;
           if(m.isInstancedMesh){ if(d.act === 'hide') acts.push({m, g: EMPTY}); else instJob(m, d.yc); return; }
           if(d.act === 'hide' || !m.isMesh){ acts.push({m, g: EMPTY}); return; }
           let c = CACHE.get(m); if(!c){ c = {}; CACHE.set(m, c); } const key = 'o' + d.bk + d.yc.toFixed(3);
@@ -5914,7 +5925,9 @@ function makeDollCut(deps){
   const sigOf = (st, varKey) => { let n = 0, h = 0; for(const {g} of roots(st, varKey)) g.traverse(o => { n++; const p = o.position; h = (h + p.x * 3.1 + p.y * 7.7 + p.z * 13.3 + o.rotation.y * 17.9 + (o.visible ? 1 : 0)) % 1e6; });
     return st + '|' + (varKey || '') + '|' + n + '|' + h.toFixed(3); };
   function planFor(st, varKey){ const key = sigOf(st, varKey); let P = PLAN.get(key); if(P) return P;
-    const it = work(st, varKey); let r; while(!(r = it.next()).done); P = r.value; P.key = key; PLAN.set(key, P); return P; }
+    const it = work(st, varKey); let r; while(!(r = it.next()).done); P = r.value; P.key = key; PLAN.set(key, P);
+    if(PLAN.size > 14) for(const k of PLAN.keys()){ if(PLAN.size <= 10) break; if(k === key || k === planKey) continue; PLAN.delete(k); const c = CAPS.get(k); if(c){ if(c.parent) c.parent.remove(c); c.geometry.dispose(); CAPS.delete(k); } }   // r35: Design moves furniture; keep the last few plans only
+    return P; }
   // pre-compute a state in idle slices (8 ms) so the click that shows it has nothing left to do
   let warmTok = 0;
   function warm(st, varKey){ if(!PLAN_OK(st)) return; const key = sigOf(st, varKey); if(PLAN.has(key)) return; const tok = ++warmTok, it = work(st, varKey);
@@ -5926,11 +5939,15 @@ function makeDollCut(deps){
   // ---- wall caps from the BIM: footprint at the plane, run by run (the plane can change along a wall), minus openings
   function wallCaps(st, out){
     const {list, opens} = walls();
-    const cutAtWall = (G, ax, az, px, pz, half) => { const e1 = at(ax + px * (half + .4), az + pz * (half + .4), G.z0), e2 = at(ax - px * (half + .4), az - pz * (half + .4), G.z0);
-      return e1 || e2 ? maxCut(cutOf(e1, st, ax, az), cutOf(e2, st, ax, az)) : cutOf(at(ax, az, G.z0, true), st, ax, az); };
+    // r35 rule:cap-on-the-cut - a wall whose base runs below its floor (outside walls go down to grade) was read as a lower-level
+    // wall: its cap was drawn at the lower level's plane, inside the wall, and its real cut edge had none. When the base is under
+    // every floor at that spot, the wall is asked again from a few feet up, where the storey it stands in is.
+    const atW = (x, z, G, nr) => { let e = at(x, z, G.z0, nr); if(e && !e.P) e = at(x, z, Math.min(G.z0 + 6, Math.max(G.z0, G.z1 - 1)), nr); return e; };
+    const cutAtWall = (G, ax, az, px, pz, half) => { const e1 = atW(ax + px * (half + .4), az + pz * (half + .4), G), e2 = atW(ax - px * (half + .4), az - pz * (half + .4), G);
+      return e1 || e2 ? maxCut(cutOf(e1, st, ax, az), cutOf(e2, st, ax, az)) : cutOf(atW(ax, az, G, true), st, ax, az); };
     for(const G of list){ const top = G.w.topToRoof ? 1e9 : G.z1;
       if(!G.rect){ const cx = G.pts.reduce((t, p) => t + p[0], 0) / G.pts.length, cz = G.pts.reduce((t, p) => t + p[1], 0) / G.pts.length;
-        const yc = cutOf(at(cx, cz, G.z0, true), st, cx, cz); if(yc !== null && isFinite(yc) && G.z0 < yc - .05 && top > yc + .02) out.push({pts: G.pts.map(p => [p[0], p[1]]), y: yc}); continue; }
+        const yc = cutOf(atW(cx, cz, G, true), st, cx, cz); if(yc !== null && isFinite(yc) && G.z0 < yc - .05 && top > yc + .02) out.push({pts: G.pts.map(p => [p[0], p[1]]), y: yc}); continue; }
       const alongX = (G.bx1 - G.bx0) >= (G.bz1 - G.bz0), a0 = alongX ? G.bx0 : G.bz0, a1 = alongX ? G.bx1 : G.bz1, half = (alongX ? G.bz1 - G.bz0 : G.bx1 - G.bx0) / 2;
       const n = Math.max(1, Math.ceil((a1 - a0) / .5)), runs = []; let s0 = a0, cur;
       for(let i = 0; i < n; i++){ const m = a0 + (a1 - a0) * (i + .5) / n, x = alongX ? m : (G.bx0 + G.bx1) / 2, z = alongX ? (G.bz0 + G.bz1) / 2 : m;
@@ -5947,6 +5964,27 @@ function makeDollCut(deps){
         for(const [p, q] of iv){ if(q - p < .03) continue;
           out.push({pts: alongX ? [[p, G.bz0], [q, G.bz0], [q, G.bz1], [p, G.bz1]] : [[G.bx0, p], [G.bx1, p], [G.bx1, q], [G.bx0, q]], y: yc}); } } }
   }
+  // r35 rule:cap-on-the-cut (2) - a wall cap comes from the BIM footprint, so it must be checked against what the section really
+  // cut: a footprint with no wall face in the plane (an opening the model has but the list of openings does not, a wall the layout
+  // idea removed, a collider that is not a full-height wall) drew a dark slab hanging in the room. A cap keeps only the stretch of
+  // its run where section segments of opaque faces lie on it (gaps under 0.6 ft are bridged: wall ends, abutting walls).
+  function capsOnSection(polys, segs){
+    const H = new Map(), key = (i, j, y) => i + ',' + j + ',' + Math.round(y * 50);
+    for(const q of segs){ const mx = (q[0][0] + q[1][0]) / 2, mz = (q[0][1] + q[1][1]) / 2, k = key(Math.floor(mx / 2), Math.floor(mz / 2), q[0][2]); let L = H.get(k); if(!L) H.set(k, L = []); L.push(q); }
+    const out = [];
+    for(const p of polys){ let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for(const q of p.pts){ x0 = Math.min(x0, q[0]); z0 = Math.min(z0, q[1]); x1 = Math.max(x1, q[0]); z1 = Math.max(z1, q[1]); }
+      const rect = p.pts.length === 4 && p.pts.every((q, i) => { const r = p.pts[(i + 1) % 4]; return Math.abs(q[0] - r[0]) < .01 || Math.abs(q[1] - r[1]) < .01; });
+      const alongX = (x1 - x0) >= (z1 - z0), iv = [];
+      for(let i = Math.floor((x0 - .5) / 2); i <= Math.floor((x1 + .5) / 2); i++) for(let j = Math.floor((z0 - .5) / 2); j <= Math.floor((z1 + .5) / 2); j++){ const L = H.get(key(i, j, p.y)); if(!L) continue;
+        for(const q of L){ const mx = (q[0][0] + q[1][0]) / 2, mz = (q[0][1] + q[1][1]) / 2; if(mx < x0 - .1 || mx > x1 + .1 || mz < z0 - .1 || mz > z1 + .1) continue;
+          const a = alongX ? q[0][0] : q[0][1], b = alongX ? q[1][0] : q[1][1]; iv.push([Math.min(a, b) - .05, Math.max(a, b) + .05]); } }
+      if(!iv.length) continue;
+      if(!rect){ out.push(p); continue; }
+      iv.sort((a, b) => a[0] - b[0]); const M = [iv[0].slice()]; for(const v of iv){ const m = M[M.length - 1]; if(v[0] <= m[1] + .6) m[1] = Math.max(m[1], v[1]); else M.push(v.slice()); }
+      const p0 = alongX ? x0 : z0, p1 = alongX ? x1 : z1;
+      for(const m of M){ const a = Math.max(p0, m[0]), b = Math.min(p1, m[1]); if(b - a < .05) continue;
+        out.push({pts: alongX ? [[a, z0], [b, z0], [b, z1], [a, z1]] : [[x0, a], [x1, a], [x1, b], [x0, b]], y: p.y}); } }
+    return out; }
   // closed section loops of the other solids: chain the segments; keep only clean loops (every node joins exactly two)
   function solidLoops(segs){
     const key = p => Math.round(p[0] * 2000) + ',' + Math.round(p[1] * 2000) + ',' + Math.round(p[2] * 100);
@@ -5980,7 +6018,9 @@ function makeDollCut(deps){
     g.computeBoundingSphere(); return g;
   }
   // ---- swap in / out
+  const LSET = new Map();   // r35: sprites taken off the draw layer by the cut -> their own layer mask
   function restore(){
+    for(const [o, k] of LSET) o.layers.mask = k; LSET.clear();
     for(const [m, g] of SET) if(m.geometry === g) m.geometry = ORIG.get(m); SET.clear();
     for(const [m, a] of ISET) if(m.instanceMatrix.array === a){ m.instanceMatrix.array.set(IORIG.get(m)); m.instanceMatrix.needsUpdate = true; } ISET.clear();
     capGroup.visible = false; state = null; planKey = ''; }
@@ -5989,12 +6029,13 @@ function makeDollCut(deps){
     const t0 = performance.now(), P = planFor(st, varKey);
     if(P.key === planKey && state === st){ capGroup.visible = true; return; }
     restore();
-    for(const {m, g, im, hid} of P.acts){
+    for(const {m, g, im, hid, lay} of P.acts){
+      if(lay){ if(!LSET.has(lay)){ LSET.set(lay, lay.layers.mask); lay.layers.set(31); } continue; }
       if(im){ if(!IORIG.has(im)) IORIG.set(im, im.instanceMatrix.array.slice()); const a = im.instanceMatrix.array; a.set(IORIG.get(im)); for(const i of hid) for(let k = 0; k < 16; k++) a[i * 16 + k] = 0;
         im.instanceMatrix.needsUpdate = true; ISET.set(im, a); continue; }
       if(!ORIG.has(m)) ORIG.set(m, m.geometry); m.geometry = g; SET.set(m, g); }
     let cm = CAPS.get(P.key);
-    if(!cm){ const polys = []; wallCaps(st, polys); const loops = solidLoops(P.segs.filter(q => !onWall((q[0][0] + q[1][0]) / 2, (q[0][1] + q[1][1]) / 2)));
+    if(!cm){ const polys0 = []; wallCaps(st, polys0); const polys = capsOnSection(polys0, P.segs); const loops = solidLoops(P.segs.filter(q => !onWall((q[0][0] + q[1][0]) / 2, (q[0][1] + q[1][1]) / 2)));
       cm = new THREE.Mesh(capGeometry(polys, loops), capMat); cm.receiveShadow = true; cm.castShadow = false; cm.name = 'cap'; cm.userData.stat = {walls: polys.length, loops: loops.length, segs: P.segs.length}; CAPS.set(P.key, cm); }
     for(const ch of capGroup.children.slice()) capGroup.remove(ch); capGroup.add(cm); capGroup.userData.stat = cm.userData.stat;
     capGroup.visible = true; state = st; planKey = P.key; capGroup.userData.ms = Math.round(performance.now() - t0);
@@ -6061,7 +6102,7 @@ function setLevel(lv, opts = {}){
   document.querySelectorAll('#lvSeg button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.lv === lv)));
   $('#tUpper').setAttribute('aria-pressed', String(vis.upper)); $('#tRoof').setAttribute('aria-pressed', String(vis.roof));
   if(mode === 'doll' && !roomFocus) $('#lvl').textContent = DOLL_LVTXT[lv];
-  if(mode === 'doll' && prev !== lv && !reduceMotion && !opts.instant){
+  if(isDoll() && prev !== lv && !reduceMotion && !opts.instant){
     const a = liftShown(prev), b = liftShown(lv), out = [], inn = [];
     for(const g of LIFT_GROUPS){ if(a[g] && !b[g]) out.push(g); if(!a[g] && b[g]) inn.push(g); }
     DOLL_LIFT.on = out.length + inn.length > 0; DOLL_LIFT.t0 = performance.now(); DOLL_LIFT.out = out; DOLL_LIFT.inn = inn; DOLL_LIFT.dur = .6;
@@ -6131,7 +6172,7 @@ $('#lvSeg').addEventListener('keydown', e => { const L = ['main', 'upper', 'roof
 try{ if(localStorage.getItem('hillside.trees')==='0') vis.trees=false; }catch(e){}
 function applyVisibility(){
   const doll = isDoll();
-  const showRoof = !doll || vis.roof, showUpper = !doll || vis.upper || mode === 'design';
+  const showRoof = !doll || vis.roof, showUpper = !doll || vis.upper;   // r35: Design follows the level buttons exactly as Dollhouse does
   grp('roof').visible = showRoof && showUpper; grp('vault').visible = grp('vaultUp').visible = showRoof && showUpper;
   grp('upper').visible = showUpper; grp('furnU').visible = showUpper;
   grp('ceil').visible = !doll;
@@ -6139,7 +6180,10 @@ function applyVisibility(){
   grp('lowerRoof').visible = !doll || vis.roof || (showUpper && false);
   if(doll && !vis.roof) grp('lowerRoof').visible = false;
   $('#labels').hidden = !(doll && vis.labels);
-  try{ if(mode === 'doll' && vis.level !== 'roof'){ dollHookHW(); dollCut().apply(vis.level, ACTIVE_VAR); } else if(DOLLCUT) DOLLCUT.restore(); }catch(e){ console.warn('doll cut', e); }
+  // r35 rule:roof-off-is-a-section - any view that takes the roof or a level off (Dollhouse and Design) shows the house through the
+  // section cut, never by just hiding the roof groups: skylight glass, frames and wells, gutters, fascia, gable tops, ceiling fixtures
+  // and anything added to a storey group later are cut by where they are, so nothing that belongs to a removed part is left behind.
+  try{ if(doll && vis.level !== 'roof'){ dollHookHW(); dollCut().apply(vis.level, ACTIVE_VAR); } else if(DOLLCUT) DOLLCUT.restore(); }catch(e){ console.warn('doll cut', e); }
   // variant copies follow their base group, and only the active variant shows
   for(const k of Object.keys(GROUPS)){ const i = k.indexOf('@'); if(i < 0) continue; const base = GROUPS[k.slice(0, i)];
     GROUPS[k].visible = k.slice(i + 1) === ACTIVE_VAR && (base ? base.visible : true); }
@@ -6541,7 +6585,7 @@ function setMode(m, opts={}){
   const prev = mode; mode = m; setTab(m); if(m !== 'tour' && LENS.cam) lensHome();
   $('#card').classList.remove('min');
   $('#ctrl').hidden = m!=='tour'; $('#realSeg').hidden = m!=='tour' || STOPS[stopIdx].photo==null; $('#toggles').hidden = !isDoll();
-  $('#design').hidden = m!=='design'; DESIGN.setActive(m==='tour' ? 'asbuilt' : DESIGN.sel());
+  $('#design').hidden = m!=='design'; DESIGN.setActive(DESIGN.modeVar(m, prev, opts)); if(DESIGN.walking()) setTab('design');   // r35 rule:design-opens-as-built (the walk-through of an idea stays under the Design tab)
   if(m==='tour'){ showStop(stopIdx); }
   if(m==='doll'){
     $('#eyebrow').textContent='Dollhouse'; $('#lvl').textContent='All levels'; $('#title').textContent='The whole house'; $('#dims').textContent='';
@@ -7799,7 +7843,8 @@ const FURN = (() => {
         add(o, 'x:' + key + ':' + seen[key], v, o.position.y, {outdoor: base === 'yard' || base === 'land'}); } }
   }
   const shown = it => { for(let o = it.obj; o; o = o.parent) if(!o.visible) return false; return true; };
-  function setOn(v){ on = !!v; try{ localStorage.setItem(LSO, on ? '1' : '0'); }catch(e){} scan(); items.forEach(show); if(!on) select(null); ui(); try{ builtinContents(on); }catch(e){} }
+  function setOn(v){ on = !!v; try{ localStorage.setItem(LSO, on ? '1' : '0'); }catch(e){} scan(); items.forEach(show); if(!on) select(null); ui(); try{ builtinContents(on); }catch(e){}
+    try{ if(window.R13 && R13.sync) R13.sync(); PERF.shadowDirty = true; }catch(e){} }   // r35: the contact shadows and the sun's shadow map follow the switch in the same frame
 
   // collisions: sample the footprint; any sample inside a wall body (knee or chest height) blocks the move; indoors it must stay over a floor of its level
   function blocked(it, x, z, r){
@@ -7900,6 +7945,7 @@ const FURN = (() => {
    body = lap siding + gable shakes (photo textures: the tint is target / texture average, so the grain stays);
    trim = exterior trim, corner boards, fascia, gutters (exterior faces of the shared trim are split off by rule once);
    accent = garage door. 'As built' restores the exact colours the house was built with. */
+try{ if(!/[?&]keep-ideas\b/.test(location.search)) for(const k of ['hillside.paint.v1', 'hillside.landscape']) localStorage.removeItem(k); }catch(e){}   // r35 rule:design-opens-as-built - paint and landscape ideas last for the visit; a reload shows the house as it is
 const PAINT_EXT = (() => {
   const LS = 'hillside.paint.v1';
   const PALS = [
@@ -7951,7 +7997,7 @@ const PAINT_EXT = (() => {
   function choose(id){ cur = {pal: id}; store(); apply(); }
   function pick(k, hex){ if(cur.pal !== 'custom'){ cur = {pal: 'custom', body: shown('body'), trim: shown('trim'), door: shown('door')}; } cur[k] = hex; store(); apply(); }
   $('#pBody').oninput = e => pick('body', e.target.value); $('#pTrim').oninput = e => pick('trim', e.target.value); $('#pDoor').oninput = e => pick('door', e.target.value);
-  $('#pLook').onclick = () => { if(mode !== 'design') return; flyTo([24, 15, 66], [2, 5, 16], 'orbit', 1.6); };
+  $('#pLook').onclick = () => { if(mode !== 'design') return; try{ IDEAS35.look('street'); }catch(e){ flyTo([24, 15, 66], [2, 5, 16], 'orbit', 1.6); } };   // r35: with the roof on
   function init(){ if(ready) return true; bim2TrimOut(); if(!snapshot()) return false; ready = true; apply(); return true; }
   return {init, choose, pick, PALS, state: () => cur, ready: () => ready};
 })();
@@ -7977,11 +8023,21 @@ const DESIGN = (() => {
   const LS = 'hillside.design.v1', T = .375;          // a new partition: 2x4 stud + drywall both sides
   let sel = 'asbuilt', custom = null, undo = [], tool = 'select', selId = null, wallStart = null, addKind = null, REG = null, lastWalk = null, seq = 0;
   const labelEls = {};
-  try{ const s = JSON.parse(localStorage.getItem(LS) || 'null'); if(s){ if(s.def && Array.isArray(s.def.elements) && Array.isArray(s.def.removes)) custom = s.def; if(typeof s.sel === 'string') sel = s.sel; } }catch(e){}
-  const save = () => { try{ localStorage.setItem(LS, JSON.stringify({sel, def: custom})); }catch(e){} };
+  try{ const s = JSON.parse(localStorage.getItem(LS) || 'null'); if(s){ if(s.def && Array.isArray(s.def.elements) && Array.isArray(s.def.removes)) custom = s.def; } }catch(e){}   // r35 rule:design-opens-as-built - a saved layout choice is never restored: every visit, and every opening of Design, starts from the house as it is
+  const save = () => { try{ localStorage.setItem(LS, JSON.stringify({sel: 'asbuilt', def: custom})); }catch(e){} };
+  let walking = false;                                // walking through the chosen idea (started from Design); the screen says so
+  /* r35 rule:design-opens-as-built - which layout a mode shows. Tour, Walk, Dollhouse and the games always show the house as built.
+     Design shows what was picked there since it was opened, and opens on 'As built'. The one way an idea leaves Design is the
+     walk-through started from inside it (the button, or a double-click on a spot), which is labelled on screen for as long as it lasts;
+     going back to Design from that walk keeps the idea, anything else drops it. */
+  function modeVar(m, prev, o){
+    if(m === 'design'){ if(prev !== 'design' && !(prev === 'walk' && walking)) sel = 'asbuilt'; walking = false; return sel; }
+    walking = m === 'walk' && sel !== 'asbuilt' && !!(o && o.keep) && (prev === 'design' || (prev === 'walk' && walking));
+    return walking ? sel : 'asbuilt'; }
+  const sent = t => { t = String(t || ''); return t.charAt(0) + t.slice(1).replace(/([A-Z])([a-z]*)/g, (m, a, b) => a.toLowerCase() + b); };   // sentence case: 'Semi-Open Plan' -> 'Semi-open plan'
   const opts = () => bim2DesignOptions();
   const defOf = id => id === 'custom' ? custom : (opts().find(d => d.id === id) || null);
-  const nameOf = id => id === 'asbuilt' ? 'As built' : id === 'custom' ? 'My design' : ((defOf(id) || {}).name || id);
+  const nameOf = id => id === 'asbuilt' ? 'As built' : id === 'custom' ? 'My design' : sent((defOf(id) || {}).name || id);
   const inReg = (bx, by) => !!REG && inPoly(REG, bx, by);
   const rectOf = w => { const xs = w.footprint.map(p => p[0]), ys = w.footprint.map(p => p[1]); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; };
   const sn = v => Math.round(v * 4) / 4;
@@ -8010,25 +8066,32 @@ const DESIGN = (() => {
   }
   function chips(){
     const box = $('#optChips'); box.innerHTML = '';
-    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today'}].concat(opts().map(d => ({id: d.id, name: d.name, sub: d.short})));
-    if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base) : 'From today’s layout'});
-    for(const o of list){ const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(o.id === sel));
-      b.append(o.name); const sm = document.createElement('small'); sm.textContent = o.sub; b.appendChild(sm); b.onclick = () => choose(o.id); box.appendChild(b); }
+    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today'}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea'})));
+    if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base).toLowerCase() : 'From today’s layout'});
+    for(const o of list){ const b = document.createElement('button'); b.type = 'button'; b.className = 'opt ' + (o.id === 'asbuilt' ? 'today' : 'idea'); b.dataset.id = o.id; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(o.id === sel)); b.tabIndex = o.id === sel ? 0 : -1;
+      const nm = document.createElement('span'); nm.textContent = o.name; b.appendChild(nm); const sm = document.createElement('small'); sm.textContent = o.sub; b.appendChild(sm); b.onclick = () => choose(o.id, true); box.appendChild(b); }
+    if(!box._r35){ box._r35 = true; box.addEventListener('keydown', e => { const L = [...box.querySelectorAll('.opt')], i = L.indexOf(document.activeElement); if(i < 0) return;   // radio group: arrows move and choose
+        const j = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (i + 1) % L.length : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
+        e.preventDefault(); e.stopPropagation(); const id = L[j].dataset.id; choose(id, true); const n = box.querySelector('.opt[data-id="' + id + '"]'); if(n) n.focus(); }); }
     $('#dTools').hidden = sel !== 'custom'; $('#dEdit').hidden = sel === 'custom';
     $('#dEdit').textContent = sel === 'asbuilt' ? 'Edit a copy' : 'Edit a copy of this';
+    $('#dWalk').textContent = sel === 'asbuilt' ? 'Walk through the house' : 'Walk through this idea';
   }
   function card(){
     if(mode !== 'design') return;
     const d = defOf(sel);
-    $('#eyebrow').textContent = 'Design ideas'; $('#lvl').textContent = 'Original home';
-    $('#title').textContent = sel === 'asbuilt' ? 'The house today' : sel === 'custom' ? 'My design' : d.name;   /* r20: no date */
+    $('#eyebrow').textContent = 'Design ideas'; $('#lvl').textContent = sel === 'asbuilt' ? 'As built' : 'Remodel idea';
+    $('#title').textContent = sel === 'asbuilt' ? 'The house today' : sel === 'custom' ? 'My design' : nameOf(sel);   /* r20: no date */
     $('#dims').textContent = ''; $('#blurb').hidden = false; strip([], '');
-    $('#blurb').textContent = sel === 'asbuilt' ? 'See two remodel concepts for the original part of the home, walk through any of them, rearrange the furniture, or try the outside in a new colour.'
+    $('#blurb').textContent = sel === 'asbuilt' ? 'This is the house as it stands. Try a remodel idea for the original part of the home, move the furniture, or see the outside in another color or with a new garden.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
-    $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'Ideas only: not engineered, permitted or priced.'
-      : 'Concept sketches from 2024, for ideas only: not engineered, permitted or priced.';
+    $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'An idea only. It is not engineered, permitted or priced.'
+      : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and the house is sold as built.';
+    $('#dNote').hidden = sel === 'asbuilt';
+    try{ IDEAS35.sync(); }catch(e){}
   }
-  function choose(id){ sel = id; selId = null; wallStart = null; pre.visible = false; tool = 'select'; setToolUI(); setActive(id); card(); chips(); status(); save(); }
+  function choose(id, fly){ sel = id; selId = null; wallStart = null; pre.visible = false; tool = 'select'; setToolUI(); setActive(id); card(); chips(); status(); save();
+    if(fly && mode === 'design'){ if(vis.level !== 'main') setLevel('main', {keepCam: true}); view(1.2); } }   // r35: a layout is looked at with the roof and upper level off, from the layout view
   function setActive(v){
     if(v !== 'asbuilt' && !defOf(v)) v = 'asbuilt';
     if(v !== ACTIVE_VAR){ ACTIVE_VAR = v; for(const k in labelEls) for(const L of labelEls[k]){ L.el.style.display = 'none'; L.el._on = false; } applyVisibility();
@@ -8036,8 +8099,25 @@ const DESIGN = (() => {
     if(mode !== 'design'){ hlBox.visible = false; pre.visible = false; } else hl();
   }
   function badge(){ if(ACTIVE_VAR !== 'asbuilt') $('#dims').textContent = 'Original home: ' + nameOf(ACTIVE_VAR) + (ACTIVE_VAR === 'custom' ? '' : ' (2024 concept)'); }
-  function open(prev){ card(); chips(); status(); hl(); if(prev !== 'design') view(); }
-  function view(dur){ const k = canvas.clientWidth < 600 ? 1.65 : 1; flyTo([15 - 31 * k, 50 * k, 13 + 25 * k], [15, 0, 13], 'orbit', dur || 1.5); }
+  function open(prev){ if(prev !== 'design' && vis.level !== 'main') setLevel('main', {instant: true, keepCam: true}); card(); chips(); status(); hl(); if(prev !== 'design') view(); }
+  /* r35: the layout view - the original house (the part the ideas change) fills the part of the screen the panel leaves free:
+     beside the panel on a wide screen, above the sheet on a phone. Same fit as the Dollhouse camera. */
+  function view(dur){
+    let x0 = 4, x1 = 33, z0 = -10, z1 = 37;
+    if(REG && REG.length > 2){ x0 = z0 = 1e9; x1 = z1 = -1e9; for(const p of REG){ z0 = Math.min(z0, p[0]); z1 = Math.max(z1, p[0]); x0 = Math.min(x0, p[1]); x1 = Math.max(x1, p[1]); } }
+    const W = canvas.clientWidth || 1, H = canvas.clientHeight || 1, ph = W < 600 || document.documentElement.classList.contains('ph');
+    const fx0 = ph ? -1 : Math.min(.3, 2 * 330 / W - 1), fy1 = 1 - 2 * 70 / H, fy0 = ph ? .02 : -1;
+    const wx = (fx0 + 1) / 2, wy = (fy0 + fy1) / 2, mx = (1 - fx0) / 2 * .84, my = (fy1 - fy0) / 2 * (ph ? .88 : .8);
+    const th = -.89, phi = .64, T = new THREE.Vector3((x0 + x1) / 2, 2, (z0 + z1) / 2), cam = camera.clone(); cam.fov = FOV0; cam.aspect = camera.aspect; cam.updateProjectionMatrix();
+    const pts = []; for(const x of [x0, x1]) for(const z of [z0, z1]) for(const y of [0, 8]) pts.push(new THREE.Vector3(x, y, z));
+    const place = r => { cam.position.set(T.x + r * Math.sin(phi) * Math.sin(th), T.y + r * Math.cos(phi), T.z + r * Math.sin(phi) * Math.cos(th)); cam.lookAt(T); cam.updateMatrixWorld(true); };
+    const ext = () => { let a0 = 9, a1 = -9, b0 = 9, b1 = -9, bad = false; for(const p of pts){ const v = p.clone().project(cam); if(v.z > 1) bad = true; a0 = Math.min(a0, v.x); a1 = Math.max(a1, v.x); b0 = Math.min(b0, v.y); b1 = Math.max(b1, v.y); } return {a0, a1, b0, b1, bad}; };
+    let lo = 15, hi = 320; for(let i = 0; i < 22; i++){ const r = (lo + hi) / 2; place(r); const e = ext(); if(!e.bad && e.a1 - e.a0 <= 2 * mx && e.b1 - e.b0 <= 2 * my) hi = r; else lo = r; }
+    place(hi);
+    for(let k = 0; k < 3; k++){ const e = ext(), tn = Math.tan(cam.fov * Math.PI / 360) * hi, R = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), U = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      T.addScaledVector(R, ((e.a0 + e.a1) / 2 - wx) * tn * cam.aspect).addScaledVector(U, ((e.b0 + e.b1) / 2 - wy) * tn); place(hi); }
+    flyTo(cam.position.toArray(), T.toArray(), 'orbit', dur || 1.5);
+  }
   function labels(){
     if(ACTIVE_VAR === 'asbuilt') return [];
     const d = defOf(ACTIVE_VAR); if(!d) return [];
@@ -8056,7 +8136,7 @@ const DESIGN = (() => {
     for(const e of L){ const d = Math.hypot(e.at[0] - bx, e.at[1] - by); if(d < bd){ bd = d; best = e; } }
     if(!best) return false;
     if(force || best !== lastWalk){ lastWalk = best; curRoom = null; $('#title').textContent = best.name; $('#lvl').textContent = 'Main level'; $('#dims').textContent = '';
-      $('#eyebrow').textContent = 'Walk · ' + nameOf(ACTIVE_VAR); $('#blurb').hidden = true; strip([], ''); }
+      $('#eyebrow').textContent = 'Remodel idea · ' + nameOf(ACTIVE_VAR); $('#blurb').hidden = true; strip([], ''); }
     return true;
   }
 
@@ -8173,7 +8253,101 @@ const DESIGN = (() => {
     else if((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && selId){ rot(); }
     else if(e.key === 'Escape'){ selId = null; setTool('select'); }
   });
-  return {init, open, view, setActive, badge, labels, hidesRoom, hidesWP, walkRoom, click, hover, sel: () => sel};
+  return {init, open, view, setActive, badge, labels, hidesRoom, hidesWP, walkRoom, click, hover, sel: () => sel, choose, modeVar, nameOf, walking: () => walking};
+})();
+/* ---------------- r35 design ideas: what is an idea, what is the house, and the way back ----------------
+   The house on sale is the house as built. A layout idea shows only in Design and in the walk-through started from it; paint and
+   landscape ideas last for the visit; none of them is restored on a reload. Whenever an idea is showing, the screen says which,
+   in Design and outside it, and one button puts the house back as it is today. */
+const IDEAS35 = (() => {
+  const css = document.createElement('style'); css.id = 'r35designCss'; css.textContent = `
+.design .dnow{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:9px 11px;border-radius:10px;background:var(--hov27,rgba(27,31,34,.05));font-size:12.5px;line-height:1.4}
+.design .dnow p{margin:0;flex:1 1 160px;color:var(--ink)}
+.design .dnow.on{background:rgba(190,132,36,.16);box-shadow:inset 3px 0 0 #b9812a}
+html .design .dnow .tool{flex:0 0 auto;font-weight:600;background:var(--ink);color:var(--paper);border-color:transparent}
+.design .dlab{font-family:inherit;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink);margin-bottom:7px}
+.design .opts{display:grid;grid-template-columns:1fr;gap:6px}
+html .design .opt{display:grid;grid-template-columns:16px 1fr auto;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 12px;font-size:14px;font-weight:500;text-align:left;border-radius:10px;line-height:1.2}
+.design .opt::before{content:"";width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;opacity:.5;box-sizing:border-box}
+.design .opt[aria-checked="true"]::before{opacity:1;border-width:5px}
+html .design .opt small{display:block;margin:0;font-family:inherit;font-size:12px;font-weight:400;text-align:right;white-space:nowrap}
+.design .dact .btn{min-height:38px}
+.design .dnote[hidden]{display:none}
+html .design .tool{min-height:36px;padding:6px 11px;font-size:12.5px}
+.design .seg button{min-height:32px;padding:5px 14px}
+.design .pals{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+html .design .pal{min-height:40px;padding:6px 10px 6px 6px;font-size:13px;border-radius:10px;justify-content:flex-start}
+.design .pal i{width:36px;height:24px;border-radius:5px}
+html .design .pal[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
+.design .prow{gap:6px 12px}
+.design .prow label{min-height:36px}
+.design .prow input[type=color]{width:36px;height:30px;border-radius:6px;cursor:pointer}
+.design .lrow{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-bottom:8px}
+.design .lrow label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.design .lrow label.ck35{flex-direction:row;align-items:center;gap:8px;color:var(--ink);min-height:34px;cursor:pointer}
+html .design .lrow select{margin:0;width:100%;min-height:38px;padding:6px 8px;font-size:13px;border-radius:10px}
+.design input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--accent);flex:0 0 auto}
+.design .dnote{font-size:12px;line-height:1.45}
+.design :is(button,select,input,summary):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+html.ph .design .opt{min-height:48px}
+html.ph .design .tool,html.ph .design .seg button,html.ph .design .dact .btn{min-height:42px}
+html.ph .design .pal{min-height:44px}
+html.ph .design .lrow select{min-height:44px}
+html.ph .design .lrow label.ck35{min-height:42px}
+.ideas35{position:absolute;left:50%;transform:translateX(-50%);top:calc(max(12px, env(safe-area-inset-top,0px)) + 58px);z-index:6;display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap;justify-content:center;
+  width:max-content;max-width:min(720px, calc(100% - 32px));box-sizing:border-box;padding:6px 6px 6px 14px;border-radius:18px;background:var(--glass-hi,var(--glass));border:1px solid var(--rim27,var(--line));box-shadow:var(--shadow);color:var(--ink);font-size:12.5px;line-height:1.35}
+.ideas35[hidden]{display:none}
+.ideas35 span{display:inline-flex;align-items:center;gap:8px;padding:3px 0}
+.ideas35 span::before{content:"";flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:#b9812a}
+.ideas35 button{border:0;border-radius:999px;background:var(--ink);color:var(--paper);font:inherit;font-weight:600;padding:7px 12px;min-height:32px;cursor:pointer;white-space:nowrap}
+.ideas35 button.alt35{background:var(--hov27,rgba(27,31,34,.08));color:var(--ink)}
+.ideas35 button[hidden]{display:none}
+.ideas35 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+html.ideas35on .qhint{top:calc(max(12px, env(safe-area-inset-top,0px)) + 112px)}
+html.ph .ideas35{top:calc(max(6px, env(safe-area-inset-top,0px)) + 62px);font-size:12px;padding:6px 6px 6px 12px}
+html.ph .ideas35 button{min-height:36px}
+html.ph.ideas35on .qhint{top:calc(max(6px, env(safe-area-inset-top,0px)) + 124px)}
+html.clean27 .ideas35{opacity:0;visibility:hidden;pointer-events:none}
+html.v33game .ideas35{display:none}
+`; document.head.appendChild(css);
+  // in Design: one line at the top of the panel that says what is on screen, and the way back
+  const now = document.createElement('div'); now.className = 'dnow'; now.id = 'dNow';
+  now.innerHTML = '<p id="dNowTxt" role="status"></p><button type="button" class="tool" id="dToday" hidden>Show the house as it is today</button>';
+  $('#design').insertBefore(now, $('#design').firstChild);
+  // outside Design: the same, as a small strip under the top bar, only while an idea is showing
+  const chip = document.createElement('div'); chip.className = 'ideas35'; chip.id = 'ideas35'; chip.hidden = true; chip.setAttribute('role', 'status');
+  chip.innerHTML = '<span id="ideas35Txt"></span><button type="button" class="alt35" id="ideas35Back" hidden>Back to Design</button><button type="button" id="ideas35Today">Show the house as it is today</button>';
+  (document.querySelector('.bar') || $('#design')).after(chip);
+  for(const l of document.querySelectorAll('#design .lrow label')) if(l.querySelector('input[type=checkbox]')) l.classList.add('ck35');
+  const land = () => { try{ return LS.front !== 'today' || LS.back !== 'today' || !!(LS.fire || LS.tub || LS.boulders || LS.lights); }catch(e){ return false; } };
+  const paintName = () => { try{ const p = PAINT_EXT.state(); if(!p || p.pal === 'asbuilt') return ''; return p.pal === 'custom' ? 'your own paint colors' : ((PAINT_EXT.PALS.find(q => q.id === p.pal) || {name: 'new'}).name.toLowerCase() + ' paint'); }catch(e){ return ''; } };
+  function list(){ const L = [], s = mode === 'design' || DESIGN.walking() ? DESIGN.sel() : 'asbuilt'; if(s !== 'asbuilt') L.push(DESIGN.nameOf(s).toLowerCase() + ' layout'); const p = paintName(); if(p) L.push(p); if(land()) L.push('landscape ideas'); return L; }
+  let last = null;
+  function sync(){ const L = list(), walk = DESIGN.walking(), k = mode + '|' + walk + '|' + L.join(','); if(k === last) return; last = k;
+    $('#dNowTxt').textContent = L.length ? 'Showing ideas: ' + L.join(', ') + '. These are ideas, not the house as sold.' : 'You are looking at the house as it is today.';
+    now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length;
+    const out = mode !== 'design' && L.length > 0; chip.hidden = !out; document.documentElement.classList.toggle('ideas35on', out);
+    if(out){ $('#ideas35Txt').textContent = walk ? 'You are walking a remodel idea: ' + DESIGN.nameOf(DESIGN.sel()).toLowerCase() + '. The house is sold as built.' : 'Showing ideas: ' + L.join(', ') + '. Not the house as sold.'; $('#ideas35Back').hidden = !walk; }
+    try{ if(typeof window.__v33discPlace === 'function') window.__v33discPlace(); }catch(e){} }
+  let quiet = false;                                    // true while the reset below presses the as-built buttons itself
+  function today(){ quiet = true;
+    try{ const p = PAINT_EXT.state(); if(p && p.pal !== 'asbuilt'){ const b = document.querySelector('#pPal .pal[data-id="asbuilt"]'); if(b) b.click(); else PAINT_EXT.choose('asbuilt'); } }catch(e){ console.warn('[r35] paint reset', e); }
+    try{ if(land()){ for(const id of ['lsFront', 'lsBack']){ const el = $('#' + id); if(el) el.value = 'today'; } for(const id of ['lsFire', 'lsTub', 'lsBoulders', 'lsLights']){ const el = $('#' + id); if(el) el.checked = false; }
+        const el = $('#lsFront'); if(el) el.dispatchEvent(new Event('change', {bubbles: true})); } }catch(e){ console.warn('[r35] landscape reset', e); }
+    quiet = false;
+    const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); sync(); }
+  $('#dToday').onclick = today; $('#ideas35Today').onclick = today; $('#ideas35Back').onclick = () => setMode('design');
+  /* a good place to stand for each kind of idea (Design only): the outside is judged with the roof on, from the street or the yard */
+  const VIEWS = {street: [[24, 15, 66], [2, 5, 16]], front: [[40, 30, 78], [10, 0, 40]], back: [[-44, 34, -92], [-12, 0, -46]]};
+  function look(k, dur){ if(mode !== 'design' || quiet) return; try{ if(vis.level !== 'roof') setLevel('roof', {keepCam: true}); }catch(e){} const v = VIEWS[k] || VIEWS.street; flyTo(v[0], v[1], 'orbit', dur || 1.6); }
+  let lastLook = '';
+  const lookOnce = k => { if(mode !== 'design' || quiet) return; if(vis.level !== 'roof' || lastLook !== k){ lastLook = k; look(k); } };
+  $('#pPal').addEventListener('click', e => { if(e.target.closest && e.target.closest('.pal')){ lookOnce('street'); setTimeout(sync, 0); } });
+  for(const id of ['pBody', 'pTrim', 'pDoor']) $('#' + id).addEventListener('input', () => { lookOnce('street'); setTimeout(sync, 0); });
+  for(const [id, k] of [['lsFront', 'front'], ['lsBack', 'back'], ['lsFire', 'back'], ['lsTub', 'back'], ['lsBoulders', 'back'], ['lsLights', 'back']]){ const el = $('#' + id); if(el) el.addEventListener('change', () => { lookOnce(k); setTimeout(sync, 0); }); }
+  { const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); lastLook = ''; try{ sync(); }catch(e){} return r; }; }
+  setInterval(() => { try{ sync(); }catch(e){} }, 600);   // the View menu changes paint and landscape too
+  return {sync, today, look, list};
 })();
 
 /* ---------------- model check: geometry rules every build must pass ---------------- */
@@ -9192,13 +9366,13 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
         else { LS.front = LS.back = k; try{ localStorage.setItem('hillside.landscape', JSON.stringify(LS)); }catch(e){} buildLandscapeConcepts(); } }},
     paint: {btn: $('#paintBtn'), pop: $('#paintPop'), val: $('#paintVal'),
       items: () => (P() ? P().PALS : []).map(p => ({id: p.id, name: p.name, sub: '', icon: '<i class="sw">' + ['body', 'trim', 'door'].map(k => '<b style="background:' + (p[k] || asBuilt(k)) + '"></b>').join('') + '</i>'})),
-      head: 'Exterior colours \u00b7 siding, trim, garage door', more: 'Pick your own colours in',
+      head: 'Exterior colors \u00b7 siding, trim, garage door', more: 'Pick your own colors in',
       cur: palKey, label: k => (isPhone() && PAL_SHORT[k]) || palName(k),
       choose: k => { const p = P(); if(p) p.choose(k); }}
   };
   let open = null;
   function sync(){ for(const m of Object.values(menus)){ const k = m.cur(); m.val.textContent = m.label(k);
-    m.btn.setAttribute('aria-label', (m === menus.land ? 'Landscape: ' : 'Exterior colours: ') + (m === menus.land ? (k === 'mixed' ? 'mixed front and back' : LAND_NAME[k]) : palName(k)) + '. Open menu');
+    m.btn.setAttribute('aria-label', (m === menus.land ? 'Landscape: ' : 'Exterior colors: ') + (m === menus.land ? (k === 'mixed' ? 'mixed front and back' : LAND_NAME[k]) : palName(k)) + '. Open menu');
     for(const it of m.pop.querySelectorAll('[role=menuitemradio]')) it.setAttribute('aria-checked', String(it.dataset.id === k)); } }
   function render(m){
     const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
@@ -17287,7 +17461,7 @@ window.CORN31 = CORNMAZE;
     let v31rmDone = false;
     const v31remodel = () => { if(v31rmDone) return; try {
       if(typeof BIM === 'undefined' || !BIM || !(BIM.options || []).length) return;
-      const opts = [['asbuilt', 'As built']].concat((BIM.options || []).map(o => [o.id, o.name]));
+      const opts = [['asbuilt', 'As built']].concat((BIM.options || []).map(o => [o.id, DESIGN.nameOf ? DESIGN.nameOf(o.id) : o.name]));
       if(opts.length > 1 && typeof DESIGN !== 'undefined'){
         const row = document.createElement('button'); row.type = 'button'; row.className = 'tod v31rm'; row.setAttribute('aria-expanded', 'false');
         row.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 17V7l7-4 7 4v10H3zM8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Remodel ideas</span><em class="v31val"></em>';
@@ -17295,7 +17469,9 @@ window.CORN31 = CORNMAZE;
         const val = row.querySelector('.v31val'), cur = () => (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt');
         const paint = () => { const c = cur(); val.textContent = (opts.find(o => o[0] === c) || opts[0])[1]; sub.querySelectorAll('button').forEach(x => x.setAttribute('aria-checked', x.dataset.v === c ? 'true' : 'false')); };
         for(const [id, label] of opts){ const x = document.createElement('button'); x.type = 'button'; x.setAttribute('role', 'radio'); x.dataset.v = id; x.textContent = label;
-          x.addEventListener('click', e => { e.stopPropagation(); try { DESIGN.setActive(id); DESIGN.badge && DESIGN.badge(); if(id === 'asbuilt') { const st = typeof stopIdx !== 'undefined' ? stopIdx : 0; showStop(st, false); } } catch(err) { console.warn(err); } paint(); });
+          x.addEventListener('click', e => { e.stopPropagation(); try {   // r35 rule:design-opens-as-built - an idea opens in Design, where it is labelled; it never shows in Tour, Walk or Dollhouse
+              if(id === 'asbuilt'){ const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); }
+              else { if(mode !== 'design') setMode('design'); DESIGN.choose(id, true); } } catch(err) { console.warn(err); } paint(); });
           sub.appendChild(x); }
         row.addEventListener('click', e => { e.stopPropagation(); const o = !sub.classList.contains('open'); sub.classList.toggle('open', o); row.setAttribute('aria-expanded', o ? 'true' : 'false'); paint(); });
         const doll = document.getElementById('phDoll'), at = doll ? doll.nextSibling : menu.firstChild;
@@ -20864,10 +21040,10 @@ const R13C = {skip: /^(rug|rug2|art|mirror|wallMirror|tvWall|inWallSpeaker|towel
 function r13FootBox(o){ const ry = o.rotation.y, q = o.quaternion.clone(); o.rotation.set(0, 0, 0); o.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(o); o.quaternion.copy(q); o.updateMatrixWorld(true);
   return {b, ry, px: o.position.x, pz: o.position.z}; }
 function r13Pieces(groups){ const out = [], R17on = window.R17 && R17.on;
-  for(const gn of groups) for(const o of GROUPS[gn].children){ if(o.userData.r13) continue;
+  for(const gn of groups) for(const o of GROUPS[gn].children){ if(o.userData.r13 || !o.visible) continue;   // r35 rule:no-piece-no-shadow - a piece that is not shown (furniture off, removed in Design, hidden by a layout idea) casts no contact shadow
     if(gn === 'yard'){   // r17 R17-3: outdoor staging; site meshes, the pergola and lights are not pieces; a kind-less set (dining23, outdoorKitchen27) is its parts
       if(!o.isGroup || /^site\||pergola|fence|gate|screen/i.test(o.name || '')) continue;
-      if(!o.userData.kind && o.children.length > 1){ for(const c of o.children) if(c.isGroup || c.isMesh) out.push({o: c, gn, sub: true}); continue; } }
+      if(!o.userData.kind && o.children.length > 1){ for(const c of o.children) if((c.isGroup || c.isMesh) && c.visible) out.push({o: c, gn, sub: true}); continue; } }
     out.push({o, gn}); }
   return out; }
 function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].concat(window.R17 && R17.on ? ['yard'] : []).filter(g => GROUPS[g]), items = [], rugs = [], rep = {pieces: 0, floor: 0, onTop: 0, skipped: 0, outdoor: 0};
@@ -20937,16 +21113,27 @@ if(R13.on){
     try{ r13Shades(); }catch(e){ console.warn('[r13] shades', e); }
     try{ r13Ceil(); }catch(e){ console.warn('[r13] ceil', e); }
     R13.report.buildMs = +(performance.now() - t0).toFixed(1); R13.furnN = r13FurnN(); };
-  const r13FurnN = () => ['furn', 'furnU', 'furn@asbuilt'].reduce((a, g) => a + (GROUPS[g] ? GROUPS[g].children.length : 0), 0);
+  // r35 rule:no-piece-no-shadow - the contact shadows are one merged mesh per furniture group, so they must be rebuilt whenever what
+  // is shown changes, not only when the number of pieces does: Furniture off left every sofa, bed and rug-side table as a dark
+  // patch on the bare floor (owner 11/10), and a piece moved or removed in Design left its shadow behind. The signature is the
+  // pieces that are shown and where they stand; it is checked every frame and the mesh is rebuilt at once (at most every 150 ms
+  // while a piece is being dragged).
+  const r13FurnN = () => { let n = 0, h = 0; for(const g of ['furn', 'furnU', 'furn@asbuilt', 'yard']){ const G = GROUPS[g]; if(!G) continue;
+      for(const o of G.children){ if(o.userData.r13) continue; n++; if(!o.visible) continue; const p = o.position; h = (h + 1 + p.x * 3.1 + p.y * 7.7 + p.z * 13.3 + o.rotation.y * 17.9) % 1e6; } } return n + '|' + h.toFixed(3); };
+  let r13At = 0;
+  const r13Sync = () => { if(R13.built !== true) return; const s = r13FurnN(); if(s === R13.furnN) return; const now = performance.now(); if(now - r13At < 150) return; r13At = now;
+    for(const m of (R13.contact || [])){ m.parent && m.parent.remove(m); m.geometry.dispose(); } R13.contact = r13Contact(); R13.furnN = s; R13.report.rebuilt = (R13.report.rebuilt || 0) + 1;
+    try{ PERF.shadowDirty = true; }catch(e){} };
+  R13.sync = r13Sync;
   // after the loading screen is done (idle: no added load time), and again for the contact shadows if the furniture set changes (Design options)
   const poll = setInterval(() => { try{ const L = document.querySelector('#loading'); if(!(L && L.classList.contains('done')) || !BIM2S) return;
       if(!R13.built){ (window.requestIdleCallback || setTimeout)(go, {timeout: 1500}); R13.built = 'q'; return; }
-      if(R13.built === true && R13.furnN !== r13FurnN()){ for(const m of (R13.contact || [])){ m.parent && m.parent.remove(m); m.geometry.dispose(); } R13.contact = r13Contact(); R13.furnN = r13FurnN(); R13.report.rebuilt = (R13.report.rebuilt || 0) + 1; } }catch(e){} }, 1000);
+      r13Sync(); }catch(e){} }, 1000);
   // the corner bands fade with the page's own smoothed indoor factor, Tour / Walk only (exteriors, dollhouse, design: off)
   // own rAF tick (outside every render call: the SSAO normal pass hides these decals through o.visible, so visibility must never be
   // written from inside a scene render)
   const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0; R13.k.value = k;
-      if(R13.edges) for(const m of R13.edges) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick13); };
+      if(R13.edges) for(const m of R13.edges) m.visible = k > .01; r13Sync(); }catch(e){} requestAnimationFrame(tick13); };
   requestAnimationFrame(tick13); }
 BIM3.report.r13 = R13.report;
 /* ===== EASED EDGES r14 (11/4: r13 tells #6 / #7; bim3_work/r14) ===== ?r14-off turns the block off. */
