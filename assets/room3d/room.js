@@ -114,7 +114,7 @@
         else if(d.sk){ const it = skyItem(d.sk), r = it && it.rects && it.rects[0]; if(!r) continue; const c = new V3(r.c.x, r.c.y, r.c.z), u = new V3(r.u.x, r.u.y, r.u.z).multiplyScalar(r.hu), v = new V3(r.v.x, r.v.y, r.v.z).multiplyScalar(r.hv);
           out.push({id: d.sk, lit: d.lit, n: new V3(0, 1, 0), sky: true, quad: [c.clone().sub(u).sub(v), c.clone().add(u).sub(v), c.clone().add(u).add(v), c.clone().sub(u).add(v)]}); } }
       return out; },
-    strength(o, h){ const s = sunAt(h); const inc = s.v.dot(o.n); return clamp((s.alt - .03) / .09, 0, 1) * clamp(inc / .16, 0, 1) * smooth(.22, .6, litOf(o.lit, h)); },
+    strength(o, h){ const s = sunAt(h); const inc = s.v.dot(o.n); return clamp((s.alt - .03) / .09, 0, 1) * clamp(inc / .16, 0, 1) * smooth(.36, .62, litOf(o.lit, h)); },   // under about four rays in nine it is dapple, not sun
     // the hours a room has direct sun, as the game states them
     facts(slot){ const O = SUN.openings(slot); let am = false, pm = false, any = false; const spans = []; let open = null;
       for(let h = H0; h <= H1 + 1e-6; h += .25){ let m = 0; for(const o of O) m = Math.max(m, SUN.strength(o, h)); const on = m >= .45;
@@ -134,7 +134,7 @@
       const api = {slot, mesh, O, level: 0,
         update(){ const s = sunAt(S.hour), d = s.v, low = 1 - Math.min(1, d.y / .5); g.clearRect(0, 0, cv.width, cv.height); let any = 0;
           const proj = v => { const t = (v.y - fy) / Math.max(.02, d.y); return new V3(v.x - d.x * t, fy, v.z - d.z * t); };
-          for(const o of O){ const k = SUN.strength(o, S.hour); o.s = k; if(k <= .01) continue; any = Math.max(any, k); const q = o.quad.map(proj).map(px);
+          for(const o of O){ const k = SUN.strength(o, S.hour); o.s = k; if(k < .3) continue; any = Math.max(any, k); const q = o.quad.map(proj).map(px);
             g.save(); g.globalAlpha = k; g.beginPath(); q.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath();
             const warm = `rgb(255,${Math.round(238 - 46 * low)},${Math.round(206 - 86 * low)})`;
             if(o.film){ const gr = g.createLinearGradient(q[0][0], q[0][1], q[1][0], q[1][1]); ['#ff6b6b', '#ffb347', '#fff275', '#7be495', '#6ec5ff', '#b28dff', '#ff8ad4'].forEach((c, i, a) => gr.addColorStop(i / (a.length - 1), c));
@@ -955,7 +955,7 @@
       const scan = (pts, n, inside) => { let s = ''; for(let h = H0; h <= H1 + 1e-6; h += .5){ const su = sunAt(h); if(su.alt < .035 || su.v.dot(n) < .08){ s += '0'; continue; } let lit = 0;
           for(const p of pts){ rc.set(p, su.v); rc.far = 700; if(rc.intersectObjects(solids, false).length) continue; if(inside){ rc.set(p.clone().addScaledVector(su.v, -.5), su.v.clone().negate()); rc.far = 40; const hit = rc.intersectObjects(solids, false)[0]; if(!hit || hit.point.y > fy + 7) continue; } lit++; }
           s += String(Math.round(lit / pts.length * 9)); } return s; };
-      for(const o of M.openings){ if(o.class !== 'IfcWindow' && !(o.class === 'IfcDoor' && (o.glazed || 0) > .4)) continue; const A = o.spaces.A, B = o.spaces.B; if(!((A === sp && B === 'EXTERIOR') || (B === sp && A === 'EXTERIOR'))) continue;
+      for(const o of M.openings){ if(!((o.glazed || 0) >= .5)) continue; const A = o.spaces.A, B = o.spaces.B; if(!((A === sp && B === 'EXTERIOR') || (B === sp && A === 'EXTERIOR'))) continue;
         const op = opening(o.id), pts = []; for(const a of [-.32, 0, .32]) for(const v of [.25, .5, .75]) pts.push(op.P(a * o.width, o.sill + (o.head - o.sill) * v, -.6)); out.push({id: o.id, lit: scan(pts, new V3(op.out[0], 0, op.out[1]), false)}); }
       const skies = [].concat(...(RINGS[slot] || []).filter(q => q.sky).map(q => q.sky));
       for(const id of skies){ const it = skyItem(id), r = it && it.rects && it.rects[0]; if(!r) continue; const pts = []; for(const a of [-.6, 0, .6]) for(const b of [-.6, 0, .6]) pts.push(new V3(r.c.x + r.u.x * r.hu * a + r.v.x * r.hv * b, r.c.y + r.u.y * r.hu * a + r.v.y * r.hv * b + .5, r.c.z + r.u.z * r.hu * a + r.v.z * r.hv * b)); out.push({sk: id, lit: scan(pts, new V3(0, 1, 0), true)}); }
@@ -963,7 +963,7 @@
     // the model against room-logic.js: levels, hallways, walls, what is over what, and the sun
     verify(){ const M = H.BIM2S.meta, bad = [], SL = LG.SLOTS, bySp = {}; for(const id of ORDER) bySp[SL[id].sp] = id;
       const lvOfZ = z => z > 4 ? 'upper' : z > -1 ? 'main' : z > -4 ? 'garage' : 'lower'; for(const id of ORDER) if(lvOfZ(GEO[id].fy) !== SL[id].lv) bad.push('level ' + id);
-      const doorsOf = sp => M.openings.filter(o => o.class !== 'IfcWindow' && (o.spaces.A === sp || o.spaces.B === sp)).map(o => o.spaces.A === sp ? o.spaces.B : o.spaces.A);
+      const doorsOf = sp => M.openings.filter(o => /^(D|OP)-/.test(o.id) && (o.spaces.A === sp || o.spaces.B === sp)).map(o => o.spaces.A === sp ? o.spaces.B : o.spaces.A);
       const hall = (a, b) => doorsOf(SL[a].sp).some(h => /HALL$/.test(h) && doorsOf(SL[b].sp).indexOf(h) >= 0);
       for(const a of LG.BEDS) for(const b of LG.BEDS){ if(a >= b) continue; const want = LG.HALLS.some(p => p.indexOf(a) >= 0 && p.indexOf(b) >= 0); if(hall(a, b) !== want) bad.push('hall ' + a + '/' + b); }
       const shared = (a, b) => { let tot = 0; const A = GEO[a].P, B = GEO[b].P; for(let i = 0; i < A.length; i++){ const p1 = A[i], p2 = A[(i + 1) % A.length], L1 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]); if(L1 < .3) continue; const u = [(p2[0] - p1[0]) / L1, (p2[1] - p1[1]) / L1];
@@ -980,8 +980,8 @@
   /* ================================================================== boot: after the house is ready */
   function loadScript(src, cb){ const s = document.createElement('script'); s.src = src; s.onload = () => cb(true); s.onerror = () => cb(false); document.head.appendChild(s); }
   function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){}
-    // beds in the bedrooms: the game needs the furniture on, and puts the visitor's own saved choice back straight away
-    try{ const fb = document.getElementById('furnBtn'); if(fb && fb.getAttribute('aria-pressed') === 'false'){ const k = 'hillside.furniture', was = localStorage.getItem(k); fb.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){}
+    // beds in the bedrooms and the oak outside the windows: the game needs the furniture and the trees on, and puts the visitor's own saved choice back straight away
+    for(const [id, k] of [['furnBtn', 'hillside.furniture'], ['treesBtn', 'hillside.trees']]) try{ const b = document.getElementById(id); if(b && b.getAttribute('aria-pressed') === 'false'){ const was = localStorage.getItem(k); b.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){}
     const base = (document.currentScript && document.currentScript.src) || '';
     loadScript('../assets/room3d/room-logic.js?v=1', () => loadScript('../assets/room3d/room-data.js?v=1', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
         try{ measure(); buildUI(); buildLabels(); TINT.build(); S.view = 'title'; HOUSE.over(); orbitFit(); rigCut(orbitPose()); UI.live = true; applyHour(13, true); setTimeout(() => { try{ dev.verify(); }catch(e){ console.warn('[room] verify', e); } }, 4000); }catch(e){ console.error('[room] build', e); }
