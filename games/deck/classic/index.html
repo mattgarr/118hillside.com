@@ -9,13 +9,13 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="118 Hillside Drive, Woodside">
 <meta property="og:title" content="Deck the House with Snowball | 118 Hillside Drive">
-<meta property="og:description" content="Decorate a real Woodside house for the holidays with a black cat named Snowball, then light it up at dusk.">
+<meta property="og:description" content="Decorate a real Woodside house for the holidays with an orange tabby cat named Snowball, then light it up at dusk.">
 <meta property="og:url" content="https://118hillside.com/games/deck/">
 <meta property="og:image" content="https://118hillside.com/images/deck-preview.jpg">
 <meta property="og:image:alt" content="118 Hillside Drive decorated for the holidays at dusk, with Snowball the cat on the porch">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Deck the House with Snowball | 118 Hillside Drive">
-<meta name="twitter:description" content="Decorate a real Woodside house for the holidays with a black cat named Snowball, then light it up at dusk.">
+<meta name="twitter:description" content="Decorate a real Woodside house for the holidays with an orange tabby cat named Snowball, then light it up at dusk.">
 <meta name="twitter:image" content="https://118hillside.com/images/deck-preview.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#18213a">
@@ -540,7 +540,7 @@ const STEPS = [
     {v: 'hanukkah', b: 'Hanukkah', n: 'The menorah, blue and white', say: 'Eight nights of candles in the window. I will supervise from a safe distance.'},
     {v: 'kwanzaa', b: 'Kwanzaa', n: 'The kinara, red, black and green', say: 'Seven candles, seven principles. I respect anything with a schedule.'},
     {v: 'diwali', b: 'Diwali', n: 'Diyas, rangoli, marigolds', say: 'Little lamps everywhere. Light wins. I am in favor.'},
-    {v: 'solstice', b: 'Winter solstice', n: 'Candles and evergreens on the longest night', say: 'The longest night of the year. Finally, a holiday for black cats.'},
+    {v: 'solstice', b: 'Winter solstice', n: 'Candles and evergreens on the longest night', say: 'The longest night of the year. Finally, a holiday for cats.'},
     {v: 'lunar', b: 'Lunar New Year', n: 'Red lanterns, a little early', say: 'Red lanterns in December. Planning ahead. I like it.'},
     {v: 'lights', b: 'Just the lights', n: 'No tradition required', say: 'No theme, just glow. Honestly the purest option.'}]},
   {id: 'lights', scene: 'front', title: 'The roofline', help: 'One string along every edge of the roof. Pick the lights, then how they move.', type: 'single', key: 'lights', options: [
@@ -607,7 +607,7 @@ const STEPS = [
     {v: 'snowday', b: 'A real snow day', n: 'Snow on the roofs, the walk, everything', say: 'So this is snow. Cold, wet, and somehow named after me.'}],
     seg: {key: 'yard', label: 'In the snow', when: s => s.weather === 'snowday', opts: [['none', 'Nothing'], ['snowman', 'A snowman'], ['snowcat', 'A snow cat']], say: {snowman: 'A snowman. He looks like he would be nice to sit near.', snowcat: 'A snow cat. Finally, a sculpture of someone important.', none: 'Untouched snow. Except for my footprints.'}}},
   {id: 'wear', scene: 'front', title: 'One more thing', help: 'Snowball would like to be festive, within reason.', type: 'single', key: 'wear', options: [
-    {v: 'none', b: 'Nothing, thanks', n: 'He is already a classic', say: 'I am already wearing black. It goes with everything.'},
+    {v: 'none', b: 'Nothing, thanks', n: 'He is already a classic', say: 'I am already wearing orange. It goes with everything.'},
     {v: 'scarfRed', b: 'Red scarf', n: 'Striped, cozy', say: 'A red scarf. I look like I am about to go caroling. I am not.'},
     {v: 'scarfBlue', b: 'Blue and white scarf', n: 'Stripes, very soft', say: 'Blue and white. Very dapper.'},
     {v: 'scarfGreen', b: 'Green and gold scarf', n: 'Forest green, gold stripes', say: 'Green and gold. Matches my eyes. Mostly my eyes.'},
@@ -646,7 +646,7 @@ const GUESTS = [
    ok: s => s.path.includes('diyas'), yes: "Diyas on the steps! The kids are counting every one.", no: "Lovely house. The kids asked where the little lamps were.", hint: 'Light that starts at your feet, on the front steps. Small clay lamps.'},
   {id: 'amara', name: 'Amara', who: "Iris's roommate, here for break", c: '#2d6b3c', at: 'tree', step: 'room', msg: "My mom sets ours on a woven mat, with corn and fruit around it. I've never been away for Kwanzaa before.",
    ok: s => s.room.includes('kinara'), yes: "You set out the mkeka and everything. It feels like home.", no: "It's okay. I'll call my mom later.", hint: "Amara's family sets the kinara on a mat with the harvest around it. One kinara here comes with a mat."},
-  {id: 'snowball', name: 'Snowball', who: 'cat', c: '#14161c', at: 'room', step: 'room', msg: "I have asked for one thing. It is cardboard. It is empty.",
+  {id: 'snowball', name: 'Snowball', who: 'cat', c: '#c2611c', at: 'room', step: 'room', msg: "I have asked for one thing. It is cardboard. It is empty.",
    ok: s => s.room.includes('box'), yes: "The box is acceptable.", no: "No box. I see how it is.", hint: 'It is a box. I would like the box.'},
   {id: 'twins', name: 'Leo & Max', who: 'the twins', c: '#7b4fd6', at: 'oak', step: 'weather', msg: "WE ASKED THE SKY FOR SNOW. if it works we are building something",
    ok: s => s.weather === 'snowday' && s.yard !== 'none', yes: "IT SNOWED. WE BUILT IT. BEST HOUSE EVER.", no: "no snow?? we asked so nicely", hint: 'The twins want real snow, and they want to build something in it.'}];
@@ -728,7 +728,7 @@ function choose(st, v){ touched.add(st.id); const o = st.options.find(x => x.v =
 function choose2(st, v){ touched.add(st.id); const a = S[st.multi2.key], i = a.indexOf(v), o = st.multi2.options.find(x => x.v === v); if(i >= 0) a.splice(i, 1); else { a.push(v); say(o.say); } chime(1.15); renderStep(); drawScene(st.scene); }
 function renderIntro(){ day = true; $('#msgs').hidden = true;
   $('#step').innerHTML = `<h1>Deck the House</h1><p class="story">It is Elena and Marcus's first holiday at 118 Hillside Drive, and they have invited everyone for tonight. Family, neighbors, the twins' friends. Each guest is hoping for one thing that says home to them.</p>
-    <p class="help">Read their messages as they come in, and get the house ready before dark with Snowball, the family's black cat. Then light it up and see who feels at home.</p>
+    <p class="help">Read their messages as they come in, and get the house ready before dark with Snowball, the family's orange tabby. Then light it up and see who feels at home.</p>
     <div class="field"><label for="nm">Whose house is it this year? (optional, goes on your postcard)</label><input id="nm" maxlength="32" placeholder="the Parks" autocomplete="off" value="${esc(S.name)}"></div>
     <div class="modes"><button class="btn primary big" id="begin" type="button">Get the house ready</button><button class="btn" id="free" type="button">Just decorate</button></div>`;
   say('Everyone is coming tonight. Nothing is decorated. I have notes.'); drawScene('front');
