@@ -8939,6 +8939,16 @@ async function buildLightFixtures(){
   // primary bedroom ceiling fan (Minka-Aire Java 54", polished nickel)
   const fan = L.feature_fixtures.find(f => /bedroom fan/i.test(f.item) && f.x != null);
   window.__FANS = [];
+  /* r37: the Minka-Aire Java 54 in LED (F753L): canopy, downrod, a shallow drum housing, three wide blades that flare from the hub and sweep back to a rounded tip at a 14 degree pitch, and a flat opal lens under the housing. Origin at the ceiling. */
+  function r37JavaFan(rod, body, blade){ const g = new THREE.Group(), add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+    add(new THREE.CylinderGeometry(.2, .24, .14, 28), body, 0, -.07, 0); add(new THREE.CylinderGeometry(.035, .035, rod + .1, 12), body, 0, -.14 - rod / 2, 0);
+    const yM = -.14 - rod - .16, pr = [[0, .16], [.1, .16], [.17, .12], [.3, .09], [.345, .04], [.35, -.06], [.31, -.12], [0, -.12]].map(q => new THREE.Vector2(q[0], q[1])); add(new THREE.LatheGeometry(pr, 36), body, 0, yM, 0);
+    const lens = new THREE.Mesh(new THREE.SphereGeometry(.26, 28, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({color: 0xfff6e6, emissive: 0xfff0d2, emissiveIntensity: .85, roughness: .6})); lens.scale.y = .32; lens.position.y = yM - .12; g.add(lens);
+    const R = 2.25, r0 = .3, sw = x => -.2 * Math.pow((x - r0) / (R - r0), 2), s = new THREE.Shape(), P = (x, y) => [x, y + sw(x)];
+    s.moveTo(...P(r0, .09)); s.quadraticCurveTo(...P(.9, .13), ...P(1.35, .27)); s.quadraticCurveTo(...P(1.9, .34), ...P(R - .12, .2)); s.quadraticCurveTo(...P(R + .03, .06), ...P(R - .1, -.1)); s.quadraticCurveTo(...P(1.8, -.3), ...P(1.2, -.27)); s.quadraticCurveTo(...P(.7, -.2), ...P(r0, -.1)); s.lineTo(...P(r0, .09));
+    const bg = new THREE.ExtrudeGeometry(s, {depth: .022, bevelEnabled: true, bevelThickness: .006, bevelSize: .006, bevelSegments: 1, curveSegments: 10});
+    for(let i = 0; i < 3; i++){ const h = new THREE.Group(); h.rotation.y = i * Math.PI * 2 / 3; h.position.y = yM + .02; const m = new THREE.Mesh(bg, blade); m.rotation.x = -Math.PI / 2 + .244; m.castShadow = true; m.receiveShadow = true; h.add(m); g.add(h); }
+    g.userData.java = true; return g; }
   for(const f of L.feature_fixtures.filter(f => f.kind === 'ceilingFan' || /\bfans?\b/i.test(f.item)) ) if(window.FIX && FIX.make){ try{
     const fz = LEVEL_Z[f.level] != null ? LEVEL_Z[f.level] : 0, isUp = fz > 4, IN_ = 1 / 12, spots = [];
     if(f.x != null) spots.push([f.x, f.y, f.item]);
@@ -8951,12 +8961,14 @@ async function buildLightFixtures(){
     if(f.qty && spots.length > f.qty){ const pref = f.prefer || 'E'; spots.sort((u, v) => pref === 'E' ? v[0] - u[0] : u[0] - v[0]); spots.length = f.qty; }
     const nick = true, dark = !nick;   /* r36 owner 11/11: the fans are the Minka-Aire Java 54 in LED in brushed nickel - three blades the same brushed-nickel finish as the housing (not white, not polished), opal LED lens underneath */
     const dia = +(((f.size || '').match(/(\d+)\s*in/) || [0, 52])[1]) * IN_, rodRec = (f.fixture || '').match(/(\d+)\s*in[^,]*downrod/), rod0 = rodRec ? +rodRec[1] * IN_ : 1.0;
-    const body = nick ? new THREE.MeshStandardMaterial({color: 0xc3c5c7, metalness: .9, roughness: .4}) : new THREE.MeshStandardMaterial({color: 0x3a3532, metalness: .45, roughness: .45});
-    const blade = nick ? new THREE.MeshStandardMaterial({color: 0xbcbec0, metalness: .85, roughness: .44}) : new THREE.MeshStandardMaterial({color: 0x34302d, metalness: .3, roughness: .5});
+    const body = nick ? new THREE.MeshStandardMaterial({color: 0xcdd0d2, metalness: .6, roughness: .4}) : new THREE.MeshStandardMaterial({color: 0x3a3532, metalness: .45, roughness: .45});
+    const blade = nick ? new THREE.MeshStandardMaterial({color: 0xc6c9cb, metalness: .25, roughness: .5}) :   /* r37: the Java's blades are silver polycarbonate (spec sheet F753L-BNW), which reads light in daylight, not dark like bare metal */
+       new THREE.MeshStandardMaterial({color: 0x34302d, metalness: .3, roughness: .5});
     for(const [bx, by, where] of spots){
       let cz = bim2CeilingAt(bx, by, fz).z; for(let a = 0; a < 8; a++) cz = Math.max(cz, bim2CeilingAt(bx + .14 * Math.cos(a * Math.PI / 4), by + .14 * Math.sin(a * Math.PI / 4), fz).z);
-      const rod = Math.max(.25, Math.min(rod0, cz - (fz + 8) - .45)), [wx, wz] = W2(bx, by);
-      const o = FIX.make('ceilingFan', {dia: nick ? 54 / 12 : dia, downrod: rod, light: nick || /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
+      let rod = Math.max(.25, Math.min(rod0, cz - (fz + 8) - .45)); const [wx, wz] = W2(bx, by);
+      if(nick){ let lo = cz; for(let a = 0; a < 8; a++) lo = Math.min(lo, bim2CeilingAt(bx + 2.25 * Math.cos(a * Math.PI / 4), by + 2.25 * Math.sin(a * Math.PI / 4), fz).z); rod = clamp(Math.max(rod, cz - lo + .7 - .5), .5, 2); }   // r37: long enough that the blade tips clear a sloped ceiling by 8 in
+      const o = nick ? r37JavaFan(rod, body, blade) : FIX.make('ceilingFan', {dia: nick ? 54 / 12 : dia, downrod: rod, light: nick || /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
       o.traverse(k => { if(!k.isMesh) return; if(k.name === 'blackMetal') k.material = body; else if(k.name === 'plasticWhite') k.material = blade; k.castShadow = true; k.receiveShadow = true; });
       o.position.set(wx, cz, wz); o.rotation.y = Math.PI / 6; o.userData.kind = 'ceilingFan'; grp(isUp ? 'furnU' : 'furn').add(o);
       window.__FANS.push({item: f.item, where, x: +bx.toFixed(2), y: +by.toFixed(2), ceiling: +cz.toFixed(2), downrod: +rod.toFixed(2), dia: +dia.toFixed(2), bladesAFF: +(cz - .2 - rod - .24 - fz).toFixed(2)}); }
