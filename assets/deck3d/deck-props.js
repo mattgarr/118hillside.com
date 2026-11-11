@@ -115,7 +115,8 @@
     const MODES = {steady: 0, twinkle: 1, chase: 2, breathe: 3};
     function buildRoof(S){ if(S.lights === 'none' || !PAL[S.lights]) return null; const g = grp('roof'), pal = PAL[S.lights], kind = S.lights, mini = kind === 'fairy' || kind === 'marigold', ice = kind === 'icicle', R = rng(5);
       const pts = [], wires = []; let q0 = 0, k = 0;
-      ROOF.forEach(e => { const line = e.p.map(p => new V3(p[0] + e.n[0] * .34, p[1] - .24, p[2] + e.n[1] * .34)); wires.push(line);
+      ROOF.forEach(e => { const lvl = e.p.every(p => Math.abs(p[1] - e.p[0][1]) < .02), out = lvl ? .54 : .34, dn = lvl ? .12 : .24;   // level eaves carry a gutter (.42 deep, .36 tall): clip the string to its front lip, not inside it
+        const line = e.p.map(p => new V3(p[0] + e.n[0] * out, p[1] - dn, p[2] + e.n[1] * out)); wires.push(line);
         along(line, ice ? .62 : mini ? .4 : 1.02, .3).forEach(s => { const sag = mini ? Math.sin(s.q * 2.4) * .05 : 0;
           if(ice){ const n = 2 + Math.floor(R() * 5); for(let j = 0; j < n; j++) pts.push({p: new V3(s.p.x, s.p.y - .05 - j * .24, s.p.z), c: pal[(k + j) % pal.length], s: .5, q: q0 + s.q + j * .8, r: .028}); k++; }
           else pts.push({p: new V3(s.p.x, s.p.y - (mini ? .02 : .1) + sag, s.p.z), c: pal[k++ % pal.length], s: mini ? .7 : 1.5, q: q0 + s.q, r: mini ? .036 : .09, dark: pal[(k - 1) % pal.length] === '#141414'}); });
