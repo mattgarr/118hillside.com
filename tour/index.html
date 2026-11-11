@@ -20180,8 +20180,7 @@ function r36CarveOpenings(){ const rep = [];
 /* r36 owner 11/11 (two screenshots, primary bedroom: "some geometry funkiness going on here"): the ceiling read as overlapping strips of different
    tint with a dotted seam, and a tan sloped sheet came through the blue wall under it. Cause, from the model's own planes: the room's gable
    ceiling breaks to the shallower shed-dormer slope 12.62 ft from the ridge side (world x = -12.62), but (a) the gable ceiling plane was built on
-   past the break to the old wall line, hanging under the dormer ceiling as a wedge, (b) the dormer ceiling was built exactly in the plane of the
-   dormer roof's underside (z-fighting: the dotted line), and (c) the main roof's east slope (shingles, soffit, fascia) was never cut where the
+   past the break to the old wall line, hanging under the dormer ceiling as a wedge, (b) the dormer bay had no ceiling at all: what showed was the dormer roof's own underside, in the eave colour, and (c) the main roof's east slope (shingles, soffit, fascia) was never cut where the
    dormer replaces it, so it ran on through the room below the ceiling. P1 cuts each of those back to the break line / out of the room, leaving
    two ceiling planes that meet in one straight line. r36CutTris removes the part of the chosen triangles inside a plan rectangle. */
 function r36CutTris(rx, rect, sel, tag){
@@ -20212,7 +20211,9 @@ function r36PrimaryCeiling(){
   // the plane through a triangle, read at the middle of the dormer bay
   const at = (a, b, c) => { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; if(Math.abs(ny) < 1e-6) return null; return a[1] - (nx * (xc - a[0]) + nz * (zc - a[2])) / ny; };
   r36CutTris(/^ceilings\|L2\|/, R, (a, b, c) => [a, b, c].every(v => Math.abs(v[1] - gable(v[0])) < .06), 'primary gable ceiling past the break');
-  r36CutTris(/^(roofs\||trim\|-\|)/, R, (a, b, c) => { const y = at(a, b, c); if(y == null){ const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3]; return m[1] < dorm(m[0]) + .03 && m[1] > 12.2; } return y < dorm(xc) + .03 && y > 12.2; }, 'roof inside the primary dormer bay'); }
+  r36CutTris(/^(roofs\||trim\|-\|)/, R, (a, b, c) => { const y = at(a, b, c); if(y == null){ const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3]; return m[1] < dorm(m[0]) - .02 && m[1] > 12.2; } return y < dorm(xc) - .02 && y > 12.2; }, 'main roof inside the primary dormer bay');
+  // the dormer bay had no ceiling of its own (the roof's tan underside showed): one painted plane just under it, in the upper level's ceiling mesh
+  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xB, dorm(xB) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -26.1], [xB, dorm(xB) - .03, -26.1], [0, -1, 0]]]); }
 { const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); }
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
