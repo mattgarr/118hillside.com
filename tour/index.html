@@ -20258,8 +20258,16 @@ function r36PrimaryCeiling(){
   r36CutTris(/^ceilings\|L2\|/, R, (a, b, c) => [a, b, c].every(v => Math.abs(v[1] - gable(v[0])) < .06), 'primary gable ceiling past the break');
   r36CutTris(/^(roofs\||trim\|-\|)/, R2, (a, b, c) => { const y = at(a, b, c); if(y == null){ const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3]; return m[1] < dorm(m[0]) - .02 && m[1] > 12.2; } return y < dorm(xc) - .02 && y > 12.2; }, 'main roof inside the primary dormer bay');
   // the dormer bay had no ceiling of its own (the roof's tan underside showed): one painted plane just under it, in the upper level's ceiling mesh
-  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xB, dorm(xB) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -26.1], [xB, dorm(xB) - .03, -26.1], [0, -1, 0]],
-    [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]]]); }   // and the bay's end, where the gable carries on below it
+  /* r37: the bay's plane now starts a hair under the gable just past the break (the 3/8 in step there showed as a dotted line), reaches both end walls, and the hole the model left in the gable ceiling beside the bay's end (the roof soffit showed through it as loose panels) is closed */
+  const xL = xB - .04;
+  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xL, gable(xL) - .005, -36.52], [-8.76, dorm(-8.76) - .03, -36.52], [-8.76, dorm(-8.76) - .03, -26.15], [xL, gable(xL) - .005, -26.15], [0, -1, 0]],
+    [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]],   // and the bay's end, where the gable carries on below it
+    [[-12.5, gable(-12.5) - .012, -37.8], [-10.78, gable(-10.78) - .012, -37.8], [-10.78, gable(-10.78) - .012, -36.5], [-12.5, gable(-12.5) - .012, -36.5], [0, -1, 0]]]);
+  // wall paint where the model left bare framing: the bath-side gable above 15.7 ft right of the ridge, that wall inside the bay, and the top of the short return wall at the bay's other end
+  r36AddFaces(/^walls\|L2\|paint-int-flat#PAINT-SW-6241-ALEUTIAN$/, 'R37-PRIMARY-WALLS', [
+    [[-17.6, 15.7, -26.17], [(7.3135 - 15.7) / .583, 15.7, -26.17], [-17.6, gable(-17.6), -26.17], [-17.6, gable(-17.6), -26.17], [0, 0, -1]],
+    [[xB, gable(xB) - .05, -26.17], [-8.78, gable(-8.78) - .05, -26.17], [-8.78, dorm(-8.78), -26.17], [xB, dorm(xB), -26.17], [0, 0, -1]],
+    [[-10.78, 13.6, -36.5], [-8.78, 13.6, -36.5], [-8.78, dorm(-8.78), -36.5], [-10.78, dorm(-10.78), -36.5], [0, 0, 1]]]); }
 { const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); }
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36GableCasing(); }catch(e){ console.warn('[r36] gable casing', e); R36G.err.push(String(e)); }
