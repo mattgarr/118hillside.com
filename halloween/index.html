@@ -1504,23 +1504,24 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     b.classList.remove('v33top'); b.style.setProperty('--v33up', '0px'); b.style.setProperty('--v33dn', '0px');
     r = b.getBoundingClientRect(); h = r.height; y = r.bottom; n = 0;
     while(n++ < 12 && (m = hits(r.left, y - h, r.right, y, O))) y = Math.min.apply(null, m.map(function(q){ return q.top; })) - 8;
-    if(y - h >= H * .5){ b.style.setProperty('--v33up', Math.round(r.bottom - y) + 'px'); return; }
+    if(y - h >= H * .5){ b.style.setProperty('--v33up', Math.round(r.bottom - y) + 'px'); return true; }
     b.classList.add('v33top'); r = b.getBoundingClientRect(); y = r.top; n = 0;
     while(n++ < 12 && (m = hits(r.left, y, r.right, y + h, O))) y = Math.max.apply(null, m.map(function(q){ return q.bottom; })) + 8;
-    if(y + h <= H * .5){ b.style.setProperty('--v33dn', Math.round(y - r.top) + 'px'); return; }
-    b.classList.remove('v33top'); }
+    if(y + h <= H * .5){ b.style.setProperty('--v33dn', Math.round(y - r.top) + 'px'); return true; }
+    b.classList.remove('v33top'); return false; }
   var covers = [];   // things found lying over the pill (a game's bottom sheet): it steps out from under them too
   function over(){ var r = b.getBoundingClientRect(), t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return (!t || t === b || b.contains(t)) ? null : t; }
   function key(O){ var s = innerWidth + 'x' + innerHeight, i; for(i = 0; i < O.length; i++) s += '|' + Math.round(O[i].left) + ',' + Math.round(O[i].top) + ',' + Math.round(O[i].right) + ',' + Math.round(O[i].bottom); return s; }
   function place(){ try{
     if(getComputedStyle(b).display === 'none'){ sig = ''; return; }
-    var O = obstacles(), live = [], i, r, t, e, A, pass;
+    var O = obstacles(), base = O.slice(), live = [], i, r, t, e, A, pass, ok = true;
     for(i = 0; i < covers.length; i++){ r = covers[i].isConnected ? box(covers[i], true) : null; if(r){ live.push(covers[i]); O.push(r); } }
     if(key(O) === sig && !over()) return;
     covers = live;
-    for(pass = 0; pass < 4; pass++){ lay(O); t = over(); if(!t) break;
+    for(pass = 0; pass < 4; pass++){ ok = lay(O); t = over(); if(!t) break;
       A = null; for(e = t; e && e !== document.body && e !== document.documentElement; e = e.parentElement) if(box(e, false)) A = e;   // the largest part of it that is not the whole screen
       if(!A || covers.indexOf(A) >= 0) break; covers.push(A); O.push(A.getBoundingClientRect()); }
+    if(!ok && O.length > base.length) lay(base);   // a dialog leaves no clear spot: keep the usual place, clear of the controls
     sig = key(O); }catch(e){} }
   place(); setInterval(place, 600); addEventListener('resize', function(){ sig = ''; place(); }); addEventListener('load', place);
   window.__v33discPlace = function(){ sig = ''; place(); var r = b.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)]; };
