@@ -1,0 +1,77 @@
+/* intro28 (owner 11/10): while the 3D house loads, a short photo introduction plays over the loading screen, so the wait reads as the
+   start of the tour. Real listing photos, one line each, a slow push-in, and a hairline progress bar fed by the page's own loading text.
+   When the house is ready: "Step inside" (first visit), or straight in (returning visitors, or a load that finishes almost at once).
+   Self-contained: include with <script src="/assets/intro28.js" defer></script> on a page that has #loading (it watches for .done). */
+(function(){
+  'use strict';
+  var L = document.getElementById('loading'); if(!L || window.__intro28) return; window.__intro28 = true;
+  var q = location.search; if(/[?&](qa|nointro)=1\b/.test(q)) return;
+  var store = { get: function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set: function(k, v){ try{ localStorage.setItem(k, v); }catch(e){} } };
+  var seen = store.get('intro28.seen') === '1', t0 = performance.now(), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(L.classList.contains('done')) return;
+  var game = /\/(thanksgiving|halloween)\//.test(location.pathname);
+  var S = [
+    ['front-exterior-1600.jpg', '118 Hillside Drive', 'A light-filled home in Woodside Glens, about a mile from Town Center and its trails.'],
+    ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a cathedral-ceilinged foyer, with the heritage oak framed at the far end.'],
+    ['living-room-1600.jpg', 'Beams over the living room', 'Fir beams cross the vaulted ceiling, and the big windows look out into the trees.'],
+    ['dining-1600.jpg', 'A wall of glass', 'The dining room opens onto the terrace, so dinner can move outside.'],
+    ['kitchen-1180.jpg', 'The white kitchen', 'Quartz counters, a long peninsula, and a coffee bar with its own drinks fridge.'],
+    ['rec-room-1180.jpg', 'The bonus lounge', 'Movie nights downstairs, with stacking doors out to the terrace.'],
+    ['primary-bedroom-1172.jpg', 'The primary suite', 'Four skylights, a walk-in closet, and a balcony facing the western hills.'],
+    ['office-1172.jpg', 'A skylit office', 'A quiet room downstairs, lit from above.'],
+    ['rear-yard-1282.jpg', 'Under the heritage oak', 'A paver terrace with an outdoor kitchen and a ceramic smoker under the pergola.'],
+    ['hills-view-1284.jpg', 'Sunset from the balcony', 'The western hills, every evening.']
+  ];
+  var css = '#intro28{position:fixed;inset:0;z-index:2147483000;background:#0e1113;color:#fff;font-family:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif;overflow:hidden;opacity:1;transition:opacity .7s ease}' +
+    '#intro28.out{opacity:0;pointer-events:none}' +
+    '#intro28 .sl{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease}#intro28 .sl.on{opacity:1}' +
+    '#intro28 .sl img{width:100%;height:100%;object-fit:cover;transform:scale(1.02);transition:transform 7s linear}#intro28 .sl.on img{transform:scale(1.1)}' +
+    '#intro28 .sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,12,14,.35) 0%,rgba(10,12,14,0) 30%,rgba(10,12,14,0) 50%,rgba(10,12,14,.78) 100%)}' +
+    '#intro28 .top{position:absolute;left:clamp(18px,4vw,48px);top:clamp(16px,3vw,32px);right:clamp(18px,4vw,48px);display:flex;justify-content:space-between;align-items:center;gap:12px}' +
+    '#intro28 .brand{font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;letter-spacing:.14em;text-transform:uppercase}' +
+    '#intro28 .st{font-size:13px;opacity:.82}' +
+    '#intro28 .cap{position:absolute;left:clamp(18px,4vw,48px);right:clamp(18px,4vw,48px);bottom:clamp(64px,9vh,104px);max-width:640px}' +
+    '#intro28 .cap h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:clamp(32px,5vw,56px);line-height:1.02;margin:0 0 10px;text-shadow:0 2px 18px rgba(0,0,0,.35)}' +
+    '#intro28 .cap p{font-size:clamp(15px,1.6vw,18px);line-height:1.45;margin:0;opacity:.92;max-width:52ch;text-shadow:0 1px 10px rgba(0,0,0,.4)}' +
+    '#intro28 .cap .t{transition:opacity .5s ease,transform .5s ease}#intro28 .cap.swap .t{opacity:0;transform:translateY(6px)}' +
+    '#intro28 .bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.14)}#intro28 .bar i{display:block;height:100%;width:0;background:#e8d3b0;transition:width .6s ease}' +
+    '#intro28 .go{position:absolute;right:clamp(18px,4vw,48px);bottom:clamp(64px,9vh,104px);display:flex;flex-direction:column;align-items:flex-end;gap:10px;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s;pointer-events:none}' +
+    '#intro28.ready .go{opacity:1;transform:none;pointer-events:auto}' +
+    '#intro28 .go button{font:inherit;font-size:16px;letter-spacing:.02em;border:0;border-radius:999px;background:#fff;color:#16191b;padding:14px 26px;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.35)}' +
+    '#intro28 .go button:hover{background:#f1ece2}#intro28 .go small{font-size:13px;opacity:.85;text-shadow:0 1px 8px rgba(0,0,0,.5)}' +
+    '#intro28 .skip{font:inherit;font-size:13px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:6px 12px;cursor:pointer;display:none}#intro28.ready .skip{display:none}' +
+    '#intro28 .dots{display:flex;gap:5px}#intro28 .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}#intro28 .dots i.on{background:#fff}' +
+    '@media (max-width:640px){#intro28 .go{left:18px;right:18px;align-items:stretch;bottom:24px}#intro28 .go button{width:100%}#intro28.ready .cap{bottom:120px}#intro28 .dots{display:none}}' +
+    '@media (prefers-reduced-motion:reduce){#intro28 .sl img,#intro28 .sl.on img{transform:none;transition:none}}';
+  var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  var el = document.createElement('div'); el.id = 'intro28'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Introducing 118 Hillside Drive while the 3D house loads');
+  var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 2 ? '' : 'loading="lazy" ') + 'src="../images/' + s[0] + '"></div>'; }).join('');
+  el.innerHTML = slides + '<div class="sh"></div>' +
+    '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
+    '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
+    '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>Drag to look around. Tap a white circle to walk there.</small></div>' +
+    '<div class="bar" aria-hidden="true"><i></i></div>';
+  document.body.appendChild(el);
+  var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');
+  var k = 0, timer = null, done = false, readyAt = 0;
+  function show(i){ sl[k].classList.remove('on'); if(dots[k]) dots[k].classList.remove('on'); k = i % S.length; sl[k].classList.add('on'); if(dots[k]) dots[k].classList.add('on');
+    var nx = sl[(k + 1) % S.length].querySelector('img'); if(nx && nx.loading === 'lazy') nx.loading = 'eager';
+    cap.classList.add('swap'); setTimeout(function(){ h2.textContent = S[k][1]; p.textContent = S[k][2]; cap.classList.remove('swap'); }, reduce ? 0 : 320); }
+  h2.textContent = S[0][1]; p.textContent = S[0][2];
+  timer = setInterval(function(){ show(k + 1); }, 3600);
+  // progress: the page writes "Rendering the first view... 95%" (or a phase name) into #loadtxt
+  var lt = document.getElementById('loadtxt'), pct = 4;
+  function prog(){ var m = lt && /(\d{1,3})\s*%/.exec(lt.textContent || ''); if(m) pct = Math.max(pct, +m[1]); else pct = Math.min(90, pct + 1.5); bar.style.width = (done ? 100 : pct) + '%'; }
+  var pi = setInterval(prog, 400); prog();
+  function leave(){ if(el.classList.contains('out')) return; store.set('intro28.seen', '1'); clearInterval(timer); clearInterval(pi); el.classList.add('out');
+    try{ window.gtag && gtag('event', 'intro28_enter', {seen_before: seen, wait_ms: Math.round(performance.now() - t0)}); }catch(e){}
+    setTimeout(function(){ el.remove(); }, 800); }
+  el.querySelector('.go button').addEventListener('click', leave);
+  document.addEventListener('keydown', function(e){ if(done && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') && document.getElementById('intro28')){ e.preventDefault(); leave(); } }, true);
+  function ready(){ if(done) return; done = true; readyAt = performance.now(); prog(); el.classList.add('ready');
+    var waited = readyAt - t0;
+    if(waited < 1400 || seen) setTimeout(leave, seen ? 900 : 200);   // quick loads and returning visitors walk straight in
+    else el.querySelector('.go button').focus({preventScroll: true}); }
+  new MutationObserver(function(){ if(L.classList.contains('done')) ready(); }).observe(L, {attributes: true, attributeFilter: ['class']});
+  if(L.classList.contains('done')) ready();
+})();
