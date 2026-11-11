@@ -801,7 +801,8 @@
     rigFly(peekPose(slot), {dur: .85, done: () => { dissolve(() => { S.view = 'room'; S.room = slot; HOUSE.inside(); setStand(slot); rigCut(standPose()); document.documentElement.classList.add('rfe-in'); arrive(slot); }, () => { S.busy = false; }); }}); }
   function hop(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'room' || slot === S.room) return; S.busy = true; closeMenus(); SND.dive();
     dissolve(() => { S.room = slot; setStand(slot); rigCut(standPose()); arrive(slot); }, () => { S.busy = false; }); }
-  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: S.hour <= 8.5, hi: S.hour >= 18.5}; S.sweeping = false; SUN.show(slot);   // the hour you arrive at counts as seen setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars(); reframe();
+  // the hour you arrive at counts as seen: come in at evening, drag to morning, and you have watched the light
+  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: S.hour <= 8.5, hi: S.hour >= 18.5}; S.sweeping = false; SUN.show(slot); setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars(); reframe();
     renderClues(true); objective(); $('#rfeSun').classList.toggle('key', !SAVE.light[slot]); S.lastAct = performance.now(); document.documentElement.classList.remove('rfe-clues'); $('#rfeCluesBtn').setAttribute('aria-pressed', 'false');
     $('#rfeWhoBtn span').textContent = LG.SLOTS[slot].bed ? 'Who sleeps here' : 'What goes here'; }
   function leave(then){ if(S.view !== 'room' || S.busy || rig.move) return; const slot = S.room; S.busy = true; closeMenus(); SND.back(); S.sweeping = false;
