@@ -9791,8 +9791,8 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
 /* r38 back to the tour (owner 11/11: "if I click off and enter walk mode it's not clear how to get back to tour mode. There should be a back to tour
    without having to go up to the main menu"). In Walk, Dollhouse, Design and Photos the stop card carries one button, "Back to the tour · <stop>",
    in the place the tour's own Next button sits (desktop) or across the foot of the sheet (phone); the gallery has the same button at its foot.
-   Where it goes: from Walk, the tour stop nearest where you are standing (same level, the room you are in first); from Dollhouse, Design and Photos,
-   the stop you were last on. The move is the tour's own (walked when the route is short, a quick dissolve when it is not). The Tour tab (the TOUR
+   Where it goes: from Walk, the tour stop nearest where you are standing (same level, the room you are in first); from Dollhouse, Design and Photos
+   (opened from the tour), the stop you were last on. The move is the tour's own (walked when the route is short, a quick dissolve when it is not). The Tour tab (the TOUR
    pill on a phone) does the same from any other mode, and on a phone it is marked as the current view in Tour. Esc in Walk does it too.
    Hidden in games (the tour UI is theirs there). */
 (function back38(){
@@ -9819,6 +9819,7 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
     'html.ph #card.bk38on{grid-template-areas:"prev head next" "body body body" "act act act" "bk38 bk38 bk38"}' +
     'html.ph #bk38{grid-area:bk38;width:100%;min-height:46px;padding:0 14px;border-radius:12px;background:var(--ph-hi);color:var(--ph-ink);font-size:15px;font-family:var(--sf)}' +
     'html.ph .card:not(.min) #bk38{margin-top:6px}' +
+    'html.ph.bk38card .navguide.ng-ph:not([hidden]){bottom:var(--bk38up,calc(140px + env(safe-area-inset-bottom,0px)))}' +   /* the one-time 'how to move' card sits above the sheet and its button */
     /* the gallery: the same button at its foot, where the stop card was */
     '#bk38g{position:sticky;bottom:max(16px, calc(env(safe-area-inset-bottom,0px) + 8px));z-index:3;width:max-content;max-width:min(430px, 100%);margin:28px 0 0;padding:0 20px;border-radius:999px;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.22)}' +
     'html.ph #bk38g{width:100%;max-width:none;min-height:48px;border-radius:14px;font-size:15px;font-family:var(--sf);background:#1f1f1d;color:#fbfaf7}' +
@@ -9841,13 +9842,17 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
       if(d < bs){ bs = d; best = i; } if(i === near) cur = d; }
     if(near >= 0 && near < STOPS.length && cur - bs < 3) return near;   // a little hysteresis, so the name does not flicker between two stops
     return best >= 0 ? best : stopIdx; }
-  function target(){ if(mode === 'walk' && !galOpen()){ near = nearest(); return near; } return clamp(stopIdx, 0, STOPS.length - 1); }
+  function target(){ if(mode === 'walk'){ near = nearest(); return near; } return clamp(stopIdx, 0, STOPS.length - 1); }   // (Photos opened from Walk: still where you were standing)
   function label(b, i){ const s = STOPS[i], t = s ? s.t : ''; const sp = b.querySelector('.bk38s'); if(sp.textContent !== t) sp.textContent = t; sp.hidden = !t;
     const a = 'Back to the tour' + (t ? ', at ' + t : ''); if(b.getAttribute('aria-label') !== a) b.setAttribute('aria-label', a); }
+  function lift(){ let t = card.getBoundingClientRect().top; const lb = document.querySelector('.phlvbar:not([hidden])'); if(lb){ const r = lb.getBoundingClientRect(); if(r.height) t = Math.min(t, r.top); }
+    root.style.setProperty('--bk38up', Math.max(0, Math.round(innerHeight - t + 10)) + 'px'); }
+  if(window.ResizeObserver) new ResizeObserver(() => { if(!btn.hidden) lift(); }).observe(card);
   function sync(){
     const g = game(); root.classList.toggle('bk38game', g);
     const onCard = !g && mode !== 'tour' && !galOpen(), onGal = !g && galOpen();
     if(btn.hidden === onCard) btn.hidden = !onCard; if(gbtn.hidden === onGal) gbtn.hidden = !onGal; card.classList.toggle('bk38on', onCard);
+    root.classList.toggle('bk38card', onCard); if(onCard) lift();
     if(onCard || onGal){ const i = target(); label(onCard ? btn : gbtn, i); }
     // the gallery's own top button goes back to the view you came from: name it
     const gx = gal.querySelector('.gx36'); if(gx){ const t = mode === 'walk' ? (DESIGN.walking() ? 'Back to the design' : 'Back to walking') : mode === 'doll' ? 'Back to the dollhouse' : mode === 'design' ? 'Back to the design' : 'Back to the 3D tour'; if(gx.textContent !== t) gx.textContent = t; }
