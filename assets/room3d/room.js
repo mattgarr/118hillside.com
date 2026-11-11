@@ -1063,6 +1063,9 @@
   function bubble(slot, g){ const b = el('div', {class: 'rfeSayG'}, `<small>${esc(shortOf(g))}</small>${esc(LG.GUESTS[g].yay)}`); $('#rfeLabels').appendChild(b); BUB.push({b, slot, t: performance.now()}); requestAnimationFrame(() => b.classList.add('on'));
     setTimeout(() => { b.classList.remove('on'); setTimeout(() => b.remove(), 500); }, 2500); }
   function bubStep(){ for(let i = BUB.length - 1; i >= 0; i--){ const q = BUB[i]; if(!q.b.parentNode){ BUB.splice(i, 1); continue; } const L = LB[q.slot], w = q.b.offsetWidth || 160, F = freeRect(); q.b.style.transform = `translate(${clamp(L.x + 14, F.l, F.r - w).toFixed(1)}px,${(L.y - 62).toFixed(1)}px)`; } }
+  // copies text; when the async clipboard is refused (an unfocused page, an in-app browser) it falls back to a hidden textarea and the copy command
+  async function copyText(text){ try{ await navigator.clipboard.writeText(text); return true; }catch(e){} try{ const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return !!ok; }catch(e){ return false; } }
+  function showLink(btn, url){ let i = btn.parentNode.querySelector('input.shareLink'); if(!i){ i = document.createElement('input'); i.className = 'shareLink'; i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Link to this game'); i.style.cssText = 'flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1.5px solid #d9a24a;border-radius:12px;font:14px Jost,sans-serif;color:#1f2433;background:#fff'; btn.parentNode.appendChild(i); } btn.textContent = 'Copy the link below'; i.focus(); i.select(); }
   function endCard(){ const L = S.L, t = elapsed(), i = LG.LEVELS.indexOf(L), nx = nextLevel(), last = nx === 'daily' && !!SAVE.solved['day' + LG.dayNumber(new Date())];
     const nextTxt = last ? 'Play one again' : nx === 'daily' ? 'Play today’s guest list' : 'Next puzzle: ' + LG.LEVELS[nx].title;
     const learned = {warm: 'You have just learned what the listing takes a page to say: a primary suite upstairs with its own bath, three bedrooms beside the kitchen, and two more downstairs.',
@@ -1083,7 +1086,7 @@
     $('#rfeStay').onclick = () => { closeCard(); const b = el('button', {class: 'rfeBtn dark shadow', type: 'button', id: 'rfeBackCard', style: 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:75'}, 'Back to the results'); document.body.appendChild(b); b.onclick = () => { b.remove(); endCard(); }; };
     $('#rfeShare').onclick = async () => { const url = 'https://118hillside.com/games/room/' + (L.daily ? '?puzzle=daily' : '?puzzle=' + (i + 1)), text = L.daily ? `I found a room for every animal on today’s guest list at 118 Hillside Drive in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.` : `I found a room for every animal at 118 Hillside Drive: “${L.title}” in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.`; ga('rfe3d_share');
       try{ if(navigator.share){ await navigator.share({title: 'Room for Everyone', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
-      try{ await navigator.clipboard.writeText(text + ' ' + url); $('#rfeShare').textContent = 'Link copied'; }catch(e){ $('#rfeShare').textContent = url; } };
+      if(await copyText(text + ' ' + url)) $('#rfeShare').textContent = 'Link copied'; else showLink($('#rfeShare'), url); };
     try{ $('#rfeNextB').focus({preventScroll: true}); }catch(e){} }
 
   /* ================================================================== frame loop */

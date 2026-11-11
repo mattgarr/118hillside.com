@@ -829,6 +829,9 @@
       setTimeout(finishCard, 5600); }, 3400); }
   // the closing view: a slow move toward the lit house at dusk; the finish card sits beside it (below it on a phone), so the view is moved over to stay in the clear
   const SHOT = () => aspect() < 1 ? {pos: [-6, 5, 34], pos2: [-6, 5, 31], look: [-6, 5, 0], fov: 80, off: [0, -.36], cat: [-4.6, 0, 6]} : {pos: [-5, 6.2, 41], pos2: [-5, 6, 36.5], look: [-5, 4.8, 0], fov: 58, off: [-.17, 0], cat: [-4.6, 0, 6]};
+  // copies text; when the async clipboard is refused (an unfocused page, an in-app browser) it falls back to a hidden textarea and the copy command
+  async function copyText(text){ try{ await navigator.clipboard.writeText(text); return true; }catch(e){} try{ const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return !!ok; }catch(e){ return false; } }
+  function showLink(btn, url){ let i = btn.parentNode.querySelector('input.shareLink'); if(!i){ i = document.createElement('input'); i.className = 'shareLink'; i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Link to this game'); i.style.cssText = 'flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1.5px solid #d9a24a;border-radius:12px;font:14px Jost,sans-serif;color:#1f2433;background:#fff'; btn.parentNode.appendChild(i); } btn.textContent = 'Copy the link below'; i.focus(); i.select(); }
   function finishCard(){ const t = elapsed(); SND.cork();
     const c = el('div', {id: 'escCard', class: 'side'}, `<div class="c" role="dialog" aria-labelledby="escH"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Cork popped.</h2>
       <p class="lede">The doorbell is ringing and the house is lit for the evening. Snowball says you are nearly as clever as he is, and he is keeping the box the champagne came in.</p>
@@ -842,7 +845,7 @@
     $('#escAgain').onclick = () => location.reload();
     $('#escShare').onclick = async () => { const url = SITE.page('/games/escape/'), text = `Locked In at Hillside: Snowball the cat locked the champagne in a fridge at 118 Hillside Drive, and I got it out in ${fmtT(t)}. Your turn.`; ga('esc_share');
       try{ if(navigator.share){ await navigator.share({title: 'Locked In at Hillside', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
-      try{ await navigator.clipboard.writeText(text + ' ' + url); $('#escShare').textContent = 'Link copied'; }catch(e){ $('#escShare').textContent = url; } };
+      if(await copyText(text + ' ' + url)) $('#escShare').textContent = 'Link copied'; else showLink($('#escShare'), url); };
     try{ $('#escSee').focus({preventScroll: true}); }catch(e){} }
 
   /* ================================================================== build the level into the house */

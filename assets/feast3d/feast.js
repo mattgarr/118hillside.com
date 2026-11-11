@@ -1060,9 +1060,12 @@
     $('#feShare').onclick = () => share($('#feShare')); $('#fePic').onclick = () => snap();
     try{ $('#fePic').focus({preventScroll: true}); }catch(e){} }
   function closeCard(){ $$('#feCard').forEach(c => c.remove()); }
+  // copies text; when the async clipboard is refused (an unfocused page, an in-app browser) it falls back to a hidden textarea and the copy command
+  async function copyText(text){ try{ await navigator.clipboard.writeText(text); return true; }catch(e){} try{ const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return !!ok; }catch(e){ return false; } }
+  function showLink(btn, url){ let i = btn.parentNode.querySelector('input.shareLink'); if(!i){ i = document.createElement('input'); i.className = 'shareLink'; i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Link to this game'); i.style.cssText = 'flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1.5px solid #d9a24a;border-radius:12px;font:14px Jost,sans-serif;color:#1f2433;background:#fff'; btn.parentNode.appendChild(i); } btn.textContent = 'Copy the link below'; i.focus(); i.select(); }
   async function share(btn){ const url = SITE.page('/games/feast/'), text = `Thanksgiving at Hillside: Snowball the cat hid dinner all over 118 Hillside Drive, and I got it to the table under the oak in ${fmtT(elapsed())}. Your turn.`; ga('feast3d_share');
     try{ if(navigator.share){ await navigator.share({title: 'Thanksgiving at Hillside', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
-    try{ await navigator.clipboard.writeText(text + ' ' + url); btn.textContent = 'Link copied'; }catch(e){ btn.textContent = url; } }
+    if(await copyText(text + ' ' + url)) btn.textContent = 'Link copied'; else showLink(btn, url); }
   /* the picture: exactly what the canvas shows, with a caption underneath */
   let shot = null;
   function snap(){ let url = null; const off = rig.off; try{ rig.off = [0, 0]; rig.sig = ''; rigStep(performance.now(), 0); url = H.snapshot('image/jpeg', .93); }catch(e){ oops('snapshot', e); } rig.off = off; rig.sig = ''; wake(6); if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.', 3200); return; }
