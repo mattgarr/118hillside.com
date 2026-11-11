@@ -19806,7 +19806,7 @@ function r28Shades(){
       const f = r28Quad(fab, F, a0 + .03, a1 - .03, -1, 0, d, g); f.geometry.translate(0, -.5, 0); f.position.y = top - cas; f.receiveShadow = true; f.castShadow = kind === 'blackout';   // a unit-tall cloth hung from the cassette: scale.y is the drop
       const h = r28Box(r28Mat('hem'), F, a0 + .02, a1 - .02, -.07, 0, d - .02, d + .02, g);            // hem bar
       parts.push({f, h}); R28W.rolls++; }
-    bl35Add({id, kind: 'roller', fab: kind, g, F, d, y1: top, y0: F.sill, door: /^D-/.test(id), dur: .6, drop: e => cas + S.full * e + .07, cols,
+    bl35Add({id, kind: 'roller', fab: kind, g, F, d, y1: top, y0: F.sill, door: /^D-/.test(id), dur: .6, drop: e => cas + S.full * e + .07, cols, fd: .03,
       fit: /^D-/.test(id) ? null : lo => { S.full = Math.max(.3, top - cas - lo - .07); },
       pose(e){ const len = S.full * e; for(const p of parts){ p.f.visible = len > .012; p.f.scale.y = Math.max(.012, len); p.h.position.y = top - cas - len - .035; } }});
     R28W.shades.push(id); }
@@ -19882,7 +19882,7 @@ function r29Cells(){   // owner 11/10: every other window blind in the house is 
       f.castShadow = kind === 'blackout';
       const b = r28Box(r28Mat('rail'), F, a0 + .006, a1 - .006, -BR, 0, d - .075, d + .075, g);                        // bottom rail
       parts.push({f, b}); }
-    bl35Add({id: o.id, kind: 'cell', fab: kind, g, F, d, y1: top, y0: F.sill, dur: .55, cols, fit,
+    bl35Add({id: o.id, kind: 'cell', fab: kind, g, F, d, y1: top, y0: F.sill, dur: .55, cols, fit, fd: .068,
       pose(e){ const len = S.up + (S.full - S.up) * e; for(const p of parts){ p.f.scale.y = len; p.b.position.y = top - HR - RV - len - BR / 2; } }});
     R28W.cellDims = {headrail_in: [HR * 12, .166 * 12], reveal_in: RV * 12, stackRaised_in: [.11 * 12, .16 * 12], bottomRail_in: [BR * 12, .15 * 12]};
     R28W.cells.push(o.id + ':' + kind + 'x' + n); }
@@ -19939,7 +19939,8 @@ function bl35Fit(it){
   if(it.fitted || !it.fit || !it.F || !it.cols) return; it.fitted = true;
   try{ const F = it.F, y = it.y0 + (it.y1 - it.y0) * .36, objs = withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible), dn = new THREE.Vector3(0, -1, 0), P = new THREE.Vector3();
     const own = o => { for(; o; o = o.parent) if(o === it.g) return true; return false; }; let lo = it.y0;
-    for(const a of it.cols){ P.set(F.cx + F.u[0] * a + F.inn[0] * it.d, y, F.cz + F.u[1] * a + F.inn[1] * it.d); BL35RD.set(P, dn); BL35RD.far = y - it.y0 + .02;
+    const df = it.d + (it.fd || 0);   // down the shade's room-side face: a sash rail that reaches into the shade's depth is not a sill
+    for(const a of it.cols){ P.set(F.cx + F.u[0] * a + F.inn[0] * df, y, F.cz + F.u[1] * a + F.inn[1] * df); BL35RD.set(P, dn); BL35RD.far = y - it.y0 + .02;
       for(const h of BL35RD.intersectObjects(objs, true)){ const m = h.object.material; if((m && m.transparent) || !h.object.isMesh || own(h.object)) continue; lo = Math.max(lo, h.point.y); break; } }
     it.lo = +lo.toFixed(3); it.fit(lo); }catch(e){ console.warn('[blinds35] fit', it.id, e); } }
 function bl35Toggle(it){
