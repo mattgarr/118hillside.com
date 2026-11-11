@@ -29,7 +29,7 @@
     garden: 'On the bedroom hallway, with the Middle bedroom and the hall bath.', middle: 'On the bedroom hallway, with the Garden bedroom and the hall bath. The Front bedroom is through one wall.',
     front: 'Opens off the dining area, not the bedroom hallway. The Middle bedroom is through one wall.', corner: 'On the lower hallway, with the Side bedroom and the lower bath. The primary suite is overhead.',
     side: 'On the lower hallway, with the Corner bedroom and the lower bath. The primary suite is overhead.', office: 'By the lower level’s own front door.',
-    lounge: 'Opens onto the terrace. The primary bath is overhead, not a bedroom.', garage: 'A level of its own, a few steps up from the lower level. Nothing sleeps above it.'};
+    lounge: 'Open to the lower hallway and the stairs. The primary bath is overhead, not a bedroom.', garage: 'A level of its own, a few steps up from the lower level. Nothing sleeps above it.'};
   const SLOT_IDS = Object.keys(SLOTS), BEDS = SLOT_IDS.filter(s => SLOTS[s].bed), SPARE = SLOT_IDS.filter(s => !SLOTS[s].bed);
   const LEVEL_NAME = {upper: 'upper level', main: 'main level', lower: 'lower level', garage: 'garage'};
   const LEVEL_RANK = {lower: 0, garage: 0.5, main: 1, upper: 2};
