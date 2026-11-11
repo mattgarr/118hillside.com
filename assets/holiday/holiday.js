@@ -23,21 +23,21 @@
 
   /* ---------- what each dress is, and the best places to see it from ---------- */
   const DRESS = {
-    none: {label: 'No decorations', sub: 'The house as it is today'},
-    halloween: {label: 'Halloween', sub: 'Jack-o’-lanterns, cobwebs and a purple dusk', busy: 'Carving the pumpkins…',
+    none: {label: 'No decorations', sub: 'The house as it is'},
+    halloween: {label: 'Halloween', sub: 'Jack-o’-lanterns and cobwebs', busy: 'Carving the pumpkins…',
       views: [{t: 'From the street', pos: [6, 3, 66], look: [-2, 7, 14], posP: [6, 3, 74], lookP: [0, 9.5, 14]},
         {t: 'The front steps', pos: [-5.2, 3.2, 31], look: [-5.6, 4.2, 6], posP: [-5.2, 3.4, 36], lookP: [-5.6, 5, 6]},
         {t: 'From the foyer', inside: true, pos: [-10.4, 4.8, -4.0], look: [12, 4.2, -4.0]}]},
-    thanksgiving: {label: 'Thanksgiving', sub: 'The table set and fall leaves in the yard', busy: 'Setting the table…',
+    thanksgiving: {label: 'Thanksgiving', sub: 'A set table and fall leaves', busy: 'Setting the table…',
       views: [{t: 'From the street', pos: [6, 3, 66], look: [-2, 7, 14], posP: [6, 3, 74], lookP: [0, 9.5, 14]},
         {t: 'The front steps', pos: [-5.2, 3.2, 31], look: [-5.6, 4.2, 6], posP: [-5.2, 3.4, 36], lookP: [-5.6, 5, 6]},
-        {t: 'The table, set for dinner', inside: true, pos: [13.6, 5, 29.5], look: [10.3, 3.3, 21.4]},
+        {t: 'The dinner table', inside: true, pos: [13.6, 5, 29.5], look: [10.3, 3.3, 21.4]},
         {t: 'The living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9]}]},
-    winter: {label: 'Winter holidays', sub: 'Lights, wreaths, a tree and a menorah', busy: 'Hanging the lights…',
+    winter: {label: 'Winter holidays', sub: 'Lights, a tree and a menorah', busy: 'Hanging the lights…',
       views: [{t: 'From the street', pos: [6, 3, 66], look: [-2, 7, 14], posP: [6, 3, 74], lookP: [0, 9.5, 14]},
         {t: 'The front doors', pos: [-5.2, 3.2, 31], look: [-5.6, 4.2, 6], posP: [-5.2, 3.4, 36], lookP: [-5.6, 5, 6]},
-        {t: 'The living room and the tree', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9]},
-        {t: 'The terrace under the oak', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5]}]}};
+        {t: 'The living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9]},
+        {t: 'Under the oak', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5]}]}};
   const KINDS = ['none', 'halloween', 'thanksgiving', 'winter'];
 
   /* ---------- Winter holidays: one scheme, in the Deck the House props' own state shape ---------- */
@@ -269,16 +269,17 @@
       if(H.mode !== 'tour') try{ H.setMode('tour'); }catch(e){}
       bar.hidden = false; placeBar(); render(); this.go(0, true); this.auto(!(o && o.auto === false) && !reduce); ga('holiday_show', {kind: k});
       try{ window.__v33discPlace && __v33discPlace(); }catch(e){} return true; },
-    go(i, first){ const L = this.list; if(!L) return; this.i = (i + L.length) % L.length; const v = L[this.i], tall = H.camera.aspect < .8, pos = tall && v.posP ? v.posP : v.pos, look = tall && v.lookP ? v.lookP : v.look;
+    go(i, first, own){ const L = this.list; if(!L) return; const now = performance.now(); if(!own && now - (this.autoAt || 0) < 900) return; if(own) this.autoAt = now; this.i = (i + L.length) % L.length; const v = L[this.i], tall = H.camera.aspect < .8, pos = tall && v.posP ? v.posP : v.pos, look = tall && v.lookP ? v.lookP : v.look;
       bar.querySelector('.cap b').textContent = v.t; bar.querySelector('.cap i').textContent = (this.i + 1) + ' of ' + L.length;
       const c = H.camera.position, far = Math.hypot(c.x - pos[0], c.y - pos[1], c.z - pos[2]) > 46, wasIn = H.inside(c);
       if(reduce){ H.look(pos, look); return; }
       if(v.inside || wasIn || far){ veil.classList.add('on'); clearTimeout(this.vt); this.vt = setTimeout(() => { try{ H.look(pos, look); }catch(e){} setTimeout(() => veil.classList.remove('on'), 140); }, 260); }
       else H.flyTo(pos, look, first ? 1.8 : 1.6); },
-    auto(on){ clearInterval(this.t); this.t = 0; if(!on) return; let n = 0; this.t = setInterval(() => { if(!this.on) return this.auto(false); if(document.hidden) return; if(++n >= this.list.length){ this.auto(false); return; } this.go(this.i + 1); }, 8000); },
+    auto(on){ clearInterval(this.t); this.t = 0; if(!on) return; let n = 0; this.t = setInterval(() => { if(!this.on) return this.auto(false); if(document.hidden) return; if(++n >= this.list.length){ this.auto(false); return; } this.go(this.i + 1, false, true); }, 8000); },
     stop(){ if(!this.on) return; this.on = false; this.auto(false); clearTimeout(this.vt); if(veil) veil.classList.remove('on'); if(bar) bar.hidden = true; this.list = null; this.i = -1; try{ window.__v33discPlace && __v33discPlace(); }catch(e){} }};
   /* moving on your own ends the slideshow's own pace (the bar stays, so the next view is one tap away) */
   { const cv = document.getElementById('c'); if(cv) for(const ev of ['pointerdown', 'wheel']) cv.addEventListener(ev, () => { if(show.on) show.auto(false); }, {passive: true}); }
+  document.addEventListener('click', e => { if(show.on && e.target && e.target.closest && e.target.closest('#card, #mini, nav.tabs, #cv27, #wplabels, #labels')) show.stop(); }, true);
   setInterval(() => { if(bar && !bar.hidden){ placeBar(); if(H.mode !== 'tour' || current() === 'none') show.stop(); } }, 700);
 
   build();
