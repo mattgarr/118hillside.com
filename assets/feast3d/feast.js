@@ -167,7 +167,7 @@
   const HUNTS = {
     a: {by: 'Snowball', steps: [
       {dish: 'cider', who: 'Snowball', spots: ['coolerLounge', 'fridge', 'coolerCoffee'], answer: 'coolerLounge',
-        clue: 'The cider’s somewhere cold. There are three cold places in this house. Biscuit carried it, and Biscuit doesn’t do stairs, so it’s the one you can reach from the dinner table without any.',
+        clue: 'The cider’s somewhere cold, and this house has three cold places. Biscuit carried it from this table, and Biscuit doesn’t do stairs.',
         wrong: {fridge: 'Butter, eggs and far too much whipped cream. No cider. And this fridge is a whole flight of stairs above the table.', coolerCoffee: 'Oat milk and fizzy water. No cider, and the table’s a floor down.'},
         found: 'Cold cider, right where Snowball said. The lounge opens straight onto the terrace, so it’s a short walk to the table.',
         thanks: 'Thankful for the downstairs fridge. A short trot from the terrace, and the door opens with one paw.',
@@ -1033,7 +1033,8 @@
   function toSmoker(){ if(S.phase === 'turkey' || !S.ex) return; const b = sheetE.querySelector('[data-i="0"]'), t0 = performance.now(), T = TIMING.smoker = {warm: !!WARM.end};
     if(b){ b.disabled = true; b.classList.add('wait'); b.textContent = 'Out to the smoker…'; }
     tidy(STEPS.length - 1); S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; S.busy = true; setGoal(); SND.spell(); ga('feast3d_smoker', {warm: !!WARM.end});
-    const pose = () => { const p = standPose('table'); S.ex = {id: 'smoker', back: {yaw: p.yaw, pitch: p.pitch}, mode: 'look'}; setMarks(); sheetFor(S.ex); sheetE.classList.remove('on'); };
+    // Back from the smoker on a narrow screen faces between the table and the smoker, so both stay in the picture (straight at the table, the smoker sat cut off at the edge)
+    const pose = () => { const p = standPose('table'), a = aspect() < 1 ? yp(PLACES.table.pos, [-0.4, -1.9, -46.4]) : [p.yaw, p.pitch]; S.ex = {id: 'smoker', back: {yaw: a[0], pitch: a[1]}, mode: 'look'}; setMarks(); sheetFor(S.ex); sheetE.classList.remove('on'); };
     const there = () => { S.busy = false; sheetE.classList.add('on'); T.framed = Math.round(performance.now() - t0); say('It spells THANKS. I knew that.', 4600, true); };
     if(WARM.end) paint().then(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); T.tod = Math.round(performance.now() - t0); pose(); frameExamine(.85, there); });
     else { fadeE.dataset.say = 'Out to the smoker…'; fadeThrough(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); pose(); frameExamine(.05, there); }, 650);
@@ -1063,7 +1064,7 @@
     {n: 'Biscuit', w: 'the golden dog', c: '#b9822e', a: 'I carried the cider. One jug, no stairs, and I didn’t lick it. Much.', b: 'That was my trail! You followed it better than I do. Now, about those rolls.'},
     {n: 'Mabel', w: 'the tortoise', c: '#5f7a4a', a: 'I set off for the table when you found the cider. Nearly there.', b: 'I set off for the table when you found the cider. Nearly there.'},
     {n: 'Pepper', w: 'the grey parrot', c: '#6c7480', a: 'Secret door! Secret door! Secret door!', b: 'Secret door! Secret door! Secret door!'},
-    {n: 'Snowball', w: 'the cat of the house', c: '#d9772b', a: 'You found all of it before sunset. I’m almost impressed.', b: 'You found all of it before sunset. I’m almost impressed.'}];
+    {n: 'Snowball', w: 'the orange tabby', c: '#d9772b', a: 'You found all of it before sunset. I’m almost impressed.', b: 'You found all of it before sunset. I’m almost impressed.'}];
   function voices(done){ let i = 0; const next = () => { if(i >= VOICES.length){ voiceE.classList.remove('on'); return later(500, done); } const g = VOICES[i++];
       voiceE.classList.remove('on'); later(i === 1 ? 0 : 320, () => { voiceE.innerHTML = `<span class="av" style="background:${g.c}">${PAWSVG}</span><div><b>${esc(g.n)}</b><small>${esc(g.w)}</small><p>${esc(g[HUNT])}</p></div>`; voiceE.classList.add('on'); if(i > 1) SND.tag(i); later(reduce ? 3400 : 2900, next); }); }; next(); }
   function leaves(){ if(reduce) return; const cols = ['#b5471d', '#c98a12', '#8c2b3d', '#d9772b']; for(let i = 0; i < 16; i++){ const l = el('i', {class: 'feLeaf', 'aria-hidden': 'true'}); l.style.left = (Math.random() * 100) + 'vw'; l.style.background = cols[i % 4]; l.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px'); l.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg'); l.style.animationDuration = (4 + Math.random() * 4) + 's'; l.style.animationDelay = (Math.random() * 2.5) + 's'; document.body.appendChild(l); setTimeout(() => l.remove(), 11000); } }
@@ -1195,7 +1196,7 @@
   /* ================================================================== boot: after the house is ready */
   async function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} S.staged = asStaged();
     const fonts = () => { try{ return Promise.race([Promise.all([document.fonts.load('40px "Caveat Brush"'), document.fonts.load('600 40px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2500))]); }catch(e){ return Promise.resolve(); } };
-    prog('Fetching Snowball', .1); await DEPS; await fonts(); prog('Hiding the dishes', .3); await paint();
+    prog('Fetching Snowball', .1); await DEPS; prog('Loading the paw-writing', .2); await fonts(); prog('Hiding the dishes', .3); await paint();
     try{ buildUI(); }catch(e){ oops('ui', e); }
     try{ buildWorld(); setHour(HOURS[0]);
       const a = yp([12.5, .9, -38.5], [-2.6, -1.6, -44]); rigCut([12.5, .9, -38.5], a[0], a[1], aspect() < 1 ? 80 : 58); UI.live = true; }catch(e){ oops('build', e); }
