@@ -38,7 +38,7 @@
      catP: [.6, -1.6], fitP: [[-3.2, 7.5, -5.2], [-5.8, .2, -5.4], [2.5, .2, -3.3], [7.2, 2.6, -.6], [3.05, 8.4, -8]]},   // a tall screen leaves a short band: the tree, the table, the box and the far beam
     {id: 'terrace', label: 'Terrace', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5], cat: [9.5, -39.5], say: 'Out back. Dinner is on the terrace tonight.', sections: ['ter'],
      fit: [[-9.6, 5.4, -37.3], [8.3, 5, -27], [.7, -4.4, -25.6], [3.8, -4.4, -51.2], [-6, -1, -44]]},
-    {id: 'oak', label: 'The oak', pos: [35, 2, -47], look: [8.3, 9, -27], cat: [14, -33], say: 'Last, the oak. It is the biggest thing here and it has never been decorated.', sections: ['oak', 'wear'],
+    {id: 'oak', label: 'The oak', pos: [35, 2, -47], look: [8.3, 9, -27], posP: [39, 2, -52], lookP: [8.3, 9, -27], fitP: [[8.3, -4.4, -27], [8.3, 22, -29], [-4, 13, -29], [21, 13, -28]], cat: [14, -33], say: 'Last, the oak. It is the biggest thing here and it has never been decorated.', sections: ['oak', 'wear'],
      fit: [[8.3, -4.4, -27], [8.3, 26, -30], [-9, 15, -30], [26, 15, -28]]}];
   const EXTRA = [   // more places to stand once the house is lit
     {id: 'walk', label: 'Front walk', pos: [-1.5, 2.6, 49], look: [-2.5, 6.2, 14], posP: [-1.5, 2.8, 56], lookP: [-2.5, 7, 14], cat: [-3.4, 36.5]},
@@ -209,7 +209,7 @@
     ['#dkPhoto', '#dkArrive', '#dkDusk'].forEach(s => { const r = box(s); if(r) y1 = Math.min(y1, r.top - c.top - 10); });
     if(y1 - y0 < 150){ const m = (y0 + y1) / 2; y0 = Math.max(14, m - 75); y1 = y0 + 150; } if(x1 - x0 < 200) x1 = x0 + 200;
     return [x0, y0, x1, y1, c.width, c.height]; }
-  function fit(pos, look, pts){ const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), zb = baseZoom(), zmin = Math.min(zb, .5), zmax = zb * 1.5;   // widen as far as it takes; close in a little when the thing is small on the screen
+  function fit(pos, look, pts){ const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), zb = baseZoom(), zmin = Math.min(zb, Math.max(.5, tv / 1.48, th / 1.54)), zmax = zb * 1.5;   // widen up to a 112 degree view; close in a little when the thing is small on the screen
     const pm = cam.projectionMatrix.elements, ox = pm[8] || 0, oy = pm[9] || 0;   // the engine shifts the lens on a tall screen (the horizon sits below the middle)
     const fx0 = R[0] / R[4] * 2 - 1 + ox, fx1 = R[2] / R[4] * 2 - 1 + ox, fy1 = 1 - R[1] / R[5] * 2 + oy, fy0 = 1 - R[3] / R[5] * 2 + oy, P0 = new V3(...pos), f = new V3(...look).sub(P0).normalize(), r = new V3(), u = new V3(), d = new V3(); let z = zb;
     for(let it = 0; it < 16; it++){ r.crossVectors(f, UP).normalize(); u.crossVectors(r, f); let ax0 = 1e9, ax1 = -1e9, ay0 = 1e9, ay1 = -1e9;
