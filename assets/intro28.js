@@ -16,7 +16,7 @@
     ['living-room-1600.jpg', 'Beams over the living room', 'Exposed wood beams cross the vaulted ceiling, and the large windows look out to the trees.'],
     ['dining-1600.jpg', 'A wall of glass', 'The dining table sits beside it, looking out to the oak at the front of the house.'],
     ['kitchen-1180.jpg', 'The white kitchen', 'Quartz counters, a long peninsula, and a coffee bar with its own drinks fridge.'],
-    ['rec-room-1180.jpg', 'The bonus lounge', 'Downstairs, with a refreshment counter and beverage cooler, a 65-inch TV, and stacking glass doors to the terrace.'],
+    ['rec-room-1180.jpg', 'The bonus lounge', 'Downstairs, with a refreshment counter, a beverage cooler and a 65-inch TV.'],
     ['primary-bedroom-1172.jpg', 'The primary suite', 'Upstairs, under four skylights, with a balcony that faces the western hills.'],
     ['office-1172.jpg', 'A skylit office', 'Downstairs, with its daylight coming in from above.'],
     ['rear-yard-1282.jpg', 'Under the heritage oak', 'A paver terrace with an outdoor kitchen and a ceramic smoker under the pergola.'],
@@ -57,7 +57,7 @@
   el.innerHTML = slides + '<div class="sh"></div>' +
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
     '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
-    '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>' + (game ? 'The house is ready.' : 'You start at the street. Drag to look around, and use Next to go through the house.') + '</small></div>' +
+    '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>' + (game ? 'The house is ready.' : 'You start at the street. Use Next to go through the house.') + '</small></div>' +
     '<div class="ld" role="status" aria-live="polite"><i aria-hidden="true"></i><div><b id="i28pct">Loading ' + (game ? 'the game' : 'the 3D house') + '…</b><span>Enjoy a few pictures of the house while it gets ready.</span></div></div>' +
     '<div class="bar" aria-hidden="true"><i></i></div>';
   document.body.appendChild(el);
