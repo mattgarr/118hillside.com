@@ -5554,6 +5554,7 @@ function fitSunShadow(){
 /* ---------------- camera control ----------------
    orbit: spin around a point (overview, outside, dollhouse). look: stand still and look around (inside, walking). */
 let mode='tour', stopIdx=0, yaw=0, pitch=0, anim=null, roomFocus=null, nav='orbit';
+let glide=null, flightN=0, flightAt=-1e9;   // NAV r34: a look flight the viewer took over still glides to where it was going; flightN / flightAt = how many flights, when the last began
 const FOV0 = 70;   // int21 I7 (was 62)
 const target = new THREE.Vector3(-6,0,-8), curT = new THREE.Vector3();
 const sph = {r:120, theta:0, phi:1};
@@ -5561,10 +5562,16 @@ const coarse = window.matchMedia && matchMedia('(pointer:coarse)').matches;
 function lookYawPitch(from, to){ const d=new THREE.Vector3(to[0]-from[0], to[1]-from[1], to[2]-from[2]); const h=Math.hypot(d.x,d.z); return [Math.atan2(-d.x,-d.z), Math.atan2(d.y,h)]; }
 function angDiff(a,b){ let d=b-a; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; return d; }
 function applyLook(){ camera.rotation.order='YXZ'; camera.rotation.set(pitch, yaw, 0); }
-/* NAV r27 (owner 11/10): eye level. In the look / walk views the tilt is held to PITCH_DN..PITCH_UP; once the viewer lets go,
+/* NAV r34 (owner 11/10, later the same day: 'the navigation where it returns your eye to level is really annoying... I can't keep the shadow
+   in my field of view'): the tilt belongs to the viewer. It stays where a drag, the pad, the keys or a pinch leave it - through letting go,
+   idle time, walking, turning, zooming and tap-to-walk moves - and reaches +/-80 degrees (PITCH_DN..PITCH_UP), enough to study the floor at
+   your feet or a skylight overhead. Only a tour stop's own framing, a mode switch, Reset / Home, or a game's look() / flyTo() set it.
+   r27's ease-back-to-level (navLevelStep), its level arrival on walk-to moves and its +/-15 degree landing clamp (navLevelLanding) are off;
+   the functions stay for reference. The text below is r27's:
+   NAV r27 (owner 11/10): eye level. In the look / walk views the tilt is held to PITCH_DN..PITCH_UP; once the viewer lets go,
    a view tilted past the level band eases back to it (0.6 s pause, then ~1/3 s); walk-to and tour-stop landings at walking
    height arrive level (within +/-15 deg). Looking straight down is left to the orbit, aerial and dollhouse views. */
-const PITCH_DN = -.45, PITCH_UP = .6, LEVEL_LO = -.12, LEVEL_HI = .1, LAND_TILT = .26;
+const PITCH_DN = -1.4, PITCH_UP = 1.4, LEVEL_LO = -.12, LEVEL_HI = .1, LAND_TILT = .26;   // r34: +/-80 deg (was -26 / +34)
 const NAVL = window.NAVL = {dirty: false, at: 0};
 function clampPitch(p, cur){ const c = cur ?? 0; return clamp(p, Math.min(PITCH_DN, c), Math.max(PITCH_UP, c)); }   // never pushes further past the limits
 function navTouched(){ NAVL.dirty = true; NAVL.at = performance.now(); }
@@ -5576,7 +5583,7 @@ function navLevelLanding(to, toT){   // a look landing at walking height (eye 3.
   try{ const fl = walkSurfaceAt(to.x, to.z, to.y - 5.3 + .6), hh = to.y - fl; if(!(hh >= 3.5 && hh <= 7.5)) return;
     const hz = Math.hypot(toT.x - to.x, toT.z - to.z); if(hz < .01) return;
     const el = Math.atan2(toT.y - to.y, hz), el2 = clamp(el, -LAND_TILT, LAND_TILT); if(el2 !== el) toT.y = to.y + Math.tan(el2) * hz; }catch(e){} }
-function lookFromCamera(){ const d=new THREE.Vector3(); camera.getWorldDirection(d); yaw=Math.atan2(-d.x,-d.z); pitch=clamp(Math.asin(clamp(d.y,-1,1)),-1.3,1.3); }
+function lookFromCamera(){ const d=new THREE.Vector3(); camera.getWorldDirection(d); yaw=Math.atan2(-d.x,-d.z); pitch=clamp(Math.asin(clamp(d.y,-1,1)),-1.45,1.45); }
 function orbitFromCamera(){ const d=camera.position.clone().sub(target); sph.r=Math.max(.5,d.length()); sph.theta=Math.atan2(d.x,d.z); sph.phi=Math.acos(clamp(d.y/sph.r,-1,1)); }
 function applyOrbit(){
   sph.phi=clamp(sph.phi,.04,1.56); sph.r=clamp(sph.r,4,520);
@@ -5586,27 +5593,62 @@ function applyOrbit(){
   target.x=clamp(target.x,-400,400); target.z=clamp(target.z,-400,400); target.y=clamp(target.y,-40,60);
   const s=Math.sin(sph.phi);
   camera.position.set(target.x+sph.r*s*Math.sin(sph.theta), target.y+sph.r*Math.cos(sph.phi), target.z+sph.r*s*Math.cos(sph.theta));
-  const gy=ground(camera.position.x,camera.position.z)+1.2; if(camera.position.y<gy) camera.position.y=gy;
+  let gy=ground(camera.position.x,camera.position.z)+1.2;
+  if(!isDoll()){ try{ gy=Math.max(gy, walkSurfaceAt(camera.position.x,camera.position.z,camera.position.y-1.2)+EYE-.25); }catch(e){} }   // NAV r34: turning or zooming an outdoor stop never puts the eye against the ground or a floor
+  if(camera.position.y<gy) camera.position.y=gy;
   camera.lookAt(target);
 }
-function setFov(f){ camera.fov=clamp(f,28,85); camera.updateProjectionMatrix(); }
+function setFov(f){ lensTw=null; camera.fov=clamp(f,28,85); camera.updateProjectionMatrix(); }
 function orbitLand(pos, look){   // v22 flash22 F3: where applyOrbit (ground clearance, phi / r / target limits) puts this orbit pose
   const P = camera.position.clone(), Q = camera.quaternion.clone(), T = target.clone(), S = {r: sph.r, theta: sph.theta, phi: sph.phi};
   try{ target.set(...look); camera.position.set(...pos); orbitFromCamera(); applyOrbit(); return [camera.position.toArray(), target.toArray()]; }
   catch(e){ return [pos, look]; }
   finally{ camera.position.copy(P); camera.quaternion.copy(Q); target.copy(T); Object.assign(sph, S); camera.updateMatrixWorld(); } }
+/* NAV r34 (owner 11/10: 'it puts me against the floor', 'put us back on the lower floor'): a flight to a standing view always arrives.
+   Touching the view mid-flight (drag, wheel, pad, a game's turn button) used to stop the camera wherever it was - between floors, in a
+   wall, up in the roof. Now the viewer gets the look direction at once and the position keeps gliding to the flight's destination. */
+function navGlide(){ if(!anim || anim.kind !== 'look') return; glide = {t0: anim.t0, dur: anim.dur, from: anim.from, to: anim.to, lift: anim.lift, last: null};
+  lensTw = {t0: performance.now(), dur: Math.max(.01, anim.dur - (performance.now() - anim.t0) / 1000), f0: camera.fov, s0: camera.userData.sy || 0}; }
+function navGlideStep(){ const g = glide, P = camera.position; if(g.last && P.distanceToSquared(g.last) > 1e-6){ glide = null; return; }   // something else placed the camera: let it
+  const tt = Math.min(1, (performance.now() - g.t0) / 1000 / g.dur), t = tt < .5 ? 4 * tt ** 3 : 1 - Math.pow(-2 * tt + 2, 3) / 2;
+  P.lerpVectors(g.from, g.to, t); if(g.lift) P.y += Math.sin(t * Math.PI) * g.lift; g.last = P.clone();
+  if(tt >= 1){ glide = null; if(mode === 'walk'){ try{ feet = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); }catch(e){} } } }
+function navStandable(P){   // a place a person could be standing: eye 3.5-7.5 ft over the floor under it, clear of walls
+  try{ const fl = walkSurfaceAt(P.x, P.z, P.y - EYE + .6), h = P.y - fl; if(!(h >= 3.5 && h <= 7.5)) return false;
+    const q = {x: P.x, z: P.z}; collide(q, fl); return Math.hypot(q.x - P.x, q.z - P.z) < .6; }catch(e){ return true; } }
+function navStandNear(x, z, y0, rooms){   // the nearest spot with footing on the floor at y0 (preferring the given tour rooms), or null
+  const ok = (px, pz) => { if(Math.abs(walkSurfaceAt(px, pz, y0 + .3) - y0) > .05) return false;
+    for(let k = 0; k < 4; k++){ const a = k * Math.PI / 2; if(Math.abs(walkSurfaceAt(px + Math.cos(a) * .9, pz + Math.sin(a) * .9, y0 + .3) - y0) > .05) return false; }
+    const q = {x: px, z: pz}; collide(q, y0); return Math.hypot(q.x - px, q.z - pz) < .05; };
+  let any = null;
+  for(let r = 0; r <= 12; r += .5){ const n = r ? Math.max(8, Math.round(r * 8)) : 1;
+    for(let k = 0; k < n; k++){ const a = k / n * 2 * Math.PI, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if(!ok(px, pz)) continue;
+      if(!rooms) return {x: px, z: pz}; let rm = null; try{ rm = bim2RoomAt(px, pz, y0 > 4); }catch(e){}
+      if(rm && rooms.includes(rm)) return {x: px, z: pz}; if(!any) any = {x: px, z: pz}; } }
+  return any; }
+function navWalkStart(prev, far){   // where Walk begins when the camera is not somewhere a person could stand
+  try{ const s = STOPS[stopIdx]; if(!far && prev === 'tour' && s && !s.aerial && s.level !== 'outside' && LV[s.level] !== undefined){ const fr = FRAME_FOR(s), y0 = LV[s.level];
+      if(navStandable(new THREE.Vector3(...fr.pos))) return {pos: fr.pos, look: fr.look, feet: walkSurfaceAt(fr.pos[0], fr.pos[2], fr.pos[1] - EYE + .6)};
+      const q = navStandNear(fr.pos[0], fr.pos[2], y0, s.rooms);
+      if(q){ const dx = fr.look[0] - fr.pos[0], dz = fr.look[2] - fr.pos[2]; return {pos: [q.x, y0 + EYE, q.z], look: [q.x + dx, y0 + EYE, q.z + dz], feet: y0}; } } }catch(e){}
+  const s = STOPS[1]; return {pos: s.pos, look: s.look, feet: LV.outside}; }
 function flyTo(pos, look, kind='look', dur, lens){
+  flightN++; flightAt = performance.now();
+  if(glide && kind === 'look'){ const P = camera.position, g = glide.to;   // a turn in place asked for mid-flight: turn, and still arrive
+    if(Math.hypot(pos[0] - P.x, pos[1] - P.y, pos[2] - P.z) < .05 && P.distanceTo(g) > .05){ look = [look[0] + g.x - P.x, look[1] + g.y - P.y, look[2] + g.z - P.z]; pos = [g.x, g.y, g.z];
+      if(dur != null) dur = Math.max(dur, glide.dur - (performance.now() - glide.t0) / 1000); } }
+  glide = null;
   if(kind === 'orbit' && window.__flash22 && __flash22.on){ const L = orbitLand(pos, look); if(Math.hypot(L[0][0] - pos[0], L[0][1] - pos[1], L[0][2] - pos[2]) > 1e-6) __flash22.landed++; pos = L[0]; look = L[1]; }
   if(!lens){ LENS = {fov: FOV0, sy: 0, cam: null}; lens = LENS; } lensTw = null;
   const to=new THREE.Vector3(...pos), toT=new THREE.Vector3(...look);
-  if(kind==='look') navLevelLanding(to, toT); NAVL.dirty = false;   // NAV r27
+  NAVL.dirty = false;   // NAV r34: a flight lands looking where it was asked to (was r27: landing tilt held to +/-15 deg, which cut off the games' authored views and 'Show me')
   const from=camera.position.clone(); const d=new THREE.Vector3(); camera.getWorldDirection(d);
   const fromT = nav==='orbit' && !anim ? target.clone() : from.clone().addScaledVector(d, Math.max(10, from.distanceTo(toT)));
   const dist=from.distanceTo(to);
   dur = dur ?? clamp(dist/26,.9,2.6); if(reduceMotion) dur=.01;
   anim={t0:performance.now(), dur, from, to, fromT, toT, kind, fov0:camera.fov, fov1:lens.fov, sy0:camera.userData.sy||0, sy1:lens.sy||0, lift: dist>40? Math.min(30,dist*.25):0};
 }
-function interrupt(){ if(ovOn){ photoMode=false; const o = $('#ov'); o.style.transition = 'opacity .28s ease-out'; hidePhoto(); setTimeout(() => { o.style.transition = ''; }, 400); } if(!anim) return; nav=anim.kind; if(nav==='orbit'){ target.copy(curT); orbitFromCamera(); } else lookFromCamera(); anim=null; updateLegend(); }
+function interrupt(){ if(ovOn){ photoMode=false; const o = $('#ov'); o.style.transition = 'opacity .28s ease-out'; hidePhoto(); setTimeout(() => { o.style.transition = ''; }, 400); } if(!anim) return; nav=anim.kind; if(nav==='orbit'){ target.copy(curT); orbitFromCamera(); } else { lookFromCamera(); navGlide(); } anim=null; updateLegend(); }
 function updateLegend(){
   const h=$('#hint'); h.hidden=false;
   if(nav==='orbit'){ h.innerHTML = coarse ? 'Drag to turn · Pinch to zoom · Two fingers to move' : 'Drag to turn · <kbd>Shift</kbd>-drag to move · <kbd>Ctrl</kbd>/<kbd>⌘</kbd>-drag to look around · Scroll to zoom'; return; }   // v24 N1
@@ -6319,6 +6361,10 @@ window.__FRAMECHECK = () => { const rc = new THREE.Raycaster(), o = []; scene.tr
     const hit = rc.intersectObjects(o, false)[0]; let near = 1e9; for(let i = 0; i < 8; i++){ const a = i * Math.PI / 4; rc.set(P, new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); rc.far = 5; const x = rc.intersectObjects(o, false)[0]; if(x) near = Math.min(near, x.distance); }
     out.push({key: k, ahead: hit ? +hit.distance.toFixed(2) : null, nearest: near > 1e8 ? null : +near.toFixed(2), used: STOPS.some(st => camKey(st) === k)}); }
   return out; };
+function navOpenAt(si){   // NAV r34: open standing at a stop (?stop=<id>). Was: the stop's look point orbited from the opening aerial's distance, 90 ft up in the air
+  stopIdx = si; const q = STOPS[si], fr = FRAME_FOR(q); anim = null; glide = null; camera.position.set(...fr.pos); target.set(...fr.look);
+  if((q.nav || 'look') === 'orbit'){ nav = 'orbit'; orbitFromCamera(); applyOrbit(); } else { nav = 'look'; camera.lookAt(target); lookFromCamera(); pitch = clamp(pitch, -LAND_TILT, LAND_TILT); applyLook(); }
+  showStop(si, false); updateLegend(); }
 function showStop(i, fly=true){
   stopIdx = clamp(i,0,STOPS.length-1); const s=STOPS[stopIdx];
   $('#eyebrow').textContent = 'Stop '+(stopIdx+1)+' of '+STOPS.length;
@@ -6332,6 +6378,152 @@ function showStop(i, fly=true){
   hidePhoto(); if(fly){ const fr = FRAME_FOR(s); LENS = fr.lens; lensTw = null; flyTo(fr.pos, fr.look, s.nav||'look', undefined, fr.lens); anim.photo = s.photo; }
   $('#realSeg').hidden = s.photo==null;
 }
+/* NAV r34 self-check (?qa=1 only): window.__TOUR.navCheck() visits every tour stop, interrupts every flight, enters Walk from every stop, taps
+   around every room, walks to every white circle, climbs both stair flights, opens every stop the way ?stop=<id> does, and (in a game URL)
+   every game room / view, and reports any place where the eye is not at standing height over the floor of the right level, the view is
+   tilted, or the camera is in a wall, a cabinet or mid-air. await __TOUR.navCheck() -> {ok, checked, fails, notes}; pass {only: 'stops'} etc.
+   for one section, {rows: true} for every measurement. Flights are stepped to their end frame by frame, so it does not wait on the clock. */
+function navQA(){
+  const V3 = THREE.Vector3, r2 = v => +(+v).toFixed(2), ix = id => STOPS.findIndex(s => s.id === id);
+  const step = (n = 1) => { for(let i = 0; i < n; i++) tick0(true); };
+  const finish = () => { for(let i = 0; i < 3 && (anim || glide); i++){ if(anim) anim.t0 = -1e9; if(glide) glide.t0 = -1e9; tick0(true); } tick0(true); camera.updateMatrixWorld(); };
+  const mid = f => { if(anim){ anim.t0 = performance.now() - anim.dur * 1000 * f; tick0(true); } };
+  const solids = () => withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible);
+  const cast = (rc, objs) => { for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if(h.object.isSprite || !h.object.visible || (m && m.transparent && m.opacity < .5) || /^(find-|esc-)/.test(h.object.name || '')) continue; return h; } return null; };
+  const nameOf = o => (o.name || (o.material && o.material.name) || (o.parent && o.parent.name) || '?').slice(0, 44);
+  function probe(){ camera.updateMatrixWorld(); const P = camera.position.clone(), rc = new THREE.Raycaster(), objs = solids(); let clr = 99, what = '', ins = 0, insWhat = '';
+    for(let k = 0; k < 16; k++){ const a = k * Math.PI / 8, d = new V3(Math.cos(a), 0, Math.sin(a)); rc.set(P, d); rc.far = 3; const f = cast(rc, objs); if(f && f.distance < clr){ clr = f.distance; what = nameOf(f.object); }
+      if(k % 2 === 0){ rc.set(P.clone().addScaledVector(d, 3), d.clone().negate()); rc.far = 3; const b = cast(rc, objs); if(b){ const rp = 3 - b.distance; if(rp > .02 && (!f || f.distance > rp + .02)){ ins++; insWhat = nameOf(b.object); } } } }
+    const fl = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); let inC = null;
+    for(const c of COLLIDERS){ if(c.pass || (c.v && c.v !== ACTIVE_VAR) || c.y1 <= fl + .7 || c.y0 >= fl + 5.6 || (c.cut && c.cut.some(f => Math.abs(f.y - fl) < 1.2 && onFloor(f, P.x, P.z)))) continue; if(P.x > c.x0 + .02 && P.x < c.x1 - .02 && P.z > c.z0 + .02 && P.z < c.z1 - .02){ inC = [c.x0, c.z0, c.x1, c.z1].map(r2); break; } }
+    return {pos: [r2(P.x), r2(P.y), r2(P.z)], fl: r2(fl), eye: r2(P.y - fl), pitch: r2(pitch), nav, mode, feet: r2(feet), clr: r2(clr), what, inside: ins, insWhat, inC}; }
+  const geo = (m, minClr = .3) => m.inC ? 'inside a wall (collider ' + m.inC + ')' : m.inside >= 5 ? 'inside ' + m.insWhat : m.clr < minClr ? 'against ' + m.what + ' (' + m.clr + ' ft)' : null;
+  const lvlOf = s => s.level === 'outside' ? null : LV[s.level];
+  const look = s => (s.nav || 'look') === 'look' && !s.aerial;
+  const dist = (m, p) => Math.hypot(m.pos[0] - p[0], m.pos[1] - p[1], m.pos[2] - p[2]);
+  const tour = i => { if(mode !== 'tour') setMode('tour'); showStop(i); finish(); };
+  const onFoot = (a, b, f0) => { let f = f0; const L = Math.hypot(b[0] - a[0], b[2] - a[2]), n = Math.max(1, Math.ceil(L / .25));   // every 3 in of the way has footing within a step of the last
+    for(let i = 1; i <= n; i++){ const y = walkSurfaceAt(a[0] + (b[0] - a[0]) * i / n, a[2] + (b[2] - a[2]) * i / n, f + .6); if(y < f - 2.05) return false; f = y; } return true; };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const pause = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });   // lets the page breathe; not throttled when the tab is hidden
+  const SEC = {};
+  SEC.stops = R => { for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i], fr = FRAME_FOR(s); tour(i); const m = probe(), id = s.id; R.row('stops', id, m);
+      if(dist(m, fr.pos) > (look(s) ? .05 : .8)) R.fail('stops', id, 'not at the stop: ' + m.pos + ' vs ' + fr.pos.map(r2));
+      if(m.nav !== (s.nav || 'look')) R.fail('stops', id, 'nav ' + m.nav);
+      if(!look(s)){ if(!s.aerial && m.pos[1] < ground(m.pos[0], m.pos[2]) + EYE - .3) R.fail('stops', id, 'low: ' + r2(m.pos[1] - ground(m.pos[0], m.pos[2])) + ' ft over the ground'); continue; }
+      const L = lvlOf(s), hover = L != null && Math.abs(m.pos[1] - (L + EYE)) < .15 && Math.abs(m.eye - EYE) >= .15;
+      if(hover) R.note('stops', id, 'authored view: eye ' + EYE + ' ft over its own level (' + s.level + '), standing ' + m.eye + ' ft over the stair below it');
+      else if(Math.abs(m.eye - EYE) > .15) R.fail('stops', id, 'eye ' + m.eye + ' ft over the floor');
+      if(L != null && !hover && (m.fl > L + .1 || m.fl < L - 1.3)) R.fail('stops', id, 'wrong level: floor ' + m.fl + ', the stop is on ' + s.level + ' (' + L + ')');
+      if(Math.abs(m.pitch) > LAND_TILT + .02) R.fail('stops', id, 'tilted ' + m.pitch + ' rad');
+      const g = geo(m, .6); if(g) R.fail('stops', id, g); } };
+  SEC.interrupt = async R => { const pairs = STOPS.map((s, i) => [i, (i + 1) % STOPS.length]).concat([['lounge', 'primary'], ['primary', 'lower'], ['balcony', 'terrace'], ['kitchen', 'loft'], ['lower', 'balcony']].map(p => p.map(ix)));
+    for(const [a, b] of pairs){ const s = STOPS[b]; if(!look(s)) continue; await pause(); for(const f of [.2, .5, .8]){ tour(a); showStop(b); mid(f); interrupt(); step(1); const at = probe(); finish(); const m = probe(), id = STOPS[a].id + '>' + s.id + '@' + f; R.row('interrupt', id, m);
+        if(dist(m, FRAME_FOR(s).pos) > .05) R.fail('interrupt', id, 'stranded mid-flight at ' + m.pos + ' (eye ' + m.eye + ' ft over floor ' + m.fl + ')');
+        if(window.HILLSIDE && f === .5){ tour(a); showStop(b); mid(f); const H = window.HILLSIDE, c = camera.position; H.anim = null; H.flyTo(c.toArray(), [c.x + 7, c.y - 1.6, c.z + 7], 'look', .45); finish(); const g = probe();
+          if(dist(g, FRAME_FOR(s).pos) > .05) R.fail('interrupt', id + ' (game turn)', 'stranded mid-flight at ' + g.pos); } } } };
+  SEC.walk = R => { for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; tour(i); setMode('walk'); finish(); step(2); const m = probe(), id = s.id, L = lvlOf(s); R.row('walk', id, m);
+      if(m.mode !== 'walk' || m.nav !== 'look') R.fail('walk', id, 'mode ' + m.mode + ' / ' + m.nav);
+      if(Math.abs(m.pos[1] - (m.feet + EYE)) > .2 || Math.abs(m.feet - m.fl) > .2) R.fail('walk', id, 'eye ' + r2(m.pos[1] - m.feet) + ' ft over the feet, feet ' + m.feet + ', floor ' + m.fl);
+      if(L != null && look(s) && (m.feet > L + .1 || m.feet < L - 1.3)) R.fail('walk', id, 'Walk began on the wrong level: feet ' + m.feet + ', stop level ' + L);
+      const g = geo(m); if(g) R.fail('walk', id, g); }
+    for(const md of ['doll', 'design']){ setMode('tour'); finish(); setMode(md); finish(); setMode('walk'); finish(); step(2); const m = probe(); R.row('walk', md + '>walk', m);
+      if(Math.abs(m.pos[1] - (m.feet + EYE)) > .25 || Math.abs(m.feet - m.fl) > .25) R.fail('walk', md + '>walk', 'eye ' + r2(m.pos[1] - m.feet) + ' ft over the feet, floor ' + m.fl); const g = geo(m); if(g) R.fail('walk', md + '>walk', g); }
+    // U / D is a peek: eye level comes back
+    NAV.eyeT = -2.3; NAV.eye = -2.3; NAV.liftAt = performance.now() - 5000; const t0 = performance.now(); while(Math.abs(NAV.eye) > .05 && performance.now() - t0 < 4000) step(1);
+    if(Math.abs(NAV.eye) > .05) R.fail('walk', 'eye-lift', 'the eye stayed ' + r2(NAV.eye) + ' ft off eye level'); setMode('tour'); finish(); };
+  SEC.clicks = async R => { const r = canvas.getBoundingClientRect();
+    for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; if(!look(s)) continue; await pause();
+      for(const u of [.12, .38, .62, .88]) for(const v of [.3, .55, .8]){ tour(i); const b = probe(), cx = r.left + u * r.width, cy = r.top + v * r.height, h = pick(cx, cy); clickAt(cx, cy, false); finish(); step(1); const m = probe(), id = s.id + '@' + u + ',' + v;
+        if(dist(m, b.pos) < .02) continue; R.row('clicks', id, m);
+        const L0 = lvlOf(s) != null && Math.abs(b.eye - EYE) > .15 ? lvlOf(s) : b.fl, floorTap = h && h.face && h.face.normal.y > .6 && Math.abs(h.point.y - m.fl) < 1;
+        if(Math.abs(m.pos[1] - (m.fl + EYE)) > .15) R.fail('clicks', id, 'eye ' + m.eye + ' ft over the floor (' + m.fl + ')');
+        if(!floorTap && Math.abs(m.fl - L0) > 2.1 && !onFoot(b.pos, m.pos, L0)) R.fail('clicks', id, (m.fl < L0 ? 'dropped' : 'jumped up') + ' a level: floor ' + L0 + ' -> ' + m.fl + ' (tapped ' + (h && h.object ? nameOf(h.object) : 'terrain') + ')');
+        const g = geo(m); if(g) R.fail('clicks', id, g); } }
+    setMode('tour'); finish(); };
+  SEC.waypoints = R => { tour(ix('entry')); setMode('walk'); finish();
+    for(const w of WPS){ const u = w.userData, f = walkSurfaceAt(u.x, u.z, u.y + .2), p0 = pitch; moveTo(u.x, u.z, f, FACE[u.label]); finish(); step(1); const m = probe(), id = u.label + '@' + r2(u.x) + ',' + r2(u.z); R.row('waypoints', id, m);
+      if(Math.abs(m.pos[1] - (m.fl + EYE)) > .15 || Math.abs(m.fl - f) > .3) R.fail('waypoints', id, 'eye ' + m.eye + ' ft over floor ' + m.fl + ' (circle is on ' + r2(f) + ')');
+      if(Math.abs(pitch - p0) > .01) R.fail('waypoints', id, 'the walk changed the tilt: ' + r2(p0) + ' -> ' + m.pitch);
+      const g = geo(m); if(g) R.fail('waypoints', id, g); }
+    setMode('tour'); finish(); };
+  SEC.stairs = async R => { const go = async (name, from, path, want) => { await pause(); tour(ix('entry')); setMode('walk'); finish(); moveTo(from[0], from[1], walkSurfaceAt(from[0], from[1], from[2] + .3)); finish(); step(2);
+      let k = 0, worst = 0, lastF = feet; const t0 = performance.now(); keys['arrowup'] = true;
+      try{ while(k < path.length && performance.now() - t0 < 14000){ const P = camera.position, dx = path[k][0] - P.x, dz = path[k][1] - P.z; if(Math.hypot(dx, dz) < .7){ k++; continue; }
+          yaw = Math.atan2(-dx, -dz); tick0(true); worst = Math.max(worst, Math.abs(feet - lastF)); lastF = feet;
+          if(Math.abs(P.y - feet - EYE) > 1.2){ R.fail('stairs', name, 'eye ' + r2(P.y - feet) + ' ft over the feet at ' + [r2(P.x), r2(P.z)]); break; } } }
+      finally{ keys['arrowup'] = false; }
+      for(let i = 0, pf = 1e9; i < 120 && Math.abs(feet - pf) > .002; i++){ pf = feet; step(1); } const m = probe(); R.row('stairs', name, m);
+      if(k < path.length) R.fail('stairs', name, 'stopped at ' + m.pos + ' before leg ' + k);
+      if(Math.abs(m.feet - want) > .1) R.fail('stairs', name, 'ended on floor ' + m.feet + ', wanted ' + want);
+      if(worst > 1.2) R.fail('stairs', name, 'the floor jumped ' + r2(worst) + ' ft in one frame'); };
+    await go('main > upper', [-11.8, -3.5, 0], [[-12.3, -6.5], [-12.3, -10.6], [-16, -10.6], [-20.5, -10]], LV.upper);
+    await go('upper > main', [-21, -9, LV.upper], [[-18, -10.6], [-12.3, -10.6], [-12.3, -6.5], [-11.8, -3]], LV.main);
+    await go('main > lower', [-11.8, -3.5, 0], [[-13.5, -4.4], [-17, -4.4], [-21, -4.4], [-21, -6.5], [-21, -10]], LV.lower);
+    await go('lower > main', [-21, -10.5, LV.lower], [[-21, -7.5], [-21, -4.4], [-17, -4.4], [-13.5, -4.4], [-11, -3.5]], LV.main);
+    setMode('tour'); finish(); };
+  SEC.deeplink = R => { for(let i = 1; i < STOPS.length; i++){ const s = STOPS[i]; setMode('tour'); tour(0); navOpenAt(i); step(2); camera.updateMatrixWorld(); const m = probe(); R.row('deeplink', s.id, m);
+      if(dist(m, FRAME_FOR(s).pos) > (look(s) ? .05 : .8) || m.nav !== (s.nav || 'look')) R.fail('deeplink', s.id, '?stop=' + s.id + ' opens at ' + m.pos + ' (' + m.nav + '), the stop is at ' + FRAME_FOR(s).pos.map(r2)); }
+    tour(0); };
+  SEC.orbit = R => { const r = canvas.getBoundingClientRect();
+    for(const id of ['street', 'yard', 'dusk']){ tour(ix(id)); for(let k = 0; k < 40; k++){ zoomAt(.8, r.left + r.width * .5, r.top + r.height * .8); tick0(true); } const m = probe(), g = ground(m.pos[0], m.pos[2]); R.row('orbit', id + ' zoom-in', m);
+      if(m.pos[1] < Math.max(g, m.fl) + EYE - .35) R.fail('orbit', id + ' zoom-in', 'eye ' + r2(m.pos[1] - Math.max(g, m.fl)) + ' ft over the ground');
+      tour(ix(id)); for(let k = 0; k < 30; k++){ sph.phi += .08; tick0(true); } const m2 = probe(), g2 = ground(m2.pos[0], m2.pos[2]); R.row('orbit', id + ' tilt-down', m2);
+      if(m2.pos[1] < Math.max(g2, m2.fl) + EYE - .35) R.fail('orbit', id + ' tilt-down', 'eye ' + r2(m2.pos[1] - Math.max(g2, m2.fl)) + ' ft over the ground'); }
+    tour(0); };
+  SEC.tod = R => { tour(ix('primary')); const a = probe(), k0 = TOD_KEY; for(const t of TOD){ setTOD(t.key); step(1); const m = probe(); if(dist(m, a.pos) > .01 || Math.abs(m.pitch - a.pitch) > .01) R.fail('tod', t.key, 'the camera moved: ' + m.pos); } setTOD(k0); R.row('tod', 'all', a); };
+  SEC.pitch = async R => { const r = canvas.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const drag = (dy, x = cx) => { if(!(typeof navGrabLook === 'function' && navGrabLook(x, cy + dy, 0, dy))){ pitch = clampPitch(pitch + dy * (camera.fov * Math.PI / 180) / canvas.clientHeight * 1.1, pitch); navTouched(); } tick0(true); };   // the drag handler's own two lines
+    for(const [stop, sg, name] of [['great', -1, 'looking down 50 deg (great room)'], ['primary', 1, 'looking up 50 deg (primary bedroom)']]){ await pause(); tour(ix(stop)); setMode('walk'); finish(); step(2);
+      for(let i = 0; i < 400 && sg * pitch < .87; i++) drag(sg * 6);
+      if(sg * pitch < .86){ R.fail('pitch', name, 'cannot tilt that far: the drag stops at ' + r2(pitch * 180 / Math.PI) + ' deg'); }
+      const p0 = pitch, same = what => { camera.updateMatrixWorld(); if(Math.abs(pitch - p0) > .01){ R.fail('pitch', name, what + ': tilt ' + r2(p0 * 180 / Math.PI) + ' -> ' + r2(pitch * 180 / Math.PI) + ' deg'); pitch = p0; } };
+      R.row('pitch', name, probe());
+      await wait(1800); step(40); same('after letting go and 2 s idle');
+      keys['arrowup'] = true; step(25); keys['arrowup'] = false; step(5); same('after walking forward (keys)');
+      padAct = 'back'; step(15); padAct = null; step(3); same('after walking back (on-screen pad)');
+      joy = {id: -1, x: 0, y: 0, dx: 0, dy: -1, t: 0, moved: true}; step(12); joy = null; step(3); same('after walking (touch joystick)');
+      keys['arrowleft'] = true; step(15); keys['arrowleft'] = false; step(3); same('after turning');
+      setFov(camera.fov * .8); step(2); setFov(camera.fov / .8); step(2); same('after zooming');
+      clickAt(cx, cy, false); finish(); step(2); same('after a tap-to-walk move');
+      await wait(900); step(30); same('after the move and another idle second'); }
+    for(const sg of [-1, 1]){ const y0 = yaw; let spin = 0, py = yaw; for(let i = 0; i < 500; i++){ drag(sg * 8, cx + r.width * .25); spin = Math.max(spin, Math.abs(angDiff(py, yaw))); py = yaw; }
+      const deg = r2(pitch * 180 / Math.PI); R.row('pitch', 'range ' + (sg < 0 ? 'down' : 'up'), probe());
+      if(sg * pitch < 1.35) R.fail('pitch', 'range', 'can only look ' + (sg < 0 ? 'down' : 'up') + ' to ' + deg + ' deg');
+      if(spin > .1 || camera.matrixWorld.elements[5] <= 0) R.fail('pitch', 'range', 'the view spun / flipped while tilting ' + (sg < 0 ? 'down' : 'up') + ' (heading jumped ' + r2(spin) + ' rad in one 8 px step)'); }
+    pitch = 0; setMode('tour'); finish(); };
+  SEC.games = async R => { const H = window.HILLSIDE; if(!H){ R.note('games', '-', 'not a game URL (open with &snowball=1 or &escape=easy)'); return; }
+    if(window.FINDCAT){ const F0 = window.FINDCAT, F = {S: F0.S, rooms: F0.rooms || ['kitchen', 'living', 'great', 'lounge', 'primary', 'pbath', 'balcony', 'lower', 'terrace'], turn: F0.turn || (sg => document.getElementById(sg > 0 ? 'fndL' : 'fndR').click())}, rooms = F.rooms.filter(k => ix(k) >= 0); let prev = rooms[rooms.length - 1];
+      for(const k of rooms){ await pause(); const s = STOPS[ix(k)], fr = FRAME_FOR(s), L = lvlOf(s);
+        H.showStop(ix(prev)); finish(); H.showStop(ix(k)); finish(); let m = probe(); R.row('games', 'snowball ' + k, m);
+        const chk = (tag, m) => { if(dist(m, fr.pos) > .05) R.fail('games', 'snowball ' + k + tag, 'not in the room: at ' + m.pos + ' (floor ' + m.fl + '), the room is at ' + fr.pos.map(r2));
+          if(Math.abs(m.eye - EYE) > .15) R.fail('games', 'snowball ' + k + tag, 'eye ' + m.eye + ' ft over the floor'); if(L != null && Math.abs(m.fl - L) > .1) R.fail('games', 'snowball ' + k + tag, 'wrong level: floor ' + m.fl + ' not ' + L); const g = geo(m, .6); if(g) R.fail('games', 'snowball ' + k + tag, g); };
+        chk('', m);
+        for(const f of [.15, .5, .85]){ H.showStop(ix(prev)); finish(); H.showStop(ix(k)); mid(f); F.turn(1); finish(); chk(' turn@' + f, probe()); }   // a turn button pressed during the flight in
+        H.showStop(ix(prev)); finish(); H.showStop(ix(k)); mid(.4); interrupt(); step(1); F.turn(-1); finish(); chk(' drag+turn', probe());   // a drag, then a turn, during the flight in
+        F.turn(1); finish(); F.turn(1); mid(.5); F.turn(-1); finish(); chk(' turns', probe());
+        if(F.S.started){ const si = stopIdx; for(const key of ['ArrowRight', 'ArrowLeft', ' ']){ window.dispatchEvent(new KeyboardEvent('keydown', {key, bubbles: true, cancelable: true})); finish(); }
+          if(stopIdx !== si) R.fail('games', 'snowball ' + k + ' keys', 'a key moved the tour to ' + STOPS[stopIdx].id); chk(' keys', probe()); }
+        prev = k; } }
+    if(window.ESCAPE){ const X = window.ESCAPE, fly = v => { H.anim = null; H.flyTo(v.pos, v.look, v.kind || 'look', 1.1); };
+      const views = [...document.querySelectorAll('#escNav button[data-v]')].map(b => ['view ' + b.dataset.v, null, b]).concat(X.ITEMS().filter(i => i.view).map(i => ['item ' + i.id, i.view, null]));
+      const go = w => { if(w[2]) w[2].click(); else fly(w[1]); };
+      for(const w of views){ await pause(); const v = w[1]; go(w); finish(); const m = probe(), id = 'escape ' + w[0], orb = v && v.kind === 'orbit'; R.row('games', id, m);
+        if(v && dist(m, v.pos) > (orb ? .8 : .05)) R.fail('games', id, 'not at the view: ' + m.pos);
+        if(v && !orb){ const el = Math.atan2(v.look[1] - v.pos[1], Math.hypot(v.look[0] - v.pos[0], v.look[2] - v.pos[2])); if(Math.abs(m.pitch - el) > .03) R.fail('games', id, 'the view was re-tilted: ' + m.pitch + ' rad, authored ' + r2(el)); }
+        if(m.fl !== 0) R.fail('games', id, 'wrong level: floor ' + m.fl); if(m.eye < 3 || m.eye > 7.6) R.fail('games', id, 'eye ' + m.eye + ' ft over the floor');
+        const g = geo(m); if(g) R.fail('games', id, g);
+        if(!orb){ go(views[0]); finish(); go(w); mid(.5); interrupt(); step(1); finish(); const m2 = probe(); if(dist(m2, m.pos) > .05) R.fail('games', id + ' interrupted', 'stranded at ' + m2.pos);
+          const p0 = -.9; pitch = p0; navTouched(); step(1); await wait(1500); step(30); if(Math.abs(pitch - p0) > .01) R.fail('games', id + ' look down', 'the tilt went back toward level: ' + r2(p0) + ' -> ' + r2(pitch)); } } } };
+  async function navCheck(o = {}){ const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
+    const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
+    for(const k of todo){ try{ await SEC[k](R); }catch(e){ R.fail(k, '-', 'check threw: ' + (e && e.message || e)); } await pause(); }
+    try{ keys['arrowup'] = false; if(!window.HILLSIDE){ setMode('tour'); showStop(saved.stopIdx); finish(); } }catch(e){}
+    const out = {ok: !R.fails.length, sections: todo, checked: R.n, ms: Math.round(performance.now() - t0), fails: R.fails, notes: R.notes}; if(o.rows) out.rows = R.rows;
+    console[out.ok ? 'info' : 'warn']('[navCheck] ' + R.n + ' poses checked, ' + R.fails.length + ' problem(s)'); if(R.fails.length) console.table(R.fails); return out; }
+  return {camera, target, scene, STOPS, flyTo, setMode, showStop, look(pos, at){ anim = null; glide = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
+    navCheck, probe, step, finish, mid, interrupt, openAt: navOpenAt, walkSurfaceAt, state: () => ({mode, nav, stopIdx, yaw, pitch, feet, anim: !!anim, glide: !!glide, fov: camera.fov}),
+    dbg: {FLOORS, COLLIDERS, NAV, NAVL, LV, EYE, WPS, ground, collide, moveTo, pick, clickAt: (x, y, d) => clickAt(x, y, d), viewReset, setTOD, keys}}; }
 function setMode(m, opts={}){
   if(m==='photos'){ openGallery(); return; }
   closeGallery(); hidePhoto();
@@ -6351,8 +6543,11 @@ function setMode(m, opts={}){
   if(m==='design') DESIGN.open(prev);
   if(m==='walk'){
     if(!opts.keep){
-      if(prev==='doll' || camera.position.y > 40 || (anim && anim.kind==='orbit') || (nav==='orbit' && sph.r>60)){ const s=STOPS[1]; anim=null; flyTo(s.pos, s.look, 'look', 1.4); feet=LV.outside; }
-      else { interrupt(); nav='look'; lookFromCamera(); feet = walkSurfaceAt(camera.position.x, camera.position.z, camera.position.y-EYE+.6); NAV.lastY = null; }
+      const far = prev==='doll' || camera.position.y > 40 || (anim && anim.kind==='orbit') || (nav==='orbit' && sph.r>60);
+      if(!far) interrupt();
+      const at = glide ? glide.to : camera.position;   // NAV r34: Walk starts where a person could stand (a camera in the air over the stairs, or left high by an orbit, is walked to the nearest floor of its level)
+      if(far || !navStandable(at)){ const s = navWalkStart(prev, far); anim=null; glide=null; flyTo(s.pos, s.look, 'look', far ? 1.4 : .8); feet=s.feet; }
+      else { nav='look'; lookFromCamera(); feet = walkSurfaceAt(at.x, at.z, at.y-EYE+.6); NAV.lastY = null; }
     }
     $('#eyebrow').textContent='Walk';
     updateWalkRoom(true);
@@ -6463,7 +6658,7 @@ addEventListener('keydown',e=>{
     if((e.key===' '||e.key==='Enter') && e.target.closest('button,a[href],select,summary,[role=button],[role=menuitem],[role=menuitemradio],[role=radio],[role=tab],[role=switch],[contenteditable]')) return;
     if(e.key.startsWith('Arrow') && e.target.closest('[role=radiogroup],[role=tablist],[role=menu],[role=toolbar],select,input[type=range]')) return;
   }
-  if(mode==='tour'){ if(e.key==='ArrowRight'||e.key===' '){ showStop(stopIdx+1); e.preventDefault(); return; } if(e.key==='ArrowLeft'){ showStop(stopIdx-1); e.preventDefault(); return; } }
+  if(mode==='tour' && !window.HILLSIDE){ if(e.key==='ArrowRight'||e.key===' '){ showStop(stopIdx+1); e.preventDefault(); return; } if(e.key==='ArrowLeft'){ showStop(stopIdx-1); e.preventDefault(); return; } }
   if(e.metaKey || e.ctrlKey || e.altKey) return;      // v21 nav: browser / OS shortcuts are not walk keys (macOS drops their keyup)
   keys[e.key.toLowerCase()]=true; if(e.key.startsWith('Arrow') && mode!=='tour') e.preventDefault();
   if(mode==='walk' && /^(PageUp|PageDown|Home)$/.test(e.key)) e.preventDefault();
@@ -6487,9 +6682,10 @@ function pick(cx,cy){
   return best;
 }
 function zoomAt(f,cx,cy){
-  const r0=sph.r, r1=clamp(r0*f,4,520), k=r1/r0; if(Math.abs(k-1)<1e-4) return;
+  const r0=sph.r, r1=clamp(r0*f,4,520); let k=r1/r0; if(Math.abs(k-1)<1e-4) return;
   const h = cx==null ? null : pick(cx,cy);
-  if(h && h.distance < 700){ const P=h.point; target.sub(P).multiplyScalar(k).add(P); camera.position.sub(P).multiplyScalar(k).add(P); orbitFromCamera(); }
+  if(h && h.distance < 700){ const P=h.point; if(k<1){ const dP=camera.position.distanceTo(P); if(dP*k<3) k=Math.min(1,3/Math.max(dP,1e-3)); }   /* NAV r34: no zooming into a wall */
+    target.sub(P).multiplyScalar(k).add(P); camera.position.sub(P).multiplyScalar(k).add(P); orbitFromCamera(); }
   else sph.r=r1;
 }
 function pan(dx,dy){
@@ -6521,12 +6717,15 @@ function roomView0(x, z, f){   // int21 I5: look along the room's longest clear 
   return [px, pz, [px + Math.sin(a) * 10, pz + Math.cos(a) * 10]]; }
 function moveTo(x,z,f,face){
   if(mode!=='walk') setMode('walk',{keep:true});
-  const p={x,z}; collide(p,f); feet=f;
+  const p={x,z}; collide(p,f);
+  if(navClear(p,f) < .6){ const C=camera.position, dx=C.x-p.x, dz=C.z-p.z, L=Math.hypot(dx,dz);   // NAV r34: no room to stand there (a slot beside a cabinet): stop short of it, back along the way you came
+    for(let s=.75; s<Math.min(L-1,6); s+=.75){ const q={x:p.x+dx/L*s, z:p.z+dz/L*s}; if(Math.abs(walkSurfaceAt(q.x,q.z,f+.6)-f)>.7) break; collide(q,f); if(navClear(q,f) >= .6){ p.x=q.x; p.z=q.z; break; } } }
+  { const f2=walkSurfaceAt(p.x,p.z,f+.6); if(Math.abs(f2-f)<=2) f=f2; } feet=f;   // the floor is the one under where you end up
   const pos=[p.x,f+EYE,p.z]; const dist=Math.hypot(p.x-camera.position.x,p.z-camera.position.z);
   // arrive looking the way you walked, so the room opens up in front of you
-  let ly=yaw, lp=clamp(pitch, LEVEL_LO, LEVEL_HI);   // NAV r27: arrive at eye level
-  if(face){ ly=Math.atan2(-(face[0]-p.x), -(face[1]-p.z)); lp=-.06; }
-  else if(dist>3){ const ty=Math.atan2(-(p.x-camera.position.x), -(p.z-camera.position.z)); lp=-.06;
+  let ly=yaw; const lp=pitch;   // NAV r34: arrive with the tilt you had (was r27: re-levelled)
+  if(face){ ly=Math.atan2(-(face[0]-p.x), -(face[1]-p.z)); }
+  else if(dist>3){ const ty=Math.atan2(-(p.x-camera.position.x), -(p.z-camera.position.z));
     // look along the longest view that stays inside the room you walked into (closer to your walking direction wins ties)
     const blockers=withVar(['main','upper','roof','furn','furnU']).filter(o=>o.visible); const rc=new THREE.Raycaster(); const o=new THREE.Vector3(p.x,f+EYE-.6,p.z);
     const dest=bim2PaintMat(bim2RoomAt(p.x,p.z,f>4)); let best=ty, bs=-1e9;
@@ -6542,9 +6741,9 @@ function clickAt(cx,cy,dbl){
   if(nav==='look'){ const w=pickWaypoint(cx,cy); if(w){ const u=w.userData; moveTo(u.x,u.z,walkSurfaceAt(u.x,u.z,u.y+.2),FACE[u.label]); return; } }
   const h=pick(cx,cy); if(!h) return;
   if(nav==='look'){
-    const n=h.face?h.face.normal:null; let x=h.point.x, z=h.point.z, f;
-    if(n && n.y>.6){ f=walkSurfaceAt(x,z,h.point.y+.3); }
-    else { const d=new THREE.Vector3().subVectors(h.point,camera.position).setY(0); const L=d.length(); if(L<2.2) return; d.multiplyScalar((L-1.8)/L); x=camera.position.x+d.x; z=camera.position.z+d.z; f=walkSurfaceAt(x,z,(mode==='walk'?feet:camera.position.y-EYE)+.6); }
+    const n=h.face?h.face.normal:null; let x=h.point.x, z=h.point.z, f, fh=false;
+    if(n && n.y>.6){ f=walkSurfaceAt(x,z,h.point.y+.3); fh = h.point.y-f < 1 && navHeadroom(x,z,f); }   // NAV r34: a floor you can stand on (not a bed, counter, shelf or roof)
+    if(!fh){ const q=navToward(h.point); if(!q) return; x=q.x; z=q.z; f=q.f; }
     moveTo(x,z,f);
   } else if(dbl){
     const P=h.point; const k=.45; const cam=camera.position.clone().sub(P).multiplyScalar(k).add(P);
@@ -6552,6 +6751,40 @@ function clickAt(cx,cy,dbl){
     flyTo(cam.toArray(),P.toArray(),'orbit',.7);
   }
 }
+function navClear(p, f){   // NAV r34: the eye keeps 0.9 ft off cabinets, shelves and appliances (walls are the colliders' job) and is never inside one; returns the clearance it ends with
+  try{ const objs = withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible), rc = new THREE.Raycaster(), o = new THREE.Vector3(), d = new THREE.Vector3(), q = new THREE.Vector3(), R = .9, N = 16, x0 = p.x, z0 = p.z;
+    const near = [], c = new THREE.Vector3(); o.set(p.x, f + EYE, p.z);   // only what is within reach of the probes (one pass, then cheap rays)
+    for(const g of objs) g.traverseVisible(m => { if(!m.isMesh || !m.geometry) return; if(m.isInstancedMesh){ near.push(m); return; } const gm = m.geometry; if(!gm.boundingSphere) gm.computeBoundingSphere();
+      if(c.copy(gm.boundingSphere.center).applyMatrix4(m.matrixWorld).distanceTo(o) < gm.boundingSphere.radius * m.matrixWorld.getMaxScaleOnAxis() + 4.5) near.push(m); });
+    if(!near.length) return 9;
+    const hit = () => { for(const h of rc.intersectObjects(near, false)){ const m = h.object.material; if(m && m.transparent && m.opacity < .5) continue; return h.distance; } return null; };
+    const scan = () => { o.set(p.x, f + EYE, p.z); const S = {mn: 9, x: 0, z: 0, ni: 0, ins: null};
+      for(let k = 0; k < N; k++){ const a = k * 2 * Math.PI / N; d.set(Math.cos(a), 0, Math.sin(a)); rc.set(o, d); rc.far = 1.6; const fw = hit();
+        if(fw != null && fw < S.mn){ S.mn = fw; S.x = d.x; S.z = d.z; } if(fw != null && fw < R) continue;
+        rc.set(q.copy(o).addScaledVector(d, 1.6), d.clone().negate()); rc.far = 1.6; const bk = hit();
+        if(bk != null){ const rp = 1.6 - bk; if(rp > .02 && (fw == null || fw > rp + .02)){ S.ni++; if(!S.ins || rp < S.ins.rp) S.ins = {rp, x: d.x, z: d.z}; } } }
+      return S; };
+    let S = scan();
+    for(let it = 0; it < 4 && (S.mn < R || S.ni >= 3); it++){ if(S.mn < R){ p.x -= S.x * (R - S.mn); p.z -= S.z * (R - S.mn); } else { p.x += S.ins.x * (S.ins.rp + R); p.z += S.ins.z * (S.ins.rp + R); }
+      collide(p, f); S = scan(); }
+    if(Math.abs(walkSurfaceAt(p.x, p.z, f + .6) - f) > .7){ p.x = x0; p.z = z0; return 0; }
+    return S.ni >= 3 ? 0 : S.mn; }catch(e){ return 9; } }
+function navHeadroom(x, z, f){   // NAV r34: standing room over a floor (storage platforms, the floor under a stair flight have none)
+  try{ const rc = new THREE.Raycaster(new THREE.Vector3(x, f + 1.5, z), new THREE.Vector3(0, 1, 0), 0, EYE - 1.5 + .6);
+    const objs = withVar(['main', 'upper', 'roof', 'vault', 'vaultUp', 'ceil', 'lowerRoof']).filter(g => g.visible && g.children.length);
+    for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if(h.object.isSprite || (m && (m.side === THREE.BackSide || m.transparent))) continue; return false; } }catch(e){}
+  return true; }
+function navToward(pt){   // NAV r34: a tap on a wall or a thing = walk toward it, on foot: stairs yes, but never off an edge, through a wall or down a level
+  const P = camera.position, s0 = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); let f = mode === 'walk' ? feet : s0, on = mode === 'walk' || P.y - s0 <= 7.5;
+  if(!on) f = P.y - EYE;   // the camera stands over a stair opening: the walk starts at the first floor of its level along the way
+  const d = new THREE.Vector3(pt.x - P.x, 0, pt.z - P.z), L = d.length(); if(L < 2.2) return null; d.multiplyScalar(1 / L);
+  const L1 = L - 1.8; let gx = P.x, gz = P.z, got = false;
+  for(let s = .25; ; s += .25){ const t = Math.min(s, L1), x = P.x + d.x * t, z = P.z + d.z * t, y = walkSurfaceAt(x, z, f + .6);
+    if(!on){ if(Math.abs(y - f) < .05){ on = true; f = y; gx = x; gz = z; got = true; } }
+    else if(y < f - NAV.DROP) break;
+    else { f = y; gx = x; gz = z; got = true; }
+    if(t >= L1) break; }
+  if(!got || Math.hypot(gx - P.x, gz - P.z) < 1) return null; return {x: gx, z: gz, f}; }
 const ring=new THREE.Group(); { const rm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide});
   const r1=new THREE.Mesh(new THREE.RingGeometry(.95,1.18,48),rm); const r2=new THREE.Mesh(new THREE.CircleGeometry(.95,48),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.22,depthWrite:false,side:THREE.DoubleSide}));
   ring.add(r1,r2); ring.rotation.x=-Math.PI/2; ring.visible=false; ring.renderOrder=6; scene.add(ring); }
@@ -6753,6 +6986,7 @@ function navSurfaceAt(x, z, lo, hi){                 // highest floor / stair su
 function navPassTag(){                               // rules 5 and 6 (see patch_v21_nav.py)
   if(NAV.nC === COLLIDERS.length && NAV.nS === SLIDERS.length && NAV.nR === RAMPS.length && NAV.nF === FLOORS.length) return; NAV.nC = COLLIDERS.length; NAV.nS = SLIDERS.length; NAV.nR = RAMPS.length; NAV.nF = FLOORS.length;
   for(const c of COLLIDERS){ const cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2;
+    c.cut = null; if(Math.min(c.x1 - c.x0, c.z1 - c.z0) > 2.5){ const fs = FLOORS.filter(f => f.y > c.y0 + .3 && f.y < c.y1 - .05 && Math.min(f.x1, c.x1) - Math.max(f.x0, c.x0) > .3 && Math.min(f.z1, c.z1) - Math.max(f.z0, c.z0) > .3); if(fs.length) c.cut = fs; }   // NAV r34: a slab with stair treads / a landing inside its volume (the stair runs through it)
     c.pass = Math.min(c.x1 - c.x0, c.z1 - c.z0) < 1.2 && SLIDERS.some(q => Math.abs(q.cx - cx) < .08 && Math.abs(q.cz - cz) < .08);
     // a wall whose real top carries a stair or floor (walls under a flight) stops at its top, not at the 8 ft default
     if(c.top != null && c.y1 > c.top + .01){ const xs = [c.x0 - .6, cx, c.x1 + .6], zs = [c.z0 - .6, cz, c.z1 + .6];
@@ -6799,8 +7033,9 @@ function navWalk(dt){
   const tgt = navSupport(P.x, P.z, feet), ramp = navOnRamp(P.x, P.z);
   feet += (tgt - feet) * Math.min(1, dt * (ramp ? 18 : tgt > feet ? 12 : 9));
   // eye height (U / D), clamped under the ceiling; stairs ease it back to normal
-  if(lift) NAV.eyeT = clamp(NAV.eyeT + lift * NAV.LIFT * dt, NAV.EYE_MIN, NAV.EYE_MAX);
+  if(lift){ NAV.eyeT = clamp(NAV.eyeT + lift * NAV.LIFT * dt, NAV.EYE_MIN, NAV.EYE_MAX); NAV.liftAt = performance.now(); }
   else if(ramp) NAV.eyeT += (0 - NAV.eyeT) * Math.min(1, dt * 2.5);
+  else if(NAV.eyeT && performance.now() - (NAV.liftAt || 0) > 600){ NAV.eyeT += (0 - NAV.eyeT) * Math.min(1, dt * 3); if(Math.abs(NAV.eyeT) < .01) NAV.eyeT = 0; }   // NAV r34: eye level is held (U / D is a peek)
   if(NAV.eyeT > 0 || NAV.eye > .05){ const room = navCeil() - .6 - (feet + EYE); NAV.eyeT = Math.min(NAV.eyeT, Math.max(0, room)); }
   NAV.eye += (NAV.eyeT - NAV.eye) * Math.min(1, dt * (lift ? 10 : 4));
   if(Math.abs(NAV.eye - NAV.eyeT) < .002) NAV.eye = NAV.eyeT;
@@ -6814,6 +7049,7 @@ function collide(p, fy){
   const R=.85, y0=fy+.7, y1=fy+5.6; navPassTag();
   for(let pass=0;pass<2;pass++) for(const c of COLLIDERS){
     if(c.y1<=y0 || c.y0>=y1 || (c.v && c.v!==ACTIVE_VAR) || c.pass) continue;
+    if(c.cut && c.cut.some(f => Math.abs(f.y - fy) < 1.2 && onFloor(f, p.x, p.z))) continue;   // NAV r34: on the stair that runs through this slab (it used to throw the walker 4 ft to the lower landing and block the way back up)
     const nx=clamp(p.x,c.x0,c.x1), nz=clamp(p.z,c.z0,c.z1); const dx=p.x-nx, dz=p.z-nz; const d2=dx*dx+dz*dz;
     if(d2 < R*R){ if(d2>1e-6){ const d=Math.sqrt(d2), push=(R-d)/d; p.x+=dx*push; p.z+=dz*push; }
       else { const l=p.x-c.x0, r=c.x1-p.x, t=p.z-c.z0, b=c.z1-p.z; const m=Math.min(l,r,t,b); if(m===l) p.x=c.x0-R; else if(m===r) p.x=c.x1+R; else if(m===t) p.z=c.z0-R; else p.z=c.z1+R; } }
@@ -6871,8 +7107,9 @@ mm.addEventListener('click',e=>{
 /* ---------------- loop ---------------- */
 function resize(){ const w=canvas.clientWidth, h=canvas.clientHeight, cpr=(typeof HITCH_CPR==='function')?HITCH_CPR():renderer.getPixelRatio(), pr=renderer.getPixelRatio(); const cv=canvas.width!==Math.floor(w*cpr)||canvas.height!==Math.floor(h*cpr); if(cv||(composer&&composer._w!==w*pr)){ if(composer) composer._w=w*pr; if(cv) renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); sizePost(); } }
 const clock = new THREE.Clock(); const tmpV=new THREE.Vector3();
-function tick(){
-  requestAnimationFrame(tick);
+const tick0 = tick;   // the frame itself, before the frame governors wrap it (the ?qa=1 self-check steps it)
+function tick(qa){
+  if(qa !== true) requestAnimationFrame(tick);   // qa === true: one frame stepped by the ?qa=1 self-check
   const dt = Math.min(clock.getDelta(), .05);
   resize();
   lensStep();
@@ -6888,10 +7125,11 @@ function tick(){
       if(isDoll()){ const w=1.4*dt; if(keys['arrowleft']) sph.theta+=w; if(keys['arrowright']) sph.theta-=w; if(keys['arrowup']) sph.phi-=w*.6; if(keys['arrowdown']) sph.phi+=w*.6;
         if(keys['+']||keys['=']) zoomAt(Math.exp(-1.3*dt)); if(keys['-']||keys['_']) zoomAt(Math.exp(1.3*dt));
         const pv=420*dt; if(keys['w']) pan(0,pv*.4); if(keys['s']) pan(0,-pv*.4); if(keys['a']) pan(pv*.4,0); if(keys['d']) pan(-pv*.4,0); }
-      applyOrbit();
+      glide=null; applyOrbit();
     } else {
+      if(glide) navGlideStep();   // NAV r34
       if(keys['+']||keys['=']) setFov(camera.fov*Math.exp(-1.1*dt)); if(keys['-']||keys['_']) setFov(camera.fov*Math.exp(1.1*dt));
-      navLevelStep(dt); applyLook();
+      applyLook();   // NAV r34: no navLevelStep - the tilt is not eased back to level
     }
   }
   // floor target ring under the mouse when looking around inside
@@ -6904,7 +7142,7 @@ function tick(){
   if(hoverAt && nav==='look' && !anim && !ptrs.size){ const h=pick(hoverAt[0],hoverAt[1]); hoverAt=null;
     if(h && h.face && h.face.normal.y>.6 && h.distance<90){ ring.position.set(h.point.x,h.point.y+.05,h.point.z); ring.visible=true; canvas.className='go'; } else { ring.visible=false; canvas.className='grab'; } }
   else if(nav!=='look' || anim){ ring.visible=false; if(!ptrs.size) canvas.className='grab'; }
-  if(mode==='walk' && !anim && nav==='look'){ navWalk(dt); updateWalkRoom(false); }
+  if(mode==='walk' && !anim && !glide && nav==='look'){ navWalk(dt); updateWalkRoom(false); }
   else NAV.lastY = null;
   // at dusk, windows glow when seen from outside and stay clear from inside
   { const inside = !isDoll() && bim2CameraIndoors();
@@ -8736,19 +8974,20 @@ async function boot(){
     new MutationObserver(()=>{ /* v27details T1: the theme no longer picks the time of day */ }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     const s=STOPS[0]; target.set(...s.look); camera.position.set(...s.pos); nav='orbit'; orbitFromCamera(); applyOrbit(); canvas.className='grab';
     { const sm = /[?&]stop=([a-z0-9]+)\b/.exec(location.search), si = sm ? STOPS.findIndex(q => q.id === sm[1]) : -1;   // ?stop=<id>: open on that tour stop (games link straight to a room)
-      if(si > 0){ stopIdx = si; const q = STOPS[si]; camera.position.set(...q.pos); target.set(...q.look); showStop(si, false); } else showStop(0,false); }
+      if(si > 0){ navOpenAt(si); } else showStop(0,false); }
     applyVisibility(); updateLegend();
     const h=(location.hash||'').slice(1); if(h && ['walk','doll','design','photos'].includes(h)) setMode(h);
     if(/[?&](escape|snowball)=/.test(location.search)){   // r30 escape room: a small host API for assets/escape/escape.js (loaded only on ?escape=...)
       const HX = window.HILLSIDE = {THREE, camera, target, scene, canvas, renderer, STOPS, ROOM, GROUPS, LV, TOD, flyTo, showStop, setMode, setTOD, pick, grp, sunPosition, SUN_DIR,
-        get mode(){ return mode; }, get nav(){ return nav; }, set nav(v){ nav = v; }, get anim(){ return anim; }, set anim(v){ anim = v; },
-        look(pos, at){ anim = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
+        get mode(){ return mode; }, get nav(){ return nav; }, set nav(v){ nav = v; }, get anim(){ return anim || glide || (performance.now() - flightAt < 250 ? {kind: 'look', settling: true} : null); }, set anim(v){ if(v == null && anim && anim.kind === 'look'){ nav = 'look'; lookFromCamera(); navGlide(); } anim = v; },   // r34: a game cancelling a flight (to turn in place) no longer strands the camera mid-flight; a flight counts as in progress for a quarter second after it starts, so a game's camera hold always sees it (also one that ends within a frame: reduced motion)
+        get flights(){ return flightN; },
+        look(pos, at){ anim = null; glide = null; flightN++; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
         door28: window.DOOR28, door28Toggle: typeof door28Toggle === 'function' ? door28Toggle : null, POCKET31: window.POCKET31, R28W: window.R28W, BIM2S: typeof BIM2S !== 'undefined' ? BIM2S : null,
         asBuilt(){ try{ if(ACTIVE_VAR !== 'asbuilt'){ ACTIVE_VAR = 'asbuilt'; applyVisibility(); } }catch(e){ console.warn('[games] asBuilt', e); } },   // games always play in the house as it is, whatever was last picked in Design
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
       const es = document.createElement('script'); es.src = /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=32' : '../assets/escape/escape.js?v=32'; document.head.appendChild(es); }
-    if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = {camera, target, scene, STOPS, flyTo, setMode, showStop, look(pos, at){ anim = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); }};   // QA camera hook (?qa=1 only)
+    if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
   }catch(err){ console.error(err); $('#loadtxt').innerHTML='<span class="err">Could not load the 3D tour ('+String(err.message||err)+'). Reload to try again.</span>'; }
@@ -20791,6 +21030,8 @@ function navRay(x, y){ const r = canvas.getBoundingClientRect(), v = new THREE.V
   v.applyMatrix4(NAV18.pinv.copy(camera.projectionMatrix).invert()).normalize().applyQuaternion(camera.quaternion); return v; }   // the inverse of the live matrix: the lens code shifts projectionMatrix directly
 function navGrabLook(x, y, dx, dy){ if(!NAV18.on) return false;
   try{ camera.updateMatrixWorld(); const a = navRay(x - dx, y - dy), b = navRay(x, y);
+    if(Math.abs(a.y) > .9 || Math.abs(b.y) > .9){ const k = (camera.fov * Math.PI / 180) / (canvas.clientHeight || 1) * 1.1, s0 = NAV18.grab ? 1 : -1;   // NAV r34: looking steeply down / up, the pointer's ray nears the vertical and its heading is unstable (the view would spin): plain proportional turn there
+      yaw += s0 * dx * k; pitch = clampPitch(pitch + s0 * dy * k, pitch); navTouched(); return true; }
     let dyaw = Math.atan2(-a.x, -a.z) - Math.atan2(-b.x, -b.z); dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
     const dp = Math.asin(clamp(a.y, -1, 1)) - Math.asin(clamp(b.y, -1, 1));
     const sg = NAV18.grab ? 1 : -1;   // NAV r27 (owner 11/10): grab-the-world is the default again, ?drag=mouse = mouselook. Was (owner 11/4): mouselook - the view turns toward the drag (scene moves opposite, 1:1); ?drag=grab = grab-the-world
