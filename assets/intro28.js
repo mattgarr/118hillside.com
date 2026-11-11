@@ -11,16 +11,16 @@
   if(L.classList.contains('done')) return;
   var game = /\/(thanksgiving|halloween)\//.test(location.pathname) || /[?&](snowball|escape)=/.test(q);
   var S = [
-    ['front-exterior-1600.jpg', '118 Hillside Drive', 'A light-filled home in Woodside Glens, about a mile from Town Center and its trails.'],
-    ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a cathedral-ceilinged foyer, with the heritage oak framed at the far end.'],
+    ['front-exterior-1600.jpg', '118 Hillside Drive', 'A house in Woodside Glens, about a mile from the market, the bakery and the library in Town Center.'],
+    ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a foyer with a cathedral ceiling. The heritage oak is framed in the glass at the far end.'],
     ['living-room-1600.jpg', 'Beams over the living room', 'Fir beams cross the vaulted ceiling, and the big windows look out into the trees.'],
     ['dining-1600.jpg', 'A wall of glass', 'The dining room opens onto the terrace, so dinner can move outside.'],
     ['kitchen-1180.jpg', 'The white kitchen', 'Quartz counters, a long peninsula, and a coffee bar with its own drinks fridge.'],
-    ['rec-room-1180.jpg', 'The bonus lounge', 'Movie nights downstairs, with stacking doors out to the terrace.'],
-    ['primary-bedroom-1172.jpg', 'The primary suite', 'Four skylights, a walk-in closet, and a balcony facing the western hills.'],
-    ['office-1172.jpg', 'A skylit office', 'A quiet room downstairs, lit from above.'],
+    ['rec-room-1180.jpg', 'The bonus lounge', 'Downstairs, with a big screen for movies and stacking doors out to the terrace.'],
+    ['primary-bedroom-1172.jpg', 'The primary suite', 'Upstairs, under four skylights, with a balcony that faces the western hills.'],
+    ['office-1172.jpg', 'A skylit office', 'Downstairs, with its daylight coming in from above.'],
     ['rear-yard-1282.jpg', 'Under the heritage oak', 'A paver terrace with an outdoor kitchen and a ceramic smoker under the pergola.'],
-    ['hills-view-1284.jpg', 'Sunset from the balcony', 'The western hills, every evening.']
+    ['hills-view-1284.jpg', 'Sunset from the balcony', 'Looking west to the hills at the end of the day.']
   ];
   var css = '#intro28{position:fixed;inset:0;z-index:2147483000;background:#0e1113;color:#fff;font-family:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif;overflow:hidden;opacity:1;transition:opacity .7s ease}' +
     '#intro28.out{opacity:0;pointer-events:none}' +
