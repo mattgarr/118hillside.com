@@ -54,11 +54,11 @@
       fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'I was keeping the bed warm.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
       spots: [{p: [22.5, 2.08, 29], n: 'on the bed', d: 1}, {p: [27, .03, 34], n: 'beside the white chair', d: 2}, {p: [27.5, .03, 29], n: 'on the far side of the bed', d: 2}, {p: [28, .03, 26], n: 'by the far bedside table', d: 2}, {p: [28, .03, 35], n: 'behind the white chair', d: 3}]},
     loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/x06.jpg', big: 'photos/x06.jpg', ar: 1.333, fit: '50% 36%', grp: ['loft'], fy: 5.57, cam: [[.4, .66, 'the railing at the top of the stairs'], [.62, .3, 'the triangle windows']],
-      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -16.8, 180, 0]],
+      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 345, 180, 20], [-19, -16.8, 180, 0]],
       spots: [{p: [-24, 7.06, -7.5], n: 'on the window seat', d: 1}, {p: [-18, 5.6, -4.5], n: 'at the top of the stairs, behind the railing', d: 2}, {p: [-18, 5.6, -18], n: 'down the upstairs hall', d: 2},
         {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 2}]},
     primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: ['suite', 'bed'], fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
-      fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'The big bed is the best bed.', v: [[-12.8, -33.5, 274, 215, 20], [-16.6, -38.4, 20, 320]],
+      fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'The big bed is the best bed.', v: [[-12.8, -33.5, 274, 215, 330], [-16.6, -38.4, 20, 320]],
       spots: [{p: [-18.5, 7.66, -31], n: 'on the big bed', d: 1}, {p: [-19.5, 5.63, -38], n: 'at the corner of the big bed', d: 2}, {p: [-9.5, 5.6, -28.5], n: 'behind the dresser', d: 2},
         {p: [-21.5, 5.63, -37.5], n: 'between the bed and the balcony doors', d: 3}, {p: [-21, 5.63, -29], n: 'on the far side of the big bed', d: 3}]},
     pbath:   {name: 'Primary bath', at: 'in the primary bath', photo: '../images/primary-bath-800.jpg', ar: .68, grp: ['pbath'], fy: 5.57, cam: [[.88, .36, 'the brass shower'], [.2, .62, 'the towels on their rings']],
@@ -389,7 +389,7 @@
   #fndBar #fndW{background:#b9641a}#fndBar button svg{width:26px;height:26px;flex:none}#fndBar button:active{transform:scale(.96)}#fndBar button:disabled{opacity:.35;cursor:default}
   #fndBar button.nudge{animation:fndNudge 1s ease-in-out infinite}
   @keyframes fndNudge{0%,100%{box-shadow:0 0 0 0 rgba(255,215,122,0)}50%{box-shadow:0 0 0 7px rgba(255,215,122,.85)}}
-  #fndWarm{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;transition:opacity .3s;white-space:nowrap}
+  #fndWarm{position:fixed;z-index:60;left:50%;bottom:130px;transform:translateX(-50%);display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;transition:opacity .3s;white-space:nowrap}
   #fndWarm i{width:18px;height:18px;display:block;color:#d8d3c6;transition:color .25s,transform .25s}#fndWarm i svg{width:100%;height:100%;display:block}
   #fndWarm i.on{color:#e0862a;transform:scale(1.15)}#fndWarm em{font:normal 500 14px Jost,sans-serif;color:#4c5565;margin-left:6px;min-width:74px}
   html.fnd-hard #fndWarm, #fndWarm.off{opacity:0;pointer-events:none}
@@ -473,7 +473,7 @@
     put(el('div', {id: 'fndBar', class: 'fnd-chip'}, `<div id="fndWarm" class="fnd-chip off" aria-hidden="true">${[0, 1, 2, 3, 4].map(() => `<i>${PAWSVG()}</i>`).join('')}<em></em></div>
       <div class="rm" aria-live="polite"><b id="fndRoom"></b><span id="fndFact"></span></div>
       <div class="go"><button type="button" id="fndL" aria-label="Turn left">${IC.l}<span>Turn</span></button><button type="button" id="fndW" aria-label="Walk to the other side of the room">${IC.walk}<span>Walk</span></button><button type="button" id="fndR" aria-label="Turn right"><span>Turn</span>${IC.r}</button></div>`));
-    warm = $('#fndWarm'); ring = put(el('div', {id: 'fndRing'})); toastE = put(el('div', {id: 'fndToast', role: 'status'})); bubble = put(el('div', {id: 'fndBubble'})); edge = put(el('div', {id: 'fndEdge'}, IC.arrow + '<span>Jingle</span>'));
+    warm = put($('#fndWarm')); ring = put(el('div', {id: 'fndRing'})); toastE = put(el('div', {id: 'fndToast', role: 'status'})); bubble = put(el('div', {id: 'fndBubble'})); edge = put(el('div', {id: 'fndEdge'}, IC.arrow + '<span>Jingle</span>'));
     fade = put(el('div', {id: 'fndFade'}, `<div>${PAWSVG()}<b></b></div>`)); blink = put(el('div', {id: 'fndBlink'}));
     $('#fndL').onclick = () => turn(1); $('#fndR').onclick = () => turn(-1); $('#fndW').onclick = () => walkTo(S.view + 1); $('#fndHelp').onclick = () => help(); $('#fndSnd').onclick = () => { ac(); setMute(!SV.mute); snd('tap'); }; setMute(SV.mute); }
   function ui(){ const id = room(), R = ROOM[id]; if(!R) return; $('#fndRoom').textContent = R.name; $('#fndFact').textContent = R.fact;
@@ -507,8 +507,9 @@
      at least an 88 px square, 64 in sneaky mode); outside sneaky mode a tap anywhere on his outline counts as long as some of him shows.
      He cannot be found from a place where none of him can be seen. */
   H.hooks.click = (cx, cy) => { if(dead) return false; if(!S.on) return true; if(S.mode !== 'seek' || !CAT.visible || walk) return true; tw = null; S.tAct = performance.now();
-    const v = cur(), seen = v.n >= SEEN() || S.step === 0, r = seen ? catRect() : null;
-    if(r && (inBox(r.part, cx, cy, S.hard ? 32 : 44, S.hard ? 10 : 22) || (!S.hard && inBox(r.all, cx, cy, 0, 6)))){ found(); return true; }
+    const v = cur(), seen = v.n >= SEEN() || S.step === 0, r = seen || (v.n > 0 && !S.hard) ? catRect() : null;
+    if(r && seen && (inBox(r.part, cx, cy, S.hard ? 32 : 44, S.hard ? 10 : 22) || (!S.hard && inBox(r.all, cx, cy, 0, 6)))){ found(); return true; }
+    if(r && !seen && !S.hard && inBox(r.part, cx, cy, 26, 12)){ found(); return true; }   // a sliver of him (an ear round a corner) is too little to count as seen, but a tap right on it still finds him
     for(const m of STEPS){ if(!m.visible) continue; const s = scr(m.position); if(s && Math.hypot(cx - s.x, cy - s.y) < Math.max(44, s.px * 1.15) && clearTo(anchor, m.position, .3)){ tapRing(cx, cy); walkTo(m.userData.to); return true; } }
     tapRing(cx, cy); snd('tap'); S.miss++;
     if(r && r.part && inBox(r.part, cx, cy, 150, 110)){ toast('Very close. He is right by there.', 1800); return true; }
@@ -528,7 +529,8 @@
     const pulse = 1 + .07 * Math.sin(t / 260); for(const m of STEPS) if(m.visible) m.scale.set(pulse, pulse, 1);
     /* the paw meter: one or two paws when you face away, three when you face him, four and five once the part of him that shows is on the screen.
        Facing him from a place where nothing of him shows reads "Try walking", and the walk button glows. */
-    const v = cur(), seen = v.n >= SEEN(), hs = seen ? scr(aimPt()) : null, inView = !!hs && Math.abs(hs.nx) < .94 && hs.ny < .94 && hs.y < $('#fndBar').getBoundingClientRect().top - 12, ry = relYaw(), ang = Math.abs(ry);
+    const barTop = $('#fndBar').getBoundingClientRect().top; warm.style.bottom = Math.round(innerHeight - barTop + 8) + 'px';   // the meter floats just above the bar as its own layer, so the page's notice pill steps clear of it
+    const v = cur(), seen = v.n >= SEEN(), hs = seen ? scr(aimPt()) : null, inView = !!hs && Math.abs(hs.nx) < .94 && hs.ny < .94 && hs.y < barTop - 12, ry = relYaw(), ang = Math.abs(ry);
     const w = S.step === 0 ? 5 : inView ? (Math.abs(hs.nx) < .5 ? 5 : 4) : ang < .7 ? 3 : ang < 1.6 ? 2 : 1, stuck = S.step > 0 && !seen && ang < .7 && !walk && ROOM[room()].v.length > 1;
     if(S.step > 0 && !S.turned && Math.abs(wrap(facing().yaw - S.open)) > .3) S.turned = true;
     if(w !== lastWarm || stuck !== lastStuck){ lastWarm = w; lastStuck = stuck; warm.querySelectorAll('i').forEach((p, i) => p.classList.toggle('on', i < w)); warm.querySelector('em').textContent = stuck ? 'Try walking' : w === 3 && hs && Math.abs(hs.nx) < .6 ? (hs.ny < 0 ? 'Look down' : 'Look up') : WARMTXT[w]; if(!S.hard){ if(stuck) nudge('walk'); else $('#fndW').classList.remove('nudge'); } }
