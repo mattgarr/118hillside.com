@@ -65,7 +65,7 @@
       fact: 'Heated floors, two sinks, and a shower big enough for two.', say: 'The floor in here is warm.', v: [[-13.5, -22, 180, 27, 100]],
       spots: [{p: [-10, 8.43, -25.1], n: 'on the bathroom counter', d: 1}, {p: [-9.5, 5.6, -19.1], n: 'in the gap by the shower glass', d: 1}, {p: [-11.5, 5.6, -19.1], n: 'in the shower, behind the glass', d: 2}, {p: [-14, 5.6, -16.1], n: 'round the little wall by the shower', d: 3}]},
     balcony: {name: 'Balcony', at: 'on the balcony', photo: '../images/hills-view-800.jpg', ar: .71, grp: ['suite', 'outside'], fy: 5.57, tod: 'golden', cam: [[.42, .34, 'the hills at sunset'], [.22, .52, 'the tall pine and the hills']],
-      fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.8, -41.3, 250, 110, 180]],
+      fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.7, -42.5, 235, 125, 180]],   // out on the deck, turned off the house wall (the first place stood in the slider doorway with the door frame and bedroom in view)
       spots: [{p: [-20.5, 6.91, -44.5], n: 'on a balcony chair', d: 1}, {p: [-21.5, 5.6, -43.5], n: 'behind a balcony chair', d: 2}, {p: [-14, 5.6, -45.5], n: 'in the corner behind a balcony chair', d: 3}]},
     lower:   {name: 'Downstairs bedroom', at: 'in the downstairs bedroom', photo: '../images/bedroom-800.jpg', ar: .68, grp: ['bed'], fy: -4.56, cam: [[.75, .34, 'the picture on the green wall'], [.12, .42, 'the dark round picture']],
       fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It is quiet down here.', v: [[-12.3, -40.5, 216, 160, 290], [-18.2, -40.3, 135, 90]],
