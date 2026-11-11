@@ -69,7 +69,7 @@
       note: 'A cathedral ceiling, a walk-in closet, and stacking glass doors to a private balcony.'},
     balcony: {name: 'Balcony', floor: 'upper', pos: [-17.7, L2 + EYE, -41.7], face: [-23.2, 10.2, -47.4], map: [-17.7, -44],
       note: 'A private balcony off the primary bedroom that looks west over the hills.'}};
-  const CATSAYS = {lounge: 'Movie night is down here. I get the good pouf.', office: 'The door shuts. I have opinions about that.', porch: 'I am an indoor cat. This is as far as I go.',
+  const CATSAYS = {lounge: 'Movie night is down here. I get the good pouf.', office: 'The door shuts. I have opinions about that.', porch: 'I watch the front walk from the window. Nobody gets past me.',
     entry: 'Everyone who comes in looks up, then straight through at the oak.', living: 'The beams are a hundred years old. I have climbed none of them. Yet.', kitchen: 'Four doors on that fridge and I cannot open one of them.',
     coffee: 'They call this the coffee bar. I call it the cupboard with the treats.', great: 'The sofa is mine from nine until five.', loft: 'Top of the stairs. Best place to watch everybody.', primary: 'I am not allowed on this bed. I am on it most days.', balcony: 'I watch birds from here. They know.'};
   const ORDER = ['table', 'lounge', 'office', 'porch', 'entry', 'living', 'kitchen', 'coffee', 'great', 'loft', 'primary', 'balcony'];
@@ -136,7 +136,7 @@
     bagPorch:    {place: 'porch', kind: 'bag', label: 'Paper bag', at: [0.95, 2.0, 9.6], pos: [-2.3, 4.3, 9.3], look: [0.95, 2.0, 9.6], fit: {w: 2.2, h: 2.6}, prop: {at: [0.95, 1.44, 9.6], ry: -1.5}, decoy: 'leaf',
       title: 'A bag on a porch lounger', text: 'On the front porch, looking down the walk to the street.', act: 'Look in the bag'},
     bagSofa:     {place: 'table', kind: 'bag', label: 'Paper bag', at: [-2.25, -2.9, -32.55], pos: [1.3, -.4, -30.4], look: [-2.25, -2.9, -32.55], fit: {w: 2.2, h: 2.6}, prop: {at: [-2.25, -3.5, -32.55], ry: 1.2}, decoy: 'duck',
-      title: 'A bag on the terrace sofas', text: 'On the low table between the wicker sofas, under the oak.', act: 'Look in the bag'},
+      title: 'A bag by the terrace sofas', text: 'On the low table between the wicker sofas, under the oak.', act: 'Look in the bag'},
     wallMirror:  {place: 'lounge', kind: 'wall', label: 'Wall with the mirror', at: [-13.5, -1.0, -25.5], pos: [-15.6, -.3, -19.7], look: [-13.5, -1.3, -25.6], fit: {w: 4.4, h: 4.8},
       title: 'The wall with the round mirror', text: 'A painted wall at the far end of the lounge, behind the round table.'},
     wallArt:     {place: 'lounge', kind: 'wall', label: 'Wall with the painting', at: [-15.3, -1.2, -12.8], pos: [-15.8, -.4, -18.4], look: [-15.3, -1.5, -12.7], fit: {w: 5.2, h: 5.2},
@@ -447,7 +447,7 @@
     // dishes: built once, hidden until found
     for(const id of Object.keys(P.DISH)){ const g = P.DISH[id](); g.visible = false; P.root.add(g); DISHOBJ[id] = g; }
     // bags and boxes
-    for(const id in SPOTS){ const sp = SPOTS[id]; if(!sp.prop) continue; const g = sp.kind === 'box' ? P.box() : P.bag(); g.position.set(...sp.prop.at); g.rotation.y = sp.kind === 'bag' ? Math.atan2(sp.pos[0] - sp.prop.at[0], sp.pos[2] - sp.prop.at[2]) : (sp.prop.ry || 0); P.root.add(g); PROP[id] = g; }
+    for(const id in SPOTS){ const sp = SPOTS[id]; if(!sp.prop || !STEPS.some(st => st.spots.includes(id))) continue; const g = sp.kind === 'box' ? P.box() : P.bag(); g.position.set(...sp.prop.at); g.rotation.y = sp.kind === 'bag' ? Math.atan2(sp.pos[0] - sp.prop.at[0], sp.pos[2] - sp.prop.at[2]) : (sp.prop.ry || 0); P.root.add(g); PROP[id] = g; }
     for(const [n, x, z] of [['drumTable', 6.56, -2.92], ['drumTable', 10.87, 29.62], ['bistroTable', -14.44, -22.5]]) try{ decorOff(n, x, z); }catch(e){}
     // the secret base under the stairs: a crate to put things on
     const cr = P.crate(); cr.position.set(-12.3, L0 + .03, -11.25); cr.rotation.y = .12; P.root.add(cr); PROP.crate = cr;
@@ -708,7 +708,7 @@
     html.fe-ex #feDock{visibility:hidden}html.fe-ex #feBack{display:none}
     html.fe-ex #feGoal{display:none}
     #feCard .c{padding:20px 18px 18px}#feCard .note{font-size:20.5px}#feCard .lede{font-size:19px}
-    #feCard.side{place-items:end center;padding:8px}#feCard.side .c{max-width:560px;max-height:66vh}
+    #feCard.side{place-items:end center;padding:8px}#feCard.side .c{max-width:560px;max-height:60vh;padding:16px 16px 14px}#feCard.side .lede{display:none}#feCard.side h2{font-size:30px}
   }
   @media (prefers-reduced-motion:reduce){.feMk.on i,#feHint.nudge,#feCoach svg,.feLeaf{animation:none!important}}
   `;
@@ -743,7 +743,7 @@
       <div id="feCoach" role="status"></div>
       <div id="feDock">
         <div id="feMapWrap"><button class="feChip" id="feMapBtn" type="button" aria-expanded="false">${ICO.pin}<span id="feMapNow">Terrace</span><small>Map</small></button>
-          <div class="feChip" id="feMap"><h4>You are in the <b id="feMapName">terrace</b></h4><button type="button" id="feMapX" aria-label="Close the map">×</button><div class="tabs" id="feTabs" role="tablist" aria-label="Floors"></div><div class="plan" id="fePlan"></div></div></div>
+          <div class="feChip" id="feMap"><h4><span id="feMapPre">You are on the</span> <b id="feMapName">terrace</b></h4><button type="button" id="feMapX" aria-label="Close the map">×</button><div class="tabs" id="feTabs" role="tablist" aria-label="Floors"></div><div class="plan" id="fePlan"></div></div></div>
         <div id="feTags" role="img" aria-label="Letter tags found so far">${[...LETTERS].map((c, i) => `<i style="--r:${[-4, 3, -2, 4, -3, 2][i]}deg">${c}</i>`).join('')}</div>
         <div id="feDockR"></div>
       </div>
@@ -844,7 +844,7 @@
     $$('#feTabs button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.f === fl)); b.classList.toggle('here', !!S.place && PLACES[S.place].floor === b.dataset.f); }); }
   function mapStep(){ if(!MAP.dot || !MAP.pt || !S.place) return; const here = PLACES[S.place].floor === MAP.floor; const m = MAP.pt(rig.pos.x, rig.pos.z), fx = -Math.sin(rig.yaw), fz = -Math.cos(rig.yaw), a = Math.atan2(fz, fx) * 180 / Math.PI;
     const key = here + m[0].toFixed(1) + ',' + m[1].toFixed(1) + ',' + a.toFixed(0); if(key === MAP.key) return; MAP.key = key; MAP.dot.style.display = here ? '' : 'none'; MAP.dot.setAttribute('transform', `translate(${m[0].toFixed(1)} ${m[1].toFixed(1)}) rotate(${a.toFixed(1)})`); }
-  function mapPlace(k){ $('#feMapName').textContent = PLACES[k].name.toLowerCase(); $('#feMapNow').textContent = PLACES[k].name; showFloor(PLACES[k].floor); }
+  function mapPlace(k){ $('#feMapPre').textContent = 'You are ' + ({table: 'on', balcony: 'on', porch: 'on', coffee: 'at'}[k] || 'in') + ' the'; $('#feMapName').textContent = PLACES[k].name.toLowerCase(); $('#feMapNow').textContent = PLACES[k].name; showFloor(PLACES[k].floor); }
 
   /* ---- markers: gold rings (look closer) and white circles (walk there), projected from the house */
   const marks = [], _v = new V3();
@@ -875,11 +875,15 @@
     const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
     // things that are out of view dock to the side they lie on: one tidy stack per side, in the clear band between the HUD above and below
-    for(const side of ['L', 'R']){ const list = items.filter(it => it.docked && it.edge === side), n = list.length; if(!n) continue;
-      const x0 = side === 'L' ? r.left : r.left + r.width - 290, x1 = x0 + 290; let yMin = r.top + top, yMax = r.top + bot;
+    const stack = (list, x0, x1, maxPitch) => { const n = list.length; if(!n) return; let yMin = r.top + top, yMax = r.top + bot;
       for(const o of obs){ if(o[2] < x0 || o[0] > x1) continue; if((o[1] + o[3]) / 2 < r.top + r.height / 2) yMin = Math.max(yMin, o[3] + 36); else yMax = Math.min(yMax, o[1] - 36); }
-      const pitch = n > 1 ? clamp((yMax - yMin) / (n - 1), 40, 66) : 0, start = clamp(r.top + r.height * .42 - (n - 1) * pitch / 2, yMin, Math.max(yMin, yMax - (n - 1) * pitch));
-      list.forEach((it, i) => { it.x = side === 'L' ? r.left + padX : r.left + r.width - padX; it.y = start + i * pitch; placed.push(box(it)); }); }
+      const pitch = n > 1 ? clamp((yMax - yMin) / (n - 1), 40, maxPitch) : 0, start = clamp(r.top + r.height * .42 - (n - 1) * pitch / 2, yMin, Math.max(yMin, yMax - (n - 1) * pitch));
+      list.forEach((it, i) => { it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = start + i * pitch; placed.push(box(it)); }); };
+    const dockL = items.filter(it => it.docked && it.edge === 'L'), dockR = items.filter(it => it.docked && it.edge === 'R');
+    if(r.width < 620 && dockL.length && dockR.length){ // a narrow screen: the two sides take turns, row by row, so their labels never meet in the middle
+      const seq = []; for(let i = 0; i < Math.max(dockL.length, dockR.length); i++){ if(dockL[i]) seq.push(dockL[i]); if(dockR[i]) seq.push(dockR[i]); }
+      stack(seq, r.left, r.left + r.width, 58); }
+    else { stack(dockL, r.left, r.left + 290, 66); stack(dockR, r.left + r.width - 290, r.left + r.width, 66); }
     for(const it of items){ const m = it.m;
       if(!it.docked){ // in view: keep clear of the HUD and of the others, at the nearest free place above or below, or stay put if there is none
         const y0 = it.y, all = obs.concat(placed), free = y => { it.y = y; const q = box(it); return !all.some(o => hit(q, o)); };
@@ -891,7 +895,7 @@
 
   /* ---- coach: look, tap, walk, taught one at a time by doing */
   function coach(){ if(!S.started || S.done){ coachE.classList.remove('on'); return; } const c = S.coach; let k = '';
-    if(!c.look){ if(S.dragPx > 140){ c.look = true; } else k = 'look'; }
+    if(!c.look){ if(S.dragPx > 90){ c.look = true; } else k = 'look'; }
     if(!k && !c.tap && S.phase === 'intro') k = 'tap'; if(!k && !c.walk && S.phase === 'hunt' && S.step === 0) k = 'walk';
     if(S.ex || rig.move || S.busy || (mapOpen() && phone()) || clueOpen()) k = '';
     if(k === UI.coachK) return; UI.coachK = k; coachE.className = k ? 'on ' + k : '';
@@ -902,11 +906,12 @@
   function arrive(k, first){ S.place = k; S.busy = false; mapPlace(k); setMarks(); const fresh = !S.visited[k]; S.visited[k] = true; if((fresh || first) && !S.carry) placeCard(k);
     if(SMK.emit) SMK.emit.rate = k === 'table' ? (S.phase === 'turkey' || S.phase === 'candles' || S.phase === 'end' ? 3.2 : 2) : 0;
     S.lastProgress = performance.now(); ga('feast3d_place', {place: k});
+    if(k === 'office') later(320, () => { if(S.place !== 'office') return; const it = (H.door28 && H.door28.items || []).find(q => q.id === 'D-L0-13'); if(it && it.t > .1){ SND.creak(); door('D-L0-13', false); } });
     if(k === 'table' && S.carry) later(250, setDown);
     else if(fresh && CATSAYS[k] && S.phase === 'hunt' && !S.carry) later(1400, () => { if(S.place === k && !S.ex && !rig.move && !sayE.classList.contains('on') && !(performance.now() - (S.hintAt || -1e9) < 12000)) say(CATSAYS[k], 5200, true); }); }
   function goTo(k, opts){ opts = opts || {}; if(!PLACES[k] || S.busy || rig.move || S.done || S.ex) return false;
     if(k === S.place){ const p = standPose(k); rig.lim = null; rig.tyaw = rig.yaw + angDiff(rig.yaw, p.yaw); rig.tpitch = p.pitch; rig.zoom = 1; if(opts.done) opts.done(); return true; }
-    const r = route(S.place, k), pose = standPose(k); S.busy = true; if(k === 'balcony' || S.place === 'balcony') door('D-L2-01', true); if(k === 'table' || k === 'lounge') door('D-L0-10', true); S.coach.walk = true; placeE.classList.remove('on'); sayE.classList.remove('on'); for(const m of marks){ m.on = false; m.b.classList.remove('on'); }
+    const r = route(S.place, k), pose = standPose(k); S.busy = true; if(S.place === 'office') door('D-L0-13', true); if(k === 'balcony' || S.place === 'balcony') door('D-L2-01', true); if(k === 'table' || k === 'lounge') door('D-L0-10', true); S.coach.walk = true; placeE.classList.remove('on'); sayE.classList.remove('on'); for(const m of marks){ m.on = false; m.b.classList.remove('on'); }
     const land = () => { arrive(k); if(opts.done) opts.done(); };
     if(r){ const path = r.map(n => [NODES[n][0], NODE_Y(n), NODES[n][1]]); let len = 0; for(let i = 1; i < path.length; i++) len += Math.hypot(path[i][0] - path[i - 1][0], path[i][2] - path[i - 1][2]); const dur = rigTravel(path, pose, {face: true, done: land, dur: clamp(.55 + len / 13, .8, 3.6)}); SND.steps(clamp(Math.round(dur / .44), 1, 7)); }
     else { const stairs = PLACES[S.place].floor !== PLACES[k].floor || (S.place === 'table' && k === 'entry') || (S.place === 'entry' && k === 'table'); SND.steps(stairs ? 5 : 3);
@@ -988,16 +993,17 @@
     if(ex.state !== 'tag') return sheet(`<h3>The table under the oak</h3><p>${S.carry ? 'Setting it down.' : 'Eight places, a linen runner and a few small pumpkins. The middle of the table is waiting for dinner.'}</p>`, {noBack: !!S.carry});
     const last = i === STEPS.length - 1, nx = STEPS[i + 1];
     if(last) return sheet(`<h3>${esc(DISHCAP[st.dish])}, and the last tag</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('P.S. from Leo and Max', 'We did not lose dinner. We wanted you to see the whole house before everybody sits down. Happy Thanksgiving. P.P.S. Dad says the turkey is ready. Lift the lid.')}`,
-      {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => { S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; setGoal(); SND.spell(); setTod('golden'); P.setLift(.9); back(() => later(300, () => { say('It spells THANKS. I knew that.', 4600, true); examine('smoker'); })); }}]});
+      {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => { tidy(STEPS.length - 1); S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; setGoal(); SND.spell(); setTod('golden'); P.setLift(.9); back(() => later(300, () => { say('It spells THANKS. I knew that.', 4600, true); examine('smoker'); })); }}]});
     return sheet(`<h3>${esc(DISHCAP[st.dish])} ${PLURAL[st.dish] ? 'are' : 'is'} on the table.</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('Clue ' + (i + 2) + ' of 6, from ' + nx.who, nx.clue)}`,
       {noBack: true, acts: [nx.map ? {label: 'Look at the map', cls: 'primary', go: () => { nextStep(); later(900, openClue); }} : {label: 'Start looking', cls: 'primary', go: () => nextStep()}]}); }
-  function nextStep(){ S.step++; S.phase = 'hunt'; S.tried = {}; S.knocked = {}; S.hot = null; S.hintIx = 0; S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); setHour(HOURS[S.step] || 17.2); setGoal(); ga('feast3d_step', {step: S.step});
+  function tidy(i){ const st = STEPS[i]; if(!st) return; for(const id of st.spots){ try{ if(COOL[id]) COOL[id].set(0); for(const k of [id, id + ':decoy']){ const g = PROP[k]; if(g && g.visible){ const s0 = g.scale.x; tween(260, u => g.scale.setScalar(Math.max(.001, s0 * (1 - u))), () => { g.visible = false; }); } } }catch(e){ oops('tidy', e); } } }
+  function nextStep(){ tidy(S.step); S.step++; S.phase = 'hunt'; S.tried = {}; S.knocked = {}; S.hot = null; S.hintIx = 0; S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); setHour(HOURS[S.step] || 17.2); setGoal(); ga('feast3d_step', {step: S.step});
     back(() => { const n = S.step; if(n === 1) later(600, () => say('The sun moved while you were carrying that.', 4600, true)); else if(n === 3) later(600, () => say('Half of dinner is found. The other half is still clever.', 4800, true)); else if(n === 5) later(600, () => say('One more, and the sun is getting low.', 4600, true)); }); }
 
   /* ---- the smoker and the turkey */
   function sheetSmoker(ex){ const sp = SPOTS.smoker;
     if(S.phase !== 'turkey') return sheet(`<h3>${esc(sp.title)}</h3><p>${esc(sp.text)}</p>`);
-    if(ex.state === 'open') return sheet(`<h3>The turkey</h3><p>Twelve hours over oak and apple wood, the colour of a good violin. It has been here the whole time, and you could smell it from the balcony.</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => { const t = DISHOBJ.turkey; dress(t, true); S.carry = 'turkey'; HELD.g = t; HELD.s = .34; setGoal(); if(SMK.emit) SMK.emit.rate = 1.2; back(() => { tween(1100, u => SMK.set(1 - ease(u))); setDown(); }); }}]});
+    if(ex.state === 'open') return sheet(`<h3>The turkey</h3><p>All day over oak and apple wood, and it is the color of a good violin. It has been here the whole time, and you could smell it from the balcony.</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => { const t = DISHOBJ.turkey; dress(t, true); S.carry = 'turkey'; HELD.g = t; HELD.s = .34; setGoal(); if(SMK.emit) SMK.emit.rate = 1.2; back(() => { tween(1100, u => SMK.set(1 - ease(u))); setDown(); }); }}]});
     return sheet(`<h3>${esc(sp.title)}</h3><p>The dial has reached the mark Marcus drew on it. The tags are up, the table is set, and the twins say it is time.</p>`, {acts: [{label: 'Lift the lid', cls: 'primary', go: () => liftLid()}]}); }
   function liftLid(){ if(S.busy || S.lidUp) return; S.busy = true; S.lidUp = true; SND.lid(); ga('feast3d_lid');
     if(SMK.emit){ P.burst(SMK.emit, 16); SMK.emit.rate = 5; later(5000, () => { SMK.emit.rate = 1.6; SMK.emit.at.y = SMK.seam + .3; }); }
@@ -1011,7 +1017,7 @@
     later(500, () => tween(2600, u => { candleLight.intensity = 1.5 * u; }));
     // the sun goes: the model's own dusk, with the house lights on
     later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt(CHAIR); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
-    later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.17] : [-.17, 0]}, {dur: 9}); });
+    later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.27] : [-.17, 0]}, {dur: 9}); });
     later(4600, () => { SND.bell(); guests(() => finish()); }); }
   const SHOT = () => aspect() < 1 ? {pos: [8.4, .7, -46.6], pos2: [7.2, .6, -46.2], look: [-2.4, -1.5, -43.3], fov: 80} : {pos: [8.3, .55, -47.1], pos2: [7.3, .5, -46.7], look: [-2.6, -1.3, -43.0], fov: 56};
   const GUESTS = [
