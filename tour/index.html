@@ -20177,7 +20177,44 @@ function r36CarveOpenings(){ const rep = [];
       if(o.sill - c.y0 > .6) add.push(piece(Math.max(lo, a0), Math.min(hi, a1), c.y0, o.sill - .02)); if(c.y1 - head > .3) add.push(piece(Math.max(lo, a0), Math.min(hi, a1), head, c.y1));
       COLLIDERS.splice(i, 1, ...add); rep.push(o.id + ' in ' + o.host); } }
   R36G.carved = rep; return rep; }
+/* r36 owner 11/11 (two screenshots, primary bedroom: "some geometry funkiness going on here"): the ceiling read as overlapping strips of different
+   tint with a dotted seam, and a tan sloped sheet came through the blue wall under it. Cause, from the model's own planes: the room's gable
+   ceiling breaks to the shallower shed-dormer slope 12.62 ft from the ridge side (world x = -12.62), but (a) the gable ceiling plane was built on
+   past the break to the old wall line, hanging under the dormer ceiling as a wedge, (b) the dormer ceiling was built exactly in the plane of the
+   dormer roof's underside (z-fighting: the dotted line), and (c) the main roof's east slope (shingles, soffit, fascia) was never cut where the
+   dormer replaces it, so it ran on through the room below the ceiling. P1 cuts each of those back to the break line / out of the room, leaving
+   two ceiling planes that meet in one straight line. r36CutTris removes the part of the chosen triangles inside a plan rectangle. */
+function r36CutTris(rx, rect, sel, tag){
+  const out = {tag, meshes: 0, cut: 0}; R36G.added.push(out);
+  for(const m of (BIM2S.meshes || [])){ if(!rx.test(m.name || '') || !m.geometry || !m.geometry.index) continue; const G = m.geometry, names = Object.keys(G.attributes);
+    if(names.some(k => !['position', 'normal', 'uv'].includes(k) || G.attributes[k].isInterleavedBufferAttribute)) continue; m.updateWorldMatrix(true, false); if(!m.matrixWorld.equals(new THREE.Matrix4())) continue;
+    const P = G.attributes.position, N = G.attributes.normal, U = G.attributes.uv, I = G.index, nT = I.count / 3, nP = [], nN = [], nU = [], kill = [];
+    const V = i => ({p: [P.getX(i), P.getY(i), P.getZ(i)], n: N ? [N.getX(i), N.getY(i), N.getZ(i)] : [0, 1, 0], u: U ? [U.getX(i), U.getY(i)] : [0, 0]});
+    const mix = (a, b, t) => ({p: a.p.map((v, k) => v + (b.p[k] - v) * t), n: a.n, u: a.u.map((v, k) => v + (b.u[k] - v) * t)});
+    const split = (poly, ax, val) => { const lo = [], hi = []; for(let i = 0; i < poly.length; i++){ const a = poly[i], b = poly[(i + 1) % poly.length], da = a.p[ax] - val, db = b.p[ax] - val;
+        if(da <= 0) lo.push(a); if(da >= 0) hi.push(a); if((da < 0 && db > 0) || (da > 0 && db < 0)){ const q = mix(a, b, da / (da - db)); lo.push(q); hi.push(q); } } return [lo, hi]; };
+    for(let t = 0; t < nT; t++){ const a = V(I.getX(3 * t)), b = V(I.getX(3 * t + 1)), c = V(I.getX(3 * t + 2));
+      if(Math.max(a.p[0], b.p[0], c.p[0]) <= rect.x0 || Math.min(a.p[0], b.p[0], c.p[0]) >= rect.x1 || Math.max(a.p[2], b.p[2], c.p[2]) <= rect.z0 || Math.min(a.p[2], b.p[2], c.p[2]) >= rect.z1) continue;
+      if(!sel(a.p, b.p, c.p)) continue; const keep = []; let rest = [a, b, c], q;
+      q = split(rest, 0, rect.x0); keep.push(q[0]); rest = q[1]; q = split(rest, 0, rect.x1); keep.push(q[1]); rest = q[0];
+      q = split(rest, 2, rect.z0); keep.push(q[0]); rest = q[1]; q = split(rest, 2, rect.z1); keep.push(q[1]); rest = q[0];
+      if(rest.length < 3) continue; kill.push(t); out.cut++;
+      for(const poly of keep){ if(poly.length < 3) continue; for(let k = 1; k < poly.length - 1; k++) for(const v of [poly[0], poly[k], poly[k + 1]]){ nP.push(...v.p); nN.push(...v.n); nU.push(...v.u); } } }
+    if(!kill.length) continue; out.meshes++;
+    const nv = P.count, add = nP.length / 3, put = (k, src, sz) => { const at = G.attributes[k]; if(!at) return; const arr = new at.array.constructor((nv + add) * sz); arr.set(at.array.subarray(0, nv * sz)); arr.set(src, nv * sz); G.setAttribute(k, new THREE.BufferAttribute(arr, sz, at.normalized)); };
+    put('position', nP, 3); put('normal', nN, 3); put('uv', nU, 2);
+    const n0 = I.count, ia = new (nv + add > 65535 ? Uint32Array : I.array.constructor)(n0 + add); ia.set(I.array.subarray(0, n0)); for(const t of kill){ const v0 = ia[3 * t]; ia[3 * t + 1] = v0; ia[3 * t + 2] = v0; } for(let j = 0; j < add; j++) ia[n0 + j] = nv + j;
+    G.setIndex(new THREE.BufferAttribute(ia, 1)); G.boundingBox = null; G.boundingSphere = null;
+    const ud = m.userData.bim2; if(ud && ud.ranges && add) ud.ranges.push(['R36-CUT-' + tag, null, n0 / 3, add / 3]); if(m.userData.idx0) m.userData.idx0 = G.index; if(m.userData.alt) m.userData.alt = {}; }
+  return out; }
+function r36PrimaryCeiling(){
+  const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, xc = -10.6, zc = -31;
+  // the plane through a triangle, read at the middle of the dormer bay
+  const at = (a, b, c) => { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; if(Math.abs(ny) < 1e-6) return null; return a[1] - (nx * (xc - a[0]) + nz * (zc - a[2])) / ny; };
+  r36CutTris(/^ceilings\|L2\|/, R, (a, b, c) => [a, b, c].every(v => Math.abs(v[1] - gable(v[0])) < .06), 'primary gable ceiling past the break');
+  r36CutTris(/^(roofs\||trim\|-\|)/, R, (a, b, c) => { const y = at(a, b, c); if(y == null){ const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3]; return m[1] < dorm(m[0]) + .03 && m[1] > 12.2; } return y < dorm(xc) + .03 && y > 12.2; }, 'roof inside the primary dormer bay'); }
 { const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); }
+    try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
 /* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
    the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
