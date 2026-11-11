@@ -32,48 +32,49 @@
      spots: p = where his paws are (world feet), n = finishes the sentence "He was ...", d = how hidden from the place you would spot him
        (0 in plain sight, 1 easy once you turn, 2 partly behind something, 3 only ears, eyes or a tail), w = you have to walk to the other standing place, box = he brought a cardboard box.
      cam = details of the room's real photo for the Snowball cam [across 0..1, down 0..1, what it shows]; each is something no other room's photo has.
-     grp = rooms that share a space or show each other in their photos; two of a group are never offered as choices together. Facts come from the site's own copy. */
+     grp = what a room shares with others: a space, a view into each other's photo, or a look (the three bedrooms all show a made bed). Two rooms with a group in common
+     are never offered as choices together. fit = which part of a tall photo the choice button shows. Facts come from the site's own copy. */
   const ROOM = {
-    entry:   {name: 'Entry', at: 'in the entry', photo: '../images/entry-800.jpg', ar: .586, grp: 'front', fy: 0, cam: [[.5, .05, 'the starburst light']],
+    entry:   {name: 'Entry', at: 'in the entry', photo: '../images/entry-800.jpg', ar: .586, grp: ['front'], fy: 0, cam: [[.5, .05, 'the starburst light']],
       fact: 'A cathedral ceiling and a starburst light, added in 2024.', say: 'Catch me if you can.', v: [[-12.25, -3.3, 90]],
       spots: [{p: [-5.93, .06, -4.07], n: 'sitting in the middle of the entry', d: 0}]},
-    living:  {name: 'Living room', at: 'in the living room', photo: '../images/living-room-800.jpg', ar: .591, grp: 'front', fy: 0, cam: [[.62, .1, 'the wood beams'], [.5, .74, 'the glass coffee table']],
+    living:  {name: 'Living room', at: 'in the living room', photo: '../images/living-room-800.jpg', ar: .591, grp: ['front'], fy: 0, cam: [[.62, .1, 'the wood beams'], [.5, .74, 'the glass coffee table']],
       fact: 'Wood beams cross the ceiling. This part of the house is from the 1920s.', say: 'This rug is my favorite.', v: [[.8, -2.2, 125, 60, 95], [12.4, -4.6, 285, 240]],
       spots: [{p: [7.5, 1.39, -6.5], n: 'on the sofa, between the pillows', d: 1}, {p: [13.2, .05, -2.6], n: 'in a cardboard box by the big picture', d: 1, box: 1}, {p: [10, .06, -2.5], n: 'behind the coffee table', d: 2},
         {p: [12, .03, -7], n: 'at the far end of the sofa', d: 2}, {p: [10.5, .03, 2.5], n: 'tucked behind an armchair', d: 2, w: 1}, {p: [12.5, .03, -8.5], n: 'beside the lamp table', d: 2, w: 1}, {p: [13, .03, 4], n: 'behind the far armchair', d: 3}]},
-    kitchen: {name: 'Kitchen', at: 'in the kitchen', photo: '../images/kitchen-800.jpg', ar: .64, grp: 'great', fy: 0, cam: [[.45, .15, 'the shiny stove hood'], [.2, .76, 'the woven kitchen stools']],
+    kitchen: {name: 'Kitchen', at: 'in the kitchen', photo: '../images/kitchen-800.jpg', ar: .64, grp: ['great'], fy: 0, cam: [[.45, .15, 'the shiny stove hood'], [.2, .76, 'the woven kitchen stools']],
       fact: 'White quartz counters, and a peninsula big enough for homework.', say: 'I was only checking on dinner.', v: [[15.2, 10.2, 315, 225], [15, 18.6, 320, 240]],
       spots: [{p: [6.5, 3.04, 13.5], n: 'on the counter by the sink', d: 1}, {p: [7, 2.18, 12], n: 'in the kitchen sink', d: 2}, {p: [14, .03, 17], n: 'at the end of the kitchen island', d: 2},
         {p: [6.5, .03, 18.5], n: 'past the last kitchen stool', d: 2, w: 1}, {p: [10, .03, 15.5], n: 'under the island, between the stools', d: 3, w: 1}, {p: [8.5, .03, 18.5], n: 'behind the kitchen stools', d: 3, w: 1}]},
-    great:   {name: 'Great room', at: 'in the great room', photo: '../images/dining-800.jpg', ar: .7325, grp: 'great', fy: 0, cam: [[.5, .82, 'the glass dining table'], [.7, .45, 'the tall windows and the oak']],
+    great:   {name: 'Great room', at: 'in the great room', photo: '../images/dining-800.jpg', ar: .7325, grp: ['great'], fy: 0, cam: [[.5, .82, 'the glass dining table'], [.12, .7, 'the wooden sideboard']],
       fact: 'Kitchen, sitting area and dining table share one long, bright room.', say: 'I was watching the birds.', v: [[15, 26, 315, 223], [6.4, 23.9, 60, 135]],
       spots: [{p: [5.5, 2.62, 34], n: 'on the back of the big sofa', d: 1}, {p: [9.5, 2.53, 20.5], n: 'on the dining table', d: 1}, {p: [15.8, .05, 32.5], n: 'in a cardboard box by the big sofa', d: 1, box: 1}, {p: [13.5, 1.65, 21.5], n: 'on a dining chair', d: 2},
         {p: [8.5, .06, 29], n: 'behind the round coffee table', d: 2}, {p: [11, .06, 32], n: 'between the sofa and the coffee table', d: 2}, {p: [6.5, .03, 18.5], n: 'behind the dining chairs', d: 3}]},
-    mainbeds: {name: 'Main-level bedroom', at: 'in the main-level bedroom', photo: 'thumbs/p74.jpg', big: 'photos/p74.jpg', ar: .667, grp: 'mainbeds', fy: 0, cam: [[.18, .62, 'the wooden bedside table'], [.56, .62, 'the gold pillows']],
+    mainbeds: {name: 'Main-level bedroom', at: 'in the main-level bedroom', photo: 'thumbs/p74.jpg', big: 'photos/p74.jpg', ar: .667, grp: ['bed'], fy: 0, cam: [[.2, .6, 'the wooden bedside table'], [.5, .12, 'the ceiling fan']],
       fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'I was keeping the bed warm.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
       spots: [{p: [22.5, 2.08, 29], n: 'on the bed', d: 1}, {p: [27, .03, 34], n: 'beside the white chair', d: 2}, {p: [27.5, .03, 29], n: 'on the far side of the bed', d: 2}, {p: [28, .03, 26], n: 'by the far bedside table', d: 2}, {p: [28, .03, 35], n: 'behind the white chair', d: 3}]},
-    loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/p37.jpg', big: 'photos/p37.jpg', ar: .667, grp: 'loft', fy: 5.57, cam: [[.84, .72, 'the triangle windows'], [.62, .84, 'the triangle windows']],
-      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -16.8, 0, 180]],
+    loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/x06.jpg', big: 'photos/x06.jpg', ar: 1.333, fit: '50% 36%', grp: ['loft'], fy: 5.57, cam: [[.4, .66, 'the railing at the top of the stairs'], [.62, .3, 'the triangle windows']],
+      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -16.8, 180, 0]],
       spots: [{p: [-24, 7.06, -7.5], n: 'on the window seat', d: 1}, {p: [-18, 5.6, -4.5], n: 'at the top of the stairs, behind the railing', d: 2}, {p: [-18, 5.6, -18], n: 'down the upstairs hall', d: 2},
         {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 2}]},
-    primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: 'suite', fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
+    primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: ['suite', 'bed'], fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
       fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'The big bed is the best bed.', v: [[-12.8, -33.5, 274, 215, 20], [-16.6, -38.4, 20, 320]],
       spots: [{p: [-18.5, 7.66, -31], n: 'on the big bed', d: 1}, {p: [-19.5, 5.63, -38], n: 'at the corner of the big bed', d: 2}, {p: [-9.5, 5.6, -28.5], n: 'behind the dresser', d: 2},
         {p: [-21.5, 5.63, -37.5], n: 'between the bed and the balcony doors', d: 3}, {p: [-21, 5.63, -29], n: 'on the far side of the big bed', d: 3}]},
-    pbath:   {name: 'Primary bath', at: 'in the primary bath', photo: '../images/primary-bath-800.jpg', ar: .68, grp: 'pbath', fy: 5.57, cam: [[.88, .36, 'the brass shower'], [.2, .62, 'the towels on their rings']],
+    pbath:   {name: 'Primary bath', at: 'in the primary bath', photo: '../images/primary-bath-800.jpg', ar: .68, grp: ['pbath'], fy: 5.57, cam: [[.88, .36, 'the brass shower'], [.2, .62, 'the towels on their rings']],
       fact: 'Heated floors, two sinks, and a shower big enough for two.', say: 'The floor in here is warm.', v: [[-13.5, -22, 180, 27, 100]],
       spots: [{p: [-10, 8.43, -25.1], n: 'on the bathroom counter', d: 1}, {p: [-9.5, 5.6, -19.1], n: 'in the gap by the shower glass', d: 1}, {p: [-11.5, 5.6, -19.1], n: 'in the shower, behind the glass', d: 2}, {p: [-14, 5.6, -16.1], n: 'round the little wall by the shower', d: 3}]},
-    balcony: {name: 'Balcony', at: 'on the balcony', photo: '../images/hills-view-800.jpg', ar: .71, grp: 'suite', fy: 5.57, tod: 'golden', cam: [[.42, .34, 'the hills at sunset'], [.22, .52, 'the tall pine and the hills']],
+    balcony: {name: 'Balcony', at: 'on the balcony', photo: '../images/hills-view-800.jpg', ar: .71, grp: ['suite'], fy: 5.57, tod: 'golden', cam: [[.42, .34, 'the hills at sunset'], [.22, .52, 'the tall pine and the hills']],
       fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.8, -41.3, 250, 110, 180]],
       spots: [{p: [-20.5, 6.91, -44.5], n: 'on a balcony chair', d: 1}, {p: [-21.5, 5.6, -43.5], n: 'behind a balcony chair', d: 2}, {p: [-14, 5.6, -45.5], n: 'in the corner behind a balcony chair', d: 3}]},
-    lower:   {name: 'Downstairs bedroom', at: 'in the downstairs bedroom', photo: '../images/bedroom-800.jpg', ar: .68, grp: 'lower', fy: -4.56, cam: [[.75, .34, 'the picture on the green wall'], [.12, .42, 'the dark round picture']],
+    lower:   {name: 'Downstairs bedroom', at: 'in the downstairs bedroom', photo: '../images/bedroom-800.jpg', ar: .68, grp: ['bed'], fy: -4.56, cam: [[.75, .34, 'the picture on the green wall'], [.12, .42, 'the dark round picture']],
       fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It is quiet down here.', v: [[-12.3, -40.5, 216, 160, 290], [-18.2, -40.3, 135, 90]],
       spots: [{p: [-16, -2.55, -47], n: 'on the bed, by the pillows', d: 1}, {p: [-12.4, -4.51, -45.2], n: 'in a cardboard box by the window', d: 1, box: 1}, {p: [-20, -4.5, -43], n: 'at the far corner of the bed', d: 2}, {p: [-20, -4.5, -46], n: 'on the far side of the bed', d: 3}]},
-    lounge:  {name: 'Bonus lounge', at: 'in the bonus lounge', photo: '../images/rec-room-800.jpg', ar: .644, grp: 'lounge', fy: -4.56, cam: [[.43, .32, 'the big screen'], [.2, .52, 'the black glass door']],
+    lounge:  {name: 'Bonus lounge', at: 'in the bonus lounge', photo: '../images/rec-room-800.jpg', ar: .644, grp: ['lounge'], fy: -4.56, cam: [[.43, .32, 'the big screen'], [.2, .52, 'the black glass door']],
       fact: 'Made for movie nights, with a big TV and a refreshment counter.', say: 'I am ready for movie night.', v: [[-13, -17.5, 255, 195, 330], [-19.3, -22.5, 60, 120]],
       spots: [{p: [-22, -1.52, -19], n: 'on the counter under the big screen', d: 1}, {p: [-15.5, -4.5, -21.5], n: 'under the glass table', d: 2}, {p: [-19.5, -4.5, -13], n: 'behind the two footstools', d: 2}, {p: [-18, -4.5, -24.5], n: 'behind the table and chairs', d: 2},
         {p: [-20, -4.53, -11], n: 'in the doorway to the stairs', d: 2, w: 1}, {p: [-11.5, -4.53, -23.5], n: 'behind a chair, by the glass doors', d: 3}]},
-    terrace: {name: 'Terrace', at: 'on the terrace', photo: '../images/rear-yard-800.jpg', ar: .71, grp: 'terrace', fy: -4.75, tod: 'golden', open: true, cam: [[.62, .4, 'the big oak tree'], [.88, .78, 'the barbecue']],
+    terrace: {name: 'Terrace', at: 'on the terrace', photo: '../images/rear-yard-800.jpg', ar: .71, grp: ['terrace'], fy: -4.75, tod: 'golden', open: true, cam: [[.74, .45, 'the trunk of the big oak'], [.9, .72, 'the outdoor kitchen under its pergola']],
       fact: 'An outdoor kitchen under a pergola, beside the heritage oak.', say: 'I was guarding the barbecue.', v: [[.4, -31, 274, 197, 120], [-2, -39.5, 200, 330]],
       spots: [{p: [-5, -3.21, -33], n: 'on the outdoor sofa', d: 1}, {p: [-8.5, -1.72, -39.5], n: 'on the outdoor kitchen counter', d: 1}, {p: [-2.5, -4.72, -40.5], n: 'beside the outdoor dining chairs', d: 2}, {p: [.5, -4.72, -41], n: 'by the outdoor dining table', d: 2}, {p: [1, -4.72, -38.5], n: 'behind the woven chair', d: 3}]}};
   const stopOf = id => H.STOPS.find(s => s.id === id), stopIx = id => H.STOPS.findIndex(s => s.id === id);
@@ -290,7 +291,7 @@
   const facing = () => { cam.getWorldDirection(_d); return {yaw: Math.atan2(_d.x, _d.z), pitch: Math.asin(clamp(_d.y, -1, 1))}; };
   function aim(yaw, pitch){ const c = Math.cos(pitch); H.look(anchor.toArray(), [anchor.x + Math.sin(yaw) * c * 10, anchor.y + Math.sin(pitch) * 10, anchor.z + Math.cos(yaw) * c * 10]); }
   function turnTo(yaw, pitch, dur){ const a = facing(), dy = wrap(yaw - a.yaw); if(reduce || !dur){ tw = null; aim(a.yaw + dy, pitch); return; } tw = {t0: performance.now(), dur, y0: a.yaw, dy, p0: a.pitch, p1: pitch}; }
-  function lookAtPoint(p, dur){ const dx = p.x - anchor.x, dz = p.z - anchor.z; turnTo(Math.atan2(dx, dz), clamp(Math.atan2(p.y - anchor.y, Math.hypot(dx, dz)), -.6, .35), dur); }
+  function lookAtPoint(p, dur){ const dx = p.x - anchor.x, dz = p.z - anchor.z; turnTo(Math.atan2(dx, dz), clamp(Math.atan2(p.y - anchor.y, Math.hypot(dx, dz)) + .08, -.85, .35), dur); }
   function pin(){ if(pinned && !H.anim && cam.position.distanceToSquared(anchor) > 1e-7){ cam.position.copy(anchor); cam.updateMatrixWorld(); } }
   const prevOBR = H.scene.onBeforeRender, myOBR = function(){ if(!dead){ try{ pin(); }catch(e){} } return prevOBR && prevOBR.apply(this, arguments); }; H.scene.onBeforeRender = myOBR;
   function turn(sign){ if(!S.on || S.mode !== 'seek' || H.anim || walk) return;   // not while travelling: a room-to-room move is never interrupted
@@ -298,12 +299,14 @@
   /* a turn or a walk keeps the tilt you had, with one exception: when it brings the part of him that shows into the picture from side to side but leaves it
      above or below the frame (he is close to your feet, or up on a counter), the tilt eases just far enough to bring him in. Small players have no way to tilt. */
   function tiltFor(yaw, pitch){ const v = cur(); if(S.step === 0 || v.n < SEEN()) return pitch; const p = aimPt(), dx = p.x - anchor.x, dz = p.z - anchor.z; if(Math.abs(wrap(Math.atan2(dx, dz) - yaw)) > hHalf() - .12) return pitch;
-    const el = Math.atan2(p.y - anchor.y, Math.hypot(dx, dz)), reach = Math.atan(Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1)) * .55; return clamp(pitch, el - reach, el + reach); }
+    const el = Math.atan2(p.y - anchor.y, Math.hypot(dx, dz)), reach = Math.atan(Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1)); return clamp(pitch, el - reach * .5, el + reach * .2); }   // the buttons cover the bottom of the picture, so he is brought in above them
   /* walk to another standing place in the room. You keep looking the way you were looking; it is a short glide when the way is clear at eye height
      and a blink when something is in between, so the camera never passes through furniture. */
   function walkTo(i, then){ if(!S.on || S.mode !== 'seek' || walk || H.anim) return false; const R = ROOM[room()], n = R.v.length; if(n < 2) return false; i = ((i % n) + n) % n; if(i === S.view){ then && then(); return false; }
     const to = eyeOf(R, i), a = tw ? {yaw: tw.y0 + tw.dy, pitch: tw.p1} : facing(); tw = null; S.walked = true; S.tAct = performance.now(); snd('patter', {n: 5}); nudge(null);
-    const land = () => { anchor.copy(to); aim(a.yaw, a.pitch); S.view = i; walk = null; placeSteps(); lastWarm = -1; ui(); const p2 = tiltFor(a.yaw, a.pitch); if(!then && Math.abs(p2 - a.pitch) > .01) turnTo(a.yaw, p2, 350); then && then(); };
+    const land = () => { anchor.copy(to); aim(a.yaw, a.pitch); S.view = i; walk = null; placeSteps(); lastWarm = -1; ui(); if(!then){ let y = a.yaw; const far = q => Math.min(hit(to.x, to.y, to.z, Math.sin(q), 0, Math.cos(q), 9), hit(to.x, to.y, to.z, Math.sin(q + .4), 0, Math.cos(q + .4), 9), hit(to.x, to.y, to.z, Math.sin(q - .4), 0, Math.cos(q - .4), 9));
+        if(far(y) < 3.5){ const w = R.v[i].slice(2).map(d => d * Math.PI / 180).find(q => far(q) > 4.5); if(w != null) y = w; }   // walked up to a wall: face the way that place looks into the room
+        const p2 = tiltFor(y, a.pitch); if(y !== a.yaw || Math.abs(p2 - a.pitch) > .01) turnTo(y, p2, 400); } then && then(); };
     if(!reduce && clearTo(anchor, to, .1)) walk = {t0: performance.now(), dur: clamp(anchor.distanceTo(to) * 70, 450, 900), from: anchor.clone(), to, yaw: a.yaw, pitch: a.pitch, land};
     else { walk = {}; blink.classList.add('on'); later(() => { land(); later(() => blink.classList.remove('on'), 140); }, 210); }
     return true; }
@@ -525,7 +528,7 @@
     const pulse = 1 + .07 * Math.sin(t / 260); for(const m of STEPS) if(m.visible) m.scale.set(pulse, pulse, 1);
     /* the paw meter: one or two paws when you face away, three when you face him, four and five once the part of him that shows is on the screen.
        Facing him from a place where nothing of him shows reads "Try walking", and the walk button glows. */
-    const v = cur(), seen = v.n >= SEEN(), hs = seen ? scr(aimPt()) : null, inView = !!hs && Math.abs(hs.nx) < .94 && Math.abs(hs.ny) < .94, ry = relYaw(), ang = Math.abs(ry);
+    const v = cur(), seen = v.n >= SEEN(), hs = seen ? scr(aimPt()) : null, inView = !!hs && Math.abs(hs.nx) < .94 && hs.ny < .94 && hs.y < $('#fndBar').getBoundingClientRect().top - 12, ry = relYaw(), ang = Math.abs(ry);
     const w = S.step === 0 ? 5 : inView ? (Math.abs(hs.nx) < .5 ? 5 : 4) : ang < .7 ? 3 : ang < 1.6 ? 2 : 1, stuck = S.step > 0 && !seen && ang < .7 && !walk && ROOM[room()].v.length > 1;
     if(S.step > 0 && !S.turned && Math.abs(wrap(facing().yaw - S.open)) > .3) S.turned = true;
     if(w !== lastWarm || stuck !== lastStuck){ lastWarm = w; lastStuck = stuck; warm.querySelectorAll('i').forEach((p, i) => p.classList.toggle('on', i < w)); warm.querySelector('em').textContent = stuck ? 'Try walking' : w === 3 && hs && Math.abs(hs.nx) < .6 ? (hs.ny < 0 ? 'Look down' : 'Look up') : WARMTXT[w]; if(!S.hard){ if(stuck) nudge('walk'); else $('#fndW').classList.remove('nudge'); } }
@@ -565,10 +568,12 @@
       if(k < 1) requestAnimationFrame(f); else { RUN.visible = false; cb(); } })(); }
 
   /* ---------- the Snowball cam: a detail of the room he ran to, and three rooms to choose from ----------
-     The clue is fair by construction: the detail is cut from the photo of the room he is in (no two rooms use the same photo), the three choices
-     never include two rooms of one group (rooms that share a space, or whose photos show each other), and the room you are standing in is not offered. */
-  function pickClue(next, here, R){ const g = k => ROOM[k].grp, pool = Object.keys(ROOM).filter(k => k !== next && k !== here && stopOf(k) && g(k) !== g(next)).map(k => [R(), k]).sort((a, b) => a[0] - b[0]).map(a => a[1]), decoys = [];
-    for(const k of pool){ if(decoys.length === 2) break; if(decoys.every(d => g(d) !== g(k))) decoys.push(k); }
+     The clue is fair by construction: the detail is cut from the photo of the room he is in (no two rooms use the same photo) and is of something only that
+     photo has; the three choices never include two rooms with a group in common (rooms that share a space, whose photos show each other, or that look alike,
+     as the three bedrooms do); and the room you are standing in is not offered. FINDCAT.dev.clues() deals every combination and checks them. */
+  const clash = (a, b) => ROOM[a].grp.some(t => ROOM[b].grp.includes(t));
+  function pickClue(next, here, R){ const pool = Object.keys(ROOM).filter(k => k !== next && k !== here && stopOf(k) && !clash(k, next)).map(k => [R(), k]).sort((a, b) => a[0] - b[0]).map(a => a[1]), decoys = [];
+    for(const k of pool){ if(decoys.length === 2) break; if(decoys.every(d => !clash(d, k))) decoys.push(k); }
     const cams = ROOM[next].cam; return {opts: [next].concat(decoys).map(k => [R(), k]).sort((a, b) => a[0] - b[0]).map(a => a[1]), c: cams[Math.floor(R() * cams.length)]}; }
   function camHTML(k, c){ const rm = ROOM[k], Z = S.hard ? 4.2 : 3, w = Z * 100, h = Z * rm.ar * 100;
     const left = clamp(50 - c[0] * w, 100 - w, 0), top = clamp(50 - c[1] * h, 100 - h, 0);
@@ -577,7 +582,7 @@
   function clue(){ if(dead) return; S.mode = 'clue'; ui(); saveRun('clue'); const next = S.trail[S.step + 1], first = S.step === 0, q = pickClue(next, room(), stepR(2)), sees = S.hard ? '' : ` He can see ${esc(q.c[2])}.`;
     const c = put(el('div', {id: 'fndCard', class: 'clue', role: 'dialog', 'aria-label': 'Where did Snowball go?'}, `<div class="c"><h2>Where did he go?</h2>
       <div class="camrow">${camHTML(next, q.c)}<p>${first ? 'He ran off. This is his view right now.' : 'Gone again. This is his view now.'}${sees} <b>Tap the room he is in.</b></p></div>
-      <div class="picks">${q.opts.map(k => `<button type="button" data-k="${k}"><img src="${ROOM[k].photo}" alt=""><span>${esc(ROOM[k].name)}</span></button>`).join('')}</div></div>`));
+      <div class="picks">${q.opts.map(k => `<button type="button" data-k="${k}"><img src="${ROOM[k].photo}" alt=""${ROOM[k].fit ? ` style="object-position:${ROOM[k].fit}"` : ''}><span>${esc(ROOM[k].name)}</span></button>`).join('')}</div></div>`));
     c.querySelectorAll('.picks button').forEach(b => b.onclick = () => { if(b.dataset.k !== next){ b.classList.add('no'); b.disabled = true; S.wrong++; snd('wrong'); c.querySelector('.camrow p').innerHTML = 'Not that room. Find what he sees in one of the other photos. <b>Tap that room.</b>'; return; }
       b.classList.add('yes'); snd('right'); c.querySelectorAll('button').forEach(x => x.disabled = true); later(() => { c.remove(); S.step++; travel(room(), false, arrive); }, 500); }); }
 
@@ -666,8 +671,8 @@
     setProp(null); return {ok: !bad.length, sum, bad, rows}; }
   // every clue the game can deal: each pair of rooms it is in and runs to, many shuffles; none may offer two rooms of a group, a wrong number of choices, or the room you are in
   function clues(n){ const R = rng(20261111), bad = [], photos = {}, seen = {}; let cards = 0; for(const k in ROOM){ if(photos[ROOM[k].photo]) bad.push('two rooms use the photo ' + ROOM[k].photo); photos[ROOM[k].photo] = k; if(!ROOM[k].cam.length) bad.push(k + ' has no cam detail'); }
-    for(let i = 0; i < (n || 40); i++) for(const here of Object.keys(ROOM)) for(const next of POOL){ if(next === here) continue; const q = pickClue(next, here, R), g = q.opts.map(k => ROOM[k].grp); cards++; q.opts.forEach(k => { seen[k] = (seen[k] || 0) + 1; });
-        if(q.opts.length !== 3 || new Set(q.opts).size !== 3 || !q.opts.includes(next) || q.opts.includes(here) || new Set(g).size !== 3 || !q.c) bad.push(here + ' -> ' + next + ': ' + q.opts.join(', ')); }
+    for(let i = 0; i < (n || 40); i++) for(const here of Object.keys(ROOM)) for(const next of POOL){ if(next === here) continue; const q = pickClue(next, here, R), o = q.opts; cards++; o.forEach(k => { seen[k] = (seen[k] || 0) + 1; });
+        if(o.length !== 3 || new Set(o).size !== 3 || !o.includes(next) || o.includes(here) || clash(o[0], o[1]) || clash(o[0], o[2]) || clash(o[1], o[2]) || !ROOM[next].cam.includes(q.c)) bad.push(here + ' -> ' + next + ': ' + q.opts.join(', ')); }
     return {ok: !bad.length, cards, bad: bad.slice(0, 20), offered: seen}; }
   // stand at the view you arrive with ('open') or where you would spot him ('spot') for one hiding place; resolves once you are there
   function show(roomId, i, which){ return new Promise(res => { document.querySelectorAll('#fndCard').forEach(e => e.remove()); S.on = S.dev = true; document.documentElement.classList.add('fnd-on'); S.daily = false; S.seed = 1; S.trail = ['entry', roomId, roomId, roomId, roomId]; S.step = roomId === 'entry' ? 0 : 1; S.force = i; S.t0 = performance.now();
