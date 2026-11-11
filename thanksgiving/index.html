@@ -1612,14 +1612,14 @@ html:not(.ph) #collapse{font-size:0;color:transparent;width:30px;height:30px;bor
 html:not(.ph) #collapse:hover{background:var(--hov27)}
 html:not(.ph) #collapse::after{content:"";width:7px;height:7px;border-left:1.7px solid var(--muted);border-top:1.7px solid var(--muted);transform:translateY(-2px) rotate(225deg)}
 html:not(.ph) .card.min #collapse::after{transform:translateY(2px) rotate(45deg)}
-html:not(.ph) .card.min{width:auto;max-width:min(560px, calc(100% - 260px));display:flex;align-items:center;flex-wrap:nowrap;gap:2px;padding:4px;overflow:visible}
+html:not(.ph) .card.min{width:min(470px, calc(100% - 260px));max-width:min(470px, calc(100% - 260px));display:flex;align-items:center;flex-wrap:nowrap;gap:2px;padding:4px;overflow:visible}
 html:not(.ph) .card.min .tb{order:0;flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:8px;border:0;padding:6px 6px 6px 10px;cursor:pointer;border-radius:10px}
 html:not(.ph) .card.min .tb:hover{background:var(--hov27)}
 html:not(.ph) .card.min .eyebrow{padding:0;flex:0 0 auto;white-space:nowrap}
 html:not(.ph) .card.min .eyebrow::after{content:"\00b7";margin-left:8px}
 html:not(.ph) .card.min .lvl,html:not(.ph) .card.min .dims{display:none}
 html:not(.ph) .card.min h2{padding:0;font-size:19px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-wrap:nowrap;min-width:0}
-html:not(.ph) .card.min .ctrl{order:1;flex:0 0 auto;flex-wrap:nowrap;gap:4px;padding:0 2px}
+html:not(.ph) .card.min .ctrl{order:-1;flex:0 0 auto;flex-wrap:nowrap;gap:4px;padding:0 2px}   /* r28: the arrows lead, so they sit in the same place at every stop */
 html:not(.ph) .card.min #realSeg,html:not(.ph) .card.min #photosBtn{display:none}
 html:not(.ph) .card.min #prev,html:not(.ph) .card.min #next{width:36px;height:34px;padding:0;font-size:0;display:grid;place-items:center}
 html:not(.ph) .card.min #prev::after,html:not(.ph) .card.min #next::after{content:"";width:8px;height:8px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateX(2px) rotate(45deg)}
@@ -19466,10 +19466,11 @@ function r28Mat(kind){
   else if(kind === 'cassette') m = new THREE.MeshStandardMaterial({color: lin(0xf3f3f0), roughness: .45, metalness: .15});
   else if(kind === 'hem') m = new THREE.MeshStandardMaterial({color: lin(0xd9d9d6), roughness: .35, metalness: .6});
   else if(kind === 'film'){ const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
-    for(let i = -512; i < 1024; i += 2){ const h = ((i + 512) * .7) % 360; x.strokeStyle = `hsla(${h},95%,56%,.85)`; x.lineWidth = 2.4; x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 300, 512); x.stroke(); }   // dichroic bands
+    x.fillStyle = 'rgba(240,244,246,.55)'; x.fillRect(0, 0, 512, 512);   // the frosted base the colour floats on
+    for(let i = -512; i < 1024; i += 2){ const h = ((i + 512) * .45) % 360; x.strokeStyle = `hsla(${h},75%,70%,.38)`; x.lineWidth = 2.4; x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 300, 512); x.stroke(); }   // dichroic bands
     for(let k = 0; k < 5; k++){ const y = 60 + k * 95; const g = x.createLinearGradient(0, y - 30, 0, y + 30); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.22)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, y - 30, 512, 60); }
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    m = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .55, transparent: true, opacity: .62, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false}); }
+    m = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .25, transparent: true, opacity: .5, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false}); }
   m.name = 'r28' + kind; return (R28W[ck] = m);
 }
 function r28Frame(id){   // an opening's world frame: centre, along-wall unit, unit pointing into the room, sill / head, width, wall thickness
