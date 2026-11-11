@@ -9,7 +9,7 @@
      neighbours; for a skylight the ray must also get down its well into the room). Made by dev.sunScan(). */
 window.ROOM_DATA = {
   stand: {
-    primary: {pos: [-11.6, 10.57, -28.3], face: [-18.8, 9.3, -37.5], pawn: [-12.5, -37]},
+    primary: {pos: [-11.6, 10.57, -28.3], face: [-18.8, 9.3, -37.5], pawn: [-15.2, -38.2]},
     loft:    {pos: [-20.5, 10.57, -11.05], face: [-19.9, 11.5, -2.5], pawn: [-22, -5.6]},
     garden:  {pos: [22.71, 5, 3.27], face: [21.8, 4.6, -6.7], pawn: [18.51, -3.73]},
     middle:  {pos: [23.8, 5, 18.12], face: [32.3, 4.4, 19], pawn: [29.5, 16.5]},

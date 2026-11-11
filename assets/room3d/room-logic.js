@@ -15,7 +15,7 @@
   /* ------------------------------------------------------------------ the rooms */
   const SLOTS = {
     primary: {name: 'Primary suite',  sp: 'SP-L2-PRIMARY', lv: 'upper',  bed: 1, own: 1, out: 1, sky: 1, pm: 1, views: ['hills', 'oak']},
-    loft:    {name: 'Loft',           sp: 'SP-L2-LOFT',    lv: 'upper',  bed: 0},
+    loft:    {name: 'Loft',           sp: 'SP-L2-LOFT',    lv: 'upper',  bed: 0},   // no sky: the two skylights seen from the loft (SK-R03, SK-R04) are over the stair hall beside it
     garden:  {name: 'Garden bedroom', sp: 'SP-L1-BED1',    lv: 'main',   bed: 1, none: 1, views: ['oak']},
     middle:  {name: 'Middle bedroom', sp: 'SP-L1-BED2',    lv: 'main',   bed: 1, am: 1, views: ['side']},
     front:   {name: 'Front bedroom',  sp: 'SP-L1-BED3',    lv: 'main',   bed: 1, am: 1, views: ['street']},
@@ -167,7 +167,7 @@
     wheelQuiet: 'The wheel squeaks all night. Nobody can have a bedroom on the same level as the wheel.',
     wheelIn: 'The wheel stays in the house, not the garage. That is too far for a hamster to walk.',
     mabelOut: 'Mabel takes her time. She needs a door that opens straight onto the terrace.',
-    lettuceSky: 'Lettuce needs daylight. The tray goes in a room with a skylight.',
+    lettuceSky: 'Lettuce needs daylight from above. The tray goes in a room with a skylight in its own ceiling.',
     scopeUp: 'The telescope goes as high in the house as it can.',
     vanOutlet: 'The van is electric and nearly flat. It needs the 50-amp, 240-volt outlet.'};
   const ASK = {

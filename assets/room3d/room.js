@@ -660,7 +660,7 @@
   .rfeMk span{position:absolute;left:50%;top:56px;transform:translateX(-50%);white-space:nowrap;font:500 13px Jost,sans-serif;color:#fff;background:rgba(20,26,44,.82);padding:4px 10px;border-radius:999px}
   .rfeMk.edge span{top:50%;transform:translateY(-50%)}.rfeMk.edge.L span{left:58px}.rfeMk.edge.R span{left:auto;right:58px}
   .rfeMk:hover span{background:#1f2948}.rfeMk:focus-visible i{outline:3px solid #fff;outline-offset:3px}
-  #rfeToast{position:absolute;left:calc(50% + 177px);top:15%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.500px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 420px);text-align:center;z-index:7;box-sizing:border-box}
+  #rfeToast{position:absolute;left:calc(50% + 177px);top:15%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.500px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;width:max-content;max-width:calc(100% - 420px);text-align:center;z-index:7;box-sizing:border-box}
   html.rfe-cine #rfeToast{left:50%;max-width:calc(100% - 40px)}
   #rfeToast.on{opacity:1;transform:translate(-50%,0)}
   #rfeGhost{--tape:#66ade6;--tapeink:#0f3556;--mut:#5c6575;position:fixed;left:0;top:0;z-index:70;pointer-events:none;display:none;will-change:transform}
@@ -1022,7 +1022,7 @@
   // who takes a bedroom and what does not: said once, on the card for each puzzle
   function ruleTxt(L){ const join = a => a.length > 2 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join(' and ');
     const ps = L.guests.filter(LG.isP), ts = L.guests.filter(g => !LG.isP(g)), tn = ts.map((g, i) => i ? nmOf(g) : NmOf(g));
-    return `${join(ps.map(nmOf))} each get a bedroom of their own.` + (ts.length ? ` ${join(tn)} ${ts.length > 1 ? 'go in rooms that are' : 'goes in a room that is'} not a bedroom: the loft, the office, the lounge or the garage.` : ''); }
+    return `${join(ps.map(nmOf))} each get a bedroom of their own.` + (ts.length ? ` ${join(tn)} ${ts.length > 1 ? 'go in rooms that are not bedrooms' : 'goes in a room that is not a bedroom'}: the loft, the office, the lounge or the garage.` : ''); }
   function introCard(L){ closeCard(); if(!L){ titleCard(); return; } try{ orbitFit(); }catch(e){} const i = LG.LEVELS.indexOf(L);
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">${i >= 0 ? 'Puzzle ' + (i + 1) + ' of ' + LG.LEVELS.length : new Date().toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})}</p><h2 id="rfeH">${esc(L.title)}</h2>
       <p class="lede">${esc(L.story)}</p>
