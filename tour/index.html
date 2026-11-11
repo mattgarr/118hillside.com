@@ -5736,7 +5736,12 @@ function navGrabOrbit(G, dx, dy, h){   // NAV r27 (owner 11/10): grab-the-world 
   try{ camera.updateMatrixWorld(); const R = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), F = new THREE.Vector3(); camera.getWorldDirection(F);
     const r = G.clone().sub(target), v = new THREE.Vector3(r.z, 0, -r.x), z = Math.max(.5, G.clone().sub(camera.position).dot(F));
     const ppa = v.dot(R) * h / (2 * z * Math.tan(camera.fov * Math.PI / 360));   // pixels G moves per radian of world spin (theta -= a)
-    if(ppa > 0) ka = clamp(1 / ppa, k0 * .5, k0); }catch(e){}
+    /* r36 owner 11/11 ("if I grab in the foreground yes, but in the background it's backwards"): a point grabbed BEHIND the turning axis moves
+       across the screen the other way for the same spin, so the spin's sign comes from where the grabbed point sits relative to the axis. The side
+       is decided once, when the drag starts (it must not flip mid-drag as the point swings round), and a point close to the axis as seen from
+       the camera (ppa near zero, no leverage either way) turns the ordinary way at the ordinary gain. */
+    if(G.r36s == null) G.r36s = ppa < -.12 * h ? -1 : 1;
+    if(G.r36s > 0){ if(ppa > 0) ka = clamp(1 / ppa, k0 * .5, k0); } else ka = -clamp(1 / Math.max(1e-6, -ppa), k0 * .5, k0); }catch(e){}
   sph.theta -= dx * ka; sph.phi -= dy * k0 * .8; }
 function v26PivotOrbit(P, yaw, pitch){   // v26 O1: rotate camera + target about the pivot P
   const C = camera.position.clone().sub(P), T = target.clone().sub(P), up = new THREE.Vector3(0, 1, 0);
@@ -7234,6 +7239,11 @@ function drawMini(){
     c.fillStyle='#d2462a'; c.strokeStyle='#fff'; c.lineWidth=2; c.beginPath(); c.arc(cx,cy,5.5,0,7); c.fill(); c.stroke(); }
 }
 function feetOrCam(){ if(mode==='walk') return feet; if(mode==='tour'){ const l=STOPS[stopIdx].level; return l==='outside'?0:LV[l]; } return 0; }
+/* r36: in Dollhouse / Design a click on the plan no longer drops you into Walk; it enlarges the plan (as does the corner button in any mode) */
+{ const mini = $('#mini'), big = () => { mini.classList.toggle('big36'); }, b = document.createElement('button'); b.type = 'button'; b.id = 'mmBig36'; b.textContent = '\u2922'; b.title = 'Enlarge or shrink the floor plan'; b.setAttribute('aria-label', 'Enlarge or shrink the floor plan');
+  b.style.cssText = 'position:absolute;right:6px;bottom:6px;width:28px;height:28px;border-radius:8px;border:1px solid rgba(0,0,0,.18);background:rgba(255,255,255,.92);font-size:15px;line-height:1;cursor:pointer;padding:0'; b.onclick = e => { e.stopPropagation(); big(); };
+  const st = document.createElement('style'); st.textContent = '.mini.big36 canvas{width:min(460px,78vw)}.mini{position:absolute}.mini:not(.open27) #mmBig36{display:none}html.ph .mini #mmBig36{display:block}'; document.head.appendChild(st); mm.parentElement.appendChild(b);
+  mm.parentElement.addEventListener('click', e => { if(e.target === mm && isDoll()){ e.stopPropagation(); big(); } }, true); }
 mm.addEventListener('click',e=>{
   const r=mm.getBoundingClientRect(); const u=(e.clientX-r.left)/r.width*mm.width, v=(e.clientY-r.top)/r.height*mm.height;
   const [x0,z0,x1,z1]=MMB; const x=x0+u/mm.width*(x1-x0), z=z0+v/mm.height*(z1-z0);
@@ -7937,7 +7947,10 @@ const FURN = (() => {
     for(const u of [-.46, 0, .46]) for(const t of [.05, .5, .95]){ const lx = u * w, lz = t * d, px = x + lx * c + lz * sn, pz = z - lx * sn + lz * c;
       for(const h of hs) if(inWallBody(px, pz, h)) return true; }
     if(!it.outdoor){ const cx = x + d / 2 * sn, cz = z + d / 2 * c;
-      if(!FLOORS.some(f => Math.abs(f.y - it.y) < .45 && (!f.v || f.v === ACTIVE_VAR) && onFloor(f, cx, cz))) return true; }
+      if(!FLOORS.some(f => Math.abs(f.y - it.y) < .45 && (!f.v || f.v === ACTIVE_VAR) && onFloor(f, cx, cz))) return true;
+      /* r36 (a dragged bed ended up outside the front wall): an indoor piece stays inside a room - its middle and four points of its footprint are over an interior space */
+      try{ if(it.home === undefined){ const s0 = BIM2S.spaceUnderFeet(it.base.z + d / 2 * Math.cos(it.base.r), it.base.x + d / 2 * Math.sin(it.base.r), it.y + .3); it.home = s0 && s0.interior ? s0.id : null; }
+        if(it.home) for(const [u, t] of [[0, .5], [-.4, .15], [.4, .15], [-.4, .85], [.4, .85]]){ const lx = u * w, lz = t * d, s1 = BIM2S.spaceUnderFeet(z - lx * sn + lz * c, x + lx * c + lz * sn, it.y + .3); if(!s1 || !s1.interior) return true; } }catch(e){} }
     return false;
   }
   function tryMove(it, x, z){   // move as far as allowed: whole step, else slide along x or z
@@ -7960,7 +7973,7 @@ const FURN = (() => {
   function ray(cx, cy){ const r = canvas.getBoundingClientRect(); nd.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); rc.setFromCamera(nd, camera); }
   function pieceAt(cx, cy){
     ray(cx, cy); const live = items.filter(it => it.obj.visible && shown(it));
-    const hs = rc.intersectObjects(live.map(it => it.obj), true).filter(h => !(h.object.material && h.object.material.transparent && h.object.material.opacity < .5)); if(!hs.length) return null;
+    const hs = rc.intersectObjects(live.map(it => it.obj), true).filter(h => !(h.object.material && h.object.material.transparent && h.object.material.opacity < .04)); if(!hs.length) return null;   /* r36: a glass table top is the table (it could not be picked) */
     const h = hs[0], front = pick(cx, cy); if(front && !front.terrain && front.distance < h.distance - .15){ let o = front.object, mine = false; for(; o; o = o.parent) if(o.userData && o.userData.furn) mine = true; if(!mine) return null; }
     for(let o = h.object; o; o = o.parent) if(o.userData && o.userData.furn) return live.find(it => it.obj === o) || null;
     return null;
@@ -8936,14 +8949,14 @@ async function buildLightFixtures(){
       for(const [room, cs] of Object.entries(groups)){ const xs = cs.map(c => c.x), ys = cs.map(c => c.y), b = [Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5];
         if(beds.some(([bx, by]) => bx > b[0] && bx < b[2] && by > b[1] && by < b[3])) spots.push([(b[0] + b[2]) / 2, (b[1] + b[3]) / 2, room]); } }
     if(f.qty && spots.length > f.qty){ const pref = f.prefer || 'E'; spots.sort((u, v) => pref === 'E' ? v[0] - u[0] : u[0] - v[0]); spots.length = f.qty; }
-    const nick = /nickel/i.test(f.fixture), dark = !nick;
+    const nick = true, dark = !nick;   /* r36 owner 11/11: the fans are the Minka-Aire Java 54 in LED in brushed nickel - three blades the same brushed-nickel finish as the housing (not white, not polished), opal LED lens underneath */
     const dia = +(((f.size || '').match(/(\d+)\s*in/) || [0, 52])[1]) * IN_, rodRec = (f.fixture || '').match(/(\d+)\s*in[^,]*downrod/), rod0 = rodRec ? +rodRec[1] * IN_ : 1.0;
-    const body = nick ? new THREE.MeshStandardMaterial({color: 0xd9dadb, metalness: 1, roughness: .18}) : new THREE.MeshStandardMaterial({color: 0x3a3532, metalness: .45, roughness: .45});
-    const blade = nick ? new THREE.MeshStandardMaterial({color: 0xb9bbbd, metalness: .6, roughness: .38}) : new THREE.MeshStandardMaterial({color: 0x34302d, metalness: .3, roughness: .5});
+    const body = nick ? new THREE.MeshStandardMaterial({color: 0xc3c5c7, metalness: .9, roughness: .4}) : new THREE.MeshStandardMaterial({color: 0x3a3532, metalness: .45, roughness: .45});
+    const blade = nick ? new THREE.MeshStandardMaterial({color: 0xbcbec0, metalness: .85, roughness: .44}) : new THREE.MeshStandardMaterial({color: 0x34302d, metalness: .3, roughness: .5});
     for(const [bx, by, where] of spots){
       let cz = bim2CeilingAt(bx, by, fz).z; for(let a = 0; a < 8; a++) cz = Math.max(cz, bim2CeilingAt(bx + .14 * Math.cos(a * Math.PI / 4), by + .14 * Math.sin(a * Math.PI / 4), fz).z);
       const rod = Math.max(.25, Math.min(rod0, cz - (fz + 8) - .45)), [wx, wz] = W2(bx, by);
-      const o = FIX.make('ceilingFan', {dia, downrod: rod, light: /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
+      const o = FIX.make('ceilingFan', {dia: nick ? 54 / 12 : dia, downrod: rod, light: nick || /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
       o.traverse(k => { if(!k.isMesh) return; if(k.name === 'blackMetal') k.material = body; else if(k.name === 'plasticWhite') k.material = blade; k.castShadow = true; k.receiveShadow = true; });
       o.position.set(wx, cz, wz); o.rotation.y = Math.PI / 6; o.userData.kind = 'ceilingFan'; grp(isUp ? 'furnU' : 'furn').add(o);
       window.__FANS.push({item: f.item, where, x: +bx.toFixed(2), y: +by.toFixed(2), ceiling: +cz.toFixed(2), downrod: +rod.toFixed(2), dia: +dia.toFixed(2), bladesAFF: +(cz - .2 - rod - .24 - fz).toFixed(2)}); }
