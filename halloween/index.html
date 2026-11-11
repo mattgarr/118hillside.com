@@ -19392,8 +19392,8 @@ function bim3GarageFace(){
 /* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
    the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
    both sides, flush cup pulls) that slides into the wall on the coffee-bar side and can be closed; the wall closed above it; and the attic
-   storage cabinet the owner built over it: two raised-panel doors, 36" wide x 30" high, bottom at 8'-5", centred on the door, satin-nickel
-   knobs, opening to the attic over the hall. The gap, the wall faces and the ceiling are probed from the built house. */
+   storage cabinet the owner built over it: two raised-panel doors, 36" wide x 30" high, bottom at 8'-5", centred on the door, no
+   knobs (owner 11/10), opening to the attic over the hall. The gap, the wall faces and the ceiling are probed from the built house. */
 function r28AtticCabinet(){
   const HEAD = 6.7813, CW = 3, CH = 2.5, CAB_Y = 8 + 5 / 12, objs = withVar(['main', 'ceil', 'vault', 'vaultUp', 'roof']).filter(g => g.children.length), rc = new THREE.Raycaster();
   const hit = (o, d, far) => { rc.set(new THREE.Vector3(...o), new THREE.Vector3(...d)); rc.far = far; return rc.intersectObjects(objs, true).find(q => q.object.isMesh && q.object.visible) || null; };
@@ -19424,7 +19424,7 @@ function r28AtticCabinet(){
   it.gap = new THREE.Box3(new THREE.Vector3(xf - .05, 0, z0), new THREE.Vector3(xh + .05, HEAD - .1, z1)); it.c0 = [cx, cz]; it.n3 = new THREE.Vector3(-1, 0, 0);   // tap the open doorway from the kitchen to close it
   POCKET31.items.push(it);
   // the attic cabinet, centred over the door
-  if(window.FIX && FIX.make){ const cab = FIX.make('upperCabinet', {w: CW, h: CH, d: .3, mountY: CAB_Y, glass: false, style: 'raised', pull: 'knob', hw: 'satinNickel', led: false, contents: false});
+  if(window.FIX && FIX.make){ const cab = FIX.make('upperCabinet', {w: CW, h: CH, d: .3, mountY: CAB_Y, glass: false, style: 'raised', pull: 'none', hw: 'satinNickel', led: false, contents: false});
     cab.position.set(xf + .24, 0, cz); cab.rotation.y = -Math.PI / 2; cab.userData.el = 'r28-attic-cabinet';
     cab.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } }); grp('main').add(cab); }
   return {z0: +z0.toFixed(2), z1: +z1.toFixed(2), xf: +xf.toFixed(2), xh: +xh.toFixed(2), yTop: +yTop.toFixed(2)};
