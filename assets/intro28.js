@@ -10,6 +10,7 @@
   var seen = store.get('intro28.seen') === '1', t0 = performance.now(), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(L.classList.contains('done')) return;
   var game = /\/(thanksgiving|halloween)\//.test(location.pathname) || /[?&](snowball|escape|deck|room|feast)=/.test(q);
+  var gname = {snowball: 'Where\u2019s Snowball?', escape: 'Locked In at Hillside', deck: 'Deck the House with Snowball', room: 'Room for Everyone', feast: 'Thanksgiving at Hillside'}[(/[?&](snowball|escape|deck|room|feast)=/.exec(q) || [])[1]];   // the game this visit is loading, named on the loading card
   var S = [
     ['front-exterior-1600.jpg', '118 Hillside Drive', 'A house in Woodside Glens, about a mile from the market, the bakery and the library in Town Center.'],
     ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a foyer with a cathedral ceiling. The heritage oak is framed in the glass at the far end.'],
@@ -58,7 +59,7 @@
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
     '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
     '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>' + (game ? 'The house is ready.' : 'Drag to look around. Tap a white circle to walk there.') + '</small></div>' +
-    '<div class="ld" role="status" aria-live="polite"><i aria-hidden="true"></i><div><b id="i28pct">Loading ' + (game ? 'the game' : 'the 3D house') + '…</b><span>Enjoy a few pictures of the house while it gets ready.</span></div></div>' +
+    '<div class="ld" role="status" aria-live="polite"><i aria-hidden="true"></i><div><b id="i28pct">Loading ' + (game ? 'the game' : 'the 3D house') + '…</b><span>' + (gname ? gname + ' is loading. ' : '') + 'Enjoy a few pictures of the house while it gets ready.</span></div></div>' +
     '<div class="bar" aria-hidden="true"><i></i></div>';
   document.body.appendChild(el);
   var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');

@@ -11,6 +11,8 @@
    - One objective line always says what to do next. Snowball gives three levels of hint for the step you are on.
    - The paper on the great room window is card and tracing paper in the same boxy figures, so only the sun can tell you the digits.
    - Sound is one small synthesized set (see SND); SND.measure() renders every cue offline and reports its level.
+   The cast is pets only: Snowball, the cat of the house, locked the bottle away, drew the clue and signs with a paw print. He is also
+   the one who gives the hints. No people are named or described anywhere in the game.
    Debug hook: window.ESCAPE (state, rig, goTo, examine, back, hint, setSlider, sound). */
 (function(){
   'use strict';
@@ -34,6 +36,10 @@
   const el = (tag, attrs, html) => { const e = document.createElement(tag); for(const k in (attrs || {})) e.setAttribute(k, attrs[k]); if(html != null) e.innerHTML = html; return e; };
   const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
   const phone = () => innerWidth < 900;   // the compact layout: phones and narrow windows
+  // where this copy of the site lives (the real domain, or a sub-path on a preview mirror), so Share can link the game's own page, which carries its preview
+  const SITE = (() => { const m = /githack/.test(location.host) ? location.pathname.match(/^(\/[^\/]+\/[^\/]+\/[^\/]+)\//) : location.pathname.match(/^(.*)\/(tour|games)\//), base = m ? m[1] : '';
+    return {base, page: path => location.origin + base + path + (base ? 'index.html' : '')}; })();
+  const PAW = '<svg class="paw" viewBox="0 0 44 44" role="img" aria-label="Signed with a paw print"><g fill="currentColor"><ellipse cx="22" cy="29" rx="10" ry="8.4"/><ellipse cx="8.6" cy="18" rx="4" ry="5.2" transform="rotate(-24 8.6 18)"/><ellipse cx="16.6" cy="10" rx="4" ry="5.4" transform="rotate(-8 16.6 10)"/><ellipse cx="27.4" cy="10" rx="4" ry="5.4" transform="rotate(8 27.4 10)"/><ellipse cx="35.4" cy="18" rx="4" ry="5.2" transform="rotate(24 35.4 18)"/></g></svg>';
 
   /* ================================================================== the level */
   const CODE = '327', T_SUN = 16, DOY = 288, EYE = 5.3;
@@ -240,7 +246,7 @@
   // with the sun behind them, card goes dark against the light and tracing paper glows: the same truth the floor shows
   function paperLight(s){ if(!PAPER.card) return; const k = clamp(s, 0, 1); PAPER.card.color.copy(lin(0xf4f0e6)).multiplyScalar(1 - .5 * k); PAPER.card.emissiveIntensity = .1 * (1 - k); PAPER.vellum.emissiveIntensity = .1 + .5 * k; }
 
-  /* ================================================================== Elena's drawing on the pocket door */
+  /* ================================================================== Snowball's drawing on the pocket door, signed with a paw print */
   function drawingCanvas(){ const w = 760, h = 1360, c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
     const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
     const kg = x.createLinearGradient(0, 0, w, h); kg.addColorStop(0, '#d8bb8c'); kg.addColorStop(1, '#c9a873'); x.fillStyle = kg; x.fillRect(26, 58, w - 52, h - 86);
@@ -268,7 +274,9 @@
     for(const [n, a] of [['12', -90], ['3', 0], ['6', 90], ['9', 180]]){ const q = a * Math.PI / 180; x.fillText(n, cx + Math.cos(q) * (r - 62), cy + Math.sin(q) * (r - 62) + 3); }
     line([[cx, cy], [cx, cy - 104]], 9); const a4 = (4 / 12) * Math.PI * 2 - Math.PI / 2; line([[cx, cy], [cx + Math.cos(a4) * 70, cy + Math.sin(a4) * 70]], 13);
     x.beginPath(); x.arc(cx, cy, 11, 0, Math.PI * 2); x.fill();
-    x.font = '600 76px Caveat, "Segoe Print", "Bradley Hand", cursive'; x.textAlign = 'right'; x.fillText('E.', w - 84, h - 110);
+    // signed with a paw print: one pad and four toes, pressed on at a slight angle
+    x.save(); x.translate(w - 150, h - 128); x.rotate(-.22); x.beginPath(); x.ellipse(0, 18, 31, 26, 0, 0, Math.PI * 2); x.fill();
+    for(const [dx, dy, a] of [[-38, -17, -.5], [-14, -40, -.15], [14, -40, .15], [38, -17, .5]]){ x.beginPath(); x.ellipse(dx, dy, 11.5, 16, a, 0, Math.PI * 2); x.fill(); } x.restore();
     return c; }
   const DRAW = {mesh: null, tex: null};
   function buildDrawing(){ const pd = (H.door28 && H.door28.items || []).find(it => it.id === 'R28-POCKET'); S.pocket = pd || null;
@@ -507,7 +515,7 @@
   #escCard .k{font-size:13px;color:#5c6575;margin:0 0 6px;letter-spacing:.03em}
   #escCard .lede{font-family:"Cormorant Garamond",Georgia,serif;font-size:21px;line-height:1.32;margin:0 0 14px;color:#2b3442}
   #escCard .note{background:#fff;border:1px solid #e3e0d8;border-radius:4px;padding:15px 18px 12px;transform:rotate(-.7deg);box-shadow:0 6px 18px rgba(0,0,0,.09);font:600 23px/1.22 Caveat,"Segoe Print","Bradley Hand",cursive;color:#2b2336;margin:0 0 18px}
-  #escCard .note p{margin:0 0 7px}#escCard .note .sig{text-align:right}#escCard .note .ps{font-size:20px;color:#5a4d63;margin:0}
+  #escCard .note p{margin:0 0 7px}#escCard .note .sig{text-align:right;line-height:1}#escCard .note .paw{width:38px;height:38px;transform:rotate(-14deg);color:#2b2336;margin:-2px 6px -4px 0}#escCard .note .ps{font-size:20px;color:#5a4d63;margin:0}
   #escCard .how{list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   #escCard .how li{background:#f1eee6;border-radius:14px;padding:10px 8px 9px;text-align:center;font-size:13.5px;line-height:1.25;color:#2b3442}
   #escCard .how svg{width:30px;height:30px;display:block;margin:0 auto 5px;color:#1f2948}
@@ -517,6 +525,8 @@
   #escCard .cta{background:#1f2948;color:#f4f1e8;border-radius:18px;padding:18px 18px 16px;margin:0 0 14px}
   #escCard .cta b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;font-weight:600;line-height:1.1;margin-bottom:6px}#escCard .cta span{display:block;font-size:15px;line-height:1.45;color:#d5daE8;margin-bottom:14px}
   #escCard .more{display:flex;flex-wrap:wrap;gap:8px}
+  #escCard.side{background:none;backdrop-filter:none;-webkit-backdrop-filter:none;place-items:center end;pointer-events:none;padding-right:max(18px,env(safe-area-inset-right))}
+  #escCard.side .c{position:relative;pointer-events:auto;max-width:440px;max-height:calc(100% - 8px);overflow-x:hidden;overflow-y:auto}#escCard.side h2{font-size:clamp(32px,4vw,42px)}
   .escBub{position:absolute;top:150px;width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(201,138,18,.55);animation:escBub 3.2s ease-in infinite}
   @keyframes escBub{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.9}100%{transform:translateY(-150px) scale(1.2);opacity:0}}
   html.esc-ex #escMapWrap, html.esc-ex #escDockR{visibility:hidden}html.esc-ex #escBack{display:inline-flex}
@@ -527,7 +537,7 @@
     #escTop{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}#escL,#escR{display:contents}
     #escBtns{order:0;align-self:flex-end}#escGoal{order:1;max-width:none;padding:9px 14px 10px}#escGoal p{font-size:18.5px}#escSay{order:2;align-self:flex-end}
     #escHint{padding:5px 12px 5px 5px;min-height:48px}#escHint small{display:none}.escIco{width:48px;height:48px}
-    #escPlace{position:fixed;left:10px;right:10px;max-width:520px;margin:0 auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 170px);padding:8px 14px 10px}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
+    #escPlace{order:3;max-width:none;padding:8px 14px 10px}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
     #escDock{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}
     #escMapWrap{flex:none;order:0;flex-direction:row}#escMapBtn{display:inline-flex}
     #escMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 24px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
@@ -540,6 +550,7 @@
     html.esc-ex #escBack{display:none}
     .escPad{grid-template-columns:repeat(5,1fr);gap:7px}.escPad button{height:50px}.escPad .z{grid-column:auto}.escPad .c{display:none}.escDisp .c2{display:grid!important}
     #escCard .c{padding:20px 18px 18px}#escCard .note{font-size:21px}#escCard .lede{font-size:19px}
+    #escCard.side{place-items:end center;padding:8px}#escCard.side .c{box-sizing:border-box;max-width:560px;max-height:calc(100% - 180px);padding:16px 16px 14px}#escCard.side h2{font-size:32px}#escCard.side .lede{font-size:18px;margin-bottom:10px}#escCard.side .stats{margin-bottom:10px}
   }
   @media (prefers-reduced-motion:reduce){.escMk.on i,#escHint.nudge,#escCoach svg,.escBub{animation:none!important}}
   `;
@@ -592,7 +603,7 @@
     $('#escBack').onclick = () => back();
     $('#escMapBtn').onclick = () => setMap(!mapOpen()); $('#escMapX').onclick = () => setMap(false);
     const sl = $('#escSlider'); sl.oninput = () => onSlide(+sl.value, true); sl.onchange = () => { onSlide(+sl.value, true); applyHour(+sl.value, true); };
-    sl.addEventListener('pointerdown', () => { SND.unlock(); sunE.classList.remove('key'); });
+    sl.addEventListener('pointerdown', () => { SND.unlock(); sunKey(false); });
     addEventListener('pointerdown', e => { if(menuOpen() && !e.target.closest('#escMenu,#escMenuBtn')) closeMenu(); if(mapOpen() && phone() && !e.target.closest('#escMap,#escMapBtn')) setMap(false); }, true);
     buildMap(); setGoal(true); setClock(S.hour); }
   const UI = {};
@@ -607,15 +618,16 @@
 
   /* ---- objective */
   const GOALS = {
-    arrive: 'Find the coffee bar. The champagne is in the little fridge there.',
-    fridge: 'The fridge needs a three-digit code. Look around the coffee bar for something Elena left.',
-    drawing: 'Make the house match Elena’s drawing. The time slider moves the sun.',
-    light: 'The sun is through the great room windows. Go and look at the floor.',
-    code: 'Take the code to the drinks fridge at the coffee bar.',
+    arrive: 'The champagne is locked in a drinks fridge somewhere in this house. Find it.',
+    fridge: 'The lock wants three digits. Find what Snowball left for you.',
+    drawing: 'Snowball’s drawing is a set of instructions. Make the house match it.',
+    light: 'The sun is where the drawing put it. Find where that light lands.',
+    code: 'You have three digits. Take them to the lock.',
     done: 'The fridge is open.'};
   const RANK = ['arrive', 'fridge', 'drawing', 'light', 'code', 'done'];
   function setStage(st){ if(RANK.indexOf(st) <= RANK.indexOf(S.stage)) return false; S.stage = st; S.lastProgress = performance.now(); hintIx = 0; ga('esc_step', {step: st}); setGoal(); $('#escHint').classList.remove('nudge');
-    sunE.classList.toggle('key', st === 'drawing'); $('#escSunL').textContent = st === 'drawing' ? 'Time of day: drag the sun' : 'Time of day'; return true; }
+    sunKey(false); return true; }
+  function sunKey(on){ sunE.classList.toggle('key', on); $('#escSunL').textContent = on ? 'Time of day: drag the sun' : 'Time of day'; }
   function setGoal(silent){ $('#escGoalT').textContent = GOALS[S.stage]; if(silent) return; goalE.classList.remove('new'); void goalE.offsetWidth; goalE.classList.add('new'); SND.goal(); }
 
   /* ---- time slider */
@@ -624,7 +636,7 @@
   const lightOn = h => h >= 14.75 && h <= 17.25;                        // there is paper-shadow on the floor at all
   function onSlide(h, user){ const was = S.hour; setClock(h); applyHour(h); if(user) S.lastProgress = performance.now(); if(lightOn(h) !== lightOn(was) && !S.ex) setMarks();
     if(lightUp(h) && !lightUp(was)){ SND.reveal(); if(!S.sawLight){ S.sawLight = true;
-        if(S.place === 'great' || (S.ex && S.ex.id === 'floor')) say('There it is.', 3600, true); else say('Something just changed in the great room.', 5200, true);
+        if(S.place === 'great' || (S.ex && S.ex.id === 'floor')) say('There it is.', 3600, true); else say('Something in the house just changed.', 5200, true);
         if(S.stage === 'drawing') setStage('light'); } }
     if(S.ex && S.ex.id === 'floor') sheetFor(S.ex); }
   function setSlider(h){ $('#escSlider').value = h; onSlide(h); applyHour(h, true); }
@@ -656,7 +668,7 @@
     for(const w of (WALKS[S.place] || [])) mark('walk', PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     for(const id in SPOTS){ const sp = SPOTS[id]; if(sp.from.includes(S.place) && (!sp.when || sp.when())) mark('look', sp.label(), sp.at(), () => examine(id), 's:' + id); } }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || !S.started || S.done || !!S.ex;
-    const top = phone() ? 210 : 96, bot = r.height - (phone() ? (placeE.classList.contains('on') ? 332 : 196) : 204), padX = 40, items = [], placed = [];
+    const top = 46, bot = r.height - 46, padX = 40, items = [], placed = [];
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '', docked = false;
@@ -664,14 +676,31 @@
       if(behind || x < r.left - 10 || x > r.left + r.width + 10 || y < r.top - 60 || y > r.top + r.height + 60){ docked = true; edge = (behind ? side < 0 : x < r.left + r.width / 2) ? 'L' : 'R'; }
       else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); if(x < r.left + 88) edge = 'L'; else if(x > r.left + r.width - 88) edge = 'R'; }
       items.push({m, x, y, edge, docked}); }
-    const pr = !phone() && placeE.classList.contains('on') ? placeE.getBoundingClientRect() : null;
-    if(pr) for(const it of items) if(!it.docked && it.x < pr.right + 60 && it.y < pr.bottom + 40) it.y = pr.bottom + 40;
-    items.sort((p, q) => p.docked - q.docked);
-    const box = it => it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 206, it.y + 32] : it.edge === 'R' ? [it.x - 206, it.y - 32, it.x + 32, it.y + 32] : [it.x - 78, it.y - 32, it.x + 78, it.y + 88];
+    // the rings you look at are placed first, so a walk label gives way to a ring and never the other way round
+    items.sort((p, q) => (p.docked - q.docked) || ((p.m.kind === 'walk') - (q.m.kind === 'walk')));
+    // everything on screen that a marker must not sit on, measured as it is right now
+    const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
+    add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#escMapBtn') : mapE); add($('#escBtns')); if(sayE.classList.contains('on')) add(sayE); add(sunE);
+    if(coachE.classList.contains('on')) add(coachE);
+    const wOf = m => m.w || (m.w = Math.max(40, (m.b.querySelector('span') || {}).offsetWidth || 90));
+    const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
-    for(const it of items){ if(it.docked){ it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = r.top + Math.max(top + 24, r.height * .42); }
-      let bx = box(it), n = 0; while(placed.some(q => hit(bx, q)) && n++ < 12){ it.y += 34; if(it.y > r.top + bot) it.y = r.top + top + 24; bx = box(it); }
-      placed.push(bx); const m = it.m;
+    // things that are out of view: one tidy stack per side, in the clear band between the HUD above and below
+    const stack = (list, x0, x1, maxPitch) => { const n = list.length; if(!n) return; let yMin = r.top + top, yMax = r.top + bot;
+      for(const o of obs){ if(o[2] < x0 || o[0] > x1) continue; if((o[1] + o[3]) / 2 < r.top + r.height / 2) yMin = Math.max(yMin, o[3] + 36); else yMax = Math.min(yMax, o[1] - 36); }
+      const pitch = n > 1 ? clamp((yMax - yMin) / (n - 1), 40, maxPitch) : 0, start = clamp(r.top + r.height * .42 - (n - 1) * pitch / 2, yMin, Math.max(yMin, yMax - (n - 1) * pitch));
+      list.forEach((it, i) => { it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = start + i * pitch; placed.push(box(it)); }); };
+    const dockL = items.filter(it => it.docked && it.edge === 'L'), dockR = items.filter(it => it.docked && it.edge === 'R');
+    const reach = list => Math.max(...list.map(it => 36 + wOf(it.m))) + padX;
+    if(dockL.length && dockR.length && reach(dockL) + reach(dockR) + 10 > r.width){ // a narrow screen, and labels long enough to meet in the middle: the two sides take turns, row by row
+      const seq = []; for(let i = 0; i < Math.max(dockL.length, dockR.length); i++){ if(dockL[i]) seq.push(dockL[i]); if(dockR[i]) seq.push(dockR[i]); }
+      stack(seq, r.left, r.left + r.width, 58); }
+    else { stack(dockL, r.left, r.left + 290, 66); stack(dockR, r.left + r.width - 290, r.left + r.width, 66); }
+    for(const it of items){ const m = it.m;
+      if(!it.docked){ // in view: the nearest free place above or below, or stay put if there is none
+        const y0 = it.y, all = obs.concat(placed), free = y => { it.y = y; const q = box(it); return !all.some(o => hit(q, o)); };
+        if(!free(y0)){ let ok = false; for(let k = 1; k <= 24 && !ok; k++) for(const d of (y0 > r.top + r.height * .55 ? [-1, 1] : [1, -1])){ const y = y0 + d * 30 * k; if(y < r.top + top || y > r.top + bot) continue; if(free(y)){ ok = true; break; } } if(!ok) it.y = y0; }
+        placed.push(box(it)); }
       m.b.style.transform = `translate(${it.x.toFixed(1)}px,${it.y.toFixed(1)}px)`; const cls = 'escMk ' + m.kind + ' on' + (it.edge ? ' edge ' + it.edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
   function tapAt(cx, cy){ if(rig.move || S.busy || S.ex) return; let best = null; for(const m of marks){ if(!m.on) continue; const q = m.b.getBoundingClientRect(), d = Math.hypot(q.left + q.width / 2 - cx, q.top + q.height / 2 - cy); if(d < 56 && (!best || d < best.d)) best = {m, d}; } if(best) best.m.act(); }
@@ -681,6 +710,7 @@
     if(!c.look){ if(S.dragPx > 140){ c.look = true; } else k = 'look'; }
     if(!k && !c.walk) k = 'walk'; if(!k && !c.tap && S.place === 'coffee' && !S.ex) k = 'tap';
     if(S.ex || rig.move || mapOpen() || S.stage !== 'arrive') k = '';
+    if(k && phone()){ const y = Math.round($('#escTop').getBoundingClientRect().bottom + 10) + 'px'; if(coachE.style.top !== y) coachE.style.top = y; } else if(coachE.style.top) coachE.style.top = '';
     if(k === UI.coachK) return; UI.coachK = k; coachE.className = k ? 'on ' + k : '';
     if(k) coachE.innerHTML = k === 'look' ? ICO.drag + '<span>Drag to look around</span>' : k === 'walk' ? ICO.disc + '<span>Tap a white circle to walk there</span>' : ICO.ring + '<span>Tap a gold ring to look closer</span>'; }
 
@@ -699,7 +729,7 @@
     const l = Math.min(W - 392, W * .62); return {fx: l / 2 / W, fy: .5, fw: l / W * .92, fh: .74}; }
   const SPOTS = {
     fridge: {from: ['coffee'], label: () => 'Drinks fridge', at: () => [19.64, 1.9, 11.5], pos: [19.64, 2.3, 8.3], look: [19.64, 1.72, 11.7], fit: {w: 2.5, h: 3.1}},
-    pocket: {from: ['coffee'], label: () => S.doorShut ? 'Elena’s drawing' : 'Pocket door', at: () => [22.0, S.doorShut ? 2.2 : 4.1, 9.55],
+    pocket: {from: ['coffee'], label: () => S.doorShut ? 'Drawing on the door' : 'Pocket door', at: () => [22.0, S.doorShut ? 2.2 : 4.1, 9.55],
       pose: () => S.doorShut ? {pos: [18.5, 4.2, 9.525], look: [22.15, 4.1, 9.525], fit: {w: 2.05, h: 3.45}} : {pos: [17.2, 4.7, 9.55], look: [22.1, 3.7, 9.55], fit: {w: 3.6, h: 6.4}}},
     paper: {from: ['great'], label: () => 'Paper on the window', at: () => PAPER.box ? [PAPER.box.max.x + .05, (PAPER.box.min.y + PAPER.box.max.y) / 2, (PAPER.box.min.z + PAPER.box.max.z) / 2] : [4.7, 3.2, 23.4],
       pose: () => { const b = PAPER.box, cy = (b.min.y + b.max.y) / 2, cz = (b.min.z + b.max.z) / 2; return {pos: [8.9, cy + .25, cz], look: [b.max.x, cy, cz], fit: {w: b.max.z - b.min.z + .9, h: b.max.y - b.min.y + .9}}; }},
@@ -721,17 +751,17 @@
   function sheetFor(ex){ const id = ex.id;
     if(id === 'fridge') return sheetFridge();
     if(id === 'pocket'){ if(!S.doorShut){ sheet(`<h3>The pocket door</h3><p>It slides out of the wall between the fridge and the coffee bar, and closes the kitchen off from the bedroom hall.</p><button class="escBtn dark" type="button" data-a="act">Slide it shut</button>`);
-        sheetE.querySelector('[data-a=act]').onclick = () => { if(S.busy || rig.move) return; slideDoor(true); S.busy = true; setTimeout(() => { S.busy = false; sheetFor(ex); frameExamine(.9, () => { S.busy = false; if(!S.sawDrawing){ S.sawDrawing = true; say('She draws everything.'); setStage(lightUp(S.hour) ? 'light' : 'drawing'); } }); S.busy = true; }, reduce ? 50 : 720); }; }
-      else { sheet(`<h3>Elena’s drawing</h3><p>Kraft paper, taped where nobody sees it while the door is open. A low sun, two tall windows side by side, light landing on a floor, and a clock.</p><button class="escBtn" type="button" data-a="act">Slide the door open</button>`);
+        sheetE.querySelector('[data-a=act]').onclick = () => { if(S.busy || rig.move) return; slideDoor(true); S.busy = true; setTimeout(() => { S.busy = false; sheetFor(ex); frameExamine(.9, () => { S.busy = false; if(!S.sawDrawing){ S.sawDrawing = true; say('I drew that. The clock took three tries.'); setStage(lightUp(S.hour) ? 'light' : 'drawing'); } }); S.busy = true; }, reduce ? 50 : 720); }; }
+      else { sheet(`<h3>Snowball’s drawing</h3><p>Kraft paper, taped where nobody sees it while the door is open. A low sun, two tall windows side by side, light landing on a floor, and a clock. It is signed with a paw print.</p><button class="escBtn" type="button" data-a="act">Slide the door open</button>`);
         sheetE.querySelector('[data-a=act]').onclick = () => { if(S.busy || rig.move) return; slideDoor(false); S.busy = true; setTimeout(() => { S.busy = false; sheetFor(ex); frameExamine(.9, () => { S.busy = false; }); S.busy = true; }, reduce ? 50 : 500); }; }
       return; }
     if(id === 'paper'){ const lit = LIGHT.dining && LIGHT.dining.wins[0].s > .3;
       return sheet(`<h3>Paper on the window</h3><p>Strips of paper taped to the glass in three boxy figures. Some are white card and some are tracing paper.</p><p>${lit ? 'With the sun behind them, the card goes dark and the tracing paper glows.' : 'With no sun on this side of the house, they all look the same.'}</p>`); }
     if(id === 'floor'){ const up = lightUp(S.hour), on = lightOn(S.hour);
       return sheet(up ? `<h3>Light on the floor</h3><p>The card strips block the sun and the tracing paper lets it through. Three digits, the right way up from here.</p>`
-        : on ? `<h3>Light on the floor</h3><p>Shadows from the paper on the window, pulled out of shape. The sun is not quite where Elena drew it.</p>`
+        : on ? `<h3>Light on the floor</h3><p>Shadows from the paper on the window, pulled out of shape. The sun is not quite where Snowball drew it.</p>`
         : `<h3>The floor</h3><p>No sun through the big windows at this hour.</p>`); } }
-  function onExamined(id){ if(id === 'fridge'){ if(S.stage === 'arrive'){ setStage('fridge'); say('Locked. Obviously.', 3800); } }
+  function onExamined(id){ if(id === 'fridge'){ if(S.stage === 'arrive'){ setStage('fridge'); say('Locked. I did that.', 3800); } }
     if(id === 'paper'){ SND.paper(); if(!S.said_paper){ S.said_paper = true; say('Light can tell them apart.', 4600); } }
     if(id === 'floor') checkRead();
     if(id === 'pocket' && S.doorShut && !S.sawDrawing){ S.sawDrawing = true; setStage(lightUp(S.hour) ? 'light' : 'drawing'); } }
@@ -757,10 +787,10 @@
   let hintIx = 0;
   const HINTS = {
     arrive: [['Coffee bar. Past the kitchen. Follow the white circles.'], ['I’ll wait by the kitchen door.', () => catAt([12.2, 0, 3.7])], ['Fine. Come with me.', () => { catAt([17.8, 0, 9.0]); goTo('coffee'); }]],
-    fridge: [['She hid her clue where you only see it with the kitchen shut.'], ['I’m sitting next to it. The door that slides into the wall.', () => { catAt([21.3, 0, 8.6]); if(S.place !== 'coffee') goTo('coffee'); }],
+    fridge: [['I put my clue where you only see it with the kitchen shut.'], ['I’m sitting next to it. The door that slides into the wall.', () => { catAt([21.3, 0, 8.6]); if(S.place !== 'coffee') goTo('coffee'); }],
       ['Tap the pocket door and slide it shut.', () => { catAt([21.3, 0, 8.6]); if(S.place !== 'coffee') goTo('coffee'); }]],
-    drawing: [['That drawing is a set of instructions. Start with the clock.'], ['A low sun. The two big windows by the dining table. Four o’clock.'], ['I’ll do it. Four in the afternoon.', () => sweepTo(T_SUN, 1500)]],
-    light: [['Great room. Look down.'], ['I’m lying in the warm bit. You can’t miss me.', () => { catAt([14.3, 0, 24.7]); if(lightOn(S.hour) === false) sweepTo(T_SUN, 1200); }],
+    drawing: [['Read my drawing again. Start with the clock.'], ['A low sun. The two big windows by the dining table. Four o’clock. The slider at the bottom is the sun.', () => sunKey(true)], ['I’ll do it. Four in the afternoon.', () => sweepTo(T_SUN, 1500)]],
+    light: [['The two tall windows in my drawing are in the great room. Look down.'], ['I’m lying in the warm bit. You can’t miss me.', () => { catAt([14.3, 0, 24.7]); if(lightOn(S.hour) === false) sweepTo(T_SUN, 1200); }],
       ['Tap the light on the floor.', () => { const go = () => setTimeout(() => examine('floor'), 250); if(!lightUp(S.hour)) setSlider(T_SUN); if(S.ex) return; if(S.place === 'great') go(); else goTo('great', {done: go}); }]],
     code: [['You’ve read it. Now go and use it.'], ['Left to right, as it lies on the floor.'], ['Three, two, seven. You’re welcome.']]};
   function hint(){ if(!S.started || S.done || rig.move || S.busy) return; const tiers = HINTS[S.stage]; if(!tiers) return; const i = Math.min(hintIx, tiers.length - 1), t = tiers[i]; hintIx = Math.min(i + 1, tiers.length - 1);
@@ -771,8 +801,8 @@
   /* ================================================================== start and finish */
   function startCard(){ const best = store.get(KEY + '.best');
     const c = el('div', {id: 'escCard'}, `<div class="c" role="dialog" aria-labelledby="escH"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Pop the Cork</h2>
-      <p class="lede">Elena designs escape rooms for a living. For her housewarming she made one out of her house, and you are the first guest through the door.</p>
-      <div class="note"><p>Welcome! The champagne is locked in the little fridge at the coffee bar. The code is hidden in the house. I’ve gone to get the cake.</p><p class="sig">Elena</p><p class="ps">P.S. Snowball watched me hide everything. Ask him.</p></div>
+      <p class="lede">Snowball is the cat of the house. There is champagne for this evening, and he has locked it in a drinks fridge to find out whether you are as clever as he is.</p>
+      <div class="note"><p>Welcome. I have locked the champagne away. The code is hidden in the house. I left one clue, and it is a good one.</p><p class="sig">${PAW}</p><p class="ps">P.S. The doorbell rings at dusk. If you get stuck, ask me. I like being asked.</p></div>
       <ul class="how"><li>${ICO.drag}Drag to look around</li><li>${ICO.disc}Tap a white circle to walk there</li><li>${ICO.ring}Tap a gold ring to look closer</li></ul>
       <div class="acts"><button class="escBtn primary" type="button" id="escGo" style="min-width:150px;min-height:52px;font-size:17px">Go inside</button><button class="escBtn" type="button" id="escSnd0"></button></div>
       <p class="foot">About five minutes${best ? ', and your best so far is ' + fmtT(best.time) : ''}. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it is for sale.</p></div>`);
@@ -780,22 +810,25 @@
     s0.onclick = () => { SND.setMuted(!SND.muted); d0(); UI.drawSnd(); if(!SND.muted) SND.goal(); }; d0(); try{ $('#escGo').focus({preventScroll: true}); }catch(e){}
     $('#escGo').onclick = () => { SND.unlock(); SND.tap(); $('#escGo').disabled = true; fadeThrough(() => { c.remove(); begin(); }, 420); }; }
   function begin(){ document.documentElement.classList.remove('esc-pre'); const p = standPose('entry'); rigCut(PLACES.entry.pos, p.yaw, p.pitch, p.fov); S.started = true; S.t0 = S.lastProgress = performance.now(); ga('esc_start');
-    arrive('entry', true); catAt([-.2, 0, -4.6]); setTimeout(() => { if(S.stage === 'arrive' && !rig.move) say('She hides things in plain sight.', 4200); }, 2600); }
+    arrive('entry', true); catAt([-.2, 0, -4.6]); setTimeout(() => { if(S.stage === 'arrive' && !rig.move) say('It is all in plain sight. That is the sporting way.', 4600); }, 2600); }
   function win(){ if(S.done) return; S.done = true; S.tEnd = performance.now(); S.stage = 'done'; const t = elapsed(); ga('esc_win', {secs: Math.round(t), hints: S.hints});
     const best = store.get(KEY + '.best'); if(!best || t < best.time) store.set(KEY + '.best', {time: t, hints: S.hints});
     sheetE.classList.remove('on'); document.documentElement.classList.add('esc-cine'); for(const m of marks) m.b.classList.remove('on'); $('#escGoalT').textContent = GOALS.done;
     // step back a little so the open door and the bottle both sit in frame
     const a = yp([19.35, 2.8, 8.3], [19.75, 1.6, 12.2]); rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], [19.35, 2.8, 8.3]], {yaw: a[0], pitch: a[1], fov: aspect() < 1 ? 80 : 58, off: [0, 0]}, {dur: 1.2});
     setTimeout(openFridgeDoor, 250); setTimeout(() => toast('Champagne.', 2400), 1300);
-    setTimeout(() => { // the afternoon runs out, the lights come on, and the guests are at the door
-      fadeThrough(() => { const p = yp([-5.7, EYE, -5.4], [-5.7, 4.5, 3]); rigCut([-5.7, EYE, -5.4], p[0], p[1], aspect() < 1 ? 84 : 64); $('#escSlider').value = 18.75; setClock(18.75); applyHour(18.75, true); catAt([-4.3, 0, -.6]); }, 520);
+    setTimeout(() => { // the afternoon runs out, the house lights come on, and the doorbell goes: the last view is the lit house from outside
+      const sh = SHOT(), a = yp(sh.pos, sh.look), a2 = yp(sh.pos2, sh.look);
+      fadeThrough(() => { rigCut(sh.pos, a[0], a[1], sh.fov); $('#escSlider').value = 18.75; setClock(18.75); applyHour(18.75, true); catAt(sh.cat);
+        rigTravel([sh.pos, sh.pos2], {yaw: a2[0], pitch: a2[1], fov: sh.fov, off: sh.off}, {dur: 9}); }, 520);
       setTimeout(() => { SND.bell(); }, 1500);
-      setTimeout(() => { const fd = (H.door28 && H.door28.items || []).find(it => it.id === 'D-LG-02'); if(fd && fd.t < .5 && H.door28.moving){ fd.dir = 1; fd.lt = performance.now(); H.door28.moving.add(fd); wake(90); }
-        const a2 = yp([-5.7, EYE, -3.6], [-5.7, 4.6, 3]); rigTravel([[-5.7, EYE, -5.4], [-5.7, EYE, -3.6]], {yaw: a2[0], pitch: a2[1], fov: rig.fov, off: [0, 0]}, {dur: 3.2}); }, 2500);
-      setTimeout(finishCard, 5200); }, 3400); }
+      setTimeout(() => { const fd = (H.door28 && H.door28.items || []).find(it => it.id === 'D-LG-02'); if(fd && fd.t < .5 && H.door28.moving){ fd.dir = 1; fd.lt = performance.now(); H.door28.moving.add(fd); wake(90); } }, 2500);
+      setTimeout(finishCard, 5600); }, 3400); }
+  // the closing view: a slow move toward the lit house at dusk; the finish card sits beside it (below it on a phone), so the view is moved over to stay in the clear
+  const SHOT = () => aspect() < 1 ? {pos: [-6, 5, 34], pos2: [-6, 5, 31], look: [-6, 5, 0], fov: 80, off: [0, -.3], cat: [-4.6, 0, 6]} : {pos: [-6, 5, 34], pos2: [-6, 5, 31], look: [-6, 5, 0], fov: 58, off: [-.17, 0], cat: [-4.6, 0, 6]};
   function finishCard(){ const t = elapsed(); SND.cork();
-    const c = el('div', {id: 'escCard'}, `<div class="c" role="dialog" aria-labelledby="escH" style="position:relative;overflow:hidden"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Cork popped.</h2>
-      <p class="lede">The guests are at the door and the house is lit for the evening. Elena owes you the first slice of cake.</p>
+    const c = el('div', {id: 'escCard', class: 'side'}, `<div class="c" role="dialog" aria-labelledby="escH"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Cork popped.</h2>
+      <p class="lede">The doorbell is ringing and the house is lit for the evening. Snowball says you are nearly as clever as he is, and he is keeping the box the champagne came in.</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint from Snowball' : 'hints from Snowball'}</span></div></div>
       <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California, with six bedrooms and three full baths. The afternoon sun really does come through the great room like that. Come and stand in it.</span>
         <div class="acts"><a class="escBtn primary" href="/#contact" id="escSee" style="min-height:52px;font-size:17px">See it in person</a><a class="escBtn light" href="/tour/" id="escFree">Explore the house freely</a></div></div>
@@ -804,7 +837,7 @@
     if(!reduce) for(let i = 0; i < 9; i++){ const b = el('i', {class: 'escBub', 'aria-hidden': 'true'}); b.style.right = (14 + Math.random() * 120) + 'px'; b.style.animationDelay = (Math.random() * 3) + 's'; b.style.width = b.style.height = (6 + Math.random() * 7) + 'px'; card.appendChild(b); }
     $('#escSee').onclick = () => ga('esc_cta', {cta: 'see_in_person'}); $('#escFree').onclick = () => ga('esc_cta', {cta: 'explore'});
     $('#escAgain').onclick = () => location.reload();
-    $('#escShare').onclick = async () => { const url = 'https://118hillside.com/tour/?escape=easy', text = `I got the champagne out of Elena's fridge at 118 Hillside Drive in ${fmtT(t)}. Your turn.`; ga('esc_share');
+    $('#escShare').onclick = async () => { const url = SITE.page('/games/escape/'), text = `Locked In at Hillside: Snowball the cat locked the champagne in a fridge at 118 Hillside Drive, and I got it out in ${fmtT(t)}. Your turn.`; ga('esc_share');
       try{ if(navigator.share){ await navigator.share({title: 'Locked In at Hillside', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
       try{ await navigator.clipboard.writeText(text + ' ' + url); $('#escShare').textContent = 'Link copied'; }catch(e){ $('#escShare').textContent = url; } };
     try{ $('#escSee').focus({preventScroll: true}); }catch(e){} }
@@ -849,7 +882,8 @@
   // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
-  window.ESCAPE = {S, rig, PLACES, SPOTS, LIGHT, FR, sound: SND, goTo, examine, back, hint, win, setSlider, sunDir, catAt, padPress, say};
+  window.ESCAPE = {S, rig, PLACES, SPOTS, LIGHT, FR, SITE, sound: SND, goTo, examine, back, hint, win, setSlider, sunDir, catAt, padPress, say,
+    view(pos, look, fov){ const a = yp(pos, look); rigCut(pos, a[0], a[1], fov || 62); }};
 })();
 
 /* preview hosts: when the site is served from a sub-path (a test mirror), point root links like /games/ at that copy; no effect on 118hillside.com */

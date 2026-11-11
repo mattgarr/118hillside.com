@@ -1,4 +1,4 @@
-/* Thanksgiving at Hillside (3D): the food, the table and the twins' paper goods.
+/* Thanksgiving at Hillside (3D): the food, the table and the paper goods (bags, boxes and tags, signed with paw prints).
    Everything is built from three.js primitives (feet, y up) for the walkable model of 118 Hillside Drive.
    window.FEASTPROPS(H) returns builders and a small particle system; assets/feast3d/feast.js places and drives them.
    Each dish is a group whose origin sits on the surface it stands on. */
@@ -37,7 +37,9 @@
         if(doodle){ x.strokeStyle = '#3f2c17'; x.fillStyle = '#3f2c17'; x.lineWidth = 6; x.lineCap = 'round'; x.lineJoin = 'round'; doodle(x, w, h); } }); }
     const leafDoodle = (x, w, h) => { x.beginPath(); x.moveTo(w * .5, h * .78); x.bezierCurveTo(w * .14, h * .62, w * .2, h * .34, w * .5, h * .26); x.bezierCurveTo(w * .8, h * .34, w * .86, h * .62, w * .5, h * .78); x.stroke(); x.beginPath(); x.moveTo(w * .5, h * .86); x.lineTo(w * .5, h * .32); x.stroke();
       for(const t of [.42, .54, .66]){ x.beginPath(); x.moveTo(w * .5, h * t); x.lineTo(w * .36, h * (t - .07)); x.moveTo(w * .5, h * t); x.lineTo(w * .64, h * (t - .07)); x.stroke(); }
-      x.font = '54px ' + HAND; x.textAlign = 'center'; x.fillText('L + M', w * .5, h * .97); };
+      // signed with two paw prints: a small one (the cat) and a big one (the dog)
+      for(const [cx, k, rot] of [[w * .4, 1, -.25], [w * .61, 1.45, .2]]){ x.save(); x.translate(cx, h * .925); x.rotate(rot); x.scale(k, k); x.beginPath(); x.ellipse(0, 5, 9.5, 8, 0, 0, 6.3); x.fill();
+        for(const [dx, dy, t] of [[-11.5, -5.5, -.5], [-4.3, -12.5, -.15], [4.3, -12.5, .15], [11.5, -5.5, .5]]){ x.beginPath(); x.ellipse(dx, dy, 3.6, 5, t, 0, 6.3); x.fill(); } x.restore(); } };
     let kraftA = null, kraftB = null;
     const kraft = () => kraftA || (kraftA = new THREE.MeshStandardMaterial({map: kraftTex(leafDoodle), roughness: .95, side: THREE.DoubleSide, emissive: lin('#8a6a3a'), emissiveIntensity: .12}));
     const kraftPlain = () => kraftB || (kraftB = new THREE.MeshStandardMaterial({map: kraftTex(null), roughness: .95, side: THREE.DoubleSide, emissive: lin('#8a6a3a'), emissiveIntensity: .12}));
