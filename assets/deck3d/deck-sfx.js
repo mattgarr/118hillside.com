@@ -12,7 +12,7 @@
   const ls = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } }, lsSet = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
   const D3 = 146.83, A3 = 220, D4 = 293.66, Fs4 = 369.99, A4 = 440, B4 = 493.88, D5 = 587.33, E5 = 659.26, Fs5 = 739.99, A5 = 880, B5 = 987.77, D6 = 1174.66, E6 = 1318.51, Fs6 = 1479.98, A6 = 1760, B6 = 1975.53, D7 = 2349.32;
   const PENT = [D5, E5, Fs5, A5, B5, D6, E6, Fs6, A6, B6];
-  const MASTER = .8, CEIL = .46, KNEE = .3;   // limiter: straight up to KNEE, then eases toward CEIL (-6.7 dBFS) and never passes it
+  const MASTER = 1, CEIL = .46, KNEE = .3;   // limiter: straight up to KNEE, then eases toward CEIL (-6.7 dBFS) and never passes it
   const LIMIT = (() => { const n = 4097, a = new Float32Array(n); for(let i = 0; i < n; i++){ const x = i / (n - 1) * 2 - 1, m = Math.abs(x), y = m <= KNEE ? m : KNEE + (CEIL - KNEE) * Math.tanh((m - KNEE) / (CEIL - KNEE)); a[i] = x < 0 ? -y : y; } return a; })();
   const lcg = seed => { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296) * 2 - 1; };
   function noiseBuf(ac){ const b = ac.createBuffer(1, Math.floor(ac.sampleRate * 2), ac.sampleRate), d = b.getChannelData(0), r = lcg(1234); for(let i = 0; i < d.length; i++) d[i] = r(); return b; }
@@ -48,8 +48,8 @@
     chord(E, t){ [D3, A3, D4, Fs4, A4, E5].forEach((f, i) => pad(E, t + i * .035, f, f < 200 ? .5 : .42, 3)); bell(E, t + .2, D5, .38, 2.4); bell(E, t + .27, A5, .3, 2.2); },   // everything lit: a warm D chord
     doorbell(E, t, mood){ bell(E, t, Fs5, .78, 1.5, 1, .22); bell(E, t + .52, D5, .82, 2.2, 1, .3);                                    // ding, dong
       if(mood === 'yes'){ bell(E, t + 1.08, A5, .36, .7, 1.3); bell(E, t + 1.17, D6, .42, 1.1, 1.3); } else if(mood === 'no') mallet(E, t + 1.2, B4, .5, .9); },
-    shutter(E, t){ click(E, t, 3400, .016, .2, .1); click(E, t + .09, 2300, .03, .16, .7); const o = osc(E, 'sine', 150, t, t + .07); o.frequency.exponentialRampToValueAtTime(90, t + .06); o.connect(amp(E, t, .006, .055, .07, E.dry)); },
-    jingle(E, t){ for(let k = 0; k < 3; k++){ const f = k % 2 ? D7 : B6, tt = t + k * .075; osc(E, 'sine', f, tt, tt + .2).connect(amp(E, tt, .004, .18, .05)); osc(E, 'sine', f * 2.7, tt, tt + .1).connect(amp(E, tt, .003, .09, .02)); } },   // his collar bell
+    shutter(E, t){ click(E, t, 3400, .016, .38, .1); click(E, t + .09, 2300, .03, .3, .7); const o = osc(E, 'sine', 150, t, t + .07); o.frequency.exponentialRampToValueAtTime(90, t + .06); o.connect(amp(E, t, .006, .055, .1, E.dry)); },
+    jingle(E, t){ for(let k = 0; k < 3; k++){ const f = k % 2 ? D7 : B6, tt = t + k * .075; osc(E, 'sine', f, tt, tt + .2).connect(amp(E, tt, .004, .18, .075)); osc(E, 'sine', f * 2.7, tt, tt + .1).connect(amp(E, tt, .003, .09, .03)); } },   // his collar bell
     purr(E, t, len){ len = len || 1.7; const am = E.ac.createGain(), lfo = osc(E, 'triangle', 24, t, t + len), lg = E.ac.createGain(), env = E.ac.createGain(), n = noise(E, t, len + .05, .9), lp = filt(E, 'lowpass', 300, .7), bp = filt(E, 'bandpass', 520, 1), bg = E.ac.createGain();
       am.gain.value = .5; lg.gain.value = .46; lfo.connect(lg); lg.connect(am.gain); n.connect(lp); lp.connect(am); n.connect(bp); bg.gain.value = .3; bp.connect(bg); bg.connect(am); const sub = osc(E, 'triangle', 48, t, t + len), sg = E.ac.createGain(); sg.gain.value = .5; sub.connect(sg); sg.connect(am);
       env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(.3, t + .3); env.gain.setValueAtTime(.3, t + len - .5); env.gain.linearRampToValueAtTime(0, t + len); am.connect(env); env.connect(E.dry); },

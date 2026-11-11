@@ -112,7 +112,7 @@
       ROOF.forEach(e => { const line = e.p.map(p => new V3(p[0] + e.n[0] * .34, p[1] - .24, p[2] + e.n[1] * .34)); wires.push(line);
         along(line, ice ? .62 : mini ? .4 : 1.02, .3).forEach(s => { const sag = mini ? Math.sin(s.q * 2.4) * .05 : 0;
           if(ice){ const n = 2 + Math.floor(R() * 5); for(let j = 0; j < n; j++) pts.push({p: new V3(s.p.x, s.p.y - .05 - j * .24, s.p.z), c: pal[(k + j) % pal.length], s: .5, q: q0 + s.q + j * .8, r: .028}); k++; }
-          else pts.push({p: new V3(s.p.x, s.p.y - (mini ? .02 : .1) + sag, s.p.z), c: pal[k++ % pal.length], s: mini ? .62 : 1.25, q: q0 + s.q, r: mini ? .03 : .075, dark: pal[(k - 1) % pal.length] === '#141414'}); });
+          else pts.push({p: new V3(s.p.x, s.p.y - (mini ? .02 : .1) + sag, s.p.z), c: pal[k++ % pal.length], s: mini ? .7 : 1.5, q: q0 + s.q, r: mini ? .036 : .09, dark: pal[(k - 1) % pal.length] === '#141414'}); });
         q0 += 40; });
       wires.forEach(w => wire(g, w, '#22302a'));
       lightSet(g, pts, {mode: MODES[S.motion] == null ? 1 : MODES[S.motion], seq: 0, body: true, bodyScale: mini || ice ? [1, 1, 1] : [1, 1.55, 1], seed: 7});
@@ -354,7 +354,7 @@
     function snowFind(){ if(SNOW.found) return; SNOW.found = true; const seen = new Set(), pickM = [], bb = new THREE.Box3(), sz = new V3();
       const take = o => { if(seen.has(o)) return; seen.add(o); if(o.isInstancedMesh || !o.geometry || !o.geometry.attributes.normal) return; const m = o.material; if(!m || Array.isArray(m) || m.transparent || m.alphaTest > 0) return; bb.setFromObject(o); bb.getSize(sz); if(sz.x * sz.z < 40) return; pickM.push(o); };
       for(let x = -44; x <= 44; x += 4) for(let z = -64; z <= 76; z += 4){ rc.set(new V3(x + .37, 60, z + .41), new V3(0, -1, 0)); rc.far = 90; let hs = []; try{ hs = rc.intersectObjects(H.scene.children, true); }catch(e){} const h = hs.find(solid); if(!h) continue; let p = h.object, bad = false; for(let q = p; q; q = q.parent) if(/^furn|^deck3d$|^trees/.test(q.name)) bad = true; if(!bad && !/cushion|wicker|decor|sofa|chair|k2\d|p2\d(?!poly)|bowl|teak|contact|-ao/i.test(p.name)) take(p); }
-      H.scene.traverse(o => { if(o.isMesh && /comp-shingle-arch|modbit-torchdown/.test(o.name) && shown(o)) take(o); });
+      H.scene.traverse(o => { if(o.isMesh && /comp-shingle-arch|modbit-torchdown|flagstone|paver-band|^site\|.*deck-composite/.test(o.name) && shown(o)) take(o); });
       pickM.forEach(o => { o.updateWorldMatrix(true, false); const m = new THREE.Mesh(o.geometry, snowMat()); m.matrixAutoUpdate = false; m.matrix.copy(o.matrixWorld); m.matrixWorld.copy(o.matrixWorld); m.renderOrder = 1; m.raycast = noop; m.frustumCulled = false; m.name = 'deck-snow'; m.visible = false; root.add(m); SNOW.over.push(m); }); }
     const HOUSE = [[3.2, 3.6, 33.7, 38.2], [-10.2, -11, 28.1, 6.3], [-26.7, -1.2, -10.2, 23.7], [-34.5, -51.1, -7.4, -1.1], [-10.2, -50.7, 3, -37]];
     function snowFall(n){ const R = rng(77), pos = new Float32Array(n * 3), ph = new Float32Array(n); for(let i = 0; i < n; i++){ pos[i * 3] = R() * 70; pos[i * 3 + 1] = R() * 36; pos[i * 3 + 2] = R() * 70; ph[i] = R(); }
@@ -367,7 +367,7 @@
             vec4 mv = viewMatrix * vec4(w, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = clamp((.11 + aPhase * .1) * uScale / max(.3, -mv.z), 1.5, 14.); if(vA < .5) gl_Position = vec4(2., 2., 2., 1.); }`,
         fragmentShader: `uniform vec3 uTint; varying float vA; void main(){ float d = length(gl_PointCoord - .5) * 2.; if(d > 1.) discard; gl_FragColor = vec4(min(vec3(1.), uTint * 1.25 + .12), (1. - d * d) * .85 * vA); }`});
       const P = new THREE.Points(geo, mat); P.frustumCulled = false; P.renderOrder = 7; P.raycast = noop; P.onBeforeRender = scaleHook; P.name = 'deck-snowfall'; return P; }
-    const SNOWMAN_AT = [-1.3, 25.9];
+    const SNOWMAN_AT = [-8.8, 26.1];
     function buildWeather(S){ const w = S.weather, full = w === 'snowday'; if(w === 'clear' || !w){ SNOW.over.forEach(m => m.visible = false); if(SNOW.fall) SNOW.fall.visible = false; return null; }
       snowFind(); SNOW.u.uCover.value = full ? 1 : .42; SNOW.over.forEach(m => m.visible = true); if(!SNOW.fall){ SNOW.fall = snowFall(2600); root.add(SNOW.fall); } SNOW.fall.visible = true; SNOW.fall.material.uniforms.uAmt.value = full ? 1 : .35;
       if(!full || S.yard === 'none') return null; const g = grp('yard'), [x, z] = SNOWMAN_AT, y = floorY(x, z, 2, -3.5), snow = std('#f4f7fb', {roughness: .95}), coal = std('#15161a'), s = new THREE.Group(); s.position.set(x, y, z); s.rotation.y = .25; g.add(s);
@@ -397,10 +397,17 @@
       win: {sig: (S, c) => (S.win || []).slice().sort().join() + (c.inside ? '|in' : '|out'), build: buildWin}, tree: {sig: S => S.tree + '|' + S.topper, build: buildTree}, room: {sig: S => (S.room || []).slice().sort().join(), build: buildRoom},
       oak: {sig: S => S.oak, build: buildOak}, ter: {sig: S => (S.ter || []).slice().sort().join(), build: buildTer}, yard: {sig: S => S.weather + '|' + S.yard, build: buildWeather}};
     const LIVE = {};
+    function bake(g){ const by = new Map(), list = [], v = new V3(), nm = new THREE.Matrix3(); g.updateMatrixWorld(true);
+      g.traverse(o => { if(!o.isMesh || o.isInstancedMesh || o.userData.own) return; const m = o.material; if(!m || Array.isArray(m) || m.transparent || !o.geometry || !o.geometry.attributes.position) return; list.push(o); });
+      if(list.length < 3) return;
+      list.forEach(o => { let e = by.get(o.material); if(!e) by.set(o.material, e = {pos: [], nor: [], uv: []}); const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry, P = geo.attributes.position, N = geo.attributes.normal, T = geo.attributes.uv; nm.getNormalMatrix(o.matrixWorld);
+        for(let i = 0; i < P.count; i++){ v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); e.pos.push(v.x, v.y, v.z); if(N) v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); else v.set(0, 1, 0); e.nor.push(v.x, v.y, v.z); e.uv.push(T ? T.getX(i) : 0, T ? T.getY(i) : 0); }
+        if(geo !== o.geometry) geo.dispose(); if(o.parent) o.parent.remove(o); });
+      by.forEach((e, m) => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(e.pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(e.nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(e.uv, 2)); const me = new THREE.Mesh(geo, m); me.userData.own = true; g.add(me); }); }
     function kill(k){ const L = LIVE[k]; if(!L || !L.g) return; L.g.userData.sets.forEach(s => { SETS.delete(s); if(s.flames) FLICK.delete(s.flames); }); root.remove(L.g);
       L.g.traverse(o => { if(o.userData.own && o.geometry && o.geometry.dispose) o.geometry.dispose(); if(o.isInstancedMesh){ FLICK.delete(o); if(o.dispose) o.dispose(); } const m = o.material; if(m && m.userData && m.userData.own) m.dispose(); }); L.g = null; }
     function apply(S, ctx){ ctx = ctx || {}; const changed = []; for(const k in FEAT){ const f = FEAT[k], sig = f.sig(S, ctx); if(LIVE[k] && LIVE[k].sig === sig) continue; kill(k); let g = null; try{ g = f.build(S, ctx); }catch(e){ console.warn('[deck3d] ' + k, e); }
-        LIVE[k] = {sig, g}; if(g){ g.traverse(o => { o.raycast = noop; }); root.add(g); changed.push(k); } }
+        LIVE[k] = {sig, g}; if(g){ try{ bake(g); }catch(e){ console.warn('[deck3d] bake ' + k, e); } g.traverse(o => { o.raycast = noop; }); root.add(g); changed.push(k); } }
       const mode = MODES[S.motion] == null ? 1 : MODES[S.motion]; if(LIVE.roof && LIVE.roof.g) LIVE.roof.g.userData.sets.forEach(s => { s.mat.uniforms.uMode.value = reduce ? 0 : mode; });
       return changed; }
     function setOn(v){ ON = v; SETS.forEach(s => applyOn(s, v)); }

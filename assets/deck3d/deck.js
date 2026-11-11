@@ -22,7 +22,7 @@
 
   /* ---------- the places you decorate from ---------- */
   const PLACES = [
-    {id: 'street', label: 'Roofline', pos: [9, 3, 68], look: [1, 7, 14], posP: [8, 3, 86], lookP: [2, 8, 14], cat: [3.4, 60.5], say: 'Let us start at the top. The roof is long, so choose carefully.', sections: ['lights']},
+    {id: 'street', label: 'Roofline', pos: [9, 3, 68], look: [1, 7, 14], posP: [8, 3, 86], lookP: [2, 8, 14], cat: [-1, 40], say: 'Let us start at the top. The roof is long, so choose carefully.', sections: ['lights']},
     {id: 'door', label: 'Front door', pos: [-5.0, 4.6, 38], look: [-5.4, 2.0, 10], posP: [-5.2, 5.2, 44], lookP: [-5.4, 2.4, 10], cat: [-1.5, 13.4], say: 'The doors next. People will stand right here waiting for someone to answer.', sections: ['door', 'hang', 'path']},
     {id: 'windows', label: 'Windows', pos: [-9.5, 2.4, 33], look: [2.5, 4.2, 11], posP: [-10, 2.6, 37], lookP: [2.5, 4.6, 11], cat: [-8.2, 14.2], say: 'Now the windows. This is what the whole street sees.', sections: ['win']},
     {id: 'living', label: 'Living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9], cat: [10.7, -3.2], say: 'Inside now. This is where I spend most of my evenings.', sections: ['tree', 'room']},
@@ -169,7 +169,10 @@
   /* ---------- the camera: the game puts you somewhere; you may look around, but you do not wander off ---------- */
   let P = null, FLY = null, anchor = null, veil = null;
   const portrait = () => innerWidth < innerHeight * .8;
-  const view = p => portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look];
+  function aim(pos, look){ const pn = $('#dkPanel'); if(!pn || pn.hidden || (PHASE !== 'decor' && PHASE !== 'fix')) return look; const W = innerWidth, Hh = innerHeight, r = pn.getBoundingClientRect(); let cx = 0, cy = 0;
+    if(W > 700) cx = -(W - r.left) / W; else cy = 1 - (118 + Hh * .54) / Hh; const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1), th = tv * cam.aspect;
+    const p = new V3(...pos), d = new V3(...look).sub(p), right = new V3().crossVectors(d, new V3(0, 1, 0)).normalize(), L = d.length(); return new V3(...look).addScaledVector(right, -cx * th * L).add(new V3(0, -cy * tv * L, 0)).toArray(); }
+  const view = p => { const v = portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look]; return [v[0], aim(v[0], v[1])]; };
   function cut(pos, look, then){ if(reduce){ H.look(pos, look); anchor = new V3(...pos); FLY = null; then && then(); return; } veil.classList.add('on'); setTimeout(() => { H.look(pos, look); anchor = new V3(...pos); FLY = null; then && then(); setTimeout(() => veil.classList.remove('on'), 120); }, 260); }
   function fly(pos, look, dur, then){ const c = H.camera, d = new V3(); c.getWorldDirection(d); H.anim = null; FLY = {t0: performance.now(), dur: (reduce ? .01 : (dur || 1.5)) * 1000, p0: c.position.clone(), p1: new V3(...pos), l0: c.position.clone().addScaledVector(d, 24), l1: new V3(...look), then}; }
   function moveTo(p, then){ const [pos, look] = view(p), far = H.camera.position.distanceTo(new V3(...pos)) > 46, wasIn = !!(PLACE && PLACE.inside); const land = () => { afterMove(p); then && then(); };
@@ -177,7 +180,8 @@
   function afterMove(p){ P.apply(S, {inside: !!p.inside}); placeCat(p); }
   const _l = new V3();
   function frame(){ requestAnimationFrame(frame); const now = performance.now();
-    try{ if(window.NAVL) window.NAVL.dirty = false;   // keep the tilt the player chose (the tour levels the view after a drag)
+    try{ const cam = H.camera, t0 = Math.tan(cam.fov * Math.PI / 360), z = cam.aspect < .8 ? Math.min(1, Math.max(t0 / Math.tan(40 * Math.PI / 180), t0 * cam.aspect / Math.tan(22 * Math.PI / 180))) : 1; if(PHASE !== 'boot' && Math.abs(cam.zoom - z) > .003){ cam.zoom = z; cam.updateProjectionMatrix(); }
+      if(window.NAVL) window.NAVL.dirty = false;   // keep the tilt the player chose (the tour levels the view after a drag)
       if(PHASE !== 'boot'){ if(FLY){ const k = Math.min(1, (now - FLY.t0) / FLY.dur), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; _l.lerpVectors(FLY.l0, FLY.l1, e); const q = FLY.p0.clone().lerp(FLY.p1, e); H.look(q.toArray(), _l.toArray()); if(k >= 1){ anchor = FLY.p1.clone(); const t = FLY.then; FLY = null; t && t(); } }
         else if(H.anim){ /* the engine is flying (first frame only) */ } else if(anchor && H.camera.position.distanceTo(anchor) > .25) H.camera.position.copy(anchor); }
       if(P) P.tick(now / 1000, H.tod); }catch(e){ if(!frame.warned){ frame.warned = true; console.warn('[deck3d] frame', e); } } }
@@ -188,13 +192,13 @@
 
   /* ---------- UI ---------- */
   const css = `
-  html.dk #mini, html.dk #cv27, html.dk header.bar nav.tabs, html.dk header.bar .plate, html.dk #aboutBtn, html.dk #card, html.dk #labels, html.dk #wplabels, html.dk #ovtag, html.dk #tod, html.dk #viewBtn, html.dk #hwBtn, html.dk #tgBtn, html.dk #phMore, html.dk .g28pill, html.dk #navHelp, html.dk #hint, html.dk #wptip{display:none!important}
+  html.dk #mini, html.dk #cv27, html.dk header.bar nav.tabs, html.dk header.bar .plate, html.dk #aboutBtn, html.dk #card, html.dk #labels, html.dk #wplabels, html.dk #ovtag, html.dk #tod, html.dk #viewBtn, html.dk #hwBtn, html.dk #tgBtn, html.dk #phMore, html.dk .g28pill, html.dk #navHelp, html.dk #hint, html.dk #wptip, html.dk #pad, html.dk #fsBtn, html.dk #peek27{display:none!important}
   .dk{font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:#1f2a3a;-webkit-font-smoothing:antialiased}
   .dk *{box-sizing:border-box}.dk [hidden]{display:none!important}
   .dk button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .dkChip{background:rgba(251,250,247,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:18px;box-shadow:0 8px 30px rgba(15,20,35,.22)}
   #dkVeil{position:fixed;inset:0;z-index:50;background:#0d1220;opacity:0;pointer-events:none;transition:opacity .25s}#dkVeil.on{opacity:1}
-  #dkTop{position:fixed;left:12px;right:12px;top:64px;z-index:60;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}
+  #dkTop{position:fixed;left:12px;right:12px;top:108px;z-index:60;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}
   #dkSay{pointer-events:auto;display:flex;align-items:flex-start;gap:10px;padding:8px 14px 8px 8px;max-width:min(430px,calc(100% - 120px));border:0;text-align:left}
   #dkSay .av{width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34416b,#1a2340);overflow:hidden;display:grid;place-items:end center;flex:none}
   #dkSay .av svg{width:48px;height:auto;margin-bottom:-4px}
@@ -205,8 +209,8 @@
   #dkSide button svg{width:22px;height:22px;flex:none}
   #dkMsgBtn .n{position:absolute;right:-4px;top:-6px;min-width:22px;height:22px;border-radius:11px;background:#9b2c3c;color:#fff;font-size:13px;display:grid;place-items:center;padding:0 6px}
   #dkMsgBtn.new{animation:dkPop .5s}@keyframes dkPop{40%{transform:scale(1.12)}}
-  #dkPanel{position:fixed;z-index:62;right:14px;top:128px;width:372px;max-height:calc(100% - 146px);display:flex;flex-direction:column;overflow:hidden}
-  #dkPlaces{display:flex;gap:6px;padding:10px 10px 8px;overflow-x:auto;scrollbar-width:none;flex:none}#dkPlaces::-webkit-scrollbar{display:none}
+  #dkPanel{position:fixed;z-index:62;right:14px;top:170px;width:372px;max-height:calc(100% - 186px);display:flex;flex-direction:column;overflow:hidden}
+  #dkPlaces{display:flex;flex-wrap:wrap;gap:6px;padding:10px 10px 8px;overflow-x:auto;scrollbar-width:none;flex:none}#dkPlaces::-webkit-scrollbar{display:none}
   #dkPlaces button{flex:none;border:1px solid #d9d4c7;background:#fff;border-radius:999px;padding:8px 13px;font-size:14.5px;white-space:nowrap;position:relative}
   #dkPlaces button[aria-pressed=true]{background:#1f2948;border-color:#1f2948;color:#fff}
   #dkPlaces button.done::after{content:"";position:absolute;right:5px;top:4px;width:7px;height:7px;border-radius:50%;background:#e0862a}
@@ -230,13 +234,13 @@
   .dkBtn.big{font-size:19px;padding:15px 30px;min-height:56px}
   .dkBtn:active{transform:scale(.97)}.dkBtn[disabled]{opacity:.55}
   #dkFold{display:none}
-  #dkToast{position:fixed;left:50%;top:132px;transform:translate(-50%,-10px);z-index:90;background:#1f2948;color:#fff;font-weight:500;font-size:15px;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 40px);text-align:center}
+  #dkToast{position:fixed;left:50%;top:176px;transform:translate(-50%,-10px);z-index:90;background:#1f2948;color:#fff;font-weight:500;font-size:15px;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 40px);text-align:center}
   #dkToast.on{opacity:1;transform:translate(-50%,0)}
   .dkMsg{display:flex;gap:10px;align-items:flex-start}
   .dkMsg .av{flex:none;width:40px;height:40px;border-radius:50%;color:#fff;font-weight:500;font-size:15px;display:grid;place-items:center}
   .dkMsg b{font-weight:500;font-size:15.5px}.dkMsg small{color:#6a7282;font-size:12.5px;margin-left:6px}
   .dkMsg p{margin:3px 0 0;font-size:15.5px;line-height:1.35;background:#eef0f4;border-radius:4px 14px 14px 14px;padding:8px 11px}
-  #dkNew{position:fixed;z-index:64;left:12px;top:132px;width:min(400px,calc(100% - 24px));padding:12px 14px;border:0;text-align:left;transform:translateY(-12px);opacity:0;pointer-events:none;transition:.35s}
+  #dkNew{position:fixed;z-index:64;left:12px;top:196px;width:min(400px,calc(100% - 24px));padding:12px 14px;border:0;text-align:left;transform:translateY(-12px);opacity:0;pointer-events:none;transition:.35s}
   #dkNew.on{transform:none;opacity:1;pointer-events:auto}
   #dkNew .k{font-size:12.5px;color:#9b2c3c;font-weight:500;margin:0 0 6px;display:block}
   #dkDrawer{position:fixed;z-index:75;inset:0;background:rgba(14,19,34,.45);display:grid;justify-items:end}
@@ -247,6 +251,7 @@
   #dkDrawer .x{position:fixed;right:14px;top:14px;z-index:2}
   #dkCard{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(14,19,34,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding:14px}
   #dkCard.clear{background:rgba(14,19,34,.18);backdrop-filter:none;-webkit-backdrop-filter:none;place-items:end center}
+  #dkCard.side{background:none;backdrop-filter:none;-webkit-backdrop-filter:none;place-items:center end;pointer-events:none;padding-right:18px}#dkCard.side .c{pointer-events:auto;max-width:410px}
   #dkCard .c{background:#fbfaf7;border-radius:24px;max-width:540px;width:100%;padding:22px 22px 18px;box-shadow:0 30px 90px rgba(0,0,0,.45);max-height:calc(100% - 28px);overflow:auto;text-align:center}
   #dkCard .cat{width:120px;margin:-4px auto 0}#dkCard .cat svg{width:100%;height:auto;display:block}
   #dkCard h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(31px,6vw,42px);font-weight:600;line-height:1;margin:4px 0 8px}
@@ -277,13 +282,13 @@
   #dkPhoto .act{display:flex;gap:8px;align-items:center}#dkPhoto .act span{font-size:13.5px;color:#5c6575;flex:1;line-height:1.25}
   #dkFlash{position:fixed;inset:0;z-index:95;background:#fff;opacity:0;pointer-events:none}#dkFlash.on{animation:dkFl .5s}@keyframes dkFl{10%{opacity:.85}100%{opacity:0}}
   @media (max-width:700px){
-    #dkTop{top:58px;left:8px;right:8px}#dkSay{max-width:calc(100% - 112px);padding:6px 10px 6px 6px}#dkSay .av{width:40px;height:40px}#dkSay .av svg{width:38px}#dkSay p{font-size:18px}
+    #dkTop{top:84px;left:8px;right:8px}#dkPlaces{flex-wrap:nowrap}#dkCard.side{place-items:end center;padding:8px}#dkCard.side .c{max-width:none;max-height:64vh}#dkSay{max-width:calc(100% - 112px);padding:6px 10px 6px 6px}#dkSay .av{width:40px;height:40px}#dkSay .av svg{width:38px}#dkSay p{font-size:18px}
     #dkSide button{height:42px;min-width:42px;padding:0 11px}#dkSide button span.t{display:none}
     #dkPanel{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:46vh}
     #dkPanel.fold #dkBody{display:none}
     #dkFold{display:inline-flex;border:1px solid #cfcabe;background:#fff;border-radius:999px;min-height:46px;padding:0 14px;font-size:14.5px;align-items:center}
     #dkBody h3{font-size:22px;margin-top:4px}#dkBody .opt{min-height:50px;padding:8px 9px}
-    #dkNew{top:112px;left:8px;width:calc(100% - 16px)}#dkToast{top:112px}
+    #dkNew{top:150px;left:8px;width:calc(100% - 16px)}#dkToast{top:150px}
     #dkCard .c{padding:18px 16px 14px;border-radius:20px}#dkCard ul.g{gap:4px 8px}#dkCard ul.g li{font-size:14.5px}
     #dkArrive{bottom:14px}#dkDusk{bottom:18px}
     #dkPhoto .act span{display:none}
@@ -310,7 +315,7 @@
     const sb = $('#dkSnd'), si = () => { sb.innerHTML = sound ? ICON.sndOn : ICON.sndOff; sb.setAttribute('aria-pressed', sound); sb.setAttribute('aria-label', sound ? 'Sound is on' : 'Sound is off'); }; si(); sb.onclick = () => { sound = !sound; store.set('deck.snd', sound ? '1' : '0'); if(window.DECKSFX) DECKSFX.setMuted(!sound); si(); if(sound){ sfx('tick'); ambience(); } };
     $('#dkAv').innerHTML = catHead('dkav'); }
   const show = (sel, on) => { const e = $(sel); if(e) e.hidden = !on; };
-  function card(html, o){ closeCard(); const c = el('div', {id: 'dkCard', class: 'dk' + (o && o.clear ? ' clear' : '')}, `<div class="c">${html}</div>`); document.body.appendChild(c); const f = c.querySelector('[data-focus]') || c.querySelector('button, a'); if(f) try{ f.focus({preventScroll: true}); }catch(e){} c.querySelectorAll('input').forEach(i => ['keydown', 'keyup', 'keypress'].forEach(ev => i.addEventListener(ev, e => e.stopPropagation()))); return c; }
+  function card(html, o){ closeCard(); const c = el('div', {id: 'dkCard', class: 'dk' + (o && o.clear ? ' clear' : '') + (o && o.side ? ' side' : '')}, `<div class="c">${html}</div>`); document.body.appendChild(c); const f = c.querySelector('[data-focus]') || c.querySelector('button, a'); if(f) try{ f.focus({preventScroll: true}); }catch(e){} c.querySelectorAll('input').forEach(i => ['keydown', 'keyup', 'keypress'].forEach(ev => i.addEventListener(ev, e => e.stopPropagation()))); return c; }
   function closeCard(){ const c = $('#dkCard'); if(c) c.remove(); }
 
   /* ---------- the decorating panel ---------- */
@@ -382,7 +387,7 @@
     const c = card(`<h2>${!story ? 'Snowball approves.' : all ? 'Everyone felt at home.' : hp.length + ' of ' + GUESTS.length + ' guests felt at home.'}</h2>` +
       (story ? `<ul class="g">${GUESTS.map(g => `<li><span class="h ${g.ok(S) ? 'y' : 'n'}" aria-hidden="true">${g.ok(S) ? '♥' : '♡'}</span>${esc(g.name)}<span style="position:absolute;left:-9999px">${g.ok(S) ? 'felt at home' : 'did not'}</span></li>`).join('')}</ul>` : `<p>The house is lit. Walk around it, and take a postcard from wherever it looks best.</p>`) +
       `<div class="row">${story && !all ? `<button class="dkBtn primary" id="dkFix" type="button" data-focus>Go back and fix it</button>` : ''}<button class="dkBtn ${story && !all ? '' : 'primary'}" id="dkPc" type="button" ${story && !all ? '' : 'data-focus'}>${ICON.cam}Take a postcard</button><button class="dkBtn" id="dkShare" type="button">Send your house</button></div>` + ctaHTML() +
-      `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a><button class="dkBtn" id="dkAgain" type="button">Decorate again</button></div>`, {clear: false});
+      `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a><button class="dkBtn" id="dkAgain" type="button">Decorate again</button></div>`, {side: true});
     if($('#dkFix')) $('#dkFix').onclick = fixIt; $('#dkPc').onclick = () => photoMode(); $('#dkShare').onclick = shareHouse; $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#dkGames').onclick = () => ga('deck_cta', {cta: 'games'}); $('#dkAgain').onclick = again; }
   function fixIt(){ const g = ARRIVE.map(guest).find(q => !q.ok(S)); if(!g) return; ga('deck_fix', {guest: g.id}); closeCard(); PHASE = 'fix'; ambience(); dimUI(false); $('#dkPanel').classList.remove('fold'); goPlace(g.place, true); say(g.name + ' was hoping for something here. Read the message again.', 'Tap me for a hint'); }
   function again(){ ga('deck_again'); closeCard(); $$('#dkPhoto').forEach(e => e.remove()); shared = false; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} begin(MODE === 'free' ? 'free' : 'story'); }
@@ -430,7 +435,7 @@
 
   /* ---------- start ---------- */
   function begin(mode){ MODE = mode; S = clone(mode === 'story' ? STORY_START : DEFAULT); PHASE = 'decor'; touched = new Set(); arrived = []; unread = 0; queue = []; visited = new Set(); lastScore = null; result.rang = false; ambience(); $$('#dkDusk,#dkArrive,#dkPhoto').forEach(e => e.remove());
-    try{ H.setTOD(DAY); }catch(e){} P.setOn(1); PLACE = PLACES[0]; visited.add(PLACE.id); const [pos, look] = view(PLACE); cut(pos, look, () => afterMove(PLACE)); show('#dkTop', true); dimUI(false); $('#dkPanel').classList.remove('fold'); $('#dkAv').innerHTML = catHead('dkav'); badge(); refresh();
+    try{ H.setTOD(DAY); }catch(e){} P.setOn(1); PLACE = PLACES[0]; visited.add(PLACE.id); show('#dkTop', true); dimUI(false); const [pos, look] = view(PLACE); cut(pos, look, () => afterMove(PLACE)); $('#dkPanel').classList.remove('fold'); $('#dkAv').innerHTML = catHead('dkav'); badge(); refresh();
     say(mode === 'story' ? 'It is December in Woodside. Nobody has decorated. I have notes.' : 'No guests, no rules. Make it look like a holiday.', 'Tap me any time for a hint'); ga('deck_start', {mode}); if(mode === 'story') setTimeout(wave, 2600); }
   function startCard(){ PHASE = 'start'; show('#dkTop', false); dimUI(true); try{ H.setTOD(DAY); }catch(e){} const [pos, look] = view(PLACES[0]); H.look(pos, look); anchor = new V3(...pos); P.apply(S, {}); P.setCat(null);
     card(`<div class="cat">${window.SNOWBALL.svg({id: 'dkst', seed: 7})}</div><h2>Deck the House with Snowball</h2>
