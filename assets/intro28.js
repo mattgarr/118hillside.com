@@ -9,7 +9,7 @@
   var store = { get: function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set: function(k, v){ try{ localStorage.setItem(k, v); }catch(e){} } };
   var seen = store.get('intro28.seen') === '1', t0 = performance.now(), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(L.classList.contains('done')) return;
-  var game = /\/(thanksgiving|halloween)\//.test(location.pathname) || /[?&](snowball|escape|deck)=/.test(q);
+  var game = /\/(thanksgiving|halloween)\//.test(location.pathname) || /[?&](snowball|escape|deck|room)=/.test(q);
   var S = [
     ['front-exterior-1600.jpg', '118 Hillside Drive', 'A house in Woodside Glens, about a mile from the market, the bakery and the library in Town Center.'],
     ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a foyer with a cathedral ceiling. The heritage oak is framed in the glass at the far end.'],
