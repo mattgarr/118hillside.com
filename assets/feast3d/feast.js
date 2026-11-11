@@ -233,6 +233,7 @@
   const HOURS = [15.0, 15.5, 16.0, 16.4, 16.8, 17.2];   // the sun, by how many dishes are on the table (the engine's mid-October sun)
   const SLOT = {turkey: [0, 0, 0], potatoes: [-1.84, .04, 0], rolls: [-2.8, -.04, 0], pie: [1.72, -.02, 0], sauce: [2.5, .34, 0], cider: [2.72, -.36, .6], candles: [0, 0, 0]};
   const PLURAL = {candles: 1, rolls: 1, potatoes: 1};
+  const ONTABLE = {cider: .8};   // how big a dish stands on the table, where 1 is the size it was built (the gallon jug outgrew the turkey)
   // what is on the shelves of the two drinks fridges, front row, door side: [from, to] along the shelf, and the shelf heights
   const STOCK = {coolerLounge: {a: [-21.42, -23.2], b: [-21.42, -22.0], ys: [-3.83, -3.19, -2.55], kind: 'soda'}, coolerCoffee: {a: [19.02, 12.1], b: [20.25, 12.1], ys: [.73, 1.37, 2.01], kind: 'milk'}};
   const TABLE = [-2.6, -2.27, -43.7], CHAIR = [2.0, -2.98, -43.7];   // the table top, and the seat of the chair at its near end
@@ -783,7 +784,7 @@
     if(S.phase === 'intro' || S.phase === 'boot') t = 'Tap the gold ring on the table and read the note Snowball left.';
     else if(S.phase === 'hunt'){ const st = cur(); k = DISHCAP[st.dish] + ', from ' + st.who; n = 'Clue ' + (S.step + 1) + ' of 6'; t = st.clue; hand = true; if(st.map) acts = '<button class="feBtn sm" type="button" data-a="map">Look at the map</button>'; }
     else if(S.phase === 'tag') t = 'Read the tag that was tied to it.';
-    else if(S.phase === 'carry'){ t = 'Carry ' + DISH[S.carry] + ' out to the table under the oak.'; acts = '<button class="feBtn sm dark" type="button" data-a="carry">Carry it there</button>'; }
+    else if(S.phase === 'carry'){ t = 'Carry ' + DISH[S.carry] + ' out to the table under the oak.'; acts = '<button class="feBtn sm dark" type="button" data-a="carry">Carry ' + (PLURAL[S.carry] ? 'them' : 'it') + ' there</button>'; }
     else if(S.phase === 'turkey') t = S.carry ? 'Carry the turkey to the table.' : 'The tags spell THANKS. Lift the lid on the smoker.';
     else if(S.phase === 'candles'){ t = 'Everything is on the table. Light the candles.'; acts = '<button class="feBtn sm gold" type="button" data-a="light">Light the candles</button>'; }
     else if(S.phase === 'end') t = 'Dinner is on the table.';
@@ -949,7 +950,7 @@
       {noBack: true, acts: [{label: 'Start looking', cls: 'primary', go: () => { if(S.phase === 'intro'){ S.phase = 'hunt'; S.step = 0; S.hintIx = 0; setGoal(); ga('feast3d_step', {step: 0}); } back(() => { if(!S.saidStart){ S.saidStart = true; later(500, () => say('I know where all of it is. Ask if you get stuck. I like being asked.', 5600)); } }); }}]});
     if(id === '_table') return sheetTable(ex);
     if(id === 'smoker') return sheetSmoker(ex);
-    if(ex.state === 'found') return sheet(`<h3>You found ${esc(DISH[st.dish])}.</h3><p>${esc(st.found)}</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => back(() => carryNow())}]});
+    if(ex.state === 'found') return sheet(`<h3>You found ${esc(DISH[st.dish])}.</h3><p>${esc(st.found)}</p>`, {noBack: true, acts: [{label: PLURAL[st.dish] ? 'Carry them to the table' : 'Carry it to the table', cls: 'primary', go: () => back(() => carryNow())}]});
     if(ex.state === 'wrong') return sheet(`<h3>${esc(sp.title)}</h3><p class="res">${esc(st.wrong[id] || 'Nothing in here.')}</p>`);
     if(sp.kind === 'wall') return sheet(`<h3>${esc(sp.title)}</h3><p>${esc(sp.text)}</p>${S.knocked[id] ? `<p class="res">${esc(KNOCK[st && st.answer === id ? 'hollow' : 'solid'])}</p>` : ''}`,
       {acts: [{label: 'Knock on it', cls: 'dark', go: () => knock(id)}, {label: 'Push it', go: () => openSpot(id)}]});
@@ -991,8 +992,8 @@
     _h.set(0, -.74 + bob, -1.95).applyMatrix4(camera.matrixWorld); g.position.copy(_h); _hq.setFromAxisAngle(_hy, rig.yaw + .5); g.quaternion.copy(_hq); g.scale.setScalar(HELD.s); g.visible = !fadeE.classList.contains('on'); }
   function slotPos(id){ const s = SLOT[id]; return new V3(TABLE[0] + s[0], TABLE[1] + .02, TABLE[2] + s[1]); }
   function setDown(){ if(!S.carry || S.busy || rig.move || S.ex) return; const id = S.carry; catAt(CHAIR); examine('_table', {mode: 'set', done: () => { const g = DISHOBJ[id], from = g.position.clone(), to = slotPos(id), s0 = g.scale.x, r0 = g.rotation.y, r1 = SLOT[id][2] || 0; HELD.fly = true; S.busy = true; g.rotation.set(0, r0, 0);
-      tween(950, u => { const e = ease(u); g.position.lerpVectors(from, to, e); g.position.y += Math.sin(u * Math.PI) * .55; g.scale.setScalar(lerp(s0, 1, e)); g.rotation.y = lerp(r0, r1, e); if(id === 'candles') g.userData.spread(e); },
-        () => { HELD.fly = false; HELD.g = null; S.carry = null; g.position.copy(to); g.scale.setScalar(1); SND.clink(); S.onTable.push(id); if(id === 'cider') SETTINGS.forEach(s => { s.userData.cider.visible = true; });
+      tween(950, u => { const e = ease(u); g.position.lerpVectors(from, to, e); g.position.y += Math.sin(u * Math.PI) * .55; g.scale.setScalar(lerp(s0, ONTABLE[id] || 1, e)); g.rotation.y = lerp(r0, r1, e); if(id === 'candles') g.userData.spread(e); },
+        () => { HELD.fly = false; HELD.g = null; S.carry = null; g.position.copy(to); g.scale.setScalar(ONTABLE[id] || 1); SND.clink(); S.onTable.push(id); if(id === 'cider') SETTINGS.forEach(s => { s.userData.cider.visible = true; });
           if(id === 'turkey'){ S.busy = false; S.phase = 'candles'; setGoal(); S.ex.state = 'turkey'; sheetFor(S.ex); return; }
           const i = S.step; S.phase = 'tag'; setGoal(true); later(350, () => hangTag(i, () => { S.busy = false; S.ex.state = 'tag'; sheetFor(S.ex); })); }); }}); }
   function hangTag(i, done){ const piv = P.tag(LETTERS[i]), slot = BUNT.userData.slots[5 - i]; piv.position.copy(slot); piv.rotation.y = Math.PI / 2 + .1; P.root.add(piv); TAGS[i] = piv; SND.tag(i); S.tagsUp = i + 1; drawTags(i);

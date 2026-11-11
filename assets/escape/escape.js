@@ -469,7 +469,7 @@
   #escSun .ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin:0 5px;font-variant-numeric:tabular-nums}
   #escSun .ticks span{width:44px;text-align:center}#escSun .ticks span:first-child{text-align:left;margin-left:-5px}#escSun .ticks span:last-child{text-align:right;margin-right:-5px}
   #escDockR{flex:0 0 268px}
-  #escCoach{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 232px);transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
+  #escCoach{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 124px);transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
   #escCoach.on{opacity:1;transform:translate(-50%,0)}#escCoach svg{width:26px;height:26px;flex:none}
   #escCoach.look svg{animation:escSwipe 1.8s ease-in-out infinite}@keyframes escSwipe{0%,100%{transform:translateX(-5px)}50%{transform:translateX(5px)}}
   .escMk{position:absolute;left:0;top:0;width:60px;height:60px;margin:-30px 0 0 -30px;border:0;background:none;padding:0;pointer-events:auto;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;will-change:transform}
@@ -681,7 +681,6 @@
     // everything on screen that a marker must not sit on, measured as it is right now
     const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
     add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#escMapBtn') : mapE); add($('#escBtns')); if(sayE.classList.contains('on')) add(sayE); add(sunE);
-    if(coachE.classList.contains('on')) add(coachE);
     const wOf = m => m.w || (m.w = Math.max(40, (m.b.querySelector('span') || {}).offsetWidth || 90));
     const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
@@ -810,7 +809,7 @@
     s0.onclick = () => { SND.setMuted(!SND.muted); d0(); UI.drawSnd(); if(!SND.muted) SND.goal(); }; d0(); try{ $('#escGo').focus({preventScroll: true}); }catch(e){}
     $('#escGo').onclick = () => { SND.unlock(); SND.tap(); $('#escGo').disabled = true; fadeThrough(() => { c.remove(); begin(); }, 420); }; }
   function begin(){ document.documentElement.classList.remove('esc-pre'); const p = standPose('entry'); rigCut(PLACES.entry.pos, p.yaw, p.pitch, p.fov); S.started = true; S.t0 = S.lastProgress = performance.now(); ga('esc_start');
-    arrive('entry', true); catAt([-.2, 0, -4.6]); setTimeout(() => { if(S.stage === 'arrive' && !rig.move) say('It is all in plain sight. That is the sporting way.', 4600); }, 2600); }
+    arrive('entry', true); catAt([-.2, 0, -4.6]); setTimeout(() => { if(S.stage === 'arrive' && !rig.move) say('It is all in plain sight. That is the sporting way.', 4600); }, phone() ? 7200 : 2600); }   // on a phone, after the place card has gone
   function win(){ if(S.done) return; S.done = true; S.tEnd = performance.now(); S.stage = 'done'; const t = elapsed(); ga('esc_win', {secs: Math.round(t), hints: S.hints});
     const best = store.get(KEY + '.best'); if(!best || t < best.time) store.set(KEY + '.best', {time: t, hints: S.hints});
     sheetE.classList.remove('on'); document.documentElement.classList.add('esc-cine'); for(const m of marks) m.b.classList.remove('on'); $('#escGoalT').textContent = GOALS.done;
@@ -825,7 +824,7 @@
       setTimeout(() => { const fd = (H.door28 && H.door28.items || []).find(it => it.id === 'D-LG-02'); if(fd && fd.t < .5 && H.door28.moving){ fd.dir = 1; fd.lt = performance.now(); H.door28.moving.add(fd); wake(90); } }, 2500);
       setTimeout(finishCard, 5600); }, 3400); }
   // the closing view: a slow move toward the lit house at dusk; the finish card sits beside it (below it on a phone), so the view is moved over to stay in the clear
-  const SHOT = () => aspect() < 1 ? {pos: [-6, 5, 34], pos2: [-6, 5, 31], look: [-6, 5, 0], fov: 80, off: [0, -.3], cat: [-4.6, 0, 6]} : {pos: [-6, 5, 34], pos2: [-6, 5, 31], look: [-6, 5, 0], fov: 58, off: [-.17, 0], cat: [-4.6, 0, 6]};
+  const SHOT = () => aspect() < 1 ? {pos: [-6, 5, 34], pos2: [-6, 5, 31], look: [-6, 5, 0], fov: 80, off: [0, -.36], cat: [-4.6, 0, 6]} : {pos: [-5, 6.2, 41], pos2: [-5, 6, 36.5], look: [-5, 4.8, 0], fov: 58, off: [-.17, 0], cat: [-4.6, 0, 6]};
   function finishCard(){ const t = elapsed(); SND.cork();
     const c = el('div', {id: 'escCard', class: 'side'}, `<div class="c" role="dialog" aria-labelledby="escH"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Cork popped.</h2>
       <p class="lede">The doorbell is ringing and the house is lit for the evening. Snowball says you are nearly as clever as he is, and he is keeping the box the champagne came in.</p>
