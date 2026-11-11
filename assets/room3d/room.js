@@ -81,7 +81,7 @@
     office: [{note: 'sky', sky: ['SK-R11', 'SK-R12'], label: 'Skylights', t: 'Two skylights and windows on two walls. The lower level’s own front door is just outside this room.'}],
     lounge: [{note: 'door', also: ['view:terrace'], op: 'D-L0-10', y: 3.4, label: 'Glass doors', t: 'Three glass panels stack open onto the terrace, under the heritage oak.'},
       {note: 'tv', at: [-22.6, 1.0, -20.4], label: 'Big screen', t: 'A 65-inch screen with speakers in the walls, and a drinks fridge beside it.'}],
-    garage: [{note: 'ev', at: [-25.0, .66, 16.5], label: 'Car charger outlet', t: 'A 50-amp outlet for charging an electric car, in an oversized garage with racks overhead.'}]};
+    garage: [{note: 'ev', op: 'D-LG-01', y: 4.2, label: 'Garage door', t: 'An oversized garage with a tall ceiling. It has a 50-amp outlet for charging an electric car.'}]};
   function ringAt(slot, r){ if(r._at) return r._at; let p = null;
     if(r.at) p = r.at.slice();
     else if(r.op){ const op = opening(r.op); if(op){ const y = r.y != null ? GEO[slot].fy + r.y : (op.o.sill + op.o.head) / 2, v = op.P(0, y, .35); p = [v.x, v.y, v.z]; } }
@@ -89,7 +89,7 @@
       if(n){ c.multiplyScalar(1 / n); p = [c.x, c.y - .6, c.z]; } }
     if(!p) p = [GEO[slot].c[0], GEO[slot].fy + 6.5, GEO[slot].c[1]]; r._at = p; return p; }
   const NOTE_TXT = {bath: 'A bath of its own', door: 'A door straight outside', sky: 'Skylights', film: 'Rainbow film on a window', 'view:oak': 'Looks at the old oak', 'view:terrace': 'Looks onto the terrace',
-    'view:street': 'Looks toward the street', 'view:hills': 'Looks west to the hills', 'view:side': 'Looks onto the side garden', tv: 'The big screen', ev: 'A charger for a car',
+    'view:street': 'Looks toward the street', 'view:hills': 'Looks west to the hills', 'view:side': 'Looks onto the side garden', tv: 'The big screen', ev: 'A 50-amp outlet for a car',
     'x:loft': 'Tall gable windows', 'x:pocket': 'Opens off the dining area'};
   const NOTE_ICO = {bath: 'bath', door: 'door', sky: 'sky', film: 'film', 'view:oak': 'oak', 'view:terrace': 'terrace', 'view:street': 'street', 'view:hills': 'hills', 'view:side': 'leaf', tv: 'tv', ev: 'ev', 'x:loft': 'win', 'x:pocket': 'win'};
   const hasNote = (slot, n) => !!(SAVE.notes[slot] && SAVE.notes[slot][n]);
@@ -121,8 +121,8 @@
         if(on){ any = true; if(h <= 10) am = true; if(h >= 17.5) pm = true; if(open == null) open = h; } else if(open != null){ spans.push([open, h - .25]); open = null; } }
       if(open != null) spans.push([open, H1]);
       return {am, pm, none: !any, spans}; },
-    text(slot){ const f = SUN.facts(slot); if(f.none) return 'No direct sun at any hour'; const names = []; if(f.am) names.push('morning'); if(f.spans.some(s => s[1] > 10.5 && s[0] < 17)) names.push('midday'); if(f.pm) names.push('evening');
-      return 'Direct sun: ' + names.join(' and ') + ' (' + f.spans.map(s => fmtH(s[0]).replace(':00', '') + ' to ' + fmtH(s[1]).replace(':00', '')).join(', ') + ')'; },
+    text(slot){ const f = SUN.facts(slot); if(f.none) return 'No direct sun at any hour'; const names = []; if(f.am) names.push('in the morning'); if(f.spans.some(s => s[1] >= 11 && s[0] <= 16.5)) names.push('in the middle of the day'); if(f.pm) names.push('in the evening');
+      const hr = h => fmtH(h).replace(':00', ''); return 'Direct sun ' + names.join(' and ') + ': ' + f.spans.map(s => hr(s[0]) + ' to ' + hr(s[1])).join(', '); },
     build(slot){ if(SUN.rooms[slot]) return SUN.rooms[slot]; const G = GEO[slot], O = SUN.openings(slot), bb = G.bb, ppf = 22, fy = G.fy + .06;
       const cv = document.createElement('canvas'); cv.width = Math.ceil((bb[2] - bb[0]) * ppf); cv.height = Math.ceil((bb[3] - bb[1]) * ppf); const g = cv.getContext('2d');
       const tex = new THREE.CanvasTexture(cv); tex.premultiplyAlpha = true; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false;
@@ -131,10 +131,15 @@
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(bb[2] - bb[0], bb[3] - bb[1]), mat); mesh.rotation.x = -Math.PI / 2; mesh.position.set((bb[0] + bb[2]) / 2, fy, (bb[1] + bb[3]) / 2);
       mesh.renderOrder = 2; mesh.name = 'rfe-light'; mesh.raycast = () => {}; mesh.visible = false; H.scene.add(mesh);
       const px = v => [(v.x - bb[0]) * ppf, (v.z - bb[1]) * ppf];
+      // the glass itself glows when the sun is on it, so you can tell even where a bed hides the floor
+      for(const o of O){ const q = o.quad, d = o.sky ? new V3(0, -.12, 0) : o.n.clone().multiplyScalar(-.1), a = []; for(const i of [0, 1, 2, 0, 2, 3]) a.push(q[i].x + d.x, q[i].y + d.y, q[i].z + d.z);
+        const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(a, 3)); gg.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2));
+        o.glow = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({color: 0xffe2a8, map: o.film ? SUN.rainbow() : null, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide}));
+        o.glow.renderOrder = 5; o.glow.raycast = () => {}; o.glow.visible = false; o.glow.name = 'rfe-glow'; H.scene.add(o.glow); }
       const api = {slot, mesh, O, level: 0,
         update(){ const s = sunAt(S.hour), d = s.v, low = 1 - Math.min(1, d.y / .5); g.clearRect(0, 0, cv.width, cv.height); let any = 0;
           const proj = v => { const t = (v.y - fy) / Math.max(.02, d.y); return new V3(v.x - d.x * t, fy, v.z - d.z * t); };
-          for(const o of O){ const k = SUN.strength(o, S.hour); o.s = k; if(k < .3) continue; any = Math.max(any, k); const q = o.quad.map(proj).map(px);
+          for(const o of O){ const k = SUN.strength(o, S.hour); o.s = k; const lit = k >= .3 && S.view === 'room'; o.glow.visible = lit; o.glow.material.opacity = lit ? k * (o.film ? .5 : .32) : 0; if(k < .3) continue; any = Math.max(any, k); const q = o.quad.map(proj).map(px);
             g.save(); g.globalAlpha = k; g.beginPath(); q.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath();
             const warm = `rgb(255,${Math.round(238 - 46 * low)},${Math.round(206 - 86 * low)})`;
             if(o.film){ const gr = g.createLinearGradient(q[0][0], q[0][1], q[1][0], q[1][1]); ['#ff6b6b', '#ffb347', '#fff275', '#7be495', '#6ec5ff', '#b28dff', '#ff8ad4'].forEach((c, i, a) => gr.addColorStop(i / (a.length - 1), c));
@@ -144,7 +149,8 @@
           if(any > 0){ g.save(); g.globalCompositeOperation = 'destination-in'; g.beginPath(); G.P.forEach((p, i) => { const q = [(p[0] - bb[0]) * ppf, (p[1] - bb[1]) * ppf]; i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); g.restore(); }
           api.level = any; mesh.visible = any > 0 && S.view === 'room'; const gain = 1.5; mat.color.setRGB(gain, gain * .94, gain * .8); tex.needsUpdate = true; }};
       SUN.rooms[slot] = api; return api; },
-    show(slot){ for(const k in SUN.rooms) SUN.rooms[k].mesh.visible = false; SUN.cur = slot ? SUN.build(slot) : null; if(SUN.cur) SUN.cur.update(); }};
+    rainbow(){ if(SUN._rb) return SUN._rb; const c = document.createElement('canvas'); c.width = 128; c.height = 4; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 128, 0); ['#ff6b6b', '#ffb347', '#fff275', '#7be495', '#6ec5ff', '#b28dff', '#ff8ad4', '#ffb347', '#7be495'].forEach((q, i, a) => gr.addColorStop(i / (a.length - 1), q)); g.fillStyle = gr; g.fillRect(0, 0, 128, 4); return (SUN._rb = new THREE.CanvasTexture(c)); },
+    show(slot){ for(const k in SUN.rooms){ SUN.rooms[k].mesh.visible = false; for(const o of SUN.rooms[k].O) o.glow.visible = false; } SUN.cur = slot ? SUN.build(slot) : null; if(SUN.cur) SUN.cur.update(); }};
 
   /* ================================================================== the engine keeps out of the way */
   const css0 = `html.rfe header.bar, html.rfe #card, html.rfe #mini, html.rfe #cv27, html.rfe #labels, html.rfe #wplabels, html.rfe #ovtag, html.rfe #tod, html.rfe #viewBtn,
@@ -215,11 +221,11 @@
     let cx = 0, cy = 0; const _q = new V3();
     for(let i = 0; i < 22; i++){ const r = (lo + hi) / 2; cam.position.copy(T).addScaledVector(dir, r); cam.lookAt(T); cam.updateMatrixWorld(true); let x0 = 9, x1 = -9, y0 = 9, y1 = -9, bad = false;
       for(const p of pts){ _q.copy(p).project(cam); if(_q.z > 1) bad = true; x0 = Math.min(x0, _q.x); x1 = Math.max(x1, _q.x); y0 = Math.min(y0, _q.y); y1 = Math.max(y1, _q.y); }
-      if(!bad && (x1 - x0) / 2 <= hw * .93 && (y1 - y0) / 2 <= hh * .84){ hi = r; cx = (x0 + x1) / 2; cy = (y0 + y1) / 2; } else lo = r; }
+      if(!bad && (x1 - x0) / 2 <= hw * .9 && (y1 - y0) / 2 <= hh * .84){ hi = r; cx = (x0 + x1) / 2; cy = (y0 + y1) / 2; } else lo = r; }
     o.fit = hi; o.offFit = [((F.l + F.r) / 2) / F.W - .5 - cx / 2, ((F.t + F.b) / 2) / F.Hh - .5 + cy / 2]; }
   function orbitPose(){ const o = rig.orb, r = o.fit * o.zoom, sp = Math.sin(o.phi), T = [o.T[0] + o.pan[0], o.T[1], o.T[2] + o.pan[1]];
     return {pos: [T[0] + r * sp * Math.sin(o.th), T[1] + r * Math.cos(o.phi), T[2] + r * sp * Math.cos(o.th)], at: T, fov: o.fov, off: (o.offFit || [0, 0]).slice()}; }
-  function standPose(){ const s = rig.st, cp = Math.cos(s.pitch), p = s.pos; return {pos: [p.x, p.y, p.z], at: [p.x - Math.sin(s.yaw) * cp * 10, p.y + Math.sin(s.pitch) * 10, p.z - Math.cos(s.yaw) * cp * 10], fov: clamp(s.fov * s.zoom, 20, 88), off: [0, 0]}; }
+  function standPose(){ const s = rig.st, cp = Math.cos(s.pitch), p = s.pos; return {pos: [p.x, p.y, p.z], at: [p.x - Math.sin(s.yaw) * cp * 10, p.y + Math.sin(s.pitch) * 10, p.z - Math.cos(s.yaw) * cp * 10], fov: clamp(s.fov * s.zoom, 20, 88), off: [s.offX || 0, 0]}; }
   function rigDrag(dx, dy){ if(!live()) return; S.dragPx += Math.abs(dx) + Math.abs(dy); S.lastAct = performance.now();
     if(S.view === 'over' || S.view === 'win'){ const o = rig.orb; o.th -= dx * .0052; o.phi = clamp(o.phi - dy * .004, .12, 1.12); }
     else if(S.view === 'room'){ const s = rig.st, k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05; s.tyaw += dx * k; s.tpitch = clamp(s.tpitch + dy * k, -1.15, 1.25); } }
@@ -429,7 +435,7 @@
   /* ================================================================== UI */
   const css = `
   #rfeRoot{--ink:#1f2a3a;--mut:#5c6575;--navy:#1f2948;--paper:#fbfaf7;--gold:#c98a12;--wine:#9b2c3c;--ok:#2e7b59;--tape:#66ade6;--tapeink:#0f3556;position:fixed;inset:0;z-index:60;pointer-events:none;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-  #rfeRoot button{font:inherit;cursor:pointer;color:inherit}
+  #rfeRoot button{font:inherit;cursor:pointer}:where(#rfeRoot) button{color:#1f2a3a}
   #rfeRoot .rfeChip{pointer-events:auto;color:var(--ink);background:rgba(251,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.2)}
   #rfeTop{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left))}
   #rfeGoal{padding:10px 16px 11px;width:340px;max-width:100%;min-width:0;border-left:4px solid var(--gold);box-sizing:border-box}
@@ -522,6 +528,7 @@
   #rfeRoom .cap.on{display:block}
   #rfeSun{flex:1 1 300px;max-width:520px;padding:9px 16px 11px;display:none}
   #rfeSun .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);gap:8px}
+  #rfeSunNow::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;border:1.500px solid #a9a595;margin-right:6px;vertical-align:-1px;box-sizing:border-box}#rfeSunNow.on{color:#7a5300}#rfeSunNow.on::before{background:#f2b632;border-color:#d98f0c;box-shadow:0 0 6px #f2b632}
   #rfeSun .top b{font-size:18.500px;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
   #rfeSun .top button{border:1px solid #d6d2c8;background:#fff;border-radius:999px;min-height:34px;padding:0 12px 0 8px;display:inline-flex;align-items:center;gap:4px;font-size:13.500px;color:var(--ink)}#rfeSun .top button svg{width:16px;height:16px}
   #rfeSun.key{box-shadow:0 0 0 2px #e8b84a,0 0 26px rgba(232,184,74,.55),0 8px 30px rgba(15,20,35,.2)}
@@ -631,7 +638,7 @@
         <button class="rfeBtn dark shadow" id="rfeBack" type="button">${ICO.back}<span>Whole house</span></button>
         <div id="rfeTip" role="status"></div>
         <button class="rfeBtn shadow" id="rfeLift" type="button" aria-pressed="false">${ICO.lift}<span>Lift off the upper level</span></button>
-        <div class="rfeChip" id="rfeSun"><div class="top"><span>Midsummer day</span><b id="rfeClock">1:00 PM</b><button type="button" id="rfePlay">${ICO.play}<span>Watch the day</span></button></div>
+        <div class="rfeChip" id="rfeSun"><div class="top"><span id="rfeSunNow"></span><b id="rfeClock">1:00 PM</b><button type="button" id="rfePlay">${ICO.play}<span>Watch the day</span></button></div>
           <input id="rfeSlider" type="range" min="${H0}" max="${H1}" step=".25" value="13" aria-label="Time of day">
           <div class="ticks" aria-hidden="true"><span>7 AM</span><span>10</span><span>1 PM</span><span>4</span><span>7:30</span></div></div>
         <button class="rfeBtn shadow" id="rfeCluesBtn" type="button" aria-pressed="false">${ICO.list}<span>Clues</span></button>
@@ -772,14 +779,14 @@
 
   /* ================================================================== going into a room and coming back out */
   function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
-  function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(64); s.zoom = 1; }
+  function setStand(slot){ const v = standView(slot), s = rig.st, F = freeRect(); s.offX = phone() ? 0 : ((F.l + F.r) / 2) / F.W - .5; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(64); s.zoom = 1; }
   function peekPose(slot){ const G = GEO[slot], o = rig.orb, dx = Math.sin(o.th), dz = Math.cos(o.th); return {pos: [G.c[0] + dx * 13, G.fy + 30, G.c[1] + dz * 13], at: [G.c[0], G.fy + 1, G.c[1]], fov: 42, off: rig.off.slice()}; }
   function enter(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'over') return; S.busy = true; S.sel = null; tip(''); closeMenus(); SND.dive(); ga('rfe3d_enter', {room: slot});
     if(!S.t0) S.t0 = performance.now(); if(covered(slot)) setUpper(!S.upperOn, true);
     rigFly(peekPose(slot), {dur: .85, done: () => { dissolve(() => { S.view = 'room'; S.room = slot; HOUSE.inside(); setStand(slot); rigCut(standPose()); document.documentElement.classList.add('rfe-in'); arrive(slot); }, () => { S.busy = false; }); }}); }
   function hop(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'room' || slot === S.room) return; S.busy = true; closeMenus(); SND.dive();
     dissolve(() => { S.room = slot; setStand(slot); rigCut(standPose()); arrive(slot); }, () => { S.busy = false; }); }
-  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: false, hi: false}; S.sweeping = false; SUN.show(slot); noteLight(); setMarks(); drawRoom(); layoutVars();
+  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: false, hi: false}; S.sweeping = false; SUN.show(slot); setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars();
     renderClues(true); objective(); $('#rfeSun').classList.toggle('key', !SAVE.light[slot]); S.lastAct = performance.now(); document.documentElement.classList.remove('rfe-clues'); $('#rfeCluesBtn').setAttribute('aria-pressed', 'false');
     $('#rfeWhoBtn span').textContent = LG.SLOTS[slot].bed ? 'Who sleeps here' : 'What goes here'; }
   function leave(then){ if(S.view !== 'room' || S.busy || rig.move) return; const slot = S.room; S.busy = true; closeMenus(); SND.back(); S.sweeping = false;
@@ -789,7 +796,7 @@
 
   /* ---- the card for the room you are standing in */
   function drawRoom(fresh){ const slot = S.room; if(!slot) return; const sl = LG.SLOTS[slot], r = RINGS[slot] || [], occ = occupant(slot); let li = '';
-    li += SAVE.light[slot] ? `<li${fresh === 'light' ? ' class="new"' : ''}>${nIco(sl.none ? 'none' : sl.am ? 'am' : sl.pm ? 'pm' : 'mid')}<span>${esc(SUN.text(slot))}</span></li>` : `<li class="todo">${nIco('mid')}<span>Light: drag the sun to find out</span></li>`;
+    li += SAVE.light[slot] ? `<li${fresh === 'light' ? ' class="new"' : ''}>${nIco(sl.none ? 'none' : sl.am ? 'am' : sl.pm ? 'pm' : 'mid')}<span>${esc(SUN.text(slot))}</span></li>` : `<li class="todo">${nIco('mid')}<span>Light: drag the sun across a midsummer day</span></li>`;
     for(const q of r){ const got = hasNote(slot, q.note); li += got ? `<li${fresh === q.note ? ' class="new"' : ''}>${nIco(NOTE_ICO[q.note])}<span>${esc(NOTE_TXT[q.note])}</span></li>` : `<li class="todo">${nIco('win')}<span>${esc(q.label)}: not looked at yet</span></li>`; }
     const i = ORDER.indexOf(slot), prev = ORDER[(i + ORDER.length - 1) % ORDER.length], next = ORDER[(i + 1) % ORDER.length];
     $('#rfeRoom').innerHTML = `<div class="hd"><button type="button" id="rfePrev" aria-label="Previous room: ${esc(LG.SLOTS[prev].name)}">${ICO.back}</button><b>${esc(sl.name)}</b><button type="button" id="rfeNext" aria-label="Next room: ${esc(LG.SLOTS[next].name)}">${ICO.fwd}</button></div>
@@ -823,8 +830,9 @@
       placed.push([x, y]); m.b.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; const cls = 'rfeMk on' + (hasNote(S.room, m.q.note) ? ' got' : '') + (edge ? ' edge ' + edge : ''); if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
 
   /* ---- the sun slider */
-  function setClock(h){ $('#rfeClock').textContent = fmtH(h); $('#rfeSlider').setAttribute('aria-valuetext', fmtH(h)); }
-  function onSlide(h, user){ setClock(h); applyHour(h); if(user) S.lastAct = performance.now(); if(S.view === 'room'){ if(h <= 8.5) S.lightSeen.lo = true; if(h >= 18.5) S.lightSeen.hi = true; noteLight(); } }
+  function setClock(h){ $('#rfeClock').textContent = fmtH(h); const on = !!(SUN.cur && SUN.cur.level >= .45), e = $('#rfeSunNow'); e.textContent = on ? 'Sun in this room now' : 'No direct sun in here now'; e.className = on ? 'on' : '';
+    $('#rfeSlider').setAttribute('aria-valuetext', fmtH(h) + ', ' + e.textContent); }
+  function onSlide(h, user){ applyHour(h); setClock(h); if(user) S.lastAct = performance.now(); if(S.view === 'room'){ if(h <= 8.5) S.lightSeen.lo = true; if(h >= 18.5) S.lightSeen.hi = true; noteLight(); } }
   function noteLight(){ const slot = S.room; if(!slot || SAVE.light[slot] || !(S.lightSeen.lo && S.lightSeen.hi)) return; SAVE.light[slot] = 1; save(); SND.note(); $('#rfeSun').classList.remove('key'); drawRoom('light'); renderClues(true); objective(); ga('rfe3d_light', {room: slot}); }
   function setHour(h){ $('#rfeSlider').value = h; onSlide(h); applyHour(h, true); }
   function watchDay(){ if(S.sweeping || S.view !== 'room') return; S.sweeping = true; const t0 = performance.now(), ms = reduce ? 1400 : 5200, slot = S.room; $('#rfeSun').classList.remove('key');
