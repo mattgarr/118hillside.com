@@ -491,6 +491,7 @@
   #rfeClues li.flash{animation:rfeFlash .8s ease}
   @keyframes rfeFlash{0%{background:#fff3c9}100%{}}
   #rfeStory{margin:0;padding:0 16px 8px;font:500 16.500px/1.32 "Cormorant Garamond",Georgia,serif;color:#2b3442}
+  @media (max-height:760px){#rfeStory{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-bottom:0;margin-bottom:8px}}
   #rfePanelX{display:none;position:absolute;right:4px;top:2px;width:44px;height:40px;border:0;background:none;font-size:26px;line-height:1;color:#5c6575;z-index:2;pointer-events:auto}
   /* room names over the house */
   #rfeLabels{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -783,7 +784,7 @@
   function tapAt(cx, cy){ if(!live()) return; if(S.view === 'over'){ const id = slotAt(cx, cy); if(id) onRoom(id); else if(S.sel) select(null); } }
   function onRoom(id){ if(!live() || S.view !== 'over') return; if(S.sel){ place(S.sel, id); return; } enter(id); }
   function setUpper(on, quiet){ if(S.upperOn === on) return; S.upperOn = on; if(!quiet) SND.lift(); HOUSE.level(on); $('#rfeLift').setAttribute('aria-pressed', String(!on)); $('#rfeLift span').textContent = on ? 'Lift off the upper level' : 'Put the upper level back';
-    $('#rfeLift').classList.remove('pulse'); orbitFit(); drawLabels(); PAWN.sync(); wake(80); if(!on && !SAVE.tips.lift){ SAVE.tips.lift = 1; save(); toast('Two bedrooms, a bath and the lounge sit under the primary suite.', 4200); } }
+    $('#rfeLift').classList.remove('pulse'); orbitFit(); drawLabels(); PAWN.sync(); wake(80); if(!on && !SAVE.tips.lift && !S.done){ SAVE.tips.lift = 1; save(); toast('Two bedrooms, a bath and the lounge sit under the primary suite.', 4200); } }
 
   /* ================================================================== going into a room and coming back out */
   function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
@@ -795,7 +796,7 @@
     rigFly(peekPose(slot), {dur: .85, done: () => { dissolve(() => { S.view = 'room'; S.room = slot; HOUSE.inside(); setStand(slot); rigCut(standPose()); document.documentElement.classList.add('rfe-in'); arrive(slot); }, () => { S.busy = false; }); }}); }
   function hop(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'room' || slot === S.room) return; S.busy = true; closeMenus(); SND.dive();
     dissolve(() => { S.room = slot; setStand(slot); rigCut(standPose()); arrive(slot); }, () => { S.busy = false; }); }
-  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: false, hi: false}; S.sweeping = false; SUN.show(slot); setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars(); reframe();
+  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: S.hour <= 8.5, hi: S.hour >= 18.5}; S.sweeping = false; SUN.show(slot);   // the hour you arrive at counts as seen setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars(); reframe();
     renderClues(true); objective(); $('#rfeSun').classList.toggle('key', !SAVE.light[slot]); S.lastAct = performance.now(); document.documentElement.classList.remove('rfe-clues'); $('#rfeCluesBtn').setAttribute('aria-pressed', 'false');
     $('#rfeWhoBtn span').textContent = LG.SLOTS[slot].bed ? 'Who sleeps here' : 'What goes here'; }
   function leave(then){ if(S.view !== 'room' || S.busy || rig.move) return; const slot = S.room; S.busy = true; closeMenus(); SND.back(); S.sweeping = false;
