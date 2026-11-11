@@ -601,8 +601,10 @@
     #rfePanel{left:8px;right:8px;top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:auto;max-height:38vh}
     #rfeStory{display:none}
     #rfePanel h3{padding:8px 14px 2px}
-    #rfeTray{flex-wrap:nowrap;overflow-x:auto;padding:4px 10px 8px;gap:6px;scrollbar-width:none;pointer-events:auto;touch-action:pan-x}#rfeTray::-webkit-scrollbar{display:none}
-    .rfeG{flex:none;touch-action:pan-x}.rfeG .em{width:30px;height:30px}.rfeG .tp{font-size:17.500px}
+    #rfeTray{flex-wrap:nowrap;padding:4px 8px 6px;gap:2px;pointer-events:auto}
+    .rfeG{flex:1 1 0;min-width:0;flex-direction:column;gap:3px;padding:4px 0 3px;align-items:center}.rfeG .em{width:38px;height:38px}.rfeG > span:last-child{display:block;min-width:0;max-width:100%}
+    .rfeG .tp{background:none;color:var(--ink);font:500 10.500px/1.12 Jost,sans-serif;padding:0;transform:none;box-shadow:none;clip-path:none;white-space:normal;text-align:center;overflow-wrap:anywhere}.rfeG.t .tp{background:none;color:var(--ink)}
+    .rfeG small{display:none}.rfeG.in .tp{opacity:1;color:var(--mut)}.rfeG.in .em{opacity:.5;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ok)}
     #rfeClues li{font-size:14.500px;padding:7px 8px 7px 36px}
     #rfeDock{left:0;padding:0 8px;bottom:calc(var(--panel-h,0px) + max(8px,env(safe-area-inset-bottom)) + 8px);gap:8px}
     #rfeTip{font-size:13.500px;padding:7px 12px}
@@ -742,7 +744,7 @@
     b.addEventListener('pointerdown', e => { if(S.done || S.busy) return; SND.unlock(); drag = {g, id: e.pointerId, sx: e.clientX, sy: e.clientY, on: false, t: performance.now(), touch: e.pointerType === 'touch'}; });
     b.addEventListener('click', e => { e.preventDefault(); if(drag && drag.moved) return; if(S.done) return; select(S.sel === g ? null : g); }); }
   addEventListener('pointermove', e => { if(!drag || e.pointerId !== drag.id) return; const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
-    if(!drag.on){ if(Math.hypot(dx, dy) < 10) return; if(drag.touch && phone() && Math.abs(dx) > Math.abs(dy) * 1.2 && S.view !== 'room'){ drag = null; return; }   // a sideways swipe scrolls the tray
+    if(!drag.on){ if(Math.hypot(dx, dy) < 10) return;
       if(S.view !== 'over'){ drag = null; return; } drag.on = drag.moved = true; S.sel = drag.g; renderTray(); renderClues(); drawLabels(); const gh = $('#rfeGhost'), G = LG.GUESTS[drag.g];
       gh.innerHTML = `<span class="rfeG${G.kind === 't' ? ' t' : ''}"><span class="em" style="background:${G.col}">${gIco(drag.g)}</span><span><span class="tp">${esc(shortOf(drag.g))}</span></span></span>`; gh.style.display = 'block'; SND.pick(); }
     e.preventDefault(); $('#rfeGhost').style.transform = `translate(${e.clientX - 24}px,${e.clientY - 46}px)`; S.hover = slotAt(e.clientX, e.clientY); drawLabels(); }, {capture: true, passive: false});
@@ -767,7 +769,7 @@
   const _v = new V3();
   function labelsStep(){ const show = S.view === 'over' && !rig.move && !S.busy, r = canvas.getBoundingClientRect(), F = freeRect(), placed = [], items = [];
     for(const id of ORDER){ const L = LB[id]; if((!show && S.view !== 'win') || (covered(id) && !occupant(id))){ if(L.on){ L.on = false; L.b.classList.remove('on'); } continue; }
-      const G = GEO[id]; _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 15 : 7.5), G.c[1]).project(camera);
+      const G = GEO[id]; _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 14 : 4.5), G.c[1]).project(camera);
       const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z}); }
     items.sort((a, b) => a.z - b.z);
     for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h; let x = clamp(it.x, F.l + w / 2 + 2, F.r - w / 2 - 2), y = clamp(it.y, F.t + h / 2, F.b - h / 2), n = 0;
