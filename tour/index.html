@@ -22338,7 +22338,7 @@ function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES
     try{ const a = anim; if(a && a.kind === 'look'){
         { const fl = walkSurfaceAt(a.to.x, a.to.z, f + .6); if(Math.abs(fl - f) > 1 || r36At(a.to.x, a.to.z, f) === 0){ const q = r36Nearest(x, z, f, 9) || r36Nearest(a.to.x, a.to.z, f, 9);   // the older clearance nudges pushed the spot off the floor or out of the area: stand at the nearest allowed place instead
             if(q){ const dx = q.x - a.to.x, dz = q.z - a.to.z; a.to.x = q.x; a.to.z = q.z; a.to.y = f + EYE; a.toT.x += dx; a.toT.z += dz; feet = f; } } }
-        const k = r36Pathify(a, {faceTravel: auto, pitch: pitch}); if(k === 0 && (Math.hypot(a.to.x - P0.x, a.to.z - P0.z) > 3 || Math.abs(a.to.y - P0.y) > 1.5 || !r36LineClear(P0, a.to))) r36Cut(a, r36WhereAt(a.to.x, a.to.z, feet).name); } }catch(e){ console.warn('[r36 nav] move', e); }
+        const k = r36Pathify(a, {faceTravel: auto, pitch: pitch}); if(k === 0 && (Math.hypot(a.to.x - P0.x, a.to.z - P0.z) > 3 || Math.abs(a.to.y - P0.y) > 1.5 || !r36LineClear(P0, a.to))) r36Cut(a, (r36WhereAt(a.to.x, a.to.z, feet) || {}).name); } }catch(e){ console.warn('[r36 nav] move', e); }
     return r; }; }
 /* walk: 'Walk to' a room = its guided-tour view, level, standing in the walkable area */
 function r36GoRoom(r){
@@ -22370,7 +22370,8 @@ function r36WhereAt(x, z, f){
     if(/CLOSET|STORAGE/.test(s.id) && !/DRESSING/.test(s.id)) return {name: (s.raw && s.raw.name) || s.name || 'Closet', level: lvl, ph: [], key: s.id};
     if(/STAIR/.test(s.id) && ROOM.stairs) return ROOM.stairs; if(id && ROOM[id]) return ROOM[id];
     return {name: R36HALL[s.tourRoom] || (s.raw && s.raw.name) || s.name || 'Hall', level: lvl, ph: [], key: s.id}; }
-  try{ for(const sl of (BIM2S.meta.slabs || [])){ if(sl.interior || Math.abs(sl.z - f) > .8 || !inPoly(sl.outline, z, x)) continue; const id = R36OUT[sl.id]; if(id && ROOM[id]) return ROOM[id]; if(sl.id === 'SL-DK-REAR') return {name: 'Rear deck', level: 'main', ph: (ROOM.entry || {ph: []}).ph, key: sl.id}; } }catch(e){}
+  try{ for(const sl of (BIM2S.meta.slabs || [])){ if(Math.abs(sl.z - f) > .8 || !inPoly(sl.outline, z, x)) continue; if(sl.interior){ if(sl.id === 'SL-DK-LAND' && ROOM.stairs) return ROOM.stairs; continue; } const id = R36OUT[sl.id]; if(id && ROOM[id]) return ROOM[id]; if(sl.id === 'SL-DK-REAR') return {name: 'Rear deck', level: 'main', ph: (ROOM.entry || {ph: []}).ph, key: sl.id}; } }catch(e){}
+  try{ if(bim2InFootprint(x, z, .3)) return ROOM.stairs && Math.hypot(x - ROOM.stairs.at[0], z - ROOM.stairs.at[1]) < 12 ? ROOM.stairs : null; }catch(e){}   // indoors but between spaces (a stair flight, a threshold): the stair, or no change
   let best = null, bd = 1e9; for(const r of ROOMS){ if(r.level !== 'outside') continue; const d = Math.hypot(x - r.at[0], z - r.at[1]); if(d < bd){ bd = d; best = r; } }
   if(z > 3 && best && best.id !== 'street' && ROOM.street) best = ROOM.street;   // the front of the house (drive, walk, steps) is the street side
   return best || ROOMS[0]; }
