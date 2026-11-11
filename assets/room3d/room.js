@@ -246,7 +246,7 @@
       if(m.mid){ _a.lerpVectors(m.from.pos, m.mid, e); _b.lerpVectors(m.mid, m.to.pos, e); rig.pos.lerpVectors(_a, _b, e); } else rig.pos.lerpVectors(m.from.pos, m.to.pos, e);
       rig.at.lerpVectors(m.from.at, m.to.at, e); rig.fov = lerp(m.from.fov, m.to.fov, e); rig.off = [lerp(m.from.off[0], m.to.off[0], e), lerp(m.from.off[1], m.to.off[1], e)];
       if(u >= 1){ rig.move = null; if(m.done) try{ m.done(); }catch(err){ console.error('[room] arrive', err); } } }
-    else if(S.view === 'over' || S.view === 'win'){ const p = orbitPose(); rig.pos.set(...p.pos); rig.at.set(...p.at); rig.fov = p.fov; rig.off = p.off; }
+    else if(S.view === 'over' || S.view === 'win' || S.view === 'title'){ const p = orbitPose(); rig.pos.set(...p.pos); rig.at.set(...p.at); rig.fov = p.fov; rig.off = p.off; }
     else if(S.view === 'room'){ const s = rig.st, k = 1 - Math.exp(-dt * 16); s.yaw += angDiff(s.yaw, s.tyaw) * k; s.pitch += (s.tpitch - s.pitch) * k;
       if(Math.abs(angDiff(s.yaw, s.tyaw)) < 2e-4) s.yaw = s.tyaw; if(Math.abs(s.tpitch - s.pitch) < 2e-4) s.pitch = s.tpitch;
       const p = standPose(); rig.pos.set(...p.pos); rig.at.set(...p.at); rig.fov = p.fov; rig.off = p.off; }
@@ -881,7 +881,7 @@
     return `<ul class="lv">` + LG.LEVELS.map((L, i) => { const b = SAVE.solved[L.id]; return `<li><button type="button" data-lv="${i}" class="${b ? 'done' : ''}">${i + 1}. ${esc(L.title)}<small>${b ? 'Solved in ' + fmtT(b.time) : L.guests.length + ' to place'}</small></button></li>`; }).join('') +
       `<li><button type="button" data-lv="daily" class="${SAVE.solved[dk] ? 'done' : ''}">Today’s guest list<small>${SAVE.solved[dk] ? 'Solved in ' + fmtT(SAVE.solved[dk].time) : 'A new one every day'}</small></button></li></ul>`; }
   function nextLevel(){ const i = LG.LEVELS.findIndex(L => !SAVE.solved[L.id]); return i < 0 ? 'daily' : i; }
-  function titleCard(){ closeCard(); const first = !Object.keys(SAVE.solved).length, nx = nextLevel();
+  function titleCard(){ closeCard(); try{ orbitFit(); }catch(e){} const first = !Object.keys(SAVE.solved).length, nx = nextLevel();
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">A logic puzzle inside a real house</p><h2 id="rfeH">Room for Everyone</h2>
       <p class="lede">Guests are on their way to 118 Hillside Drive, and every one of them has asked for something. Work out who sleeps where. Some of what you need is written in the clues. The rest you find by going into the rooms and looking.</p>
       <ul class="how"><li>${ICO.bed}Tap a guest, then a room</li><li>${ICO.house}Tap a room on its own to go inside</li><li>${ICO.ring}Tap gold rings and drag the sun to see what a room has</li></ul>
@@ -890,7 +890,7 @@
       <p class="foot">Five puzzles and a new one every day, each with exactly one answer. The house is real: 118 Hillside Drive in Woodside, California, and it is for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day.</p></div>`);
     document.body.appendChild(c); bindSnd0(); const go = v => { SND.unlock(); SND.tap(); introCard(v === 'daily' ? LG.daily(LG.dayNumber(new Date())) : LG.LEVELS[v]); };
     $('#rfeGo').onclick = () => go(nx); $$('#rfeCard .lv button').forEach(b => b.onclick = () => go(b.dataset.lv === 'daily' ? 'daily' : +b.dataset.lv)); try{ $('#rfeGo').focus({preventScroll: true}); }catch(e){} }
-  function introCard(L){ closeCard(); if(!L){ titleCard(); return; } const i = LG.LEVELS.indexOf(L);
+  function introCard(L){ closeCard(); if(!L){ titleCard(); return; } try{ orbitFit(); }catch(e){} const i = LG.LEVELS.indexOf(L);
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">${i >= 0 ? 'Puzzle ' + (i + 1) + ' of ' + LG.LEVELS.length : new Date().toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})}</p><h2 id="rfeH">${esc(L.title)}</h2>
       <p class="lede">${esc(L.story)}</p>
       <ul class="who">${L.guests.map(g => `<li><span class="em" style="background:${LG.GUESTS[g].col}">${gIco(g)}</span><span><b>${esc(nmOf(g))}</b>${esc(LG.GUESTS[g].bio)}</span></li>`).join('')}</ul>
