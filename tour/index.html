@@ -26,12 +26,40 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://118hillside.com/tour/#page","url":"https://118hillside.com/tour/","name":"3D Tour of 118 Hillside Drive, Woodside, CA","description":"Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.","inLanguage":"en-US","primaryImageOfPage":"https://118hillside.com/images/tour-share.jpg","isPartOf":{"@type":"WebSite","@id":"https://118hillside.com/#website","url":"https://118hillside.com/","name":"118 Hillside Drive, Woodside"},"about":{"@type":"SingleFamilyResidence","@id":"https://118hillside.com/#residence","name":"118 Hillside Drive, Woodside, CA 94062","address":{"@type":"PostalAddress","streetAddress":"118 Hillside Drive","addressLocality":"Woodside","addressRegion":"CA","postalCode":"94062","addressCountry":"US"},"url":"https://118hillside.com/"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"118 Hillside Drive","item":"https://118hillside.com/"},{"@type":"ListItem","position":2,"name":"3D Tour of 118 Hillside Drive, Woodside, CA","item":"https://118hillside.com/tour/"}]}}]}</script>
 <!-- seo:end -->
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="preload" as="image" href="../images/front-exterior-800.jpg" fetchpriority="high">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TML59CSLTY"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());var _gi=0;try{var _q=location.search;if(/[?&]internal=1/.test(_q))localStorage.setItem("ga_internal","1");if(/[?&]internal=0/.test(_q))localStorage.removeItem("ga_internal");_gi=localStorage.getItem("ga_internal")==="1";}catch(e){}gtag("config","G-TML59CSLTY",_gi?{traffic_type:"internal"}:{});</script>
 <meta charset="utf-8">
-<script>(function(){ try{ var d = document; if(d.querySelector('meta[name="viewport"]')) return; var m = d.createElement("meta"); m.name = "viewport"; m.content = "width=device-width, initial-scale=1, viewport-fit=cover"; (d.head || d.documentElement).appendChild(m); }catch(e){} })();</script>
+<script>(function(){ try{ var d = document; if(d.querySelector('meta[name="viewport"]')) return; var m = d.createElement("meta"); m.name = "viewport"; m.content = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"; (d.head || d.documentElement).appendChild(m); }catch(e){} })();</script>
+<style id="nz38">/* r38 owner 11/11: the page itself never zooms on a phone (walking in the house is the canvas's own pinch, not page zoom).
+   pan-x pan-y on the root: no pinch-zoom and no double-tap zoom anywhere, one-finger scrolling of panels still works;
+   manipulation on every element (specificity 0, so every existing touch-action rule still wins: the canvas and game layers keep none);
+   form controls at 16px on touch screens so iOS Safari does not zoom in when one is focused. */
+html{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+:where(body,body *){touch-action:manipulation}
+@media (pointer:coarse),(hover:none){input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=button]):not([type=submit]):not([type=reset]):not([type=file]):not([type=image]),select,textarea{font-size:16px!important}}
+</style>
+<script>/* r38 nz38: iOS Safari ignores user-scalable=no, so pinch and double-tap are also stopped here. The 3D canvas is left alone (it has touch-action:none and does its own pinch). */
+(function(){ try{
+  var d = document, last = 0, lx = 0, ly = 0, o = {passive: false, capture: true};
+  var cv = function(t){ return !!(t && t.closest && t.closest('canvas')); };
+  var no = function(e){ if(e.cancelable !== false) e.preventDefault(); };
+  // iOS pinch: Safari's own gesture events (pointer and touch events still reach the canvas)
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(t){ d.addEventListener(t, no, o); });
+  // a two-finger move that did not start on the canvas: no page pinch
+  d.addEventListener('touchmove', function(e){ if(e.touches && e.touches.length > 1 && !cv(e.target)) no(e); }, o);
+  // a quick second tap on plain text or a panel background (not a control, not the canvas): no double-tap zoom. Controls are covered by touch-action and keep their clicks.
+  d.addEventListener('touchend', function(e){
+    var c = e.changedTouches && e.changedTouches[0]; if(!c || (e.touches && e.touches.length)){ last = 0; return; }
+    var now = Date.now(), dbl = now - last < 350 && Math.abs(c.clientX - lx) < 40 && Math.abs(c.clientY - ly) < 40, t = e.target;
+    last = dbl ? 0 : now; lx = c.clientX; ly = c.clientY;
+    if(!dbl || !t || t.nodeType !== 1 || cv(t)) return;
+    if(t.closest('a,button,input,select,textarea,label,summary,option,video,audio,img,[role],[onclick],[tabindex],[contenteditable]')) return;
+    var s = getComputedStyle(t); if(!/^(auto|default|text)$/.test(s.cursor) || s.touchAction === 'none') return;
+    no(e);
+  }, o);
+}catch(e){} })();</script>
 <script>/* v22 boot22 B1: boot JSON downloads start before the page is parsed (bimtools/patch_v22_boot22.py) */
 (function(){ try{
   var href = location.href, has = function(k){ return href.indexOf(k) >= 0; };
@@ -78,7 +106,7 @@
   --paper:#161a1c; --paper-2:#20262a; --ink:#eef0ec; --muted:#9ca6a8; --line:rgba(238,240,236,.16);
   --accent:#b8c58a; --accent-ink:#11150c; --glass:rgba(22,26,28,.88); --scrim:rgba(6,8,9,.9); --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark }
 
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;height:100dvh;overflow:hidden}
 body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45}
 #app{position:relative;height:100%;width:100%;overflow:hidden;background:#cfd8de}
 #c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
@@ -184,7 +212,7 @@ html.ph .navkeys{display:none}
 .design .lrow{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink);margin-bottom:6px}
 .design .lrow select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:3px 6px;margin-left:4px}
 .card{max-height:calc(100% - 150px);overflow-y:auto;overscroll-behavior:contain}
-@media (max-width:720px){ .card{max-height:50vh} #pad.pad{top:calc(max(12px, env(safe-area-inset-top,0px)) + 150px);transform:none} }
+@media (max-width:720px){ .card{max-height:50vh;max-height:50dvh} #pad.pad{top:calc(max(12px, env(safe-area-inset-top,0px)) + 150px);transform:none} }
 .collapse{position:absolute;right:8px;top:6px;width:28px;height:28px;border-radius:3px;display:grid;place-items:center;color:var(--muted)}
 .card.min .body{display:none}
 
@@ -348,7 +376,7 @@ html.ph .navkeys{display:none}
   .qbtn .ql{display:none}
   .qbtn{padding:8px 7px;gap:4px}
   .qbtn .qv{font-size:12px;max-width:64px;overflow:hidden;text-overflow:ellipsis}
-  .qhint{top:auto;bottom:calc(52vh + 10px)}
+  .qhint{top:auto;bottom:calc(52vh + 10px);bottom:calc(52dvh + 10px)}
 }
 @media (max-width: 420px){
   .qrow{gap:6px}
@@ -426,7 +454,7 @@ html.uidle27 .g28pill:not(.on),html.clean27 .g28pill:not(.on){opacity:0!importan
 .g28card .bt{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .g28card button{min-height:48px;padding:0 18px;border-radius:999px;border:0;font:700 16px/1 var(--f-ui,system-ui);cursor:pointer;background:rgba(255,255,255,.14);color:inherit}
 .g28card button.go{background:var(--busy-accent,#ff8a2a);color:#1a0d03}
-.g28menu .gl{display:flex;flex-direction:column;gap:8px;margin-top:6px;max-height:60vh;overflow:auto}
+.g28menu .gl{display:flex;flex-direction:column;gap:8px;margin-top:6px;max-height:60vh;max-height:60dvh;overflow:auto}
 .g28menu .gi{display:flex;align-items:center;gap:12px;text-align:left;min-height:56px;padding:8px 14px;border-radius:14px;background:rgba(255,255,255,.12)}
 .g28menu .gi .ic{font-size:28px;line-height:1} .g28menu .gi b{display:block;font:700 16px/1.2 var(--f-ui,system-ui)} .g28menu .gi i{display:block;font:500 13px/1.25 var(--f-ui,system-ui);font-style:normal;opacity:.8}
 .g28menu .gi:hover,.g28menu .gi:focus-visible{background:var(--busy-accent,#ff8a2a);color:#1a0d03}
@@ -1215,7 +1243,7 @@ html.dn33on .wpl,html.dn33on #cv27,html.dn33on #toggles,html.dn33on #pad,html.dn
 .ph #prev::before,.ph #next::before{content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;margin:-5px 0 0 -3px;transform:rotate(45deg)}
 .ph #next::before{margin-left:-7px;transform:rotate(-135deg)}
 .ph #prev[disabled],.ph #next[disabled]{opacity:.32}
-.ph .card .body{grid-area:body;max-height:min(40vh, 320px);overflow-y:auto;overscroll-behavior:contain;padding:0 8px 2px}
+.ph .card .body{grid-area:body;max-height:min(40vh, 320px);max-height:min(40dvh, 320px);overflow-y:auto;overscroll-behavior:contain;padding:0 8px 2px}
 .ph .card p{padding:6px 2px 0;font-size:14px;line-height:1.45;color:var(--pt);max-width:none}
 .ph .card p#blurb:not(.phall){display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;cursor:pointer}
 .ph .card p a,.ph .modelfiles{color:var(--pm)}
@@ -1274,7 +1302,7 @@ html.dn33on .wpl,html.dn33on #cv27,html.dn33on #toggles,html.dn33on #pad,html.dn
 /* landscape phone: a narrower sheet on the left, more of the view */
 @media (max-height: 500px){
   .ph .card{width:min(430px, 56vw)}
-  .ph .card .body{max-height:calc(100vh - 190px)}
+  .ph .card .body{max-height:calc(100vh - 190px);max-height:calc(100dvh - 190px)}
   .ph .phtoast{top:46%}
 }
 @media (prefers-reduced-motion: reduce){ .ph .phtoast,.ph #treesBtn::after,.ph #furnBtn::after{transition:none} }
@@ -1636,7 +1664,7 @@ html .design .opt[aria-checked="true"] small{color:var(--accent-ink)}
 /* ---- U3 desktop View menu: the quick-control group (#phMenu) as a dropdown under "View" ---- */
 html.ph #viewBtn,html.ph #fsBtn{display:none!important}
 html:not(.ph) .qrow{display:none;position:fixed;z-index:31;top:var(--vtop27,62px);right:max(16px, env(safe-area-inset-right,0px));margin:0;width:262px;max-width:calc(100vw - 32px);
-  max-height:calc(100vh - var(--vtop27,62px) - 16px);overflow-y:auto;overscroll-behavior:contain;flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:1px;
+  max-height:calc(100vh - var(--vtop27,62px) - 16px);max-height:calc(100dvh - var(--vtop27,62px) - 16px);overflow-y:auto;overscroll-behavior:contain;flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:1px;
   padding:6px;border-radius:14px;background:none;isolation:isolate;border:1px solid var(--rim27);
   box-shadow:0 2px 4px rgba(40,30,20,.06),0 16px 40px rgba(40,30,20,.20);color:var(--ink)}
 /* the frosted ground is a pseudo-element: backdrop-filter on .qrow itself would make it the containing block of the fixed pickers */
