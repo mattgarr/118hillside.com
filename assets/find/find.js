@@ -184,7 +184,8 @@
     $('#fndGo').onclick = () => { c.remove(); ac(); S.started = true; S.daily = !dailyDone; hide(S.daily ? rng(dayNum * 7919 + 13) : rng(Math.floor(Math.random() * 1e9))); S.roomIx--; go(1); ga('find_start', {daily: S.daily}); }; }
   function boot(){ try{ H.setTOD('midday'); }catch(e){} makeCat(() => { buildUI(); requestAnimationFrame(frame);
     const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); startCard(); } }); mo.observe(document.body, {childList: true}); } else startCard(); }); }
-  const ld = document.getElementById('loading');
-  if(ld && !ld.classList.contains('done')) new MutationObserver((m, o) => { if(ld.classList.contains('done')){ o.disconnect(); setTimeout(boot, 300); } }).observe(ld, {attributes: true, attributeFilter: ['class']}); else setTimeout(boot, 300);
+  // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
+  (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
+    if((fr > 8 && !up) || n > 240) setTimeout(boot, 900); else setTimeout(() => wait(n + 1), 250); })(0);
   window.FINDCAT = {S, spot: () => SPOT, rooms: ROOMS.map(r => r.s.id), hideIn(id, seed){ const room = ROOMS.find(q => q.s.id === id), sp = castSpot(room.s, rng(seed || 5)); if(!sp) return null; SPOT = Object.assign(sp, {room}); CAT.position.copy(SPOT.p); CAT.visible = true; S.found = false; S.t0 = performance.now(); return SPOT.p.toArray(); }, found, heatNow, go};
 })();

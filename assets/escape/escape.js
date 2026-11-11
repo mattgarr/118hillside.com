@@ -338,7 +338,8 @@
   function boot(){ loadSnowball(() => { try{ buildUI(); buildEasy(); applyHour(L.start, true); setSlider(L.start); makeCat(); }catch(e){ console.error('[escape] build', e); }
     requestAnimationFrame(frame); const go = () => startCard();
     const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); go(); } }); mo.observe(document.body, {childList: true}); } else go(); }); }
-  const ld = document.getElementById('loading');
-  if(ld && !ld.classList.contains('done')) new MutationObserver((m, o) => { if(ld.classList.contains('done')){ o.disconnect(); setTimeout(boot, 300); } }).observe(ld, {attributes: true, attributeFilter: ['class']}); else setTimeout(boot, 300);
+  // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
+  (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
+    if((fr > 8 && !up) || n > 240) setTimeout(boot, 900); else setTimeout(() => wait(n + 1), 250); })(0);
   window.ESCAPE = {S, ITEMS: () => ITEMS, applyHour, setSlider, PATCH, win, hint, sunDir, interact: id => interact(ITEMS.find(i => i.id === id)), catAt};
 })();
