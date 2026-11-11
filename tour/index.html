@@ -9241,7 +9241,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=35' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=36' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
@@ -21493,6 +21493,195 @@ function bim3FurnClear(){
   if(wall.length) console.info('[bim3] furnishings crossing a wall body:', wall.join(', '));
   return wall; }
 if(typeof settleStaging === 'function'){ const _b3ss = settleStaging; settleStaging = function(){ const r = _b3ss.apply(this, arguments); try{ bim3FurnClear(); }catch(e){ console.warn('[bim3] furn clear', e); } return r; }; }
+/* ================= front35: the front yard as built (r35) ==========================================================================
+   Source: the listing photos (p03 dusk court, p66 from the great room, p70 from the street) and the owner's Nov 2026 phone photos.
+   The C-6 civil trace drew a narrow walk and a triangular bed; what was built is one paver court: the full apron in front of the
+   garage, the strip down the south side of the garage, the court in front of the porch steps and a walk that passes the oak on the
+   house side and flares to the street. The oak stands in a gravel teardrop that runs out to the asphalt (owner 11/10: gravel on the
+   island and the street strip, as in the recent photos); the bed under the picture windows is bark mulch with spaced shrubs.
+   World frame here: [x, z] feet (x = BIM y, z = BIM x; the street is +z, the garage is -x).
+   F1 outline   - F35.runs: straight runs and splines (true curves, sampled every 0.4 ft); it replaces the C-6 driveway trace, the R/W
+                  apron and the typed R/W walk in TERR.paved (the rear terrace is untouched). pavSmooth passes it through unchanged.
+   F2 cover     - a second, fine cover map over the frontage only (25.6 px/ft; the site cover is 3.4 px/ft), drawn from the same
+                  vectors: pavers / gravel / bark / asphalt. It starts as a copy of the site cover, so nothing changes at its border.
+                  The paver courses run parallel to the garage door here, as laid.
+   F3 border    - one soldier course inside the outline wherever the paving meets planting, gravel or the street; none at the
+                  house, the garage or the steps (owner rule pavers22). Same material as the rear band.
+   F4 drain     - the trench drain across the garage door (p03).
+   F5 planting  - (kept clear of the Deck the House luminaria line x = .5 / the street rows) the shrubs in the photos, one by one (LAND.make): rosemary at the deck corner, white shrub roses, lavender and the
+                  young olive under the picture windows; lavender and a white rose on the oak island. Replaces the scattered P10 shrubs.
+   F6 flagstone - typed flagstones that would lie on the new walk are dropped (whole stones).
+   F7 oak       - the front oak leans hard toward the garage (p70, p66 and both phone photos: about 22 deg), splits at ~11 ft and
+                  carries its long limb over the drive; its bark is lifted to the grey-brown of the photos (this tree's own vertex
+                  colours only). Report: window.__F35. */
+const F35 = window.__F35 = {on: true, built: false, streetZ: 56.11, bandW: .68, lift: .055,
+  rect: [-45.1171875, -4.6875, 34.86328125, 58.0078125],   // x0, z0, x1, z1: on site-cover texel boundaries (2048 px over 600 ft)
+  runs: [
+    {k: 'wall', p: [[-25.77, -1.6], [-25.77, 22.84]]},                                         // south wall of the garage
+    {k: 'wall', p: [[-25.77, 22.84], [-10.17, 22.84]]},                                        // garage door wall
+    {k: 'wall', p: [[-10.17, 22.84], [-10.17, 19.8]]},
+    {k: 'wall', p: [[-10.17, 19.8], [0, 19.8]]},                                               // foot of the porch steps
+    {k: 'band', curve: true, p: [[0, 19.8], [.05, 22], [.25, 25.5], [.8, 29.2], [1.55, 32.8], [2.35, 35.6], [3.3, 37.3], [4.2, 38.5], [4.6, 40.2], [4.95, 42.6], [5.8, 47], [7.1, 52], [8.2, 56.11]]},   // bed under the picture windows, then the walk's north edge
+    {k: 'band', p: [[8.2, 56.11], [.3, 56.11]]},                                               // walk at the street
+    {k: 'band', curve: true, p: [[.3, 56.11], [-.8, 51.5], [-2.1, 46.5], [-2.8, 41.5], [-3.2, 37.2], [-3.9, 33.7], [-4.9, 31.6], [-5.9, 30.5], [-7.2, 30.2], [-8.3, 30.9], [-8.95, 32.4], [-9.6, 34.6], [-10.9, 38.5], [-12.4, 43], [-13.1, 47.5], [-12.7, 52], [-12, 56.11]]},   // round the oak island
+    {k: 'band', p: [[-12, 56.11], [-34.6, 56.11]]},                                            // apron at the street
+    {k: 'band', p: [[-34.6, 56.11], [-35.5, 44], [-36.3, 24], [-36.3, -1.6]]},                 // south edge, beside the fence strip
+    {k: 'plain', p: [[-36.3, -1.6], [-25.77, -1.6]]}],
+  drain: {x0: -24.3, x1: -11.6, z: 23.95, w: .42},
+  fence: [[-38.3, -4.7], [-38.85, 22.8], [-41.1, 44], [-42.3, 58.1]],                         // bark between the paving and the south fence
+  plants: [
+    ['rosemary', 2.7, 17.4, {w: 2.4, h: 3, habit: 'upright', seed: 3}],
+    ['azalea', 2.4, 20.3, {w: 2.2, h: 2, color: 'white', seed: 2}],
+    ['lavender', 2.4, 22.7, {w: 2.2, h: 2.5, seed: 5}],
+    ['azalea', 2.6, 25.1, {w: 2.4, h: 2.2, color: 'white', seed: 7}],
+    ['dwarfOlive', 2.75, 27.9, {w: 2.2, h: 5, seed: 4}],   // the young olive: the shrub form stays inside the bed (the tree kind's crown is ~7 ft whatever w is)
+    ['azalea', 3.2, 31.6, {w: 2.2, h: 2, color: 'white', seed: 9}],
+    ['lavender', 3.5, 35.2, {w: 1.9, h: 2.1, seed: 11}],
+    ['lavender', -7.4, 33.7, {w: 2.2, h: 2.3, seed: 21}],
+    ['azalea', -5.5, 34.6, {w: 1.8, h: 1.6, color: 'white', seed: 22}],
+    ['lavender', -7.9, 38, {w: 2.6, h: 2.6, seed: 23}],
+    ['lavender', -9.6, 44.2, {w: 2, h: 2.1, seed: 24}],
+    ['lavender', -9.7, 40.4, {w: 2.1, h: 2.2, seed: 25}]],
+  tone: new THREE.Vector3(.45, .55, 1), pav: new THREE.Vector2(1.3, .45),   // front pavers: desaturate / contrast / gain; unit scale (6 and 9 in. cobbles) / tumbled mottle
+  oak: {lean: {dir: [-.85, -.5], amount: .4}, trunkBias: {dir: [-.6, -.8], amount: .3}, trunkHeight: 11, bark: 1.7}, report: {}};
+function f35Spline(P, step){   // uniform Catmull-Rom through P
+  const out = [], n = P.length, g = i => P[Math.max(0, Math.min(n - 1, i))];
+  for(let i = 0; i < n - 1; i++){ const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2), k = Math.max(2, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
+    for(let j = 0; j < k; j++){ const t = j / k, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map(c => .5 * (2 * p1[c] + (p2[c] - p0[c]) * t + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t2 + (3 * p1[c] - p0[c] - 3 * p2[c] + p3[c]) * t3))); } }
+  out.push(P[n - 1].slice()); return out; }
+function f35Outline(){   // {P: closed outline (world [x, z]), kind[i]: run kind of the segment P[i] -> P[i + 1], run[i]: run index}
+  const P = [], kind = [], run = [];
+  F35.runs.forEach((r, ri) => { let q;
+    if(r.curve) q = f35Spline(r.p, .4);
+    else { q = []; for(let i = 0; i < r.p.length - 1; i++){ const a = r.p[i], b = r.p[i + 1], k = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / .5)); for(let j = 0; j < k; j++) q.push([a[0] + (b[0] - a[0]) * j / k, a[1] + (b[1] - a[1]) * j / k]); } q.push(r.p[r.p.length - 1].slice()); }
+    for(let i = 0; i < q.length - 1; i++){ P.push(q[i]); kind.push(r.k); run.push(ri); } });
+  let A = 0; for(let i = 0; i < P.length; i++){ const a = P[i], b = P[(i + 1) % P.length]; A += a[0] * b[1] - b[0] * a[1]; }
+  return {P, kind, run, sg: A > 0 ? 1 : -1}; }
+function f35PlanPoly(){ const poly = [];   // BIM plan [x, y] for the site rules and the coarse cover: run corners, curves at 1.2 ft
+  for(const r of F35.runs){ const q = r.curve ? f35Spline(r.p, 1.2) : r.p; for(let i = 0; i < q.length - 1; i++) poly.push([q[i][1], q[i][0]]); }
+  poly.f35 = true; return poly; }
+function f35Is(pa){ return !!(pa && (pa.f35 || (pa.polygon && pa.polygon.f35) || (pa.P && pa.P.f35))); }
+function f35Install(){   // F1: the as-built field takes the place of the front traces in TERR.paved
+  if(!F35.on || !(TERR && TERR.paved)) return false;
+  F35.O = f35Outline(); const poly = f35PlanPoly();
+  const front = pa => !f35Is(pa) && (pa.typedId === 'HS-WALK-FRONT-ROW' || pa.polygon.reduce((s, p) => s + p[0], 0) / pa.polygon.length > 5);   // BIM x > 5: street side of the house
+  F35.report.replaced = TERR.paved.filter(front).map(pa => pa.name);
+  TERR.paved = TERR.paved.filter(pa => !front(pa) && !f35Is(pa)); TERR.paved.unshift({name: 'driveway court + front walk (pavers, as built r35)', polygon: poly, f35: true});
+  PAV_BEDS = null; PAV_PADS = null; return true; }
+{ const _ps = pavSmooth; pavSmooth = function(P0){ return P0 && P0.f35 ? P0 : _ps.apply(this, arguments); }; }
+{ const _pf = pavFields; pavFields = function(){ const F = _pf.apply(this, arguments); return F35.banding ? F.filter(f => !f.P.f35) : F; }; }
+{ const _pb = buildPaverBand; buildPaverBand = function(){ F35.banding = true; try{ return _pb.apply(this, arguments); } finally { F35.banding = false; } }; }   // the front field carries its own border (F3)
+{ const _pp = pavBedPlants; pavBedPlants = function(){ if(!F35.on || !F35.O) return _pp.apply(this, arguments); try{ return f35Plants(); }catch(e){ console.warn('[front35] plants', e); return null; } }; }
+{ const _sct = siteCoverTexture; siteCoverTexture = function(){ const t = _sct.apply(this, arguments); F35.lo = t; return t; }; }
+function f35CoverTexture(){   // F2: the frontage cover, RGB = asphalt / gravel / bark weights, black = pavers, white = none (the orthophoto shows)
+  const [x0, z0, x1, z1] = F35.rect, coarse = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches), S = coarse ? 12.8 : 25.6, W = Math.round((x1 - x0) * S), H = Math.round((z1 - z0) * S);
+  const cv = F35.cv || (F35.cv = document.createElement('canvas')); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  const lo = F35.lo && F35.lo.image; if(lo && lo.data){   // start from the site cover so the two agree where this one is not redrawn
+    const N = lo.width, SL = N / 600, j1 = Math.round((300 - x0) * SL) - 1, i0 = Math.round((z0 + 300) * SL), w = Math.round((x1 - x0) * SL), h = Math.round((z1 - z0) * SL);
+    const sm = document.createElement('canvas'); sm.width = w; sm.height = h; const sg = sm.getContext('2d'), im = sg.createImageData(w, h), d = lo.data;
+    for(let b = 0; b < h; b++) for(let a = 0; a < w; a++){ const q = ((j1 - a) * N + i0 + b) * 4, o = (b * w + a) * 4, none = Math.max(0, 255 - d[q] - d[q + 1] - d[q + 2] - d[q + 3]);
+      im.data[o] = Math.min(255, d[q] + none); im.data[o + 1] = Math.min(255, d[q + 1] + none); im.data[o + 2] = Math.min(255, d[q + 2] + none); im.data[o + 3] = 255; }
+    sg.putImageData(im, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(sm, 0, 0, W, H); }
+  g.setTransform(S, 0, 0, S, -x0 * S, -z0 * S); g.lineJoin = 'round'; g.lineCap = 'butt';
+  const path = (pts, close) => { g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); if(close) g.closePath(); };
+  const O = F35.O, P = O.P, n = P.length, ZS = F35.streetZ, MULCH = '#00f', GRAVEL = '#0f0', ASPH = '#f00', PAV = '#000';
+  const runPts = k => { const out = []; for(let i = 0; i < n; i++) if(O.run[i] === k) out.push(P[i]); out.push(P[(O.run.lastIndexOf(k) + 1) % n]); return out; };
+  // bark: the strip along the south fence, and the bed between the picture-window wall and the paving
+  { const f = F35.fence, e = F35.runs[8].p; g.fillStyle = MULCH; path(f.concat([[e[0][0], f[f.length - 1][1]]], e, [[e[e.length - 1][0], f[0][1]]]), true); g.fill(); }
+  { const e = runPts(4).filter(p => p[1] <= 40.4); g.fillStyle = MULCH; path(e.concat([[5.4, 40.4], [5.4, 37.2], [4.8, 37], [4.8, 15.4], [-.2, 15.4], [-.2, 19.8]]), true); g.fill(); }
+  // gravel: the oak island out to the street
+  { const e = runPts(6); g.fillStyle = g.strokeStyle = GRAVEL; path(e, true); g.fill(); g.lineWidth = .3; g.stroke(); }
+  { const e = runPts(4).filter(p => p[1] >= 40.2); g.fillStyle = GRAVEL; path(e.concat(e.slice().reverse().map(p => [p[0] + 2.6, p[1]])), true); g.fill(); }   // gravel north of the walk
+  // pavers: the field, carried under the walls and the bottom step
+  g.fillStyle = g.strokeStyle = PAV; path(P, true); g.fill();
+  g.lineWidth = 1.1; for(let k = 0; k < F35.runs.length; k++) if(F35.runs[k].k === 'wall'){ path(runPts(k)); g.stroke(); }
+  // street: a straight asphalt edge
+  g.fillStyle = ASPH; g.fillRect(x0, ZS, x1 - x0, z1 - ZS);
+  let t = F35.tex; if(!t){ t = F35.tex = new THREE.CanvasTexture(cv); t.flipY = false; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = ANISO; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; }
+  t.needsUpdate = true; F35.report.cover = W + ' x ' + H + ' px, ' + S + ' px/ft'; return t; }
+{ const _scm = siteCoverMaterial; siteCoverMaterial = function(mat){ const r = _scm.apply(this, arguments); if(!F35.on || !F35.O) return r;
+    let tex = null; try{ tex = f35CoverTexture(); }catch(e){ console.warn('[front35] cover', e); } if(!tex) return r;
+    const ob = mat.onBeforeCompile, [x0, z0, x1, z1] = F35.rect;
+    mat.onBeforeCompile = sh => { ob(sh);
+      const kA = 'vec3 s2l(vec3 c){ return pow(c, vec3(2.2)); }', kB = 'vec4 cw = texture2D(sCover, vec2((vSW.z + 300.0) / 600.0, (300.0 - vSW.x) / 600.0));', kC = 's2l(texture2D(sPav, wq * rPav).rgb)', fs = sh.fragmentShader;
+      if(!(fs.includes(kA) && fs.includes(kB) && fs.includes(kC) && fs.includes('vec3 dt = ') && fs.includes(' dl = '))){ console.warn('[front35] cover shader anchors not found'); F35.report.shader = false; return; }
+      Object.assign(sh.uniforms, {sCoverF: {value: tex}, f35R: {value: new THREE.Vector4(x0, z0, x1 - x0, z1 - z0)}, f35T: {value: F35.tone}, f35P: {value: F35.pav}});
+      sh.fragmentShader = fs.replace(kA, kA + `
+uniform sampler2D sCoverF; uniform vec4 f35R; uniform vec3 f35T; uniform vec2 f35P;
+vec3 f35Tone(vec3 c){ float l = dot(c, vec3(.3, .55, .15)); return clamp((mix(c, vec3(l), f35T.x) - .5) * f35T.y + .5, 0.0, 1.0) * f35T.z; }`).replace(kB, kB + `
+  vec2 f35q = (vSW.xz - f35R.xy) / f35R.zw, f35e = smoothstep(vec2(0.0), vec2(.012), f35q) * smoothstep(vec2(0.0), vec2(.012), 1.0 - f35q);
+  float f35k = f35e.x * f35e.y;
+  { vec3 fc = texture2D(sCoverF, clamp(f35q, 0.0, 1.0)).rgb; float fn = min(fc.r, min(fc.g, fc.b));
+    cw = mix(cw, vec4(fc - fn, max(0.0, 1.0 - fc.r - fc.g - fc.b + 2.0 * fn)), f35k); }`).replace(kC, 's2l(mix(texture2D(sPav, wq * rPav).rgb, f35Tone(texture2D(sPav, vSW.xz * rPav * f35P.x).rgb) * (1.0 + clamp(dot(dt - dl, vec3(.33)) * f35P.y, -.22, .22)), f35k))');
+      F35.report.shader = true; };
+    mat.customProgramCacheKey = () => 'siteCover1f35'; mat.needsUpdate = true; return r; }; }
+function f35Band(){   // F3: one soldier course just inside the outline, draped on the grade
+  const O = F35.O, P = O.P, n = P.length, W = F35.bandW, EPS = .04, pos = [], uv = [], nor = [], idx = [];
+  const en = i => { const a = P[i], b = P[(i + 1) % n], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [-(b[1] - a[1]) / l * O.sg, (b[0] - a[0]) / l * O.sg]; };   // inward
+  const isB = i => O.kind[(i + n) % n] === 'band';
+  let s = 0, ft = 0; const U = 1 / (16 * .6);
+  const vn = (i, seg) => { const j = (i + n - 1) % n; if(isB(i) && isB(j)){ const a = en(j), b = en(i); let x = a[0] + b[0], z = a[1] + b[1]; const l = Math.hypot(x, z) || 1; x /= l; z /= l; const c = Math.max(.5, x * b[0] + z * b[1]); return [x / c, z / c]; } return en(seg); };
+  for(let i = 0; i < n; i++){ const i1 = (i + 1) % n, L = Math.hypot(P[i1][0] - P[i][0], P[i1][1] - P[i][1]); if(!isB(i)){ s += L; continue; } ft += L;
+    const n0 = vn(i, i), n1 = vn(i1, i), b = pos.length / 3;
+    for(const [p, m, u] of [[P[i], n0, s], [P[i1], n1, s + L]]) for(const [d, v] of [[-EPS, 0], [W, 1]]){ const x = p[0] + m[0] * d, z = p[1] + m[1] * d; pos.push(x, ground(x, z) + F35.lift, z); uv.push(u * U, v); nor.push(0, 1, 0); }
+    const up = (pos[b * 3 + 5] - pos[b * 3 + 2]) * (pos[b * 3 + 6] - pos[b * 3]) - (pos[b * 3 + 3] - pos[b * 3]) * (pos[b * 3 + 8] - pos[b * 3 + 2]) > 0;   // (v1 - v0) x (v2 - v0), y part
+    if(up) idx.push(b, b + 1, b + 2, b + 2, b + 1, b + 3); else idx.push(b, b + 2, b + 1, b + 2, b + 3, b + 1); s += L; }
+  if(!idx.length) return null;
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeBoundingSphere();
+  const rear = grp('land').children.find(o => o.name === 'paver-band');
+  const mat = F35.bandMat || (F35.bandMat = rear ? rear.material : new THREE.MeshStandardMaterial({map: paverBandTexture(), color: 0xf2f0ea, roughness: .95, metalness: 0, polygonOffset: true, polygonOffsetFactor: -.5, polygonOffsetUnits: -10}));
+  const m = new THREE.Mesh(geo, mat); m.name = 'paver-band-front'; m.receiveShadow = true; m.castShadow = false; F35.report.band = ft.toFixed(0) + ' ft'; return m; }
+function f35Drain(){   // F4: cast-iron trench grate in a slim frame, 5 in wide, across the garage door
+  const D = F35.drain, cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const g = cv.getContext('2d');
+  g.fillStyle = '#4a4b4c'; g.fillRect(0, 0, 128, 64); g.fillStyle = '#2b2c2d'; g.fillRect(0, 7, 128, 50);
+  g.fillStyle = '#0a0a0b'; for(let x = 6; x < 128; x += 16){ g.fillRect(x, 12, 5, 17); g.fillRect(x + 8, 35, 5, 17); }
+  g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(0, 7, 128, 2); g.fillRect(0, 31, 128, 2);
+  const t = new THREE.CanvasTexture(cv); t.wrapS = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; t.anisotropy = ANISO;
+  const pos = [], uv = [], nor = [], idx = [], k = Math.ceil(D.x1 - D.x0), y = Math.max(ground(D.x0, D.z), ground((D.x0 + D.x1) / 2, D.z), ground(D.x1, D.z)) + F35.lift + .012;
+  for(let i = 0; i <= k; i++){ const x = D.x0 + (D.x1 - D.x0) * i / k; for(const [dz, v] of [[-D.w / 2, 0], [D.w / 2, 1]]){ pos.push(x, y, D.z + dz); uv.push((x - D.x0) / .9, v); nor.push(0, 1, 0); }
+    if(i < k){ const b = i * 2; idx.push(b, b + 1, b + 2, b + 2, b + 1, b + 3); } }
+  { const b = pos.length / 3; for(let i = 0; i < 3; i++){ pos.push(D.x0, y, D.z + 3.4); uv.push(0, 0); nor.push(0, 1, 0); } idx.push(b, b + 1, b + 2); }   // zero-area: gives the strip a footprint over 40 sq ft, which the games' snow cover asks of a surface
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({map: t, roughness: .62, metalness: .35, polygonOffset: true, polygonOffsetFactor: -.5, polygonOffsetUnits: -10, side: THREE.DoubleSide}));
+  m.material.name = 'front35Drain'; m.name = 'paver-band-front-drain';   /* a paver-band name: the games' snow cover takes it with the border */ m.receiveShadow = true; return m; }
+function f35Plants(){   // F5
+  const g = new THREE.Group(); g.name = 'pavBedPlants'; g.userData.probeSkip = true; g.userData.f35 = true; let n = 0;
+  if(!(window.LAND && LAND.make)) return g;
+  for(const [kind, x, z, o] of F35.plants){ try{ const p = LAND.make(kind, Object.assign({at: [x, z], heightAt: (a, b) => ground(a, b), ry: (o.seed || 1) * 1.7}, o)); p.name = 'f35:' + kind; g.add(p); n++; }catch(e){ console.warn('[front35] plant ' + kind, e); } }
+  F35.report.plants = n; return g; }
+function f35ClipFlagstones(){   // F6: whole typed flagstones whose centre lies on (or within 0.5 ft of) the new paving go
+  const Pw = F35.O.P; let cut = 0, stones = 0; if(!GROUPS.yard) return;
+  GROUPS.yard.traverse(o => { if(!o.isMesh || !/flagstone/i.test(o.name || '') || !o.geometry || !o.geometry.index || Array.isArray(o.material) || o.userData.f35Clip) return; o.userData.f35Clip = true;
+    o.updateMatrixWorld(true); const pa = o.geometry.attributes.position, ix = o.geometry.index.array, v = new THREE.Vector3(), key = new Map(), root = [], W = [];
+    const find = a => { while(root[a] !== a){ root[a] = root[root[a]]; a = root[a]; } return a; };
+    const id = new Int32Array(pa.count);
+    for(let i = 0; i < pa.count; i++){ v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); const k = Math.round(v.x * 50) + ',' + Math.round(v.z * 50); let q = key.get(k); if(q == null){ q = root.length; root.push(q); W.push([v.x, v.z]); key.set(k, q); } id[i] = q; }
+    for(let t = 0; t < ix.length; t += 3){ const a = find(id[ix[t]]), b = find(id[ix[t + 1]]), c = find(id[ix[t + 2]]); root[b] = a; root[find(c)] = a; }
+    const acc = new Map(); for(let q = 0; q < root.length; q++){ const r = find(q), e = acc.get(r) || [0, 0, 0]; e[0] += W[q][0]; e[1] += W[q][1]; e[2]++; acc.set(r, e); }
+    const drop = new Set(); for(const [r, e] of acc){ stones++; const x = e[0] / e[2], z = e[1] / e[2]; if(SITE_RULES.polyD(Pw, x, z) < .5) drop.add(r); }
+    if(!drop.size) return; const nx = ix.slice(); for(let t = 0; t < nx.length; t += 3) if(drop.has(find(id[nx[t]]))) nx[t + 1] = nx[t + 2] = nx[t];   // zero-area: index ranges stay as the model wrote them
+    cut += drop.size; o.geometry = o.geometry.clone(); o.geometry.setIndex(new THREE.BufferAttribute(nx, 1)); });
+  if(stones) F35.report.flagstones = cut + ' of ' + stones + ' stones dropped on the walk'; }
+function f35Build(){   // meshes on top of the painted cover; safe to call again after editing F35 (F35.rebuild())
+  const land = grp('land'); for(const k of ['band', 'drainM']){ if(F35[k]){ land.remove(F35[k]); F35[k].geometry.dispose(); F35[k] = null; } }
+  try{ F35.band = f35Band(); if(F35.band) land.add(F35.band); }catch(e){ console.warn('[front35] band', e); }
+  try{ F35.drainM = f35Drain(); land.add(F35.drainM); }catch(e){ console.warn('[front35] drain', e); }
+  try{ f35ClipFlagstones(); }catch(e){ console.warn('[front35] flagstones', e); }
+  F35.built = true; SITE_RULES.checks.front35 = Object.entries(F35.report).map(([k, v]) => k + ' ' + (Array.isArray(v) ? v.length : v)).join(', '); }
+F35.rebuild = function(){ F35.O = f35Outline(); const pa = TERR.paved.find(f35Is); if(pa) pa.polygon = f35PlanPoly(); PAV_PADS = null;
+  f35CoverTexture(); f35Build(); if(PAV_PLANTS && PAV_PLANTS.userData.f35){ const par = PAV_PLANTS.parent; if(par) par.remove(PAV_PLANTS); PAV_PLANTS = f35Plants(); if(par) par.add(PAV_PLANTS); } return F35.report; };
+{ const _bs = buildSite; buildSite = function(){ let ok = false; try{ ok = f35Install(); }catch(e){ console.warn('[front35] install', e); F35.on = false; }
+    const r = _bs.apply(this, arguments); if(ok){ try{ f35Build(); console.info('[front35] ' + JSON.stringify(F35.report)); }catch(e){ console.warn('[front35] build', e); } } return r; }; }
+{ const _lo = lotOakOpts; lotOakOpts = function(t){ const o = _lo.apply(this, arguments);   // F7
+    if(F35.on && t && t.id === 'OAK-FRONT'){ o.lean = F35.oak.lean; o.trunkBias = F35.oak.trunkBias; o.trunkHeight = F35.oak.trunkHeight; o.cacheKey = 'lot:OAK-FRONT:r35'; } return o; }; }
+if(window.TREES && TREES.make && !TREES.make.f35){ const _mk = TREES.make;   // the trees are planted in staged idle tasks: the bark lift rides on the oak's own make (geometry is cached per cacheKey)
+  TREES.make = function(kind, o){ const tr = _mk.apply(this, arguments);
+    try{ if(F35.on && o && o.cacheKey === 'lot:OAK-FRONT:r35'){ const b = tr.children.find(q => q.name === 'bark'), c = b && b.geometry.attributes.color;
+        if(c && c.array instanceof Float32Array && !b.geometry.userData.f35){ b.geometry.userData.f35 = true; for(let i = 0; i < c.array.length; i++) c.array[i] *= F35.oak.bark; c.needsUpdate = true; F35.report.oak = 'lean ' + F35.oak.lean.amount + ', bark x' + F35.oak.bark; } } }catch(e){ console.warn('[front35] oak', e); }
+    return tr; }; TREES.make.f35 = true; }
+/* ================= end front35 ================= */
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
    the model / GLB / IFC. Page rules on top (BIM plan frame, feet):
