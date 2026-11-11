@@ -53,7 +53,7 @@
     coffee:  {name: 'Coffee bar', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [20.6, 9.4],
       note: 'A coffee bar with its own drinks fridge, tucked in beside the kitchen.'},
     great:   {name: 'Great room', pos: [11.2, EYE, 31.95], face: [10.7, 3.3, 22.0], faceLight: [10.95, .9, 24.7], fov: 56, map: [10.4, 28.2],
-      note: 'The kitchen, the dining table and this sitting area share one long room, with butcher-block shelves over the built-in cabinets and a wall of glass.'}};
+      note: 'The kitchen, the dining table and this sitting area share one long room, with butcher-block shelves over the built-in cabinets and large windows along one side.'}};
   const ORDER = ['entry', 'living', 'kitchen', 'coffee', 'great'];
   // walkable graph (x, z at eye height). Plain nodes are corners of the route. Every edge was ray-cast in the model at ankle, knee,
   // counter and eye height across a one-foot-wide path, and all of them are clear of walls and furniture.
@@ -469,7 +469,7 @@
   #escSun .ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin:0 5px;font-variant-numeric:tabular-nums}
   #escSun .ticks span{width:44px;text-align:center}#escSun .ticks span:first-child{text-align:left;margin-left:-5px}#escSun .ticks span:last-child{text-align:right;margin-right:-5px}
   #escDockR{flex:0 0 268px}
-  #escCoach{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 124px);transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
+  #escCoach{position:absolute;left:50%;top:96px;transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
   #escCoach.on{opacity:1;transform:translate(-50%,0)}#escCoach svg{width:26px;height:26px;flex:none}
   #escCoach.look svg{animation:escSwipe 1.8s ease-in-out infinite}@keyframes escSwipe{0%,100%{transform:translateX(-5px)}50%{transform:translateX(5px)}}
   .escMk{position:absolute;left:0;top:0;width:60px;height:60px;margin:-30px 0 0 -30px;border:0;background:none;padding:0;pointer-events:auto;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;will-change:transform}
@@ -543,7 +543,7 @@
     #escMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 24px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
     #escMap.on{display:block}#escMap .plan{width:100%;height:0;padding-bottom:71%}#escMap .pl{font-size:13.5px;padding:7px 11px}#escMapX{display:grid;position:absolute;right:6px;top:4px;width:44px;height:44px;border:0;background:none;place-items:center;font-size:24px;color:var(--mut)}
     #escSun{order:1;max-width:none;margin:0;padding:8px 14px 10px}
-    #escCoach{top:236px;bottom:auto;font-size:14.5px}
+    #escCoach{top:236px;font-size:14.5px}
     #escSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:560px;margin:0 auto;max-height:62vh;transform:translateY(20px);padding:16px 16px 14px}
     #escSheet.on{transform:none}#escSheet h3{font-size:24px}#escSheet p{font-size:15.5px}
     html.esc-ex #escDock{visibility:hidden}html.esc-ex.esc-exsun #escSun{visibility:visible;position:fixed;left:10px;right:10px;bottom:calc(var(--sheet-h,180px) + 18px)}
@@ -681,6 +681,7 @@
     // everything on screen that a marker must not sit on, measured as it is right now
     const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
     add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#escMapBtn') : mapE); add($('#escBtns')); if(sayE.classList.contains('on')) add(sayE); add(sunE);
+    if(coachE.classList.contains('on')) add(coachE);
     const wOf = m => m.w || (m.w = Math.max(40, (m.b.querySelector('span') || {}).offsetWidth || 90));
     const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
@@ -709,7 +710,10 @@
     if(!c.look){ if(S.dragPx > 140){ c.look = true; } else k = 'look'; }
     if(!k && !c.walk) k = 'walk'; if(!k && !c.tap && S.place === 'coffee' && !S.ex) k = 'tap';
     if(S.ex || rig.move || mapOpen() || S.stage !== 'arrive') k = '';
-    if(k && phone()){ const y = Math.round($('#escTop').getBoundingClientRect().bottom + 10) + 'px'; if(coachE.style.top !== y) coachE.style.top = y; } else if(coachE.style.top) coachE.style.top = '';
+    if(k){ let y, x = '';   // the coach line sits in the top bar when there is room between the objective and the buttons; otherwise just under what is at the top
+      if(phone()) y = $('#escTop').getBoundingClientRect().bottom + 10;
+      else { const g = goalE.getBoundingClientRect(), b = $('#escBtns').getBoundingClientRect(); if(b.left - g.right > 360){ y = g.top + 6; x = Math.round((g.right + b.left) / 2) + 'px'; } else y = Math.max(g.bottom, placeE.classList.contains('on') ? placeE.getBoundingClientRect().bottom : 0) + 12; }
+      y = Math.round(y) + 'px'; if(coachE.style.top !== y) coachE.style.top = y; if(coachE.style.left !== x) coachE.style.left = x; }
     if(k === UI.coachK) return; UI.coachK = k; coachE.className = k ? 'on ' + k : '';
     if(k) coachE.innerHTML = k === 'look' ? ICO.drag + '<span>Drag to look around</span>' : k === 'walk' ? ICO.disc + '<span>Tap a white circle to walk there</span>' : ICO.ring + '<span>Tap a gold ring to look closer</span>'; }
 
