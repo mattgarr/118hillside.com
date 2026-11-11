@@ -9,7 +9,7 @@
   var store = { get: function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set: function(k, v){ try{ localStorage.setItem(k, v); }catch(e){} } };
   var seen = store.get('intro28.seen') === '1', t0 = performance.now(), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(L.classList.contains('done')) return;
-  var game = /\/(thanksgiving|halloween)\//.test(location.pathname);
+  var game = /\/(thanksgiving|halloween)\//.test(location.pathname) || /[?&](snowball|escape)=/.test(q);
   var S = [
     ['front-exterior-1600.jpg', '118 Hillside Drive', 'A light-filled home in Woodside Glens, about a mile from Town Center and its trails.'],
     ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a cathedral-ceilinged foyer, with the heritage oak framed at the far end.'],
@@ -49,7 +49,7 @@
   el.innerHTML = slides + '<div class="sh"></div>' +
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
     '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
-    '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>Drag to look around. Tap a white circle to walk there.</small></div>' +
+    '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>' + (game ? 'The house is ready.' : 'Drag to look around. Tap a white circle to walk there.') + '</small></div>' +
     '<div class="bar" aria-hidden="true"><i></i></div>';
   document.body.appendChild(el);
   var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');
