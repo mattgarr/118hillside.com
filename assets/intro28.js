@@ -146,7 +146,7 @@
     if(!lifted){ if(!L.classList.contains('done')) return; lifted = performance.now(); G0 = renders(); (function f(){ rafN++; if(!done && rafN < 600) requestAnimationFrame(f); })(); prog(); }
     if(document.hidden) return; liftedVis += 200;
     var faded = +getComputedStyle(L).opacity < .05, r = renders(), drawn = r >= 0 && G0 >= 0 ? r - G0 >= 3 : rafN >= 8, B = window.__boot22, refined = !B || B.done || B.off;
-    if(seen && B && B.settled) refined = true;   // a returning visitor goes in as soon as the view is drawn and the rooms have settled; the page's own "Refining the view" covers the trees
+    if((seen || reports) && B && B.settled) refined = true;   // (a game's start card covers the house while the trees and reflections finish)   // a returning visitor goes in as soon as the view is drawn and the rooms have settled; the page's own "Refining the view" covers the trees
     var game0 = !reports || (window.__game28 && __game28.ready) || liftedVis > 30000;   // a game that reports: its start card is ready under the pictures
     if(game0 && ((faded && drawn && (refined || liftedVis > 6000)) || liftedVis > 15000)) ready(); }
   wi = setInterval(watch, 200);
