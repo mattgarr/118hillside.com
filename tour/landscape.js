@@ -3691,8 +3691,8 @@ CPL.med = {
 };
 
 CPL.family = {
-  name: 'Family garden',
-  blurb: 'A garden to use every day: a small lawn-alternative play lawn in the one sunny corner clear of the oak roots, a natural play space under the oak (log steppers and climbing boulders on soft wood-fiber), and two steel raised vegetable beds with drip along the redwood fence. Easy-care, deer-resistant shrubs edge the beds.',
+  name: 'Lawn and vegetable beds',
+  blurb: 'A small lawn-alternative lawn in the one sunny corner clear of the oak roots, log steppers and boulders on soft wood-fiber under the oak, and two steel raised vegetable beds with drip along the redwood fence. Easy-care, deer-resistant shrubs edge the beds.',
   back: {
     beds: [
       { name: 'north fence', poly: SITE.bed.northFence, back: SITE.back.northFence, drift: 9, layers: [
