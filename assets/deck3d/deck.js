@@ -150,7 +150,7 @@
   GUESTS.forEach(g => { g.ok = s => g.needs.every(n => n.ok(s)); });
   /* the ending never keeps score: a wish that did not come true is offered as an idea, one line per need, and only if the player feels like it */
   const IDEA = {pepper: ['Pepper would love some color on the roof.'], clover: ['Clover would come closer if the roof lights held still.', 'Clover would love a light in a window.'],
-    admiral: ['Admiral would love a little light down low on the walk.'], snowball: ['I would not say no to a box.'], biscuit: ['Biscuit would love something cooking on the terrace.'],
+    admiral: ['Admiral would love a little light down low on the walk.'], snowball: ['Snowball would not say no to a box.'], biscuit: ['Biscuit would love something cooking on the terrace.'],
     mabel: ['Mabel would love a glow along the paving.'], nugget: ['Nugget would love some light on the oak.'], juniper: ['Juniper would sleep better with the oak branches dark.']};
   GUESTS.forEach(g => g.needs.forEach((n, i) => { n.idea = (IDEA[g.id] || [])[i] || ''; }));
   /* what is up, in words: for Snowball's last line and for the postcard caption. Each key gives the phrases for what the player chose there. */
@@ -394,7 +394,7 @@
   #dkCard ul.w .av{flex:none;width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;display:grid;place-items:center}#dkCard ul.w b{font-weight:500}
   #dkCard .ideas{text-align:left;font-size:14px;line-height:1.4;color:#5c6575;margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#f1eee6}#dkCard .ideas b{display:block;font-weight:500;color:#2b3442;margin-bottom:2px}
   #dkCard .quiet{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin:10px 0 0}#dkCard .quiet button{border:0;background:none;padding:8px 6px;font-size:14.5px;color:#5c6575;text-decoration:underline;text-underline-offset:3px;min-height:40px}
-  #dkCard img.pc.sm{max-width:300px;margin:0 auto 10px}
+  #dkCard img.pc.sm{max-width:240px;margin:0 auto 10px}
   #dkFlash{position:fixed;inset:0;z-index:95;background:#fff;opacity:0;pointer-events:none}#dkFlash.on{animation:dkFl .5s}@keyframes dkFl{10%{opacity:.85}100%{opacity:0}}
   @media (max-width:700px){
     #dkTop{top:40px;left:8px;right:8px}#dkPlaces{flex-wrap:nowrap}#dkCard.side{place-items:end center;padding:8px}#dkCard.side .c{max-width:none;max-height:64vh}#dkSay{max-width:calc(100% - 112px);padding:6px 10px 6px 6px}#dkSay .av{width:40px;height:40px}#dkSay .av svg{width:38px}#dkSay p{font-size:18px}
@@ -532,9 +532,16 @@
   const SEES = {street: ['roof', 'door', 'hang', 'path', 'win'], door: ['door', 'hang', 'path', 'win', 'roof'], windows: ['win', 'roof', 'door', 'path'], living: ['tree', 'room'], terrace: ['ter', 'oak'], oak: ['oak', 'ter'],
     walk: ['door', 'hang', 'path', 'roof', 'win'], dining: ['win'], tree: ['tree', 'room'], table: ['ter', 'oak'], corner: ['roof', 'door', 'hang', 'path', 'win']};
   const PLACE_WORDS = {street: 'From the street', door: 'At the front doors', windows: 'The front windows', living: 'The living room', terrace: 'The terrace', oak: 'The oak out back', walk: 'Up the front walk', dining: 'The dining room', tree: 'By the tree', table: 'Under the oak', corner: 'From the corner'};
-  function seen(v){ const cam = H.camera, cr = H.canvas.getBoundingClientRect(), x0 = v[0] / cr.width * 2 - 1, x1 = (v[0] + v[2]) / cr.width * 2 - 1, y1 = 1 - v[1] / cr.height * 2, y0 = 1 - (v[1] + v[3]) / cr.height * 2, b = new THREE.Box3(), q = new V3();
-    cam.updateMatrixWorld(); return (SEES[PLACE.id] || []).filter(k => { const g = P && P.group(k); if(!g || !g.visible) return false; try{ b.setFromObject(g); }catch(e){ return false; } if(b.isEmpty()) return false;
-      for(let i = 0; i < 27; i++){ q.set(b.min.x + (b.max.x - b.min.x) * (i % 3) / 2, b.min.y + (b.max.y - b.min.y) * (Math.floor(i / 3) % 3) / 2, b.min.z + (b.max.z - b.min.z) * Math.floor(i / 9) / 2).project(cam); if(q.z > -1 && q.z < 1 && q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) return true; } return false; }); }
+  /* which of the place's decorations are really inside the viewfinder: sample the points each one is made of (light bulbs, flames, the centers of
+     its pieces) and keep it if a few of them land in the frame, in front of the camera */
+  function seen(v){ const cam = H.camera, cr = H.canvas.getBoundingClientRect(), x0 = v[0] / cr.width * 2 - 1, x1 = (v[0] + v[2]) / cr.width * 2 - 1, y1 = 1 - v[1] / cr.height * 2, y0 = 1 - (v[1] + v[3]) / cr.height * 2, q = new V3(), m4 = new THREE.Matrix4(), bb = new THREE.Box3();
+    cam.updateMatrixWorld(); const inside = () => { q.project(cam); return q.z > -1 && q.z < 1 && q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1; };
+    return (SEES[PLACE.id] || []).filter(k => { const g = P && P.group(k); if(!g || !g.visible) return false; let hit = 0, n = 0; g.updateMatrixWorld(true);
+      g.traverse(o => { if(hit >= 2 || !o.visible || !o.geometry) return; const pa = o.geometry.attributes && o.geometry.attributes.position; if(!pa) return;
+        if(o.isInstancedMesh){ const st = Math.max(1, Math.floor(o.count / 40)); for(let i = 0; i < o.count && hit < 2; i += st){ o.getMatrixAt(i, m4); q.setFromMatrixPosition(m4).applyMatrix4(o.matrixWorld); n++; if(inside()) hit++; } }
+        else if(o.isPoints){ const st = Math.max(1, Math.floor(pa.count / 60)); for(let i = 0; i < pa.count && hit < 2; i += st){ q.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); n++; if(inside()) hit++; } }
+        else { if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); bb.getCenter(q); n++; if(inside()) hit++; } });
+      return n > 0 && hit >= Math.min(2, n); }); }
   function photoMode(){ closeCard(); PHASE = 'photo'; dimUI(true); show('#dkTop', false); ga('deck_photo_mode'); $$('#dkPhoto,#dkVF').forEach(e => e.remove()); const all = PLACES.concat(EXTRA);
     const bar = el('div', {id: 'dkPhoto', class: 'dk dkChip'}, `<div class="pl" role="tablist" aria-label="Places to stand">${all.map(p => `<button type="button" data-p="${p.id}" aria-pressed="${p === PLACE}">${esc(p.label === 'Roofline' ? 'From the street' : p.label)}</button>`).join('')}</div>
       <div class="act"><span>Drag to look around. The postcard is what is inside the frame.</span><button type="button" class="dkBtn" id="dkPhDone">Done</button><button type="button" class="dkBtn gold" id="dkSnap">${ICON.cam}Take the picture</button></div>`);
@@ -610,7 +617,7 @@
   window.DECK3D = {get S(){ return S; }, get mode(){ return MODE; }, get phase(){ return PHASE; }, get place(){ return PLACE.id; }, get props(){ return P; }, get arrived(){ return arrived.slice(); },
     state: () => ({phase: PHASE, mode: MODE, place: PLACE.id, S: clone(S), happy: happy().map(g => g.id), arrived: arrived.slice(), on: P ? P.on : null, tod: H.tod, count: P ? P.count() : null}),
     go: id => goPlace(id, true), set(o){ Object.assign(S, clone(o)); if(P) applyAll(); if(PHASE === 'decor' || PHASE === 'fix') refresh(true); }, story: {GUESTS, SECT, PLACES, EXTRA, WAVES, ARRIVE, LINK, FREE_START}, freeRect, reframe, view, tune(id, o){ const p = placeOf(id); Object.assign(p, o); p.catY = p.catYP = null; if(p === PLACE){ setCam(view(p)); placeCat(p); } return view(p); }, start: m => { closeCard(); begin(m || 'story'); }, sunset, lightUp, dusk(){ try{ H.setTOD('dusk'); }catch(e){} }, day(){ try{ H.setTOD(DAY); }catch(e){} },
-    on: v => P && P.setOn(v), get sfx(){ return window.DECKSFX; }, happy: () => happy().map(g => g.id), photo: photoMode, snap, result, encode, decode, shareLink, places: PLACES.concat(EXTRA).map(p => p.id), look: (pos, at) => { H.look(pos, at); anchor = new V3(...pos); FLY = null; }, DEFAULT, STORY_START};
+    on: v => P && P.setOn(v), get sfx(){ return window.DECKSFX; }, happy: () => happy().map(g => g.id), photo: photoMode, snap, result, encode, decode, decodeView, shareLink, get shot(){ return shot; }, finder, places: PLACES.concat(EXTRA).map(p => p.id), look: (pos, at) => { H.look(pos, at); anchor = new V3(...pos); FLY = null; }, DEFAULT, STORY_START};
 })();
 
 /* preview hosts: when the site is served from a sub-path (a test mirror), point root links like /games/ at that copy; no effect on 118hillside.com */
