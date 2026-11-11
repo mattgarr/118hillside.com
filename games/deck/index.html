@@ -722,7 +722,7 @@ async function savePostcard(){ const btn = $('#save'); btn.disabled = true; btn.
   try{ const key = viewScene, sc = SCENES[key], host = document.createElement('div'); host.innerHTML = sceneSVG(key); const svg = host.firstChild;
     svg.querySelector('defs').insertAdjacentHTML('afterbegin', GD.innerHTML); svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); svg.setAttribute('width', sc.W); svg.setAttribute('height', sc.H);
     svg.querySelectorAll('.snowfall').forEach(n => n.remove()); svg.querySelectorAll('.staticflakes').forEach(n => n.removeAttribute('class'));
-    svg.querySelector('image').setAttribute('href', await dataURL(sc.img));
+    const du = await dataURL(sc.img); svg.querySelectorAll('image').forEach(im => im.setAttribute('href', du));
     const blob = new Blob([new XMLSerializer().serializeToString(svg)], {type: 'image/svg+xml'}), url = URL.createObjectURL(blob);
     const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
     const W = 1600, Hh = Math.round(W * sc.H / sc.W), band = 150, c = document.createElement('canvas'); c.width = W; c.height = Hh + band; const x = c.getContext('2d');
