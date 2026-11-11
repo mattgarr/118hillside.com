@@ -53,7 +53,7 @@
       fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'I was keeping the bed warm.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
       spots: [{p: [22.5, 2.08, 29], n: 'on the bed', d: 1}, {p: [27, .03, 34], n: 'beside the white chair', d: 2}, {p: [27.5, .03, 29], n: 'on the far side of the bed', d: 2}, {p: [28, .03, 26], n: 'by the far bedside table', d: 2}, {p: [28, .03, 35], n: 'behind the white chair', d: 3}]},
     loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/p37.jpg', big: 'photos/p37.jpg', ar: .667, grp: 'loft', fy: 5.57, cam: [[.84, .72, 'the triangle windows'], [.62, .84, 'the triangle windows']],
-      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -16.2, 0, 180]],
+      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -15.5, 0, 180]],
       spots: [{p: [-24, 7.06, -7.5], n: 'on the window seat', d: 1}, {p: [-18, 5.6, -4.5], n: 'at the top of the stairs, behind the railing', d: 2}, {p: [-18, 5.6, -18], n: 'down the upstairs hall', d: 2},
         {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 2}]},
     primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: 'suite', fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
@@ -67,7 +67,7 @@
       fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.8, -41.3, 250, 110, 180]],
       spots: [{p: [-20.5, 6.91, -44.5], n: 'on a balcony chair', d: 1}, {p: [-21.5, 5.6, -43.5], n: 'behind a balcony chair', d: 2}, {p: [-14, 5.6, -45.5], n: 'in the corner behind a balcony chair', d: 3}]},
     lower:   {name: 'Downstairs bedroom', at: 'in the downstairs bedroom', photo: '../images/bedroom-800.jpg', ar: .68, grp: 'lower', fy: -4.56, cam: [[.75, .34, 'the picture on the green wall'], [.12, .42, 'the dark round picture']],
-      fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It is quiet down here.', v: [[-12.3, -40.5, 216, 160, 290], [-19.5, -41, 135, 90]],
+      fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It is quiet down here.', v: [[-12.3, -40.5, 216, 160, 290], [-18.5, -39.8, 135, 90]],
       spots: [{p: [-16, -2.55, -47], n: 'on the bed, by the pillows', d: 1}, {p: [-12.4, -4.51, -45.2], n: 'in a cardboard box by the window', d: 1, box: 1}, {p: [-20, -4.5, -43], n: 'at the far corner of the bed', d: 2}, {p: [-20, -4.5, -46], n: 'on the far side of the bed', d: 3}]},
     lounge:  {name: 'Bonus lounge', at: 'in the bonus lounge', photo: '../images/rec-room-800.jpg', ar: .644, grp: 'lounge', fy: -4.56, cam: [[.43, .32, 'the big screen'], [.2, .52, 'the black glass door']],
       fact: 'Made for movie nights, with a big TV and a refreshment counter.', say: 'I am ready for movie night.', v: [[-13, -17.5, 255, 195, 330], [-19.3, -22.5, 60, 120]],
@@ -524,7 +524,7 @@
     const v = cur(), seen = v.n >= SEEN(), hs = seen ? scr(aimPt()) : null, inView = !!hs && Math.abs(hs.nx) < .94 && Math.abs(hs.ny) < .94, ry = relYaw(), ang = Math.abs(ry);
     const w = S.step === 0 ? 5 : inView ? (Math.abs(hs.nx) < .5 ? 5 : 4) : ang < .7 ? 3 : ang < 1.6 ? 2 : 1, stuck = S.step > 0 && !seen && ang < .7 && !walk && ROOM[room()].v.length > 1;
     if(S.step > 0 && !S.turned && Math.abs(wrap(facing().yaw - S.open)) > .3) S.turned = true;
-    if(w !== lastWarm || stuck !== lastStuck){ lastWarm = w; lastStuck = stuck; warm.querySelectorAll('i').forEach((p, i) => p.classList.toggle('on', i < w)); warm.querySelector('em').textContent = stuck ? 'Try walking' : WARMTXT[w]; if(!S.hard){ if(stuck) nudge('walk'); else $('#fndW').classList.remove('nudge'); } }
+    if(w !== lastWarm || stuck !== lastStuck){ lastWarm = w; lastStuck = stuck; warm.querySelectorAll('i').forEach((p, i) => p.classList.toggle('on', i < w)); warm.querySelector('em').textContent = stuck ? 'Try walking' : w === 3 && hs && Math.abs(hs.nx) < .6 ? (hs.ny < 0 ? 'Look down' : 'Look up') : WARMTXT[w]; if(!S.hard){ if(stuck) nudge('walk'); else $('#fndW').classList.remove('nudge'); } }
     if(inView){ if(!S.tSeen) S.tSeen = t; edge.classList.remove('on'); } else S.tSeen = 0;
     // his bell comes from his side of the room, and a little more often the closer you are to looking at him
     if(t - S.tMeow > (S.step === 0 ? 5200 : [0, 8500, 7000, 5600, 4300, 3500][w])){ S.tMeow = t; snd(Math.random() < .2 ? 'mrrp' : 'bell', {pan: panOf(), vol: w >= 4 ? 1 : .8});
