@@ -1495,7 +1495,7 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
   function box(e, strict){ var cs = getComputedStyle(e); if(cs.display === 'none') return null; if(strict && (cs.visibility === 'hidden' || +cs.opacity < .05)) return null;
     var r = e.getBoundingClientRect(); if(r.width < 6 || r.height < 6 || (r.width > innerWidth * .9 && r.height > innerHeight * .8)) return null; return r; }
   function obstacles(){ var out = [], L = document.querySelectorAll(SEL), i, e, r, cs, z;
-    for(i = 0; i < L.length; i++){ r = box(L[i], false); if(r) out.push(r); }
+    for(i = 0; i < L.length; i++){ r = box(L[i], true); if(r) out.push(r); }   // only what is on screen: when the controls fade away the notice settles into the corner
     for(e = document.body.firstElementChild; e; e = e.nextElementSibling){ if(e === b || e.id === 'intro28') continue; cs = getComputedStyle(e); if(cs.position !== 'fixed') continue;
       z = parseInt(cs.zIndex, 10); if(!(z >= 56 && z <= 79)) continue; r = box(e, true); if(r) out.push(r); }   // a game's HUD and docks (its markers sit lower, its dialogs higher)
     return out; }
@@ -1524,6 +1524,7 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     if(!ok && O.length > base.length) lay(base);   // a dialog leaves no clear spot: keep the usual place, clear of the controls
     sig = key(O); }catch(e){} }
   place(); setInterval(place, 600); addEventListener('resize', function(){ sig = ''; place(); }); addEventListener('load', place);
+  try{ new MutationObserver(function(){ setTimeout(place, 80); setTimeout(place, 640); }).observe(document.documentElement, {attributes: true, attributeFilter: ['class']}); }catch(e){}   // the controls show and hide with a class on <html>
   window.__v33discPlace = function(){ sig = ''; place(); var r = b.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)]; };
 })();</script>
 </div>
