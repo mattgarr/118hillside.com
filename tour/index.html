@@ -9811,6 +9811,10 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
     'html:not(.ph) .card.min.bk38on{flex-wrap:wrap;row-gap:4px;width:auto;min-width:min(470px, calc(100% - 260px))}' +
     'html:not(.ph) .card.min.bk38on[data-m27="doll"]{max-width:calc(100% - 200px)}' +
     'html:not(.ph) .card.min.bk38on .tb{flex:1 1 auto}' +
+    /* the compact Dollhouse row already holds the level buttons: the tab above names the view, so the row drops its 'Dollhouse' word (and, as the window narrows, the stop name and the title) to keep one line */
+    'html:not(.ph) .card.min.bk38on[data-m27="doll"] .eyebrow{display:none}' +
+    '@media (max-width:980px){html:not(.ph) .card.min.bk38on[data-m27="doll"] #bk38 .bk38s{display:none}}' +
+    '@media (max-width:860px){html:not(.ph) .card.min.bk38on[data-m27="doll"] .tb{display:none}}' +
     /* phone: its own row across the foot of the sheet, under the thumb */
     'html.ph #card.bk38on{grid-template-areas:"prev head next" "body body body" "act act act" "bk38 bk38 bk38"}' +
     'html.ph #bk38{grid-area:bk38;width:100%;min-height:46px;padding:0 14px;border-radius:12px;background:var(--ph-hi);color:var(--ph-ink);font-size:15px;font-family:var(--sf)}' +
@@ -9828,12 +9832,12 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   const game = () => { try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)) || /\b(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)\b/.test(root.className); }catch(e){ return false; } };
   const galOpen = () => !gal.hidden;
   let near = -1;
-  // Walk: the stop nearest the walker. A stop on another level counts 30 ft further; a stop that shows the room you are in counts 8 ft nearer.
+  // Walk: the stop nearest the walker. A stop on another level counts 30 ft further; a stop that shows the room you are in counts 12 ft nearer.
   function nearest(){
     const P = camera.position, cr = curRoom && curRoom.id; let best = -1, bs = 1e9, cur = 1e9;
     for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; if(!s || s.aerial || !s.pos) continue;
       const L = s.level === 'outside' ? LV.outside : LV[s.level]; let d = Math.hypot(s.pos[0] - P.x, s.pos[2] - P.z);
-      if(L != null && Math.abs(L - feet) > 2.5) d += 30; if(cr && s.rooms && s.rooms.includes(cr)) d -= 8;
+      if(L != null && Math.abs(L - feet) > 2.5) d += 30; if(cr && s.rooms && s.rooms.includes(cr)) d -= 12;
       if(d < bs){ bs = d; best = i; } if(i === near) cur = d; }
     if(near >= 0 && near < STOPS.length && cur - bs < 3) return near;   // a little hysteresis, so the name does not flicker between two stops
     return best >= 0 ? best : stopIdx; }
