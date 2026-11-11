@@ -19821,17 +19821,22 @@ function bim3GarageTracks(){ let n = 0; if(!/[?&]b3tracks=1/.test(location.searc
    The model hangs a closet bypass door on two tracks (outer panels share the front one), so a panel could only reach the middle. A bypass door
    gets one track per panel: depths a panel thickness plus a small gap apart, centred in the wall (kept inside its faces), ordered as the model
    had them front to back (ties by position). Then every panel slides all the way to the far jamb and the stack is n deep. */
-function bim3BypassTracks(it, P){
+function bim3BypassTracks(it, P, lo, W){
   const n = P.length, nv = it.o.normal || [0, 1], n3 = new THREE.Vector3(nv[1], 0, nv[0]); if(n < 2) return;
   const dep = p => p.lf.hinge[0][0] * nv[0] + p.lf.hinge[0][1] * nv[1], O = (BIM2S.meta.openings || []).find(q => q.id === it.id) || {};
   const t = Math.max(...P.map(p => p.lf.t || .1146)), th = O.thickness || .375, d0 = P.map(dep), cen = (Math.min(...d0) + Math.max(...d0)) / 2;
   const pitch = Math.max(t + .004, Math.min(t + .02, (th - t - .01) / (n - 1)));
   const ord = P.map((p, i) => i).sort((a, b) => (d0[a] - d0[b]) || (a - b));
   ord.forEach((i, r) => { const p = P[i], d = cen + (r - (n - 1) / 2) * pitch; p.base.addScaledVector(n3, d - d0[i]); p.piv.position.copy(p.base); p.trk = r; p.dep = d; });
-  it.sl3 = {pitch, gap: pitch - t, cen, wall: th}; }
+  /* closed, the model leaves the panels short of the far jamb (n panels exactly fill the clear width, less the meeting-stile overlaps: a 1-2"
+     slot at that jamb). Fill jamb to jamb with a 1" overlap where panels meet: each panel a hair wider along the opening (<2%) on even slots. */
+  let f = 1; const j = P[0].s - lo, Wc = W - 2 * j, ov = 1 / 12, w = P[0].w, f1 = (Wc + (n - 1) * ov) / (n * w);
+  if(j > -.01 && j < .3 && P.every(p => Math.abs(p.w - w) < .01) && f1 > 1 && f1 < 1.05){ f = f1; const ws = w * f, u = P[0].u3, ka = Math.abs(u.z) > .5 ? 'z' : 'x';
+    P.forEach((p, i) => { const s1 = P[0].s + i * (ws - ov); p.base.addScaledVector(p.u3, s1 - p.s); p.piv.position.copy(p.base); p.piv.scale[ka] = f; p.s = s1; p.w = ws; }); }
+  it.sl3 = {pitch, gap: pitch - t, cen, wall: th, jamb: j, clear: Wc, stretch: f, overlap: f > 1 ? ov : null}; }
 function bim3Slide(it, side, c, ax, W){
   const P = it.parts.filter(p => p.s != null).sort((a, b) => a.s - b.s), n = P.length; if(!n) return; const last = P[n - 1], first = P[0];
-  if(/BYPASS/.test(it.b3kind || '')) try{ bim3BypassTracks(it, P); }catch(e){ console.warn('[bim3] bypass tracks', e); }
+  if(/BYPASS/.test(it.b3kind || '')) try{ bim3BypassTracks(it, P, c[0] * ax[0] + c[1] * ax[1] - W / 2, W); }catch(e){ console.warn('[bim3] bypass tracks', e); }
   for(let i = n - 1; i >= 0; i--){ let lim = last.s + last.w - P[i].w; for(let j = i + 1; j < n; j++) if(P[j].trk === P[i].trk){ lim = Math.min(lim, P[j].pL - P[i].w); break; } P[i].pL = Math.max(P[i].s, lim); P[i].dL = P[i].pL - P[i].s; }
   for(let i = 0; i < n; i++){ let lim = first.s; for(let j = i - 1; j >= 0; j--) if(P[j].trk === P[i].trk){ lim = Math.max(lim, P[j].pR + P[j].w); break; } P[i].pR = Math.min(P[i].s, lim); P[i].dR = P[i].s - P[i].pR; }
   const alongZ = Math.abs(ax[0]) > .5, mid = c[0] * ax[0] + c[1] * ax[1];
