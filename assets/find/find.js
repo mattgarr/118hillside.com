@@ -35,7 +35,7 @@
      grp = rooms that share a space or show each other in their photos; two of a group are never offered as choices together. Facts come from the site's own copy. */
   const ROOM = {
     entry:   {name: 'Entry', at: 'in the entry', photo: '../images/entry-800.jpg', ar: .586, grp: 'front', fy: 0, cam: [[.5, .05, 'the starburst light']],
-      fact: 'A cathedral ceiling and a starburst light, added in 2024.', say: 'Catch me if you can.', v: [[-12.25, -4.07, 85]],
+      fact: 'A cathedral ceiling and a starburst light, added in 2024.', say: 'Catch me if you can.', v: [[-12.25, -3.3, 90]],
       spots: [{p: [-5.93, .06, -4.07], n: 'sitting in the middle of the entry', d: 0}]},
     living:  {name: 'Living room', at: 'in the living room', photo: '../images/living-room-800.jpg', ar: .591, grp: 'front', fy: 0, cam: [[.62, .1, 'the wood beams'], [.5, .74, 'the glass coffee table']],
       fact: 'Wood beams cross the ceiling. This part of the house is from the 1920s.', say: 'This rug is my favorite.', v: [[.8, -2.2, 125, 60, 95], [12.4, -4.6, 285, 240]],
@@ -120,8 +120,8 @@
     return {n, f: n / MASK.length, head: hn ? hd / hn : 0, cu: n ? su / n : 0, cv: n ? sv / n : .5, u0: u0 - .04, u1: u1 + .04, v0: Math.max(0, v0 - .03), v1: Math.min(1, v1 + .03), d: Math.hypot(P.x - V.x, P.z - V.z)}; }
   // a point on him: u across the picture, v up it, as you see him from V
   function onCat(V, P, u, v, out){ const rx = V.z - P.z, rz = -(V.x - P.x), L = Math.hypot(rx, rz) || 1; return out.set(P.x + rx / L * u * CW, P.y + v * CH, P.z + rz / L * u * CW); }
-  // how wide the picture is: half the angle from the middle of the screen to its side edge (the lens is the tour's own for the room)
-  const hHalf = () => { const a = cam.aspect || 1.6; return Math.max(Math.atan(Math.tan(cam.fov * Math.PI / 360) * a), Math.atan(Math.tan(38.3 * Math.PI / 180) * a / Math.sqrt(1 + a * a))); };
+  // how wide the picture is: half the angle from the middle of the screen to its side edge (the lens is the tour's own for the room: about 95 degrees across on a wide screen)
+  const hHalf = () => Math.atan(Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1) * (cam.aspect || 1.6));
   const yawTo = (V, P) => Math.atan2(P.x - V.x, P.z - V.z);
   const outOfView = (yaw, V, P) => Math.abs(wrap(yawTo(V, P) - yaw)) > hHalf() + Math.atan(.75 * CW / (Math.hypot(P.x - V.x, P.z - V.z) || 1)) + .07;
   // the way you face when you arrive: a good view of the room that does not have him in it
@@ -321,11 +321,12 @@
      partly behind something, then one you have to walk for, and last one where only his ears, eyes or tail show. Sneaky mode starts at the hardest.
      A place is used only if the model still lets some of him be seen from one of the room's standing places. */
   const PREF = [['d0'], ['d1', 'd2', 'd2w', 'd3'], ['d2', 'd2w', 'd1', 'd3'], ['d2w', 'd3', 'd2', 'd1'], ['d3', 'd2w', 'd2', 'd1']], klass = s => s.d === 2 && s.w ? 'd2w' : 'd' + s.d;
-  function seeAll(R, P){ const vs = R.v.map((v, i) => vis(eyeOf(R, i), P)); let best = 0; vs.forEach((q, i) => { if(q.f > vs[best].f + 1e-6) best = i; }); return {vs, best}; }
+  const SEEN = () => S.hard ? 3 : 6;   // how many points of his outline must show before he counts as visible from a place (about 5 % of him; 3 % in sneaky mode)
+  function seeAll(R, P){ const vs = R.v.map((v, i) => vis(eyeOf(R, i), P)), sc = q => q.f * (q.d < 3 ? .3 : 1); let best = 0; if(vs[0].f < .1) vs.forEach((q, i) => { if(sc(q) > sc(vs[best]) + 1e-6) best = i; }); return {vs, best}; }
   function chooseSpot(id){ const R = ROOM[id], Rn = stepR(1), pref = S.step === 0 ? PREF[0] : PREF[S.hard ? 4 : Math.min(S.step, 4)];
     const order = R.spots.map((s, i) => ({s, i, r: Rn(), k: (pref.indexOf(klass(s)) + 9) % 9, old: S.daily || !SV.spots[id + '.' + i] ? 0 : 1})).sort((a, b) => (a.k - b.k) || (a.old - b.old) || (a.r - b.r));
     if(S.force != null){ const f = order.findIndex(o => o.i === S.force); if(f > 0) order.unshift(order.splice(f, 1)[0]); S.force = null; }
-    for(const o of order){ setProp(o.s); const q = seeAll(R, _v.set(o.s.p[0], o.s.p[1], o.s.p[2])); if(q.vs[q.best].n >= (S.hard ? 3 : 5) && hit(o.s.p[0], o.s.p[1] + .5, o.s.p[2], 0, -1, 0, 1.3) !== Infinity) return Object.assign(o, q); }
+    for(const o of order){ setProp(o.s); const q = seeAll(R, _v.set(o.s.p[0], o.s.p[1], o.s.p[2])); if(q.vs[q.best].n >= SEEN() && hit(o.s.p[0], o.s.p[1] + .5, o.s.p[2], 0, -1, 0, 1.3) !== Infinity) return Object.assign(o, q); }
     setProp(null); const V = eyeOf(R, 0), y0 = R.v[0][2] * Math.PI / 180;   // last resort: out on real floor, behind the way you arrive facing
     for(const q of [5, 4, 3]) for(const a of [Math.PI, 2.4, -2.4, 1.7, -1.7, 1, -1, 0]){ const x = V.x + Math.sin(y0 + a) * q, z = V.z + Math.cos(y0 + a) * q, t = hit(x, R.fy + 2.5, z, 0, -1, 0, 3.2); if(!((t !== Infinity && Math.abs(R.fy + 2.5 - t - R.fy) < .4) || (t === Infinity && R.open))) continue;
       const s = seeAll(R, _v.set(x, R.fy + .03, z)); if(s.vs[0].f > .6) return Object.assign({s: {p: [x, R.fy + .03, z], n: R.at, d: 1}, i: -1}, s); }
@@ -339,7 +340,7 @@
       else if(S.step === 4) toast('This is the last room. Find him.', 4200);
       else if(S.hard) return;
       else if(S.step === 1){ toast('He is hiding in this room. Turn to look for him.', 5200); nudge('turn', 5200); }
-      else if(!S.vis[0].n && R.v.length > 1){ toast('He is tucked away. Try walking across the room.', 5200); nudge('walk', 5200); }
+      else if(S.vis[0].n < SEEN() && R.v.length > 1){ toast('He is tucked away. Try walking across the room.', 5200); nudge('walk', 5200); }
       else if(S.step === 2) toast('He hides better now. Look for his ears, or his tail.', 4800); }, 900); }
 
   /* ---------- UI ---------- */
@@ -466,7 +467,7 @@
      the game does the second step itself. */
   function help(auto){ if(!S.on || S.mode !== 'seek' || H.anim || walk) return; const t = performance.now(); S.tHint = S.tAct = t; if(!auto){ S.helps++; ga('find_help', {step: S.step, tier: S.asked}); }
     if(!auto && !S.asked && S.step > 0){ S.asked = 1; ui(); snd('bell', {pan: panOf(), vol: 1.2}); hop(.9, 520); const v = cur();
-      if(v.n < 3 && S.best !== S.view){ toast('He is behind something from here. Try walking.', 3600); nudge('walk', 5000); }
+      if(v.n < SEEN() && S.best !== S.view){ toast('He is behind something from here. Try walking.', 3600); nudge('walk', 5000); }
       else if(!onScreen()){ const left = relYaw() > 0; edge.className = left ? 'l on' : 'r on'; later(() => edge.classList.remove('on'), 2600); toast(left ? 'Jingle. He is to your left.' : 'Jingle. He is to your right.', 2600); nudge('turn', 2600); }
       else toast('He is in front of you. Look closely.', 2600); return; }
     S.asked = 2; ui(); const go = () => { lookAtPoint(aimPt(), 650); ringUntil = performance.now() + 7000; S.tHint = performance.now(); snd('bell'); later(() => { if(S.mode === 'seek') hop(.5, 420); }, 700); }; if(S.view !== S.best) walkTo(S.best, go); else go(); }
@@ -478,7 +479,7 @@
   const headPt = () => onCat(anchor, S.P, -.17, .76, _b).setY(CAT.position.y + CH * .76);
   const relYaw = () => wrap(yawTo(anchor, S.P) - facing().yaw);   // + is to your left
   const panOf = () => clamp(-Math.sin(relYaw()) * .9, -.9, .9);
-  const onScreen = () => { const v = cur(), s = v.n >= 3 && scr(aimPt()); return !!s && Math.abs(s.nx) < .94 && Math.abs(s.ny) < .94; };
+  const onScreen = () => { const v = cur(), s = v.n >= SEEN() && scr(aimPt()); return !!s && Math.abs(s.nx) < .94 && Math.abs(s.ny) < .94; };
   // the part of him you can see, as a box on the screen (and the box of all of him)
   function catRect(){ const v = cur(), box = (u0, u1, v0, v1) => { let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for(const [u, w] of [[u0, v0], [u1, v0], [u0, v1], [u1, v1]]){ const s = scr(onCat(anchor, S.P, u, w, _a)); if(!s) return null; x0 = Math.min(x0, s.x); x1 = Math.max(x1, s.x); y0 = Math.min(y0, s.y); y1 = Math.max(y1, s.y); } return {x0, x1, y0, y1}; };
     return {part: v.n ? box(v.u0, v.u1, v.v0, v.v1) : null, all: box(-.5, .5, 0, 1)}; }
@@ -488,7 +489,7 @@
      at least an 88 px square, 64 in sneaky mode); outside sneaky mode a tap anywhere on his outline counts as long as some of him shows.
      He cannot be found from a place where none of him can be seen. */
   H.hooks.click = (cx, cy) => { if(dead) return false; if(!S.on) return true; if(S.mode !== 'seek' || !CAT.visible || walk) return true; tw = null; S.tAct = performance.now();
-    const v = cur(), seen = v.n >= (S.hard ? 2 : 3), r = seen ? catRect() : null;
+    const v = cur(), seen = v.n >= SEEN() || S.step === 0, r = seen ? catRect() : null;
     if(r && (inBox(r.part, cx, cy, S.hard ? 32 : 44, S.hard ? 10 : 22) || (!S.hard && inBox(r.all, cx, cy, 0, 6)))){ found(); return true; }
     for(const m of STEPS){ if(!m.visible) continue; const s = scr(m.position); if(s && Math.hypot(cx - s.x, cy - s.y) < Math.max(44, s.px * 1.15) && clearTo(anchor, m.position, .3)){ tapRing(cx, cy); walkTo(m.userData.to); return true; } }
     tapRing(cx, cy); snd('tap'); S.miss++;
@@ -509,7 +510,7 @@
     const pulse = 1 + .07 * Math.sin(t / 260); for(const m of STEPS) if(m.visible) m.scale.set(pulse, pulse, 1);
     /* the paw meter: one or two paws when you face away, three when you face him, four and five once the part of him that shows is on the screen.
        Facing him from a place where nothing of him shows reads "Try walking", and the walk button glows. */
-    const v = cur(), seen = v.n >= 3, hs = seen ? scr(aimPt()) : null, inView = !!hs && Math.abs(hs.nx) < .94 && Math.abs(hs.ny) < .94, ry = relYaw(), ang = Math.abs(ry);
+    const v = cur(), seen = v.n >= SEEN(), hs = seen ? scr(aimPt()) : null, inView = !!hs && Math.abs(hs.nx) < .94 && Math.abs(hs.ny) < .94, ry = relYaw(), ang = Math.abs(ry);
     const w = S.step === 0 ? 5 : inView ? (Math.abs(hs.nx) < .5 ? 5 : 4) : ang < .7 ? 3 : ang < 1.6 ? 2 : 1, stuck = S.step > 0 && !seen && ang < .7 && !walk && ROOM[room()].v.length > 1;
     if(S.step > 0 && !S.turned && Math.abs(wrap(facing().yaw - S.open)) > .3) S.turned = true;
     if(w !== lastWarm || stuck !== lastStuck){ lastWarm = w; lastStuck = stuck; warm.querySelectorAll('i').forEach((p, i) => p.classList.toggle('on', i < w)); warm.querySelector('em').textContent = stuck ? 'Try walking' : WARMTXT[w]; if(!S.hard){ if(stuck) nudge('walk'); else $('#fndW').classList.remove('nudge'); } }
@@ -614,7 +615,7 @@
     if(e.type === 'keydown' && S.on && !inCard){ if(e.key === 'ArrowLeft' || /^a$/i.test(e.key)) turn(1); else if(e.key === 'ArrowRight' || /^d$/i.test(e.key)) turn(-1); else if(e.key === 'ArrowUp' || /^w$/i.test(e.key)){ if(S.step > 0) walkTo(S.view + 1); } else if(/^h$/i.test(e.key)) help(); }
     e.stopImmediatePropagation(); if(/^Arrow|^ $|^Page|^Home$|^End$/.test(e.key) && !inCard && !(onBtn && e.key === ' ')) e.preventDefault(); }
   const onDown = e => { if(e.target === H.canvas){ tw = null; S.tAct = performance.now(); } try{ if(AC && AC.state === 'suspended' && !document.hidden) AC.resume(); }catch(err){} };
-  function boot(){ try{ H.asBuilt && H.asBuilt(); H.setTOD('dusk'); }catch(e){} if(Q.get('hard')) S.hard = Q.get('hard') === '1';
+  function boot(){ try{ H.asBuilt && H.asBuilt(); H.setTOD('golden'); }catch(e){} if(Q.get('hard')) S.hard = Q.get('hard') === '1';
     addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true); addEventListener('pointerdown', onDown, true); document.addEventListener('visibilitychange', onVis);
     makeArt(() => { if(dead) return; buildUI(); raf = requestAnimationFrame(frame);
       const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); if(!dead) startCard(); } }); mo.observe(document.body, {childList: true}); } else startCard(); }); }
@@ -626,27 +627,29 @@
     clearPrints(); OBJ.forEach(o => H.scene.remove(o)); DOM.forEach(e => e.remove()); document.querySelectorAll('.fndConf,.fndHeart,.fndTap,#fndCard').forEach(e => e.remove()); if(styleE) styleE.remove(); document.documentElement.classList.remove('fnd', 'fnd-hard', 'fnd-on'); window.FINDCAT = null; }
 
   /* ---------- checks (FINDCAT.dev): the same sight test the game plays with, run over every room, standing place and hiding place ----------
-     audit({aspects}) -> for each hiding place: what share of him shows from each standing place, the view you arrive with and how many points of him
-     are on the screen in it (must be none, at a desktop and a phone shape), and the size on screen of the part that shows and of its tap target from
-     the place you would spot him. Also every standing place: floor under it, clear of walls and furniture, a clear walk to the others. */
-  function audit(opt){ opt = opt || {}; const keep = {SP, PX, box: BOX.visible}, rows = [], bad = [], shapes = opt.aspects || [[1280, 800], [375, 812]], pc = new THREE.PerspectiveCamera(50, 1, .1, 600), tan = Math.tan(38.3 * Math.PI / 180), sum = {rooms: 0, places: 0, spots: 0, seenOnArrival: 0, needWalk: 0, d: {}};
-    const lens = (w, h) => { const a = w / h; pc.aspect = a; pc.fov = 2 * Math.atan(tan / Math.sqrt(1 + a * a)) * 180 / Math.PI; pc.updateProjectionMatrix(); return Math.atan(tan * a / Math.sqrt(1 + a * a)); };
-    const pose = (V, yaw, pitch) => { pc.position.copy(V); pc.lookAt(V.x + Math.sin(yaw) * Math.cos(pitch) * 10, V.y + Math.sin(pitch) * 10, V.z + Math.cos(yaw) * Math.cos(pitch) * 10); pc.updateMatrixWorld(true); pc.matrixWorldInverse.copy(pc.matrixWorld).invert(); };
+     await audit() goes to each room in turn (so the lens is the real one for this screen) and reports, for each hiding place: what share of him shows
+     from each standing place; the view you arrive with, and how many points of him are on the screen in it (must be none); and, from the place you
+     would spot him, the size on screen of the part that shows and of its tap target. Also every standing place: the floor under it, the nearest
+     wall or furniture, and whether the walk to the others is a glide or a blink. Run it at a desktop size and again at a phone size. */
+  async function audit(opt){ opt = opt || {}; const rc = H.canvas.getBoundingClientRect(), rows = [], bad = [], sum = {screen: Math.round(rc.width) + 'x' + Math.round(rc.height), rooms: 0, places: 0, spots: 0, seenOnArrival: 0, needWalk: 0, byHow: {}}, pc = cam.clone();
+    const pose = (V, yaw, pitch) => { pc.position.copy(V); pc.up.set(0, 1, 0); pc.lookAt(V.x + Math.sin(yaw) * Math.cos(pitch) * 10, V.y + Math.sin(pitch) * 10, V.z + Math.cos(yaw) * Math.cos(pitch) * 10); pc.updateMatrixWorld(true); pc.matrixWorldInverse.copy(pc.matrixWorld).invert(); };
     const shown = (V, P) => MASK.filter(([u, v]) => { const q = onCat(V, P, u, v, _a), dx = q.x - V.x, dy = q.y - V.y, dz = q.z - V.z, D = Math.hypot(dx, dy, dz); return hit(V.x, V.y, V.z, dx / D, dy / D, dz / D, D - .12, true) === Infinity; });
-    for(const id of Object.keys(ROOM)){ const R = ROOM[id]; if(!stopOf(id)) continue; SP = soupFor(id); PX = null; sum.rooms++; const eyes = R.v.map((v, i) => eyeOf(R, i));
+    document.querySelectorAll('#fndCard').forEach(e => e.remove());
+    for(const id of opt.rooms || Object.keys(ROOM)){ const R = ROOM[id]; if(!stopOf(id)) continue; await new Promise(res => travel(id, true, res)); SP = soupFor(id); PX = null; sum.rooms++; pc.projectionMatrix.copy(cam.projectionMatrix); pc.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+      const eyes = R.v.map((v, i) => eyeOf(R, i)), wide = Math.round(hHalf() * 360 / Math.PI);
       eyes.forEach((V, i) => { sum.places++; const fl = hit(V.x, V.y, V.z, 0, -1, 0, 9); let near = 99; for(let k = 0; k < 16; k++){ const a = k * Math.PI / 8; near = Math.min(near, hit(V.x, V.y, V.z, Math.sin(a), 0, Math.cos(a), 30), hit(V.x, R.fy + 1.2, V.z, Math.sin(a), 0, Math.cos(a), 30)); }
-        const walkOk = eyes.map((W, j) => j === i ? '-' : clearTo(V, W, .1) ? 'glide' : 'blink').join('/'), row = `${id} place ${i}: floor ${fl.toFixed(2)} ft under the eye, nearest thing ${near.toFixed(1)} ft, walks ${walkOk}`; rows.push(row);
-        if(Math.abs(fl - EYE) > .2) bad.push(row + ' (not standing on the floor)'); if(near < .9) bad.push(row + ' (too close to a wall or furniture)'); });
-      R.spots.forEach((s, i) => { sum.spots++; sum.d[s.d] = (sum.d[s.d] || 0) + 1; setProp(s); const P = new THREE.Vector3(s.p[0], s.p[1], s.p[2]), q = seeAll(R, P), b = q.vs[q.best], V0 = eyes[0], Vb = eyes[q.best], flags = [];
-        const under = hit(P.x, P.y + .5, P.z, 0, -1, 0, 3); if(!(under < .75)) flags.push('NOTHING-UNDER-HIM'); if(b.n < 5) flags.push('TOO-HIDDEN'); if(!!s.w !== (q.vs[0].n < 3) && id !== 'entry') flags.push(s.w ? 'W-BUT-SEEN-FROM-ARRIVAL' : 'NEEDS-WALK'); if(q.vs[0].n < 3) sum.needWalk++;
-        let open = '', seenOpen = 0; const vis0 = id === 'entry' ? [] : shown(V0, P); for(const [w, h] of shapes){ const hh = lens(w, h), keepA = cam.aspect; cam.aspect = w / h; const yaw = openingYaw(R, V0, P, q.vs[0]); cam.aspect = keepA; pose(V0, yaw, 0);
-          let n = 0; for(const [u, v] of vis0){ _b.copy(onCat(V0, P, u, v, _a)).project(pc); if(_b.z < 1 && Math.abs(_b.x) < 1 && Math.abs(_b.y) < 1) n++; } seenOpen = Math.max(seenOpen, n); open += ` ${w}x${h}: faces ${Math.round(((yaw * 180 / Math.PI) % 360 + 360) % 360)}, ${n} pts`; }
-        if(seenOpen){ sum.seenOnArrival++; flags.push('IN-OPENING-VIEW'); }
-        let size = ''; for(const [w, h] of shapes){ lens(w, h); const c = onCat(Vb, P, b.cu, b.cv, new THREE.Vector3()), dx = c.x - Vb.x, dz = c.z - Vb.z; pose(Vb, Math.atan2(dx, dz), clamp(Math.atan2(c.y - Vb.y, Math.hypot(dx, dz)), -.6, .35)); let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
-          for(const [u, v] of [[b.u0, b.v0], [b.u1, b.v0], [b.u0, b.v1], [b.u1, b.v1]]){ _b.copy(onCat(Vb, P, u, v, _a)).project(pc); x0 = Math.min(x0, _b.x); x1 = Math.max(x1, _b.x); y0 = Math.min(y0, _b.y); y1 = Math.max(y1, _b.y); }
-          const pw = (x1 - x0) / 2 * w, ph = (y1 - y0) / 2 * h; size += ` ${w}x${h}: shows ${Math.round(pw)}x${Math.round(ph)} px, tap ${Math.round(Math.max(88, pw + 44))}x${Math.round(Math.max(88, ph + 44))}`; if(Math.max(pw, ph) < 12) flags.push('TINY@' + w); if(Math.abs((x0 + x1) / 2) > .9 || Math.abs((y0 + y1) / 2) > .9) flags.push('OFF-SCREEN@' + w); }
-        const row = `${id}.${i} d${s.d}${s.w ? 'w' : ''}${s.box ? ' box' : ''} "${s.n}": shows ` + q.vs.map((x, j) => `${Math.round(x.f * 100)}% (head ${Math.round(x.head * 100)}%) from place ${j} at ${x.d.toFixed(0)} ft`).join(', ') + `; spot him from place ${q.best};${open};${size}` + (flags.length ? ' !! ' + flags.join(' ') : ''); rows.push(row); if(flags.length) bad.push(row); }); }
-    SP = keep.SP; PX = keep.PX; BOX.visible = keep.box; return {ok: !bad.filter(r => !/NEEDS-WALK|W-BUT/.test(r)).length, sum, bad, rows}; }
+        const row = `${id} place ${i}: floor ${fl.toFixed(2)} ft under the eye, nearest thing ${near.toFixed(1)} ft, walks ${eyes.map((W, j) => j === i ? '-' : clearTo(V, W, .1) ? 'glide' : 'blink').join('/')}, lens ${wide} deg across`; rows.push(row);
+        if(Math.abs(fl - EYE) > .2) bad.push(row + ' !! NOT-ON-THE-FLOOR'); if(near < .9) bad.push(row + ' !! TOO-CLOSE'); });
+      R.spots.forEach((s, i) => { sum.spots++; setProp(s); const P = new THREE.Vector3(s.p[0], s.p[1], s.p[2]), q = seeAll(R, P), b = q.vs[q.best], V0 = eyes[0], Vb = eyes[q.best], flags = [], how = 'd' + s.d + (s.w ? 'w' : ''); sum.byHow[how] = (sum.byHow[how] || 0) + 1;
+        if(!(hit(P.x, P.y + .5, P.z, 0, -1, 0, 3) < .75)) flags.push('NOTHING-UNDER-HIM'); if(b.n < 6) flags.push('TOO-HIDDEN'); if(id !== 'entry' && !!s.w !== (q.vs[0].n < 6)) flags.push(s.w ? 'W-BUT-SEEN-FROM-ARRIVAL' : 'NEEDS-WALK'); if(q.vs[0].n < 6) sum.needWalk++;
+        const yaw = id === 'entry' ? yawTo(V0, P) : openingYaw(R, V0, P, q.vs[0]); pose(V0, yaw, 0); let n0 = 0; for(const [u, v] of shown(V0, P)){ _b.copy(onCat(V0, P, u, v, _a)).project(pc); if(_b.z < 1 && Math.abs(_b.x) < 1 && Math.abs(_b.y) < 1) n0++; }
+        if(n0 && id !== 'entry'){ sum.seenOnArrival++; flags.push('IN-OPENING-VIEW'); }
+        const c = onCat(Vb, P, b.cu, b.cv, new THREE.Vector3()), dx = c.x - Vb.x, dz = c.z - Vb.z; pose(Vb, Math.atan2(dx, dz), clamp(Math.atan2(c.y - Vb.y, Math.hypot(dx, dz)), -.6, .35)); let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+        for(const [u, v] of [[b.u0, b.v0], [b.u1, b.v0], [b.u0, b.v1], [b.u1, b.v1]]){ _b.copy(onCat(Vb, P, u, v, _a)).project(pc); x0 = Math.min(x0, _b.x); x1 = Math.max(x1, _b.x); y0 = Math.min(y0, _b.y); y1 = Math.max(y1, _b.y); }
+        const pw = (x1 - x0) / 2 * rc.width, ph = (y1 - y0) / 2 * rc.height; if(Math.max(pw, ph) < 14) flags.push('TINY'); if(Math.abs((x0 + x1) / 2) > .94 || Math.abs((y0 + y1) / 2) > .94) flags.push('OFF-SCREEN-WHEN-SHOWN');
+        const row = `${id}.${i} ${how}${s.box ? ' box' : ''} "${s.n}" | shows ` + q.vs.map((x, j) => `${Math.round(x.f * 100)}% head ${Math.round(x.head * 100)}% @${x.d.toFixed(0)}ft`).join(', ') + ` | spot from place ${q.best} | arrive facing ${Math.round(((yaw * 180 / Math.PI) % 360 + 360) % 360)}, ${n0} pts on screen | shows ${Math.round(pw)}x${Math.round(ph)} px, tap ${Math.round(Math.max(88, pw + 44))}x${Math.round(Math.max(88, ph + 44))}` + (flags.length ? ' !! ' + flags.join(' ') : '');
+        rows.push(row); if(flags.length) bad.push(row); }); }
+    setProp(null); return {ok: !bad.length, sum, bad, rows}; }
   // every clue the game can deal: each pair of rooms it is in and runs to, many shuffles; none may offer two rooms of a group, a wrong number of choices, or the room you are in
   function clues(n){ const R = rng(20261111), bad = [], photos = {}, seen = {}; let cards = 0; for(const k in ROOM){ if(photos[ROOM[k].photo]) bad.push('two rooms use the photo ' + ROOM[k].photo); photos[ROOM[k].photo] = k; if(!ROOM[k].cam.length) bad.push(k + ' has no cam detail'); }
     for(let i = 0; i < (n || 40); i++) for(const here of Object.keys(ROOM)) for(const next of POOL){ if(next === here) continue; const q = pickClue(next, here, R), g = q.opts.map(k => ROOM[k].grp); cards++; q.opts.forEach(k => { seen[k] = (seen[k] || 0) + 1; });
