@@ -6649,7 +6649,7 @@ function navQA(){
     for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
       if(A && A.path){ walked++; const P = A.path; let off = 0, f = P.pts[0].y - EYE;
         for(let k = 7; k < P.pts.length - 7; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0){ const q = r36Nearest(v.x, v.z, f, 3); if(!q || q.d > .8) off++; } }
-        if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > R36N.MAXS + .01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
+        if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > 8.01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
         R.note('moves', id, 'walk ' + r2(P.L) + ' ft in ' + r2(A.dur) + ' s' + (P.doors.length ? ', doors ' + P.doors.map(d => d.it.id).join(' ') : '')); for(const f2 of [.25, .5, .75]){ mid(f2); R.row('moves', id + '@' + f2, probe()); } }
       else if(A && A.cut){ cut++; R.note('moves', id, 'cut'); } else if(A){ flown++; if(A.kind === 'look' && A.from.distanceTo(A.to) > 3) R.fail('moves', id, 'a straight flight of ' + r2(A.from.distanceTo(A.to)) + ' ft'); else R.note('moves', id, A.kind === 'orbit' ? 'orbit flight outdoors' : 'turn'); }
       finish(); const m = probe(); if(dist(m, FRAME_FOR(b).pos) > (look(b) ? .05 : .8)) R.fail('moves', id, 'ended at ' + m.pos + ', not at the stop'); }
@@ -7242,7 +7242,7 @@ function feetOrCam(){ if(mode==='walk') return feet; if(mode==='tour'){ const l=
 /* r36: in Dollhouse / Design a click on the plan no longer drops you into Walk; it enlarges the plan (as does the corner button in any mode) */
 { const mini = $('#mini'), big = () => { mini.classList.toggle('big36'); }, b = document.createElement('button'); b.type = 'button'; b.id = 'mmBig36'; b.textContent = '\u2922'; b.title = 'Enlarge or shrink the floor plan'; b.setAttribute('aria-label', 'Enlarge or shrink the floor plan');
   b.style.cssText = 'position:absolute;right:6px;bottom:6px;width:28px;height:28px;border-radius:8px;border:1px solid rgba(0,0,0,.18);background:rgba(255,255,255,.92);font-size:15px;line-height:1;cursor:pointer;padding:0'; b.onclick = e => { e.stopPropagation(); big(); };
-  const st = document.createElement('style'); st.textContent = '.mini.big36 canvas{width:min(460px,78vw)}.mini{position:absolute}.mini:not(.open27) #mmBig36{display:none}html.ph .mini #mmBig36{display:block}'; document.head.appendChild(st); mm.parentElement.appendChild(b);
+  const st = document.createElement('style'); st.textContent = '.mini.big36 canvas{width:min(460px,78vw)}.mini.big36{z-index:5}.mini{position:absolute}.mini:not(.open27) #mmBig36{display:none}html.ph .mini #mmBig36{display:block}'; document.head.appendChild(st); mm.parentElement.appendChild(b);
   mm.parentElement.addEventListener('click', e => { if(e.target === mm && isDoll()){ e.stopPropagation(); big(); } }, true); }
 mm.addEventListener('click',e=>{
   const r=mm.getBoundingClientRect(); const u=(e.clientX-r.left)/r.width*mm.width, v=(e.clientY-r.top)/r.height*mm.height;
@@ -8939,6 +8939,16 @@ async function buildLightFixtures(){
   // primary bedroom ceiling fan (Minka-Aire Java 54", polished nickel)
   const fan = L.feature_fixtures.find(f => /bedroom fan/i.test(f.item) && f.x != null);
   window.__FANS = [];
+  /* r37: the Minka-Aire Java 54 in LED (F753L): canopy, downrod, a shallow drum housing, three wide blades that flare from the hub and sweep back to a rounded tip at a 14 degree pitch, and a flat opal lens under the housing. Origin at the ceiling. */
+  function r37JavaFan(rod, body, blade){ const g = new THREE.Group(), add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+    add(new THREE.CylinderGeometry(.2, .24, .14, 28), body, 0, -.07, 0); add(new THREE.CylinderGeometry(.035, .035, rod + .1, 12), body, 0, -.14 - rod / 2, 0);
+    const yM = -.14 - rod - .16, pr = [[0, .16], [.1, .16], [.17, .12], [.3, .09], [.345, .04], [.35, -.06], [.31, -.12], [0, -.12]].map(q => new THREE.Vector2(q[0], q[1])); add(new THREE.LatheGeometry(pr, 36), body, 0, yM, 0);
+    const lens = new THREE.Mesh(new THREE.SphereGeometry(.26, 28, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({color: 0xfff6e6, emissive: 0xfff0d2, emissiveIntensity: .85, roughness: .6})); lens.scale.y = .32; lens.position.y = yM - .12; g.add(lens);
+    const R = 2.25, r0 = .3, sw = x => -.2 * Math.pow((x - r0) / (R - r0), 2), s = new THREE.Shape(), P = (x, y) => [x, y + sw(x)];
+    s.moveTo(...P(r0, .09)); s.quadraticCurveTo(...P(.9, .13), ...P(1.35, .27)); s.quadraticCurveTo(...P(1.9, .34), ...P(R - .12, .2)); s.quadraticCurveTo(...P(R + .03, .06), ...P(R - .1, -.1)); s.quadraticCurveTo(...P(1.8, -.3), ...P(1.2, -.27)); s.quadraticCurveTo(...P(.7, -.2), ...P(r0, -.1)); s.lineTo(...P(r0, .09));
+    const bg = new THREE.ExtrudeGeometry(s, {depth: .022, bevelEnabled: true, bevelThickness: .006, bevelSize: .006, bevelSegments: 1, curveSegments: 10});
+    for(let i = 0; i < 3; i++){ const h = new THREE.Group(); h.rotation.y = i * Math.PI * 2 / 3; h.position.y = yM + .02; const m = new THREE.Mesh(bg, blade); m.rotation.x = -Math.PI / 2 + .244; m.castShadow = true; m.receiveShadow = true; h.add(m); g.add(h); }
+    g.userData.java = true; return g; }
   for(const f of L.feature_fixtures.filter(f => f.kind === 'ceilingFan' || /\bfans?\b/i.test(f.item)) ) if(window.FIX && FIX.make){ try{
     const fz = LEVEL_Z[f.level] != null ? LEVEL_Z[f.level] : 0, isUp = fz > 4, IN_ = 1 / 12, spots = [];
     if(f.x != null) spots.push([f.x, f.y, f.item]);
@@ -8951,12 +8961,14 @@ async function buildLightFixtures(){
     if(f.qty && spots.length > f.qty){ const pref = f.prefer || 'E'; spots.sort((u, v) => pref === 'E' ? v[0] - u[0] : u[0] - v[0]); spots.length = f.qty; }
     const nick = true, dark = !nick;   /* r36 owner 11/11: the fans are the Minka-Aire Java 54 in LED in brushed nickel - three blades the same brushed-nickel finish as the housing (not white, not polished), opal LED lens underneath */
     const dia = +(((f.size || '').match(/(\d+)\s*in/) || [0, 52])[1]) * IN_, rodRec = (f.fixture || '').match(/(\d+)\s*in[^,]*downrod/), rod0 = rodRec ? +rodRec[1] * IN_ : 1.0;
-    const body = nick ? new THREE.MeshStandardMaterial({color: 0xc3c5c7, metalness: .9, roughness: .4}) : new THREE.MeshStandardMaterial({color: 0x3a3532, metalness: .45, roughness: .45});
-    const blade = nick ? new THREE.MeshStandardMaterial({color: 0xbcbec0, metalness: .85, roughness: .44}) : new THREE.MeshStandardMaterial({color: 0x34302d, metalness: .3, roughness: .5});
+    const body = nick ? new THREE.MeshStandardMaterial({color: 0xcdd0d2, metalness: .6, roughness: .4}) : new THREE.MeshStandardMaterial({color: 0x3a3532, metalness: .45, roughness: .45});
+    const blade = nick ? new THREE.MeshStandardMaterial({color: 0xc6c9cb, metalness: .25, roughness: .5}) :   /* r37: the Java's blades are silver polycarbonate (spec sheet F753L-BNW), which reads light in daylight, not dark like bare metal */
+       new THREE.MeshStandardMaterial({color: 0x34302d, metalness: .3, roughness: .5});
     for(const [bx, by, where] of spots){
       let cz = bim2CeilingAt(bx, by, fz).z; for(let a = 0; a < 8; a++) cz = Math.max(cz, bim2CeilingAt(bx + .14 * Math.cos(a * Math.PI / 4), by + .14 * Math.sin(a * Math.PI / 4), fz).z);
-      const rod = Math.max(.25, Math.min(rod0, cz - (fz + 8) - .45)), [wx, wz] = W2(bx, by);
-      const o = FIX.make('ceilingFan', {dia: nick ? 54 / 12 : dia, downrod: rod, light: nick || /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
+      let rod = Math.max(.25, Math.min(rod0, cz - (fz + 8) - .45)); const [wx, wz] = W2(bx, by);
+      if(nick){ let lo = cz; for(let a = 0; a < 8; a++) lo = Math.min(lo, bim2CeilingAt(bx + 2.25 * Math.cos(a * Math.PI / 4), by + 2.25 * Math.sin(a * Math.PI / 4), fz).z); rod = clamp(Math.max(rod, cz - lo + .7 - .5), .5, 2); }   // r37: long enough that the blade tips clear a sloped ceiling by 8 in
+      const o = nick ? r37JavaFan(rod, body, blade) : FIX.make('ceilingFan', {dia: nick ? 54 / 12 : dia, downrod: rod, light: nick || /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
       o.traverse(k => { if(!k.isMesh) return; if(k.name === 'blackMetal') k.material = body; else if(k.name === 'plasticWhite') k.material = blade; k.castShadow = true; k.receiveShadow = true; });
       o.position.set(wx, cz, wz); o.rotation.y = Math.PI / 6; o.userData.kind = 'ceilingFan'; grp(isUp ? 'furnU' : 'furn').add(o);
       window.__FANS.push({item: f.item, where, x: +bx.toFixed(2), y: +by.toFixed(2), ceiling: +cz.toFixed(2), downrod: +rod.toFixed(2), dia: +dia.toFixed(2), bladesAFF: +(cz - .2 - rod - .24 - fz).toFixed(2)}); }
@@ -9322,7 +9334,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=2' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=2' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=44' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=38' : '../assets/escape/escape.js?v=37'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=2' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=2' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=44' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=39' : '../assets/escape/escape.js?v=37'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
@@ -10019,7 +10031,8 @@ function lightMeterPoll(){
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
     const gl = r.getContext(), prev = r.getRenderTarget(); METER.mat.uniforms.tDiffuse.value = read.texture; r.setRenderTarget(METER.rt); METER.quad.render(r);
-    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 16 * 16 * 4, gl.STREAM_READ);   /* r37: a fresh store for each read (orphans the one the last read may still be using; the reused buffer made the driver warn) */
+    gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     METER.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); METER.eAt = r.toneMappingExposure; r.setRenderTarget(prev); }};
 function lightMeterMul(dt){
   const Mt = LIGHT.meter; dt = Math.min(.1, dt || .016);
@@ -19706,16 +19719,15 @@ function bim3Doors(){
         const vw = [v[1], v[0]], sw = [s[1], s[0]], e = 1e-3, vx = vw[0] * Math.cos(e) + vw[1] * Math.sin(e), vz = -vw[0] * Math.sin(e) + vw[1] * Math.cos(e);
         part.sign = ((vx - vw[0]) * sw[0] + (vz - vw[1]) * sw[1]) >= 0 ? 1 : -1; part.ang = open; part.ang0 = ang0; t0 = Math.max(t0, Math.min(1, ang0 / open)); }
       else if(/POCKET/.test(kind0)){ const dir = lf.hingeEnd === 'END' ? 1 : -1; part.u3 = new THREE.Vector3(ax[1] * dir, 0, ax[0] * dir); part.d = Math.max(.5, (lf.w || W) - .25); part.f0 = lf.openFraction || 0; t0 = part.f0; }
-      else if(/BYPASS/.test(kind0)){ const sgn = k === 1 ? 1 : -1; part.u3 = new THREE.Vector3(ax[1] * sgn, 0, ax[0] * sgn); part.d = (k % 2) ? (lf.w || W / L.length) * .92 : 0; part.f0 = lf.openFraction || 0; }
-      else if(/MULTI|SLID/.test(kind0)){ part.u3 = new THREE.Vector3(-ax[1], 0, -ax[0]); part.f0 = lf.openFraction || 0; }
+      else if(/BYPASS|MULTI|SLID/.test(kind0)){   /* r37 owner 11/11: every sliding panel slides, panels stack on their own tracks, and the door opens from either end (see bim3Slide) */
+        part.u3 = new THREE.Vector3(ax[1], 0, ax[0]); part.s = h[0] * ax[0] + h[1] * ax[1]; part.w = lf.w || W / L.length; part.trk = Math.round((h[0] * (o.normal || [0, 1])[0] + h[1] * (o.normal || [0, 1])[1]) / .03); part.f0 = lf.openFraction || 0; }
       else if(/SECTIONAL|ROLL/.test(kind0)){ const sB = bim3SideDir(o, 'B'); box.getCenter(part.cen = new THREE.Vector3()); part.inW = new THREE.Vector3(sB[1], 0, sB[0]); part.H = box.max.y - box.min.y;
         part.axW = new THREE.Vector3(ax[1], 0, ax[0]).normalize();
         if(lf.sections > 1){ part.j = lf.section || 0; part.secH = lf.secH; part.Ltot = lf.h; part.R = .5;   // r5 rolling sections (kernel O5c)
           part.sg = part.axW.clone().cross(new THREE.Vector3(0, 1, 0)).dot(part.inW) > 0 ? 1 : -1; } }
       it.parts.push(part); B3D.report.leaves++; });
     if(!it.parts.length){ DOOR28.items.splice(DOOR28.items.indexOf(it), 1); continue; }
-    if(/MULTI|SLID/.test(kind0)){ const sv = p => { const q = new THREE.Vector3(); p.box.getCenter(q); q.add(p.piv.position); return q.x * p.u3.x + q.z * p.u3.z; };
-      const ord = it.parts.slice().sort((a, b) => sv(b) - sv(a)); ord.forEach((p, i) => { p.rank = i; }); it.pitch = (W - .4) / it.parts.length; }
+    if(/BYPASS|MULTI|SLID/.test(kind0)) bim3Slide(it, /BYPASS/.test(kind0) ? 'L' : 'R', c, ax, W);
     it.t0 = it.t = t0; it.gap = null; it.c0 = [c[1], c[0]]; it.n3 = new THREE.Vector3((o.normal || [0, 1])[1], 0, (o.normal || [0, 1])[0]);
     // a closed door blocks walking (v33 rule): a thin collider over the opening, passable once open
     try{ const hw = W / 2, th = Math.max(.25, o.thickness || .4) / 2, P = (a, d) => [c[0] + ax[0] * a + (o.normal || [0, 1])[0] * d, c[1] + ax[1] * a + (o.normal || [0, 1])[1] * d];
@@ -19743,13 +19755,30 @@ function bim3GarageTracks(){ let n = 0; if(!/[?&]b3tracks=1/.test(location.searc
       basis.makeBasis(tx, ty, tz); m.quaternion.setFromRotationMatrix(basis); m.castShadow = m.receiveShadow = true; g.add(m); n++; }
     (p.piv.parent || grp('main')).add(g); }
   BIM3.report.garageTracks = n; return n; }
+/* r37 owner 11/11: "closet doors in bedrooms (triple sliders) only the middle panel moves - should be more like the sliders to the outside... they
+   can even open from either side - that is actually true for all sliders". One rule for every slider in the model (closet bypass doors, the
+   stacking glass doors): each leaf has its own slot along the opening (s, width w) and a track (trk, from its depth in the wall). Opening from the
+   low end ('L') every leaf slides toward the high end as far as it can: onto the last leaf's slot, but never through a leaf ahead of it on its own
+   track; 'R' is the mirror. The lead panel moves first and picks the others up as it reaches them. Which end opens is decided when a closed door
+   is told to open: by where it was clicked (nearer end), or by where a walked route crosses it. The stack that is left standing keeps a collider. */
+function bim3Slide(it, side, c, ax, W){
+  const P = it.parts.filter(p => p.s != null).sort((a, b) => a.s - b.s), n = P.length; if(!n) return; const last = P[n - 1], first = P[0];
+  for(let i = n - 1; i >= 0; i--){ let lim = last.s + last.w - P[i].w; for(let j = i + 1; j < n; j++) if(P[j].trk === P[i].trk){ lim = Math.min(lim, P[j].pL - P[i].w); break; } P[i].pL = Math.max(P[i].s, lim); P[i].dL = P[i].pL - P[i].s; }
+  for(let i = 0; i < n; i++){ let lim = first.s; for(let j = i - 1; j >= 0; j--) if(P[j].trk === P[i].trk){ lim = Math.max(lim, P[j].pR + P[j].w); break; } P[i].pR = Math.min(P[i].s, lim); P[i].dR = P[i].s - P[i].pR; }
+  const alongZ = Math.abs(ax[0]) > .5, mid = c[0] * ax[0] + c[1] * ax[1];
+  it.sl = {side, P, mid, alongZ, DL: Math.max(...P.map(p => p.dL)), DR: Math.max(...P.map(p => p.dR)), lo: mid - W / 2, hi: mid + W / 2, openL: Math.min(...P.map(p => p.pL)), openR: Math.max(...P.map(p => p.pR + p.w))}; }
+function bim3SlideSide(it, a){ const S = it.sl; if(!S || it.t > .02 || DOOR28.moving.has(it)) return; S.side = a < 0 ? 'L' : 'R'; }   // a = how far along the opening from its middle (BIM axis); only a closed door changes its mind
+function bim3SlideAt(it, x, z){ const o = it.o, ax = (BIM2S.meta.openings.find(q => q.id === it.id) || {}).axis || [1, 0]; return (z - o.center[0]) * ax[0] + (x - o.center[1]) * ax[1]; }   // world point -> a
+function bim3SlideColl(it){ const S = it.sl, q = it.coll; if(!q) return;
+  if(!it.coll2){ COLLIDERS.push(it.coll2 = Object.assign({}, q, {pass: true, r37: true})); }
+  const k = it.coll2, open = it.t > .9, a0 = S.side === 'L' ? S.openL : S.lo, a1 = S.side === 'L' ? S.hi : S.openR; k.pass = !open;
+  if(S.alongZ){ k.z0 = a0; k.z1 = a1; } else { k.x0 = a0; k.x1 = a1; } }
 function bim3DoorPose(it){
   const e = door28Ease(it.t), k = it.b3kind;
   for(const p of it.parts){
     if(p.sign != null) p.piv.rotation.y = p.sign * (p.ang * e - p.ang0);
     else if(/POCKET/.test(k)) p.piv.position.copy(p.base).addScaledVector(p.u3, p.d * (e - p.f0));
-    else if(/BYPASS/.test(k)) p.piv.position.copy(p.base).addScaledVector(p.u3, p.d * e);
-    else if(/MULTI|SLID/.test(k)){ const x = e * (it.parts.length - 1) * it.pitch; p.piv.position.copy(p.base).addScaledVector(p.u3, Math.min(p.rank * it.pitch, x) ); }
+    else if(p.dL != null){ const S = it.sl, d = S.side === 'L' ? p.dL : p.dR, D = S.side === 'L' ? S.DL : S.DR, x = e * D; p.piv.position.copy(p.base).addScaledVector(p.u3, (S.side === 'L' ? 1 : -1) * clamp(x - (D - d), 0, d)); }
     else if(p.secH){ // r5: the section's bottom and top edges ride the track (up the jamb, round radius R, back under the ceiling)
       const a = bim3TrackPt(p, p.j * p.secH + e * p.Ltot), b = bim3TrackPt(p, (p.j + 1) * p.secH + e * p.Ltot), phi = Math.atan2(b[0] - a[0], b[1] - a[1]);
       p.piv.quaternion.setFromAxisAngle(p.axW, p.sg * phi); const lb = new THREE.Vector3(0, p.j * p.secH, 0).applyQuaternion(p.piv.quaternion);
@@ -19760,6 +19789,7 @@ function bim3DoorPose(it){
       p.piv.quaternion.copy(q); const r = pivotLocal.clone().applyQuaternion(q); p.piv.position.add(pivotLocal.sub(r)).addScaledVector(p.inW, .25 * e); }
   }
   if(it.coll) it.coll.pass = it.t > .9;
+  if(it.sl) bim3SlideColl(it);
 }
 { const _dp3 = door28Pose; door28Pose = function(it){ if(it.kind === 'bim3') return bim3DoorPose(it); return _dp3.apply(this, arguments); }; }
 { const _lb3 = door28Label; door28Label = function(it){ if(it.kind !== 'bim3') return _lb3.apply(this, arguments);
@@ -20240,8 +20270,16 @@ function r36PrimaryCeiling(){
   r36CutTris(/^ceilings\|L2\|/, R, (a, b, c) => [a, b, c].every(v => Math.abs(v[1] - gable(v[0])) < .06), 'primary gable ceiling past the break');
   r36CutTris(/^(roofs\||trim\|-\|)/, R2, (a, b, c) => { const y = at(a, b, c); if(y == null){ const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3]; return m[1] < dorm(m[0]) - .02 && m[1] > 12.2; } return y < dorm(xc) - .02 && y > 12.2; }, 'main roof inside the primary dormer bay');
   // the dormer bay had no ceiling of its own (the roof's tan underside showed): one painted plane just under it, in the upper level's ceiling mesh
-  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xB, dorm(xB) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -26.1], [xB, dorm(xB) - .03, -26.1], [0, -1, 0]],
-    [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]]]); }   // and the bay's end, where the gable carries on below it
+  /* r37: the bay's plane now starts a hair under the gable just past the break (the 3/8 in step there showed as a dotted line), reaches both end walls, and the hole the model left in the gable ceiling beside the bay's end (the roof soffit showed through it as loose panels) is closed */
+  const xL = xB - .04;
+  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xL, gable(xL) - .005, -36.52], [-8.76, dorm(-8.76) - .03, -36.52], [-8.76, dorm(-8.76) - .03, -26.15], [xL, gable(xL) - .005, -26.15], [0, -1, 0]],
+    [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]],   // and the bay's end, where the gable carries on below it
+    [[-12.5, gable(-12.5) - .012, -37.8], [-10.78, gable(-10.78) - .012, -37.8], [-10.78, gable(-10.78) - .012, -36.5], [-12.5, gable(-12.5) - .012, -36.5], [0, -1, 0]]]);
+  // wall paint where the model left bare framing: the bath-side gable above 15.7 ft right of the ridge, that wall inside the bay, and the top of the short return wall at the bay's other end
+  r36AddFaces(/^walls\|L2\|paint-int-flat#PAINT-SW-6241-ALEUTIAN$/, 'R37-PRIMARY-WALLS', [
+    [[-17.6, 15.7, -26.17], [(7.3135 - 15.7) / .583, 15.7, -26.17], [-16, gable(-16), -26.17], [-17.6, gable(-17.6), -26.17], [0, 0, -1]],
+    [[xB, gable(xB) - .05, -26.17], [-8.78, gable(-8.78) - .05, -26.17], [-8.78, dorm(-8.78), -26.17], [xB, dorm(xB), -26.17], [0, 0, -1]],
+    [[-10.78, 13.6, -36.5], [-8.78, 13.6, -36.5], [-8.78, dorm(-8.78), -36.5], [-10.78, dorm(-10.78), -36.5], [0, 0, 1]]]); }
 { const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); }
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36GableCasing(); }catch(e){ console.warn('[r36] gable casing', e); R36G.err.push(String(e)); }
@@ -22270,27 +22308,43 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
   } finally { doors.forEach((it, q) => { it.coll.pass = was[q]; }); } }
 function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
   const key = [from.x, from.y, from.z, to.x, to.y, to.z].map(v => v.toFixed(1)).join(',') + R36N.key; if(R36N.cache.has(key)) return R36N.cache.get(key);
-  let res = null; try{ const way = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
+  let res = null; try{ let way = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
+    /* r37: a route through the garage door goes through the middle of it, not past a jamb */
+    if(way && !R36N.noClear) for(const it of r36Doors()){ if(!/SECTIONAL/.test(it.b3kind || '') || !it.c0) continue; const q = it.coll; let hit = false;
+      for(let i = 0; i < way.length - 1 && !hit; i++){ const a = way[i], b = way[i + 1], k = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .4)); for(let u = 0; u <= k; u++){ const x = a.x + (b.x - a.x) * u / k, z = a.z + (b.z - a.z) * u / k; if(x > q.x0 - .3 && x < q.x1 + .3 && z > q.z0 - .3 && z < q.z1 + .3 && Math.abs(a.f - q.y0) < 2.5){ hit = true; break; } } }
+      if(hit){ const C = {x: it.c0[0], z: it.c0[1], f: q.y0}, w1 = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, C), w2 = w1 && r36Plan(C, {x: to.x, z: to.z, f: tf, rooms: rooms || null}); if(w1 && w2) way = w1.concat(w2.slice(1)); break; } }
     if(way){ // round the corners (two passes of corner cutting keep the line inside the pulled corridor), then sample every 0.5 ft and set the eye over the floor
       let P = way.map(n => [n.x, n.z, n.f]); for(let pass = 0; pass < 2; pass++){ const Q = [P[0]]; for(let i = 1; i < P.length - 1; i++){ const a = P[i - 1], b = P[i], d = P[i + 1], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lb = Math.hypot(d[0] - b[0], d[1] - b[1]), ka = Math.min(.25, 1.2 / Math.max(la, .01)), kb = Math.min(.25, 1.2 / Math.max(lb, .01));
           Q.push([b[0] + (a[0] - b[0]) * ka, b[1] + (a[1] - b[1]) * ka, b[2] + (a[2] - b[2]) * ka], [b[0] + (d[0] - b[0]) * kb, b[1] + (d[1] - b[1]) * kb, b[2] + (d[2] - b[2]) * kb]); } Q.push(P[P.length - 1]); P = Q; }
       const pts = [from.clone()]; let f = P[0][2];
       for(let i = 0; i < P.length - 1; i++){ const a = P[i], b = P[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]), k = Math.max(1, Math.ceil(L / .5)); for(let s = (i ? 1 : 0); s <= k; s++){ const x = a[0] + (b[0] - a[0]) * s / k, z = a[1] + (b[1] - a[1]) * s / k; f = navSupport(x, z, a[2] + (b[2] - a[2]) * s / k + .3); pts.push(new THREE.Vector3(x, f + EYE, z)); } }
       pts.push(to.clone());
+      /* r37: keep a shoulder's width off a wall that runs beside the route (the line used to brush siding and door jambs). Each point is nudged away from an obstacle on one side only, the nudges are smoothed, and a nudge is kept only where the ground is still walkable */
+      if(!R36N.noClear) try{ const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
+        try{ const n = pts.length, D = [], fr = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; }, DIR = [[1, 0], [.7071, .7071], [0, 1], [-.7071, .7071]], near = (x, z, f, dx, dz) => { for(const r of [.5, 1, 1.5, 2, 2.5]) if(!fr(x + dx * r, z + dz * r, f)) return r - .5; return 2.5; };
+          for(let i = 0; i < n; i++){ const q = pts[i], f = q.y - EYE; let sx = 0, sz = 0; if(i > 2 && i < n - 3 && Math.abs(pts[i + 1].y - pts[i - 1].y) < .12) for(const [dx, dz] of DIR){ const a = near(q.x, q.z, f, dx, dz), b = near(q.x, q.z, f, -dx, -dz); const m = a < 2.5 && b < 2.5 ? (a - b) / 2 : a - b; sx += dx * m; sz += dz * m; }
+            const L = Math.hypot(sx, sz), k = L > 2 ? 2 / L : 1; D.push([sx * k, sz * k]); }
+          const sm = k => { for(let pass = 0; pass < k; pass++){ const E = D.map(d => d.slice()); for(let i = 1; i < n - 1; i++){ D[i][0] = (E[i - 1][0] + E[i][0] * 2 + E[i + 1][0]) / 4; D[i][1] = (E[i - 1][1] + E[i][1] * 2 + E[i + 1][1]) / 4; } } };
+          const ok = i => { const q = pts[i], f = q.y - EYE, x = q.x + D[i][0], z = q.z + D[i][1]; if(Math.hypot(D[i][0], D[i][1]) < .04) return true; return !!r36At(x, z, f) && fr(x, z, f) && Math.abs(navSupport(x, z, f + .3) - f) < .2; };
+          for(let i = 0; i < n; i++){ const w = Math.max(0, Math.min(1, (i - 2) / 6, (n - 3 - i) / 6)); D[i][0] *= w; D[i][1] *= w; }
+          sm(80); for(let round = 0; round < 5; round++){ let bad = 0; for(let i = 0; i < n; i++) if(!ok(i)){ D[i][0] *= .4; D[i][1] *= .4; bad++; } if(!bad) break; sm(3); }
+          D[0] = [0, 0]; D[n - 1] = [0, 0]; for(let i = 1; i < n - 1; i++) if(ok(i) && Math.hypot(D[i][0], D[i][1]) >= .04){ const q = pts[i], f = q.y - EYE; q.x += D[i][0]; q.z += D[i][1]; q.y = navSupport(q.x, q.z, f + .3) + EYE; }
+          for(let pass = 0; pass < 5; pass++) for(let i = 2; i < n - 2; i++){ const q = pts[i], f = q.y - EYE, x = (pts[i - 1].x + q.x * 2 + pts[i + 1].x) / 4, z = (pts[i - 1].z + q.z * 2 + pts[i + 1].z) / 4; if(Math.hypot(x - q.x, z - q.z) < .01 || !r36At(x, z, f) || !fr(x, z, f)) continue; const y = navSupport(x, z, f + .3); if(Math.abs(y - f) < .3){ q.x = x; q.z = z; q.y = y + EYE; } }   // and no kinks left in the line
+        } finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }catch(e){ console.warn('[r37 nav] clearance', e); }
       for(let pass = 0; pass < 3; pass++) for(let i = 2; i < pts.length - 2; i++) pts[i].y = (pts[i - 1].y + pts[i].y * 2 + pts[i + 1].y) / 4;   // stair nosings and thresholds become one even climb
       { const n = pts.length, k0 = Math.min(6, n - 2), y0 = pts[0].y, y1 = pts[n - 1].y; for(let i = 1; i <= k0; i++){ const w = i / (k0 + 1); pts[i].y = lerp(y0, pts[i].y, w); pts[n - 1 - i].y = lerp(y1, pts[n - 1 - i].y, w); } }
       const cum = [0]; for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
-      const doors = []; for(const it of r36Doors()){ const q = it.coll; for(let i = 0; i < pts.length; i++){ const p = pts[i]; if(p.x > q.x0 - .25 && p.x < q.x1 + .25 && p.z > q.z0 - .25 && p.z < q.z1 + .25 && p.y - EYE > q.y0 - 1.5 && p.y - EYE < q.y1 - 2){ doors.push({it, s: cum[i]}); break; } } }
+      const doors = []; for(const it of r36Doors()){ const q = it.coll; for(let i = 0; i < pts.length; i++){ const p = pts[i]; if(p.x > q.x0 - .25 && p.x < q.x1 + .25 && p.z > q.z0 - .25 && p.z < q.z1 + .25 && p.y - EYE > q.y0 - 1.5 && p.y - EYE < q.y1 - 2){ doors.push({it, s: cum[i], x: p.x, z: p.z}); break; } } }
       res = {pts, cum, L: cum[cum.length - 1], doors}; } }catch(e){ console.warn('[r36 nav] route', e); }
   if(R36N.cache.size > 400) R36N.cache.clear(); R36N.cache.set(key, res); return res; }
 function r36PathPos(p, s, out){ const c = p.cum; let lo = 0, hi = c.length - 1; s = clamp(s, 0, p.L); while(hi - lo > 1){ const m = (lo + hi) >> 1; if(c[m] <= s) lo = m; else hi = m; } const d = c[hi] - c[lo]; return out.lerpVectors(p.pts[lo], p.pts[hi], d > 1e-6 ? (s - c[lo]) / d : 0); }
 const r36Ease = t => { const a = .16, v = 1 / (1 - a); return t < a ? v * t * t / (2 * a) : t > 1 - a ? 1 - v * (1 - t) * (1 - t) / (2 * a) : v * (t - a / 2); };
-function r36OpenDoor(it){ if(DOOR28.moving.has(it)){ if(it.dir < 0) it.dir = 1; return; } if(it.t < .5) door28Toggle(it); }
+function r36OpenDoor(it, x, z){ if(DOOR28.moving.has(it)){ if(it.dir < 0) it.dir = 1; return; } if(it.t < .5){ if(it.sl && x != null){ it.r37a = null; try{ bim3SlideSide(it, bim3SlideAt(it, x, z)); }catch(e){} } door28Toggle(it); } }
 const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
 function r36PathStep(a, tt){   // one frame of a walked move: position on the route, eyes ahead, then onto the destination's own view
   const p = a.path; if(tt >= 1){ camera.position.copy(a.to); curT.copy(a.toT); camera.lookAt(curT); return; }
   let s = r36Ease(tt) * p.L;
-  for(const d of p.doors){ if(d.s - s < 10 && s - d.s < 1.5){ r36OpenDoor(d.it); if(d.s - s < 2.4 && d.s - s > -.4 && d.it.t < .55 && a.sHold != null){ s = Math.min(s, a.sHold); a.t0 += performance.now() - (a.lastNow || performance.now()); } } }   // wait at a door that is still swinging
+  for(const d of p.doors){ const sp = a.sHold == null ? s : a.sHold; if(d.s - s < Math.max(10, p.L / Math.max(a.dur, .5) * ((d.it.dur || .8) + .35) + 2) && sp - d.s < 1.5){ r36OpenDoor(d.it, d.x, d.z); if(d.s - s < 2.4 && sp - d.s < .4 && d.it.t < .85 && a.sHold != null){ s = Math.min(s, Math.max(sp, d.s - 2.4)); a.t0 += performance.now() - (a.lastNow || performance.now()); } } }   // (r37: measured from last frame's place, so a slow frame cannot step over the door)   // wait at a door that is still swinging
   a.sHold = s; a.lastNow = performance.now(); r36PathPos(p, s, camera.position);
   const ah = r36PathPos(p, Math.min(p.L, s + 5), R36V), dx = ah.x - camera.position.x, dz = ah.z - camera.position.z, dy = ah.y - camera.position.y, hz = Math.hypot(dx, dz);
   let yw = a.yaw0, pt = a.pitch0;
@@ -22316,8 +22370,8 @@ function r36Pathify(a, o){ o = o || {};
   let fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); if(o.level0 != null && Math.abs(fa - o.level0) > .6 && P.y - fa > 7 && Math.abs(P.y - o.level0 - EYE) < 1.2) fa = o.level0; const ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return 0;
   let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return 0;
   if(reduceMotion) return 0;
-  const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > R36N.CAP) return 0;
-  a.path = R; a.lift = 0; a.dur = clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS); a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
+  const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > (o.cap || R36N.CAP)) return 0;
+  a.path = R; a.lift = 0; a.dur = R.L > R36N.PACE * R36N.MAXS ? clamp(R.L / 12.2, R36N.MAXS, 8) : clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS);   /* r37: a tour move of two stair flights is walked a little faster (up to 11.5 ft/s, 8 s) rather than cut */ a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
   { const dir = new THREE.Vector3(); camera.getWorldDirection(dir); a.yaw0 = Math.atan2(-dir.x, -dir.z); a.pitch0 = Math.asin(clamp(dir.y, -1, 1)); }
   if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)]; let dx = e.x - b.x, dz = e.z - b.z; const L = Math.hypot(dx, dz);
     if(L > .5){ dx /= L; dz /= L;
@@ -22334,7 +22388,7 @@ function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
-        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true};
+        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 100};
         if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
         else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
         else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
@@ -22374,19 +22428,23 @@ function r36WalkDoors(){ if((r36WalkDoors.n = (r36WalkDoors.n || 0) + 1) % 3) re
   const sg = mv >= 0 ? 1 : -1, hx = -Math.sin(yaw) * sg, hz = -Math.cos(yaw) * sg;
   for(const it of r36Doors()){ if(it.t > .5 || (DOOR28.moving.has(it) && it.dir > 0)) continue; const q = it.coll; if(feet < q.y0 - 2.5 || feet > q.y0 + 2.5) continue;
     const rx = it.c0[0] - P.x, rz = it.c0[1] - P.z, dn = Math.abs(rx * it.n3.x + rz * it.n3.z), lat = Math.abs(-rx * it.n3.z + rz * it.n3.x), W = it.o.width || 3, reach = /SECTIONAL/.test(it.b3kind || '') ? 7 : 5.2;
-    if(dn < reach && lat < W / 2 + .4 && (rx * hx + rz * hz > .15 * Math.hypot(rx, rz) || dn < 1.4)) r36OpenDoor(it); } }
+    if(dn < reach && lat < W / 2 + .4 && (rx * hx + rz * hz > .15 * Math.hypot(rx, rz) || dn < 1.4)) r36OpenDoor(it, P.x, P.z); } }
 { const _nw36 = navWalk; navWalk = function(dt){ const r = _nw36.apply(this, arguments); if(R36N.on) try{ r36WalkDoors(); }catch(e){} return r; }; }
 /* the open garage doorway is for walking through (as the kitchen pocket door): a tap on the floor seen through it walks in; the raised door itself still closes it */
-{ const _dh36 = door28Hit; door28Hit = function(cx, cy){ const it = _dh36.apply(this, arguments); try{ if(it && /SECTIONAL/.test(it.b3kind || '') && it.t > .5){ const h = pick(cx, cy); if(h && h.face && h.face.normal.y > .6) return null; } }catch(e){} return it; }; }
+{ const _dh36 = door28Hit; door28Hit = function(cx, cy){ const it = _dh36.apply(this, arguments); try{ if(it && /SECTIONAL/.test(it.b3kind || '') && it.t > .5){ const h = pick(cx, cy); if(h && h.face && h.face.normal.y > .6) return null; }
+      if(it && it.sl){ const R = D28RC.ray, n = it.n3, dn = R.direction.x * n.x + R.direction.z * n.z, t = Math.abs(dn) > 1e-4 ? ((it.c0[0] - R.origin.x) * n.x + (it.c0[1] - R.origin.z) * n.z) / dn : -1; it.r37a = t > 0 ? bim3SlideAt(it, R.origin.x + R.direction.x * t, R.origin.z + R.direction.z * t) : null; } }catch(e){} return it; }; }
+/* r37: a slider opens from the end nearer the click (a closed one; an open one just closes) */
+{ const _dt37 = door28Toggle; door28Toggle = function(it){ try{ if(it && it.sl && it.r37a != null){ bim3SlideSide(it, it.r37a); it.r37a = null; } }catch(e){} return _dt37.apply(this, arguments); }; }
 /* 'You are in': the space under the feet; outdoors the deck slab or the nearest outdoor place, never an indoor room */
 const R36OUT = {'SL-DK-FRONT': 'frontdeck', 'SL-DK-BALC': 'balcony'}, R36HALL = {lhall: 'Lower hall', mainhall: 'Bedroom hallway', uhall: 'Primary hall'};
 function r36WhereAt(x, z, f){
   let s = null; try{ s = BIM2S.spaceUnderFeet(z, x, f); }catch(e){}
   if(s && Math.abs(s.floorZ - f) < 2.6){ const id = GRID2ROOM[s.tourRoom] || s.tourRoom, lvl = {L0: 'lower', LG: 'garage', L1: 'main', L2: 'upper'}[s.storey] || 'main';
     if(/CLOSET|STORAGE/.test(s.id) && !/DRESSING/.test(s.id)) return {name: (s.raw && s.raw.name) || s.name || 'Closet', level: lvl, ph: [], key: s.id};
-    if(/STAIR/.test(s.id) && ROOM.stairs) return ROOM.stairs; if(id && ROOM[id]) return ROOM[id];
+    if(/STAIR/.test(s.id) && ROOM.stairs) return Math.abs(f - LV.main) < .45 && ROOM.entry ? ROOM.entry : ROOM.stairs;   /* r37: the tiled main-level floor of the stair hall is the entry foyer (the Entry stop stands on it and the label read 'Stairs'); the flights and the other landings stay 'Stairs' */
+    if(id && ROOM[id]) return ROOM[id];
     return {name: R36HALL[s.tourRoom] || (s.raw && s.raw.name) || s.name || 'Hall', level: lvl, ph: [], key: s.id}; }
-  try{ for(const sl of (BIM2S.meta.slabs || [])){ if(Math.abs(sl.z - f) > .8 || !inPoly(sl.outline, z, x)) continue; if(sl.interior){ if(sl.id === 'SL-DK-LAND' && ROOM.stairs) return ROOM.stairs; continue; } const id = R36OUT[sl.id]; if(id && ROOM[id]) return ROOM[id]; if(sl.id === 'SL-DK-REAR') return {name: 'Rear deck', level: 'main', ph: (ROOM.entry || {ph: []}).ph, key: sl.id}; } }catch(e){}
+  try{ for(const sl of (BIM2S.meta.slabs || [])){ if(Math.abs(sl.z - f) > .8 || !inPoly(sl.outline, z, x)) continue; if(sl.interior){ if(sl.id === 'SL-DK-LAND' && ROOM.stairs) return Math.abs(f - LV.main) < .45 && ROOM.entry ? ROOM.entry : ROOM.stairs; continue; } const id = R36OUT[sl.id]; if(id && ROOM[id]) return ROOM[id]; if(sl.id === 'SL-DK-REAR') return {name: 'Rear deck', level: 'main', ph: (ROOM.entry || {ph: []}).ph, key: sl.id}; } }catch(e){}
   try{ if(bim2InFootprint(x, z, .3)) return ROOM.stairs && Math.hypot(x - ROOM.stairs.at[0], z - ROOM.stairs.at[1]) < 12 ? ROOM.stairs : null; }catch(e){}   // indoors but between spaces (a stair flight, a threshold): the stair, or no change
   let best = null, bd = 1e9; for(const r of ROOMS){ if(r.level !== 'outside') continue; const d = Math.hypot(x - r.at[0], z - r.at[1]); if(d < bd){ bd = d; best = r; } }
   if(z > 3 && best && best.id !== 'street' && ROOM.street) best = ROOM.street;   // the front of the house (drive, walk, steps) is the street side
@@ -22401,7 +22459,7 @@ function r36WhereAt(x, z, f){
 function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golden' ? .045 : .08, g = GROUPS.terrain; if(!g) return; g.traverse(o => { if(o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(k, k, k * .96); }); }
 { const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
-setTimeout(() => { try{ if(R36N.on && MODEL) r36Grids(); }catch(e){} }, 2500);
+{ let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)
 boot();
 })();
 </script>
