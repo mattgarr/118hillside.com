@@ -949,7 +949,7 @@
     $('#rfeRoom').innerHTML = `<div class="hd"><button type="button" id="rfePrev" aria-label="Previous room: ${esc(LG.SLOTS[prev].name)}">${ICO.back}</button><b>${esc(sl.name)}</b><button type="button" id="rfeNext" aria-label="Next room: ${esc(LG.SLOTS[next].name)}">${ICO.fwd}</button></div>
       <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(NmOf(occ)) : ''}</div><p class="wh">${esc(LG.WHERE[slot])}</p><ul>${li}</ul><p class="cap${cap ? ' on' : ''}">${cap ? esc(UI.cap) : ''}</p>
       <button type="button" id="rfeFace"><span class="cmp">${COMPASS}</span><span id="rfeFaceT"></span><i>Turn back</i></button>`;
-    { const wb = $('#rfeWhoBtn span'); if(wb) wb.textContent = occ ? 'Change the guest' : 'Put a guest here'; }   // r38: the room already has a guest
+    { const wb = $('#rfeWhoBtn span'); if(wb) wb.textContent = occ ? 'Change guest' : 'Put a guest here'; }   // r38: the room already has a guest
     UI.faceKey = ''; $('#rfeFace').onclick = () => { if(turned()) faceRoom(); }; faceStep(performance.now()); layoutVars();
     $('#rfePrev').onclick = () => { SND.unlock(); hop(prev); }; $('#rfeNext').onclick = () => { SND.unlock(); hop(next); }; if(S.view === 'room') requestAnimationFrame(reframe); }
   function openWho(){ const slot = S.room, w = $('#rfeWho'), occ = occupant(slot); let h = `<h4>${esc(LG.SLOTS[slot].name)}</h4>`;
