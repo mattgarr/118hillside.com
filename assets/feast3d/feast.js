@@ -708,7 +708,7 @@
     html.fe-ex #feDock{visibility:hidden}html.fe-ex #feBack{display:none}
     html.fe-ex #feGoal{display:none}
     #feCard .c{padding:20px 18px 18px}#feCard .note{font-size:20.5px}#feCard .lede{font-size:19px}
-    #feCard.side{place-items:end center;padding:8px}#feCard.side .c{max-width:560px;max-height:60vh;padding:16px 16px 14px}#feCard.side .lede{display:none}#feCard.side h2{font-size:30px}
+    #feCard.side{place-items:end center;padding:8px}#feCard.side .c{box-sizing:border-box;max-width:560px;max-height:60vh;padding:16px 16px 14px}#feCard.side .lede{display:none}#feCard.side h2{font-size:30px}
   }
   @media (prefers-reduced-motion:reduce){.feMk.on i,#feHint.nudge,#feCoach svg,.feLeaf{animation:none!important}}
   `;
@@ -880,7 +880,8 @@
       const pitch = n > 1 ? clamp((yMax - yMin) / (n - 1), 40, maxPitch) : 0, start = clamp(r.top + r.height * .42 - (n - 1) * pitch / 2, yMin, Math.max(yMin, yMax - (n - 1) * pitch));
       list.forEach((it, i) => { it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = start + i * pitch; placed.push(box(it)); }); };
     const dockL = items.filter(it => it.docked && it.edge === 'L'), dockR = items.filter(it => it.docked && it.edge === 'R');
-    if(r.width < 620 && dockL.length && dockR.length){ // a narrow screen: the two sides take turns, row by row, so their labels never meet in the middle
+    const reach = list => Math.max(...list.map(it => 36 + wOf(it.m))) + padX;
+    if(dockL.length && dockR.length && reach(dockL) + reach(dockR) + 10 > r.width){ // a narrow screen, and labels long enough to meet in the middle: the two sides take turns, row by row
       const seq = []; for(let i = 0; i < Math.max(dockL.length, dockR.length); i++){ if(dockL[i]) seq.push(dockL[i]); if(dockR[i]) seq.push(dockR[i]); }
       stack(seq, r.left, r.left + r.width, 58); }
     else { stack(dockL, r.left, r.left + 290, 66); stack(dockR, r.left + r.width - 290, r.left + r.width, 66); }
@@ -973,7 +974,7 @@
 
   /* ---- carrying a dish, and setting it down */
   const HELD = {g: null, s: 1};
-  function carryNow(){ if(S.phase === 'hunt'){ const st = cur(), g = DISHOBJ[st.dish]; S.carry = st.dish; S.phase = 'carry'; HELD.g = g; g.userData.spin = false; HELD.s = clamp(.56 / Math.max(g.userData.h || .5, (g.userData.r || .4) * 2), .28, .7); setGoal(); setMarks(); }
+  function carryNow(){ if(clueOpen()) closeClue(); if(S.phase === 'hunt'){ const st = cur(), g = DISHOBJ[st.dish]; S.carry = st.dish; S.phase = 'carry'; HELD.g = g; g.userData.spin = false; HELD.s = clamp(.56 / Math.max(g.userData.h || .5, (g.userData.r || .4) * 2), .28, .7); setGoal(); setMarks(); }
     if(S.place === 'table'){ if(!S.ex && !rig.move && !S.busy) setDown(); return; }
     if(!S.ex && !rig.move && !S.busy) goTo('table'); }
   const _h = new V3(), _hq = new THREE.Quaternion(), _hy = new V3(0, 1, 0);
@@ -1017,7 +1018,7 @@
     later(500, () => tween(2600, u => { candleLight.intensity = 1.5 * u; }));
     // the sun goes: the model's own dusk, with the house lights on
     later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt(CHAIR); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
-    later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.27] : [-.17, 0]}, {dur: 9}); });
+    later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.3] : [-.17, 0]}, {dur: 9}); });
     later(4600, () => { SND.bell(); guests(() => finish()); }); }
   const SHOT = () => aspect() < 1 ? {pos: [8.4, .7, -46.6], pos2: [7.2, .6, -46.2], look: [-2.4, -1.5, -43.3], fov: 80} : {pos: [8.3, .55, -47.1], pos2: [7.3, .5, -46.7], look: [-2.6, -1.3, -43.0], fov: 56};
   const GUESTS = [
