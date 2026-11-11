@@ -6166,6 +6166,7 @@ function dollCamFor(lv, theta = DOLL_VIEW.theta, phi = DOLL_VIEW.phi){
   const ext = () => { let x0 = 9, x1 = -9, y0 = 9, y1 = -9, bad = false; for(const p of pts){ const v = p.clone().project(cam); if(v.z > 1) bad = true;
     x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); } return {x0, x1, y0, y1, bad}; };
   let lo = 15, hi = 420; for(let i = 0; i < 24; i++){ const r = (lo + hi) / 2; place(r); const e = ext(); if(!e.bad && e.x1 - e.x0 <= 2 * mx && e.y1 - e.y0 <= 2 * my) hi = r; else lo = r; }
+  if(mode === 'doll' && !narrow) hi *= .78;   // r36: the fitted box is mostly empty air at its corners; come in closer so the house fills the view
   place(hi);
   // slide the target so the house's box is centred on the free area
   for(let k = 0; k < 3; k++){ const e = ext(), cxn = (e.x0 + e.x1) / 2, cyn = (e.y0 + e.y1) / 2, th = Math.tan(cam.fov * Math.PI / 360) * hi;
