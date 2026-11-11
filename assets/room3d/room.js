@@ -85,8 +85,9 @@
   function ringAt(slot, r){ if(r._at) return r._at; let p = null;
     if(r.at) p = r.at.slice();
     else if(r.op){ const op = opening(r.op); if(op){ const y = r.y != null ? GEO[slot].fy + r.y : (op.o.sill + op.o.head) / 2, v = op.P(0, y, .35); p = [v.x, v.y, v.z]; } }
-    else if(r.sky){ let n = 0; const c = new V3(); for(const id of r.sky){ const it = skyItem(id); if(it && it.rects && it.rects[0]){ c.add(new V3(it.rects[0].c.x, it.rects[0].c.y, it.rects[0].c.z)); n++; } }
-      if(n){ c.multiplyScalar(1 / n); p = [c.x, c.y - .6, c.z]; } }
+    else if(r.sky){ const st = standOf(slot); let best = null;   // the skylight you can see best from where you stand: not the one right overhead
+      for(const id of r.sky){ const it = skyItem(id), q = it && it.rects && it.rects[0]; if(!q) continue; const d = Math.hypot(q.c.x - st.pos[0], q.c.z - st.pos[2]), sc = Math.abs(d - 5); if(!best || sc < best.sc) best = {sc, c: q.c}; }
+      if(best) p = [best.c.x, best.c.y - .4, best.c.z]; }
     if(!p) p = [GEO[slot].c[0], GEO[slot].fy + 6.5, GEO[slot].c[1]]; r._at = p; return p; }
   const NOTE_TXT = {bath: 'A bath of its own', door: 'A door straight outside', sky: 'Skylights', film: 'Rainbow film on a window', 'view:oak': 'Looks at the old oak', 'view:terrace': 'Looks onto the terrace',
     'view:street': 'Looks toward the street', 'view:hills': 'Looks west to the hills', 'view:side': 'Looks onto the side garden', tv: 'The big screen', ev: 'A 50-amp outlet for a car',
@@ -167,7 +168,7 @@
   addEventListener('pointerdown', e => { if(!onCanvas(e)) return; e.stopPropagation();
     if(!S.started) return; try{ canvas.setPointerCapture(e.pointerId); canvas.focus({preventScroll: true}); }catch(_){}
     ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), far: 0, btn: e.button, shift: e.shiftKey}); pinch = 0; panMid = null;
-    document.documentElement.classList.add('rfe-drag'); SND.unlock(); closeMenus(); }, true);
+    document.documentElement.classList.add('rfe-drag'); SND.unlock(); closeMenus(); if(UI.clues && S.view === 'room') UI.clues(false); }, true);
   addEventListener('pointermove', e => { if(!onCanvas(e)) return; e.stopPropagation(); const p = ptrs.get(e.pointerId); if(!p) return;
     if(e.pointerType === 'mouse' && e.buttons === 0){ endPtr(e, false); return; }
     const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; p.far = Math.max(p.far, Math.hypot(p.x - p.sx, p.y - p.sy));
@@ -207,6 +208,7 @@
   function wake(n){ rig.wakeN = Math.max(rig.wakeN, n || 20); }
   // the part of the screen the house (or the room) can use, in pixels
   function freeRect(){ const W = innerWidth, Hh = innerHeight; let l = 12, t = 84, r = W - 12, b = Hh - 16; const pn = $('#rfePanel'), box = q => { const e = $(q); return e ? e.getBoundingClientRect() : null; };
+    if(S.view === 'win') return {l: 8, t: 76, r: W - 8, b: Hh - 96, W, Hh};
     if(phone()){ l = 6; r = W - 6;
       if(S.view === 'room'){ const rc = box('#rfeRoom'), dk = box('#rfeSun'); t = (rc && rc.height > 10 ? rc.bottom : 150) + 6; b = (dk && dk.height > 10 ? dk.top : Hh - 190) - 6; }
       else { const g = box('#rfeGoal'), q = pn ? pn.getBoundingClientRect() : null; t = (g && g.height > 10 ? g.bottom : 120) + 6; b = (q && q.height > 10 ? q.top : Hh - 300) - 58; } }
@@ -489,7 +491,7 @@
   #rfeClues li.flash{animation:rfeFlash .8s ease}
   @keyframes rfeFlash{0%{background:#fff3c9}100%{}}
   #rfeStory{margin:0;padding:0 16px 8px;font:500 16.500px/1.32 "Cormorant Garamond",Georgia,serif;color:#2b3442}
-  #rfePanelX{display:none}
+  #rfePanelX{display:none;position:absolute;right:4px;top:2px;width:44px;height:40px;border:0;background:none;font-size:26px;line-height:1;color:#5c6575;z-index:2;pointer-events:auto}
   /* room names over the house */
   #rfeLabels{position:absolute;inset:0;overflow:hidden;pointer-events:none}
   .rfeLb{position:absolute;left:0;top:0;border:0;padding:0;background:none;pointer-events:auto;will-change:transform;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;text-align:center}
@@ -603,7 +605,7 @@
     #rfeClues li{font-size:14.500px;padding:7px 8px 7px 36px}
     #rfeDock{left:0;padding:0 8px;bottom:calc(var(--panel-h,0px) + max(8px,env(safe-area-inset-bottom)) + 8px);gap:8px}
     #rfeTip{font-size:13.500px;padding:7px 12px}
-    html.rfe-in #rfePanel{display:none}html.rfe-in.rfe-clues #rfePanel{display:flex;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 62px);max-height:52vh;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
+    html.rfe-in #rfePanel{display:none}html.rfe-in.rfe-clues #rfePanel{display:flex;bottom:max(8px,env(safe-area-inset-bottom));max-height:60vh;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}html.rfe-in.rfe-clues #rfePanelX{display:block}html.rfe-in.rfe-clues #rfePanel h3:first-of-type{padding-right:48px}
     html.rfe-in #rfeDock{bottom:max(8px,env(safe-area-inset-bottom));flex-wrap:wrap;gap:6px}html.rfe-in #rfeGoal{display:none}
     html.rfe-in .rfeBtn{flex:1 1 auto;padding:0 10px;font-size:14.500px;gap:6px}#rfeBack span::after{content:""}#rfeSun .ticks{display:none}#rfeSun .top b{font-size:17px}#rfeSunNow{font-size:12.500px}#rfePlay span{display:none}#rfeSun .top button{padding:0 9px}
     html.rfe-in #rfeCluesBtn{display:inline-flex}
@@ -635,7 +637,7 @@
       </div>
       <div class="rfeChip" id="rfeMenu" role="menu"><button type="button" role="menuitem" id="rfeRestart">Start this puzzle again</button><button type="button" role="menuitem" id="rfePick">Choose another puzzle</button><button type="button" role="menuitem" id="rfeAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
       <div class="rfeChip" id="rfeRoom" aria-live="polite"></div>
-      <div class="rfeChip" id="rfePanel"><p id="rfeStory"></p><h3><span>Who is staying</span><span id="rfeCount"></span></h3><div id="rfeTray"></div>
+      <div class="rfeChip" id="rfePanel"><button type="button" id="rfePanelX" aria-label="Close the clues">×</button><p id="rfeStory"></p><h3><span>Who is staying</span><span id="rfeCount"></span></h3><div id="rfeTray"></div>
         <div id="rfeSelBar"></div><h3><span>What they asked for</span><span id="rfeDone"></span></h3><ol id="rfeClues"></ol></div>
       <div id="rfeDock">
         <button class="rfeBtn dark shadow" id="rfeBack" type="button">${ICO.back}<span>Whole house</span></button>
@@ -660,7 +662,8 @@
     $('#rfeAbout').onclick = () => { closeMenus(); const d = document.getElementById('aboutDlg'); try{ d.showModal(); }catch(e){ if(d) d.setAttribute('open', ''); } };
     $('#rfeBack').onclick = () => { SND.unlock(); leave(); };
     $('#rfeLift').onclick = () => { SND.unlock(); setUpper(!S.upperOn); };
-    $('#rfeCluesBtn').onclick = () => { const on = !document.documentElement.classList.contains('rfe-clues'); document.documentElement.classList.toggle('rfe-clues', on); $('#rfeCluesBtn').setAttribute('aria-pressed', String(on)); };
+    const clues = on => { document.documentElement.classList.toggle('rfe-clues', on); $('#rfeCluesBtn').setAttribute('aria-pressed', String(on)); }; UI.clues = clues;
+    $('#rfeCluesBtn').onclick = () => clues(!document.documentElement.classList.contains('rfe-clues')); $('#rfePanelX').onclick = () => clues(false);
     $('#rfeWhoBtn').onclick = e => { e.stopPropagation(); SND.unlock(); const on = !$('#rfeWho').classList.contains('on'); closeMenus(); if(on) openWho(); };
     const sl = $('#rfeSlider'); sl.oninput = () => onSlide(+sl.value, true); sl.onchange = () => { onSlide(+sl.value, true); applyHour(+sl.value, true); };
     sl.addEventListener('pointerdown', () => { SND.unlock(); S.sweeping = false; $('#rfeSun').classList.remove('key'); });
@@ -719,7 +722,7 @@
     else setGoal('Everyone has a room.', true); }
   function select(g){ if(S.done) return; S.sel = g; if(g) SND.pick(); renderTray(); renderClues(); drawLabels(); objective();
     if(g && S.view === 'over'){ tip(LG.isP(g) ? 'Tap one of the six bedrooms' : 'Tap a room that is not a bedroom'); } else tip('');
-    $('#rfeLift').classList.toggle('pulse', !!g && S.view === 'over' && ORDER.some(id => covered(id) && fits(g, id))); }
+    $('#rfeLift').classList.toggle('pulse', !!g && S.view === 'over' && S.upperOn && ORDER.some(id => covered(id) && fits(g, id))); }
   function place(g, slot, opts){ opts = opts || {}; if(S.done || !S.L || S.L.guests.indexOf(g) < 0) return false;
     if(!fits(g, slot)){ toast(LG.isP(g) ? `The ${LG.SLOTS[slot].name.toLowerCase()} is not a bedroom. People sleep in the six bedrooms.` : `${nmOf(g)} ${LG.vb(g, 'goes', 'go')} in a room that is not a bedroom: the loft, the office, the lounge or the garage.`, 3800); SND.bad(); return false; }
     if(!S.t0) S.t0 = performance.now(); const was = S.status.map(x => x.s), prevSlot = S.at[g], occ = occupant(slot);
@@ -780,7 +783,7 @@
   function tapAt(cx, cy){ if(!live()) return; if(S.view === 'over'){ const id = slotAt(cx, cy); if(id) onRoom(id); else if(S.sel) select(null); } }
   function onRoom(id){ if(!live() || S.view !== 'over') return; if(S.sel){ place(S.sel, id); return; } enter(id); }
   function setUpper(on, quiet){ if(S.upperOn === on) return; S.upperOn = on; if(!quiet) SND.lift(); HOUSE.level(on); $('#rfeLift').setAttribute('aria-pressed', String(!on)); $('#rfeLift span').textContent = on ? 'Lift off the upper level' : 'Put the upper level back';
-    orbitFit(); drawLabels(); PAWN.sync(); wake(80); if(!on && !SAVE.tips.lift){ SAVE.tips.lift = 1; save(); toast('Two bedrooms, a bath and the lounge sit under the primary suite.', 4200); } }
+    $('#rfeLift').classList.remove('pulse'); orbitFit(); drawLabels(); PAWN.sync(); wake(80); if(!on && !SAVE.tips.lift){ SAVE.tips.lift = 1; save(); toast('Two bedrooms, a bath and the lounge sit under the primary suite.', 4200); } }
 
   /* ================================================================== going into a room and coming back out */
   function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
