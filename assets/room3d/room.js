@@ -387,7 +387,7 @@
     return g; }
   /*PIECES-END*/
   // Over the house a piece is drawn at twice its size and more, like a token on a board, so it reads from that far away; inside a room it is toy size.
-  const PAWN = {g: {}, hop: {}, K_OVER: 2.1, K_IN: 1.15,
+  const PAWN = {g: {}, hop: {}, K_OVER: 2.4, K_IN: 1,
     build(id){ const g = buildPiece(THREE, LG.GUESTS[id], lin); g.userData.h = new THREE.Box3().setFromObject(g).max.y;
       g.traverse(o => { o.raycast = () => {}; if(o.isMesh){ o.castShadow = false; o.receiveShadow = false; } }); g.name = 'rfe-pawn:' + id; g.visible = false; H.scene.add(g); PAWN.g[id] = g; return g; },
     spot(slot){ const s = standOf(slot); return s.pawn || GEO[slot].c; },
