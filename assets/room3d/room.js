@@ -904,7 +904,8 @@
     $('#rfeLift').classList.remove('pulse'); orbitFit(); drawLabels(); PAWN.sync(); wake(80); if(!on && !SAVE.tips.lift && !S.done){ SAVE.tips.lift = 1; save(); toast('Two bedrooms, a bath and the lounge sit under the primary suite.', 4200); } }
 
   /* ================================================================== going into a room and coming back out */
-  function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
+  // with a guest in the room, look a little lower so their piece on the floor ahead is in the picture and not under the sun bar
+  function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face), here = S.L && Object.keys(S.at || {}).some(g => S.at[g] === slot && S.L.guests.indexOf(g) >= 0); return {pos: st.pos, yaw: a[0], pitch: a[1] - (here ? .22 : 0)}; }
   function reframe(){ const s = rig.st, F = freeRect(); s.offX = ((F.l + F.r) / 2) / F.W - .5; s.offY = phone() ? ((F.t + F.b) / 2) / F.Hh - .5 : 0; rig.sig = ''; }
   function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(68); s.zoom = 1; s.slow = false; S.lookBack = 0; }
   function peekPose(slot){ const G = GEO[slot], o = rig.orb, dx = Math.sin(o.th), dz = Math.cos(o.th); return {pos: [G.c[0] + dx * 13, G.fy + 30, G.c[1] + dz * 13], at: [G.c[0], G.fy + 1, G.c[1]], fov: 42, off: rig.off.slice()}; }
