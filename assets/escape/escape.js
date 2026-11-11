@@ -40,7 +40,7 @@
   const PLACES = {
     entry:   {name: 'Entry', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-7.6, -2.3],
       note: 'A cathedral ceiling, a starburst light, and iron-and-glass doors at both ends. The heritage oak is straight ahead.'},
-    living:  {name: 'Living room', pos: [1.8, EYE, -3.6], face: [10, 5.7, -2.6], map: [3.4, -3.2],
+    living:  {name: 'Living room', pos: [1.8, EYE, -3.6], face: [10, 5.0, -2.9], map: [3.4, -3.2],
       note: 'Fir beams cross the vaulted ceiling. This room is part of the original 1920s house.'},
     kitchen: {name: 'Kitchen', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [12.4, 8.2],
       note: 'Quartz counters, a long peninsula and a Bosch gas range. The great room opens up past the peninsula.'},
@@ -664,6 +664,8 @@
       if(behind || x < r.left - 10 || x > r.left + r.width + 10 || y < r.top - 60 || y > r.top + r.height + 60){ docked = true; edge = (behind ? side < 0 : x < r.left + r.width / 2) ? 'L' : 'R'; }
       else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); if(x < r.left + 88) edge = 'L'; else if(x > r.left + r.width - 88) edge = 'R'; }
       items.push({m, x, y, edge, docked}); }
+    const pr = !phone() && placeE.classList.contains('on') ? placeE.getBoundingClientRect() : null;
+    if(pr) for(const it of items) if(!it.docked && it.x < pr.right + 60 && it.y < pr.bottom + 40) it.y = pr.bottom + 40;
     items.sort((p, q) => p.docked - q.docked);
     const box = it => it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 206, it.y + 32] : it.edge === 'R' ? [it.x - 206, it.y - 32, it.x + 32, it.y + 32] : [it.x - 78, it.y - 32, it.x + 78, it.y + 88];
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
