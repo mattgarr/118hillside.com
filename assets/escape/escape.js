@@ -106,7 +106,7 @@
       intro: `<p class="lede">Elena designs escape rooms for a living. For her housewarming, she made one out of the house.</p>
         <div class="note"><p>Welcome! The champagne is locked in the little fridge at the coffee bar. The code is somewhere in the house. I'm out getting the cake.</p><p class="sig">— Elena</p><p class="ps">P.S. Snowball watched me hide everything. Ask him.</p></div>`,
       goal: 'Open the coffee-bar fridge',
-      views: {coffee: {label: 'Coffee bar', pos: [14.6, 5.0, 17.4], look: [21.4, 3.2, 10.4]}, dining: {label: 'Dining room', pos: [16.6, 5.2, 31.0], look: [8.6, 1.2, 22.4]}},
+      views: {coffee: {label: 'Kitchen', pos: [10.6, 5.2, 9.7], look: [22.0, 3.4, 9.6]}, dining: {label: 'Dining room', pos: [16.6, 5.2, 31.0], look: [8.6, 1.2, 22.4]}},
       startView: 'coffee'},
   };
   const L = LEVELS[LEVEL] || LEVELS.easy;
@@ -151,7 +151,7 @@
     S.pocket = pd;
     // interactables
     ITEMS = [
-      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.6, 13.9], view: {pos: [16.4, 3.9, 16.4], look: [19.6, 1.3, 12.6]}, open: openFridge},
+      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [18.8, 4.4, 6.6], look: [19.6, 1.6, 11.6]}, open: openFridge},
       {id: 'pocket', label: 'Pocket door', p: [22.0, 3.6, 9.5], view: {pos: [17.2, 4.6, 9.6], look: [22.0, 3.7, 9.5]}, open: openPocket},
       {id: 'paper', label: 'Paper on the glass', p: [5.0, 3.8, 22.0], view: {pos: [9.6, 4.4, 21.0], look: [4.8, 3.8, 21.6]}, open: openPaper},
       {id: 'floor', label: 'Dining floor', p: [11.8, .3, 22.0], hidden: true, view: {pos: [17.6, 6.4, 21.4], look: [11.2, 0, 21.8]}, open: () => {}}];
@@ -177,7 +177,7 @@
 
   /* ------------------------------------------------------------------ UI */
   const css = `
-  html.esc header.bar nav.tabs, html.esc #card, html.esc #labels, html.esc #tod, html.esc #viewBtn, html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp{display:none!important}
+  html.esc header.bar nav.tabs, html.esc #card, html.esc #labels, html.esc #wplabels, html.esc #ovtag, html.esc #tod, html.esc #viewBtn, html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp{display:none!important}
   #escHud{position:fixed;left:0;right:0;top:0;z-index:60;pointer-events:none;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:#1f2a3a}
   #escHud .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:64px 14px 0}
   .escChip{pointer-events:auto;background:rgba(251,250,247,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.18);padding:10px 14px}
@@ -304,7 +304,7 @@
 
   /* ------------------------------------------------------------------ start / win */
   function startCard(){ const best = store.get(KEY + '.best');
-    const c = el('div', {id: 'escCard'}, `<div class="c"><p class="k">Locked In at Hillside · ${LEVEL === 'easy' ? 'Easy, about 5 minutes' : ''}</p><h2>${esc(L.title)}</h2>${L.intro}
+    const c = el('div', {id: 'escCard'}, `<div class="c"><p class="k">Locked In at Hillside, ${LEVEL === 'easy' ? 'easy, about 5 minutes' : ''}</p><h2>${esc(L.title)}</h2>${L.intro}
       <p class="how">Drag to look around. Tap the glowing circles to look closer. The slider at the bottom moves the sun, and the light in the house moves with it.${best ? ' Your best: ' + fmtT(best.time) + '.' : ''}</p>
       <button class="escBtn primary" type="button" id="escGo">Start</button></div>`);
     document.body.appendChild(c); $('#escGo').focus();
@@ -320,7 +320,7 @@
       const fd = (H.door28 && H.door28.items || []).find(it => /D-L0-11|D-LG-02/.test(it.id) && it.t < .5); if(fd && H.door28Toggle) setTimeout(() => H.door28Toggle(fd), 1400); }, 1200);
     setTimeout(finishCard, 4200); }
   function finishCard(){ const t = elapsed(), stars = t <= L.par && S.hints <= 1 ? 3 : t <= L.par * 1.8 ? 2 : 1;
-    const c = el('div', {id: 'escCard'}, `<div class="c"><p class="k">Locked In at Hillside · ${esc(L.title)}</p><h2>Cork popped.</h2>
+    const c = el('div', {id: 'escCard'}, `<div class="c"><p class="k">Locked In at Hillside</p><h2>Cork popped.</h2>
       <p class="lede">The guests are at the door, and the house is lit for the evening. Elena owes you a slice of cake.</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint' : 'hints'}</span></div><div><b>${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</b><span>${stars === 3 ? 'a natural' : stars === 2 ? 'nicely done' : 'you got there'}</span></div></div>
       <div class="cta"><b>The sun really does that.</b><span>118 Hillside Drive is for sale in Woodside. Come stand in that afternoon light yourself.</span><a class="escBtn primary" href="/#contact" id="escSee">See it in person</a></div>
