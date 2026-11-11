@@ -21085,10 +21085,11 @@ F35.rebuild = function(){ F35.O = f35Outline(); const pa = TERR.paved.find(f35Is
     const r = _bs.apply(this, arguments); if(ok){ try{ f35Build(); console.info('[front35] ' + JSON.stringify(F35.report)); }catch(e){ console.warn('[front35] build', e); } } return r; }; }
 { const _lo = lotOakOpts; lotOakOpts = function(t){ const o = _lo.apply(this, arguments);   // F7
     if(F35.on && t && t.id === 'OAK-FRONT'){ o.lean = F35.oak.lean; o.trunkBias = F35.oak.trunkBias; o.trunkHeight = F35.oak.trunkHeight; o.cacheKey = 'lot:OAK-FRONT:r35'; } return o; }; }
-{ const _bt = buildTreesLib; buildTreesLib = function(){ const r = _bt.apply(this, arguments);   // (buildTrees itself is deferred by the lazy-trees patch)
-    try{ const tr = F35.on && GROUPS.trees && GROUPS.trees.children.find(o => o.name === 'tree:OAK-FRONT'), b = tr && tr.children.find(o => o.name === 'bark'), c = b && b.geometry.attributes.color;
-      if(c && c.array instanceof Float32Array && !b.geometry.userData.f35){ b.geometry.userData.f35 = true; for(let i = 0; i < c.array.length; i++) c.array[i] *= F35.oak.bark; c.needsUpdate = true; F35.report.oak = 'lean ' + F35.oak.lean.amount; } }catch(e){ console.warn('[front35] oak', e); }
-    return r; }; }
+if(window.TREES && TREES.make && !TREES.make.f35){ const _mk = TREES.make;   // the trees are planted in staged idle tasks: the bark lift rides on the oak's own make (geometry is cached per cacheKey)
+  TREES.make = function(kind, o){ const tr = _mk.apply(this, arguments);
+    try{ if(F35.on && o && o.cacheKey === 'lot:OAK-FRONT:r35'){ const b = tr.children.find(q => q.name === 'bark'), c = b && b.geometry.attributes.color;
+        if(c && c.array instanceof Float32Array && !b.geometry.userData.f35){ b.geometry.userData.f35 = true; for(let i = 0; i < c.array.length; i++) c.array[i] *= F35.oak.bark; c.needsUpdate = true; F35.report.oak = 'lean ' + F35.oak.lean.amount + ', bark x' + F35.oak.bark; } } }catch(e){ console.warn('[front35] oak', e); }
+    return tr; }; TREES.make.f35 = true; }
 /* ================= end front35 ================= */
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
