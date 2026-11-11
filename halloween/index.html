@@ -19451,6 +19451,73 @@ function r28AtticCabinet(){
   return {z0: +z0.toFixed(2), z1: +z1.toFixed(2), xf: +xf.toFixed(2), xh: +xh.toFixed(2), yTop: +yTop.toFixed(2)};
 }
 { const _r28a = bim2BuildHouse; bim2BuildHouse = function(){ const r = _r28a.apply(this, arguments); try{ BIM3.report.r28attic = r28AtticCabinet(); }catch(e){ console.warn('[r28] attic cabinet', e); } return r; }; }
+/* r28 owner 11/10: window treatments and the pantry right of the fridge.
+   Roller shades, inside mount (a white cassette at the head, fabric, a hem bar), shown part-way down: blackout in the bedrooms (the primary
+   suite's stacking slider), light filtering elsewhere (the two big great-room windows and the big kitchen window).
+   Privacy film: the owner's rainbow (dichroic) film on the downstairs bedrooms' glass that faces the close-by house - every pane of the back
+   bedroom's back window, the bottom panes of the side bedroom's window.
+   A tall pantry cabinet fills the bay between the fridge and the hall wall, matching the pantry on the fridge's other side. */
+const R28W = window.R28W = {shades: [], film: [], err: []};
+function r28Mat(kind){
+  if(R28W[kind]) return R28W[kind]; let m;
+  const lin = c => new THREE.Color(c).convertSRGBToLinear();
+  if(kind === 'blackout') m = new THREE.MeshStandardMaterial({color: lin(0xe7e3db), roughness: .95, side: THREE.DoubleSide});
+  else if(kind === 'filter') m = new THREE.MeshStandardMaterial({color: lin(0xf1ece2), roughness: .9, transparent: true, opacity: .84, side: THREE.DoubleSide, emissive: lin(0xfff4e2), emissiveIntensity: .14, depthWrite: false});
+  else if(kind === 'cassette') m = new THREE.MeshStandardMaterial({color: lin(0xf3f3f0), roughness: .45, metalness: .15});
+  else if(kind === 'hem') m = new THREE.MeshStandardMaterial({color: lin(0xd9d9d6), roughness: .35, metalness: .6});
+  else if(kind === 'film'){ const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
+    for(let i = -512; i < 1024; i += 2){ const h = ((i + 512) / 6) % 360; x.strokeStyle = `hsla(${h},90%,62%,.55)`; x.lineWidth = 2.2; x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 300, 512); x.stroke(); }
+    const g = x.createRadialGradient(170, 140, 10, 256, 256, 420); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 512, 512);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    m = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .35, transparent: true, opacity: .42, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false}); }
+  m.name = 'r28' + kind; return (R28W[kind] = m);
+}
+function r28Frame(id){   // an opening's world frame: centre, along-wall unit, unit pointing into the room, sill / head, width, wall thickness
+  const o = (BIM2S.meta.openings || []).find(q => q.id === id); if(!o) return null;
+  const n = o.normal || [0, 1], sp = BIM2S.spaceById[(o.spaces || {}).B] || BIM2S.spaceById[(o.spaces || {}).A], c = o.center;
+  let s = 1; try{ if(sp && sp.poly && !BIM2.inPoly(sp.poly, c[0] + n[0] * 1.2, c[1] + n[1] * 1.2)) s = -1; }catch(e){}
+  const [cx, cz] = W2(c[0], c[1]), inn = [n[1] * s, n[0] * s], ax = o.axis || [-n[1], n[0]], u = [ax[1], ax[0]];
+  return {o, cx, cz, inn, u, sill: o.sill, head: o.head, W: o.width, T: o.thickness || .45, storey: o.storey};
+}
+function r28Quad(mat, F, a0, a1, y0, y1, d, g){   // a flat panel in the opening's plane, d ft into the room from the wall centre
+  const geo = new THREE.PlaneGeometry(a1 - a0, y1 - y0), m = new THREE.Mesh(geo, mat), am = (a0 + a1) / 2;
+  m.position.set(F.cx + F.u[0] * am + F.inn[0] * d, (y0 + y1) / 2, F.cz + F.u[1] * am + F.inn[1] * d); m.rotation.y = Math.atan2(F.inn[0], F.inn[1]); g.add(m); return m; }
+function r28Box(mat, F, a0, a1, y0, y1, d0, d1, g){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(a1 - a0, y1 - y0, d1 - d0), mat), am = (a0 + a1) / 2, dm = (d0 + d1) / 2;
+  m.position.set(F.cx + F.u[0] * am + F.inn[0] * dm, (y0 + y1) / 2, F.cz + F.u[1] * am + F.inn[1] * dm); m.rotation.y = Math.atan2(F.inn[0], F.inn[1]); m.castShadow = m.receiveShadow = true; g.add(m); return m; }
+function r28Shades(){
+  const SPEC = [['D-L2-01', 'blackout', 3, .24], ['WN-L1-03', 'filter', 2, .26], ['WN-L1-04', 'filter', 1, .26], ['WN-L1-02', 'filter', 1, .22]];
+  for(const [id, kind, n, drop] of SPEC){ const F = r28Frame(id); if(!F){ R28W.err.push('no opening ' + id); continue; }
+    const g = new THREE.Group(); g.name = 'r28shade:' + id; grp(F.storey === 'L2' ? 'upper' : 'main').add(g);
+    const d = F.T / 2 - .12, top = F.head - .02, cas = .28, fab = r28Mat(kind), pw = (F.W - .08) / n;
+    for(let k = 0; k < n; k++){ const a0 = -F.W / 2 + .04 + k * pw + .02, a1 = a0 + pw - .04, len = (top - cas - F.sill) * drop;
+      r28Box(r28Mat('cassette'), F, a0, a1, top - cas, top, d - .14, d + .14, g);                     // cassette
+      const f = r28Quad(fab, F, a0 + .03, a1 - .03, top - cas - len, top - cas, d, g); f.receiveShadow = true; f.castShadow = kind === 'blackout';
+      r28Box(r28Mat('hem'), F, a0 + .02, a1 - .02, top - cas - len - .07, top - cas - len, d - .02, d + .02, g); }   // hem bar
+    R28W.shades.push(id); }
+}
+function r28Film(){
+  const SPEC = [['WN-L0-03', 'all'], ['WN-L0-07', 'bottom']];
+  const rc = new THREE.Raycaster();
+  for(const [id, part] of SPEC){ const F = r28Frame(id); if(!F){ R28W.err.push('no opening ' + id); continue; }
+    // find the inner face of the glass: cast from the room toward the window centre and take the first glass hit
+    const ym = (F.sill + F.head) / 2, O = new THREE.Vector3(F.cx + F.inn[0] * 3, ym, F.cz + F.inn[1] * 3); rc.set(O, new THREE.Vector3(-F.inn[0], 0, -F.inn[1])); rc.far = 4;
+    const hits = rc.intersectObjects(withVar(['main']).filter(g => g.children.length), true), gh = hits.find(h => h.object.material && (h.object.material.transparent || /glass/i.test(h.object.material.name || h.object.name)));
+    const d = gh ? gh.distance - 3 : 0; const dd = -d + .012;                                                  // distance into the room from the wall centre
+    const units = /-2$/.test(F.o.type) ? 2 : 1, fr = .2, mull = .22, uw = (F.W - 2 * fr - (units - 1) * mull) / units;
+    const g = new THREE.Group(); g.name = 'r28film:' + id; grp('main').add(g);
+    for(let k = 0; k < units; k++){ const a0 = -F.W / 2 + fr + k * (uw + mull), y0 = F.sill + fr, y1 = part === 'bottom' ? F.sill + (F.head - F.sill) * .5 : F.head - fr;
+      const q = r28Quad(r28Mat('film'), F, a0, a0 + uw, y0, y1, dd, g); q.renderOrder = 3; q.userData.noAO = true; }
+    R28W.film.push(id + (gh ? '' : ' (no glass hit)')); }
+}
+function r28Pantry(){
+  if(!(window.FIX && FIX.make)) return;
+  const cab = FIX.make('tallCabinet', {w: 2.06, h: 8, d: 2, split: 5.75, style: 'raised', pull: 'knob', hw: 'satinNickel'});
+  cab.position.set(20.95, 0, 5.32); cab.userData.el = 'r28-pantry'; cab.traverse(o => { if(o.isMesh){ o.castShadow = o.receiveShadow = true; } }); grp('main').add(cab); R28W.pantry = true;
+}
+{ const _r28w = bim2BuildHouse; bim2BuildHouse = function(){ const r = _r28w.apply(this, arguments);
+    for(const f of [r28Shades, r28Film, r28Pantry]) try{ f(); }catch(e){ console.warn('[r28] windows', e); R28W.err.push(String(e)); }
+    return r; }; }
 /* G35-6 shingle courses run parallel to the eave (v33 roofs; QA ext_W_mid): the package UVs are a BIM-frame box projection (u = BIM x,
    v = BIM y on near-horizontal faces), which lays courses along x. On a roof face that slopes along BIM x (eave along y, e.g. RF-L02) that put the
    courses down the slope; there the face's u/v swap so the texture's courses follow the eave. */
