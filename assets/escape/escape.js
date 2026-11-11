@@ -341,7 +341,7 @@
 
   /* ================================================================== Snowball in the house (a billboard of the shared drawing) */
   let CAT = null;
-  function loadSnowball(cb){ if(window.SNOWBALL) return cb(); const s = document.createElement('script'); s.src = '../assets/snowball.js?v=35'; s.onload = cb; s.onerror = cb; document.head.appendChild(s); }
+  function loadSnowball(cb){ if(window.SNOWBALL) return cb(); const s = document.createElement('script'); s.src = '../assets/snowball.js?v=36'; s.onload = cb; s.onerror = cb; document.head.appendChild(s); }
   function makeCat(){ if(CAT || !window.SNOWBALL) return CAT; const img = new Image(), cv = document.createElement('canvas'); cv.width = 384; cv.height = 590;
     const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
     img.onload = () => { cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); tex.needsUpdate = true; wake(4); };

@@ -1134,7 +1134,7 @@
         const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
             if(o < .03 || n++ > 40){ document.documentElement.classList.add('fe-up'); startCard(); } else setTimeout(w, 120); })(); };
         const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); clear(); } }); mo.observe(document.body, {childList: true}); } else clear(); }); };
-    loadScript('../assets/snowball.js?v=35', !!window.SNOWBALL, go); loadScript('../assets/feast3d/feast-props.js?v=2', !!window.FEASTPROPS, go); }
+    loadScript('../assets/snowball.js?v=36', !!window.SNOWBALL, go); loadScript('../assets/feast3d/feast-props.js?v=2', !!window.FEASTPROPS, go); }
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
 
