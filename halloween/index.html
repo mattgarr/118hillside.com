@@ -13505,7 +13505,7 @@ const HAUNTED = (() => {
     if(CH && (k === '1' || k === '2')) return CH.pick(CH.opts[+k - 1][1]);
     if(k === 'l' || k === 'L') return H.lights(!H.lightsOn); if(k === 'm' || k === 'M') return H.mute(!muted()); }, true);
   // ---------------------------------------------------------------- registration (contract section 1)
-  HWGAMES.register({id: 'haunted', icon: '🏚️', title: "Snowball's Haunted House", blurb: 'Night walk with Snowball', ages: '4+', start: () => H.start(), stop: () => H.stop(true)});
+  // owner 11/10: Snowball's Haunted House retired while the house is on the market (not registered, no deep link)
   if(!HWGAMES._renderMenu){   // minimal fallback menu (same pill id as the real one, so menus never duplicate)
     HWGAMES._renderMenu = function(){ let b = document.getElementById('hwGamesPill');
       if(!b){ const hw = document.getElementById('hwBtn'); b = document.createElement('button'); b.type = 'button'; b.id = 'hwGamesPill'; b.className = 'hh28btn hh28pill'; b.style.cssText = 'margin-left:6px;min-height:44px;min-width:56px;font-size:14px';
@@ -13515,7 +13515,7 @@ const HAUNTED = (() => {
         if(hw && hw.parentNode) hw.insertAdjacentElement('afterend', b); else { b.style.cssText += ';position:fixed;left:12px;top:64px;z-index:58'; document.body.appendChild(b); } } };
     try{ HWGAMES._renderMenu(); }catch(e){ console.warn('[haunted28] menu', e); } }
   // deep link ?game=haunted: open the intro card after the reveal (sound waits for the Play tap)
-  if(/[?&]game=haunted\b/.test(Q)){ const ld = document.querySelector('#loading'); const go = () => setTimeout(() => HWGAMES.start('haunted'), 400);
+  if(false && /[?&]game=haunted\b/.test(Q)){ const ld = document.querySelector('#loading'); const go = () => setTimeout(() => HWGAMES.start('haunted'), 400);
     if(!ld || ld.classList.contains('done')) setTimeout(go, 0); else { const mo = new MutationObserver(() => { if(ld.classList.contains('done')){ mo.disconnect(); go(); } }); mo.observe(ld, {attributes: true}); } }
   // QA hooks (no UI uses them)
   H.state = () => ({active: H.active, route: H.route, done: !!H.done, cur: CUR && !CUR.done ? {x: CUR.x, y: CUR.y, shine: CUR.shine, label: CUR.b.getAttribute('aria-label')} : null, choice: CH ? CH.opts.map(o => o[0]) : null, dark: darkMode, dim: +H.dim.toFixed(3), hints: H.hints, say: sayE ? sayE.textContent : ''});
