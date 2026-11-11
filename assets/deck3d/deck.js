@@ -258,8 +258,8 @@
   function catAt(p){ if(!P || !p.cat) return null; if(p.id === 'living' && S.room.includes('box')) return [P.BOX_AT[0], P.BOX_AT[1] + .12, P.BOX_AT[2]];
     const c = portrait() && p.catP ? p.catP : p.cat, k = c === p.cat ? 'catY' : 'catYP'; if(p[k] == null) p[k] = P.floorY(c[0], c[1], stand(p)[0][1] + 1.5, p.inside ? 0 : -3.5); return [c[0], p[k] + .02, c[1]]; }
   let SV = null;   // the view a shared postcard was taken from: the recipient opens on it
-  function view(p){ if(SV && shared && SV.place === p.id){   // frame the corners of the sender's picture (a 4:3 card at their zoom) in whatever part of this screen is clear
-      const pos = SV.tall && p.posP ? p.posP : p.pos, P0 = new V3(...pos), f = new V3(...SV.dir).normalize(), r = new V3().crossVectors(f, UP).normalize(), u = new V3().crossVectors(r, f), tv = Math.tan(H.camera.fov * Math.PI / 360) / SV.zoom, th = tv * 4 / 3;
+  function view(p){ if(SV && shared && SV.place === p.id){   // frame the middle of the sender's picture (most of a 4:3 card at their zoom) in whatever part of this screen is clear
+      const pos = SV.tall && p.posP ? p.posP : p.pos, P0 = new V3(...pos), f = new V3(...SV.dir).normalize(), r = new V3().crossVectors(f, UP).normalize(), u = new V3().crossVectors(r, f), tv = Math.tan(H.camera.fov * Math.PI / 360) / SV.zoom * .45, th = tv * 4 / 3;
       const pts = [[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([a, b]) => P0.clone().addScaledVector(f, 30).addScaledVector(r, 30 * th * a).addScaledVector(u, 30 * tv * b).toArray());
       return fit(pos, P0.clone().addScaledVector(f, 30).toArray(), pts); }
     const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = (portrait() && p.fitP ? p.fitP : p.fit).concat(PHASE === 'photo' && p.pfit ? p.pfit : []); return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
