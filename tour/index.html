@@ -8707,6 +8707,14 @@ async function boot(){
       if(si > 0){ stopIdx = si; const q = STOPS[si]; camera.position.set(...q.pos); target.set(...q.look); showStop(si, false); } else showStop(0,false); }
     applyVisibility(); updateLegend();
     const h=(location.hash||'').slice(1); if(h && ['walk','doll','design','photos'].includes(h)) setMode(h);
+    if(/[?&]escape=/.test(location.search)){   // r30 escape room: a small host API for assets/escape/escape.js (loaded only on ?escape=...)
+      const HX = window.HILLSIDE = {THREE, camera, target, scene, canvas, renderer, STOPS, ROOM, GROUPS, LV, TOD, flyTo, showStop, setMode, setTOD, pick, grp, sunPosition, SUN_DIR,
+        get mode(){ return mode; }, get nav(){ return nav; }, set nav(v){ nav = v; }, get anim(){ return anim; }, set anim(v){ anim = v; },
+        look(pos, at){ anim = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
+        door28: window.DOOR28, door28Toggle: typeof door28Toggle === 'function' ? door28Toggle : null, POCKET31: window.POCKET31, R28W: window.R28W, BIM2S: typeof BIM2S !== 'undefined' ? BIM2S : null,
+        hooks: {click: null, frame: null}};
+      { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
+      const es = document.createElement('script'); es.src = '../assets/escape/escape.js?v=30'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = {camera, target, scene, STOPS, flyTo, setMode, showStop, look(pos, at){ anim = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); }};   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
