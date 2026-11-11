@@ -206,15 +206,17 @@
     else { if(pn){ const q = pn.getBoundingClientRect(); if(q.width > 10) l = q.right + 14; } b = Hh - 78; }
     if(r - l < 120){ l = 12; r = W - 12; } if(b - t < 120){ t = 60; b = Hh - 60; } return {l, t, r, b, W, Hh}; }
   // where the orbit puts the camera, fitted so the house fills the free part of the screen
-  const BOX = {x0: -34, x1: 33.5, z0: -51, z1: 38, y0: -4.6, y1: 9};
   function orbitFit(){ const o = rig.orb, F = freeRect(), cam = orbitFit.cam || (orbitFit.cam = new THREE.PerspectiveCamera()); cam.fov = o.fov; cam.aspect = F.W / F.Hh; cam.updateProjectionMatrix();
     const T = new V3(o.T[0], o.T[1], o.T[2]), sp = Math.sin(o.phi), dir = new V3(sp * Math.sin(o.th), Math.cos(o.phi), sp * Math.cos(o.th));
-    const pts = []; for(const x of [BOX.x0, BOX.x1]) for(const z of [BOX.z0, BOX.z1]) for(const y of [BOX.y0, S.upperOn ? BOX.y1 + 6 : BOX.y1]) pts.push(new V3(x, y, z));
+    if(!orbitFit.pts){ orbitFit.pts = []; for(const sp of H.BIM2S.meta.spaces){ const fz = sp.floorZ || 0, P = sp.poly || sp.polygon; for(const p of P){ orbitFit.pts.push([p[1], fz, p[0], fz > 4]); orbitFit.pts.push([p[1], fz + (fz > 4 ? 9 : 8), p[0], fz > 4]); } } }
+    const pts = orbitFit.pts.filter(p => S.upperOn || !p[3]).map(p => new V3(p[0], p[1], p[2]));
     const hw = (F.r - F.l) / F.W, hh = (F.b - F.t) / F.Hh; let lo = 30, hi = 520;
-    for(let i = 0; i < 22; i++){ const r = (lo + hi) / 2; cam.position.copy(T).addScaledVector(dir, r); cam.lookAt(T); cam.updateMatrixWorld(true); let mx = 0, my = 0, bad = false;
-      for(const p of pts){ const v = p.clone().project(cam); if(v.z > 1) bad = true; mx = Math.max(mx, Math.abs(v.x)); my = Math.max(my, Math.abs(v.y)); }
-      if(!bad && mx <= hw * .98 && my <= hh * .94) hi = r; else lo = r; }
-    o.fit = hi; o.offFit = [((F.l + F.r) / 2) / F.W - .5, ((F.t + F.b) / 2) / F.Hh - .5]; }
+    // the house's own extent on screen is not centred on the point the camera looks at, so the fit measures it and re-centres it
+    let cx = 0, cy = 0; const _q = new V3();
+    for(let i = 0; i < 22; i++){ const r = (lo + hi) / 2; cam.position.copy(T).addScaledVector(dir, r); cam.lookAt(T); cam.updateMatrixWorld(true); let x0 = 9, x1 = -9, y0 = 9, y1 = -9, bad = false;
+      for(const p of pts){ _q.copy(p).project(cam); if(_q.z > 1) bad = true; x0 = Math.min(x0, _q.x); x1 = Math.max(x1, _q.x); y0 = Math.min(y0, _q.y); y1 = Math.max(y1, _q.y); }
+      if(!bad && (x1 - x0) / 2 <= hw * .93 && (y1 - y0) / 2 <= hh * .84){ hi = r; cx = (x0 + x1) / 2; cy = (y0 + y1) / 2; } else lo = r; }
+    o.fit = hi; o.offFit = [((F.l + F.r) / 2) / F.W - .5 - cx / 2, ((F.t + F.b) / 2) / F.Hh - .5 + cy / 2]; }
   function orbitPose(){ const o = rig.orb, r = o.fit * o.zoom, sp = Math.sin(o.phi), T = [o.T[0] + o.pan[0], o.T[1], o.T[2] + o.pan[1]];
     return {pos: [T[0] + r * sp * Math.sin(o.th), T[1] + r * Math.cos(o.phi), T[2] + r * sp * Math.cos(o.th)], at: T, fov: o.fov, off: (o.offFit || [0, 0]).slice()}; }
   function standPose(){ const s = rig.st, cp = Math.cos(s.pitch), p = s.pos; return {pos: [p.x, p.y, p.z], at: [p.x - Math.sin(s.yaw) * cp * 10, p.y + Math.sin(s.pitch) * 10, p.z - Math.cos(s.yaw) * cp * 10], fov: clamp(s.fov * s.zoom, 20, 88), off: [0, 0]}; }
@@ -428,7 +430,7 @@
   const css = `
   #rfeRoot{--ink:#1f2a3a;--mut:#5c6575;--navy:#1f2948;--paper:#fbfaf7;--gold:#c98a12;--wine:#9b2c3c;--ok:#2e7b59;--tape:#66ade6;--tapeink:#0f3556;position:fixed;inset:0;z-index:60;pointer-events:none;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
   #rfeRoot button{font:inherit;cursor:pointer;color:inherit}
-  #rfeRoot .chip{pointer-events:auto;color:var(--ink);background:rgba(251,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.2)}
+  #rfeRoot .rfeChip{pointer-events:auto;color:var(--ink);background:rgba(251,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.2)}
   #rfeTop{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left))}
   #rfeGoal{padding:10px 16px 11px;width:340px;max-width:100%;min-width:0;border-left:4px solid var(--gold);box-sizing:border-box}
   #rfeGoal .k{display:flex;gap:8px;align-items:baseline;font-size:12.500px;color:var(--mut);letter-spacing:.02em}
@@ -614,28 +616,28 @@
     root = el('div', {id: 'rfeRoot'}, `
       <div id="rfeLabels"></div><div id="rfeMarks"></div>
       <div id="rfeTop">
-        <div class="chip" id="rfeGoal" role="status" aria-live="polite"><div class="k"><b id="rfeTitle">Room for Everyone</b><span id="rfeTime">0:00</span></div><p id="rfeGoalT"></p></div>
+        <div class="rfeChip" id="rfeGoal" role="status" aria-live="polite"><div class="k"><b id="rfeTitle">Room for Everyone</b><span id="rfeTime">0:00</span></div><p id="rfeGoalT"></p></div>
         <div id="rfeR"><div id="rfeBtns">
-          <button class="chip" id="rfeHint" type="button" aria-label="Ask Snowball for a hint"><span class="av">${cat}</span><span class="tx"><b>Ask Snowball</b><small>For a hint</small></span></button>
-          <button class="chip rfeIco" id="rfeSnd" type="button" aria-label="Sound"></button>
-          <button class="chip rfeIco" id="rfeMenuBtn" type="button" aria-label="Menu" aria-expanded="false">${ICO.menu}</button>
+          <button class="rfeChip" id="rfeHint" type="button" aria-label="Ask Snowball for a hint"><span class="av">${cat}</span><span class="tx"><b>Ask Snowball</b><small>For a hint</small></span></button>
+          <button class="rfeChip rfeIco" id="rfeSnd" type="button" aria-label="Sound"></button>
+          <button class="rfeChip rfeIco" id="rfeMenuBtn" type="button" aria-label="Menu" aria-expanded="false">${ICO.menu}</button>
         </div><div id="rfeSay" aria-live="polite"></div></div>
       </div>
-      <div class="chip" id="rfeMenu" role="menu"><button type="button" role="menuitem" id="rfeRestart">Start this puzzle again</button><button type="button" role="menuitem" id="rfePick">Choose another puzzle</button><button type="button" role="menuitem" id="rfeAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
-      <div class="chip" id="rfeRoom" aria-live="polite"></div>
-      <div class="chip" id="rfePanel"><p id="rfeStory"></p><h3><span>Who is staying</span><span id="rfeCount"></span></h3><div id="rfeTray"></div>
+      <div class="rfeChip" id="rfeMenu" role="menu"><button type="button" role="menuitem" id="rfeRestart">Start this puzzle again</button><button type="button" role="menuitem" id="rfePick">Choose another puzzle</button><button type="button" role="menuitem" id="rfeAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
+      <div class="rfeChip" id="rfeRoom" aria-live="polite"></div>
+      <div class="rfeChip" id="rfePanel"><p id="rfeStory"></p><h3><span>Who is staying</span><span id="rfeCount"></span></h3><div id="rfeTray"></div>
         <div id="rfeSelBar"></div><h3><span>What they asked for</span><span id="rfeDone"></span></h3><ol id="rfeClues"></ol></div>
       <div id="rfeDock">
         <button class="rfeBtn dark shadow" id="rfeBack" type="button">${ICO.back}<span>Whole house</span></button>
         <div id="rfeTip" role="status"></div>
         <button class="rfeBtn shadow" id="rfeLift" type="button" aria-pressed="false">${ICO.lift}<span>Lift off the upper level</span></button>
-        <div class="chip" id="rfeSun"><div class="top"><span>Midsummer day</span><b id="rfeClock">1:00 PM</b><button type="button" id="rfePlay">${ICO.play}<span>Watch the day</span></button></div>
+        <div class="rfeChip" id="rfeSun"><div class="top"><span>Midsummer day</span><b id="rfeClock">1:00 PM</b><button type="button" id="rfePlay">${ICO.play}<span>Watch the day</span></button></div>
           <input id="rfeSlider" type="range" min="${H0}" max="${H1}" step=".25" value="13" aria-label="Time of day">
           <div class="ticks" aria-hidden="true"><span>7 AM</span><span>10</span><span>1 PM</span><span>4</span><span>7:30</span></div></div>
         <button class="rfeBtn shadow" id="rfeCluesBtn" type="button" aria-pressed="false">${ICO.list}<span>Clues</span></button>
         <button class="rfeBtn primary shadow" id="rfeWhoBtn" type="button" aria-expanded="false">${ICO.bed}<span>Who sleeps here</span></button>
       </div>
-      <div class="chip" id="rfeWho" role="menu"></div>
+      <div class="rfeChip" id="rfeWho" role="menu"></div>
       <div id="rfeToast" role="status"></div>`);
     document.body.appendChild(root); document.body.appendChild(el('div', {id: 'rfeGhost'}));
     toastE = $('#rfeToast'); sayE = $('#rfeSay');
@@ -941,10 +943,10 @@
         if(!Array.isArray(m)){ if((m.transparent && m.opacity < .6) || m.blending === THREE.AdditiveBlending || /glass|pane/i.test(m.name || '')) return; }
         const g = o.geometry; if(!g.boundingSphere) g.computeBoundingSphere(); if(g.boundingSphere.radius > 2000) return; out.push(o); }); return out; },
     // the clearest place to stand in a room, and a clear spot for a game piece
-    stand(slot, solids){ solids = solids || dev.solids(); const G = GEO[slot], rc = new THREE.Raycaster(), cand = [], D = []; for(let i = 0; i < 16; i++) D.push(new V3(Math.cos(i * Math.PI / 8), 0, Math.sin(i * Math.PI / 8)));
-      const clr = (x, z, hs, cap) => { let m = cap; for(const h of hs){ const o = new V3(x, G.fy + h, z); for(const d of D){ rc.set(o, d); rc.far = m; const hit = rc.intersectObjects(solids, false)[0]; if(hit) m = Math.min(m, hit.distance); if(m < .6) return m; } } return m; };
-      for(let x = G.bb[0] + 1.2; x < G.bb[2] - 1.1; x += .7) for(let z = G.bb[1] + 1.2; z < G.bb[3] - 1.1; z += .7){ if(!inPoly(x, z, G.P)) continue; const c = clr(x, z, [.7, 2.2, 3.6, 5], 6); if(c > 1.1) cand.push({x: +x.toFixed(2), z: +z.toFixed(2), c: +c.toFixed(2)}); }
-      cand.sort((a, b) => b.c - a.c); return cand.slice(0, 14); },
+    stand(slot, solids, step){ solids = solids || dev.solids(); const G = GEO[slot], rc = new THREE.Raycaster(), cand = [], D = []; for(let i = 0; i < 8; i++) D.push(new V3(Math.cos(i * Math.PI / 4), 0, Math.sin(i * Math.PI / 4)));
+      const clr = (x, z, hs, cap) => { let m = cap; for(const h of hs){ const o = new V3(x, G.fy + h, z); for(const d of D){ rc.set(o, d); rc.far = m; const hit = rc.intersectObjects(solids, false)[0]; if(hit) m = Math.min(m, hit.distance); if(m < 1) return m; } } return m; };
+      step = step || 1.4; for(let x = G.bb[0] + 1.4; x < G.bb[2] - 1.3; x += step) for(let z = G.bb[1] + 1.4; z < G.bb[3] - 1.3; z += step){ if(!inPoly(x, z, G.P)) continue; const c = clr(x, z, [1.2, 4.6], 5); if(c >= 1) cand.push({x: +x.toFixed(2), z: +z.toFixed(2), c: +c.toFixed(2)}); }
+      cand.sort((a, b) => b.c - a.c); return cand; },
     // is there a clear line from where you stand to each thing worth a look
     los(solids){ solids = solids || dev.solids(); const rc = new THREE.Raycaster(), out = {}; for(const slot of ORDER){ const st = standOf(slot), o = new V3(...st.pos); out[slot] = (RINGS[slot] || []).map(q => { const at = new V3(...ringAt(slot, q)), d = at.clone().sub(o), L = d.length(); rc.set(o, d.normalize()); rc.far = L - .4; const hit = rc.intersectObjects(solids, false)[0];
           return q.label + ': ' + (hit ? 'BLOCKED at ' + hit.distance.toFixed(1) + ' of ' + L.toFixed(1) + ' by ' + (hit.object.name || hit.object.parent.name) : 'clear ' + L.toFixed(1)); }); } return out; },
