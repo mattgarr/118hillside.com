@@ -656,7 +656,7 @@
     for(const w of (WALKS[S.place] || [])) mark('walk', PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     for(const id in SPOTS){ const sp = SPOTS[id]; if(sp.from.includes(S.place) && (!sp.when || sp.when())) mark('look', sp.label(), sp.at(), () => examine(id), 's:' + id); } }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || !S.started || S.done || !!S.ex;
-    const top = phone() ? 210 : 96, bot = r.height - (phone() ? (placeE.classList.contains('on') ? 276 : 196) : 204), padX = 40, items = [], placed = [];
+    const top = phone() ? 210 : 96, bot = r.height - (phone() ? (placeE.classList.contains('on') ? 332 : 196) : 204), padX = 40, items = [], placed = [];
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '', docked = false;
