@@ -20226,6 +20226,13 @@ function r36CutTris(rx, rect, sel, tag){
     G.setIndex(new THREE.BufferAttribute(ia, 1)); G.boundingBox = null; G.boundingSphere = null;
     const ud = m.userData.bim2; if(ud && ud.ranges && add) ud.ranges.push(['R36-CUT-' + tag, null, n0 / 3, add / 3]); if(m.userData.idx0) m.userData.idx0 = G.index; if(m.userData.alt) m.userData.alt = {}; }
   return out; }
+/* r36 owner 11/11 ("missing trim on the left of the triangle window"): the two gable windows over the balcony slider were cased at the sill and the
+   upright only; the sloped side under the rake had none, so the siding and soffit ran straight into the glass. One casing board per window,
+   3 1/2 in wide like the slider's, laid along the rake just under the soffit (roof underside: y = 28.30 + .583 x left of the ridge, mirrored right). */
+function r36GableCasing(){ const zF = -40.358, w = .29, g = grp('upper'), mat = M.trimExt || M.trim, ang = Math.atan(.583), cs = Math.cos(ang);
+  for(const [x0, x1, sg] of [[-22.2, -17.72, 1], [-17.65, -13.17, -1]]){ const roof = x => (sg > 0 ? 28.3024 + .583 * x : 7.5068 - .583 * x) - .03, xm = (x0 + x1) / 2, L = (x1 - x0) / cs;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(L, w, .09), mat); m.name = 'r36-gable-casing'; m.position.set(xm, roof(xm) - w / 2 / cs, zF - .045); m.rotation.z = sg * ang; m.castShadow = m.receiveShadow = true; g.add(m); }
+  R36G.added.push({el: 'R36-GABLE-CASING', n: 2}); }
 function r36PrimaryCeiling(){
   const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, R2 = {x0: xB, x1: -8.6, z0: -36.52, z1: -25.55}, xc = -10.6, zc = -31;
   // the plane through a triangle, read at the middle of the dormer bay
@@ -20237,6 +20244,7 @@ function r36PrimaryCeiling(){
     [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]]]); }   // and the bay's end, where the gable carries on below it
 { const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); }
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
+    try{ r36GableCasing(); }catch(e){ console.warn('[r36] gable casing', e); R36G.err.push(String(e)); }
     try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
 /* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
    the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
