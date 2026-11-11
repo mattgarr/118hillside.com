@@ -169,6 +169,7 @@
         const corn = []; [-.5, 0, .5].forEach((o, i) => corn.push({p: new V3(o * .34, -R0 - .02 + Math.abs(o) * .12, tube + .1), q: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI + o * .9)), s: [.075, .36, .075], c: ['#e8b93c', '#b4502a', '#e3c056'][i]})); w.add(inst(G.sphLo, std('#ffffff', {roughness: .6}), corn)); bow(w, '#b9925a', 0, -R0 + .26, tube + .12, .8); }
       if(kind !== 'bluesilver'){ const lp = []; for(let i = 0; i < 26; i++){ const a = i / 26 * 6.283; lp.push({p: new V3(Math.cos(a) * (R0 + (i % 2 ? .08 : -.08)), Math.sin(a) * (R0 + (i % 2 ? .08 : -.08)), tube + .07), c: '#ffdca8', s: .34}); } lightSet(w, lp, {mode: 1, seq: 1}); }   // on the wreath itself, so they swing with the door
       else lightSet(w, [{p: new V3(0, R0 + .08, tube + .2), c: '#cfe2ff', s: 1.1}], {mode: 3, seq: 1});
+      w.traverse(o => { if(o.isMesh && !o.isInstancedMesh) o.userData.own = true; });   // keep the ring and bow out of the bake, which would pin them to the doorway
       return g; }
 
     /* a five-point star with a ridge down each arm */
