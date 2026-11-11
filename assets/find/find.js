@@ -321,7 +321,7 @@
         const e = eyeOf(R, 0), y = R.v[0][2] * Math.PI / 180; anchor.copy(e); pinned = true; aim(y, PITCH0); cb(); later(() => fade.classList.remove('on'), first ? 300 : 420); })(); }, 300); }
 
   /* ---------- state ---------- */
-  const S = {on: false, mode: 'idle', daily: true, hard: !!SV.hard, seed: 0, step: 0, trail: [], spot: null, P: new THREE.Vector3(), path: null, view: 0, vis: [], best: 0, open: 0, t0: 0, tSeek: 0, tHint: 0, tMeow: 0, tSeen: 0, tAct: 0,
+  const S = {on: false, mode: 'idle', daily: true, hard: !!SV.hard, seed: 0, step: 0, trail: [], spot: null, P: new THREE.Vector3(), path: null, view: 0, vis: [], best: 0, open: 0, t0: 0, tSeek: 0, tHint: 0, tMeow: 0, tSeen: 0, tAct: 0, tWig: 0,
     wrong: 0, helps: 0, miss: 0, asked: 0, fresh: 0, got: [], turned: false, walked: false, taught: false, force: null, dev: false};
   const NOV = {n: 0, f: 0, head: 0, cu: 0, cv: .6, u0: -.5, u1: .5, v0: 0, v1: 1, d: 9}, room = () => S.trail[S.step], cur = () => S.vis[S.view] || NOV;
   const dailyDone = SV.last === DAY, stepR = salt => rng(S.seed * 31 + S.step * 977 + salt);
@@ -409,7 +409,7 @@
   #fndCard.clue{background:rgba(14,19,34,.28)}
   #fndCard .c{background:#fbfaf7;color:#1f2a3a;border-radius:24px;max-width:540px;width:100%;padding:20px 20px 18px;box-shadow:0 30px 90px rgba(0,0,0,.45);max-height:calc(100% - 28px);overflow:auto;text-align:center;animation:fndUp .35s ease-out;box-sizing:border-box}
   @keyframes fndUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
-  #fndCard .cat{width:118px;margin:-4px auto 0}#fndCard .cat svg{width:100%;height:auto;display:block}
+  #fndCard .cat{width:118px;margin:-4px auto 0}#fndCard .fin .cat{width:84px}#fndCard .fin{padding-top:14px}#fndCard .cat svg{width:100%;height:auto;display:block}
   #fndCard h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(32px,6vw,44px);font-weight:600;line-height:1;margin:4px 0 8px}
   #fndCard p{font-size:17px;line-height:1.4;margin:0 0 12px;color:#2b3442}
   #fndCard .how{list-style:none;margin:0 auto 14px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:460px}
@@ -483,7 +483,7 @@
   /* help, in two steps so a small player is never stuck and an older one is not handed the answer: the first press is a hint (he rings his bell and jumps,
      and you are told which way, or to walk); the second press takes you to where he can be seen, turns you to him and rings him. Left alone long enough,
      the game does the second step itself. */
-  function help(auto){ if(!S.on || S.mode !== 'seek' || H.anim || walk) return; const t = performance.now(); S.tHint = S.tAct = t; if(!auto){ S.helps++; ga('find_help', {step: S.step, tier: S.asked}); }
+  function help(auto){ if(!S.on || S.mode !== 'seek' || H.anim || walk) return; const t = performance.now(); S.tHint = S.tAct = t; S.taught = true; if(!auto){ S.helps++; ga('find_help', {step: S.step, tier: S.asked}); }
     if(!auto && !S.asked && S.step > 0){ S.asked = 1; ui(); snd('bell', {pan: panOf(), vol: 1.2}); hop(.9, 520); const v = cur();
       if(v.n < SEEN() && S.best !== S.view){ toast('He is behind something from here. Try walking.', 3600); nudge('walk', 5000); }
       else if(!onScreen()){ const left = relYaw() > 0; edge.className = left ? 'l on' : 'r on'; later(() => edge.classList.remove('on'), 2600); toast(left ? 'Jingle. He is to your left.' : 'Jingle. He is to your right.', 2600); nudge('turn', 2600); }
@@ -539,8 +539,8 @@
     if(!S.hard && S.step > 0){
       if(S.step === 1 && !S.taught && !S.turned && t - S.tSeek > 10000){ S.taught = true; toast('Tap an arrow to turn around.', 3800); nudge('turn', 5000); }
       // small players never get stuck: he wiggles when he is on the screen and not spotted, and after a while the game shows him
-      if(inView && S.tSeen && t - S.tSeen > 7000 && t - S.tHint > 7000){ S.tHint = t; hop(.45, 420); snd('bell', {pan: panOf(), vol: .9}); }
-      if(t - S.tSeek > 45000 && t - S.tHint > 15000 && t - S.tAct > 2500) help(true); }
+      if(inView && S.tSeen && t - S.tSeen > 7000 && t - S.tWig > 7000){ S.tWig = t; hop(.45, 420); snd('bell', {pan: panOf(), vol: .9}); }
+      if(t - S.tSeek > 45000 && t - S.tHint > 20000 && t - S.tAct > 2500) help(true); }
     if(t < ringUntil && inView){ const b = catRect().part, r = b ? clamp(Math.max(b.x1 - b.x0, b.y1 - b.y0) / 2 + 16, 44, 130) : 60; ring.style.width = ring.style.height = r * 2 + 'px'; ring.style.margin = -r + 'px 0 0 ' + -r + 'px'; ring.style.left = (b ? (b.x0 + b.x1) / 2 : hs.x) + 'px'; ring.style.top = (b ? (b.y0 + b.y1) / 2 : hs.y) + 'px'; ring.classList.add('on'); } else ring.classList.remove('on'); }
   function hop(hgt, ms, cb){ if(reduce){ cb && cb(); return; } const y0 = S.P.y, t0 = performance.now(); (function f(){ if(dead) return; const k = (performance.now() - t0) / ms; if(k >= 1){ CAT.position.y = y0; CAT.scale.set(CW, CH, 1); cb && cb(); return; } const a = Math.sin(k * Math.PI); CAT.position.y = y0 + a * hgt; CAT.scale.set(CW * (1 + .06 * a), CH * (1 + .1 * a), 1); requestAnimationFrame(f); })(); }
   function say(text, ms){ bubble.textContent = text; bubbleUntil = performance.now() + ms; }
@@ -598,7 +598,7 @@
   const gameURL = () => location.origin + SITE + '/games/snowball/' + (SITE ? 'index.html' : '');
   function finishCard(secs, first){ const id = S.trail[4], where = S.spot.s.n + (S.spot.i >= 0 && !S.spot.s.n.includes(ROOM[id].name.toLowerCase()) ? ', ' + ROOM[id].at : ''), clean = !S.wrong && !S.helps, got = Object.keys(SV.spots).filter(k => { const q = k.split('.'); return ROOM[q[0]] && ROOM[q[0]].spots[+q[1]]; }).length, streak = SV.streak || 0, done = SV.last === DAY;
     const medal = S.hard ? (clean && secs < 150 ? 'Gold medal. No help, no wrong rooms, and fast.' : clean ? 'Silver medal. No help and no wrong rooms.' : 'Bronze medal. You beat sneaky mode.') : '';
-    const c = put(el('div', {id: 'fndCard', role: 'dialog', 'aria-label': 'You found Snowball'}, `<div class="c"><div class="cat">${window.SNOWBALL.svg({id: 'sbw', seed: 7, wear: WEAR, bell: BELL})}</div><h2>You found Snowball</h2>
+    const c = put(el('div', {id: 'fndCard', role: 'dialog', 'aria-label': 'You found Snowball'}, `<div class="c fin"><div class="cat">${window.SNOWBALL.svg({id: 'sbw', seed: 7, wear: WEAR, bell: BELL})}</div><h2>You found Snowball</h2>
       <p>He was ${esc(where)}. Dinner is served.${medal ? ' ' + medal : clean ? ' You never needed a hint.' : ''}</p>
       <div class="stats"><div><b>${fmtT(secs)}</b><span>${S.daily ? "today's trail" : 'this trail'}</span></div><div><b>${streak}</b><span>${streak === 1 ? 'day in a row' : 'days in a row'}</span></div><div><b>${got} of ${ALLSPOTS}</b><span>hiding places found</span></div></div>
       <p class="book"><i><u style="width:${Math.max(2, Math.round(got / ALLSPOTS * 100))}%"></u></i>${S.fresh ? (S.fresh === 1 ? 'One new hiding place' : S.fresh + ' new hiding places') + ' on this trail. ' : 'No new hiding places this time. '}${first ? 'That was today’s trail. He hides somewhere new tomorrow.' : S.daily ? '' : done ? 'Today’s trail is done, so this one was for practice.' : 'This one was for practice.'}</p>
@@ -610,7 +610,8 @@
       const say2 = (label, msg) => { b.textContent = label; toast(msg, 3200); later(() => { b.textContent = 'Share this game'; }, 3200); };
       try{ if(navigator.share){ await navigator.share({title: "Where's Snowball?", text, url}); say2('Shared', 'Shared. Thank you.'); return; } }catch(err){ if(err && err.name === 'AbortError') return; }
       try{ await navigator.clipboard.writeText(text + ' ' + url); say2('Link copied', 'Copied. Paste it in a message to a friend.'); }
-      catch(err){ if(!c.querySelector('.link')){ const i = el('input', {class: 'link', readonly: '', 'aria-label': 'Link to this game', value: url}); b.parentNode.appendChild(i); i.focus(); i.select(); } toast('Copy this link and send it to a friend.', 4200); } }; }
+      catch(err){ let i = c.querySelector('.link'); if(!i){ i = el('input', {class: 'link', readonly: '', 'aria-label': 'Link to this game', value: url}); b.parentNode.appendChild(i); } i.focus(); i.select(); try{ i.scrollIntoView({block: 'nearest'}); }catch(e2){}
+        let ok = false; try{ ok = document.execCommand('copy'); }catch(e2){} if(ok) say2('Link copied', 'Copied. Paste it in a message to a friend.'); else toast('Here is the link. Copy it and send it to a friend.', 5000); } }; }
 
   /* ---------- start ---------- */
   function begin(seed, saved){ document.documentElement.classList.toggle('fnd-hard', S.hard); S.dev = false; newTrail(seed); S.on = true; document.documentElement.classList.add('fnd-on'); S.mode = 'travel'; lastWarm = -1;
