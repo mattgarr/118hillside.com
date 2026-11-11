@@ -22186,7 +22186,7 @@ function r36Grids(){
   G.idx = (x, z) => { const i = ci(x), j = cj(z); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
   const doors = r36Doors(), dcoll = new Set(DOOR28.items.filter(it => it.coll).map(it => it.coll)), open = new Set(doors.map(it => it.coll));
   for(const g of LVS){ const L = g.L;
-    for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const y = walkSurfaceAt(cx(i), cz(j), L + .3); if(Math.abs(y - L) < .4) g.base[j * NX + i] = 1; }
+    for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const x = cx(i), z = cz(j), y = walkSurfaceAt(x, z, L + .3); if(Math.abs(y - L) < .4 && !(y !== L && FLOORS.some(f => f.kind === 'TREAD' && Math.abs(f.y - y) < .02 && onFloor(f, x, z)))) g.base[j * NX + i] = 1; }   // a stair tread that happens to pass a level's height is stair, not that level's floor
     for(const q of COLLIDERS){ if(q.y1 <= L + .7 || q.y0 >= L + 5.6 || (q.v && q.v !== ACTIVE_VAR)) continue; if(dcoll.has(q) ? open.has(q) : q.pass) continue;
       const R = R36N.RW, i0 = Math.max(0, ci(q.x0 - R)), i1 = Math.min(NX - 1, ci(q.x1 + R)), j0 = Math.max(0, cj(q.z0 - R)), j1 = Math.min(NZ - 1, cj(q.z1 + R));
       for(let j = j0; j <= j1; j++) for(let i = i0; i <= i1; i++){ const x = cx(i), z = cz(j), dx = x - clamp(x, q.x0, q.x1), dz = z - clamp(z, q.z0, q.z1); if(dx * dx + dz * dz >= R * R) continue;
