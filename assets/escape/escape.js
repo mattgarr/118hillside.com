@@ -153,7 +153,7 @@
     S.pocket = pd;
     // interactables
     ITEMS = [
-      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [18.5, 5.0, 8.9], look: [19.7, 1.4, 11.8]}, open: openFridge},
+      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [19.0, 3.1, 8.5], look: [20.5, 1.7, 11.6]}, open: openFridge},
       {id: 'pocket', label: 'Pocket door', p: [22.0, 3.6, 9.5], view: {pos: [17.2, 4.6, 9.6], look: [22.0, 3.7, 9.5]}, open: openPocket},
       {id: 'paper', label: 'Paper on the glass', p: [5.0, 3.8, 22.0], view: {pos: [9.6, 4.4, 21.0], look: [4.8, 3.8, 21.6]}, open: openPaper},
       {id: 'floor', label: 'Dining floor', p: [10.4, .3, 24.4], hidden: true, view: {pos: [10.4, 7.2, 31.0], look: [10.4, 0, 24.4], kind: 'orbit'}, open: () => {}}];
@@ -179,7 +179,7 @@
 
   /* ------------------------------------------------------------------ UI */
   const css = `
-  html.esc header.bar nav.tabs, html.esc #card, html.esc header.bar .plate, html.esc #aboutBtn, html.esc #labels, html.esc #wplabels, html.esc #ovtag, html.esc #tod, html.esc #viewBtn, html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp{display:none!important}
+  html.esc header.bar nav.tabs, html.esc #card, html.esc #mini, html.esc #cv27, html.esc header.bar .plate, html.esc #aboutBtn, html.esc #labels, html.esc #wplabels, html.esc #ovtag, html.esc #tod, html.esc #viewBtn, html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp{display:none!important}
   #escHud{position:fixed;left:0;right:0;top:0;z-index:60;pointer-events:none;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:#1f2a3a}
   #escHud .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:64px 14px 0}
   .escChip{pointer-events:auto;background:rgba(251,250,247,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.18);padding:10px 14px}
