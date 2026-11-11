@@ -153,9 +153,9 @@ var SEASONS = [
   { id:'thanksgiving', from:'11-01', to:'11-27', href:'/games/feast/', img:'/images/feast-hero.jpg', alt:'Grocery tags set out on the dining table at 118 Hillside Drive', age:'Ages 7 and up',
     bg:'linear-gradient(135deg,#3a2414,#8a4b1c 55%,#d99a3c)', btn:'#ffd27a', btnInk:'#2a1806', icon:'🦃',
     title:'Thanksgiving at Hillside', sub:'The twins put dinner away, so it is hidden all over the house. Follow their clues through the 3D model, carry every dish out to the table under the oak, and light the candles.', go:'Start the hunt' },
-  { id:'holidays', from:'11-28', to:'01-06', href:'/games/deck/', img:'/images/deck-hero.jpg', alt:'118 Hillside Drive decorated for the holidays at dusk, with Snowball the cat on the porch', age:'All ages',
-    bg:'linear-gradient(135deg,#141c33,#26326a 55%,#5a3b6e)', btn:'#e8b84a', btnInk:'#2a1d07', icon:'❄️',
-    title:'Deck the House with Snowball', sub:'Everyone is coming tonight, and each guest hopes for one thing that says home: a menorah in the window, a kinara on its mat, diyas on the steps, a real tree. Read their messages, decorate, and light it up.', go:'Light it up' }
+  { id:'holidays', from:'11-28', to:'01-06', href:'/games/deck/', img:'/images/deck-hero.jpg', alt:'118 Hillside Drive at dusk, decorated for the holidays with lights along the roofline and the front walk', age:'All ages',
+    bg:'linear-gradient(135deg,#141c33,#26326a 55%,#5a3b6e)', btn:'#e8b84a', btnInk:'#2a1d07', icon:'✨',
+    title:'Deck the House with Snowball', sub:'Company is coming tonight and bringing their animals, and every animal has a request. Decorate the real house in 3D however you celebrate, light it up at sunset, and see who is happy.', go:'Start decorating' }
 ];
 function md(d){ return ('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 function inSeason(s, t){ return s.from <= s.to ? (t >= s.from && t <= s.to) : (t >= s.from || t <= s.to); }
