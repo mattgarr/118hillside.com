@@ -51,7 +51,7 @@ function T(name) {
     case 'mudcloth': TX[name] = tx(cv(128, 128, function (x, W) { x.fillStyle = '#ece6da'; x.fillRect(0, 0, W, W); x.fillStyle = '#1e1c1a';   // front-living pillows: rows of black triangles (p506)
       for (var j = 0; j < 4; j++) for (var i = 0; i < 4; i++) { var cx = i * 32 + (j % 2) * 16 + 8, cy = j * 32 + 8; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + 16, cy); x.lineTo(cx + 8, cy + 14); x.closePath(); x.fill(); } }), [1.6, 1.6]); break;
     case 'stripeBW': TX[name] = tx(cv(128, 128, function (x, W) { x.fillStyle = '#f1efea'; x.fillRect(0, 0, W, W); x.fillStyle = '#1a1a1a'; x.fillRect(0, 54, W, 20); }), [1, 1]); break;   // white pillow, black band (p495)
-    case 'duvetStripe': TX[name] = tx(cv(128, 128, function (x, W) { x.fillStyle = '#f2f1ee'; x.fillRect(0, 0, W, W); x.fillStyle = '#7d8086'; for (var i = 0; i < 4; i++) x.fillRect(0, i * 32 + 4, W, 13); }), [1, 3]); break;   // Josie duvet (p548)
+    case 'duvetStripe': TX[name] = tx(cv(128, 128, function (x, W) { x.fillStyle = '#f2f1ee'; x.fillRect(0, 0, W, W); x.fillStyle = '#7d8086'; for (var i = 0; i < 4; i++) x.fillRect(0, i * 32 + 4, W, 13); }), [1, 1.25]); break;   // Josie duvet (p548). r38: 1.25 tiles per ft (was 3: 1-inch stripes shimmered into moire from the door)
     case 'blueDot': R = rng(19); TX[name] = tx(cv(128, 128, function (x, W) { x.fillStyle = '#eef0f2'; x.fillRect(0, 0, W, W); x.fillStyle = '#4f6684';   // Evie coverlet: small blue-grey block print (p561)
       for (var j = 0; j < 8; j++) for (var i = 0; i < 8; i++) { x.beginPath(); x.ellipse(i * 16 + (j % 2) * 8 + 4, j * 16 + 6, 4.6, 3.2, 0.6, 0, TAU); x.fill(); } }), [1.5, 1.5]); break;
     case 'creamGeo': R = rng(21); TX[name] = tx(cv(256, 128, function (x, W, Hh) { x.fillStyle = '#efe8da'; x.fillRect(0, 0, W, Hh);   // front-bedroom quilt: tan / cream geometric patchwork (p508)
@@ -540,6 +540,19 @@ function rows(h) {
     ['mainbeds', 'basket', { style: 'mats' }, [1875, 1752], 's'],
     ['mainbeds', 'floorMirror', { frame: 'frameSilver', w: 1.9, h: 6.2 }, [2008, 1945], 'w', { back: true }],
     ['mainbeds', 'floorMirror', { frame: 'frameSilver', w: 1.9, h: 6.2 }, [2008, 1998], 'w', { back: true }]);
+  // r38 MIDDLE BEDROOM (model BED2, at the end of the bedroom hall; not in the 10/31 photos, so it stood empty and read as unfinished once it
+  // became a tour stop): a simple guest-room set in the house palette. Queen bed against the south wall with its back to the front bedroom,
+  // white linen with oat pillows, grey wood nightstands with urn lamps, a grey wool rug, one grey landscape print over the bed. The closet
+  // doors (west wall), the hall door's swing and the window (east wall) stay clear.
+  add(['mainbeds', 'rug2', { w: 6, d: 8, pattern: 'greyWool' }, [2015, 2378], 'n'],
+    ['mainbeds', 'bedQueen', { upholstery: 'linenWhite', channels: false, shamMat: 'linenWhite', accentMat: 'pillowTaupe33', throwBlanket: false }, [2015, 2428], 'n', { key: 'mb' }],
+    ['mainbeds', 'pillows', { mountY: 1.88, lean: -0.38, items: [['linenOat33', -0.8, 1.45, 1.45, 0.1], ['linenOat33', 0.8, 1.45, 1.45, -0.1]] }, 0, 'n', { on: 'mb', z: 1.0 }],
+    ['mainbeds', 'bedRunner', { w: 5.6, d: 2.4, drop: 1.0, mountY: 2.0, mat: 'linenOat33' }, 0, 'n', { on: 'mb', z: 4.0 }],
+    ['mainbeds', 'nightstand', { w: 1.8, legs: false, finish: 'greyWood33', hw: 'blackMetal', pull: 'bar' }, [1918, 2508], 'n', { key: 'mbL' }],
+    ['mainbeds', 'lamp', { style: 'urn', h: 2.1, shade: 'linenOat33' }, 0, 'n', { on: 'mbL' }],
+    ['mainbeds', 'nightstand', { w: 1.8, legs: false, finish: 'greyWood33', hw: 'blackMetal', pull: 'bar' }, [2112, 2508], 'n', { key: 'mbR' }],
+    ['mainbeds', 'lamp', { style: 'urn', h: 2.1, shade: 'linenOat33' }, 0, 'n', { on: 'mbR' }],
+    ['mainbeds', 'art', { w: 3.6, h: 2.4, mountY: 5.6, style: 'greyScape', seed: 21, frame: 'frameSilver', fw: 0.05 }, [2015, 2539], 'n', { back: true }]);
   // HALL BATH (unchanged from the listing staging; hardware is built-in)
   add(['mainbath', 'succulent', { pot: 'bowl', dia: 0.9 }, [2010, 2062], 's', { drop: true }],
     ['mainbath', 'soapPump', {}, [2050, 2054], 's', { drop: true }],
@@ -607,13 +620,13 @@ function rows(h) {
   // SKYLIT OFFICE (p542-p546): white X desk on the right-hand wall under the green / blue abstract, clear lamp, toy blocks, acrylic chair with
   // a navy pillow, white 2x2 cube unit under the alphabet + days posters and a blank oak frame, jute rug. Walls stay Serenely (owner).
   add(['office', 'rug2', { w: 5, d: 7, pattern: 'jute' }, [585, 1700], 's'],
-    ['office', 'deskX', { style: 'white', w: 4.2, d: 2.0 }, [654, 1700], 'w', { key: 'oD' }],
+    ['office', 'deskX', { style: 'white', w: 3.4, d: 2.0 }, [654, 1756], 'w', { key: 'oD' }],   // r38: 3.4 ft and 2 ft further in (was 4.2 at py 1700): with the door open, the desk closed the only way in past the leaf, so the office could not be walked into
     ['office', 'lamp', { style: 'clear', h: 2.3 }, 0, 'w', { on: 'oD', dx: 1.4 }],
     ['office', 'toyBlocks', {}, 0, 'w', { on: 'oD', dx: -0.9 }],
     ['office', 'books', { n: 2 }, 0, 'w', { on: 'oD', dx: 0.2 }],
-    ['office', 'ghostChair', {}, [608, 1700], 'e', { key: 'oC' }],
+    ['office', 'ghostChair', {}, [608, 1756], 'e', { key: 'oC' }],
     ['office', 'pillows', { mountY: 1.6, lean: -0.25, items: [['pillowNavy33', 0, 1.2, 1.1]] }, 0, 'e', { on: 'oC', z: 0.3 }],
-    ['office', 'art', { w: 3.2, h: 3.4, mountY: 5.6, style: 'kidsLoops', seed: 11, frame: 'frameOak', fw: 0.05 }, [680, 1700], 'w', { back: true }],
+    ['office', 'art', { w: 3.2, h: 3.4, mountY: 5.6, style: 'kidsLoops', seed: 11, frame: 'frameOak', fw: 0.05 }, [680, 1756], 'w', { back: true }],
     ['office', 'cubeShelf', {}, [497, 1640], 'e', { key: 'oS' }],
     ['office', 'vase2', { style: 'cylinder', h: 0.6, dia: 0.4, n: 2, gap: 0.1, mat: 'glassClear' }, 0, 'e', { on: 'oS' }],
     ['office', 'art', { w: 1.8, h: 2.3, mountY: 5.0, style: 'letters', seed: 12, frame: 'frameOak', fw: 0.05 }, [466, 1615], 'e', { back: true }],

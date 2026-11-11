@@ -1831,7 +1831,7 @@ var ACCEL_PHONETEX = 0;
 })();</script>
 <script src="fixtures.js"></script>
 <script src="staging.js"></script>
-<script src="staging33.js"></script>
+<script src="staging33.js?v=2"></script>
 <script src="builtins.js"></script>
 <script src="landscape.js"></script>
 <script src="trees.js"></script>
@@ -1874,12 +1874,12 @@ const ROOMS = [
  {id:'living',   name:'Living room', dims:'14′1″ × 14′7″', level:'main', at:wp(1480,1830), ph:[44,23]},
  {id:'kitchen',  name:'Kitchen', dims:'17′2″ × 10′0″', level:'main', at:wp(1640,2160), ph:[1,11,0,49,48,'x01']},
  {id:'great',    name:'Dining & sitting area', dims:'13′9″ × 21′6″', level:'main', at:wp(1590,2600), ph:[15,34,16,12,31,41,'x02','x03']},
- {id:'mainbeds', name:'Main-level bedrooms', dims:'9′9″ × 11′6″ · 10′10″ × 10′0″ · 11′10″ × 12′2″', level:'main', at:wp(1950,2700), ph:[62,74,73]},
+ {id:'mainbeds', name:'Main-level bedrooms', dims:'9′9″ × 11′6″ · 10′10″ × 10′0″ · 11′10″ × 12′2″', level:'main', at:wp(1950,2700), ph:[74,62,73,64,'x04']},
  {id:'mainbath', name:'Hall bath', dims:'6′4″ × 8′6″', level:'main', at:wp(2065,2160), ph:[57,22]},
  {id:'stairs',   name:'Stairs', level:'main', at:wp(960,1700), ph:[36,40]},
  {id:'rec',      name:'Bonus lounge', dims:'12′1″ × 13′3″', level:'lower', at:wp(855,1390), ph:[65,56,72]},
- {id:'lbed1',    name:'Lower-level bedroom 1', dims:'11′3″ × 12′5″', level:'lower', at:wp(865,740), ph:[63,58]},
- {id:'lbed2',    name:'Lower-level bedroom 2', dims:'11′3″ × 14′9″', level:'lower', at:wp(610,1000), ph:[64,'x04']},
+ {id:'lbed1',    name:'Lower-level bedroom 1', dims:'11′3″ × 12′5″', level:'lower', at:wp(865,740), ph:[63]},
+ {id:'lbed2',    name:'Lower-level bedroom 2', dims:'11′3″ × 14′9″', level:'lower', at:wp(610,1000), ph:[58]},
  {id:'office',   name:'Skylit office', dims:'7′7″ × 9′3″', level:'lower', at:wp(585,1710), ph:[20]},
  {id:'lbath',    name:'Lower-level bath', dims:'5′7″ × 9′9″', level:'lower', at:wp(945,1050), ph:[60,68,55,'x05']},
  {id:'laundry',  name:'Laundry room', dims:'6′8″ × 6′3″', level:'lower', at:wp(555,1385), ph:[4]},
@@ -1904,7 +1904,15 @@ const STOPS = [
     -> bonus lounge -> (stacking doors) terrace -> backyard -> back in through the lounge and along the hall -> (the house door, D-L0-03) garage
     -> out the garage door to the driveway -> the front of the house at dusk, where the closing card comes up (SELL36).
     The opening aerial is gone: the tour starts on the street view, which matches the listing's first photo. Everything finds a stop by its id.
-    Titles are the rooms' own names (ROOMS), and each caption says what is in view, in the landing page's plain voice. */
+    Titles are the rooms' own names (ROOMS), and each caption says what is in view, in the landing page's plain voice.
+    r38 (owner: "the tour should showcase all rooms"): seven more stops, 25 in all, still one walk with no doubling back:
+    ... dining and sitting area -> (pocket door) front bedroom -> back through the kitchen into the bedroom hall -> middle bedroom (end of the
+    hall) -> hall bath -> back bedroom (other end of the hall) -> kitchen, living room, foyer -> stairs ... balcony -> (cut) lower-level
+    bedroom 1 (south end of the lower hall) -> lower-level bath -> lower-level bedroom 2 -> up the hall, through the lounge to the lower entry ->
+    laundry room -> skylit office -> bonus lounge -> terrace ... The three main-level bedrooms are one model room ('mainbeds'), so each of their
+    stops carries its own photos (ph) and size (dims). The bedrooms are named by where they sit (the model numbers them the other way round:
+    front = BED3, middle = BED2, back = BED1). Photos p64 and x04 are the back bedroom (vaulted ceiling, upper cabinets over the closet: they
+    were filed under lower-level bedroom 2), and p58 is lower-level bedroom 2 (skylight, one window: it was filed under bedroom 1). */
  {id:'street', t:'From the street', lvl:'Woodside, California', dims:'Six bedrooms · three full baths', photo:69, level:'outside', nav:'orbit', rooms:['street'], pos:S(1168,2975,2.0), look:S(1168,2150,1.6),
   p:'The paver driveway runs up to the garage on the left. Beside it, the front steps climb to the porch and the iron-and-glass front doors. The large windows on the right are the dining and sitting area.'},
  {id:'porch', t:'Front porch', photo:71, level:'main', rooms:['frontdeck'], pos:S(1170,2480,2.4), look:S(1166,1900,4.6),
@@ -1917,10 +1925,16 @@ const STOPS = [
   p:'The kitchen is all white, with Cambria Brittanicca quartz counters, a large peninsula, and a Bosch gas range and dishwasher.'},
  {id:'great', t:'Dining & sitting area', photo:15, level:'main', rooms:['great'], pos:S(1626,2420,EYE), look:S(1585,2860,4.2),
   p:'The kitchen opens to the dining table and a sitting area. Together they are the great room. Large windows face the front of the house, and butcher-block shelves sit over built-in cabinets on the left.'},
- {id:'mainbeds', t:'Main-level bedrooms', photo:74, level:'main', rooms:['mainbeds','mainbath'], pos:S(2065,2865,EYE), look:S(1850,2600,3.6),
-  p:'This is one of three bedrooms on the main level. They share a hall with a full bath that has a Carrara marble-topped vanity, and a hall closet has hookups for a second washer and dryer.'},
+ {id:'mainbeds', t:'Front bedroom', dims:'11′10″ × 12′2″', ph:[74,62], photo:74, level:'main', rooms:['mainbeds'], pos:S(2065,2865,EYE), look:S(1850,2600,3.6),
+  p:'The first of three bedrooms on the main level opens off the dining area through a pocket door. It has a vaulted ceiling and two windows toward the street.'},
+ {id:'middlebed', t:'Middle bedroom', dims:'10′10″ × 10′0″', ph:[], level:'main', rooms:['mainbeds'], pos:[30.9,EYE,15.1], look:[23.5,EYE,23.2],
+  p:'The middle bedroom, at the end of the bedroom hall, has a vaulted ceiling and a closet with three sliding doors.'},
+ {id:'hallbath', t:'Hall bath', level:'main', rooms:['mainbath'], pos:[31.0,EYE,9.6], look:[25.8,EYE,5.8],
+  p:'The full bath on the bedroom hall has a Carrara marble-topped vanity and a tub with a shower.'},
+ {id:'backbed', t:'Back bedroom', dims:'9′9″ × 11′6″', ph:[73,64,'x04'], photo:73, level:'main', rooms:['mainbeds'], pos:[21.0,EYE,3.7], look:[24.4,EYE,-6.6],
+  p:'The back bedroom, at the other end of the hall, is staged here as a gym and office.'},
  {id:'stairs', t:'Stairs', photo:36, level:'main', rooms:['stairs'], pos:S(1150,1790,EYE), look:S(820,1650,7.4),
-  p:'Back at the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'},
+  p:'Back through the kitchen and living room to the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'},
  {id:'loft', t:'Loft', photo:37, cam:'loft', level:'upper', rooms:['loft'], pos:SU(1900,1262,LV.upper+EYE), look:SU(2090,1545,LV.upper+6.0),
   p:'The loft is a sitting area at the top of the stairs, with a window seat and cable railings over the stairwell. The primary suite is through the door.'},
  {id:'pbath', t:'Primary bath & closet', photo:45, level:'upper', rooms:['pbath','closet'], pos:SU(2092,1198,LV.upper+EYE), look:SU(2140,925,LV.upper+4.4),
@@ -1929,8 +1943,16 @@ const STOPS = [
   p:'The primary bedroom has a cathedral ceiling with four skylights, each with a remote-controlled shade. Stacking glass doors open to the balcony.'},
  {id:'balcony', t:'Balcony', photo:19, tod:'golden', level:'upper', rooms:['balcony'], fixed:true, pos:[-17.9,LV.upper+5.2,-39.5], look:[-17.4,LV.upper+1.4,-60],
   p:'The balcony is off the primary bedroom. It faces west, toward the hills and the sunset.'},
- {id:'lower', t:'Lower-level bedrooms & office', photo:63, level:'lower', rooms:['lbed1','lbed2','office','lbath','laundry'], pos:S(1000,890,LV.lower+EYE), look:S(820,640,LV.lower+3.4),
-  p:'Two flights down, this is one of two bedrooms on the lower level. The skylit office, a full bath with a dual-sink vanity and heated floors, and the main laundry room with its washer and dryer are along the same hall.'},
+ {id:'lower', t:'Lower-level bedroom 1', photo:63, level:'lower', rooms:['lbed1'], pos:S(1000,890,LV.lower+EYE), look:S(820,640,LV.lower+3.4),
+  p:'Two flights down, this is the first of two bedrooms on the lower level, at the end of the hall. It has windows on two walls.'},
+ {id:'lbath', t:'Lower-level bath', photo:60, level:'lower', rooms:['lbath'], pos:[-14.2,LV.lower+EYE,-32.65], look:[-10.6,LV.lower+EYE,-35.6],
+  p:'The full bath on the lower hall has a dual-sink vanity and heated floors.'},
+ {id:'lbed2', t:'Lower-level bedroom 2', photo:58, level:'lower', rooms:['lbed2'], pos:[-24.6,LV.lower+EYE,-27.2], look:[-28.0,LV.lower+EYE,-39.5],
+  p:'The second bedroom on the lower level is across the hall from the bath, with skylights overhead.'},
+ {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], pos:[-24.3,LV.lower+EYE,-17.6], look:[-30.0,LV.lower+EYE,-20.4],
+  p:'The main laundry room, with the washer and dryer, is off the lower level’s own entrance.'},
+ {id:'office', t:'Skylit office', photo:20, level:'lower', rooms:['office'], pos:[-28.1,LV.lower+EYE,-10.1], look:[-26.0,LV.lower+EYE,-2.7],
+  p:'The skylit office is across the entrance from the laundry room, with windows on two walls.'},
  {id:'lounge', t:'Bonus lounge', photo:65, level:'lower', rooms:['rec'], pos:S(740,1545,LV.lower+EYE), look:S(1010,1290,LV.lower+4.8),
   p:'The bonus lounge has a refreshment counter with a beverage cooler, in-wall surround audio and a 65-inch Samsung TV. The glass door on the left leads outside, and stacking glass doors on the other side of the room open to the terrace.'},
  {id:'terrace', t:'Terrace & outdoor kitchen', photo:8, level:'outside', rooms:['terrace'], pos:S(1580,1010,1.0), look:S(1035,1210,2.4),
@@ -6330,6 +6352,11 @@ const STOP_CAMS = window.STOP_CAMS = {
   primary:  {photo:'p06', pos:[-12.66, 9.25, -28.22], dir:[-0.7021, 0, -0.7121], hfov:102.1, sy:0.002, err:19},        // NE corner: bed, slider, glazed gable
   pbath:    {photo:'p45', pos:[-14.24, 9.49, -22.88], dir:[0.6625, 0, 0.7491], hfov:97.7, sy:-0.014, err:24},          // windows + curbless shower
   balcony:  {photo:'p19', pos:[-17.73, 9.57, -39.60], dir:[-0.0464, 0, -0.9989], hfov:80.9, sy:-0.026, err:1},         // from the slider: parapet, chairs, western hills
+  backbed:  {photo:'p73', pos:[21.00, 5.00, 3.70], dir:[0.3135, 0, -0.9496], hfov:100, sy:0, err:null},   // r38: south wall of the back bedroom: closet left, window, leaning mirror right (the gym in p73)
+  lbath:    {photo:'p60', pos:[-14.20, 0.44, -32.65], dir:[0.7735, 0, -0.6338], hfov:98, sy:0, err:null},   // r38: past the open door: vanity, mirror and blue tile left, window and towel rings ahead
+  lbed2:    {photo:'p58', pos:[-24.60, 0.44, -27.20], dir:[-0.2664, 0, -0.9639], hfov:100, sy:0, err:null},   // r38: closet end: art wall left, bed under the window
+  laundry:  {photo:'p04', pos:[-24.30, 0.44, -17.60], dir:[-0.8976, 0, -0.4409], hfov:77, sy:0, ar:0.667, err:null},   // r38: just inside the door: the window and the washer and dryer (portrait photo; its cabinets and sink are not in the model)
+  office:   {photo:'p20', pos:[-28.10, 0.44, -10.10], dir:[0.2730, 0, 0.9620], hfov:77, sy:0, ar:0.667, err:null},   // r38: beside the cube shelf: desk wall left, corner windows ahead-right (portrait photo)
   lower:    {photo:'p63', pos:[-19.03, 0.82, -38.79], dir:[0.5848, 0, -0.8112], hfov:111.8, sy:-0.160, err:21},        // lower bedroom corner, both windows
   lounge:   {photo:'p65', pos:[-12.07, -0.49, -15.78], dir:[-0.8506, 0, -0.5258], hfov:97.0, sy:0.005, err:11},        // refreshment wall + glass door
   terrace:  {photo:'p08', pos:[13.84, -1.72, -32.91], dir:[-0.9985, 0, 0.0556], hfov:91.1, sy:0.093, err:14},          // rear facade, lounge, outdoor kitchen
@@ -6414,12 +6441,19 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   kitchen: {at: [16.0, 20.5], to: [6, 8]},   // from the hall end across the island -> range hood, cabinets, fridge, front window
   great: {at: [15.2, 17.6], to: [11.2, 31.5], ph: [8.6, 31]},   // r36: where the kitchen meets the room, in the clear aisle by the built-ins, facing the way photo p15 faces: shelves and cabinets left, dining table, sitting area, the large windows right. Was over the coffee table looking back at the kitchen:     // sitting-area corner down the long axis -> dining, glass wall, kitchen beyond
   mainbeds: {at: [18.5, 35.0], to: [26.4, 28.8], hf: 100, eye: 4.8, rise: -.12},   // r36: just inside the door, where photo p74 was taken and facing the same way: bed, closet doors, window. Was over the bed facing a corner:     // headboard corner, low with a falling front (rise) -> bed in front, both windows leading, closet doors to the side
+  middlebed: {at: [30.9, 15.1], to: [23.5, 23.2], hf: 100},   // r38: the window corner (window behind, left): the bed against the far wall, the sliding closet on the right. From the hall door the bed's foot filled the frame
+  hallbath: {at: [31.0, 9.6], to: [25.8, 5.8], ph: [27.6, 5.2], hf: 100},   // r38: the window corner by the tub, looking back past the open door's edge to the marble-topped vanity and the hall (photo p57's spot, by the door, has the open leaf in front of the vanity)
+  backbed: {at: [21.0, 3.7], to: [24.4, -6.6], hf: 100},   // r38: by the south wall, the way photo p73 faces: closet left, window, leaning mirror right, the oval desk. Two feet further from the door than this, the walk on to the stairs plans 10.1-10.5 s (here 8.2 s)
   stairs: {at: [-9.5, -3], to: [-18.5, -8], hf: 100, rise: .08},   // foyer edge, square to the stair hall -> open treads and cable rails of both flights as one sculptural run, landing bench, loft rail and window light above
   loft: {at: [-13.5, -10.8], to: [-24.7, -2.8], rise: .2},   // stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
   primary: {at: [-10.2, -27.5], to: [-24, -40]},   // loft-side corner -> bed, skylights, glazed gable, slider to the balcony
   pbath: {at: [-14.4, -23.0], to: [-7.76, -15.52], hf: 100},   // r36: photo p45's own spot and direction: window, curbless shower behind its glass. Was turned 60 degrees from the photo:     // just inside the door -> double vanity + round mirrors, window, curbless shower glass
   balcony: {at: [-14.5, -41.1], to: [-28, -54], rise: -.18, ph: [-24, -56], riseP: .08},   // balcony corner by the house wall (downspout + siding frame the left edge) -> chairs and deck, parapet, oak, the valley and hills at golden hour; the frame falls (rise) to trade sky for deck
   lower: {at: [-18.75, -38.5], to: [-12.65, -47.0], hf: 100, rise: -.14},   // r36: in the doorway, wider and with the frame lowered so the whole bed, the floor and both windows show (photo p63's direction):     // doorway corner -> bed, both windows
+  lbath: {at: [-14.2, -32.65], to: [-10.6, -35.6], hf: 100},   // r38: past the open door's edge (it stands in front of the vanity's west end): mirror, blue tile and sink left, window and towel rings ahead (photo p60)
+  lbed2: {at: [-24.6, -27.2], to: [-28.0, -39.5], hf: 100},   // r38: closet end, beside the open door: art wall left, bed under the window, a skylight overhead (photo p58)
+  laundry: {at: [-24.3, -17.6], to: [-30.0, -20.4], hf: 100, rise: -.2, riseP: 0},   // r38: just inside the door, the frame lowered: the window, and the washer and dryer under it. Square on from the doorway (photo p04's direction) the frame was a blank wall: the model has no cabinets or sink there
+  office: {at: [-28.1, -10.1], to: [-26.0, -2.7], hf: 100, rise: .12},   // r38: by the cube shelf, past the open door: desk wall left, corner windows ahead, the frame risen for the skylit ceiling (photo p20)
   lounge: {at: [-14.4, -15.4], to: [-23.5, -21.0], hf: 100},   // r36: three feet further in than photo p65, same direction, so the cafe table is no longer in the foreground: the glass door, TV, refreshment counter and beverage cooler:     // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
   terrace: {at: [8, -20], to: [-8, -36]},   // out on the gravel under the oak -> rear facade, lounge set, outdoor kitchen + pergola, hills
   yard: {at: [31.21, -12.08], to: [23.69, -18.67]},   // NE corner of the yard -> heritage oak, house, pergola
@@ -6502,7 +6536,7 @@ function showStop(i, fly=true){
   $('#title').textContent = s.t;
   const r = ROOM[s.rooms[0]]; $('#dims').textContent = s.dims || (s.rooms.length===1 && r.dims ? r.dims : '');
   $('#blurb').textContent = s.p; $('#blurb').hidden=false;
-  const ph = roomsPhotos(s.rooms); strip(ph, s.t); $('#photosBtn').onclick=()=>openLB(ph,0,s.t);
+  const ph = s.ph || roomsPhotos(s.rooms); strip(ph, s.t); $('#photosBtn').onclick=()=>openLB(ph,0,s.t); $('#photosBtn').hidden = !ph.length;   // r38: a stop may carry its own photos (one of the three main-level bedrooms); none -> no button
   $('#prev').disabled = stopIdx===0; $('#next').disabled = stopIdx===STOPS.length-1;
   $('#count').textContent = ph.length+(ph.length===1?' photo':' photos');   // frame22 R9: the garage stop has one photo
   hidePhoto(); if(fly){ const fr = FRAME_FOR(s); LENS = fr.lens; lensTw = null; flyTo(fr.pos, fr.look, s.nav||'look', undefined, fr.lens); anim.photo = s.photo; }
@@ -9789,6 +9823,100 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   MQ.addEventListener ? MQ.addEventListener('change', () => requestAnimationFrame(sync)) : MQ.addListener(() => requestAnimationFrame(sync));
   sync();
   window.__phDoll = {sync, bar};
+})();
+/* r38 back to the tour (owner 11/11: "if I click off and enter walk mode it's not clear how to get back to tour mode. There should be a back to tour
+   without having to go up to the main menu"). In Walk, Dollhouse, Design and Photos the stop card carries one button, "Back to the tour · <stop>",
+   in the place the tour's own Next button sits (desktop) or across the foot of the sheet (phone); the gallery has the same button at its foot.
+   Where it goes: from Walk, the tour stop nearest where you are standing (same level, the room you are in first); from Dollhouse, Design and Photos
+   (opened from the tour), the stop you were last on. The move is the tour's own (walked when the route is short, a quick dissolve when it is not). The Tour tab (the TOUR
+   pill on a phone) does the same from any other mode, and on a phone it is marked as the current view in Tour. Esc in Walk does it too.
+   Hidden in games (the tour UI is theirs there). */
+(function back38(){
+  const card = $('#card'), gal = $('#gallery'), root = document.documentElement; if(!card || !gal) return;
+  const st = document.createElement('style'); st.id = 'back38css';
+  st.textContent =
+    '#bk38,#bk38g{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin:0;border:0;cursor:pointer;font:inherit;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent}' +
+    '#bk38 .bk38c,#bk38g .bk38c{flex:0 0 auto;width:8px;height:8px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateX(2px) rotate(45deg)}' +
+    '#bk38 .bk38t,#bk38g .bk38t{flex:0 0 auto}#bk38 .bk38s,#bk38g .bk38s{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:400}' +
+    '#bk38 .bk38s::before,#bk38g .bk38s::before{content:"\\00b7";margin-right:8px}' +
+    'html.bk38game #bk38,html.bk38game #bk38g{display:none!important}' +
+    /* desktop: the expanded card ends with it (it stays in view while the card scrolls); the compact card leads with it, where the tour arrows sit */
+    'html:not(.ph) #bk38{position:sticky;bottom:0;z-index:2;width:calc(100% - 28px);margin:6px 14px 14px;padding:0 16px;border-radius:999px;font-size:14px;box-shadow:0 1px 2px rgba(40,50,20,.18),0 0 0 6px var(--paper,#fbfaf7)}' +
+    'html:not(.ph) .card.min #bk38{position:relative;order:-2;flex:0 1 auto;width:auto;max-width:100%;min-width:0;min-height:38px;margin:0 2px 0 0;padding:0 16px;box-shadow:0 1px 2px rgba(40,50,20,.18);font-size:13.5px}' +
+    'html:not(.ph) .card.min #bk38::after{content:"";position:absolute;left:0;right:0;top:-3px;bottom:-3px}' +   /* a 44 px tall target */
+    'html:not(.ph) .card.min.bk38on{flex-wrap:wrap;row-gap:4px;width:auto;min-width:min(470px, calc(100% - 260px))}' +
+    'html:not(.ph) .card.min.bk38on[data-m27="doll"]{max-width:calc(100% - 200px)}' +
+    'html:not(.ph) .card.min.bk38on .tb{flex:1 1 auto}' +
+    /* the compact Dollhouse row already holds the level buttons: the tab above names the view, so the row drops its 'Dollhouse' word (and, as the window narrows, the stop name and the title) to keep one line */
+    'html:not(.ph) .card.min.bk38on[data-m27="doll"] .eyebrow{display:none}' +
+    '@media (max-width:980px){html:not(.ph) .card.min.bk38on[data-m27="doll"] #bk38 .bk38s{display:none}}' +
+    '@media (max-width:860px){html:not(.ph) .card.min.bk38on[data-m27="doll"] .tb{display:none}html:not(.ph) .card.min.bk38on[data-m27="doll"]{max-width:calc(100% - 150px)}}' +
+    /* phone: its own row across the foot of the sheet, under the thumb */
+    'html.ph #card.bk38on{grid-template-areas:"prev head next" "body body body" "act act act" "bk38 bk38 bk38"}' +
+    'html.ph #bk38{grid-area:bk38;width:100%;min-height:46px;padding:0 14px;border-radius:12px;background:var(--ph-hi);color:var(--ph-ink);font-size:15px;font-family:var(--sf)}' +
+    'html.ph .card:not(.min) #bk38{margin-top:6px}' +
+    'html.ph.bk38card .navguide.ng-ph:not([hidden]){bottom:var(--bk38up,calc(140px + env(safe-area-inset-bottom,0px)))}' +   /* the one-time 'how to move' card sits above the sheet and its button */
+    /* the gallery: the same button at its foot, where the stop card was */
+    '#bk38g{position:sticky;bottom:max(16px, calc(env(safe-area-inset-bottom,0px) + 8px));z-index:3;width:max-content;max-width:min(430px, 100%);margin:28px 0 0;padding:0 20px;border-radius:999px;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.22)}' +
+    'html.ph #bk38g{width:100%;max-width:none;min-height:48px;border-radius:14px;font-size:15px;font-family:var(--sf);background:#1f1f1d;color:#fbfaf7}' +
+    /* phone TOUR pill: a back chevron in the other views; in Tour, a mark under the word (it is where you are) */
+    'html.ph .tab[data-mode="tour"][aria-selected="false"]::before{content:"";display:inline-block;width:6px;height:6px;margin:0 7px 1px 1px;border-left:1.8px solid currentColor;border-bottom:1.8px solid currentColor;transform:rotate(45deg)}' +
+    'html.ph .tab[data-mode="tour"][aria-selected="true"]::after{content:"";position:absolute;left:50%;bottom:7px;width:16px;height:2px;margin-left:-8px;border-radius:1px;background:currentColor;opacity:.8}';
+  document.head.appendChild(st);
+  const mk = id => { const b = document.createElement('button'); b.type = 'button'; b.id = id; b.className = 'btn primary'; b.hidden = true;
+    b.innerHTML = '<span class="bk38c" aria-hidden="true"></span><span class="bk38t">Back to the tour</span><span class="bk38s"></span>'; return b; };
+  const btn = mk('bk38'), gbtn = mk('bk38g'); card.appendChild(btn); gal.appendChild(gbtn);
+  const game = () => { try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)) || /\b(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)\b/.test(root.className); }catch(e){ return false; } };
+  const galOpen = () => !gal.hidden;
+  let near = -1;
+  // Walk: the stop nearest the walker. A stop on another level counts 30 ft further; a stop that shows the room you are in counts 12 ft nearer.
+  function nearest(){
+    const P = camera.position, cr = curRoom && curRoom.id; let best = -1, bs = 1e9, cur = 1e9;
+    for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; if(!s || s.aerial || !s.pos) continue;
+      const L = s.level === 'outside' ? LV.outside : LV[s.level]; let d = Math.hypot(s.pos[0] - P.x, s.pos[2] - P.z);
+      if(L != null && Math.abs(L - feet) > 2.5) d += 30; if(cr && s.rooms && s.rooms.includes(cr)) d -= 12;
+      if(d < bs){ bs = d; best = i; } if(i === near) cur = d; }
+    if(near >= 0 && near < STOPS.length && cur - bs < 3) return near;   // a little hysteresis, so the name does not flicker between two stops
+    return best >= 0 ? best : stopIdx; }
+  function target(){ if(mode === 'walk'){ near = nearest(); return near; } return clamp(stopIdx, 0, STOPS.length - 1); }   // (Photos opened from Walk: still where you were standing)
+  function label(b, i){ const s = STOPS[i], t = s ? s.t : ''; const sp = b.querySelector('.bk38s'); if(sp.textContent !== t) sp.textContent = t; sp.hidden = !t;
+    const a = 'Back to the tour' + (t ? ', at ' + t : ''); if(b.getAttribute('aria-label') !== a) b.setAttribute('aria-label', a); }
+  function lift(){ let t = card.getBoundingClientRect().top; const lb = document.querySelector('.phlvbar:not([hidden])'); if(lb){ const r = lb.getBoundingClientRect(); if(r.height) t = Math.min(t, r.top); }
+    root.style.setProperty('--bk38up', Math.max(0, Math.round(innerHeight - t + 10)) + 'px'); }
+  if(window.ResizeObserver) new ResizeObserver(() => { if(!btn.hidden) lift(); }).observe(card);
+  function sync(){
+    const g = game(); root.classList.toggle('bk38game', g);
+    const onCard = !g && mode !== 'tour' && !galOpen(), onGal = !g && galOpen();
+    if(btn.hidden === onCard) btn.hidden = !onCard; if(gbtn.hidden === onGal) gbtn.hidden = !onGal; card.classList.toggle('bk38on', onCard);
+    root.classList.toggle('bk38card', onCard); if(onCard) lift();
+    if(onCard || onGal){ const i = target(); label(onCard ? btn : gbtn, i); }
+    // the gallery's own top button goes back to the view you came from: name it
+    const gx = gal.querySelector('.gx36'); if(gx){ const t = mode === 'walk' ? (DESIGN.walking() ? 'Back to the design' : 'Back to walking') : mode === 'doll' ? 'Back to the dollhouse' : mode === 'design' ? 'Back to the design' : 'Back to the 3D tour'; if(gx.textContent !== t) gx.textContent = t; }
+  }
+  function go(){
+    if(game()) return; const i = target(); near = -1;
+    try{ if(window.__phone && window.__phone.setMenu) window.__phone.setMenu(false); }catch(e){}
+    stopIdx = i; setMode('tour');   // setMode closes the gallery and runs the tour's own move to the stop
+    sync(); }
+  btn.addEventListener('click', e => { e.stopPropagation(); go(); });
+  gbtn.addEventListener('click', e => { e.stopPropagation(); go(); });
+  // the Tour tab (the phone's TOUR pill) from any other view: the same move, to the same stop
+  const tabs = document.querySelector('.bar .tabs');
+  if(tabs) tabs.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.tab[data-mode="tour"]'); if(!t || game()) return;
+    if(mode !== 'tour' || galOpen()){ e.stopPropagation(); go(); } }, true);
+  { const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); try{ sync(); }catch(e){} return r; }; }
+  new MutationObserver(() => sync()).observe(gal, {attributes: true, attributeFilter: ['hidden']});
+  // Esc in Walk: back to the tour, unless Esc is closing something else (a menu, the help card, a dialog, full screen) or a field has the keys
+  const busy = () => !!(!$('#lb').hidden || galOpen() || /\b(clean27|phm|vmo27)\b/.test(root.className) || document.querySelector('dialog[open], .qpop:not([hidden]), .navguide:not([hidden]), [aria-modal="true"]:not([hidden]):not(#lb)') ||
+    document.fullscreenElement || document.webkitFullscreenElement);
+  let wasBusy = false; setInterval(() => { wasBusy = busy(); if((mode === 'walk' && !btn.hidden) || game() !== root.classList.contains('bk38game')) sync(); }, 250);   // (what a capture-phase Esc handler closes first still counts as open)
+  addEventListener('keydown', e => {
+    if(e.key !== 'Escape' || e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    if(mode !== 'walk' || DESIGN.walking() || game() || wasBusy || busy()) return;
+    const tg = e.target; if(tg && (/INPUT|TEXTAREA|SELECT/.test(tg.tagName) || tg.isContentEditable)) return;
+    e.preventDefault(); go(); });
+  sync();
+  window.__back38 = {sync, go, target, nearest: () => nearest()};
 })();
 /* v26 S1: daylight exterior stops show the listing shoot's sun (their photos' light) */
 for(const st of STOPS) if(st.level === 'outside' && !st.tod && !st.aerial) st.tod = 'morning';
@@ -22661,14 +22789,18 @@ function r36Pathify(a, o){ o = o || {};
   R36N.last = {kind: 'walk', L: +R.L.toFixed(1), dur: +a.dur.toFixed(2), doors: R.doors.map(q => q.it.id)}; return 1; }
 function r36LineClear(A, B){ try{ const d = B.clone().sub(A), L = d.length(); if(L < 1) return true; const rc = new THREE.Raycaster(A, d.normalize(), 0, L); for(const h of rc.intersectObjects(withVar(['main', 'upper', 'roof', 'ceil']).filter(g => g.visible), true)){ const m = h.object.material; if(h.object.isSprite || (m && m.transparent && m.opacity < .5)) continue; return false; } }catch(e){} return true; }
 function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)); }catch(e){ return false; } }
+/* r38: a tour move whose planned walk would take longer than the 10 s rule (R37S.CHK.dur: the upper balcony down both flights to the far end of the
+   lower hall is 12-13 s) is the quick dissolve instead. Decided per move from the plan itself, so it holds for any stop order. */
+function r38Long(a){ try{ return !!(a && a.path && a.tl && a.dur > R38.MAXD); }catch(e){ return false; } }
+const R38 = window.R38 = {MAXD: 10.0};
 /* tour: Next / Back / pills / keys */
 { const _ss36 = showStop; showStop = function(i, fly){
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
         const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 100};
-        if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
-        else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
+        if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
+        else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
         else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
     return r; }; }
 /* walk: taps, white circles, the plan */
