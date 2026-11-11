@@ -123,7 +123,12 @@
   // how wide the picture is: half the angle from the middle of the screen to its side edge (the lens is the tour's own for the room: about 95 degrees across on a wide screen)
   const hHalf = () => Math.atan(Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1) * (cam.aspect || 1.6));
   const yawTo = (V, P) => Math.atan2(P.x - V.x, P.z - V.z);
-  const outOfView = (yaw, V, P) => Math.abs(wrap(yawTo(V, P) - yaw)) > hHalf() + Math.atan(.75 * CW / (Math.hypot(P.x - V.x, P.z - V.z) || 1)) + .07;
+  /* you arrive looking a little down (PITCH0), the way people look into a room, so the floor a few feet away is in the picture. poseAt puts a stand-in camera with the
+     room's lens at a standing place; outOfView asks whether his whole outline (and a margin, and room to hop) is outside the picture from there, hidden or not. */
+  const PITCH0 = -.24, PC = cam.clone();
+  function poseAt(V, yaw, pitch){ const c = Math.cos(pitch); PC.projectionMatrix.copy(cam.projectionMatrix); PC.projectionMatrixInverse.copy(cam.projectionMatrixInverse); PC.position.copy(V); PC.up.set(0, 1, 0); PC.lookAt(V.x + Math.sin(yaw) * c * 10, V.y + Math.sin(pitch) * 10, V.z + Math.cos(yaw) * c * 10); PC.updateMatrixWorld(true); PC.matrixWorldInverse.copy(PC.matrixWorld).invert(); return PC; }
+  const inPicture = (p, m) => { _b.copy(p).project(PC); return _b.z < 1 && Math.abs(_b.x) < m && Math.abs(_b.y) < m; };
+  function outOfView(yaw, V, P){ poseAt(V, yaw, PITCH0); for(const [u, v] of [[-.62, 0], [.62, 0], [-.62, 1.2], [.62, 1.2], [0, .6], [-.62, .6], [.62, .6]]) if(inPicture(onCat(V, P, u, v, _a), 1.04)) return false; return true; }
   // the way you face when you arrive: a good view of the room that does not have him in it
   function openingYaw(R, V, P, v0){ const want = R.v[0].slice(2).map(d => d * Math.PI / 180); for(const y of want) if(outOfView(y, V, P)) return y; if(!v0.n) return want[0];
     let best = null; for(let k = 0; k < 12; k++){ const y = k * Math.PI / 6; if(!outOfView(y, V, P)) continue; let s = 0; for(const a of [-.3, 0, .3]) s += Math.min(30, hit(V.x, V.y, V.z, Math.sin(y + a), 0, Math.cos(y + a), 30)); if(!best || s > best.s) best = {y, s}; }
@@ -299,18 +304,18 @@
   // go to a room: a soft fade, then stand at its first standing place with the tour's own lens for the room
   function travel(id, first, cb){ const R = ROOM[id]; S.mode = 'travel'; ring.classList.remove('on'); hideSteps(); nudge(null); snd('whoosh'); fade.querySelector('b').textContent = R.name; fade.classList.add('on');
     later(() => { clearPrints(); CAT.visible = RUN.visible = BOX.visible = false; PX = null; pinned = false; tw = null; walk = null;
-      try{ H.setTOD(R.tod || 'dusk'); }catch(e){}   // dinner time: the lamps are on and the white rooms have some shape; outdoors it is still golden
       try{ H.showStop(stopIx(id)); const a = H.anim; if(a){ a.dur = .001; a.photo = null; a.lift = 0; } }catch(e){}
       let n = 0; (function settle(){ if(dead) return; if(H.anim && n++ < 40) return requestAnimationFrame(settle);
-        const e = eyeOf(R, 0), y = R.v[0][2] * Math.PI / 180; anchor.copy(e); pinned = true; H.look(e.toArray(), [e.x + Math.sin(y) * 10, e.y, e.z + Math.cos(y) * 10]); cb(); later(() => fade.classList.remove('on'), first ? 300 : 420); })(); }, 300); }
+        try{ if(H.tod !== (R.tod || 'dusk')) H.setTOD(R.tod || 'dusk'); }catch(err){}   // dinner time: the lamps are on and the white rooms have some shape; outdoors it is still golden
+        const e = eyeOf(R, 0), y = R.v[0][2] * Math.PI / 180; anchor.copy(e); pinned = true; aim(y, PITCH0); cb(); later(() => fade.classList.remove('on'), first ? 300 : 420); })(); }, 300); }
 
   /* ---------- state ---------- */
   const S = {on: false, mode: 'idle', daily: true, hard: !!SV.hard, seed: 0, step: 0, trail: [], spot: null, P: new THREE.Vector3(), path: null, view: 0, vis: [], best: 0, open: 0, t0: 0, tSeek: 0, tHint: 0, tMeow: 0, tSeen: 0, tAct: 0,
-    wrong: 0, helps: 0, miss: 0, asked: 0, fresh: 0, got: [], turned: false, walked: false, taught: false, force: null};
+    wrong: 0, helps: 0, miss: 0, asked: 0, fresh: 0, got: [], turned: false, walked: false, taught: false, force: null, dev: false};
   const NOV = {n: 0, f: 0, head: 0, cu: 0, cv: .6, u0: -.5, u1: .5, v0: 0, v1: 1, d: 9}, room = () => S.trail[S.step], cur = () => S.vis[S.view] || NOV;
   const dailyDone = SV.last === DAY, stepR = salt => rng(S.seed * 31 + S.step * 977 + salt);
   // a trail left half way is picked up again after a reload (same rooms, same hiding places), for the rest of the day
-  const RUNKEY = 'find.run', saveRun = phase => store.set(RUNKEY, {day: DAY, at: Date.now(), daily: S.daily, hard: S.hard, seed: S.seed, trail: S.trail, step: S.step, phase, wrong: S.wrong, helps: S.helps, fresh: S.fresh, got: S.got, ms: Math.round(performance.now() - S.t0)});
+  const RUNKEY = 'find.run', saveRun = phase => S.dev || store.set(RUNKEY, {day: DAY, at: Date.now(), daily: S.daily, hard: S.hard, seed: S.seed, trail: S.trail, step: S.step, phase, wrong: S.wrong, helps: S.helps, fresh: S.fresh, got: S.got, ms: Math.round(performance.now() - S.t0)});
   const savedRun = () => { const r = store.get(RUNKEY); return r && r.day === DAY && Date.now() - r.at < 6 * 3600e3 && Array.isArray(r.trail) && r.trail.length === 5 && r.trail.every(k => ROOM[k] && stopOf(k)) && r.step >= 0 && r.step < 5 && (r.step > 0 || r.phase === 'clue') ? r : null; };
   function newTrail(seed){ const R = rng(seed), pool = POOL.slice(); for(let i = pool.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
     let rooms = pool.slice(0, 4); const force = (Q.get('trail') || '').split(',').filter(k => ROOM[k] && k !== 'entry' && stopOf(k)); if(force.length) rooms = force.concat(rooms.filter(k => !force.includes(k))).slice(0, 4);
@@ -323,17 +328,19 @@
   const PREF = [['d0'], ['d1', 'd2', 'd2w', 'd3'], ['d2', 'd2w', 'd1', 'd3'], ['d2w', 'd3', 'd2', 'd1'], ['d3', 'd2w', 'd2', 'd1']], klass = s => s.d === 2 && s.w ? 'd2w' : 'd' + s.d;
   const SEEN = () => S.hard ? 3 : 6;   // how many points of his outline must show before he counts as visible from a place (about 5 % of him; 3 % in sneaky mode)
   function seeAll(R, P){ const vs = R.v.map((v, i) => vis(eyeOf(R, i), P)), sc = q => q.f * (q.d < 3 ? .3 : 1); let best = 0; if(vs[0].f < .1) vs.forEach((q, i) => { if(sc(q) > sc(vs[best]) + 1e-6) best = i; }); return {vs, best}; }
+  // how big the part of him that shows is on this screen, in pixels (the longer side), from the place you would spot him: small screens drop the hiding places that would be specks
+  const sizeOn = q => { const b = q.vs[q.best]; return Math.max((b.u1 - b.u0) * CW, (b.v1 - b.v0) * CH) * H.canvas.getBoundingClientRect().height / (2 * Math.tan(cam.fov * Math.PI / 360) / (cam.zoom || 1) * Math.hypot(b.d, 3)); }, BIG = () => S.hard ? 12 : 22;
   function chooseSpot(id){ const R = ROOM[id], Rn = stepR(1), pref = S.step === 0 ? PREF[0] : PREF[S.hard ? 4 : Math.min(S.step, 4)];
     const order = R.spots.map((s, i) => ({s, i, r: Rn(), k: (pref.indexOf(klass(s)) + 9) % 9, old: S.daily || !SV.spots[id + '.' + i] ? 0 : 1})).sort((a, b) => (a.k - b.k) || (a.old - b.old) || (a.r - b.r));
     if(S.force != null){ const f = order.findIndex(o => o.i === S.force); if(f > 0) order.unshift(order.splice(f, 1)[0]); S.force = null; }
-    for(const o of order){ setProp(o.s); const q = seeAll(R, _v.set(o.s.p[0], o.s.p[1], o.s.p[2])); if(q.vs[q.best].n >= SEEN() && hit(o.s.p[0], o.s.p[1] + .5, o.s.p[2], 0, -1, 0, 1.3) !== Infinity) return Object.assign(o, q); }
+    for(const o of order){ setProp(o.s); const q = seeAll(R, _v.set(o.s.p[0], o.s.p[1], o.s.p[2])); if(q.vs[q.best].n >= SEEN() && sizeOn(q) >= BIG() && hit(o.s.p[0], o.s.p[1] + .5, o.s.p[2], 0, -1, 0, 1.3) !== Infinity) return Object.assign(o, q); }
     setProp(null); const V = eyeOf(R, 0), y0 = R.v[0][2] * Math.PI / 180;   // last resort: out on real floor, behind the way you arrive facing
     for(const q of [5, 4, 3]) for(const a of [Math.PI, 2.4, -2.4, 1.7, -1.7, 1, -1, 0]){ const x = V.x + Math.sin(y0 + a) * q, z = V.z + Math.cos(y0 + a) * q, t = hit(x, R.fy + 2.5, z, 0, -1, 0, 3.2); if(!((t !== Infinity && Math.abs(R.fy + 2.5 - t - R.fy) < .4) || (t === Infinity && R.open))) continue;
       const s = seeAll(R, _v.set(x, R.fy + .03, z)); if(s.vs[0].f > .6) return Object.assign({s: {p: [x, R.fy + .03, z], n: R.at, d: 1}, i: -1}, s); }
     return Object.assign({s: {p: [V.x + Math.sin(y0 + Math.PI) * 3, R.fy + .03, V.z + Math.cos(y0 + Math.PI) * 3], n: R.at, d: 1}, i: -1}, {vs: R.v.map(() => Object.assign({}, NOV, {n: MASK.length, f: 1, head: 1})), best: 0}); }
   function arrive(){ const id = room(), R = ROOM[id]; SP = soupFor(id); const o = chooseSpot(id), V = eyeOf(R, 0); S.spot = o; S.P.set(o.s.p[0], o.s.p[1], o.s.p[2]); S.vis = o.vs; S.best = o.best; S.view = 0; S.path = null; anchor.copy(V);
     CAT.material.map = TEX.open; CAT.material.opacity = 1; CAT.scale.set(CW, CH, 1); CAT.position.copy(S.P); CAT.visible = true;
-    if(S.step === 0) lookAtPoint(_v.copy(S.P).setY(S.P.y + CH * .6), 0); else aim(S.open = openingYaw(R, V, S.P, S.vis[0]), 0);
+    if(S.step === 0) lookAtPoint(_v.copy(S.P).setY(S.P.y + CH * .6), 0); else aim(S.open = openingYaw(R, V, S.P, S.vis[0]), PITCH0);
     const t = performance.now(); S.mode = 'seek'; S.tSeek = S.tHint = S.tAct = t; S.tMeow = t - 5000; S.tSeen = 0; S.miss = 0; S.asked = 0; S.turned = S.walked = S.taught = false; lastWarm = -1; placeSteps(); ui(); saveRun('seek');
     later(() => { if(S.mode !== 'seek') return; snd('bell', {pan: panOf()}); S.tMeow = performance.now();
       if(S.step === 0){ toast('There he is. Tap Snowball.', 5200); ringUntil = performance.now() + 60000; }
@@ -519,7 +526,7 @@
     if(t - S.tMeow > (S.step === 0 ? 5200 : [0, 8500, 7000, 5600, 4300, 3500][w])){ S.tMeow = t; snd(Math.random() < .2 ? 'mrrp' : 'bell', {pan: panOf(), vol: w >= 4 ? 1 : .8});
       if(!S.hard && !inView && !stuck && S.step > 0 && t - S.tSeek > 12000){ edge.className = ry > 0 ? 'l on' : 'r on'; later(() => edge.classList.remove('on'), 1700); } }
     if(!S.hard && S.step > 0){
-      if(S.step === 1 && !S.taught && !S.turned && t - S.tSeek > 7000){ S.taught = true; toast('Tap an arrow to turn around.', 3800); nudge('turn', 5000); }
+      if(S.step === 1 && !S.taught && !S.turned && t - S.tSeek > 10000){ S.taught = true; toast('Tap an arrow to turn around.', 3800); nudge('turn', 5000); }
       // small players never get stuck: he wiggles when he is on the screen and not spotted, and after a while the game shows him
       if(inView && S.tSeen && t - S.tSeen > 7000 && t - S.tHint > 7000){ S.tHint = t; hop(.45, 420); snd('bell', {pan: panOf(), vol: .9}); }
       if(t - S.tSeek > 45000 && t - S.tHint > 15000 && t - S.tAct > 2500) help(true); }
@@ -593,7 +600,7 @@
       catch(err){ if(!c.querySelector('.link')){ const i = el('input', {class: 'link', readonly: '', 'aria-label': 'Link to this game', value: url}); b.parentNode.appendChild(i); i.focus(); i.select(); } toast('Copy this link and send it to a friend.', 4200); } }; }
 
   /* ---------- start ---------- */
-  function begin(seed, saved){ document.documentElement.classList.toggle('fnd-hard', S.hard); newTrail(seed); S.on = true; document.documentElement.classList.add('fnd-on'); S.mode = 'travel'; lastWarm = -1;
+  function begin(seed, saved){ document.documentElement.classList.toggle('fnd-hard', S.hard); S.dev = false; newTrail(seed); S.on = true; document.documentElement.classList.add('fnd-on'); S.mode = 'travel'; lastWarm = -1;
     if(saved){ S.trail = saved.trail; S.step = saved.step; S.wrong = saved.wrong || 0; S.helps = saved.helps || 0; S.fresh = saved.fresh || 0; S.got = saved.got || []; preload(); }
     S.t0 = performance.now() - (saved ? saved.ms || 0 : 0); ui();
     travel(room(), true, () => { if(!saved) S.t0 = performance.now(); if(saved && saved.phase === 'clue'){ SP = soupFor(room()); S.spot = {s: ROOM[room()].spots[0], i: -1}; ui(); later(clue, 500); } else arrive(); });
@@ -631,23 +638,22 @@
      from each standing place; the view you arrive with, and how many points of him are on the screen in it (must be none); and, from the place you
      would spot him, the size on screen of the part that shows and of its tap target. Also every standing place: the floor under it, the nearest
      wall or furniture, and whether the walk to the others is a glide or a blink. Run it at a desktop size and again at a phone size. */
-  async function audit(opt){ opt = opt || {}; const rc = H.canvas.getBoundingClientRect(), rows = [], bad = [], sum = {screen: Math.round(rc.width) + 'x' + Math.round(rc.height), rooms: 0, places: 0, spots: 0, seenOnArrival: 0, needWalk: 0, byHow: {}}, pc = cam.clone();
-    const pose = (V, yaw, pitch) => { pc.position.copy(V); pc.up.set(0, 1, 0); pc.lookAt(V.x + Math.sin(yaw) * Math.cos(pitch) * 10, V.y + Math.sin(pitch) * 10, V.z + Math.cos(yaw) * Math.cos(pitch) * 10); pc.updateMatrixWorld(true); pc.matrixWorldInverse.copy(pc.matrixWorld).invert(); };
+  async function audit(opt){ opt = opt || {}; const rc = H.canvas.getBoundingClientRect(), rows = [], bad = [], sum = {screen: Math.round(rc.width) + 'x' + Math.round(rc.height), rooms: 0, places: 0, spots: 0, seenOnArrival: 0, needWalk: 0, byHow: {}}, pc = PC, pose = poseAt; S.dev = true;
     const shown = (V, P) => MASK.filter(([u, v]) => { const q = onCat(V, P, u, v, _a), dx = q.x - V.x, dy = q.y - V.y, dz = q.z - V.z, D = Math.hypot(dx, dy, dz); return hit(V.x, V.y, V.z, dx / D, dy / D, dz / D, D - .12, true) === Infinity; });
     document.querySelectorAll('#fndCard').forEach(e => e.remove());
-    for(const id of opt.rooms || Object.keys(ROOM)){ const R = ROOM[id]; if(!stopOf(id)) continue; await new Promise(res => travel(id, true, res)); SP = soupFor(id); PX = null; sum.rooms++; pc.projectionMatrix.copy(cam.projectionMatrix); pc.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+    for(const id of opt.rooms || Object.keys(ROOM)){ const R = ROOM[id]; if(!stopOf(id)) continue; await new Promise(res => travel(id, true, res)); SP = soupFor(id); PX = null; sum.rooms++;
       const eyes = R.v.map((v, i) => eyeOf(R, i)), wide = Math.round(hHalf() * 360 / Math.PI);
       eyes.forEach((V, i) => { sum.places++; const fl = hit(V.x, V.y, V.z, 0, -1, 0, 9); let near = 99; for(let k = 0; k < 16; k++){ const a = k * Math.PI / 8; near = Math.min(near, hit(V.x, V.y, V.z, Math.sin(a), 0, Math.cos(a), 30), hit(V.x, R.fy + 1.2, V.z, Math.sin(a), 0, Math.cos(a), 30)); }
         const row = `${id} place ${i}: floor ${fl.toFixed(2)} ft under the eye, nearest thing ${near.toFixed(1)} ft, walks ${eyes.map((W, j) => j === i ? '-' : clearTo(V, W, .1) ? 'glide' : 'blink').join('/')}, lens ${wide} deg across`; rows.push(row);
         if(Math.abs(fl - EYE) > .2) bad.push(row + ' !! NOT-ON-THE-FLOOR'); if(near < .9) bad.push(row + ' !! TOO-CLOSE'); });
       R.spots.forEach((s, i) => { sum.spots++; setProp(s); const P = new THREE.Vector3(s.p[0], s.p[1], s.p[2]), q = seeAll(R, P), b = q.vs[q.best], V0 = eyes[0], Vb = eyes[q.best], flags = [], how = 'd' + s.d + (s.w ? 'w' : ''); sum.byHow[how] = (sum.byHow[how] || 0) + 1;
         if(!(hit(P.x, P.y + .5, P.z, 0, -1, 0, 3) < .75)) flags.push('NOTHING-UNDER-HIM'); if(b.n < 6) flags.push('TOO-HIDDEN'); if(id !== 'entry' && !!s.w !== (q.vs[0].n < 6)) flags.push(s.w ? 'W-BUT-SEEN-FROM-ARRIVAL' : 'NEEDS-WALK'); if(q.vs[0].n < 6) sum.needWalk++;
-        const yaw = id === 'entry' ? yawTo(V0, P) : openingYaw(R, V0, P, q.vs[0]); pose(V0, yaw, 0); let n0 = 0; for(const [u, v] of shown(V0, P)){ _b.copy(onCat(V0, P, u, v, _a)).project(pc); if(_b.z < 1 && Math.abs(_b.x) < 1 && Math.abs(_b.y) < 1) n0++; }
+        const yaw = id === 'entry' ? yawTo(V0, P) : openingYaw(R, V0, P, q.vs[0]); pose(V0, yaw, PITCH0); let n0 = 0; for(const [u, v] of shown(V0, P)){ _b.copy(onCat(V0, P, u, v, _a)).project(pc); if(_b.z < 1 && Math.abs(_b.x) < 1 && Math.abs(_b.y) < 1) n0++; }
         if(n0 && id !== 'entry'){ sum.seenOnArrival++; flags.push('IN-OPENING-VIEW'); }
-        const c = onCat(Vb, P, b.cu, b.cv, new THREE.Vector3()), dx = c.x - Vb.x, dz = c.z - Vb.z; pose(Vb, Math.atan2(dx, dz), clamp(Math.atan2(c.y - Vb.y, Math.hypot(dx, dz)), -.6, .35)); let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+        const c = onCat(Vb, P, b.cu, b.cv, new THREE.Vector3()), dx = c.x - Vb.x, dz = c.z - Vb.z; pose(Vb, yawTo(Vb, P), PITCH0); if(id !== 'entry' && !inPicture(c, .9)) flags.push('NEEDS-A-TILT'); pose(Vb, Math.atan2(dx, dz), clamp(Math.atan2(c.y - Vb.y, Math.hypot(dx, dz)), -.6, .35)); let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
         for(const [u, v] of [[b.u0, b.v0], [b.u1, b.v0], [b.u0, b.v1], [b.u1, b.v1]]){ _b.copy(onCat(Vb, P, u, v, _a)).project(pc); x0 = Math.min(x0, _b.x); x1 = Math.max(x1, _b.x); y0 = Math.min(y0, _b.y); y1 = Math.max(y1, _b.y); }
-        const pw = (x1 - x0) / 2 * rc.width, ph = (y1 - y0) / 2 * rc.height; if(Math.max(pw, ph) < 14) flags.push('TINY'); if(Math.abs((x0 + x1) / 2) > .94 || Math.abs((y0 + y1) / 2) > .94) flags.push('OFF-SCREEN-WHEN-SHOWN');
-        const row = `${id}.${i} ${how}${s.box ? ' box' : ''} "${s.n}" | shows ` + q.vs.map((x, j) => `${Math.round(x.f * 100)}% head ${Math.round(x.head * 100)}% @${x.d.toFixed(0)}ft`).join(', ') + ` | spot from place ${q.best} | arrive facing ${Math.round(((yaw * 180 / Math.PI) % 360 + 360) % 360)}, ${n0} pts on screen | shows ${Math.round(pw)}x${Math.round(ph)} px, tap ${Math.round(Math.max(88, pw + 44))}x${Math.round(Math.max(88, ph + 44))}` + (flags.length ? ' !! ' + flags.join(' ') : '');
+        const pw = (x1 - x0) / 2 * rc.width, ph = (y1 - y0) / 2 * rc.height; if(sizeOn(q) < 12) flags.push('TINY'); const note = sizeOn(q) < 22 ? ' (sneaky mode only at this screen size)' : ''; if(note) sum.sneakyOnly = (sum.sneakyOnly || 0) + 1; if(Math.abs((x0 + x1) / 2) > .94 || Math.abs((y0 + y1) / 2) > .94) flags.push('OFF-SCREEN-WHEN-SHOWN');
+        const row = `${id}.${i} ${how}${s.box ? ' box' : ''} "${s.n}" | shows ` + q.vs.map((x, j) => `${Math.round(x.f * 100)}% head ${Math.round(x.head * 100)}% @${x.d.toFixed(0)}ft`).join(', ') + ` | spot from place ${q.best} | arrive facing ${Math.round(((yaw * 180 / Math.PI) % 360 + 360) % 360)}, ${n0} pts on screen | shows ${Math.round(pw)}x${Math.round(ph)} px, tap ${Math.round(Math.max(88, pw + 44))}x${Math.round(Math.max(88, ph + 44))}` + note + (flags.length ? ' !! ' + flags.join(' ') : '');
         rows.push(row); if(flags.length) bad.push(row); }); }
     setProp(null); return {ok: !bad.length, sum, bad, rows}; }
   // every clue the game can deal: each pair of rooms it is in and runs to, many shuffles; none may offer two rooms of a group, a wrong number of choices, or the room you are in
@@ -656,12 +662,12 @@
         if(q.opts.length !== 3 || new Set(q.opts).size !== 3 || !q.opts.includes(next) || q.opts.includes(here) || new Set(g).size !== 3 || !q.c) bad.push(here + ' -> ' + next + ': ' + q.opts.join(', ')); }
     return {ok: !bad.length, cards, bad: bad.slice(0, 20), offered: seen}; }
   // stand at the view you arrive with ('open') or where you would spot him ('spot') for one hiding place; resolves once you are there
-  function show(roomId, i, which){ return new Promise(res => { document.querySelectorAll('#fndCard').forEach(e => e.remove()); S.on = true; document.documentElement.classList.add('fnd-on'); S.daily = false; S.seed = 1; S.trail = ['entry', roomId, roomId, roomId, roomId]; S.step = roomId === 'entry' ? 0 : 1; S.force = i; S.t0 = performance.now();
+  function show(roomId, i, which){ return new Promise(res => { document.querySelectorAll('#fndCard').forEach(e => e.remove()); S.on = S.dev = true; document.documentElement.classList.add('fnd-on'); S.daily = false; S.seed = 1; S.trail = ['entry', roomId, roomId, roomId, roomId]; S.step = roomId === 'entry' ? 0 : 1; S.force = i; S.t0 = performance.now();
       travel(roomId, true, () => { arrive(); toastE.classList.remove('on'); if(which === 'spot' && S.step > 0){ anchor.copy(eyeOf(ROOM[roomId], S.best)); S.view = S.best; lookAtPoint(aimPt(), 0); placeSteps(); } later(() => res(where()), 700); }); }); }
   const where = () => { const r = S.mode === 'seek' && CAT && CAT.visible ? catRect() : null, v = cur(), b = r && r.part; return {room: room(), step: S.step, mode: S.mode, spot: S.spot && S.spot.i, name: S.spot && S.spot.s.n, place: S.view, spotFrom: S.best, shows: +v.f.toFixed(2), turn: +(relYaw() * 180 / Math.PI).toFixed(0), onScreen: S.mode === 'seek' && onScreen(),
     rect: b ? {x: Math.round((b.x0 + b.x1) / 2), y: Math.round((b.y0 + b.y1) / 2), w: Math.round(b.x1 - b.x0), h: Math.round(b.y1 - b.y0)} : null}; };
   window.FINDCAT = {S, ROOM, SV, help, found, turn, walkTo, destroy, anchor, where,
-    dev: {measure, audit, clues, show, kit: () => AK, go(roomId, i){ document.querySelectorAll('#fndCard').forEach(e => e.remove()); ac(); S.on = true; document.documentElement.classList.add('fnd-on'); S.daily = false; S.seed = Math.floor(Math.random() * 1e6); S.trail = ['entry', roomId, roomId, roomId, roomId]; S.step = 1; S.force = i; S.t0 = performance.now(); travel(roomId, false, arrive); }, spots: () => Object.keys(ROOM).map(k => k + ':' + ROOM[k].spots.length).join(' ')}};
+    dev: {measure, audit, clues, show, pose(){ anchor.copy(eyeOf(ROOM[room()], S.best)); S.view = S.best; lookAtPoint(aimPt(), 0); placeSteps(); return where(); }, kit: () => AK, go(roomId, i){ document.querySelectorAll('#fndCard').forEach(e => e.remove()); ac(); S.on = S.dev = true; document.documentElement.classList.add('fnd-on'); S.daily = false; S.seed = Math.floor(Math.random() * 1e6); S.trail = ['entry', roomId, roomId, roomId, roomId]; S.step = 1; S.force = i; S.t0 = performance.now(); travel(roomId, false, arrive); }, spots: () => Object.keys(ROOM).map(k => k + ':' + ROOM[k].spots.length).join(' ')}};
 })();
 
 /* preview hosts: when the site is served from a sub-path (a test mirror), point root links like /games/ at that copy; no effect on 118hillside.com */
