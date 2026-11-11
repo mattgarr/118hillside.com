@@ -103,7 +103,7 @@ h1 { font-family:var(--serif); font-weight:500; font-size:clamp(30px,5vw,48px); 
   <a class="feature" id="feature" href="#"></a>
   <div class="lineup">
     <a class="gcard" href="/games/snowball/" data-g="snowball"><img src="/images/snowball-hero.jpg" alt="Snowball the black cat peeking out from behind a side table in the living room" loading="lazy">
-      <span class="tx"><span class="age">Ages 5 and up</span><span class="t">Where&rsquo;s Snowball?</span><span class="s">A black cat is hiding somewhere in the house, and he picks a new spot every day. Follow the meows from room to room and tap him when you spot him.</span><span class="go">Ready or not</span></span></a>
+      <span class="tx"><span class="age">Ages 5 and up</span><span class="t">Where&rsquo;s Snowball?</span><span class="s">Dinner is ready and Snowball is missing, but he left a trail. Find what he dropped in each room, read the clue, pick where he went next, and track him down. A new trail every day.</span><span class="go">Start the trail</span></span></a>
     <a class="gcard" href="/games/escape/" data-g="escape"><img src="/images/escape-hero.jpg" alt="A drawing taped to the kitchen pocket door: a low sun, two windows and a clock" loading="lazy">
       <span class="tx"><span class="age">Teens and adults</span><span class="t">Locked In at Hillside</span><span class="s">An escape room inside the 3D house. Slide the doors, move the sun across the sky, and read what the light is telling you.</span><span class="go">Start the clock</span></span></a>
     <a class="gcard" href="/games/room/" data-g="room"><img src="/images/room-hero.jpg" alt="Names on painter's tape placed on the floor plan of 118 Hillside Drive" loading="lazy">
@@ -119,7 +119,7 @@ var SEASONS = [
     title:'Thanksgiving at Hillside', sub:'The twins put the groceries away, so dinner is hidden all over the house. Follow their clues, then get it all to the terrace table.', go:'Start the hunt' },
   { id:'holidays', from:'11-28', to:'01-06', href:'/games/deck/', img:'/images/deck-hero.jpg', alt:'118 Hillside Drive decorated for the holidays at dusk, with Snowball the cat on the porch', age:'All ages',
     bg:'linear-gradient(135deg,#141c33,#26326a 55%,#5a3b6e)', btn:'#e8b84a', btnInk:'#2a1d07', icon:'❄️',
-    title:'Deck the House with Snowball', sub:'Decorate the real house for whatever you celebrate: Hanukkah, Christmas, Kwanzaa, Diwali, the solstice, or just the lights. Then wait for dark and light it up.', go:'Light it up' }
+    title:'Deck the House with Snowball', sub:'Everyone is coming tonight, and each guest hopes for one thing that says home: a menorah in the window, a kinara on its mat, diyas on the steps, a real tree. Read their messages, decorate, and light it up.', go:'Light it up' }
 ];
 function md(d){ return ('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 function inSeason(s, t){ return s.from <= s.to ? (t >= s.from && t <= s.to) : (t >= s.from || t <= s.to); }

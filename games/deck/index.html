@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Deck the House with Snowball | Decorate 118 Hillside Drive, Woodside</title>
-<meta name="description" content="Snowball is a black cat with yellow eyes and strong opinions. Decorate the real 118 Hillside Drive for whatever you celebrate, then light it up at dusk and send the postcard.">
+<meta name="description" content="Everyone is coming to 118 Hillside Drive tonight, and each guest is hoping for one thing that says home. Read their messages, decorate the real house with Snowball the cat, then light it up and see who feels at home.">
 <link rel="canonical" href="https://118hillside.com/games/deck/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="118 Hillside Drive, Woodside">
@@ -168,6 +168,35 @@ svg.scene .lit.off{opacity:0}
   .flake{display:none}.staticflakes{display:inline}
   svg.scene .dusk-only,svg.scene .lit{transition:none}
 }
+
+#msgs{margin:0 0 14px;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+#msgs summary{cursor:pointer;padding:9px 14px;font-size:14.5px;font-weight:500;display:flex;justify-content:space-between;align-items:center;list-style:none}
+#msgs summary::-webkit-details-marker{display:none}
+#msgs summary .n{background:var(--berry);color:#fff;border-radius:999px;font-size:12.5px;padding:1px 9px}
+#msgs .list{max-height:230px;overflow:auto;padding:2px 12px 10px;display:grid;gap:8px}
+.msg{display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:start}
+.msg .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:500;font-size:14px}
+.msg b{font-size:13.5px;font-weight:500}.msg small{font-size:12.5px;color:var(--soft);margin-left:6px}
+.msg p{margin:2px 0 0;background:#f1efe9;border-radius:4px 14px 14px 14px;padding:7px 11px;font-size:14.5px;line-height:1.35;color:#2b3442}
+.msg.new p{background:#fff3d6;animation:pop .4s ease}
+.msg.done p{background:#e6f2ea}
+.msg .tick{color:var(--pine);font-weight:500;font-size:12.5px;margin-left:6px}
+.asklink{border:0;background:none;color:var(--berry);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0;margin:-6px 0 12px}
+#arrive{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:min(520px,calc(100% - 24px));background:rgba(251,250,247,.97);color:var(--ink);border-radius:18px;box-shadow:0 16px 50px rgba(0,0,0,.45);padding:12px 14px;display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;z-index:4}
+#arrive[hidden]{display:none}
+#arrive.in{animation:arr .45s ease}
+@keyframes arr{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+#arrive .av{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:500;font-size:19px}
+#arrive b{display:block;font-size:14px;font-weight:500}#arrive b small{font-weight:300;color:var(--soft);margin-left:6px}
+#arrive p{margin:2px 0 0;font-family:var(--hand);font-size:21px;line-height:1.2;color:#2b2336}
+#arrive .h{font-size:30px;line-height:1}
+#arrive .h.y{color:var(--berry);animation:pop .4s ease}#arrive .h.n{color:#c9c5bb}
+#arrive .skip{position:absolute;right:10px;top:-34px;border:0;border-radius:999px;background:rgba(14,19,34,.7);color:#fff;font:inherit;font-size:13px;padding:5px 12px;cursor:pointer}
+.guests{list-style:none;margin:10px 0 4px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:14.5px}
+.guests li{display:flex;gap:8px;align-items:center}.guests .h{font-size:17px}.guests .y{color:var(--berry)}.guests .n{color:#c9c5bb}
+.modes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:480px){#arrive p{font-size:18px}.guests{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){#arrive.in,.msg.new p{animation:none}}
 </style>
 </head>
 <body>
@@ -183,6 +212,7 @@ svg.scene .lit.off{opacity:0}
       <div id="sceneHost"></div>
       <div class="fade"></div>
       <span class="label" id="sceneLabel">Front of the house</span>
+      <div id="arrive" hidden></div>
       <div class="lightup" id="lightup" hidden><button type="button" id="lightBtn">Light it up</button></div>
     </div>
     <div class="scenes" id="sceneBtns" hidden></div>
@@ -192,6 +222,7 @@ svg.scene .lit.off{opacity:0}
       <div class="avatar" id="avatar" aria-hidden="true"></div>
       <p class="say" id="say"></p>
     </div>
+    <div id="msgs" hidden></div>
     <div id="step"></div>
     <div class="nav" id="nav">
       <button class="btn" id="back" type="button">Back</button>
@@ -430,7 +461,7 @@ function buildFront(){ const W = 1600, H = 936, sc = SCENES.front; let g = '', d
   if(snow) g += paws([[700, 694], [672, 724], [640, 756], [604, 792], [566, 830], [526, 870], [486, 912]], 1.1);
   const slots = {A: [1144, 556], B: [1288, 613], C: [1410, 642], D: [933, 453], E: [609, 549]};
   if(has('win', 'tree')) g += tree('fir', 1398, 652, 214, 'star', 21);
-  if(has('win', 'menorah')) g += menorah(slots.B[0], slots.B[1], .78);
+  if(has('win', 'menorah')) g += menorah(slots.B[0], slots.B[1], .78, MODE === 'story' ? 6 : 9);
   if(has('win', 'kinara')) g += kinara(slots.A[0], slots.A[1], .62);
   if(has('win', 'candles')){ const free = ['D', 'E'].concat(has('win', 'kinara') ? [] : ['A'], has('win', 'menorah') ? [] : ['B'], has('win', 'tree') ? [] : ['C']);
     free.forEach(k => { const s2 = k === 'D' || k === 'E' ? .62 : .9; g += candle(slots[k][0], slots[k][1], s2); }); }
@@ -598,6 +629,40 @@ const sayDefault = {
   wear: 'Last thing. It is about me.'
 };
 
+
+/* ---------- the story: everyone is coming tonight, and each guest hopes for one thing ---------- */
+let MODE = 'story';
+const STORY_START = {name: '', trad: [], lights: 'none', motion: 'twinkle', door: 'none', win: [], hang: 'none', path: [], tree: 'none', topper: 'flake', room: [], oak: 'none', ter: [], weather: 'clear', yard: 'none', wear: 'none'};
+const GUESTS = [
+  {id: 'marcus', name: 'Marcus', who: 'hosting with Elena', c: '#2f5fb8', at: 'lights', step: 'ter', msg: "Dinner is out under the oak tonight. I'd love that tree to show off, and I need to be able to see my plate.",
+   ok: s => s.oak !== 'none' && s.ter.includes('bistro'), yes: "The oak is glowing and I can see the table. Dinner is on.", no: "It's a little dark out by the oak. We'll manage.", hint: 'Marcus wants two things out back: lights on the oak, and lights over the table.'},
+  {id: 'walt', name: 'Walt', who: "Elena's dad", c: '#7a5c38', at: 'lights', step: 'tree', msg: "No fuss on my account. But a house isn't dressed without a real tree you can smell, with a star on top. Not a snowflake. A star.",
+   ok: s => s.tree === 'fir' && s.topper === 'star', yes: "Now that's a tree. I could smell it from the porch.", no: "It's very nice. Very... modern.", hint: 'Walt said real, and he said star. Only one of these trees smells like anything.'},
+  {id: 'adler', name: 'Mrs. Adler', who: 'from across the street', c: '#3b6fd8', at: 'door', step: 'win', msg: "It's the fifth night. I'll be looking for it from the street before I even knock.",
+   ok: s => s.win.includes('menorah'), yes: "I saw it from my own front step. Five candles and the helper. Thank you, dear.", no: "I looked for the candles from the street. Maybe next year.", hint: 'Mrs. Adler will be looking from the street. The coffee table is not the street.'},
+  {id: 'rosa', name: 'Rosa', who: "Marcus's mom", c: '#b5232c', at: 'win', step: 'porch', msg: "When I was little we lined the walk with paper lanterns, so nobody could miss the house.",
+   ok: s => s.path.includes('luminarias'), yes: "Luminarias! I could find this house with my eyes closed.", no: "I nearly walked right past in the dark. Good thing Luis had the address.", hint: 'Rosa wants paper lanterns along the walk. They are called luminarias.'},
+  {id: 'priya', name: 'Priya & Dev', who: 'friends from work, with the kids', c: '#e0862a', at: 'win', step: 'porch', msg: "In our family the light starts at your feet, right at the front steps. The kids are bringing sweets.",
+   ok: s => s.path.includes('diyas'), yes: "Diyas on the steps! The kids are counting every one.", no: "Lovely house. The kids asked where the little lamps were.", hint: 'Light that starts at your feet, on the front steps. Small clay lamps.'},
+  {id: 'amara', name: 'Amara', who: "Iris's roommate, here for break", c: '#2d6b3c', at: 'tree', step: 'room', msg: "My mom sets ours on a woven mat, with corn and fruit around it. I've never been away for Kwanzaa before.",
+   ok: s => s.room.includes('kinara'), yes: "You set out the mkeka and everything. It feels like home.", no: "It's okay. I'll call my mom later.", hint: "Amara's family sets the kinara on a mat with the harvest around it. One kinara here comes with a mat."},
+  {id: 'snowball', name: 'Snowball', who: 'cat', c: '#14161c', at: 'room', step: 'room', msg: "I have asked for one thing. It is cardboard. It is empty.",
+   ok: s => s.room.includes('box'), yes: "The box is acceptable.", no: "No box. I see how it is.", hint: 'It is a box. I would like the box.'},
+  {id: 'twins', name: 'Leo & Max', who: 'the twins', c: '#7b4fd6', at: 'oak', step: 'weather', msg: "WE ASKED THE SKY FOR SNOW. if it works we are building something",
+   ok: s => s.weather === 'snowday' && s.yard !== 'none', yes: "IT SNOWED. WE BUILT IT. BEST HOUSE EVER.", no: "no snow?? we asked so nicely", hint: 'The twins want real snow, and they want to build something in it.'}];
+const stepIx = id => STEPS.findIndex(s => s.id === id);
+const arrived = () => GUESTS.filter(g => cur >= stepIx(g.at));
+const happy = () => GUESTS.filter(g => g.ok(S));
+const initials = g => g.id === 'snowball' ? '🐾' : g.name.split(/ & | /).map(w => w[0]).slice(0, 2).join('');
+let seenMsgs = new Set();
+function renderMsgs(){ const box = $('#msgs'); if(MODE !== 'story' || cur < 2 || STEPS[cur].id === 'final'){ box.hidden = true; return; } box.hidden = false;
+  const list = arrived(), fresh = list.filter(g => !seenMsgs.has(g.id));
+  box.innerHTML = `<details open><summary><span>Messages from tonight's guests</span><span class="n">${list.length} of ${GUESTS.length}</span></summary><div class="list">` +
+    list.slice().reverse().map(g => `<div class="msg${fresh.includes(g) ? ' new' : ''}"><span class="av" style="background:${g.c}">${initials(g)}</span><div><b>${esc(g.name)}</b><small>${esc(g.who)}</small><p>${esc(g.msg)}</p></div></div>`).join('') + '</div></details>';
+  if(fresh.length){ fresh.forEach(g => seenMsgs.add(g.id)); chime(1.5, .05); setTimeout(() => say('New message from ' + fresh.map(g => g.name).join(' and ') + '.'), 60); } }
+function askSnowball(){ const st = STEPS[cur], g = arrived().find(g => g.step === st.id && !g.ok(S)); ga('deck_ask', {step: st.id});
+  say(g ? g.hint : arrived().some(g => !g.ok(S)) ? 'Nobody has asked for anything on this step. Do what you like here.' : 'Everyone who has written is taken care of so far. Carry on.'); }
+
 /* ---------- rendering ---------- */
 let cur = 0, sceneNow = null, day = true, finalLit = false, viewScene = 'front', shared = false;
 function sceneSVG(key, extraClass){ const sc = SCENES[key], b = BUILD[key]();
@@ -626,15 +691,17 @@ function sw(stepId, v){ // option swatches, drawn with the same pieces as the sc
 function tagHTML(step, o, on){ const s = suggested(o) ? `<span class="sug">${esc(sugLabel(o))}</span>` : '';
   return `<button type="button" class="tag" data-v="${o.v}" aria-pressed="${on}"><span class="sw">${sw(step, o.v)}</span><span><b>${esc(o.b)}</b><small>${esc(o.n)}</small>${s}</span></button>`; }
 function say(t){ const el = $('#say'); el.textContent = t; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
-function applySuggestions(st){ if(touched.has(st.id) || !S.trad.length) return;
+function applySuggestions(st){ if(MODE === 'story' || touched.has(st.id) || !S.trad.length) return;
   const pick = o => suggested(o);
   if(st.type === 'single'){ const o = st.options.find(pick); if(o) S[st.key] = o.v; }
   if(st.type === 'multi'){ const v = st.options.filter(pick).map(o => o.v); if(v.length) S[st.key] = [...new Set((st.id === 'trad' ? [] : S[st.key]).concat(v))]; }
   if(st.multi2){ const v = st.multi2.options.filter(pick).map(o => o.v); if(v.length) S[st.multi2.key] = v; } }
 function renderStep(){ const st = STEPS[cur], box = $('#step');
-  $('#dots').innerHTML = STEPS.slice(1, -1).map((s, i) => `<i class="${i + 1 < cur ? 'on' : i + 1 === cur ? 'cur' : ''}"></i>`).join('');
+  const first = MODE === 'story' ? 2 : 1;
+  $('#dots').innerHTML = STEPS.slice(first, -1).map((s, i) => `<i class="${i + first < cur ? 'on' : i + first === cur ? 'cur' : ''}"></i>`).join('');
+  renderMsgs();
   $('#nav').hidden = st.id === 'final' || st.id === 'intro';
-  $('#back').disabled = cur <= 1;
+  $('#back').disabled = cur <= first;
   $('#next').textContent = STEPS[cur + 1] && STEPS[cur + 1].id === 'final' ? 'Wait for dark' : 'Next';
   $('#sceneBtns').hidden = st.id !== 'final';
   $('#lightup').hidden = true;
@@ -645,7 +712,8 @@ function renderStep(){ const st = STEPS[cur], box = $('#step');
   h += st.options.map(o => tagHTML(st.id, o, st.type === 'multi' ? S[st.key].includes(o.v) : S[st.key] === o.v)).join('') + '</div>';
   if(st.seg && (!st.seg.when || st.seg.when(S))) h += `<p class="sub">${esc(st.seg.label)}</p><div class="seg" role="group" aria-label="${esc(st.seg.label)}">` + st.seg.opts.map(([v, l]) => `<button type="button" data-seg="${v}" aria-pressed="${S[st.seg.key] === v}">${esc(l)}</button>`).join('') + '</div>';
   if(st.multi2) h += `<p class="sub">${esc(st.multi2.label)}</p><div class="tags" role="group" aria-label="${esc(st.multi2.label)}" data-m2="1">` + st.multi2.options.map(o => tagHTML('porch', o, S[st.multi2.key].includes(o.v))).join('') + '</div>';
-  box.innerHTML = h;
+  if(MODE === 'story') h = `<button class="asklink" type="button" id="ask">Ask Snowball who cares about this</button>` + h;
+  box.innerHTML = h; if($('#ask')) $('#ask').onclick = askSnowball;
   box.querySelectorAll('.tags:not([data-m2]) .tag').forEach(b => b.onclick = () => choose(st, b.dataset.v));
   box.querySelectorAll('[data-m2] .tag').forEach(b => b.onclick = () => choose2(st, b.dataset.v));
   box.querySelectorAll('.seg button').forEach(b => b.onclick = () => { S[st.seg.key] = b.dataset.seg; touched.add(st.id); chime(1.3); renderStep(); drawScene(st.scene); if(st.seg.say && st.seg.say[b.dataset.seg]) say(st.seg.say[b.dataset.seg]); });
@@ -656,16 +724,19 @@ function choose(st, v){ touched.add(st.id); const o = st.options.find(x => x.v =
     if(st.id === 'trad' && a.length > 1 && i < 0) say(o.say + ' And more than one holiday under one roof. There is room here for all of it.'); }
   else { S[st.key] = v; if(o.say) say(o.say); }
   if(st.id === 'trad') STEPS.forEach(s => touched.delete(s.id === 'trad' ? '' : s.id)), touched.add('trad');
-  chime(1); renderStep(); drawScene(st.scene); ga('deck_pick', {step: st.id, v}); }
+  chime(1); renderStep(); drawScene(st.scene); ga('deck_pick', {step: st.id, v, mode: MODE}); }
 function choose2(st, v){ touched.add(st.id); const a = S[st.multi2.key], i = a.indexOf(v), o = st.multi2.options.find(x => x.v === v); if(i >= 0) a.splice(i, 1); else { a.push(v); say(o.say); } chime(1.15); renderStep(); drawScene(st.scene); }
-function renderIntro(){ day = true;
-  $('#step').innerHTML = `<h1>Deck the House</h1><p class="story">Snowball is a black cat with yellow eyes, so his name is a joke he has heard many times. It is December at 118 Hillside Drive, the sun is going down, and nothing is decorated yet. He has opinions about all of it.</p>
-    <p class="help">Choose the lights, the door, the windows and the tree, inside and out, for whatever this house celebrates. Then wait for dark and light it up.</p>
+function renderIntro(){ day = true; $('#msgs').hidden = true;
+  $('#step').innerHTML = `<h1>Deck the House</h1><p class="story">It is Elena and Marcus's first holiday at 118 Hillside Drive, and they have invited everyone for tonight. Family, neighbors, the twins' friends. Each guest is hoping for one thing that says home to them.</p>
+    <p class="help">Read their messages as they come in, and get the house ready before dark with Snowball, the family's black cat. Then light it up and see who feels at home.</p>
     <div class="field"><label for="nm">Whose house is it this year? (optional, goes on your postcard)</label><input id="nm" maxlength="32" placeholder="the Parks" autocomplete="off" value="${esc(S.name)}"></div>
-    <button class="btn primary big" id="begin" type="button">Wait for dusk</button>`;
-  say(sayDefault.intro); drawScene('front');
+    <div class="modes"><button class="btn primary big" id="begin" type="button">Get the house ready</button><button class="btn" id="free" type="button">Just decorate</button></div>`;
+  say('Everyone is coming tonight. Nothing is decorated. I have notes.'); drawScene('front');
   $('#nm').oninput = e => { S.name = e.target.value.trim(); };
-  $('#begin').onclick = () => { ga('deck_start'); chime(.8); day = false; const svg = $('#sceneHost svg'); if(svg) svg.classList.remove('day'); say('There it goes. Now we can see what we are doing.'); $('#begin').disabled = true; setTimeout(() => { cur = 1; renderStep(); }, 2300); }; }
+  const go = mode => { MODE = mode; const nm = S.name; S = JSON.parse(JSON.stringify(mode === 'story' ? STORY_START : DEFAULT)); S.name = nm; touched = new Set(); seenMsgs = new Set(); ga('deck_start', {mode}); chime(.8); day = false;
+    const svg = $('#sceneHost svg'); if(svg) svg.classList.remove('day'); say(mode === 'story' ? 'The sun is going down. The phone is already buzzing.' : 'There it goes. Now we can see what we are doing.'); $('#begin').disabled = $('#free').disabled = true;
+    setTimeout(() => { cur = mode === 'story' ? 2 : 1; renderStep(); }, 2300); };
+  $('#begin').onclick = () => go('story'); $('#free').onclick = () => go('free'); }
 function recap(){ const bits = [];
   const LP = {warm: 'warm white lights on the roof', multi: 'old-school colored lights on the roof', icicle: 'icicle lights along the roof', hanukkah: 'blue and white lights on the roof', kwanzaa: 'red, black and green lights on the roof', marigold: 'marigold lights on the roof', fairy: 'fairy lights along the roof'};
   const DP = {evergreen: 'an evergreen wreath on the door', magnolia: 'a magnolia wreath on the door', eucalyptus: 'eucalyptus on the door', citrus: 'dried oranges on the door', bluesilver: 'a blue and silver wreath on the door', harvest: 'a harvest wreath on the door', toran: 'marigolds over the door'};
@@ -686,16 +757,29 @@ function lightsOff(){ const svg = $('#sceneHost svg'); if(!svg) return; svg.quer
 function lightUp(){ $('#lightup').hidden = true; ga('deck_lightup', {shared}); const svg = $('#sceneHost svg'); const groups = [...svg.querySelectorAll('.lit')];
   const seq = g => +(g.dataset.seq || 3); groups.sort((a, b) => seq(a) - seq(b)); let t = 300;
   groups.forEach((g, i) => { setTimeout(() => { g.classList.remove('off'); chime(.7 + (i % 5) * .18, .05); }, t); t += i < 3 ? 650 : 260; });
-  setTimeout(() => { finalLit = true; bell(); showFinalBody(); }, t + 500); }
-function showFinalBody(){ $('#fh').textContent = 'Snowball approves.'; $('#fsub').textContent = recap();
-  say(S.weather === 'snowday' ? 'Lit up, snowed in, and I am wearing ' + (S.wear === 'none' ? 'nothing but my best expression' : 'something festive') + '. Best night of the year.' : 'Look at it. The whole street is going to slow down. Worth every minute.');
+  setTimeout(() => { finalLit = true; bell(); if(MODE === 'story' && !shared) arrivals(); else showFinalBody(); }, t + 500); }
+function arrivals(){ const box = $('#arrive'), order = ['adler', 'rosa', 'priya', 'walt', 'amara', 'twins', 'marcus', 'snowball'].map(id => GUESTS.find(g => g.id === id)); let i = 0, timer = 0, over = false;
+  $('#fh').textContent = 'Here they come.'; $('#fsub').textContent = 'The doorbell has not stopped.'; say('Positions, everyone. I will be on the porch looking casual.');
+  const end = () => { if(over) return; over = true; clearTimeout(timer); box.hidden = true; showFinalBody(); };
+  const next = () => { if(i >= order.length) return end(); const g = order[i++], ok = g.ok(S); box.hidden = false; box.classList.remove('in'); void box.offsetWidth; box.classList.add('in');
+    box.innerHTML = `<button class="skip" type="button">Skip</button><span class="av" style="background:${g.c}">${initials(g)}</span><div><b>${esc(g.name)}<small>${esc(g.who)}</small></b><p>${esc(ok ? g.yes : g.no)}</p></div><span class="h ${ok ? 'y' : 'n'}" aria-label="${ok ? 'felt at home' : 'missed'}">${ok ? '♥' : '♡'}</span>`;
+    box.querySelector('.skip').onclick = end; if(ok) chime(1 + i * .08, .07); else if(AC && sound) try{ tone(220, AC.currentTime, .35, .04); }catch(e){}
+    timer = setTimeout(next, ok ? 2500 : 2900); };
+  try{ if(!AC && sound) AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} setTimeout(next, 700); }
+function showFinalBody(){ const story = MODE === 'story' && !shared, hp = story ? happy() : [], all = story && hp.length === GUESTS.length;
+  $('#fh').textContent = !story ? 'Snowball approves.' : all ? 'Everyone felt at home.' : hp.length + ' of ' + GUESTS.length + ' guests felt at home.'; $('#fsub').textContent = recap();
+  say(!story ? (S.weather === 'snowday' ? 'Lit up, snowed in, and looking my best. Best night of the year.' : 'Look at it. The whole street is going to slow down. Worth every minute.')
+    : all ? 'Everyone is happy, and I am in a box. Best night this house has ever had.' : 'Some of them were being polite. I can tell. We could fix that.');
+  if(story) ga('deck_score', {happy: hp.length});
   $('#sceneBtns').hidden = false; $('#sceneBtns').innerHTML = Object.keys(SCENES).map(k => `<button type="button" data-k="${k}" aria-pressed="${k === viewScene}">${SCENES[k].label}</button>`).join('');
   $('#sceneBtns').querySelectorAll('button').forEach(b => b.onclick = () => { viewScene = b.dataset.k; $('#sceneBtns').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); drawScene(viewScene); ga('deck_view', {scene: viewScene}); });
-  $('#fbody').innerHTML = `<div class="row"><button class="btn" id="save" type="button">Save the postcard</button><button class="btn" id="share" type="button">Send your house</button></div>
+  const gl = story ? `<ul class="guests">${GUESTS.map(g => `<li><span class="h ${g.ok(S) ? 'y' : 'n'}">${g.ok(S) ? '♥' : '♡'}</span>${esc(g.name)}</li>`).join('')}</ul>` + (all ? '' : `<div class="row"><button class="btn primary" id="fix" type="button">Go back and fix it</button></div>`) : '';
+  $('#fbody').innerHTML = gl + `<div class="row"><button class="btn" id="save" type="button">Save the postcard</button><button class="btn" id="share" type="button">Send your house</button></div>
     <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive, a mile from Woodside's Town Center. The oak, the terrace and the porch are all there in person.</span><a class="btn primary big" href="/#contact" id="see">See it in person</a></div>
     <div class="row"><a class="btn" href="/tour/" id="tourl">Walk through it in 3D</a><a class="btn" href="/games/feast/">Play Thanksgiving at Hillside</a><a class="btn" href="/games/room/">Play Room for Everyone</a><button class="btn" id="again" type="button">Decorate again</button></div>
     <p class="meta">Decorations are illustrations on real photos of the house.</p>`;
-  $('#save').onclick = savePostcard; $('#share').onclick = shareHouse; $('#again').onclick = () => { ga('deck_again'); shared = false; history.replaceState(null, '', location.pathname); S = JSON.parse(JSON.stringify(DEFAULT)); touched = new Set(); day = true; cur = 0; renderStep(); };
+  if($('#fix')) $('#fix').onclick = () => { const g = GUESTS.find(g => !g.ok(S)); ga('deck_fix'); cur = stepIx(g.step); $('#sceneBtns').hidden = true; renderStep(); say(g.name + ' was hoping for something here. Read the message again.'); };
+  $('#save').onclick = savePostcard; $('#share').onclick = shareHouse; $('#again').onclick = () => { ga('deck_again'); shared = false; history.replaceState(null, '', location.pathname); S = JSON.parse(JSON.stringify(DEFAULT)); touched = new Set(); MODE = 'story'; day = true; cur = 0; renderStep(); };
   $('#see').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#tourl').onclick = () => ga('deck_cta', {cta: 'tour'}); }
 
 /* ---------- postcard + sharing ---------- */
@@ -711,7 +795,9 @@ async function savePostcard(){ const btn = $('#save'); btn.disabled = true; btn.
     x.fillStyle = '#18213a'; x.fillRect(0, 0, W, Hh + band); x.drawImage(img, 0, 0, W, Hh); URL.revokeObjectURL(url);
     await document.fonts.ready; x.fillStyle = '#f6f5f1'; x.font = '600 60px "Cormorant Garamond", Georgia, serif'; x.textBaseline = 'alphabetic';
     x.fillText('Happy holidays from ' + (S.name || '118 Hillside'), 56, Hh + 76); x.font = '300 26px Jost, "Helvetica Neue", Arial, sans-serif'; x.fillStyle = '#c4cad8';
-    x.fillText('Decorated with Snowball at 118hillside.com/games/deck', 58, Hh + 118);
+    const st2 = MODE === 'story' && !shared, hp2 = st2 ? happy().length : 0;
+    x.fillText((st2 ? hp2 + ' of ' + GUESTS.length + ' guests felt at home. ' : '') + 'Decorated with Snowball at 118hillside.com/games/deck', 58, Hh + 118);
+    if(st2 && hp2 === GUESTS.length){ x.save(); x.translate(W - 110, Hh + 74); x.rotate(-.18); x.beginPath(); for(let k = 0; k < 32; k++){ const a = k / 32 * Math.PI * 2, r = k % 2 ? 50 : 57; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); } x.closePath(); x.fillStyle = '#e8b84a'; x.fill(); x.fillStyle = '#2a1d07'; x.textAlign = 'center'; x.font = '600 22px "Cormorant Garamond", Georgia, serif'; x.fillText('A perfect', 0, -4); x.fillText('evening', 0, 20); x.restore(); }
     const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = c.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {scene: key});
   }catch(e){ console.warn(e); toast('That did not work. Try a screenshot instead.'); }
   btn.disabled = false; btn.textContent = 'Save the postcard'; }
@@ -734,12 +820,12 @@ function bell(){ if(!sound) return; try{ AC = AC || new (window.AudioContext || 
 
 /* ---------- go ---------- */
 $('#avatar').innerHTML = SNOWBALL.svg({id: 'sbav', seed: 7}).replace('viewBox="96 18 304 462"', 'viewBox="110 10 280 300"');
-$('#back').onclick = () => { if(cur > 1){ cur--; renderStep(); } };
+$('#back').onclick = () => { if(cur > (MODE === 'story' ? 2 : 1)){ cur--; renderStep(); } };
 $('#next').onclick = () => { if(cur < STEPS.length - 1){ ga('deck_step', {step: STEPS[cur].id}); cur++; renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); } };
 const hm = /#h=([A-Za-z0-9_-]+)/.exec(location.hash);
-if(hm){ const n = decode(hm[1]); if(n){ S = n; shared = true; day = false; cur = STEPS.length - 1; } }
+if(hm){ const n = decode(hm[1]); if(n){ S = n; shared = true; MODE = 'free'; day = false; cur = STEPS.length - 1; } }
 renderStep();
-window.DECK = {get S(){ return S; }, set(o){ Object.assign(S, o); renderStep(); }, go(i){ day = false; cur = i; renderStep(); }, light: () => lightUp(), steps: STEPS.map(s => s.id), encode, scene: k => { viewScene = k; drawScene(k); }};
+window.DECK = {get S(){ return S; }, get mode(){ return MODE; }, happy: () => happy().map(g => g.id), set(o){ Object.assign(S, o); renderStep(); }, go(i){ day = false; cur = i; renderStep(); }, light: () => lightUp(), steps: STEPS.map(s => s.id), encode, scene: k => { viewScene = k; drawScene(k); }};
 })();
 </script>
 </body>

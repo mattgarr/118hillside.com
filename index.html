@@ -418,13 +418,13 @@ footer p { margin: 0 0 8px; max-width: 900px; }
   var d = new Date(), md = ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   var SEASONAL = [
     {id:'snowball', from:'01-01', to:'12-31', href:'games/snowball/', img:'images/snowball-hero.jpg', alt:'Snowball the black cat peeking out from behind a side table in the living room',
-     eyebrow:'New hiding spot every day', title:'Where&rsquo;s Snowball?', sub:'A black cat is hiding somewhere in the house. Follow the meows from room to room and find him. Fun from age five up.'},
+     eyebrow:'A new trail every day', title:'Where&rsquo;s Snowball?', sub:'Dinner is ready and Snowball is missing. Follow the trail he left from room to room and find him. Fun from age five up.'},
     {id:'escape', from:'01-01', to:'12-31', href:'games/escape/', img:'images/escape-hero.jpg', alt:'A drawing taped to the kitchen pocket door: a low sun, two windows and a clock',
      eyebrow:'An escape room in 3D', title:'Locked In at Hillside', sub:'Slide the doors, move the sun across the sky, and read what the light through the windows is telling you.'},
     {id:'feast', from:'11-01', to:'11-27', href:'games/feast/', img:'images/feast-hero.jpg', alt:'Grocery tags set out on the dining table at 118 Hillside Drive',
      eyebrow:'A whole-house hunt', title:'Thanksgiving at Hillside', sub:'The twins hid the groceries all over the house. Follow their clues, then carry dinner out to the terrace.'},
     {id:'deck', from:'11-20', to:'12-31', href:'games/deck/', img:'images/deck-hero.jpg', alt:'118 Hillside Drive decorated for the holidays at dusk, with Snowball the cat on the porch',
-     eyebrow:'Decorate it your way', title:'Deck the House with Snowball', sub:'Lights, a menorah, a kinara, diyas or a tree. Decorate the real house with a black cat who has opinions, then light it up.'}
+     eyebrow:'A holiday story you decorate', title:'Deck the House with Snowball', sub:'Everyone is coming tonight, and each guest hopes for one thing that says home. Read their messages, decorate the real house, and light it up.'}
   ];
   var dots = document.getElementById('rotDots');
   SEASONAL.forEach(function(g){ if(md < g.from || md > g.to) return;
