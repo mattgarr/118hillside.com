@@ -53,11 +53,11 @@
       fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'I was keeping the bed warm.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
       spots: [{p: [22.5, 2.08, 29], n: 'on the bed', d: 1}, {p: [27, .03, 34], n: 'beside the white chair', d: 2}, {p: [27.5, .03, 29], n: 'on the far side of the bed', d: 2}, {p: [28, .03, 26], n: 'by the far bedside table', d: 2}, {p: [28, .03, 35], n: 'behind the white chair', d: 3}]},
     loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/p37.jpg', big: 'photos/p37.jpg', ar: .667, grp: 'loft', fy: 5.57, cam: [[.84, .72, 'the triangle windows'], [.62, .84, 'the triangle windows']],
-      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.5, -8.5, 299, 180], [-19.2, -17, 0, 180]],
+      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19.2, -15.2, 0, 180]],
       spots: [{p: [-24, 7.06, -7.5], n: 'on the window seat', d: 1}, {p: [-18, 5.6, -4.5], n: 'at the top of the stairs, behind the railing', d: 2}, {p: [-18, 5.6, -18], n: 'down the upstairs hall', d: 2},
         {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 3}]},
     primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: 'suite', fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
-      fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'The big bed is the best bed.', v: [[-12.8, -33.5, 274, 215, 20], [-19, -38.3, 20, 320]],
+      fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'The big bed is the best bed.', v: [[-12.8, -33.5, 274, 215, 20], [-16.6, -38.4, 20, 320]],
       spots: [{p: [-18.5, 7.66, -31], n: 'on the big bed', d: 1}, {p: [-19.5, 5.63, -38], n: 'at the corner of the big bed', d: 2}, {p: [-9.5, 5.6, -28.5], n: 'behind the dresser', d: 2},
         {p: [-21.5, 5.63, -37.5], n: 'between the bed and the balcony doors', d: 3}, {p: [-21, 5.63, -29], n: 'on the far side of the big bed', d: 3}]},
     pbath:   {name: 'Primary bath', at: 'in the primary bath', photo: '../images/primary-bath-800.jpg', ar: .68, grp: 'pbath', fy: 5.57, cam: [[.88, .36, 'the brass shower'], [.2, .62, 'the towels on their rings']],
@@ -131,7 +131,10 @@
   function outOfView(yaw, V, P){ poseAt(V, yaw, PITCH0); for(const [u, v] of [[-.62, 0], [.62, 0], [-.62, 1.2], [.62, 1.2], [0, .6], [-.62, .6], [.62, .6]]) if(inPicture(onCat(V, P, u, v, _a), 1.04)) return false; return true; }
   // the way you face when you arrive: a good view of the room that does not have him in it
   function openingYaw(R, V, P, v0){ const want = R.v[0].slice(2).map(d => d * Math.PI / 180); for(const y of want) if(outOfView(y, V, P)) return y; if(!v0.n) return want[0];
-    let best = null; for(let k = 0; k < 12; k++){ const y = k * Math.PI / 6; if(!outOfView(y, V, P)) continue; let s = 0; for(const a of [-.3, 0, .3]) s += Math.min(30, hit(V.x, V.y, V.z, Math.sin(y + a), 0, Math.cos(y + a), 30)); if(!best || s > best.s) best = {y, s}; }
+    // none of the room's good views leaves him out: turn the nearest one just far enough that it does, as long as it still looks into the room and not at a wall
+    const roomy = y => Math.min(hit(V.x, V.y, V.z, Math.sin(y), 0, Math.cos(y), 30), hit(V.x, V.y, V.z, Math.sin(y + .35), 0, Math.cos(y + .35), 30), hit(V.x, V.y, V.z, Math.sin(y - .35), 0, Math.cos(y - .35), 30)) > 5; let best = null;
+    for(const y of want) for(const s of [1, -1]) for(let k = 1; k <= 36; k++){ const c = y + s * k * Math.PI / 36; if(outOfView(c, V, P) && roomy(c)){ if(!best || k < best.k) best = {y: c, k}; break; } }
+    if(best) return best.y; for(let k = 0; k < 12; k++){ const y = k * Math.PI / 6; if(!outOfView(y, V, P)) continue; let s = 0; for(const a of [-.3, 0, .3]) s += Math.min(30, hit(V.x, V.y, V.z, Math.sin(y + a), 0, Math.cos(y + a), 30)); if(!best || s > best.s) best = {y, s}; }
     return best ? best.y : wrap(yawTo(V, P) + Math.PI); }
   // the way he runs off: along the floor, away from you or across the room, as far as the room lets him
   function runPath(V, P, fy, open){ const tx = V.x - P.x, tz = V.z - P.z, tl = Math.hypot(tx, tz) || 1; let best = null;
