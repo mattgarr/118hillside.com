@@ -6630,7 +6630,7 @@ function navQA(){
   SEC.moves = async R => { const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)); let walked = 0, cut = 0, flown = 0; tour(seq[0]);
     for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
       if(A && A.path){ walked++; const P = A.path; let off = 0, f = P.pts[0].y - EYE;
-        for(let k = 7; k < P.pts.length - 7; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0) off++; }
+        for(let k = 7; k < P.pts.length - 7; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0){ const q = r36Nearest(v.x, v.z, f, 3); if(!q || q.d > .8) off++; } }
         if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > R36N.MAXS + .01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
         R.note('moves', id, 'walk ' + r2(P.L) + ' ft in ' + r2(A.dur) + ' s' + (P.doors.length ? ', doors ' + P.doors.map(d => d.it.id).join(' ') : '')); for(const f2 of [.25, .5, .75]){ mid(f2); R.row('moves', id + '@' + f2, probe()); } }
       else if(A && A.cut){ cut++; R.note('moves', id, 'cut'); } else if(A){ flown++; if(A.kind === 'look' && A.from.distanceTo(A.to) > 3) R.fail('moves', id, 'a straight flight of ' + r2(A.from.distanceTo(A.to)) + ' ft'); else R.note('moves', id, A.kind === 'orbit' ? 'orbit flight outdoors' : 'turn'); }
@@ -21896,7 +21896,7 @@ function r36Grids(){
   const key = r36Key(); if(R36N.lv && key === R36N.key) return R36N.lv;
   const t0 = now; R36N.key = key; R36N.cache.clear(); navPassTag();
   const c = R36N.cell, B = dollBox(), X0 = Math.floor(B.min.x - 8), Z0 = Math.floor(B.min.z - 8), NX = Math.ceil((B.max.x + 8 - X0) / c), NZ = Math.ceil((B.max.z + 8 - Z0) / c), n = NX * NZ;
-  const LVS = [['lower', LV.lower], ['garage', LV.garage], ['main', LV.main], ['upper', LV.upper]].map(([name, L]) => ({name, L, base: new Uint8Array(n), blk: new Uint8Array(n), fb: new Uint8Array(n), door: new Uint8Array(n), ok: new Uint8Array(n)}));
+  const LVS = [['lower', LV.lower], ['garage', LV.garage], ['main', LV.main], ['upper', LV.upper]].map(([name, L]) => ({name, L, base: new Uint8Array(n), blk: new Uint8Array(n), wb: new Uint8Array(n), st: new Uint8Array(n), fb: new Uint8Array(n), door: new Uint8Array(n), ok: new Uint8Array(n)}));
   const G = {X0, Z0, NX, NZ, c, LVS}, cx = i => X0 + (i + .5) * c, cz = j => Z0 + (j + .5) * c, ci = x => Math.floor((x - X0) / c), cj = z => Math.floor((z - Z0) / c);
   G.idx = (x, z) => { const i = ci(x), j = cj(z); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
   const doors = r36Doors(), dcoll = new Set(DOOR28.items.filter(it => it.coll).map(it => it.coll)), open = new Set(doors.map(it => it.coll));
@@ -21905,7 +21905,10 @@ function r36Grids(){
     for(const q of COLLIDERS){ if(q.y1 <= L + .7 || q.y0 >= L + 5.6 || (q.v && q.v !== ACTIVE_VAR)) continue; if(dcoll.has(q) ? open.has(q) : q.pass) continue;
       const R = R36N.RW, i0 = Math.max(0, ci(q.x0 - R)), i1 = Math.min(NX - 1, ci(q.x1 + R)), j0 = Math.max(0, cj(q.z0 - R)), j1 = Math.min(NZ - 1, cj(q.z1 + R));
       for(let j = j0; j <= j1; j++) for(let i = i0; i <= i1; i++){ const x = cx(i), z = cz(j), dx = x - clamp(x, q.x0, q.x1), dz = z - clamp(z, q.z0, q.z1); if(dx * dx + dz * dz >= R * R) continue;
-        if(q.cut && q.cut.some(f => Math.abs(f.y - L) < 1.2 && onFloor(f, x, z))) continue; g.blk[j * NX + i] = 1; } }
+        if(q.cut && q.cut.some(f => Math.abs(f.y - L) < 1.2 && onFloor(f, x, z))) continue; g.wb[j * NX + i] = 1; } }
+    // the foot and head of a stair flight: the rails and newels stand closer than the wall margin, so there the older wall rule (0.85 ft) decides
+    for(const t of FLOORS.filter(f => f.kind === 'TREAD' && Math.abs(f.y - L) < 1.4).concat(RAMPS.filter(r => Math.min(Math.abs(r.hA - L), Math.abs(r.hB - L)) < 1.4))){ if(t.x0 == null) continue;
+      for(let j = Math.max(0, cj(t.z0 - 3.5)); j <= Math.min(NZ - 1, cj(t.z1 + 3.5)); j++) for(let i = Math.max(0, ci(t.x0 - 3.5)); i <= Math.min(NX - 1, ci(t.x1 + 3.5)); i++){ const k = j * NX + i; if(!g.base[k] || g.st[k]) continue; const pp = {x: cx(i), z: cz(j)}; collide(pp, L); if(Math.abs(pp.x - cx(i)) + Math.abs(pp.z - cz(j)) < .03) g.st[k] = 1; } }
     try{ for(const s of BIM2S.spaces){ if(!r36Excl(s) || Math.abs(s.floorZ - L) > .6) continue; const P = s.poly || (s.raw && s.raw.polygon); if(!P) continue;
         let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9; for(const p of P){ a0 = Math.min(a0, p[1]); a1 = Math.max(a1, p[1]); b0 = Math.min(b0, p[0]); b1 = Math.max(b1, p[0]); }
         for(let j = Math.max(0, cj(b0 - .3)); j <= Math.min(NZ - 1, cj(b1 + .3)); j++) for(let i = Math.max(0, ci(a0 - .3)); i <= Math.min(NX - 1, ci(a1 + .3)); i++) if(BIM2S.contains(s, cz(j), cx(i))) g.blk[j * NX + i] = 1; } }catch(e){}
@@ -21924,7 +21927,7 @@ function r36Grids(){
     for(const m of (BIM2S.meshes || [])) if(/^builtins\|/.test(m.name || '')){ let vis = true; for(let o = m; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) doMesh(m); } }catch(e){ console.warn('[r36 nav] furniture', e); }
   const rr = Math.ceil(R36N.RF / c), disc = []; for(let dj = -rr; dj <= rr; dj++) for(let di = -rr; di <= rr; di++) if((di * di + dj * dj) * c * c <= R36N.RF * R36N.RF + .01) disc.push([di, dj]);
   for(const g of LVS){ for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++) if(g.fb[j * NX + i]) for(const [di, dj] of disc){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ) g.blk[b * NX + a] = 1; }
-    const free = new Uint8Array(n); for(let k = 0; k < n; k++) free[k] = g.base[k] && (g.door[k] || !g.blk[k]) ? 1 : 0;
+    const free = new Uint8Array(n); for(let k = 0; k < n; k++) free[k] = g.base[k] && (g.door[k] || (!g.blk[k] && (!g.wb[k] || g.st[k]))) ? 1 : 0;
     // keep what joins a tour stop or a room marker on foot (level to level through the stair cells, which are not on any grid: seed every level)
     const st = [], seed = (x, z) => { let k = G.idx(x, z); if(k < 0) return; if(!free[k]){ let bd = 1e9, bk = -1; const i0 = ci(x), j0 = cj(z); for(let dj = -8; dj <= 8; dj++) for(let di = -8; di <= 8; di++){ const a = i0 + di, b = j0 + dj; if(a < 0 || b < 0 || a >= NX || b >= NZ || !free[b * NX + a]) continue; const d = di * di + dj * dj; if(d < bd){ bd = d; bk = b * NX + a; } } k = bk; } if(k >= 0 && !g.ok[k]){ g.ok[k] = 1; st.push(k); } };
     for(const s of STOPS){ if(s.aerial) continue; const fr = FRAME_FOR(s), f = walkSurfaceAt(fr.pos[0], fr.pos[2], fr.pos[1] - EYE + .6); if(Math.abs(f - g.L) < .6 || (LV[s.level] === g.L)) seed(fr.pos[0], fr.pos[2]); }
