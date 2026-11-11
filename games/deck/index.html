@@ -28,7 +28,8 @@
   var q = location.search ? location.search.slice(1) : '', h = location.hash || '', ok = false;
   try{ var c = document.createElement('canvas'); ok = !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl'))); }catch(e){}
   if(/(^|&)classic(=|&|$)/.test(q)) ok = false;
-  location.replace(ok ? '/tour/?deck=1' + (q ? '&' + q : '') + h : '/games/deck/classic/' + (q ? '?' + q : '') + h);
+  var b = (location.pathname.match(/^(.*)\/games\//) || [])[1] || '', ix = b ? 'index.html' : '';
+  location.replace(ok ? b + '/tour/' + ix + '?deck=1' + (q ? '&' + q : '') + h : b + '/games/deck/classic/' + ix + (q ? '?' + q : '') + h);
 })();
 </script>
 <noscript><meta http-equiv="refresh" content="0; url=/games/deck/classic/"></noscript>
