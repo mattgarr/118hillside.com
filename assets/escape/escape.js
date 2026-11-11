@@ -52,7 +52,7 @@
       note: 'Quartz counters, a long peninsula and a Bosch gas range. The great room opens up past the peninsula.'},
     coffee:  {name: 'Coffee bar', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [20.6, 9.4],
       note: 'A coffee bar with its own drinks fridge, tucked in beside the kitchen.'},
-    great:   {name: 'Great room', pos: [11.2, EYE, 31.95], face: [10.7, 3.3, 22.0], faceLight: [10.95, .9, 24.7], fov: 56, map: [10.4, 28.2],
+    great:   {name: 'Great room', pos: [13.4, EYE, 31.95], face: [10.7, 3.3, 22.0], faceLight: [10.95, .9, 24.7], fov: 56, map: [10.4, 28.2],
       note: 'The kitchen, the dining table and this sitting area share one long room, with butcher-block shelves over the built-in cabinets and large windows along one side.'}};
   const ORDER = ['entry', 'living', 'kitchen', 'coffee', 'great'];
   // walkable graph (x, z at eye height). Plain nodes are corners of the route. Every edge was ray-cast in the model at ankle, knee,
