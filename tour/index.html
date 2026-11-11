@@ -1559,6 +1559,8 @@ html.hwload .loading span{color:#ffb04a}
 html.hwload .loading .loadnote{color:#c9bcd8}
 .perfpill{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:25;background:var(--paper);color:var(--muted);
   font-family:var(--f-data);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-radius:999px;box-shadow:0 2px 12px rgba(0,0,0,.18);pointer-events:none}
+/* r38: a status pill is always one line that hugs its words, whatever top/bottom a later rule gives it */
+.perfpill{box-sizing:border-box;width:max-content;max-height:44px;max-width:calc(100vw - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
 </style><style>
 /* ===== v27 ui27: frosted glass palette, View menu, compact card, auto-hide, clean view (patch_v27_ui) ===== */
 /* normal theme (light, warm): beats the dark-scheme :root:not([data-theme=light]) block (0,2,0) so the UI is light glass everywhere */
@@ -20879,7 +20881,10 @@ const SELL36 = window.SELL36 = (() => {
     '.bks36 .bkb36:active{background:#654d2c}' +
     /* what sat just under the phone header moves down by the height of that line */
     'html.ph.bks36on .ovtag,html.ph.bks36on .qhint{top:calc(max(6px, env(safe-area-inset-top,0px)) + 106px)}' +
-    'html.ph.bks36on .ideas35,html.ph.bks36on .perfpill{top:calc(max(6px, env(safe-area-inset-top,0px)) + 104px)}' +
+    'html.ph.bks36on .ideas35{top:calc(max(6px, env(safe-area-inset-top,0px)) + 104px)}' +
+    /* r38 owner 11/11: the status pill took this top and kept its phone bottom, so it stretched into a tall translucent capsule over the house. One line, right under the booking line */
+    'html.ph.bks36on .perfpill,html.ph.bks36on.phdoll .perfpill{top:calc(var(--bar36,53px) + 50px);bottom:auto}' +
+    'html.ph.bks36on.ideas35on .perfpill{top:calc(var(--bar36,53px) + 104px)}' +
     'html.ph.bks36on.ideas35on .qhint{top:calc(max(6px, env(safe-area-inset-top,0px)) + 166px)}' +
     'html.ph.bks36on .qrow{top:calc(max(6px, env(safe-area-inset-top,0px)) + 96px);max-height:calc(100% - max(6px, env(safe-area-inset-top,0px)) - 96px - max(var(--gut), env(safe-area-inset-bottom,0px)))}' +
     'html.ph.bks36on .gallery{padding-top:calc(max(6px, env(safe-area-inset-top,0px)) + 108px)}' +
