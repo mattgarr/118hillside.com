@@ -88,7 +88,7 @@
     if(r.at) p = r.at.slice();
     else if(r.op){ const op = opening(r.op); if(op){ const y = r.y != null ? GEO[slot].fy + r.y : (op.o.sill + op.o.head) / 2, v = op.P(0, y, .35); p = [v.x, v.y, v.z]; } }
     else if(r.sky){ const st = standOf(slot); let best = null;   // the skylight you can see best from where you stand: near, but not right overhead
-      for(const id of r.sky){ const it = skyItem(id), q = it && it.rects && it.rects[0]; if(!q) continue; const d = Math.hypot(q.c.x - st.pos[0], q.c.z - st.pos[2]), sc = Math.abs(d - 3.4); if(!best || sc < best.sc) best = {sc, c: q.c}; }   // a skylight up a well is only seen from nearly under it
+      for(const id of r.sky){ const it = skyItem(id), q = it && it.rects && it.rects[0]; if(!q) continue; const d = Math.hypot(q.c.x - st.pos[0], q.c.z - st.pos[2]), sc = Math.abs(d - 2.2); if(!best || sc < best.sc) best = {sc, c: q.c}; }   // the glass at the top of a well is only seen from nearly under it
       if(best) p = [best.c.x, best.c.y - .4, best.c.z]; }
     if(!p) p = [GEO[slot].c[0], GEO[slot].fy + 6.5, GEO[slot].c[1]]; r._at = p; return p; }
   const NOTE_TXT = {bath: 'A bath of its own', door: 'A door straight outside', sky: 'Skylights', film: 'Rainbow film on a window', 'view:oak': 'Looks at the old oak', 'view:terrace': 'Looks onto the terrace',
@@ -109,6 +109,7 @@
     if(force || now - todAt > 420) go(); else todTimer = setTimeout(go, 200); }
   // how much of the sun reaches one opening at an hour (0..1): from the rays cast in the model, half-hourly from 7:00
   function litOf(str, h){ if(!str) return 1; const x = clamp((h - H0) * 2, 0, str.length - 1), i = Math.floor(x), f = x - i, a = +str[i] / 9, b = +str[Math.min(str.length - 1, i + 1)] / 9; return lerp(a, b, f); }
+  const SKY_NOON = lin('#4a9fee'), SKY_LOW = lin('#f2b27a');   // what a skylight shows from inside: midday blue, warm when the sun is low
   const SUN = {rooms: {}, cur: null,
     // every opening of a room that the sun can come through: its glass as a quad, which way it faces, and its measured share of sun
     openings(slot){ const out = [], D = (DATA.sun || {})[slot] || [];
@@ -143,10 +144,10 @@
         // a plain sky-coloured sheet just outside its glass, shown only while you stand in the room
         if(o.sky && o.rn){ const up = o.rn.clone().multiplyScalar(-.3), b = []; for(const i of [0, 1, 2, 0, 2, 3]) b.push(q[i].x + up.x, q[i].y + up.y, q[i].z + up.z);
           const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(b, 3));
-          o.pane = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({color: 0xa9d3f5, toneMapped: false, fog: false, side: THREE.DoubleSide})); o.pane.raycast = () => {}; o.pane.visible = false; o.pane.name = 'rfe-skypane'; H.scene.add(o.pane); } }
+          o.pane = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({color: SKY_NOON.clone(), toneMapped: false, fog: false, side: THREE.DoubleSide})); o.pane.raycast = () => {}; o.pane.visible = false; o.pane.name = 'rfe-skypane'; H.scene.add(o.pane); } }
       const api = {slot, mesh, O, level: 0,
         update(){ const s = sunAt(S.hour), d = s.v, low = 1 - Math.min(1, d.y / .5); g.clearRect(0, 0, cv.width, cv.height); let any = 0;
-          for(const o of O) if(o.pane){ o.pane.visible = S.view === 'room'; o.pane.material.color.setRGB(lerp(.6, .98, low * low), lerp(.8, .82, low * low), lerp(.98, .66, low * low)); }
+          for(const o of O) if(o.pane){ o.pane.visible = S.view === 'room'; o.pane.material.color.copy(SKY_NOON).lerp(SKY_LOW, low * low); }
           const proj = v => { const t = (v.y - fy) / Math.max(.02, d.y); return new V3(v.x - d.x * t, fy, v.z - d.z * t); };
           for(const o of O){ const k = SUN.strength(o, S.hour); o.s = k; const lit = k >= .3 && S.view === 'room'; o.glow.visible = lit; o.glow.material.opacity = lit ? k * (o.film ? .5 : .32) : 0; if(k < .3) continue; any = Math.max(any, k); const q = o.quad.map(proj).map(px);
             g.save(); g.globalAlpha = k; g.beginPath(); q.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath();
@@ -902,7 +903,7 @@
   /* ================================================================== going into a room and coming back out */
   function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
   function reframe(){ const s = rig.st, F = freeRect(); s.offX = ((F.l + F.r) / 2) / F.W - .5; s.offY = phone() ? ((F.t + F.b) / 2) / F.Hh - .5 : 0; rig.sig = ''; }
-  function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(64); s.zoom = 1; s.slow = false; S.lookBack = 0; }
+  function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(68); s.zoom = 1; s.slow = false; S.lookBack = 0; }
   function peekPose(slot){ const G = GEO[slot], o = rig.orb, dx = Math.sin(o.th), dz = Math.cos(o.th); return {pos: [G.c[0] + dx * 13, G.fy + 30, G.c[1] + dz * 13], at: [G.c[0], G.fy + 1, G.c[1]], fov: 42, off: rig.off.slice()}; }
   function enter(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'over') return; S.busy = true; S.sel = null; tip(''); closeMenus(); SND.dive(); ga('rfe3d_enter', {room: slot});
     if(!S.t0) S.t0 = performance.now(); if(covered(slot)) setUpper(!S.upperOn, true);
@@ -929,8 +930,8 @@
   const turned = () => { if(S.view !== 'room' || !S.room) return false; const s = rig.st, v = standView(S.room); return Math.abs(angDiff(s.tyaw, v.yaw)) > .6 || Math.abs(s.tpitch - v.pitch) > .3 || s.zoom < .95; };
   function faceRoom(){ if(S.view !== 'room' || !S.room || S.busy || rig.move) return; const s = rig.st, v = standView(S.room); s.tyaw = s.yaw + angDiff(s.yaw, v.yaw); s.tpitch = v.pitch; s.zoom = 1; s.slow = true; S.lookBack = 0; S.lastAct = performance.now(); SND.tap(); }
   function faceStep(now){ if(S.view !== 'room') return; const e = $('#rfeFace'); if(!e) return;
-    // a look up at a skylight settles back to level by itself, unless you have taken hold of the view since
-    if(S.lookBack && now > S.lookBack){ S.lookBack = 0; const s = rig.st; s.tpitch = standView(S.room).pitch; s.zoom = 1; s.slow = true; }
+    // a look up at a skylight settles back to the way you came in by itself, unless you have taken hold of the view since
+    if(S.lookBack && now > S.lookBack){ S.lookBack = 0; const s = rig.st, v = standView(S.room); s.tyaw = s.yaw + angDiff(s.yaw, v.yaw); s.tpitch = v.pitch; s.zoom = 1; s.slow = true; }
     const f = facing(), off = turned(), key = f.text + '|' + Math.round(f.b / 2) + '|' + off; if(key === UI.faceKey) return; UI.faceKey = key;
     $('#rfeFaceT').textContent = f.text; const n = e.querySelector('g'); if(n) n.setAttribute('transform', 'rotate(' + (-f.b).toFixed(0) + ' 12 12)');
     e.classList.toggle('off', off); e.setAttribute('aria-label', f.text + (off ? '. Turn back to the way you came in.' : '')); }
@@ -1101,7 +1102,9 @@
     // the clearest place to stand in a room, and a clear spot for a game piece
     stand(slot, solids, step){ solids = solids || dev.solids(); const G = GEO[slot], rc = new THREE.Raycaster(), cand = [], D = []; for(let i = 0; i < 8; i++) D.push(new V3(Math.cos(i * Math.PI / 4), 0, Math.sin(i * Math.PI / 4)));
       const clr = (x, z, hs, cap) => { let m = cap; for(const h of hs){ const o = new V3(x, G.fy + h, z); for(const d of D){ rc.set(o, d); rc.far = m; const hit = rc.intersectObjects(solids, false)[0]; if(hit) m = Math.min(m, hit.distance); if(m < 1) return m; } } return m; };
-      step = step || 1.4; for(let x = G.bb[0] + 1.4; x < G.bb[2] - 1.3; x += step) for(let z = G.bb[1] + 1.4; z < G.bb[3] - 1.3; z += step){ if(!inPoly(x, z, G.P)) continue; const c = clr(x, z, [1.2, 4.6], 5); if(c >= 1) cand.push({x: +x.toFixed(2), z: +z.toFixed(2), c: +c.toFixed(2)}); }
+      // you must be standing on the floor: a ray dropped from eye height, here and a step to each side, has to reach it (a spot on a bed reads as clear to the side rays, which start inside the mattress)
+      const DN = new V3(0, -1, 0), floor = (x, z) => { for(const [dx, dz] of [[0, 0], [.7, 0], [-.7, 0], [0, .7], [0, -.7]]){ rc.set(new V3(x + dx, G.fy + 5.2, z + dz), DN); rc.far = 8; const hit = rc.intersectObjects(solids, false)[0]; if(!hit || hit.point.y - G.fy > .35) return false; } return true; };
+      step = step || 1.4; for(let x = G.bb[0] + 1.4; x < G.bb[2] - 1.3; x += step) for(let z = G.bb[1] + 1.4; z < G.bb[3] - 1.3; z += step){ if(!inPoly(x, z, G.P) || !floor(x, z)) continue; const c = clr(x, z, [1.2, 4.6], 5); if(c >= 1) cand.push({x: +x.toFixed(2), z: +z.toFixed(2), c: +c.toFixed(2)}); }
       cand.sort((a, b) => b.c - a.c); return cand; },
     // is there a clear line from where you stand to each thing worth a look
     los(solids){ solids = solids || dev.solids(); const rc = new THREE.Raycaster(), out = {}; for(const slot of ORDER){ const st = standOf(slot), o = new V3(...st.pos); out[slot] = (RINGS[slot] || []).map(q => { const at = new V3(...ringAt(slot, q)), d = at.clone().sub(o), L = d.length(); rc.set(o, d.normalize()); rc.far = L - .4; const hit = rc.intersectObjects(solids, false)[0];
