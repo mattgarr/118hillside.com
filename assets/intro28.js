@@ -14,7 +14,7 @@
     ['front-exterior-1600.jpg', '118 Hillside Drive', 'A house in Woodside Glens, about a mile from the market, the bakery and the library in Town Center.'],
     ['entry-1600.jpg', 'Straight through to the oak', 'The iron-and-glass front doors open onto a foyer with a cathedral ceiling. The heritage oak is framed in the glass at the far end.'],
     ['living-room-1600.jpg', 'Beams over the living room', 'Exposed wood beams cross the vaulted ceiling, and the large windows look out to the trees.'],
-    ['dining-1600.jpg', 'A wall of glass', 'The dining table sits beside it, looking out to the oak at the front of the house.'],
+    ['dining-1600.jpg', 'Large front windows', 'The dining table sits beside them, looking out to the oak at the front of the house.'],
     ['kitchen-1180.jpg', 'The white kitchen', 'Quartz counters, a long peninsula, and a coffee bar with its own drinks fridge.'],
     ['rec-room-1180.jpg', 'The bonus lounge', 'Downstairs, with a refreshment counter, a beverage cooler and a 65-inch TV.'],
     ['primary-bedroom-1172.jpg', 'The primary suite', 'Upstairs, under four skylights, with a balcony that faces the western hills.'],
