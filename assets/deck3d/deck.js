@@ -31,14 +31,14 @@
      fit: [[33.7, 7.9, 38.2], [18.4, 14.6, 38.2], [3.2, 7.9, 38.2], [-26.7, 5.5, 23.7], [-18, 10.9, 23.7], [-17.9, 18.6, -1.1], [-26.3, 13.4, -1.1]]},
     {id: 'door', label: 'Front door', pos: [-5.0, 4.6, 38], look: [-5.4, 2.0, 10], posP: [-5.2, 5.2, 44], lookP: [-5.4, 2.4, 10], cat: [-1.5, 13.4], say: 'The doors next. Everyone who arrives ends up standing right here.', sections: ['door', 'hang', 'path'],
      fit: [[-10.6, 8.4, 6.3], [3.9, 8.4, 6.3], [-10.6, -3.4, 24], [3.9, 3.3, 15.6], [-5, -3.4, 26]]},
-    {id: 'windows', label: 'Windows', pos: [-9.5, 2.4, 33], look: [2.5, 4.2, 11], posP: [-10, 2.6, 37], lookP: [2.5, 4.6, 11], cat: [-8.2, 14.2], say: 'Now the windows. This is what the whole street sees.', sections: ['win'],
-     fit: [[4.2, 6.2, 30.5], [4.2, .6, 30.5], [3.2, 7.4, 6.4], [-10.2, 5.2, 3.6], [-10.2, .1, 5]]},
+    {id: 'windows', label: 'Windows', pos: [-8.5, 2.4, 40.5], look: [0, 3, 12], cat: [-4, 24], say: 'Now the windows. This is what the whole street sees.', sections: ['win'],
+     fit: [[-10.5, 5.2, 4.7], [-10.5, 0, 4.7], [4.2, 5.8, 29.6], [4.2, .8, 29.6], [2.4, 5.2, 5.5]]},
     {id: 'living', label: 'Living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9], cat: [10.7, -3.2], say: 'Inside now. This is where I spend most of my evenings.', sections: ['tree', 'room'],
      fit: [[-3.2, 7.6, -5.2], [-6.2, .1, -5.6], [9, 8.5, -6], [9.4, .1, 1.2], [2.5, .1, -3.3]]},
     {id: 'terrace', label: 'Terrace', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5], cat: [9.5, -39.5], say: 'Out back. Dinner is on the terrace tonight.', sections: ['ter'],
      fit: [[-9.6, 5.4, -37.3], [8.3, 5, -27], [.7, -4.4, -25.6], [3.8, -4.4, -51.2], [-6, -1, -44]]},
-    {id: 'oak', label: 'The oak', pos: [33, 0, -60], look: [8.3, 9, -27], posP: [38, 0, -66], lookP: [8.3, 10, -27], cat: [13, -32.5], say: 'Last, the oak. It is the biggest thing here and it has never been decorated.', sections: ['oak', 'wear'],
-     fit: [[8.3, -4.4, -27], [8.3, 27, -30], [-12, 16, -30], [29, 16, -30]]}];
+    {id: 'oak', label: 'The oak', pos: [35, 2, -47], look: [8.3, 9, -27], cat: [14, -33], say: 'Last, the oak. It is the biggest thing here and it has never been decorated.', sections: ['oak', 'wear'],
+     fit: [[8.3, -4.4, -27], [8.3, 26, -30], [-9, 15, -30], [26, 15, -28]]}];
   const EXTRA = [   // more places to stand once the house is lit
     {id: 'walk', label: 'Front walk', pos: [-1.5, 2.6, 49], look: [-2.5, 6.2, 14], posP: [-1.5, 2.8, 56], lookP: [-2.5, 7, 14], cat: [-3.4, 36.5]},
     {id: 'dining', label: 'Dining room', inside: true, pos: [16.2, 5, 30.5], look: [6, 4, 22.5], cat: [8.6, 26.4]},
