@@ -74,8 +74,8 @@
     balcony: {name: 'Balcony', floor: 'upper', pos: [-17.7, L2 + EYE, -41.7], face: [-23.2, 10.2, -47.4], map: [-17.7, -44],
       note: 'A private balcony off the primary bedroom that looks west over the hills.'}};
   const CATSAYS = {lounge: 'Movie night is down here. I get the good pouf.', office: 'The door shuts. I have opinions about that.', porch: 'I watch the front walk from the window. Nobody gets past me.',
-    entry: 'Everyone who comes in looks up, then straight through at the oak.', living: 'The beams are a hundred years old. I have climbed none of them. Yet.', kitchen: 'Four doors on that fridge and I cannot open one of them.',
-    coffee: 'They call this the coffee bar. I call it the cupboard with the treats.', great: 'The sofa is mine from nine until five.', loft: 'Top of the stairs. Best place to watch everybody.', primary: 'I am not allowed on this bed. I am on it most days.', balcony: 'I watch birds from here. They know.'};
+    entry: 'Come in, look up, then straight through the glass to the oak.', living: 'The beams are a hundred years old. I have climbed none of them. Yet.', kitchen: 'Four doors on that fridge and I cannot open one of them.',
+    coffee: 'This is the coffee bar. I call it the cupboard with the treats.', great: 'The sofa is mine from nine until five.', loft: 'Top of the stairs. Best place to watch the whole house.', primary: 'Four skylights over this bed. I have napped under each one.', balcony: 'I watch birds from here. They know.'};
   const ORDER = ['table', 'lounge', 'office', 'porch', 'entry', 'living', 'kitchen', 'coffee', 'great', 'loft', 'primary', 'balcony'];
   const FLOORS = [['upper', 'Upstairs', /^SP-L2-/], ['main', 'Main floor', /^SP-L1-/], ['lower', 'Downstairs', /^SP-L0-/]];
   // walkable graph: the main-floor edges are the ones escape.js ray-checked; the rest were ray-checked the same way (FEAST3D.audit()).
