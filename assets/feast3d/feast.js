@@ -47,17 +47,17 @@
       note: 'A big screen, a drinks counter with its own fridge, and stacking glass doors that open straight onto the terrace.'},
     office:  {name: 'Office', floor: 'lower', pos: [-27.8, L0 + EYE, -10.6], face: [-24.3, -1.9, -8.0], map: [-27, -7.5],
       note: 'A quiet room downstairs with a door that shuts, lit from above by two skylights.'},
-    porch:   {name: 'Front porch', floor: 'main', pos: [-3.2, EYE, 9.6], face: [1.2, 2.0, 9.0], map: [-3.5, 10.5],
+    porch:   {name: 'Front porch', floor: 'main', pos: [-6.4, EYE, 5.4], face: [0.4, 2.3, 12.6], map: [-8.5, 12.5],
       note: 'The front deck, with two loungers that look down the paver walk to Hillside Drive.'},
-    entry:   {name: 'Entry', floor: 'main', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-6.5, -2.3],
+    entry:   {name: 'Entry', floor: 'main', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-5.5, -5.2],
       note: 'A cathedral ceiling, a starburst light, and iron-and-glass doors at both ends. The oak is straight ahead.'},
-    living:  {name: 'Living room', floor: 'main', pos: [1.8, EYE, -3.6], face: [8.5, 3.1, -3.0], map: [5.5, -3.4],
+    living:  {name: 'Living room', floor: 'main', pos: [1.8, EYE, -3.6], face: [8.5, 3.1, -3.0], map: [7.5, -3.4],
       note: 'Fir beams cross the vaulted ceiling. This room is part of the original 1920s house.'},
-    kitchen: {name: 'Kitchen', floor: 'main', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [10.5, 10.4],
+    kitchen: {name: 'Kitchen', floor: 'main', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [9.0, 11.6],
       note: 'Quartz counters, a long peninsula, a gas range under a glass hood, and a pantry beside the big fridge.'},
-    coffee:  {name: 'Coffee bar', floor: 'main', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [20.2, 8.6],
+    coffee:  {name: 'Coffee bar', floor: 'main', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [21.4, 8.8],
       note: 'A coffee bar tucked in beside the kitchen, with a drinks fridge under the counter and a microwave above it.'},
-    great:   {name: 'Great room', floor: 'main', pos: [11.2, EYE, 31.95], face: [10.7, 3.3, 22.0], fov: 56, map: [10.4, 28.6],
+    great:   {name: 'Great room', floor: 'main', pos: [11.2, EYE, 31.95], face: [10.7, 3.3, 22.0], fov: 56, map: [10.4, 29.5],
       note: 'The kitchen, the dining table and this sitting area share one long room with a wall of glass.'},
     loft:    {name: 'Loft', floor: 'upper', pos: [-19.5, L2 + EYE, -11.5], face: [-23.6, 8.2, -6.2], map: [-21.3, -8],
       note: 'A sitting area at the top of the stairs, with cable railings and skylights overhead.'},
@@ -84,7 +84,7 @@
     table:   [{to: 'lounge', at: [-9.6, -2.6, -18.9]}, {to: 'entry', at: [-5.4, -1.0, -13.6], label: 'Up the steps to the entry'}],
     lounge:  [{to: 'table', at: [-9.2, -2.9, -19.6]}, {to: 'office', at: [-22.3, -2.4, -14.4]}, {to: 'entry', at: [-20.9, -2.2, -12.8], label: 'Upstairs to the entry'}],
     office:  [{to: 'lounge', at: [-24.9, -2.3, -12.3]}],
-    porch:   [{to: 'entry', at: [-5.7, 3.4, 3.4]}],
+    porch:   [{to: 'entry', at: [-5.7, 3.6, 3.2]}],
     entry:   [{to: 'living', at: [0.4, 2.6, -3.0]}, {to: 'porch', at: [-5.7, 3.2, 2.8]}, {to: 'table', at: [-5.7, 3.0, -7.4], label: 'Out to the terrace'}, {to: 'loft', at: [-10.6, 4.4, -5.4], label: 'Upstairs to the loft'}, {to: 'lounge', at: [-10.6, 1.6, -2.0], label: 'Downstairs to the lounge'}],
     living:  [{to: 'entry', at: [-3.4, 2.4, -1.6]}, {to: 'kitchen', at: [12.7, 3.3, 4.7]}],
     kitchen: [{to: 'living', at: [12.75, 3.2, 5.3]}, {to: 'coffee', at: [17.0, 2.6, 9.7]}, {to: 'great', at: [15.7, 2.2, 18.2]}],
@@ -225,7 +225,7 @@
   const PLURAL = {candles: 1, rolls: 1, potatoes: 1};
   // what is on the shelves of the two drinks fridges, front row, door side: [from, to] along the shelf, and the shelf heights
   const STOCK = {coolerLounge: {a: [-21.42, -23.2], b: [-21.42, -22.0], ys: [-3.83, -3.19, -2.55], kind: 'soda'}, coolerCoffee: {a: [19.02, 12.1], b: [20.25, 12.1], ys: [.73, 1.37, 2.01], kind: 'milk'}};
-  const TABLE = [-2.6, -2.27, -43.7];
+  const TABLE = [-2.6, -2.27, -43.7], CHAIR = [2.0, -2.98, -43.7];   // the table top, and the seat of the chair at its near end
 
   /* ================================================================== state */
   const S = {started: false, done: false, t0: 0, tEnd: 0, hints: 0, peeks: 0, phase: 'boot', step: 0, place: null, ex: null, busy: false, carry: null, tried: {}, knocked: {}, hot: null,
@@ -432,11 +432,11 @@
     const T = new THREE.Group(); T.name = 'feast-table'; T.position.set(TABLE[0], TABLE[1], TABLE[2]); P.root.add(T); PROP.table = T;
     T.add(P.runner(6.7, 1.3));
     for(const s of [-1, 1]) [-2.75, -1.05, 1.05, 2.75].forEach((x, i) => { const st = P.setting(s > 0); st.position.set(x, .004, s * 1.22); st.rotation.y = s > 0 ? 0 : Math.PI; T.add(st); SETTINGS.push(st); });
-    const pk = [['#d9772b', .19, -3.36, .38], ['#efe6d2', .14, -3.3, -.42], ['#9aa884', .13, 3.3, .1], ['#d9772b', .12, .98, .42], ['#efe6d2', .11, -.98, -.42]];
+    const pk = [['#d9772b', .19, -3.36, .38], ['#efe6d2', .14, -3.3, -.42], ['#9aa884', .12, 3.38, -.3], ['#d9772b', .12, .98, .42], ['#efe6d2', .11, -.98, -.42]];
     for(const [hex, r, x, z] of pk){ const p = P.pumpkin(r, hex); p.position.set(x, .012, z); p.rotation.y = x * 2; T.add(p); }
     [['#b5471d', -2.2, .48], ['#c98a12', -1.3, -.5], ['#8c2b3d', 1.35, .5], ['#c98a12', 2.3, -.46], ['#b5471d', .5, -.5], ['#8c2b3d', -.45, .52], ['#c98a12', 3.05, .42], ['#b5471d', -3.2, -.1]].forEach(([hex, x, z], i) => { const l = P.leaf(hex, .2 + (i % 3) * .03); l.position.set(x, .02, z); l.rotation.z = i * 1.1; T.add(l); });
     // the twins' note: a kraft tag lying on the runner by the near end of the table
-    noteProp = P.tag('?', true); noteProp.rotation.set(-Math.PI / 2, 0, .35); noteProp.position.set(3.2, .03, .08); T.add(noteProp);
+    noteProp = P.tag('?', true); noteProp.rotation.set(-Math.PI / 2, 0, .35); noteProp.position.set(3.2, .03, .3); T.add(noteProp);
     // the string for the letter tags, across the table, hung from the pergola
     BUNT = P.bunting([-3.2, 2.05, -47.5], [-2.4, 2.05, -39.9], .45, 6); P.root.add(BUNT);
     for(const e of [[-3.2, -47.5], [-2.4, -39.9]]){ const s = P.mesh(new THREE.CylinderGeometry(.008, .008, 3.0, 4), P.std('#b5894e', {roughness: 1}), e[0], 2.05 + 1.5, e[1]); P.root.add(s); }
@@ -649,6 +649,7 @@
   #feBack{position:absolute;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));display:none;box-shadow:0 8px 30px rgba(15,20,35,.25);min-height:52px;font-size:16px}
   #feToast{position:absolute;left:50%;top:15%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.5px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 40px);text-align:center}
   #feToast.on{opacity:1;transform:translate(-50%,0)}
+  #feRoot #feGuest{pointer-events:none}
   #feGuest{position:absolute;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 10px);transform:translate(-50%,14px);width:min(500px,calc(100% - 24px));padding:13px 16px;display:flex;gap:12px;align-items:center;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none}
   #feGuest.on{opacity:1;transform:translate(-50%,0)}
   #feGuest .av{flex:none;width:46px;height:46px;border-radius:50%;color:#fff;font-weight:500;font-size:16px;display:grid;place-items:center}
@@ -693,11 +694,11 @@
     #fePlace{position:fixed;left:10px;right:10px;max-width:520px;margin:0 auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 70px);padding:8px 14px 10px}#fePlace b{font-size:22px}#fePlace span{font-size:13.5px}
     #feDock{align-items:center;gap:8px;padding-left:10px;padding-right:10px}
     #feMapWrap{flex:none;flex-direction:row}#feMapBtn{display:inline-flex}
-    #feMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(350px,calc(100% - 20px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
+    #feMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:min(370px,calc(100% - 16px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
     #feMap.on{display:block}#feMap .plan{width:100%;height:0;padding-bottom:70%}#feMap .pl{font-size:13.5px;padding:7px 11px}#feMap .tabs button{min-height:42px;font-size:14px}
     #feMapX{display:grid;position:absolute;right:6px;top:4px;width:44px;height:44px;border:0;background:none;place-items:center;font-size:24px;color:var(--mut)}
     #feTags{justify-content:flex-end;gap:4px;padding-bottom:0}#feTags i{width:30px;height:40px;font-size:25px;line-height:44px}
-    #feCoach{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 70px);font-size:14.5px}
+    #feCoach{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 166px);font-size:14.5px}
     #feSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:560px;margin:0 auto;max-height:58vh;transform:translateY(20px);padding:16px 16px 14px}
     #feSheet.on{transform:none}#feSheet h3{font-size:24px}#feSheet p{font-size:15.5px}.feTagCard{font-size:20px}#feSheet .row{margin:10px -16px -14px;padding:8px 16px 14px;bottom:-14px}
     html.fe-ex #feDock{visibility:hidden}html.fe-ex #feBack{display:none}
@@ -817,7 +818,7 @@
   /* ---- the map: three floors drawn from the model's own room outlines */
   const MAP = {floor: 'lower', dots: {}, key: ''};
   function buildMap(){ const all = H.BIM2S.meta.spaces;
-    const polys = {}; for(const [fl, , re] of FLOORS){ polys[fl] = all.filter(s => re.test(s.id) || (fl === 'main' && /^SP-LG-/.test(s.id))).map(s => ({id: s.id, p: (s.poly || s.polygon).map(q => W2(q[0], q[1]))})); }
+    const polys = {}; for(const [fl, , re] of FLOORS){ polys[fl] = all.filter(s => re.test(s.id)).map(s => ({id: s.id, p: (s.poly || s.polygon).map(q => W2(q[0], q[1]))})); }
     polys.lower.push({id: 'terrace', out: true, p: [[-10.5, -52], [3.2, -52], [3.2, -37], [11, -37], [11, -13], [-10.5, -13]]});
     polys.upper.push({id: 'balcony', out: true, p: [[-22.6, -46.2], [-12.8, -46.2], [-12.8, -40.2], [-22.6, -40.2]]});
     polys.main.push({id: 'porch', out: true, p: [[-10.1, 3], [4, 3], [4, 15.7], [-10.1, 15.7]]});
@@ -997,7 +998,7 @@
     c.userData.sticks.forEach((st, i) => { const at = new V3(); st.getWorldPosition(at); at.y += st.userData.top; const f = P.flame(at, 1); flames.push(f); later(500 + i * 420, () => { SND.flame(i); tween(500, u => f.on(u)); }); });
     later(500, () => tween(2600, u => { candleLight.intensity = 1.5 * u; }));
     // the sun goes: the model's own dusk, with the house lights on
-    later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt([2.9, TER + .02, -41.9]); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
+    later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt(CHAIR); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
     later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.17] : [-.17, 0]}, {dur: 9}); });
     later(4600, () => { SND.bell(); guests(() => finish()); }); }
   const SHOT = () => aspect() < 1 ? {pos: [8.4, .7, -46.6], pos2: [7.2, .6, -46.2], look: [-2.4, -1.5, -43.3], fov: 80} : {pos: [8.3, .55, -47.1], pos2: [7.3, .5, -46.7], look: [-2.6, -1.3, -43.0], fov: 56};
@@ -1079,7 +1080,7 @@
     s0.onclick = () => { SND.setMuted(!SND.muted); d0(); UI.drawSnd(); if(!SND.muted) SND.goal(); }; d0(); try{ $('#feGo').focus({preventScroll: true}); }catch(e){}
     $('#feGo').onclick = () => { SND.unlock(); SND.tap(); $('#feGo').disabled = true; fadeThrough(() => { c.remove(); begin(); }, 420); }; }
   function begin(){ document.documentElement.classList.remove('fe-pre'); const p = standPose('table'); rigCut(PLACES.table.pos, p.yaw, p.pitch, p.fov); S.started = true; S.phase = 'intro'; S.t0 = S.lastProgress = performance.now(); ga('feast3d_start');
-    setGoal(true); arrive('table', true); catAt([4.6, TER + .02, -42.0]); }
+    setGoal(true); arrive('table', true); catAt(CHAIR); }
 
   /* ================================================================== frame loop */
   let lastT = performance.now();
