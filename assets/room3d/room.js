@@ -499,6 +499,7 @@
   .rfeLb.on{opacity:1;visibility:visible;transition:opacity .25s}
   .rfeLb .nm{display:inline-flex;align-items:center;gap:5px;background:rgba(20,26,44,.84);color:#fff;border-radius:999px;padding:5px 11px 5px 11px;font:500 13px/1.15 Jost,sans-serif;white-space:nowrap;box-shadow:0 3px 10px rgba(10,14,28,.3)}
   .rfeLb .nm i{font-style:normal;display:inline-flex;gap:2px;color:#ffd77a}.rfeLb .nm i svg{width:14px;height:14px}
+  .rfeLb .nm .oe{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;margin:-2px 1px -2px -7px;box-shadow:0 0 0 1.500px #fff}.rfeLb .nm .oe svg{width:14px;height:14px}
   .rfeLb .oc{display:block;margin:3px auto 0;width:max-content;background:var(--tape);color:var(--tapeink);font:400 16.500px/1 "Caveat Brush",Caveat,cursive;padding:4px 8px 5px;border-radius:2px;transform:rotate(-1.500deg);box-shadow:0 2px 4px rgba(10,14,28,.3)}
   .rfeLb .oc.t{background:#d6b98f;color:#45321c}
   .rfeLb.ghost .nm{background:rgba(20,26,44,.5);border:1px dashed rgba(255,255,255,.7);padding:4px 10px}
@@ -758,7 +759,8 @@
       b.onclick = e => { e.stopPropagation(); SND.unlock(); onRoom(id); }; b.onpointerenter = () => { S.hover = id; }; b.onpointerleave = () => { if(S.hover === id) S.hover = null; }; } }
   function drawLabels(){ if(!S.L) return; for(const id of ORDER){ const L = LB[id], sl = LG.SLOTS[id], occ = occupant(id), ghost = covered(id);
       const icons = noteIcons(id), cls = 'rfeLb' + (L.on ? ' on' : '') + (ghost ? ' ghost' : '') + (S.sel ? (fits(S.sel, id) ? ' can' : ' no') : '') + (S.hover === id ? ' hov' : '');
-      const html = `<span class="nm">${esc(sl.name)}${icons ? '<i>' + icons + '</i>' : ''}</span>` + (occ ? `<span class="oc${LG.GUESTS[occ].kind === 't' ? ' t' : ''}">${esc(shortOf(occ))}</span>` : '');
+      // who is in the room: a strip of tape under the name where there is space, the guest's own medallion inside the name on a phone (so names never jump about)
+      const ph = phone(), html = `<span class="nm">${occ && ph ? `<b class="oe" style="background:${LG.GUESTS[occ].col}">${gIco(occ)}</b>` : ''}${esc(sl.name)}${icons ? '<i>' + icons + '</i>' : ''}</span>` + (occ && !ph ? `<span class="oc${LG.GUESTS[occ].kind === 't' ? ' t' : ''}">${esc(shortOf(occ))}</span>` : '');
       if(L.html !== html){ L.b.innerHTML = html; L.html = html; L.w = 0; } if(L.b.className !== cls){ L.b.className = cls; L.w = 0; }
       L.b.setAttribute('aria-label', sl.name + ', ' + lvTxt(id) + (occ ? ', ' + nmOf(occ) : ', empty')); } }
   function noteIcons(id){ let s = ''; const N = SAVE.notes[id] || {}; if(SAVE.light[id]){ const sl = LG.SLOTS[id]; s += sl.none ? nIco('none') : (sl.am ? nIco('am') : '') + (sl.pm ? nIco('pm') : '') + (!sl.am && !sl.pm ? nIco('mid') : ''); }
@@ -771,10 +773,10 @@
     for(const id of ORDER){ const L = LB[id]; if((!show && S.view !== 'win') || (covered(id) && !occupant(id))){ if(L.on){ L.on = false; L.b.classList.remove('on'); } continue; }
       const G = GEO[id]; _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 14 : 4.5), G.c[1]).project(camera);
       const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z}); }
-    items.sort((a, b) => a.z - b.z);
-    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h; let x = clamp(it.x, F.l + w / 2 + 2, F.r - w / 2 - 2), y = clamp(it.y, F.t + h / 2, F.b - h / 2), n = 0;
-      const hit = q => !(x + w / 2 + 4 < q[0] || x - w / 2 - 4 > q[2] || y + h / 2 + 3 < q[1] || y - h / 2 - 3 > q[3]);
-      while(placed.some(hit) && n++ < 14){ y += (n % 2 ? 1 : -1) * n * 9; y = clamp(y, F.t + h / 2, F.b - h / 2); }
+    // each name goes as near its room as it can without covering another: tried in a fixed order and in small steps, so a name moves little when another changes
+    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, x = clamp(it.x, F.l + w / 2 + 2, F.r - w / 2 - 2), y0 = clamp(it.y, F.t + h / 2, F.b - h / 2); let y = y0;
+      const hit = yy => placed.some(q => !(x + w / 2 + 4 < q[0] || x - w / 2 - 4 > q[2] || yy + h / 2 + 2 < q[1] || yy - h / 2 - 2 > q[3]));
+      for(const dy of [0, 14, -14, 28, -28, 42, -42, 56]){ const yy = clamp(y0 + dy, F.t + h / 2, F.b - h / 2); if(!hit(yy)){ y = yy; break; } }
       placed.push([x - w / 2, y - h / 2, x + w / 2, y + h / 2]); L.x = x; L.y = y;
       L.b.style.transform = `translate(${(x - w / 2).toFixed(1)}px,${(y - h / 2).toFixed(1)}px)`; if(!L.on){ L.on = true; L.b.classList.add('on'); } } }
   // which room is under a point on the screen: a label first, then the floors you can see

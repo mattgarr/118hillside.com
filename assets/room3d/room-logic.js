@@ -67,7 +67,7 @@
       bio: 'Collects prisms, and anything else that throws a rainbow.', yay: 'Rainbows on the floor at six o’clock.'},
     dev:     {name: 'Dev', kind: 'p', col: '#3f7f9f', ico: 'laptop',
       bio: 'On call for work all weekend, laptop under one arm.', yay: 'Ten steps from the bed to the desk.'},
-    drums:   {name: 'Nico’s drums', short: 'The drums', kind: 't', col: '#2f8f6b', ico: 'drum', bio: 'Loud, and getting louder.', yay: 'A distant, happy thumping.'},
+    drums:   {name: 'Nico’s drums', short: 'The drums', pl: 1, kind: 't', col: '#2f8f6b', ico: 'drum', bio: 'Loud, and getting louder.', yay: 'A distant, happy thumping.'},
     biscuit: {name: 'Biscuit', kind: 't', col: '#a8773a', ico: 'dog', bio: 'Rosa and Luis’s dog. He needs to go out, often and urgently.', yay: 'Biscuit is already outside.'},
     desk:    {name: 'Dev’s desk', short: 'Dev’s desk', kind: 't', col: '#3f7f9f', ico: 'desk', bio: 'Two monitors and a folding table. He will be on calls.', yay: 'On mute, mostly.'},
     scope:   {name: 'Iris’s telescope', short: 'The telescope', kind: 't', col: '#5b4a9c', ico: 'scope', bio: 'Four feet long, and it does not travel well.', yay: 'Pointed at the sky.'},
