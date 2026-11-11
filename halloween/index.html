@@ -21072,7 +21072,7 @@ function f35ClipFlagstones(){   // F6: whole typed flagstones whose centre lies 
     const drop = new Set(); for(const [r, e] of acc){ stones++; const x = e[0] / e[2], z = e[1] / e[2]; if(SITE_RULES.polyD(Pw, x, z) < .5) drop.add(r); }
     if(!drop.size) return; const nx = ix.slice(); for(let t = 0; t < nx.length; t += 3) if(drop.has(find(id[nx[t]]))) nx[t + 1] = nx[t + 2] = nx[t];   // zero-area: index ranges stay as the model wrote them
     cut += drop.size; o.geometry = o.geometry.clone(); o.geometry.setIndex(new THREE.BufferAttribute(nx, 1)); });
-  F35.report.flagstones = cut + ' of ' + stones + ' stones dropped on the walk'; }
+  if(stones) F35.report.flagstones = cut + ' of ' + stones + ' stones dropped on the walk'; }
 function f35Build(){   // meshes on top of the painted cover; safe to call again after editing F35 (F35.rebuild())
   const land = grp('land'); for(const k of ['band', 'drainM']){ if(F35[k]){ land.remove(F35[k]); F35[k].geometry.dispose(); F35[k] = null; } }
   try{ F35.band = f35Band(); if(F35.band) land.add(F35.band); }catch(e){ console.warn('[front35] band', e); }
