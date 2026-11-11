@@ -21896,7 +21896,7 @@ function r36Grids(){
   const key = r36Key(); if(R36N.lv && key === R36N.key) return R36N.lv;
   const t0 = now; R36N.key = key; R36N.cache.clear(); navPassTag();
   const c = R36N.cell, B = dollBox(), X0 = Math.floor(B.min.x - 8), Z0 = Math.floor(B.min.z - 8), NX = Math.ceil((B.max.x + 8 - X0) / c), NZ = Math.ceil((B.max.z + 8 - Z0) / c), n = NX * NZ;
-  const LVS = [['lower', LV.lower], ['garage', LV.garage], ['main', LV.main], ['upper', LV.upper]].map(([name, L]) => ({name, L, base: new Uint8Array(n), blk: new Uint8Array(n), wb: new Uint8Array(n), st: new Uint8Array(n), fb: new Uint8Array(n), door: new Uint8Array(n), ok: new Uint8Array(n)}));
+  const LVS = [['lower', LV.lower], ['garage', LV.garage], ['main', LV.main], ['upper', LV.upper]].map(([name, L]) => ({name, L, base: new Uint8Array(n), blk: new Uint8Array(n), wb: new Uint8Array(n), st: new Uint8Array(n), sp: new Uint8Array(n), f1: new Uint8Array(n), fb: new Uint8Array(n), door: new Uint8Array(n), ok: new Uint8Array(n)}));
   const G = {X0, Z0, NX, NZ, c, LVS}, cx = i => X0 + (i + .5) * c, cz = j => Z0 + (j + .5) * c, ci = x => Math.floor((x - X0) / c), cj = z => Math.floor((z - Z0) / c);
   G.idx = (x, z) => { const i = ci(x), j = cj(z); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
   const doors = r36Doors(), dcoll = new Set(DOOR28.items.filter(it => it.coll).map(it => it.coll)), open = new Set(doors.map(it => it.coll));
@@ -21911,7 +21911,7 @@ function r36Grids(){
       for(let j = Math.max(0, cj(t.z0 - 3.5)); j <= Math.min(NZ - 1, cj(t.z1 + 3.5)); j++) for(let i = Math.max(0, ci(t.x0 - 3.5)); i <= Math.min(NX - 1, ci(t.x1 + 3.5)); i++){ const k = j * NX + i; if(!g.base[k] || g.st[k]) continue; const pp = {x: cx(i), z: cz(j)}; collide(pp, L); if(Math.abs(pp.x - cx(i)) + Math.abs(pp.z - cz(j)) < .03) g.st[k] = 1; } }
     try{ for(const s of BIM2S.spaces){ if(!r36Excl(s) || Math.abs(s.floorZ - L) > .6) continue; const P = s.poly || (s.raw && s.raw.polygon); if(!P) continue;
         let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9; for(const p of P){ a0 = Math.min(a0, p[1]); a1 = Math.max(a1, p[1]); b0 = Math.min(b0, p[0]); b1 = Math.max(b1, p[0]); }
-        for(let j = Math.max(0, cj(b0 - .3)); j <= Math.min(NZ - 1, cj(b1 + .3)); j++) for(let i = Math.max(0, ci(a0 - .3)); i <= Math.min(NX - 1, ci(a1 + .3)); i++) if(BIM2S.contains(s, cz(j), cx(i))) g.blk[j * NX + i] = 1; } }catch(e){}
+        for(let j = Math.max(0, cj(b0 - .3)); j <= Math.min(NZ - 1, cj(b1 + .3)); j++) for(let i = Math.max(0, ci(a0 - .3)); i <= Math.min(NX - 1, ci(a1 + .3)); i++) if(BIM2S.contains(s, cz(j), cx(i))) g.blk[j * NX + i] = g.sp[j * NX + i] = 1; } }catch(e){}
     for(const it of doors){ const q = it.coll; if(q.y1 <= L + .7 || q.y0 >= L + 5.6 || Math.abs(q.y0 - L) > 1.3) continue; const W = it.o.width || 3, ux = -it.n3.z, uz = it.n3.x, hw = Math.max(.3, W / 2 - .45);
       for(let a = -hw; a <= hw + 1e-6; a += .25) for(let d = -2; d <= 2 + 1e-6; d += .25){ const k = G.idx(it.c0[0] + ux * a + it.n3.x * d, it.c0[1] + uz * a + it.n3.z * d); if(k >= 0) g.door[k] = 1; } } }
   // furniture, cabinets, appliances, built-ins: every triangle that crosses a level's standing band marks the cells under its edges
@@ -21926,8 +21926,8 @@ function r36Grids(){
     for(const F of FIXOBJ){ if(!F.obj || (F.v && F.v !== ACTIVE_VAR)) continue; let vis = true; for(let o = F.obj; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) F.obj.traverseVisible(doMesh); }
     for(const m of (BIM2S.meshes || [])) if(/^builtins\|/.test(m.name || '')){ let vis = true; for(let o = m; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) doMesh(m); } }catch(e){ console.warn('[r36 nav] furniture', e); }
   const rr = Math.ceil(R36N.RF / c), disc = []; for(let dj = -rr; dj <= rr; dj++) for(let di = -rr; di <= rr; di++) if((di * di + dj * dj) * c * c <= R36N.RF * R36N.RF + .01) disc.push([di, dj]);
-  for(const g of LVS){ for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++) if(g.fb[j * NX + i]) for(const [di, dj] of disc){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ) g.blk[b * NX + a] = 1; }
-    const free = new Uint8Array(n); for(let k = 0; k < n; k++) free[k] = g.base[k] && (g.door[k] || (!g.blk[k] && (!g.wb[k] || g.st[k]))) ? 1 : 0;
+  for(const g of LVS){ for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++) if(g.fb[j * NX + i]) for(const [di, dj] of disc){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ){ g.blk[b * NX + a] = 1; if(Math.abs(di) + Math.abs(dj) <= 1) g.f1[b * NX + a] = 1; } }
+    const free = new Uint8Array(n); for(let k = 0; k < n; k++) free[k] = g.base[k] && (g.door[k] || (g.st[k] ? !g.f1[k] && !g.sp[k] : !g.blk[k] && !g.wb[k])) ? 1 : 0;   // by a stair, a basket or newel only blocks its own footprint
     // keep what joins a tour stop or a room marker on foot (level to level through the stair cells, which are not on any grid: seed every level)
     const st = [], seed = (x, z) => { let k = G.idx(x, z); if(k < 0) return; if(!free[k]){ let bd = 1e9, bk = -1; const i0 = ci(x), j0 = cj(z); for(let dj = -8; dj <= 8; dj++) for(let di = -8; di <= 8; di++){ const a = i0 + di, b = j0 + dj; if(a < 0 || b < 0 || a >= NX || b >= NZ || !free[b * NX + a]) continue; const d = di * di + dj * dj; if(d < bd){ bd = d; bk = b * NX + a; } } k = bk; } if(k >= 0 && !g.ok[k]){ g.ok[k] = 1; st.push(k); } };
     for(const s of STOPS){ if(s.aerial) continue; const fr = FRAME_FOR(s), f = walkSurfaceAt(fr.pos[0], fr.pos[2], fr.pos[1] - EYE + .6); if(Math.abs(f - g.L) < .6 || (LV[s.level] === g.L)) seed(fr.pos[0], fr.pos[2]); }
