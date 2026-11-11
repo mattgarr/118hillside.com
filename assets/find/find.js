@@ -53,16 +53,16 @@
       fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'I was keeping the bed warm.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
       spots: [{p: [22.5, 2.08, 29], n: 'on the bed', d: 1}, {p: [27, .03, 34], n: 'beside the white chair', d: 2}, {p: [27.5, .03, 29], n: 'on the far side of the bed', d: 2}, {p: [28, .03, 26], n: 'by the far bedside table', d: 2}, {p: [28, .03, 35], n: 'behind the white chair', d: 3}]},
     loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/p37.jpg', big: 'photos/p37.jpg', ar: .667, grp: 'loft', fy: 5.57, cam: [[.84, .72, 'the triangle windows'], [.62, .84, 'the triangle windows']],
-      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19.2, -15.2, 0, 180]],
+      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 299, 180, 20], [-19, -16.2, 0, 180]],
       spots: [{p: [-24, 7.06, -7.5], n: 'on the window seat', d: 1}, {p: [-18, 5.6, -4.5], n: 'at the top of the stairs, behind the railing', d: 2}, {p: [-18, 5.6, -18], n: 'down the upstairs hall', d: 2},
-        {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 3}]},
+        {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 2}]},
     primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: 'suite', fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
       fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'The big bed is the best bed.', v: [[-12.8, -33.5, 274, 215, 20], [-16.6, -38.4, 20, 320]],
       spots: [{p: [-18.5, 7.66, -31], n: 'on the big bed', d: 1}, {p: [-19.5, 5.63, -38], n: 'at the corner of the big bed', d: 2}, {p: [-9.5, 5.6, -28.5], n: 'behind the dresser', d: 2},
         {p: [-21.5, 5.63, -37.5], n: 'between the bed and the balcony doors', d: 3}, {p: [-21, 5.63, -29], n: 'on the far side of the big bed', d: 3}]},
     pbath:   {name: 'Primary bath', at: 'in the primary bath', photo: '../images/primary-bath-800.jpg', ar: .68, grp: 'pbath', fy: 5.57, cam: [[.88, .36, 'the brass shower'], [.2, .62, 'the towels on their rings']],
       fact: 'Heated floors, two sinks, and a shower big enough for two.', say: 'The floor in here is warm.', v: [[-13.5, -22, 180, 27, 100]],
-      spots: [{p: [-10, 8.43, -25.1], n: 'on the bathroom counter', d: 1}, {p: [-9.5, 5.6, -19.1], n: 'in the gap by the shower glass', d: 2}, {p: [-11.5, 5.6, -19.1], n: 'in the shower, behind the glass', d: 3}, {p: [-14, 5.6, -16.1], n: 'round the little wall by the shower', d: 3}]},
+      spots: [{p: [-10, 8.43, -25.1], n: 'on the bathroom counter', d: 1}, {p: [-9.5, 5.6, -19.1], n: 'in the gap by the shower glass', d: 1}, {p: [-11.5, 5.6, -19.1], n: 'in the shower, behind the glass', d: 2}, {p: [-14, 5.6, -16.1], n: 'round the little wall by the shower', d: 3}]},
     balcony: {name: 'Balcony', at: 'on the balcony', photo: '../images/hills-view-800.jpg', ar: .71, grp: 'suite', fy: 5.57, tod: 'golden', cam: [[.42, .34, 'the hills at sunset'], [.22, .52, 'the tall pine and the hills']],
       fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.8, -41.3, 250, 110, 180]],
       spots: [{p: [-20.5, 6.91, -44.5], n: 'on a balcony chair', d: 1}, {p: [-21.5, 5.6, -43.5], n: 'behind a balcony chair', d: 2}, {p: [-14, 5.6, -45.5], n: 'in the corner behind a balcony chair', d: 3}]},
@@ -177,7 +177,8 @@
   // Snowball hiding is a flat picture that stands upright and turns to face you (a sprite leans with your gaze, and would poke through whatever he is behind)
   function board(tex, w, h, name){ const g = new THREE.PlaneGeometry(1, 1); g.translate(0, .5, 0); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({map: tex, transparent: true, depthWrite: false, alphaTest: .04, side: THREE.DoubleSide}));
     m.scale.set(w, h, 1); m.name = name; m.renderOrder = 6; m.visible = false; m.frustumCulled = false; m.raycast = function(){}; m.userData.noAO = true;
-    m.onBeforeRender = function(){ this.rotation.y = Math.atan2(cam.position.x - this.position.x, cam.position.z - this.position.z); this.updateMatrixWorld(); }; H.scene.add(m); OBJ.push(m); return m; }
+    m.onBeforeRender = function(){ this.rotation.y = Math.atan2(cam.position.x - this.position.x, cam.position.z - this.position.z); this.updateMatrixWorld(); const k = clamp(1.02 / (H.renderer.toneMappingExposure || 1), .55, 1); this.material.color.setRGB(k, k, k); };   // he is drawn unlit, so the brighter exposure outdoors would bleach him
+    H.scene.add(m); OBJ.push(m); return m; }
   // the cardboard box he sometimes brings: open at the top, so his head shows over the rim
   function makeBox(){ const g = new THREE.Group(), card = new THREE.MeshStandardMaterial({color: 0xb98a55, roughness: .92}), dark = new THREE.MeshStandardMaterial({color: 0x86603a, roughness: 1}), W = 1.8, T = .06, HT = 1.12;
     const add = (geo, mat, x, y, z, ry, rx) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if(ry) m.rotation.y = ry; if(rx) m.rotation.x = rx; m.castShadow = m.receiveShadow = true; m.raycast = function(){}; g.add(m); };
@@ -552,7 +553,7 @@
     cam.getWorldDirection(_d); const across = (-_d.z) * Math.sin(yaw) + _d.x * Math.cos(yaw), right = across > 0, away = _d.x * Math.sin(yaw) + _d.z * Math.cos(yaw) > .8 && Math.abs(across) < .55;   // to the right of the screen, or straight away from you?
     for(const k of ['runA', 'runB']){ TEX[k].repeat.x = right ? 1 : -1; TEX[k].offset.x = right ? 0 : 1; }
     const FA = away ? TEX.backA : TEX.runA, FB = away ? TEX.backB : TEX.runB; if(away) RUN.scale.set(1.5, 1.88, 1); else RUN.scale.set(2.25, 1.2, 1);
-    RUN.material.map = FA; RUN.material.opacity = 1; RUN.visible = true; snd('patter', {n: Math.round(dur / 85)}); let laid = 0, side = 1;
+    RUN.material.map = FA; RUN.material.opacity = 1; RUN.material.color.copy(CAT.material.color); RUN.visible = true; snd('patter', {n: Math.round(dur / 85)}); let laid = 0, side = 1;
     (function f(){ if(dead) return; const k = Math.min(1, (performance.now() - t0) / dur); let dist = k * total, i = 0; while(i < seg.length - 1 && dist > seg[i]){ dist -= seg[i]; i++; }
       const u = seg[i] ? dist / seg[i] : 1; RUN.position.lerpVectors(pts[i], pts[i + 1], u); if(i === 0 && hopDown) RUN.position.y += Math.sin(u * Math.PI) * .7;
       RUN.material.map = Math.floor(k * dur / (away ? 130 : 105)) % 2 ? FB : FA; RUN.material.opacity = k > .82 ? (1 - k) / .18 : 1;
