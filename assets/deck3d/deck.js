@@ -163,7 +163,7 @@
     tree: s => ({fir: 'the noble fir by the glass doors', flocked: 'the white tree by the glass doors', pencil: 'the slim tree by the glass doors', olive: 'the olive tree in lights'})[s.tree],
     room: s => s.room.map(v => ({menorah: 'the menorah on the coffee table', kinara: 'the kinara on its mat', beams: 'the garland on the beams', poinsettia: 'the poinsettias by the sofa', rangoli: 'the rangoli and diyas by the doors', box: 'a box for Snowball'})[v]),
     ter: s => s.ter.map(v => ({bistro: 'the bistro lights over the table', luminarias: 'the luminarias along the pavers', lanterns: 'the lanterns on the table', smoker: 'the smoker going'})[v]),
-    oak: s => ({wrap: 'the lights around the oak trunk', branches: 'the lights up in the oak', both: 'the oak, lit from the trunk to the branches'})[s.oak]};
+    oak: s => ({wrap: 'the lights around the oak trunk', branches: 'the lights up in the oak', both: 'the oak lit from trunk to branches'})[s.oak]};
   const words = (keys, s, max) => { const out = []; keys.forEach(k => { const w = WORDS[k] && WORDS[k](s || S); [].concat(w || []).forEach(x => { if(x && out.length < (max || 3) && !out.includes(x)) out.push(x); }); }); return out; };
   const andList = a => a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
   const cap = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
@@ -503,7 +503,7 @@
   /* Snowball's last word: warm, and about what the player actually put up. No tally, nothing to fix. */
   function snowLine(story){ const w = words(['roof', 'door', 'tree', 'oak', 'ter', 'path', 'win', 'hang', 'room'], S, 6).filter(x => !/box for Snowball/.test(x)).slice(0, 3), box = S.room.includes('box');
     if(!w.length) return box ? 'You kept it simple and gave me a box. The house glows from the inside, and so do I.' : 'You kept it simple, and the house glows from the inside. I like it like this.';
-    return 'I keep looking at ' + andList(w) + '.' + (box ? ' And thank you for the box.' : story ? ' Company is going to love it.' : ' The whole street is going to slow down.'); }
+    return 'I keep looking at ' + andList(w) + '.' + (box ? ' And thank you for the box.' : story ? ' Company is going to love it.' : ' It looks like a holiday out here.'); }
   const openIdeas = () => { const o = []; ARRIVE.map(guest).forEach(g => g.needs.forEach(n => { if(!n.ok(S) && n.idea && !o.includes(n.idea)) o.push(n.idea); })); return o; };
   function result(){ PHASE = 'result'; $$('#dkArrive,#dkPhoto,#dkVF').forEach(e => e.remove()); dimUI(true); show('#dkTop', true); const story = MODE === 'story' && !shared, hp = story ? happy() : [], all = story && hp.length === GUESTS.length; if(story){ lastScore = hp.map(g => g.id); ga('deck_score', {happy: hp.length}); }
     if(PLACE.id !== 'street'){ PLACE = PLACES[0]; moveTo(PLACE); }
@@ -534,7 +534,7 @@
      then one frame is drawn and cut to exactly that rectangle. The caption names the place and only the decorations that are inside the frame. */
   const SEES = {street: ['roof', 'door', 'hang', 'path', 'win'], door: ['door', 'hang', 'path', 'win', 'roof'], windows: ['win', 'roof', 'door', 'path'], living: ['tree', 'room'], terrace: ['ter', 'oak'], oak: ['oak', 'ter'],
     walk: ['door', 'hang', 'path', 'roof', 'win'], dining: ['win'], tree: ['tree', 'room'], table: ['ter', 'oak'], corner: ['roof', 'door', 'hang', 'path', 'win']};
-  const PLACE_WORDS = {street: 'From the street', door: 'At the front doors', windows: 'The front windows', living: 'The living room', terrace: 'The terrace', oak: 'The oak out back', walk: 'Up the front walk', dining: 'The dining room', tree: 'By the tree', table: 'Under the oak', corner: 'From the corner'};
+  const PLACE_WORDS = {street: 'From the street', door: 'At the front doors', windows: 'The front windows', living: 'The living room', terrace: 'The terrace', oak: 'Out back', walk: 'Up the front walk', dining: 'The dining room', tree: 'By the tree', table: 'At the terrace table', corner: 'From the corner'};
   /* which of the place's decorations are really inside the viewfinder: sample the points each one is made of (light bulbs, flames, the centers of
      its pieces) and keep it if a few of them land in the frame, in front of the camera */
   function seen(v){ const cam = H.camera, cr = H.canvas.getBoundingClientRect(), x0 = v[0] / cr.width * 2 - 1, x1 = (v[0] + v[2]) / cr.width * 2 - 1, y1 = 1 - v[1] / cr.height * 2, y0 = 1 - (v[1] + v[3]) / cr.height * 2, q = new V3(), m4 = new THREE.Matrix4(), bb = new THREE.Box3();
