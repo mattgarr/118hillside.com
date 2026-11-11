@@ -259,10 +259,13 @@
   function catAt(p){ if(!P || !p.cat) return null; if(p.id === 'living' && S.room.includes('box')) return [P.BOX_AT[0], P.BOX_AT[1] + .12, P.BOX_AT[2]];
     const c = portrait() && p.catP ? p.catP : p.cat, k = c === p.cat ? 'catY' : 'catYP'; if(p[k] == null) p[k] = P.floorY(c[0], c[1], stand(p)[0][1] + 1.5, p.inside ? 0 : -3.5); return [c[0], p[k] + .02, c[1]]; }
   let SV = null;   // the view a shared postcard was taken from: the recipient opens on it
-  function view(p){ if(SV && shared && SV.place === p.id){   // frame the middle of the sender's picture (most of a 4:3 card at their zoom) in whatever part of this screen is clear
-      const pos = SV.tall && p.posP ? p.posP : p.pos, P0 = new V3(...pos), f = new V3(...SV.dir).normalize(), r = new V3().crossVectors(f, UP).normalize(), u = new V3().crossVectors(r, f), tv = Math.tan(H.camera.fov * Math.PI / 360) / SV.zoom * .45, th = tv * 4 / 3;
-      const pts = [[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([a, b]) => P0.clone().addScaledVector(f, 30).addScaledVector(r, 30 * th * a).addScaledVector(u, 30 * tv * b).toArray());
-      return fit(pos, P0.clone().addScaledVector(f, 30).toArray(), pts); }
+  function view(p){ if(SV && shared && SV.place === p.id){   // the sender's view, turned so the middle of their picture sits in the middle of whatever part of this screen is clear
+      const pos = SV.tall && p.posP ? p.posP : p.pos, P0 = new V3(...pos), f0 = new V3(...SV.dir).normalize(), cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), pm = cam.projectionMatrix.elements;
+      const fx0 = R[0] / R[4] * 2 - 1 + (pm[8] || 0), fx1 = R[2] / R[4] * 2 - 1 + (pm[8] || 0), fy1 = 1 - R[1] / R[5] * 2 + (pm[9] || 0), fy0 = 1 - R[3] / R[5] * 2 + (pm[9] || 0);
+      const zb = baseZoom(), z = Math.max(Math.min(zb, Math.max(.5, tv / 1.48, th / 1.54)), Math.min(SV.zoom, (fx1 - fx0) / 2 * th / (tv / SV.zoom * 4 / 3) * .95, zb * 1.5));   // as close as the sender was, unless their card would not fit across the clear part
+      const a = (fx0 + fx1) / 2 * th / z, b = (fy0 + fy1) / 2 * tv / z, f = f0.clone(), r = new V3(), u = new V3();
+      for(let it = 0; it < 12; it++){ r.crossVectors(f, UP).normalize(); u.crossVectors(r, f); f.copy(f0).addScaledVector(r, -a).addScaledVector(u, -b).normalize(); }
+      return {pos, look: P0.clone().addScaledVector(f, 30).toArray(), zoom: z}; }
     const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = (portrait() && p.fitP ? p.fitP : p.fit).concat(PHASE === 'photo' && p.pfit ? p.pfit : []); return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
   function setCam(v){ H.look(v.pos, v.look); anchor = new V3(...v.pos); FLY = null; ZOOM = v.zoom; }
   function cut(p, then){ if(reduce){ setCam(view(p)); then && then(); return; } CUT++; veil.classList.add('on'); setTimeout(() => { CUT--; setCam(view(p)); then && then(); setTimeout(() => veil.classList.remove('on'), 120); }, 260); }
