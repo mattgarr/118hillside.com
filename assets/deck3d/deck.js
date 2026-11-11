@@ -121,7 +121,7 @@
      ok: s => s.path.includes('diyas'), yes: 'Diyas on the steps! The kids are counting every one.', no: 'Lovely house. The kids asked where the little lamps were.', hint: 'Light that starts at your feet, on the front steps. Small clay lamps.'},
     {id: 'amara', name: 'Amara', who: "Iris's roommate, here for break", c: '#2d6b3c', place: 'living', msg: "My mom sets ours on a woven mat, with corn and fruit around it. I've never been away for Kwanzaa before.",
      ok: s => s.room.includes('kinara'), yes: 'You set out the mkeka and everything. It feels like home.', no: "It's okay. I'll call my mom later.", hint: "Amara's family sets the kinara on a mat with the harvest around it. One kinara here comes with a mat."},
-    {id: 'snowball', name: 'Snowball', who: 'cat', c: '#14161c', place: 'living', msg: 'I have asked for one thing. It is cardboard. It is empty.',
+    {id: 'snowball', name: 'Snowball', who: 'cat', c: '#c2611c', place: 'living', msg: 'I have asked for one thing. It is cardboard. It is empty.',
      ok: s => s.room.includes('box'), yes: 'The box is acceptable.', no: 'No box. I see how it is.', hint: 'It is a box. I would like the box.'},
     {id: 'twins', name: 'Leo & Max', who: 'the twins', c: '#7b4fd6', place: 'sky', msg: 'WE ASKED THE SKY FOR SNOW. if it works we are building something',
      ok: s => s.weather === 'snowday' && s.yard !== 'none', yes: 'IT SNOWED. WE BUILT IT. BEST HOUSE EVER.', no: 'no snow?? we asked so nicely', hint: 'The twins want real snow, and they want to build something in it.'}];
