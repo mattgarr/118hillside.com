@@ -1249,6 +1249,9 @@ html.dn33on .wpl,html.dn33on #cv27,html.dn33on #toggles,html.dn33on #pad,html.dn
 
 /* photos (gallery) under the slim bar */
 .ph .gallery{padding-top:calc(max(6px, env(safe-area-inset-top,0px)) + 66px)}
+/* r36: Photos on a desktop covered the header it leaves room for (the photo page sits at z-index 8, the header at 5), so the tabs, Games and View could not be
+   reached from Photos. While the photo page is open the header sits above it, as it already does on phones. */
+#app:has(> .gallery:not([hidden])) > .bar{z-index:9}
 .ph .gallery header h1{font-family:var(--sf);font-size:22px;font-weight:600}
 .ph .gallery header p{font-size:14px}
 .ph .gsec h3{font-family:var(--sf);font-style:normal;font-size:17px;font-weight:600}
