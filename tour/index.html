@@ -1892,7 +1892,7 @@ const STOPS = [
     -> out the garage door to the driveway -> the front of the house at dusk, where the closing card comes up (SELL36).
     The opening aerial is gone: the tour starts on the street view, which matches the listing's first photo. Everything finds a stop by its id.
     Titles are the rooms' own names (ROOMS), and each caption says what is in view, in the landing page's plain voice. */
- {id:'street', t:'From the street', lvl:'Woodside, California', dims:'Six bedrooms · three full baths · about 3,087 sq. ft.', photo:69, level:'outside', nav:'orbit', rooms:['street'], pos:S(1168,2975,2.0), look:S(1168,2150,1.6),
+ {id:'street', t:'From the street', lvl:'Woodside, California', dims:'Six bedrooms · three full baths', photo:69, level:'outside', nav:'orbit', rooms:['street'], pos:S(1168,2975,2.0), look:S(1168,2150,1.6),
   p:'The paver driveway runs up to the garage on the left. Beside it, the front steps climb to the porch and the iron-and-glass front doors. The large windows on the right are the dining and sitting area.'},
  {id:'porch', t:'Front porch', photo:71, level:'main', rooms:['frontdeck'], pos:S(1170,2480,2.4), look:S(1166,1900,4.6),
   p:'The porch is at the top of the front steps. From here you can see through the iron-and-glass front doors, across the foyer, to the heritage oak in the backyard.'},
@@ -20645,7 +20645,7 @@ const SELL36 = window.SELL36 = (() => {
   const root = document.documentElement, bar = document.querySelector('header.bar'), plate = bar && bar.querySelector('.plate'), app = document.getElementById('app'), card = $('#card');
   if(!bar || !plate || !app || !card) return null;
   const GAME = /[?&](escape|snowball|deck|room|feast|game)=/.test(location.search) || /\/(thanksgiving|halloween)\//.test(location.pathname);
-  const F = {addr: '118 Hillside Drive', town: 'Woodside, California', price: 'Offered at $4,195,000', facts: 'Six bedrooms, three full baths, about 3,087 square feet',
+  const F = {addr: '118 Hillside Drive', town: 'Woodside, California', price: 'Offered at $4,195,000', facts: 'Six bedrooms, three full baths',
     how: 'Showings are private. Call, text or email Michael Warren, the listing agent, to set one up.', agent: 'Michael Warren', firm: 'Compass, DRE 01968537',
     tel: 'tel:+16503150224', sms: 'sms:+16503150224', telTxt: '650.315.0224', email: 'Michael@MichaelWarrenRealEstate.com',
     mail: 'mailto:Michael@MichaelWarrenRealEstate.com?subject=Showing%20request%3A%20118%20Hillside%20Drive',
