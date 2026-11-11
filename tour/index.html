@@ -11431,12 +11431,12 @@ function hwPumpkin(size = 1, face = 0, opts = {}){ const g = new THREE.Group(), 
   g.userData.hwPumpkin = {size, face}; g.userData.hwR = size * 1.02; g.name = 'pumpkin'; return g; }
 function hwPumpkinGlow(obj){ const d = obj && obj.userData.hwPumpkin; if(!d || d.face == null || !obj.parent) return; const s = d.size, c = Math.cos(obj.rotation.y), si = Math.sin(obj.rotation.y);
   hwGlow(obj.parent, obj.position.x + si * s * 1.05, obj.position.y + .74 * s, obj.position.z + c * s * 1.05, s * 2.6, HW.pal.pumpkin, d.face % 3); }
-// ---- black cats (sitting, facing +z)
+// ---- cats (sitting, facing +z), in Snowball's orange coat
 function hwCat(scale = 1){ const g = new THREE.Group(); const G = HW.G;
   G.sph = G.sph || new THREE.SphereGeometry(1, 16, 12); G.ear = G.ear || new THREE.ConeGeometry(.09, .22, 4); G.leg = G.leg || new THREE.CylinderGeometry(.045, .05, .5, 6);
   if(!G.tail){ const c = new THREE.CatmullRomCurve3([new THREE.Vector3(0, .12, -.38), new THREE.Vector3(.28, .06, -.45), new THREE.Vector3(.48, .1, -.2), new THREE.Vector3(.52, .4, .02), new THREE.Vector3(.42, .62, .05)]);
     G.tail = new THREE.TubeGeometry(c, 20, .045, 6, false); }
-  const fur = HW.M.fur || (HW.M.fur = hwStd(0x0d0a12, {roughness: .45, metalness: .1})), eye = HW.M.eye || (HW.M.eye = hwBasic(0xc8ff5a));
+  const fur = HW.M.fur || (HW.M.fur = hwStd(0xd8802c, {roughness: .8, metalness: 0})), eye = HW.M.eye || (HW.M.eye = hwBasic(0xffcf3a));
   const add = (geo, mat, x, y, z, sx, sy, sz) => { const m = hwMesh(geo, mat, g, x, y, z); if(sx) m.scale.set(sx, sy, sz); m.castShadow = true; return m; };
   add(G.sph, fur, 0, .42, -.05, .36, .44, .42); add(G.sph, fur, 0, .66, .1, .26, .34, .26); add(G.sph, fur, 0, 1.06, .16, .25, .22, .23);
   add(G.sph, fur, 0, 1.0, .33, .12, .09, .1);
@@ -11754,7 +11754,7 @@ function hwInterior(inn, L){
       const thin = Math.abs(a.x - b2.x) < Math.abs(a.z - b2.z) ? 'x' : 'z'; const nn = thin === 'x' ? new THREE.Vector3(Math.sign(n.x), 0, 0) : new THREE.Vector3(0, 0, Math.sign(n.z));
       const y = hwDrop(mid.x + nn.x * 1, mid.z + nn.z * 1, 6, 8); o.position.set(mid.x + nn.x * .65, y != null ? y : 0, mid.z + nn.z * .65); o.rotation.y = Math.atan2(nn.x, nn.z); inn.add(o);
       HW.G.shelfAt = o.position.clone(); } }
-  // black cat on the stairs (ST-UP1 second tread), witch hat on the entry bench
+  // cat on the stairs (ST-UP1 second tread), witch hat on the entry bench
   { const s1 = hwBIM('ST-UP1'); if(s1){ const bx = s1.start[0] + (s1.end[0] - s1.start[0]) * .5, by = (s1.start[1] + s1.end[1]) / 2 + .6; const [x, z] = W2(bx, by); hwPut(hwCat(1), inn, x, z, 6, Math.atan2(...(([dx, dz]) => [dx, dz])(W2(s1.start[0] - s1.end[0], 0))), 6, 'stair cat'); } }
   for(const it of FURN.items()){ if(it.obj.userData.kind !== 'shoeBench') continue; const b = box(it), c = ctr(b); const p = hwPumpkin(.5, 2); p.position.set(c.x, b.max.y, c.z); p.rotation.y = Math.atan2(ROOM.entry.at[0] - c.x, ROOM.entry.at[1] - c.z); inn.add(p); hwPumpkinGlow(p);   // FURN bench: its own top (rays skip furniture)
     const pl = hwPumpkin(.35, null); pl.position.set(c.x + .7, b.max.y, c.z + .1); inn.add(pl); }
@@ -12827,7 +12827,7 @@ const GAME = (() => {
   const toast = (msg, ms = 1700) => { if(!toastE){ toastE = el('div'); toastE.id = 'g28toast'; toastE.setAttribute('role', 'status'); toastE.setAttribute('aria-live', 'polite'); document.body.appendChild(toastE); }
     toastE.textContent = msg; toastE.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastE.classList.remove('on'), ms); };
   const scr = p => { const v = _v.copy(p).project(camera), r = canvas.getBoundingClientRect(); return v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 ? [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height] : null; };
-  const CAT = (hat) => `<svg viewBox="0 0 84 84" width="84" height="84" aria-hidden="true"><ellipse cx="42" cy="78" rx="22" ry="4" fill="rgba(0,0,0,.35)"/><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#0d0b10" stroke="#3d3550" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#0d0b10" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#2a2630" stroke-width="1.6" fill="none"/>${hat ? '<path d="M22 30l20-28 20 28z" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><ellipse cx="42" cy="30" rx="26" ry="5" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><rect x="31" y="22" width="22" height="5" fill="#ff7a1a"/>' : ''}</svg>`;
+  const CAT = (hat) => `<svg viewBox="0 0 84 84" width="84" height="84" aria-hidden="true"><ellipse cx="42" cy="78" rx="22" ry="4" fill="rgba(0,0,0,.35)"/><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#e58f3a" stroke="#a9541a" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#e08a36" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M62 70c10 0 14-8 10-16" stroke="#a64c15" stroke-width="5" fill="none" stroke-dasharray="3 5"/><ellipse cx="42" cy="68" rx="8" ry="8" fill="#fff5e4"/><ellipse cx="42" cy="57" rx="6.5" ry="4.5" fill="#fff5e4"/><path d="M38 36v5M42 35v6M46 36v5M22 62l6 2M21 69l6 1M62 62l-6 2M63 69l-6 1" stroke="#a64c15" stroke-width="1.8" stroke-linecap="round" fill="none"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#5a2a14" stroke-width="1.6" fill="none"/>${hat ? '<path d="M22 30l20-28 20 28z" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><ellipse cx="42" cy="30" rx="26" ry="5" fill="#2a1238" stroke="#ff7a1a" stroke-width="1.5"/><rect x="31" y="22" width="22" height="5" fill="#ff7a1a"/>' : ''}</svg>`;
   function cameo(next, hat, ms = 1800){ const c = el('div', 'g28cat', CAT(hat)); let at = next && next.p ? scr(next.p) : null; if(!at) at = [Math.max(60, innerWidth * .18), innerHeight * .62];
     c.style.left = at[0] + 'px'; c.style.top = (at[1] - 30) + 'px'; document.body.appendChild(c); requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('on')));
     setTimeout(() => { c.classList.remove('on'); setTimeout(() => c.remove(), 400); }, ms); return c; }
@@ -12855,7 +12855,7 @@ const GAME = (() => {
     if(!(typeof MODEL !== 'undefined' && MODEL && BIM)) { toast('One moment, the house is still loading…'); return; }
     const st = store.get(), n = st ? (st.found || []).length : 0;
     if(n > 0 && n < N) { G.start(how, true); return; }
-    G.intro = card('<div style="font-size:34px;line-height:1" aria-hidden="true">🐈‍⬛🧪</div><h2>Snowball’s potion hunt</h2><p>Snowball knocked over the potions! Find all 10 glowing bottles.</p>',
+    G.intro = card('<div style="font-size:34px;line-height:1" aria-hidden="true">🐈🧪</div><h2>Snowball’s potion hunt</h2><p>Snowball knocked over the potions! Find all 10 glowing bottles.</p>',
       [["Let's go!", 'go', () => G.start(how, false)]]); };
   G.start = (how, resume) => {
     sndInit(); entry = how || entry; const st = resume ? store.get() : null;
@@ -12891,7 +12891,7 @@ const GAME = (() => {
     snd('bubble'); setTimeout(() => snd('fanfare'), 500); setTimeout(() => snd('bats'), 900); setTimeout(() => snd('meow'), 1700); fx('bubbles'); setTimeout(() => fx('bats'), 600);
     store.set({v: 1, found: [], t0: 0, hints: 0, muted: G.muted, best: ms});
     setTimeout(() => {
-      G.winCard = card(`<div aria-hidden="true">${CAT(true)}</div><h2>You fixed the potion!</h2><p>🐈‍⬛ Snowball says MEOW. Happy Halloween! 🎃</p><div class="st">${N}/${N} · ${fmt(ms)} · 🦉 x${hints}</div>`,
+      G.winCard = card(`<div aria-hidden="true">${CAT(true)}</div><h2>You fixed the potion!</h2><p>🐈 Snowball says MEOW. Happy Halloween! 🎃</p><div class="st">${N}/${N} · ${fmt(ms)} · 🦉 x${hints}</div>`,
         [['Beat your time?', 'go', () => { G.stop(); HWGAMES.active = POTION; G.start('replay', false); }], ['🎃 More games', '', () => { G.stop(); menuCard(); }], ['Keep exploring', '', () => G.stop()]]); }, reduceMotion ? 0 : 1300); };
   G.check = () => { const out = {ok: true, items: []}; targets();
     for(const it of G.items){ const st = STOPS[stopIx(it.stop)], P = new THREE.Vector3(...st.pos); const r = {id: it.id, placed: !!it.p, sight: false, support: null};
@@ -13311,15 +13311,15 @@ const MAZE = (() => {
     const cell = (k, fn) => { x.save(); x.translate((k % 4) * 128, ((k / 4) | 0) * 128); fn(); x.restore(); };
     const emo = (k, e, size = 92) => cell(k, () => { x.font = size + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 6; x.fillText(e, 64, 70); });
     emo(SL.kid, '🧙'); CANDY_E.forEach((e, i) => emo(SL.candy + i, e, 78)); emo(SL.feet, '👣', 70); emo(SL.mallow, '🍡', 80);
-    cell(SL.cat, () => {   // Snowball: all black, yellow eyes, with a soft moon rim so she reads at night
-      x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+    cell(SL.cat, () => {   // Snowball: orange tabby, amber eyes, with a soft moon rim so she reads at night
+      x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
       x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill();
       x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
       x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-      x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-      x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+      x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+      x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
       x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-      x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); });
+      x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); });
     const ghost = (k, sleep) => cell(k, () => { x.shadowColor = 'rgba(190,220,255,.9)'; x.shadowBlur = 12; x.fillStyle = 'rgba(246,248,255,.96)';
       x.beginPath(); x.moveTo(30, 112); x.lineTo(30, 58); x.arc(64, 58, 34, Math.PI, 0); x.lineTo(98, 112);
       for(let i = 0; i < 4; i++){ const x0 = 98 - i * 17; x.quadraticCurveTo(x0 - 4, 100, x0 - 8.5, 112); x.quadraticCurveTo(x0 - 13, 100, x0 - 17, 112); } x.fill(); x.shadowBlur = 0;
@@ -13820,7 +13820,7 @@ const HAUNTED = (() => {
   const live = tok => { if(!H.active || tok !== H.tok) throw STOP; };
   const wait = (ms, tok) => new Promise(r => { later(r, reduceMotion ? Math.min(ms, 400) : ms); }).then(() => live(tok));
   // ---------------------------------------------------------------- cast (inline SVG)
-  const CAT = (w = 84) => `<svg viewBox="0 0 84 84" width="${w}" height="${w}" aria-hidden="true"><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#0d0b10" stroke="#3d3550" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#0d0b10" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#ffd23a"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#2a2630" stroke-width="1.6" fill="none"/></svg>`;
+  const CAT = (w = 84) => `<svg viewBox="0 0 84 84" width="${w}" height="${w}" aria-hidden="true"><path d="M18 76c-2-16 4-28 12-32l-4-20 12 12h8l12-12-4 20c8 4 14 16 12 32z" fill="#e58f3a" stroke="#a9541a" stroke-width="1.2"/><path d="M62 70c10 0 14-8 10-16" stroke="#e08a36" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M62 70c10 0 14-8 10-16" stroke="#a64c15" stroke-width="5" fill="none" stroke-dasharray="3 5"/><ellipse cx="42" cy="68" rx="8" ry="8" fill="#fff5e4"/><ellipse cx="42" cy="57" rx="6.5" ry="4.5" fill="#fff5e4"/><path d="M38 36v5M42 35v6M46 36v5M22 62l6 2M21 69l6 1M62 62l-6 2M63 69l-6 1" stroke="#a64c15" stroke-width="1.8" stroke-linecap="round" fill="none"/><ellipse cx="34" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="50" cy="48" rx="5" ry="6" fill="#f6c132" stroke="#3d1c08" stroke-width="1.2"/><ellipse cx="34" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><ellipse cx="50" cy="48" rx="1.6" ry="4.4" fill="#0d0b10"/><path d="M40 56l2 2 2-2" stroke="#5a2a14" stroke-width="1.6" fill="none"/></svg>`;
   const GHOST = (w = 110, lantern) => `<svg viewBox="0 0 110 120" width="${w}" height="${w * 120 / 110}" aria-hidden="true"><path d="M20 112V52a35 35 0 0170 0v60l-12-9-11 9-12-9-12 9-11-9z" fill="#f4f7ff" stroke="#c9d3ff" stroke-width="2"/><ellipse cx="42" cy="52" rx="6" ry="8" fill="#1d1830"/><ellipse cx="68" cy="52" rx="6" ry="8" fill="#1d1830"/><path d="M46 72q9 8 18 0" stroke="#1d1830" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="64" rx="5" ry="3" fill="#ffb3c7" opacity=".7"/><ellipse cx="76" cy="64" rx="5" ry="3" fill="#ffb3c7" opacity=".7"/>${lantern ? '<g><line x1="96" y1="58" x2="96" y2="70" stroke="#3a2a1a" stroke-width="2"/><rect x="88" y="70" width="16" height="20" rx="3" fill="#ffcf5a" stroke="#3a2a1a" stroke-width="2"/><circle cx="96" cy="80" r="11" fill="#ffd96a" opacity=".35"/></g>' : ''}</svg>`;
   const EYES = `<svg viewBox="0 0 120 40" width="150" height="50" aria-hidden="true"><ellipse cx="30" cy="20" rx="13" ry="15" fill="#ffd23a"/><ellipse cx="90" cy="20" rx="13" ry="15" fill="#ffd23a"/><ellipse cx="30" cy="20" rx="4" ry="12" fill="#0d0b10"/><ellipse cx="90" cy="20" rx="4" ry="12" fill="#0d0b10"/></svg>`;
   // ---------------------------------------------------------------- DOM (made on first Play)
@@ -13938,7 +13938,7 @@ const HAUNTED = (() => {
     // S1 street: dusk -> night, Snowball's eyes on the roof
     say('🐱 Psst. All the lights went out. Come help?', 0); setDark('soft'); H.dimT = houseDim();
     await fly('street', tok); sfx('thunderSoft', {volume: .5});
-    await tgt({id: 's1', icon: '🐈‍⬛', label: 'Tap Snowball on the roof', at: [.5, .3], size: 54, nudge: '👆 Tap me! Up on the roof!'}, tok);
+    await tgt({id: 's1', icon: '🐈', label: 'Tap Snowball on the roof', at: [.5, .3], size: 54, nudge: '👆 Tap me! Up on the roof!'}, tok);
     sfx('meow'); fx('dust', 10); say("🐱 Mrrow! That's me. Let's go!", 2600); await wait(1800, tok);
     // S2 porch: three pumpkin candles pop on, knock, the door opens itself
     say('🚪 Knock knock…', 0); await fly('porch', tok);
@@ -14008,7 +14008,7 @@ const HAUNTED = (() => {
     try{ window.HWSFX && HWSFX.music('skeletonGroove', {loop: true, fade: 1}); }catch(e){}
     const big = el('div', 'big', '🎉 PARTY!'); big.classList.add('hh28big'); document.body.appendChild(big); PROPS.push(big); fx('party', 22); say('🎉 PARTY!', 2400);
     await wait(1600, tok); await fly('terrace', tok); fx('bats', 12);
-    const party = el('div', 'party', ['👻', '🖼️', '🦇', '🐈‍⬛', '🎃', '👻'].map((c, k) => `<span style="animation-delay:${k * .08}s">${c}</span>`).join('')); party.classList.add('hh28party'); document.body.appendChild(party); PROPS.push(party);
+    const party = el('div', 'party', ['👻', '🖼️', '🦇', '🐈', '🎃', '👻'].map((c, k) => `<span style="animation-delay:${k * .08}s">${c}</span>`).join('')); party.classList.add('hh28party'); document.body.appendChild(party); PROPS.push(party);
     sfx('kazoo'); await wait(2600, tok); await fly('yard', tok); fx('party', 16); sfx('win'); await wait(2200, tok);
     big.remove(); end(); }
   // ---------------------------------------------------------------- end card
@@ -14025,14 +14025,14 @@ const HAUNTED = (() => {
     const n = st.routes.length, left = Object.keys(ROUTES).filter(r => !st.routes.includes(r));
     const btns = [[n < 4 ? '🔁 Try the other way?' : '🔁 Again!', 'go', () => H.begin(true), 'Play again a different way']];
     if(HWGAMES.games.length > 1) btns.push(['🎃 Other games', '', () => { H.stop(); setTimeout(() => { const p = document.getElementById('hwGamesPill'); p && p.click(); }, 60); }, 'Choose another game']);
-    card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈‍⬛👻</div><h2>🏚️ You made it!</h2><div class="st">🗺️ Route ${n} of 4 ${ROUTES[H.route] || ''}<br>⏱ ${fmt(ms)} · 🦉 ${H.hints}</div>` +
+    card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈👻</div><h2>🏚️ You made it!</h2><div class="st">🗺️ Route ${n} of 4 ${ROUTES[H.route] || ''}<br>⏱ ${fmt(ms)} · 🦉 ${H.hints}</div>` +
       (left.length ? `<p>👀 Next time try ${ROUTES[left[0]]}</p>` : '<p>🏆 All 4 ways! You are brave.</p>'), btns); }
   // ---------------------------------------------------------------- flow
   let saved = null, wasHW = false;
   H.open = () => { document.querySelectorAll('.hh28card').forEach(c => c.remove());
     if(!(typeof MODEL !== 'undefined' && MODEL && typeof BIM !== 'undefined' && BIM)){ return; }
     const st = store.get(); H.brave = !!st.brave;
-    const c = card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈‍⬛</div><h2>🏚️ Snowball's Haunted House</h2><p>🐱 The lights went out! Walk with me?</p>` +
+    const c = card(`<div style="font-size:40px;line-height:1" aria-hidden="true">🏚️🐈</div><h2>🏚️ Snowball's Haunted House</h2><p>🐱 The lights went out! Walk with me?</p>` +
       `<label class="brave"><input type="checkbox" ${H.brave ? 'checked' : ''}> 🦁 Brave mode (8+)</label>`,
       [['▶ Play', 'go', () => { H.brave = c.querySelector('.brave input').checked; H.begin(false); }, 'Play']], () => H.stop()); };
   H.begin = (again) => {
@@ -14144,13 +14144,13 @@ const HIDESEEK = (() => {
   const sfx = (n, o) => HWGAMES.sfx(n, o);
   const store = {get(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; }catch(e){ return {}; } }, set(v){ try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){} }};
   let st = null;   // live game state (null while idle)
-  // ---------------------------------------------------------------- 3D: Snowball (all black, yellow eyes), built on first start
+  // ---------------------------------------------------------------- 3D: Snowball (orange tabby, amber eyes), built on first start
   let CAT = null, FUR = null, EYE = null, GEO = null;
   function mkCat(){
     if(!GEO){ GEO = {sph: new THREE.SphereGeometry(1, 16, 12), ear: new THREE.ConeGeometry(.09, .22, 4), leg: new THREE.CylinderGeometry(.045, .05, .5, 6)};
       const c = new THREE.CatmullRomCurve3([new THREE.Vector3(0, .12, -.38), new THREE.Vector3(.28, .06, -.45), new THREE.Vector3(.48, .1, -.2), new THREE.Vector3(.52, .4, .02), new THREE.Vector3(.42, .62, .05)]);
       GEO.tail = new THREE.TubeGeometry(c, 20, .05, 6, false); }
-    FUR = new THREE.MeshStandardMaterial({color: 0x0b0a0e, roughness: .45, metalness: .08}); EYE = new THREE.MeshBasicMaterial({color: 0xffd21a, toneMapped: false});
+    FUR = new THREE.MeshStandardMaterial({color: 0xd8802c, roughness: .8, metalness: 0}); EYE = new THREE.MeshBasicMaterial({color: 0xffd21a, toneMapped: false});
     const g = new THREE.Group(), body = [];
     const add = (geo, mat, x, y, z, sx, sy, sz) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if(sx) m.scale.set(sx, sy, sz); m.userData.hw = true; m.userData.noAO = true; g.add(m); return m; };
     body.push(add(GEO.sph, FUR, 0, .42, -.05, .36, .44, .42), add(GEO.sph, FUR, 0, .66, .1, .26, .34, .26), add(GEO.sph, FUR, 0, 1.06, .16, .25, .22, .23), add(GEO.sph, FUR, 0, 1.0, .33, .12, .09, .1));
@@ -14321,7 +14321,7 @@ const HIDESEEK = (() => {
     { const v = dollCamFor('roof'), D = new THREE.Vector3(...v.pos).sub(new THREE.Vector3(...v.look)).normalize(); CAT.root.rotation.y = Math.atan2(D.x, D.z);
       flyTo(v.pos, v.look, 'orbit', 1.4); }
     // the moment: Snowball on a big moon over the roof (DOM, always readable at night)
-    el.moon = mk('div', 'moon', '<span class="m">🌕</span><span class="c">🐈‍⬛</span>');
+    el.moon = mk('div', 'moon', '<span class="m">🌕</span><span class="c">🐈</span>');
     say('🌙', 'My favorite spot. Happy Halloween!'); sfx('bats'); later(() => sfx('meow', {pitch: .8}), 700); later(() => sfx('win'), 1400);
     later(() => burst('🦇', innerWidth / 2, innerHeight * .4, 12), 500); later(() => burst('🦇🌙⭐', innerWidth / 2, innerHeight * .4, 14), 1600);
     later(endCard, 3800); }
@@ -14459,13 +14459,13 @@ const MIDNIGHT28 = (() => {
   const stopIx = id => STOPS.findIndex(q => q.id === id);
   const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
   // ---------------------------------------------------------------- art (inline SVG, no textures)
-  const CAT = (w = 90, cls = '') => `<svg class="${cls}" width="${w}" height="${w}" viewBox="0 0 100 100" aria-label="Snowball the black cat" role="img">
-    <path d="M70 78c14 0 22-10 18-22-2-6-8-6-8-1 2 8-3 14-10 14" fill="none" stroke="#0b0b0f" stroke-width="7" stroke-linecap="round"/>
-    <ellipse cx="50" cy="72" rx="24" ry="20" fill="#0b0b0f"/><circle cx="50" cy="42" r="20" fill="#0b0b0f"/>
-    <path d="M33 33l-4-20 16 11zM67 33l4-20-16 11z" fill="#0b0b0f"/>
-    <ellipse cx="42" cy="42" rx="5.5" ry="6.5" fill="#ffd21f"/><ellipse cx="58" cy="42" rx="5.5" ry="6.5" fill="#ffd21f"/>
+  const CAT = (w = 90, cls = '') => `<svg class="${cls}" width="${w}" height="${w}" viewBox="0 0 100 100" aria-label="Snowball the orange tabby cat" role="img">
+    <path d="M70 78c14 0 22-10 18-22-2-6-8-6-8-1 2 8-3 14-10 14" fill="none" stroke="#e08a36" stroke-width="7" stroke-linecap="round"/><path d="M70 78c14 0 22-10 18-22-2-6-8-6-8-1 2 8-3 14-10 14" fill="none" stroke="#a64c15" stroke-width="7" stroke-dasharray="4 6"/>
+    <ellipse cx="50" cy="72" rx="24" ry="20" fill="#e58f3a"/><ellipse cx="50" cy="77" rx="11" ry="14" fill="#fff5e4"/><circle cx="50" cy="42" r="20" fill="#e58f3a"/><ellipse cx="50" cy="52.5" rx="8" ry="5.5" fill="#fff5e4"/><path d="M45 24v6M50 23v7M55 24v6M31 46l6 2M69 46l-6 2M28 68l7 2M27 78l7 1M72 68l-7 2M73 78l-7 1" stroke="#a64c15" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <path d="M33 33l-4-20 16 11zM67 33l4-20-16 11z" fill="#e58f3a"/><path d="M34 29l-2-10 8 6zM66 29l2-10-8 6z" fill="#f0b6a0"/>
+    <ellipse cx="42" cy="42" rx="5.5" ry="6.5" fill="#f6c132" stroke="#3d1c08" stroke-width="1.3"/><ellipse cx="58" cy="42" rx="5.5" ry="6.5" fill="#f6c132" stroke="#3d1c08" stroke-width="1.3"/>
     <ellipse cx="42" cy="42" rx="1.6" ry="5" fill="#0b0b0f"/><ellipse cx="58" cy="42" rx="1.6" ry="5" fill="#0b0b0f"/>
-    <path d="M47 51l3 2 3-2" fill="none" stroke="#40303a" stroke-width="1.6"/></svg>`;
+    <path d="M47 51l3 2 3-2" fill="none" stroke="#5a2a14" stroke-width="1.6"/></svg>`;
   const GHOST = (w = 110, acc = '', sleepy = false) => `<div style="position:relative;display:inline-block;width:${w}px"><svg width="${w}" height="${w * 1.1}" viewBox="0 0 100 110" aria-hidden="true">
     <path d="M14 100V48a36 36 0 0 1 72 0v52l-12-9-12 9-12-9-12 9-12-9z" fill="#f5f3ff" stroke="#c9c2ff" stroke-width="2"/>
     ${sleepy ? '<path d="M33 50q6 5 12 0M55 50q6 5 12 0" stroke="#2a2440" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="50" cy="66" rx="5" ry="4" fill="#2a2440"/>'
@@ -14902,13 +14902,13 @@ const STAIRDOOR = (() => {
     const cup = new THREE.Mesh(cg, cm); cup.position.copy(cupC); cup.rotation.y = Math.atan2(D.u[0], D.u[1]) - Math.PI / 2; cup.rotation.y = Math.atan2(-D.u[1], D.u[0]); cup.visible = false; add(cup);
     const spill = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 4.2), mat(THREE.MeshBasicMaterial, {map: glowTexture(), color: 0xffa040, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending}));
     spill.rotation.x = -Math.PI / 2; spill.position.copy(D.P(0, D.sill + .02, D.dF - D.sw * 1.6)); add(spill);
-    // Golden Pumpkin + Snowball (all black, yellow eyes), just inside the threshold
+    // Golden Pumpkin + Snowball (orange tabby, amber eyes), just inside the threshold
     const nest = new THREE.Group(); nest.name = 'sd28nest'; nest.position.copy(D.P(0, D.sill, D.dF + D.sw * .75)); nest.rotation.y = Math.atan2(-D.n[0] * -D.sw, -D.n[1] * -D.sw); add(nest);
     const gold = mat(THREE.MeshStandardMaterial, {color: 0xf2a516, emissive: 0x7a3c00, emissiveIntensity: .6, metalness: .55, roughness: .35});
     const pg = new THREE.SphereGeometry(.62, 28, 18); { const p = pg.attributes.position; for(let i = 0; i < p.count; i++){ const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const a = Math.atan2(z, x); const k = 1 + .09 * Math.cos(a * 8); p.setXYZ(i, x * k, y * .78, z * k); } pg.computeVertexNormals(); }
     const pump = new THREE.Mesh(pg, gold); pump.position.y = .5; nest.add(pump);
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(.05, .08, .26, 8), mat(THREE.MeshStandardMaterial, {color: 0x6b4a1a, roughness: .8})); stem.position.y = 1.0; stem.rotation.z = .2; nest.add(stem);
-    const fur = mat(THREE.MeshStandardMaterial, {color: 0x030304, roughness: .9, metalness: 0});
+    const fur = mat(THREE.MeshStandardMaterial, {color: 0xd8802c, roughness: .9, metalness: 0});
     const cat = new THREE.Group(); cat.position.set(0, .93, 0); cat.scale.setScalar(1.25); nest.add(cat);
     const body = new THREE.Mesh(new THREE.SphereGeometry(.42, 20, 14), fur); body.scale.set(1.15, .55, .95); body.position.y = .12; cat.add(body);
     const head = new THREE.Mesh(new THREE.SphereGeometry(.2, 18, 12), fur); head.position.set(.3, .2, -.2); cat.add(head);
@@ -15003,7 +15003,7 @@ const STAIRDOOR = (() => {
   function endCard(){ const t = (performance.now() - R.t0) / 1000, mm = Math.floor(t / 60), ss = String(Math.floor(t % 60)).padStart(2, '0'); const st = load(); const best = st.best && st.best < t ? st.best : t; save(Object.assign(st, {best, wins: (st.wins || 0) + 1}));
     sfx('win'); HWGAMES.track('stairdoor_win', {secs: Math.round(t), hints: R.hints + R.helped}); SD.report.win = {secs: t, hints: R.hints, helped: R.helped};
     UI.hilda.classList.remove('on');
-    card(`<div class="ic">🗝️🎃🐈‍⬛</div><h2>🚪 Door opened!</h2><div class="st">⏱️ ${mm}:${ss} · 💡 ${R.hints + R.helped}${best < t - .5 ? ' · 🏆 ' + Math.floor(best / 60) + ':' + String(Math.floor(best % 60)).padStart(2, '0') : ''}</div>`,
+    card(`<div class="ic">🗝️🎃🐈</div><h2>🚪 Door opened!</h2><div class="st">⏱️ ${mm}:${ss} · 💡 ${R.hints + R.helped}${best < t - .5 ? ' · 🏆 ' + Math.floor(best / 60) + ':' + String(Math.floor(best % 60)).padStart(2, '0') : ''}</div>`,
       [['🔁 Faster?', 'go', () => { closeCard(); teardownRun(); begin(); }], ['✅ Done', '', () => HWGAMES.stop()]]); }
   // ------------------------------------------------------------------ keyboard (desktop)
   function onKey(e){ if(!SD.active) return; if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); if(UI.card) closeCard(); HWGAMES.stop(); return; }
@@ -15114,15 +15114,15 @@ const TREAT = (() => {
   const st = () => { if(ST) return ST; try{ const v = JSON.parse(localStorage.getItem(KEY) || 'null'); ST = v && v.v === 1 ? v : {v: 1}; }catch(e){ ST = {v: 1}; } ST.met = ST.met || []; return ST; };
   const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(st())); }catch(e){} };
   const shuffle = (a, r = Math.random) => { for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  // ---- Snowball: the family's real cat, ALL black with yellow eyes (inline SVG; costume = tiny pumpkin suit, bag = tiny treat bag)
-  const CAT = (bag = true, costume = true) => `<svg viewBox="0 0 120 120" aria-label="Snowball the black cat" role="img">
-    <path d="M92 96c16-4 22-20 14-34" fill="none" stroke="#0b0b0e" stroke-width="7" stroke-linecap="round"/>
-    <ellipse cx="60" cy="88" rx="30" ry="24" fill="#0b0b0e"/>
+  // ---- Snowball: the house cat, an orange tabby with amber eyes (inline SVG; costume = tiny pumpkin suit, bag = tiny treat bag)
+  const CAT = (bag = true, costume = true) => `<svg viewBox="0 0 120 120" aria-label="Snowball the orange tabby cat" role="img">
+    <path d="M92 96c16-4 22-20 14-34" fill="none" stroke="#e08a36" stroke-width="7" stroke-linecap="round"/><path d="M92 96c16-4 22-20 14-34" fill="none" stroke="#a64c15" stroke-width="7" stroke-dasharray="4 6"/>
+    <ellipse cx="60" cy="88" rx="30" ry="24" fill="#e58f3a"/><ellipse cx="60" cy="93" rx="13" ry="17" fill="#fff5e4"/><path d="M33 80l8 3M32 92l8 1M87 80l-8 3M88 92l-8 1" stroke="#a64c15" stroke-width="2.6" stroke-linecap="round" fill="none"/>
     ${costume ? '<ellipse cx="60" cy="92" rx="22" ry="17" fill="#ff7a1a"/><path d="M48 78c-3 8-3 20 0 28M60 76v32M72 78c3 8 3 20 0 28" stroke="#c2410c" stroke-width="2.5" fill="none"/><path d="M52 98l4-4 4 4 4-4 4 4" stroke="#0b0b0e" stroke-width="2.5" fill="none"/>' : ''}
-    <path d="M30 30l6-24 18 16z M90 30l-6-24-18 16z" fill="#0b0b0e"/><path d="M35 24l3-11 8 8z M85 24l-3-11-8 8z" fill="#3a2a35"/>
-    <circle cx="60" cy="42" r="30" fill="#0b0b0e"/>
+    <path d="M30 30l6-24 18 16z M90 30l-6-24-18 16z" fill="#e58f3a"/><path d="M35 24l3-11 8 8z M85 24l-3-11-8 8z" fill="#f0b6a0"/>
+    <circle cx="60" cy="42" r="30" fill="#e58f3a"/><ellipse cx="60" cy="57" rx="12" ry="8.5" fill="#fff5e4"/><path d="M53 15v8M60 13v10M67 15v8M32 46l8 2M88 46l-8 2" stroke="#a64c15" stroke-width="2.6" stroke-linecap="round" fill="none"/>
     ${costume ? '<path d="M57 13c2-6 6-8 10-7-3 2-5 5-5 8z" fill="#3c8d2f"/>' : ''}
-    <ellipse cx="48" cy="40" rx="8" ry="9" fill="#ffd21a"/><ellipse cx="72" cy="40" rx="8" ry="9" fill="#ffd21a"/>
+    <ellipse cx="48" cy="40" rx="8" ry="9" fill="#f6c132" stroke="#3d1c08" stroke-width="1.5"/><ellipse cx="72" cy="40" rx="8" ry="9" fill="#f6c132" stroke="#3d1c08" stroke-width="1.5"/>
     <ellipse cx="48" cy="41" rx="2.6" ry="7" fill="#0b0b0e"/><ellipse cx="72" cy="41" rx="2.6" ry="7" fill="#0b0b0e"/>
     <circle cx="50" cy="37" r="1.8" fill="#fff"/><circle cx="74" cy="37" r="1.8" fill="#fff"/>
     <path d="M57 52l3 3 3-3z" fill="#e58aa0"/><path d="M60 55q-4 5-8 2M60 55q4 5 8 2" stroke="#3a2a35" stroke-width="1.6" fill="none"/>
@@ -16424,14 +16424,14 @@ const TURKEY = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads indoors
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads indoors
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   let URL_TOM = '', URL_CAT = '';
   function urls(){ if(URL_TOM) return; try{ URL_TOM = canv(x => drawTom(x), 224).toDataURL(); URL_CAT = canv(drawCat, 160).toDataURL(); }catch(e){} }
@@ -17000,12 +17000,12 @@ const CORNMAZE = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill(); x.restore(); }
   // sprite atlas, 4 x 4 slots of 128 px
   const SL = {kid: 0, cat: 1, wisp: 2, wispZ: 3, candy: 4, gold: 10, feet: 11, gate: 12, mallow: 13, dot: 14, glow: 15};
@@ -17132,7 +17132,7 @@ const CORNMAZE = (() => {
   function tip(t, ms){ if(!tipE) return; tipE.textContent = t; tipE.hidden = !t; clearTimeout(Z.tipT); if(ms) Z.tipT = setTimeout(() => { tipE.hidden = true; }, ms); }
   function fx(kind, at){ const box = el('div', 'cn31fx cn31'); document.body.appendChild(box); const W = innerWidth, Hh = innerHeight, cx = at ? at[0] : W / 2, cy = at ? at[1] : Hh / 2;
     if(kind === 'bat'){ for(let i = 0; i < 3; i++){ const b = el('i', null, '🦇'); b.style.cssText = `left:${cx}px;top:${cy}px;font-size:${30 + i * 6}px;--dx:${(i - 1) * 140 + 60}px;--dy:${-220 - i * 50}px;animation:cn31fly ${1.4 + i * .2}s ease-out ${i * .12}s forwards;opacity:0`; box.appendChild(b); } }
-    else if(kind === 'snow'){ const b = el('i'); b.innerHTML = Z.snowURL ? `<img src="${Z.snowURL}" alt="" width="64" height="64">` : '🐈‍⬛'; b.style.cssText = `left:${cx}px;top:${cy}px;font-size:46px;animation:cn31pop 1.9s ease-out forwards`; box.appendChild(b); }
+    else if(kind === 'snow'){ const b = el('i'); b.innerHTML = Z.snowURL ? `<img src="${Z.snowURL}" alt="" width="64" height="64">` : '🐈'; b.style.cssText = `left:${cx}px;top:${cy}px;font-size:46px;animation:cn31pop 1.9s ease-out forwards`; box.appendChild(b); }
     else if(kind === 'squirrel'){ const b = el('i', null, '🐿️'); b.style.cssText = `left:${-60}px;top:${cy}px;font-size:44px;--dx:${W + 120}px;--dy:-20px;animation:cn31fly 1.4s linear forwards`; box.appendChild(b); }
     else if(kind === 'leaves'){ for(let i = 0; i < 14; i++){ const b = el('i', null, i % 2 ? '🍂' : '🍁'); const a = i / 14 * 6.283; b.style.cssText = `left:${cx}px;top:${cy}px;font-size:26px;--dx:${Math.cos(a) * 130}px;--dy:${Math.sin(a) * 90 - 120}px;animation:cn31fly 1.6s ease-out ${i * .03}s forwards;opacity:0`; box.appendChild(b); } }
     else if(kind === 'owl'){ const b = el('i', null, '🦉'); b.style.cssText = `left:${cx}px;top:${cy}px;font-size:46px;animation:cn31pop 1.8s ease-out forwards`; box.appendChild(b); }
@@ -18121,14 +18121,14 @@ const LEAFPILE = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads at dusk
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads at dusk
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   function emo(e, extra){ return canv(x => { x.font = '96px ' + EMOJI_FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(255,240,200,.95)'; x.shadowBlur = 7; x.fillText(e, 64, 70); x.shadowBlur = 0; if(extra) extra(x); }, 192); }
@@ -18601,14 +18601,14 @@ const THANKFUL = (() => {
     x.fillStyle = 'rgba(240,120,100,.45)'; x.beginPath(); x.arc(50, 51, 3.4, 0, 7); x.arc(78, 51, 3.4, 0, 7); x.fill();
     x.restore(); }
   function drawTom(x, blink){ drawTomTail(x); drawTomBody(x, blink); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads at dusk
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads at dusk
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   function emo(e){ return canv(x => { x.font = '96px ' + EMOJI_FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(255,240,200,.95)'; x.shadowBlur = 7; x.fillText(e, 64, 70); }, 192); }
@@ -18972,14 +18972,14 @@ const DINNER = (() => {
     x.strokeStyle = '#FFF4E2'; x.lineWidth = 2; x.beginPath(); x.moveTo(56, 71); x.lineTo(57, 62); x.moveTo(72, 71); x.lineTo(71, 62); x.stroke();
     x.fillStyle = '#D9822B'; x.beginPath(); x.ellipse(64, 97, 6, 4.6, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#5c7a2e'; x.fillRect(63.2, 91.3, 1.6, 2.4);
     x.strokeStyle = '#9E2B25'; x.lineWidth = 1.4; x.beginPath(); x.moveTo(50, 86); x.lineTo(78, 86); x.stroke(); x.restore(); }
-  function drawCat(x){   // Snowball: all black, yellow eyes, warm rim so she reads indoors
-    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#0b0b0e';
+  function drawCat(x){   // Snowball: orange tabby, amber eyes, warm rim so she reads indoors
+    x.save(); x.shadowColor = 'rgba(255,235,160,.95)'; x.shadowBlur = 9; x.fillStyle = '#e58f3a';
     x.beginPath(); x.ellipse(64, 90, 27, 30, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(64, 50, 25, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.moveTo(42, 40); x.lineTo(44, 14); x.lineTo(60, 30); x.fill(); x.beginPath(); x.moveTo(86, 40); x.lineTo(84, 14); x.lineTo(68, 30); x.fill();
-    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#0b0b0e'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke();
-    x.shadowBlur = 6; x.shadowColor = '#ffcf1a'; x.fillStyle = '#ffd21a'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 9; x.lineCap = 'round'; x.strokeStyle = '#e08a36'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.shadowBlur = 0; x.lineCap = 'butt'; x.setLineDash([4, 7]); x.strokeStyle = '#a64c15'; x.beginPath(); x.moveTo(88, 110); x.quadraticCurveTo(122, 104, 112, 70); x.stroke(); x.setLineDash([]); x.lineCap = 'round'; x.lineWidth = 3; x.beginPath(); for(const [a, b, c, d] of [[56, 27, 57, 36], [64, 25, 64, 35], [72, 27, 71, 36], [40, 53, 47, 55], [88, 53, 81, 55], [38, 82, 47, 85], [37, 95, 46, 97], [90, 82, 81, 85], [91, 95, 82, 97]]){ x.moveTo(a, b); x.lineTo(c, d); } x.stroke(); x.fillStyle = '#fff5e4'; x.beginPath(); x.ellipse(64, 97, 12, 18, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(64, 62, 10, 7, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#3d1c08'; x.beginPath(); x.ellipse(54, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 8.4, 9.4, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#f6c132'; x.beginPath(); x.ellipse(54, 49, 7, 8, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(74, 49, 7, 8, 0, 0, Math.PI * 2); x.fill();
     x.shadowBlur = 0; x.fillStyle = '#000'; x.beginPath(); x.ellipse(54, 49, 2, 7, 0, 0, Math.PI * 2); x.ellipse(74, 49, 2, 7, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#3a2a30'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
+    x.fillStyle = '#d9806e'; x.beginPath(); x.moveTo(61, 59); x.lineTo(67, 59); x.lineTo(64, 63); x.fill(); x.restore(); }
   function canv(fn, px = 256){ const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.scale(px / 128, px / 128); fn(x); return c; }
   const EMO = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   const emoDraw = (e, sz = 96, glow = 'rgba(255,240,200,.95)', blur = 8) => x => { x.font = sz + 'px ' + EMO; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = glow; x.shadowBlur = blur; x.fillText(e, 64, 68); x.shadowBlur = 0; x.fillText(e, 64, 68); };
@@ -19258,7 +19258,7 @@ const DINNER = (() => {
       let cx, cy, cz; if(q < .25){ const f = q / .25; cx = C[0] + (mid[0] - C[0]) * f; cz = C[2] + (mid[2] - C[2]) * f; cy = C[1] + (top - C[1]) * f + Math.sin(f * Math.PI) * 1.4; }
       else if(q < .62){ cx = mid[0] - (q - .42) * 4 * Math.sign(C[0] - T.x || 1) * -1; cz = mid[2]; cy = top + Math.abs(Math.sin(q * 30)) * .12; }
       else { const f = (q - .62) / .38, sx = C[0] < T.x ? 1 : -1; cx = mid[0] + sx * f * 4.5; cz = mid[2] + (mid[2] < T.z ? -1 : 1) * f * 2.2; cy = f < .2 ? top + Math.sin(f / .2 * Math.PI) * .7 : Math.max(.1, top - (f - .2) * 5); }
-      g2.cat.position.set(cx, cy, cz); g2.cat.scale.set(1.6, 1.6, 1); g2.glow.visible = q < 1; g2.glow.position.set(cx, cy + .7, cz); g2.glow.scale.set(2.6, 2.6, 1); g2.glow.material.opacity = .75; g2.cat.material.opacity = 1; g2.cat.visible = q < 1; g2.stick.visible = q > .4 && q < 1; g2.stick.position.set(cx + .45, cy + .75, cz + .1); g2.stick.scale.set(1.3, 1.3, 1);   // glow: a warm halo so the black cat reads against the dark kitchen
+      g2.cat.position.set(cx, cy, cz); g2.cat.scale.set(1.6, 1.6, 1); g2.glow.visible = q < 1; g2.glow.position.set(cx, cy + .7, cz); g2.glow.scale.set(2.6, 2.6, 1); g2.glow.material.opacity = .75; g2.cat.material.opacity = 1; g2.cat.visible = q < 1; g2.stick.visible = q > .4 && q < 1; g2.stick.position.set(cx + .45, cy + .75, cz + .1); g2.stick.scale.set(1.3, 1.3, 1);   // glow: a warm halo so the cat reads against the dark kitchen
       g2.stick.material.rotation = -.5 + Math.sin(now2 / 110) * .25; }; }
   function endCard(){ if(!st || st.done) return; st.done = true; st.ph = 'end'; const ms = st.ms || (performance.now() - st.t0), s = store.get(), sec = Math.round(ms / 1000);
     const best = s.best && s.best < ms ? s.best : null, newBest = !s.best || ms < s.best; if(newBest) s.best = Math.round(ms); s.plays = (s.plays || 0) + 1; store.set(s);
