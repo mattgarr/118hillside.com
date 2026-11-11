@@ -141,14 +141,13 @@
       const ring = mesh(new THREE.TorusGeometry(R0, tube * .7, 8, 28), std(kind === 'harvest' ? '#8a6a34' : kind === 'bluesilver' ? '#2b3a55' : '#1d3a25')); w.add(ring);
       /* the wreath hangs on the door leaf, so it swings with it: each frame it takes the leaf's pose relative to the closed door */
       { const rest = {p: w.position.clone(), q: w.quaternion.clone()}, st = {piv: null, m0: null, tried: 0}, A = new THREE.Matrix4(), B = new THREE.Matrix4(), sc = new V3();
-        ring.frustumCulled = false;
-        ring.onBeforeRender = (rn, scene) => { try{
+        let seen = false; const tick = () => { if(!g.parent){ if(seen) return; } else seen = true; requestAnimationFrame(tick); if(!g.parent) return; try{
           if(!st.piv){ if(st.tried++ % 30) return; const it = window.DOOR28 && DOOR28.items && DOOR28.items.find(i => i.id === 'D-LG-02'), pt = it && it.parts && it.parts[0]; if(!pt || !pt.piv || !pt.quat0) return;
-            const piv = pt.piv, q = piv.quaternion.clone(); piv.quaternion.copy(pt.quat0); piv.updateMatrixWorld(true); g.updateWorldMatrix(true, false);
+            const piv = pt.piv, q = piv.quaternion.clone(); piv.quaternion.copy(pt.quat0); piv.updateWorldMatrix(true, true); g.updateWorldMatrix(true, false);
             const wRest = new THREE.Matrix4().compose(rest.p, rest.q, new V3(1, 1, 1)).premultiply(g.matrixWorld);
             st.m0 = new THREE.Matrix4().copy(piv.matrixWorld).invert().multiply(wRest); piv.quaternion.copy(q); piv.updateMatrixWorld(true); st.piv = piv; }
-          A.copy(st.piv.matrixWorld).multiply(st.m0); B.copy(g.matrixWorld).invert().multiply(A); B.decompose(w.position, w.quaternion, sc); w.updateMatrixWorld(true);
-        }catch(e){} }; }
+          A.copy(st.piv.matrixWorld).multiply(st.m0); B.copy(g.matrixWorld).invert().multiply(A); B.decompose(w.position, w.quaternion, sc);
+        }catch(e){} }; requestAnimationFrame(tick); }
       const tang = (a, out, lift) => new V3(-Math.sin(a) + Math.cos(a) * out, Math.cos(a) + Math.sin(a) * out, lift).normalize();
       if(kind === 'evergreen' || kind === 'citrus'){ const greens = ['#1f4d2e', '#2a6138', '#24573a', '#356d3f'];
         w.add(inst(G.spike, std('#ffffff', {roughness: .9}), ringItems(520, R0, tube, R, (p, a, b) => ({p, q: qY(tang(a, (R() - .35) * 1.3, .25 + R() * .9)), s: [.07, .26 + R() * .2, .05], c: greens[Math.floor(R() * 4)]}))));
