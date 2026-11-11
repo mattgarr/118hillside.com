@@ -70,7 +70,7 @@
   function fitCap(){ var d = el.querySelector('.ld'); if(d && d.offsetHeight) el.style.setProperty('--ldh', d.offsetHeight + 'px'); }
   fitCap(); addEventListener('resize', fitCap); if(window.ResizeObserver){ try{ new ResizeObserver(fitCap).observe(el.querySelector('.ld')); }catch(e){} }
   function warm(i){ var im = sl[i % S.length].querySelector('img'); if(im && !im.getAttribute('src') && im.dataset.src) im.src = im.dataset.src; }
-  function show(i){ var nimg = sl[i % S.length].querySelector('img'); warm(i); if(!(nimg.complete && nimg.naturalWidth)) return;   // hold the current slide until the next photo is in
+  function show(i){ var nimg = sl[i % S.length].querySelector('img'); warm(i); if(!(nimg.complete && nimg.naturalWidth)) return; nimg.classList.add('in');   // hold the current slide until the next photo is in
     sl[k].classList.remove('on'); if(dots[k]) dots[k].classList.remove('on'); k = i % S.length; sl[k].classList.add('on'); if(dots[k]) dots[k].classList.add('on');
     warm(k + 1); warm(k + 2);
     cap.classList.add('swap'); setTimeout(function(){ h2.textContent = S[k][1]; p.textContent = S[k][2]; cap.classList.remove('swap'); }, reduce ? 0 : 320); }
