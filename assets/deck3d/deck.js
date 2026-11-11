@@ -202,6 +202,7 @@
   function baseZoom(){ const cam = H.camera, t0 = Math.tan(cam.fov * Math.PI / 360); return cam.aspect < .8 ? Math.min(1, Math.max(t0 / Math.tan(40 * Math.PI / 180), t0 * cam.aspect / Math.tan(22 * Math.PI / 180))) : 1; }
   /* the free part of the canvas, in canvas pixels: below Snowball's line (and the message that drops over it), beside or above the panel, above any bar at the bottom */
   function freeRect(){ const c = H.canvas.getBoundingClientRect(), wide = innerWidth > 700, box = s => { const e = $(s); if(!e || e.hidden) return null; const r = e.getBoundingClientRect(); return r.width && r.height ? r : null; };
+    if(PHASE === 'photo') return [c.width * .04, c.height * .07, c.width * .96, c.height * .9, c.width, c.height];   // the postcard is the whole picture, so compose for all of it
     let x0 = 14, x1 = c.width - 14, y0 = 14, y1 = c.height - 14; const top = box('#dkTop'), pn = box('#dkPanel'), cd = box('#dkCard.side .c');
     if(top) y0 = top.top - c.top + (MODE === 'story' && PHASE === 'decor' ? (wide ? 180 : 164) : (wide ? 84 : 104));   // Snowball's line, or the tallest message that drops over it
     if(pn){ if(wide) x1 = pn.left - c.left - 14; else y1 = pn.top - c.top - 10; }
