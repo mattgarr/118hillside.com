@@ -398,7 +398,7 @@
   #dkCard ul.w .av{flex:none;width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;display:grid;place-items:center}#dkCard ul.w b{font-weight:500}
   #dkCard .ideas{text-align:left;font-size:14px;line-height:1.4;color:#5c6575;margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#f1eee6}#dkCard .ideas b{display:block;font-weight:500;color:#2b3442;margin-bottom:2px}
   #dkCard .quiet{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin:10px 0 0}#dkCard .quiet button{border:0;background:none;padding:8px 6px;font-size:14.5px;color:#5c6575;text-decoration:underline;text-underline-offset:3px;min-height:40px}
-  #dkCard img.pc.sm{max-width:240px;margin:0 auto 10px}
+  #dkCard img.pc.sm{width:auto;max-width:min(240px,100%);max-height:26vh;margin:0 auto 10px}
   #dkFlash{position:fixed;inset:0;z-index:95;background:#fff;opacity:0;pointer-events:none}#dkFlash.on{animation:dkFl .5s}@keyframes dkFl{10%{opacity:.85}100%{opacity:0}}
   @media (max-width:700px){
     #dkTop{top:40px;left:8px;right:8px}#dkPlaces{flex-wrap:nowrap}#dkCard.side{place-items:end center;padding:8px}#dkCard.side .c{max-width:none;max-height:64vh}#dkSay{max-width:calc(100% - 112px);padding:6px 10px 6px 6px}#dkSay .av{width:40px;height:40px}#dkSay .av svg{width:38px}#dkSay p{font-size:18px}
