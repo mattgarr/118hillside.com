@@ -33,6 +33,10 @@
   const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
   const phone = () => innerWidth < 900;
   const v3 = a => new V3(a[0], a[1], a[2]);
+  // anything that goes wrong is kept where a test can read it (FEAST3D.errors), as well as in the console
+  const ERRS = [], oops = (what, e) => { ERRS.push(what + ': ' + String(e && e.message || e).slice(0, 200)); try{ console.error('[feast] ' + what, e); }catch(_){} };
+  addEventListener('error', e => { if(/feast/.test(String(e.filename || ''))) ERRS.push('error: ' + String(e.message).slice(0, 200) + ' @' + e.lineno); });
+  addEventListener('unhandledrejection', e => { const t = String(e.reason && e.reason.stack || e.reason); if(/feast/.test(t)) ERRS.push('rejection: ' + t.slice(0, 200)); });
 
   /* ================================================================== which clue set */
   let HUNT = ((/[?&]hunt=([ab])\b/i.exec(location.search) || [])[1] || '').toLowerCase();
@@ -133,10 +137,10 @@
       title: 'A bag on a porch lounger', text: 'On the front porch, looking down the walk to the street.', act: 'Look in the bag'},
     bagSofa:     {place: 'table', kind: 'bag', label: 'Paper bag', at: [-2.25, -2.9, -32.55], pos: [1.3, -.4, -30.4], look: [-2.25, -2.9, -32.55], fit: {w: 2.2, h: 2.6}, prop: {at: [-2.25, -3.5, -32.55], ry: 1.2}, decoy: 'duck',
       title: 'A bag on the terrace sofas', text: 'On the low table between the wicker sofas, under the oak.', act: 'Look in the bag'},
-    wallMirror:  {place: 'lounge', kind: 'wall', label: 'Wall by the mirror', at: [-18.7, -2.0, -25.5], pos: [-18.5, -.5, -20.4], look: [-18.7, -2.0, -25.6], fit: {w: 3.4, h: 5},
-      title: 'The wall by the round mirror', text: 'A plain painted wall at the far end of the lounge.'},
-    wallArt:     {place: 'lounge', kind: 'wall', label: 'Wall by the painting', at: [-18.5, -1.9, -12.8], pos: [-17.8, -.5, -17.6], look: [-18.5, -2.0, -12.7], fit: {w: 3.4, h: 5},
-      title: 'The wall beside the circle painting', text: 'A plain painted wall, between the painting and the door to the stairs.'},
+    wallMirror:  {place: 'lounge', kind: 'wall', label: 'Wall with the mirror', at: [-13.5, -1.0, -25.5], pos: [-15.6, -.3, -19.7], look: [-13.5, -1.3, -25.6], fit: {w: 4.4, h: 4.8},
+      title: 'The wall with the round mirror', text: 'A painted wall at the far end of the lounge, behind the round table.'},
+    wallArt:     {place: 'lounge', kind: 'wall', label: 'Wall with the painting', at: [-15.3, -1.2, -12.8], pos: [-15.8, -.4, -18.4], look: [-15.3, -1.5, -12.7], fit: {w: 5.2, h: 5.2},
+      title: 'The wall with the circle painting', text: 'The big painted circle hangs here, over two poufs.'},
     wallPanel:   {place: 'lounge', kind: 'wall', label: 'Wall by the glass doors', at: [-12.2, -2.1, -12.8], pos: [-13.6, -.6, -17.4], look: [-12.3, -2.3, -12.6], fit: {w: 3.4, h: 5.4},
       title: 'The wall by the glass doors', text: 'A plain painted wall with a faint line around part of it. The stairs run above this corner.'}};
 
@@ -302,7 +306,7 @@
       if(m.face && m.curve){ m.curve.getTangentAt(clamp(e, .001, .999), _t); const ty = Math.atan2(-_t.x, -_t.z), w = smooth(0, .25, u) * (1 - smooth(.5, .92, u));
         const base = m.yaw0 + angDiff(m.yaw0, m.yaw1) * smooth(.45, 1, u); yaw = base + angDiff(base, ty) * w; pitch = lerp(pitch, -.06, w * .8); }
       rig.yaw = rig.tyaw = yaw; rig.pitch = rig.tpitch = pitch; rig.fov = lerp(m.fov0, m.fov1, e); rig.off = [lerp(m.off0[0], m.off1[0], e), lerp(m.off0[1], m.off1[1], e)];
-      if(u >= 1){ rig.move = null; rig.yaw = rig.tyaw = m.yaw1; rig.pitch = rig.tpitch = m.pitch1; rig.fov = m.fov1; rig.off = m.off1.slice(); if(m.done) try{ m.done(); }catch(err){ console.error('[feast] arrive', err); } }
+      if(u >= 1){ rig.move = null; rig.yaw = rig.tyaw = m.yaw1; rig.pitch = rig.tpitch = m.pitch1; rig.fov = m.fov1; rig.off = m.off1.slice(); if(m.done) try{ m.done(); }catch(err){ oops('arrive', err); } }
     } else {
       const k = 1 - Math.exp(-dt * 18); rig.yaw += angDiff(rig.yaw, rig.tyaw) * k; rig.pitch += (rig.tpitch - rig.pitch) * k;
       if(Math.abs(angDiff(rig.yaw, rig.tyaw)) < 2e-4) rig.yaw = rig.tyaw; if(Math.abs(rig.tpitch - rig.pitch) < 2e-4) rig.pitch = rig.tpitch; }
@@ -322,9 +326,9 @@
   /* ================================================================== small timed animations */
   const TW = [];
   function tween(ms, fn, done){ const t = {t0: performance.now(), ms: reduce ? Math.min(ms, 40) : ms, fn, done}; TW.push(t); return t; }
-  function tweens(now){ for(let i = TW.length - 1; i >= 0; i--){ const t = TW[i], u = clamp((now - t.t0) / t.ms, 0, 1); try{ t.fn(u); }catch(e){ console.error('[feast] tween', e); }
-      if(u >= 1){ TW.splice(TW.indexOf(t), 1); if(t.done) try{ t.done(); }catch(e){ console.error('[feast] tween end', e); } } } if(TW.length) wake(3); }
-  const later = (ms, fn) => setTimeout(() => { try{ fn(); }catch(e){ console.error('[feast] later', e); } }, reduce ? Math.min(ms, 120) : ms);
+  function tweens(now){ for(let i = TW.length - 1; i >= 0; i--){ const t = TW[i], u = clamp((now - t.t0) / t.ms, 0, 1); try{ t.fn(u); }catch(e){ oops('tween', e); }
+      if(u >= 1){ TW.splice(TW.indexOf(t), 1); if(t.done) try{ t.done(); }catch(e){ oops('tween end', e); } } } if(TW.length) wake(3); }
+  const later = (ms, fn) => setTimeout(() => { try{ fn(); }catch(e){ oops('later', e); } }, reduce ? Math.min(ms, 120) : ms);
 
   /* ================================================================== routes */
   function route(a, b){ if(a === b) return [a]; const adj = {}; for(const [p, q] of EDGES){ const d = Math.hypot(NODES[p][0] - NODES[q][0], NODES[p][1] - NODES[q][1]); (adj[p] = adj[p] || []).push([q, d]); (adj[q] = adj[q] || []).push([p, d]); }
@@ -339,8 +343,8 @@
   function sunDir(h){ const p = H.sunPosition(h, DOY), plan = p.az - 46.14 * Math.PI / 180, alt = Math.max(p.alt, -.02);
     return new V3(Math.cos(plan) * Math.cos(alt), Math.sin(alt), Math.sin(plan) * Math.cos(alt)).normalize(); }
   if(!H.TOD.find(t => t.key === 'feast')) H.TOD.push({key: 'feast', label: 'Afternoon', h: 15, doy: DOY});
-  function setHour(h){ S.hour = h; S.tod = 'feast'; const T = H.TOD.find(t => t.key === 'feast'); T.h = h; T.doy = DOY; try{ H.setTOD('feast'); }catch(e){ console.warn('[feast] tod', e); } LIGHT.update(); wake(30); }
-  function setTod(key){ S.tod = key; S.hour = key === 'golden' ? 17.75 : 18.75; try{ H.setTOD(key); }catch(e){ console.warn('[feast] tod', e); } LIGHT.update(); wake(30); }
+  function setHour(h){ S.hour = h; S.tod = 'feast'; const T = H.TOD.find(t => t.key === 'feast'); T.h = h; T.doy = DOY; try{ H.setTOD('feast'); }catch(e){ oops('tod', e); } LIGHT.update(); wake(30); }
+  function setTod(key){ S.tod = key; S.hour = key === 'golden' ? 17.75 : 18.75; try{ H.setTOD(key); }catch(e){ oops('tod', e); } LIGHT.update(); wake(30); }
   const LIGHT = {planes: [], update(){ for(const r of LIGHT.planes) r.update(); }};
   function opening(id){ const o = H.BIM2S.meta.openings.find(q => q.id === id); if(!o) return null; const c = W2(o.center[0], o.center[1]), a = W2(o.axis[0], o.axis[1]), n = W2(o.normal[0], o.normal[1]);
     return {o, c, a, n, P: (along, y) => new V3(c[0] + a[0] * along, y, c[1] + a[1] * along)}; }
@@ -406,7 +410,7 @@
           for(const o of grp.children.slice()){ if(!o.isMesh || o === cer || !o.visible || /^k28(ceramic|ao)|^feast|-rest$/.test(o.name)) continue; try{ const b = splitMesh(o, (c, y0) => near(c) && y0 > SMK.seam + .04 && c.y > SMK.seam + .1); if(b) parts.push(b.part); }catch(e){} }
           const pv = SMK.pivot = new THREE.Group(); pv.name = 'feast-smoker-hinge'; pv.position.set(SMK.c[0], SMK.seam, SMK.c[1] - 1.03); H.scene.add(pv); H.scene.updateWorldMatrix(true, true); for(const m of parts) pv.attach(m);
           // inside: a grate over a bed of coals
-          const gr = P.grate(.99); gr.position.set(SMK.c[0], SMK.seam - .1, SMK.c[1]); } } }catch(e){ console.warn('[feast] smoker', e); SMK.pivot = null; }
+          const gr = P.grate(.99); gr.position.set(SMK.c[0], SMK.seam - .1, SMK.c[1]); } } }catch(e){ oops('smoker', e); SMK.pivot = null; }
     SMK.emit = P.emitter({at: new V3(SMK.c[0], -.12, SMK.c[1]), rate: 0, size: .5, rise: .8, drift: [.34, .1], life: 3.4, color: '#dfe3e8', alpha: .34, grow: 2.6}); }
 
   // the game is played in the house as it is staged: furniture on, nothing moved or removed. What the visitor chose in the tour's
@@ -416,7 +420,7 @@
       const o = ls('hillside.furniture'), e = ls('hillside.furniture.edits.v1'); let did = '';
       if(!F.isOn()){ F.setOn(true); put('hillside.furniture', o); did += 'on '; }
       const ed = F.edits(); if(ed && (Object.keys(ed.mv || {}).length || (ed.rm || []).length)){ F.reset(); put('hillside.furniture.edits.v1', e); did += 'reset'; }
-      return did || 'as staged'; }catch(e){ console.warn('[feast] furniture', e); return 'error'; } }
+      return did || 'as staged'; }catch(e){ oops('furniture', e); return 'error'; } }
 
   /* ================================================================== props in the house */
   let P = null;
@@ -443,7 +447,7 @@
     // dishes: built once, hidden until found
     for(const id of Object.keys(P.DISH)){ const g = P.DISH[id](); g.visible = false; P.root.add(g); DISHOBJ[id] = g; }
     // bags and boxes
-    for(const id in SPOTS){ const sp = SPOTS[id]; if(!sp.prop) continue; const g = sp.kind === 'box' ? P.box() : P.bag(); g.position.set(...sp.prop.at); g.rotation.y = sp.prop.ry || 0; P.root.add(g); PROP[id] = g; }
+    for(const id in SPOTS){ const sp = SPOTS[id]; if(!sp.prop) continue; const g = sp.kind === 'box' ? P.box() : P.bag(); g.position.set(...sp.prop.at); g.rotation.y = sp.kind === 'bag' ? Math.atan2(sp.pos[0] - sp.prop.at[0], sp.pos[2] - sp.prop.at[2]) : (sp.prop.ry || 0); P.root.add(g); PROP[id] = g; }
     for(const [n, x, z] of [['drumTable', 6.56, -2.92], ['drumTable', 10.87, 29.62], ['bistroTable', -14.44, -22.5]]) try{ decorOff(n, x, z); }catch(e){}
     // the secret base under the stairs: a crate to put things on
     const cr = P.crate(); cr.position.set(-12.3, L0 + .03, -11.25); cr.rotation.y = .12; P.root.add(cr); PROP.crate = cr;
@@ -452,8 +456,8 @@
       if(gp) LIGHT.great = lightPlane(gp, 0, big, {ppf: 26});
       LIGHT.dining = lightPlane(circle(10.69, 21.37, 2.08), 2.5, big, {ppf: 40, gain: 1.15});
       LIGHT.sitting = lightPlane(circle(10.87, 29.62, 1.78), 1.4, big, {ppf: 40, gain: 1.15});
-      if(kp) LIGHT.kitchen = lightPlane(kp, 0, [{id: 'WN-L1-02'}], {ppf: 22}); }catch(e){ console.warn('[feast] light', e); }
-    try{ COOL.coolerLounge = hingeCooler(SPOTS.coolerLounge); COOL.coolerCoffee = hingeCooler(SPOTS.coolerCoffee); }catch(e){ console.warn('[feast] coolers', e); }
+      if(kp) LIGHT.kitchen = lightPlane(kp, 0, [{id: 'WN-L1-02'}], {ppf: 22}); }catch(e){ oops('light', e); }
+    try{ COOL.coolerLounge = hingeCooler(SPOTS.coolerLounge); COOL.coolerCoffee = hingeCooler(SPOTS.coolerCoffee); }catch(e){ oops('coolers', e); }
     buildSmoker();
     for(const id in STOCK){ const K = STOCK[id], cols = ['#b5232c', '#2d6b3c', '#e0862a', '#c9ccd0', '#2f5fb8']; let n = 0;
       K.ys.forEach((y, r) => { for(let i = 0; i < 5; i++){ if(r === 1 && i > 0 && i < 4) continue; const t = i / 4, it = K.kind === 'soda' ? P.can(cols[(n++) % 5]) : P.bottle((n++) % 3 ? 'milk' : 'water'); it.position.set(lerp(K.a[0], K.b[0], t), y + .012, lerp(K.a[1], K.b[1], t)); it.rotation.y = n; P.root.add(it); } }); }
@@ -477,7 +481,7 @@
 
   /* ================================================================== Snowball in the house (a billboard of the shared drawing) */
   let CAT = null;
-  function loadScript(src, has, cb){ if(has) return cb(); const s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = () => { console.warn('[feast] could not load ' + src); cb(); }; document.head.appendChild(s); }
+  function loadScript(src, has, cb){ if(has) return cb(); const s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = () => { oops('could not load ' + src); cb(); }; document.head.appendChild(s); }
   function makeCat(){ if(CAT || !window.SNOWBALL) return CAT; const img = new Image(), cv = document.createElement('canvas'); cv.width = 384; cv.height = 590;
     const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
     img.onload = () => { cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); tex.needsUpdate = true; wake(4); };
@@ -766,7 +770,7 @@
   let toastT = 0; function toast(m, ms){ toastE.textContent = m; toastE.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastE.classList.remove('on'), ms || 2200); }
   let sayT = 0; function say(m, ms, quiet){ sayE.innerHTML = '<small>Snowball</small>' + esc(m); sayE.classList.add('on'); clearTimeout(sayT); sayT = setTimeout(() => sayE.classList.remove('on'), ms || 5200); if(!quiet) SND.jingle(); }
   let placeT = 0; function placeCard(k){ const Pl = PLACES[k]; placeE.innerHTML = `<b>${esc(Pl.name)}</b><span>${esc(Pl.note)}</span>`; placeE.classList.add('on'); clearTimeout(placeT); placeT = setTimeout(() => placeE.classList.remove('on'), 6500); }
-  function fadeThrough(fn, hold){ fadeE.classList.add('on'); setTimeout(() => { try{ fn(); }catch(e){ console.error('[feast] cut', e); } wake(30); setTimeout(() => fadeE.classList.remove('on'), hold || 260); }, reduce ? 60 : 340); }
+  function fadeThrough(fn, hold){ fadeE.classList.add('on'); setTimeout(() => { try{ fn(); }catch(e){ oops('cut', e); } wake(30); setTimeout(() => fadeE.classList.remove('on'), hold || 260); }, reduce ? 60 : 340); }
 
   /* ---- objective: one line, always */
   function setGoal(silent){ const K = $('#feGoalK'), N = $('#feGoalN'), T = $('#feGoalT'), A = $('#feGoalA'); let hand = false, k = 'Thanksgiving at Hillside', n = '', t = '', acts = '';
@@ -870,12 +874,17 @@
     const wOf = m => m.w || (m.w = Math.max(40, (m.b.querySelector('span') || {}).offsetWidth || 90));
     const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
-    for(const it of items){ if(it.docked){ it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = r.top + Math.max(top + 24, r.height * .4); }
-      // keep clear of the HUD and of each other: the nearest free place above or below, and where it was if there is none
-      const y0 = it.y, all = obs.concat(placed), free = y => { it.y = y; const q = box(it); return !all.some(o => hit(q, o)); };
-      if(!free(y0)){ let ok = false; for(let k = 1; k <= 24 && !ok; k++) for(const d of (y0 > r.top + r.height * .55 ? [-1, 1] : [1, -1])){ const y = y0 + d * 30 * k; if(y < r.top + top || y > r.top + bot) continue; if(free(y)){ ok = true; break; } } if(!ok) it.y = y0; }
-      const bx = box(it);
-      placed.push(bx); const m = it.m;
+    // things that are out of view dock to the side they lie on: one tidy stack per side, in the clear band between the HUD above and below
+    for(const side of ['L', 'R']){ const list = items.filter(it => it.docked && it.edge === side), n = list.length; if(!n) continue;
+      const x0 = side === 'L' ? r.left : r.left + r.width - 290, x1 = x0 + 290; let yMin = r.top + top, yMax = r.top + bot;
+      for(const o of obs){ if(o[2] < x0 || o[0] > x1) continue; if((o[1] + o[3]) / 2 < r.top + r.height / 2) yMin = Math.max(yMin, o[3] + 36); else yMax = Math.min(yMax, o[1] - 36); }
+      const pitch = n > 1 ? clamp((yMax - yMin) / (n - 1), 40, 66) : 0, start = clamp(r.top + r.height * .42 - (n - 1) * pitch / 2, yMin, Math.max(yMin, yMax - (n - 1) * pitch));
+      list.forEach((it, i) => { it.x = side === 'L' ? r.left + padX : r.left + r.width - padX; it.y = start + i * pitch; placed.push(box(it)); }); }
+    for(const it of items){ const m = it.m;
+      if(!it.docked){ // in view: keep clear of the HUD and of the others, at the nearest free place above or below, or stay put if there is none
+        const y0 = it.y, all = obs.concat(placed), free = y => { it.y = y; const q = box(it); return !all.some(o => hit(q, o)); };
+        if(!free(y0)){ let ok = false; for(let k = 1; k <= 24 && !ok; k++) for(const d of (y0 > r.top + r.height * .55 ? [-1, 1] : [1, -1])){ const y = y0 + d * 30 * k; if(y < r.top + top || y > r.top + bot) continue; if(free(y)){ ok = true; break; } } if(!ok) it.y = y0; }
+        placed.push(box(it)); }
       m.b.style.transform = `translate(${it.x.toFixed(1)}px,${it.y.toFixed(1)}px)`; const cls = 'feMk ' + m.kind + ' on' + (m.hot ? ' hot' : '') + (it.edge ? ' edge ' + it.edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
   function tapAt(cx, cy){ if(rig.move || S.busy || S.ex) return; let best = null; for(const m of marks){ if(!m.on) continue; const q = m.b.getBoundingClientRect(), d = Math.hypot(q.left + q.width / 2 - cx, q.top + q.height / 2 - cy); if(d < 56 && (!best || d < best.d)) best = {m, d}; } if(best) best.m.act(); }
@@ -966,7 +975,7 @@
   function heldStep(now){ const g = HELD.g; if(!g || !S.carry || HELD.fly) return; const bob = rig.move ? Math.sin(now / 130) * .025 : 0;
     _h.set(0, -.74 + bob, -1.95).applyMatrix4(camera.matrixWorld); g.position.copy(_h); _hq.setFromAxisAngle(_hy, rig.yaw + .5); g.quaternion.copy(_hq); g.scale.setScalar(HELD.s); g.visible = !fadeE.classList.contains('on'); }
   function slotPos(id){ const s = SLOT[id]; return new V3(TABLE[0] + s[0], TABLE[1] + .02, TABLE[2] + s[1]); }
-  function setDown(){ if(!S.carry || S.busy || rig.move || S.ex) return; const id = S.carry; examine('_table', {mode: 'set', done: () => { const g = DISHOBJ[id], from = g.position.clone(), to = slotPos(id), s0 = g.scale.x, r0 = g.rotation.y, r1 = SLOT[id][2] || 0; HELD.fly = true; S.busy = true; g.rotation.set(0, r0, 0);
+  function setDown(){ if(!S.carry || S.busy || rig.move || S.ex) return; const id = S.carry; catAt(CHAIR); examine('_table', {mode: 'set', done: () => { const g = DISHOBJ[id], from = g.position.clone(), to = slotPos(id), s0 = g.scale.x, r0 = g.rotation.y, r1 = SLOT[id][2] || 0; HELD.fly = true; S.busy = true; g.rotation.set(0, r0, 0);
       tween(950, u => { const e = ease(u); g.position.lerpVectors(from, to, e); g.position.y += Math.sin(u * Math.PI) * .55; g.scale.setScalar(lerp(s0, 1, e)); g.rotation.y = lerp(r0, r1, e); if(id === 'candles') g.userData.spread(e); },
         () => { HELD.fly = false; HELD.g = null; S.carry = null; g.position.copy(to); g.scale.setScalar(1); SND.clink(); S.onTable.push(id); if(id === 'cider') SETTINGS.forEach(s => { s.userData.cider.visible = true; });
           if(id === 'turkey'){ S.busy = false; S.phase = 'candles'; setGoal(); S.ex.state = 'turkey'; sheetFor(S.ex); return; }
@@ -1037,7 +1046,7 @@
     try{ await navigator.clipboard.writeText(text + ' ' + url); btn.textContent = 'Link copied'; }catch(e){ btn.textContent = url; } }
   /* the picture: exactly what the canvas shows, with a caption underneath */
   let shot = null;
-  function snap(){ let url = null; const off = rig.off; try{ rig.off = [0, 0]; rig.sig = ''; rigStep(performance.now(), 0); url = H.snapshot('image/jpeg', .93); }catch(e){ console.warn('[feast] snapshot', e); } rig.off = off; rig.sig = ''; wake(6); if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.', 3200); return; }
+  function snap(){ let url = null; const off = rig.off; try{ rig.off = [0, 0]; rig.sig = ''; rigStep(performance.now(), 0); url = H.snapshot('image/jpeg', .93); }catch(e){ oops('snapshot', e); } rig.off = off; rig.sig = ''; wake(6); if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.', 3200); return; }
     SND.shutter(); const fl = $('#feFlash'); fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); shot = url; ga('feast3d_photo'); setTimeout(pictureCard, reduce ? 0 : 260); }
   async function compose(){ const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = shot; });
     let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0; const ar = sw / sh; if(ar > 1.9){ const w2 = sh * 1.9; sx = (sw - w2) / 2; sw = w2; } else if(ar < .72){ const h2 = sw / .72; sy = (sh - h2) * .5; sh = h2; }
@@ -1048,7 +1057,7 @@
     x.fillStyle = '#c4cad8'; x.font = `300 ${Math.round(25 * k)}px Jost, "Helvetica Neue", Arial, sans-serif`; x.fillText('Dinner found with Snowball the cat at 118hillside.com/games/feast', Math.round(58 * k), Hh + Math.round(116 * k));
     if(perfect){ x.save(); x.translate(W - Math.round(100 * k), Hh + Math.round(band / 2 - 4)); x.rotate(-.18); x.scale(k, k); x.beginPath(); for(let q = 0; q < 32; q++){ const a = q / 32 * Math.PI * 2, r = q % 2 ? 50 : 57; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); } x.closePath(); x.fillStyle = '#e8b84a'; x.fill(); x.fillStyle = '#2a1d07'; x.textAlign = 'center'; x.font = '600 22px "Cormorant Garamond", Georgia, serif'; x.fillText('A perfect', 0, -4); x.fillText('hunt', 0, 20); x.restore(); }
     return c; }
-  async function pictureCard(){ let cv = null; try{ cv = await compose(); }catch(e){ console.warn('[feast] picture', e); toast('That did not work here. Try a screenshot instead.', 3200); return; } closeCard();
+  async function pictureCard(){ let cv = null; try{ cv = await compose(); }catch(e){ oops('picture', e); toast('That did not work here. Try a screenshot instead.', 3200); return; } closeCard();
     const c = el('div', {id: 'feCard'}, `<div class="c" role="dialog" aria-label="Your picture"><img class="pc" alt="Your picture: the Thanksgiving table at dusk, with a caption underneath" src="${cv.toDataURL('image/jpeg', .9)}">
       <div class="acts"><button class="feBtn primary" type="button" id="feSave">Save the picture</button><button class="feBtn" type="button" id="feShare2">Share</button><button class="feBtn" type="button" id="feRetake">Back to the table</button></div>
       <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California. Come and stand on the terrace.</span><div class="acts"><a class="feBtn primary" href="/#contact" id="feSee2">See it in person</a></div></div></div>`);
@@ -1093,15 +1102,15 @@
       if(S.busy && !rig.move && !TW.length){ if(!frame.busyAt) frame.busyAt = now; else if(now - frame.busyAt > 4200){ S.busy = false; frame.busyAt = 0; } } else frame.busyAt = 0;
       if(S.started){ marksStep(); mapStep(); coach();
         if(!S.done && now - S.lastProgress > 75000 && !S.ex) $('#feHint').classList.add('nudge'); }
-    }catch(e){ if(!frame.err){ frame.err = true; console.error('[feast] frame', e); } } }
+    }catch(e){ if(!frame.err){ frame.err = true; oops('frame', e); } } }
 
   /* ================================================================== boot: after the house is ready */
   function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} S.staged = asStaged();
     let need = 2; const go = () => { if(--need > 0) return;
       const fonts = () => { try{ return Promise.race([Promise.all([document.fonts.load('40px "Caveat Brush"'), document.fonts.load('600 40px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2500))]); }catch(e){ return Promise.resolve(); } };
-      try{ buildUI(); }catch(e){ console.error('[feast] ui', e); }
+      try{ buildUI(); }catch(e){ oops('ui', e); }
       fonts().then(() => { try{ buildWorld(); setHour(HOURS[0]);
-          const a = yp([12.5, .9, -38.5], [-2.6, -1.6, -44]); rigCut([12.5, .9, -38.5], a[0], a[1], aspect() < 1 ? 80 : 58); UI.live = true; }catch(e){ console.error('[feast] build', e); }
+          const a = yp([12.5, .9, -38.5], [-2.6, -1.6, -44]); rigCut([12.5, .9, -38.5], a[0], a[1], aspect() < 1 ? 80 : 58); UI.live = true; }catch(e){ oops('build', e); }
         requestAnimationFrame(frame);
         const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
             if(o < .03 || n++ > 40){ document.documentElement.classList.add('fe-up'); startCard(); } else setTimeout(w, 120); })(); };
@@ -1117,7 +1126,7 @@
   function ray(o, d, far){ rc.set(v3(o), v3(d).normalize()); rc.far = far || 40; let hs = []; try{ hs = rc.intersectObjects(H.scene.children, true); }catch(e){} for(const h of hs) if(solid(h)) return h; return null; }
   function clearAt(p, hs){ let min = 99, who = ''; for(const dy of (hs || [0, -2, -3.8])) for(let i = 0; i < 12; i++){ const a = i / 12 * Math.PI * 2, h = ray([p[0], p[1] + dy, p[2]], [Math.cos(a), 0, Math.sin(a)], 10); if(h && h.distance < min){ min = h.distance; who = (h.object.name || h.object.parent.name) + '@' + dy; } } return {min: +min.toFixed(2), who}; }
   function clearSeg(a, b){ const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], len = Math.hypot(d[0], d[1], d[2]); let worst = null; for(const dy of [0, -1.6, -3.4, -4.7]) for(const s of [-.5, 0, .5]){ const nx = -d[2] / len * s, nz = d[0] / len * s, h = ray([a[0] + nx, a[1] + dy, a[2] + nz], d, len); if(h && (!worst || h.distance < worst.d)) worst = {d: +h.distance.toFixed(2), who: h.object.name || h.object.parent.name, dy}; } return worst; }
-  window.FEAST3D = {S, rig, PLACES, SPOTS, STEPS, HUNTS, LIGHT, COOL, SMK, PROP, DISHOBJ, get hunt(){ return HUNT; }, get P(){ return P; }, sound: SND, goTo, examine, back, hint, openSpot, knock, carryNow, setDown, liftLid, lightCandles, setHour, setTod, catAt, say, snap, finish, ray, clearAt, clearSeg, sunDir,
+  window.FEAST3D = {errors: ERRS, S, rig, PLACES, SPOTS, STEPS, HUNTS, LIGHT, COOL, SMK, PROP, DISHOBJ, get hunt(){ return HUNT; }, get P(){ return P; }, sound: SND, goTo, examine, back, hint, openSpot, knock, carryNow, setDown, liftLid, lightCandles, setHour, setTod, catAt, say, snap, finish, ray, clearAt, clearSeg, sunDir,
     state: () => ({phase: S.phase, step: S.step, place: S.place, ex: S.ex && {id: S.ex.id, state: S.ex.state, mode: S.ex.mode}, busy: S.busy, move: !!rig.move, carry: S.carry, onTable: S.onTable.slice(), hints: S.hints, peeks: S.peeks, tod: S.tod, hour: S.hour, done: S.done, tw: TW.length,
       marks: marks.filter(m => m.on).map(m => { const q = m.b.getBoundingClientRect(); return {k: m.kind, key: m.key, label: m.label, x: Math.round(q.left + q.width / 2), y: Math.round(q.top + q.height / 2), edge: /edge/.test(m.b.className)}; })}),
     view(pos, look, fov){ const a = yp(pos, look); rigCut(pos, a[0], a[1], fov || 62); },
