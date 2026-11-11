@@ -802,9 +802,62 @@ async function savePostcard(){ const btn = $('#save'); btn.disabled = true; btn.
   }catch(e){ console.warn(e); toast('That did not work. Try a screenshot instead.'); }
   btn.disabled = false; btn.textContent = 'Save the postcard'; }
 const KEYS = ['lights', 'motion', 'door', 'win', 'hang', 'path', 'tree', 'topper', 'room', 'oak', 'ter', 'weather', 'yard', 'wear', 'trad', 'name'];
-function encode(){ const o = {}; KEYS.forEach(k => o[k] = S[k]); return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
-function decode(h){ try{ const o = JSON.parse(decodeURIComponent(escape(atob(h.replace(/-/g, '+').replace(/_/g, '/'))))); const n = JSON.parse(JSON.stringify(DEFAULT)); KEYS.forEach(k => { if(o[k] != null && typeof o[k] === typeof n[k]) n[k] = Array.isArray(n[k]) ? o[k].filter(v => typeof v === 'string').slice(0, 12) : typeof n[k] === 'string' ? String(o[k]).slice(0, 32) : o[k]; }); return n; }catch(e){ return null; } }
-async function shareHouse(){ const url = 'https://118hillside.com/games/deck/#h=' + encode(), text = 'I decorated 118 Hillside Drive for the holidays with Snowball the cat. Light up my version, then do yours.';
+/* ---------- share links ----------
+   A link is  /games/deck/#d<13 chars>            e.g. #d05k2r9x0c3ab1
+   or, with a household name,  #d<13 chars>~the-parks
+   - "d" is the format version. A different layout gets a new letter and its own decoder.
+   - The 13 characters are one base-36 number holding every choice, packed field by field in the order of
+     LINK below (mixed radix). Single-choice fields store the option's position in its list; multi-select
+     fields store a bitmask (bit i = option i). Each field has a fixed capacity (the number after the key),
+     with room to spare, so the code is always the same length.
+   - APPEND ONLY: new options go at the END of a list, and never past the capacity (for a multi-select,
+     capacity = 2 to the number of options). Never reorder, remove or insert, and never reorder the fields,
+     or links people have already sent will open as a different house. If a list would outgrow its
+     capacity, or a field is added, start version "e" and keep this decoder.
+   - The name cannot be packed, so it rides along readably: spaces become "-", a real hyphen becomes "_",
+     and anything that is not a letter, digit, hyphen or apostrophe is dropped. No name, no suffix.
+   - Old links (#h=<base64 JSON>) still open through decodeOld. */
+const LINK = [
+  ['lights', 16, ['warm', 'multi', 'icicle', 'hanukkah', 'kwanzaa', 'marigold', 'fairy', 'none']],
+  ['motion', 8, ['steady', 'twinkle', 'chase', 'breathe']],
+  ['door', 16, ['evergreen', 'magnolia', 'eucalyptus', 'citrus', 'bluesilver', 'harvest', 'toran', 'none']],
+  ['hang', 8, ['star', 'red', 'moravian', 'none']],
+  ['tree', 8, ['fir', 'flocked', 'pencil', 'olive', 'none']],
+  ['topper', 6, ['star', 'flake', 'none']],
+  ['oak', 8, ['wrap', 'branches', 'both', 'none']],
+  ['weather', 6, ['clear', 'dusting', 'snowday']],
+  ['yard', 6, ['none', 'snowman', 'snowcat']],
+  ['wear', 10, ['none', 'scarfRed', 'scarfBlue', 'scarfGreen', 'bell']],
+  ['win', 64, ['candles', 'menorah', 'kinara', 'tree']],
+  ['path', 64, ['diyas', 'luminarias', 'garland', 'rangoli']],
+  ['room', 256, ['menorah', 'kinara', 'beams', 'poinsettia', 'rangoli', 'box']],
+  ['ter', 64, ['bistro', 'luminarias', 'lanterns', 'smoker']],
+  ['trad', 512, ['christmas', 'hanukkah', 'kwanzaa', 'diwali', 'solstice', 'lunar', 'lights']]
+];
+const LINK_VER = 'd', LINK_LEN = 13, B36 = '0123456789abcdefghijklmnopqrstuvwxyz';
+function nameToLink(n){ return String(n == null ? '' : n).replace(/[‘’]/g, "'").replace(/[^\p{L}\p{N}' -]/gu, '').replace(/ +/g, ' ').trim().slice(0, 32).trim().replace(/-/g, '_').replace(/ /g, '-'); }
+function nameFromLink(t){ return String(t == null ? '' : t).replace(/[^\p{L}\p{N}'_-]/gu, '').replace(/-+/g, ' ').replace(/_/g, '-').trim().slice(0, 32).trim(); }
+function encode(s){ s = s || S; const d = new Array(LINK_LEN).fill(0);
+  LINK.forEach(([k, cap, opts]) => { let v = 0;
+    if(Array.isArray(DEFAULT[k])) (Array.isArray(s[k]) ? s[k] : []).forEach(x => { const i = opts.indexOf(x); if(i >= 0) v |= 1 << i; });
+    else { v = opts.indexOf(s[k]); if(v < 0) v = opts.indexOf(DEFAULT[k]); }
+    for(let i = LINK_LEN - 1; i >= 0; i--){ const t = d[i] * cap + v; d[i] = t % 36; v = Math.floor(t / 36); } });   // d = d * cap + v
+  const nm = nameToLink(s.name);
+  return LINK_VER + d.map(x => B36[x]).join('') + (nm ? '~' + nm : ''); }
+function decodeShort(c){ const m = /^d([0-9a-z]{13})(?![0-9a-z])(?:~([^&?#\/]*))?/i.exec(String(c)); if(!m) return null;
+  const d = m[1].toLowerCase().split('').map(ch => B36.indexOf(ch)), n = JSON.parse(JSON.stringify(DEFAULT));
+  for(let f = LINK.length - 1; f >= 0; f--){ const [k, cap, opts] = LINK[f]; let r = 0;
+    for(let i = 0; i < LINK_LEN; i++){ const t = r * 36 + d[i]; d[i] = Math.floor(t / cap); r = t % cap; }   // r = d % cap, d = floor(d / cap)
+    if(Array.isArray(n[k])) n[k] = opts.filter((o, i) => r & (1 << i));
+    else if(r < opts.length) n[k] = opts[r]; }   // an option this build does not know keeps the default
+  if(d.some(x => x)) return null;   // larger than any real code: not one of ours
+  n.name = m[2] ? nameFromLink(m[2]) : '';
+  return n; }
+function decodeOld(h){ try{ const o = JSON.parse(decodeURIComponent(escape(atob(h.replace(/-/g, '+').replace(/_/g, '/'))))); const n = JSON.parse(JSON.stringify(DEFAULT)); KEYS.forEach(k => { if(o[k] != null && typeof o[k] === typeof n[k]) n[k] = Array.isArray(n[k]) ? o[k].filter(v => typeof v === 'string').slice(0, 12) : typeof n[k] === 'string' ? String(o[k]).slice(0, 32) : o[k]; }); return n; }catch(e){ return null; } }
+function decode(h){ try{ h = String(h == null ? '' : h).replace(/^#/, ''); try{ h = decodeURIComponent(h); }catch(e){}
+    const old = /^h=([A-Za-z0-9_-]+)/.exec(h); return old ? decodeOld(old[1]) : decodeShort(h); }catch(e){ return null; } }
+function shareLink(s){ const c = encode(s), i = c.indexOf('~'); return 'https://118hillside.com/games/deck/#' + (i < 0 ? c : c.slice(0, i) + '~' + encodeURIComponent(c.slice(i + 1))); }
+async function shareHouse(){ const url = shareLink(), text = 'I decorated 118 Hillside Drive for the holidays with Snowball the cat. Light up my version, then do yours.';
   ga('deck_share');
   try{ if(navigator.share){ await navigator.share({title: 'Deck the House with Snowball', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
   try{ await navigator.clipboard.writeText(text + ' ' + url); toast('Link copied. Paste it anywhere.'); }catch(e){ toast(url); } }
@@ -822,10 +875,9 @@ function bell(){ if(!sound) return; try{ AC = AC || new (window.AudioContext || 
 $('#avatar').innerHTML = SNOWBALL.svg({id: 'sbav', seed: 7}).replace('viewBox="96 18 304 462"', 'viewBox="110 10 280 300"');
 $('#back').onclick = () => { if(cur > (MODE === 'story' ? 2 : 1)){ cur--; renderStep(); } };
 $('#next').onclick = () => { if(cur < STEPS.length - 1){ ga('deck_step', {step: STEPS[cur].id}); cur++; renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); } };
-const hm = /#h=([A-Za-z0-9_-]+)/.exec(location.hash);
-if(hm){ const n = decode(hm[1]); if(n){ S = n; shared = true; MODE = 'free'; day = false; cur = STEPS.length - 1; } }
+{ const n = location.hash.length > 1 ? decode(location.hash) : null; if(n){ S = n; shared = true; MODE = 'free'; day = false; cur = STEPS.length - 1; } }
 renderStep();
-window.DECK = {get S(){ return S; }, get mode(){ return MODE; }, happy: () => happy().map(g => g.id), set(o){ Object.assign(S, o); renderStep(); }, go(i){ day = false; cur = i; renderStep(); }, light: () => lightUp(), steps: STEPS.map(s => s.id), encode, scene: k => { viewScene = k; drawScene(k); }};
+window.DECK = {get S(){ return S; }, get mode(){ return MODE; }, happy: () => happy().map(g => g.id), set(o){ Object.assign(S, o); renderStep(); }, go(i){ day = false; cur = i; renderStep(); }, light: () => lightUp(), steps: STEPS.map(s => s.id), encode, decode, shareLink, keys: KEYS, link: LINK, options: (() => { const o = {}; STEPS.forEach(st => { if(st.key) o[st.key] = st.options.map(x => x.v); if(st.seg) o[st.seg.key] = st.seg.opts.map(x => x[0]); if(st.multi2) o[st.multi2.key] = st.multi2.options.map(x => x.v); }); return o; })(), scene: k => { viewScene = k; drawScene(k); }};
 })();
 </script>
 </body>
