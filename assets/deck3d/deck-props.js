@@ -12,6 +12,8 @@
     const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const Y = new V3(0, 1, 0);
+    /* one warm light under the porch eave, on after dark, so the wreath, the toran and the little tree keep their color at night */
+    const porch = new THREE.PointLight(col('#ffd7a6'), 0, 18, 1.6); porch.position.set(-5.7, 7.1, 6.6); porch.name = 'deck-porch-light'; root.add(porch);
 
     /* ---------- materials and shared geometry ---------- */
     const MATS = new Map();
@@ -416,7 +418,7 @@
       keys.forEach(k => groups[k].forEach((s, j) => { const at = t; t += reduce ? 60 : (j < 3 ? 420 : 140); setTimeout(() => { const t0 = performance.now(); (function f(){ const q = Math.min(1, (performance.now() - t0) / (reduce ? 1 : 520)); applyOn(s, q * q * (3 - 2 * q)); if(q < 1 && SETS.has(s)) requestAnimationFrame(f); })(); if(onStep) onStep(i++, k); }, at); }));
       setTimeout(() => { setOn(1); if(onDone) onDone(); }, t + 600); return t + 600; }
     const SKY = {afternoon: [[1.02, 1, .97], [.5, .46, .4]], golden: [[.95, .86, .78], [.75, .5, .3]], dusk: [[.3, .34, .46], [.1, .06, .04]], morning: [[1, 1, 1], [.5, .48, .44]], midday: [[1.05, 1.05, 1.05], [.5, .5, .48]]};
-    function tick(t, tod){ U.time.value = t; flick(t); const night = tod === 'dusk'; U.halo.value = night ? 1 : .5; const k = SKY[tod] || SKY.afternoon; SNOW.u.uLight.value.setRGB(k[0][0], k[0][1], k[0][2]); SNOW.u.uSunC.value.setRGB(k[1][0] * .5, k[1][1] * .5, k[1][2] * .5); if(H.SUN_DIR) SNOW.u.uSun.value.copy(H.SUN_DIR);
+    function tick(t, tod){ U.time.value = t; flick(t); const night = tod === 'dusk'; U.halo.value = night ? 1 : .5; porch.intensity = night ? .85 : 0; const k = SKY[tod] || SKY.afternoon; SNOW.u.uLight.value.setRGB(k[0][0], k[0][1], k[0][2]); SNOW.u.uSunC.value.setRGB(k[1][0] * .5, k[1][1] * .5, k[1][2] * .5); if(H.SUN_DIR) SNOW.u.uSun.value.copy(H.SUN_DIR);
       if(SNOW.fall && SNOW.fall.visible) SNOW.fall.material.uniforms.uCam.value.copy(H.camera.position); for(const key in LIVE){ const g = LIVE[key].g; if(g && g.userData.tick) g.userData.tick(t); } }
     function count(){ let pts = 0, meshes = 0; root.traverse(o => { if(o.isPoints) pts += o.geometry.attributes.position.count; if(o.isMesh) meshes++; }); return {points: pts, meshes, sets: SETS.size}; }
     return {root, apply, setOn, lightUp, tick, setCat, count, oakInfo, floorY, BOX_AT, TREE_AT, SNOWMAN_AT, get on(){ return ON; }};

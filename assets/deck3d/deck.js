@@ -22,7 +22,7 @@
 
   /* ---------- the places you decorate from ---------- */
   const PLACES = [
-    {id: 'street', label: 'Roofline', pos: [9, 3, 68], look: [1, 7, 14], posP: [8, 3, 86], lookP: [2, 8, 14], cat: [-1, 40], say: 'Let us start at the top. The roof is long, so choose carefully.', sections: ['lights']},
+    {id: 'street', label: 'Roofline', pos: [9, 3, 68], look: [1, 7, 14], posP: [6, 3, 74], lookP: [0, 9.5, 14], cat: [-1, 40], say: 'Let us start at the top. The roof is long, so choose carefully.', sections: ['lights']},
     {id: 'door', label: 'Front door', pos: [-5.0, 4.6, 38], look: [-5.4, 2.0, 10], posP: [-5.2, 5.2, 44], lookP: [-5.4, 2.4, 10], cat: [-1.5, 13.4], say: 'The doors next. People will stand right here waiting for someone to answer.', sections: ['door', 'hang', 'path']},
     {id: 'windows', label: 'Windows', pos: [-9.5, 2.4, 33], look: [2.5, 4.2, 11], posP: [-10, 2.6, 37], lookP: [2.5, 4.6, 11], cat: [-8.2, 14.2], say: 'Now the windows. This is what the whole street sees.', sections: ['win']},
     {id: 'living', label: 'Living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9], cat: [10.7, -3.2], say: 'Inside now. This is where I spend most of my evenings.', sections: ['tree', 'room']},
@@ -288,7 +288,7 @@
     #dkPanel.fold #dkBody{display:none}
     #dkFold{display:inline-flex;border:1px solid #cfcabe;background:#fff;border-radius:999px;min-height:46px;padding:0 14px;font-size:14.5px;align-items:center}
     #dkBody h3{font-size:22px;margin-top:4px}#dkBody .opt{min-height:50px;padding:8px 9px}
-    #dkNew{top:150px;left:8px;width:calc(100% - 16px)}#dkToast{top:150px}
+    #dkNew{top:166px;left:8px;width:calc(100% - 16px)}#dkToast{top:166px}html.dk header.bar{visibility:hidden}#dkFoot .dkBtn{padding:11px 15px}
     #dkCard .c{padding:18px 16px 14px;border-radius:20px}#dkCard ul.g{gap:4px 8px}#dkCard ul.g li{font-size:14.5px}
     #dkArrive{bottom:14px}#dkDusk{bottom:18px}
     #dkPhoto .act span{display:none}
@@ -327,11 +327,11 @@
     body.innerHTML = h; body.scrollTop = keep ? top : 0;
     body.querySelectorAll('.opt').forEach(b => b.onclick = () => pick(b.dataset.s, b.dataset.v)); body.querySelectorAll('.seg button').forEach(b => b.onclick = () => pickSeg(b.dataset.s, b.dataset.g)); }
   function renderFoot(){ const i = PLACES.indexOf(PLACE), last = i === PLACES.length - 1, f = $('#dkFoot'), fix = PHASE === 'fix';
-    f.innerHTML = `<button type="button" id="dkFold" aria-expanded="true">Hide choices</button><span class="grow"></span>` + (i > 0 ? `<button type="button" class="dkBtn" id="dkBack">Back</button>` : '') +
+    f.innerHTML = `<button type="button" id="dkFold" aria-expanded="true" aria-label="Hide the choices">Hide</button><span class="grow"></span>` + (i > 0 ? `<button type="button" class="dkBtn" id="dkBack">Back</button>` : '') +
       (fix ? `<button type="button" class="dkBtn primary" id="dkNext">${MODE === 'story' ? 'See how they feel now' : 'Done decorating'}</button>` : last ? `<button type="button" class="dkBtn primary" id="dkNext">Wait for sunset</button>` : `<button type="button" class="dkBtn dark" id="dkNext">Next: ${esc(PLACES[i + 1].label.toLowerCase())}</button>`);
     if($('#dkBack')) $('#dkBack').onclick = () => goPlace(PLACES[i - 1].id);
     $('#dkNext').onclick = () => { if(fix) return refix(); if(last) return sunset(); goPlace(PLACES[i + 1].id); };
-    const fold = $('#dkFold'), pn = $('#dkPanel'); fold.onclick = () => { const on = pn.classList.toggle('fold'); fold.textContent = on ? 'Show choices' : 'Hide choices'; fold.setAttribute('aria-expanded', !on); }; if(pn.classList.contains('fold')){ fold.textContent = 'Show choices'; fold.setAttribute('aria-expanded', 'false'); } }
+    const fold = $('#dkFold'), pn = $('#dkPanel'); fold.onclick = () => { const on = pn.classList.toggle('fold'); fold.textContent = on ? 'Show' : 'Hide'; fold.setAttribute('aria-label', on ? 'Show the choices' : 'Hide the choices'); fold.setAttribute('aria-expanded', !on); }; if(pn.classList.contains('fold')){ fold.textContent = 'Show'; fold.setAttribute('aria-label', 'Show the choices'); fold.setAttribute('aria-expanded', 'false'); } }
   function refresh(keep){ renderPlaces(); renderBody(keep); renderFoot(); }
   function applyAll(){ P.apply(S, {inside: !!PLACE.inside}); placeCat(PLACE); }
   function pick(sid, v){ const st = SECT[sid], o = st.options.find(q => q.v === v); touched.add(st.key);
@@ -406,20 +406,22 @@
     sfx('shutter'); const fl = $('#dkFlash'); fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); shot = {url, place: PLACE.id}; ga('deck_photo', {place: PLACE.id}); setTimeout(postcardCard, reduce ? 0 : 260); }
   async function compose(){ const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = shot.url; });
     let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0; const ar = sw / sh; if(ar > 1.9){ const w2 = sh * 1.9; sx = (sw - w2) / 2; sw = w2; } else if(ar < .72){ const h2 = sw / .72; sy = (sh - h2) * .45; sh = h2; }   // keep the card a sensible shape
-    const W = sw >= sh ? 1600 : 1200, Hh = Math.round(W * sh / sw), k = W / 1600, band = Math.round(150 * k), c = document.createElement('canvas'); c.width = W; c.height = Hh + band; const x = c.getContext('2d');
-    x.fillStyle = '#18213a'; x.fillRect(0, 0, W, Hh + band); x.drawImage(img, sx, sy, sw, sh, 0, 0, W, Hh);
     try{ await Promise.all([document.fonts.load('600 60px "Cormorant Garamond"'), document.fonts.load('300 26px Jost')]); }catch(e){}
-    const story = MODE === 'story' && !shared, hp = story ? happy().length : 0, perfect = story && hp === GUESTS.length, maxW = W - Math.round(112 * k) - (perfect ? Math.round(150 * k) : 0);
+    const story = MODE === 'story' && !shared, hp = story ? happy().length : 0, perfect = story && hp === GUESTS.length;
+    const W = sw >= sh ? 1600 : 1200, Hh = Math.round(W * sh / sw), k = sw >= sh ? 1 : 1.12, maxW = W - Math.round(112 * k) - (perfect ? Math.round(150 * k) : 0), m = document.createElement('canvas').getContext('2d'); m.font = `300 ${Math.round(26 * k)}px Jost, "Helvetica Neue", Arial, sans-serif`;
+    const two = story && m.measureText(hp + ' of 8 guests felt at home. Decorated with Snowball at 118hillside.com/games/deck').width > maxW, band = Math.round((two ? 184 : 150) * k), c = document.createElement('canvas'); c.width = W; c.height = Hh + band; const x = c.getContext('2d');
+    x.fillStyle = '#18213a'; x.fillRect(0, 0, W, Hh + band); x.drawImage(img, sx, sy, sw, sh, 0, 0, W, Hh);
     x.textBaseline = 'alphabetic'; x.fillStyle = '#f6f5f1'; let fs = Math.round(60 * k); const title = 'Happy holidays from ' + (S.name || '118 Hillside'); do{ x.font = `600 ${fs}px "Cormorant Garamond", Georgia, serif`; fs -= 2; }while(x.measureText(title).width > maxW && fs > 22);
-    x.fillText(title, Math.round(56 * k), Hh + Math.round(76 * k)); x.fillStyle = '#c4cad8'; fs = Math.round(26 * k); const line = (story ? hp + ' of ' + GUESTS.length + ' guests felt at home. ' : '') + 'Decorated with Snowball at 118hillside.com/games/deck';
-    do{ x.font = `300 ${fs}px Jost, "Helvetica Neue", Arial, sans-serif`; fs -= 1; }while(x.measureText(line).width > maxW && fs > 12); x.fillText(line, Math.round(58 * k), Hh + Math.round(118 * k));
-    if(perfect){ x.save(); x.translate(W - Math.round(100 * k), Hh + Math.round(70 * k)); x.rotate(-.18); x.scale(k, k); x.beginPath(); for(let q = 0; q < 32; q++){ const a = q / 32 * Math.PI * 2, r = q % 2 ? 50 : 57; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); } x.closePath(); x.fillStyle = '#e8b84a'; x.fill(); x.fillStyle = '#2a1d07'; x.textAlign = 'center'; x.font = '600 22px "Cormorant Garamond", Georgia, serif'; x.fillText('A perfect', 0, -4); x.fillText('evening', 0, 20); x.restore(); }
+    x.fillText(title, Math.round(56 * k), Hh + Math.round(76 * k)); x.fillStyle = '#c4cad8'; fs = Math.round(26 * k); const l1 = story ? hp + ' of ' + GUESTS.length + ' guests felt at home.' : '', l2 = 'Decorated with Snowball at 118hillside.com/games/deck'; x.font = `300 ${fs}px Jost, "Helvetica Neue", Arial, sans-serif`;
+    if(!two){ x.fillText((l1 ? l1 + ' ' : '') + l2, Math.round(58 * k), Hh + Math.round(118 * k)); } else { x.fillText(l1, Math.round(58 * k), Hh + Math.round(116 * k)); x.fillText(l2, Math.round(58 * k), Hh + Math.round(150 * k)); }
+    if(perfect){ x.save(); x.translate(W - Math.round(100 * k), Hh + Math.round(band / 2 - 4)); x.rotate(-.18); x.scale(k, k); x.beginPath(); for(let q = 0; q < 32; q++){ const a = q / 32 * Math.PI * 2, r = q % 2 ? 50 : 57; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); } x.closePath(); x.fillStyle = '#e8b84a'; x.fill(); x.fillStyle = '#2a1d07'; x.textAlign = 'center'; x.font = '600 22px "Cormorant Garamond", Georgia, serif'; x.fillText('A perfect', 0, -4); x.fillText('evening', 0, 20); x.restore(); }
     return c; }
   async function postcardCard(){ let cv = null; try{ cv = await compose(); }catch(e){ console.warn('[deck3d] postcard', e); toast('That did not work here. Try a screenshot instead.'); return; }
     const draw = () => { const c = card(`<img class="pc" alt="Your postcard: the decorated house with a greeting underneath" src="${cv.toDataURL('image/jpeg', .9)}"><label for="dkName">Who is it from? This goes on the card.</label><input id="dkName" maxlength="32" autocomplete="off" placeholder="118 Hillside" value="${esc(S.name)}">
         <div class="row"><button class="dkBtn primary" id="dkSave" type="button" data-focus>Save the postcard</button><button class="dkBtn" id="dkShare2" type="button">Send your house</button><button class="dkBtn" id="dkRetake" type="button">Take another postcard</button></div>` + ctaHTML() + `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a><button class="dkBtn" id="dkAgain" type="button">Decorate again</button></div>`);
       let nt = 0; $('#dkName').oninput = e => { S.name = e.target.value.replace(/\s+/g, ' ').slice(0, 32); clearTimeout(nt); nt = setTimeout(async () => { try{ cv = await compose(); const im = $('#dkCard img.pc'); if(im) im.src = cv.toDataURL('image/jpeg', .9); }catch(err){} }, 350); };
-      $('#dkSave').onclick = () => { try{ S.name = S.name.trim(); const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = cv.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {place: shot.place}); }catch(e){ toast('That did not work here. Try a screenshot instead.'); } };
+      $('#dkSave').onclick = () => { const fail = () => toast('That did not work here. Try a screenshot instead.'), give = href => { const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = href; document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {place: shot.place}); };
+        try{ S.name = S.name.trim(); if(cv.toBlob) cv.toBlob(b => { try{ if(!b) return give(cv.toDataURL('image/png')); const u = URL.createObjectURL(b); give(u); setTimeout(() => URL.revokeObjectURL(u), 20000); }catch(e){ fail(); } }, 'image/png'); else give(cv.toDataURL('image/png')); }catch(e){ fail(); } };
       $('#dkShare2').onclick = shareHouse; $('#dkRetake').onclick = () => { closeCard(); ga('deck_retake'); }; $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#dkGames').onclick = () => ga('deck_cta', {cta: 'games'}); $('#dkAgain').onclick = again; };
     draw(); }
 
