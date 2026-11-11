@@ -20940,19 +20940,19 @@ const F35 = window.__F35 = {on: true, built: false, streetZ: 56.11, bandW: .68, 
   drain: {x0: -24.3, x1: -11.6, z: 23.95, w: .42},
   fence: [[-38.3, -4.7], [-38.85, 22.8], [-41.1, 44], [-42.3, 58.1]],                         // bark between the paving and the south fence
   plants: [
-    ['rosemary', 2.7, 17.5, {w: 2.4, h: 3, habit: 'upright', seed: 3}],
-    ['azalea', 2.3, 20.9, {w: 2.3, h: 2, color: 'white', seed: 2}],
-    ['lavender', 2.5, 24, {w: 2.4, h: 2.5, seed: 5}],
-    ['azalea', 2.7, 27.1, {w: 2.5, h: 2.2, color: 'white', seed: 7}],
-    ['olive', 3, 30.2, {w: 3.4, h: 6.2, trunks: 1, seed: 4}],
-    ['azalea', 3.3, 33.4, {w: 2.2, h: 2, color: 'white', seed: 9}],
-    ['lavender', 3.6, 36.1, {w: 1.9, h: 2.1, seed: 11}],
+    ['rosemary', 2.7, 17.4, {w: 2.4, h: 3, habit: 'upright', seed: 3}],
+    ['azalea', 2.4, 20.3, {w: 2.2, h: 2, color: 'white', seed: 2}],
+    ['lavender', 2.4, 22.7, {w: 2.2, h: 2.5, seed: 5}],
+    ['azalea', 2.6, 25.1, {w: 2.4, h: 2.2, color: 'white', seed: 7}],
+    ['olive', 2.5, 27.9, {w: 3.4, h: 6.2, trunks: 1, seed: 4}],
+    ['azalea', 3.2, 31.6, {w: 2.2, h: 2, color: 'white', seed: 9}],
+    ['lavender', 3.5, 35.2, {w: 1.9, h: 2.1, seed: 11}],
     ['lavender', -7.4, 33.7, {w: 2.2, h: 2.3, seed: 21}],
     ['azalea', -5.5, 34.6, {w: 1.8, h: 1.6, color: 'white', seed: 22}],
     ['lavender', -7.9, 38, {w: 2.6, h: 2.6, seed: 23}],
     ['lavender', -6.3, 42.4, {w: 2, h: 2.1, seed: 24}],
     ['lavender', -10.3, 42.2, {w: 2.1, h: 2.2, seed: 25}]],
-  tone: new THREE.Vector3(.35, .55, 1), pav: new THREE.Vector2(1.3, .45),   // front pavers: desaturate / contrast / gain; unit scale (6 and 9 in. cobbles) / tumbled mottle
+  tone: new THREE.Vector3(.45, .55, 1), pav: new THREE.Vector2(1.3, .45),   // front pavers: desaturate / contrast / gain; unit scale (6 and 9 in. cobbles) / tumbled mottle
   oak: {lean: {dir: [-.85, -.5], amount: .4}, trunkBias: {dir: [-.6, -.8], amount: .3}, trunkHeight: 11, bark: 1.7}, report: {}};
 function f35Spline(P, step){   // uniform Catmull-Rom through P
   const out = [], n = P.length, g = i => P[Math.max(0, Math.min(n - 1, i))];
@@ -21085,7 +21085,7 @@ F35.rebuild = function(){ F35.O = f35Outline(); const pa = TERR.paved.find(f35Is
     const r = _bs.apply(this, arguments); if(ok){ try{ f35Build(); console.info('[front35] ' + JSON.stringify(F35.report)); }catch(e){ console.warn('[front35] build', e); } } return r; }; }
 { const _lo = lotOakOpts; lotOakOpts = function(t){ const o = _lo.apply(this, arguments);   // F7
     if(F35.on && t && t.id === 'OAK-FRONT'){ o.lean = F35.oak.lean; o.trunkBias = F35.oak.trunkBias; o.trunkHeight = F35.oak.trunkHeight; o.cacheKey = 'lot:OAK-FRONT:r35'; } return o; }; }
-{ const _bt = buildTrees; buildTrees = function(){ const r = _bt.apply(this, arguments);
+{ const _bt = buildTreesLib; buildTreesLib = function(){ const r = _bt.apply(this, arguments);   // (buildTrees itself is deferred by the lazy-trees patch)
     try{ const tr = F35.on && GROUPS.trees && GROUPS.trees.children.find(o => o.name === 'tree:OAK-FRONT'), b = tr && tr.children.find(o => o.name === 'bark'), c = b && b.geometry.attributes.color;
       if(c && c.array instanceof Float32Array && !b.geometry.userData.f35){ b.geometry.userData.f35 = true; for(let i = 0; i < c.array.length; i++) c.array[i] *= F35.oak.bark; c.needsUpdate = true; F35.report.oak = 'lean ' + F35.oak.lean.amount; } }catch(e){ console.warn('[front35] oak', e); }
     return r; }; }
