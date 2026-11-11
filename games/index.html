@@ -114,12 +114,16 @@ footer p { margin:0 0 8px; max-width:900px; }
 @media (max-width:760px){ .wrap { padding:0 16px; } h1 { margin-top:32px; } .real { grid-template-columns:1fr; gap:28px; padding:48px 0 56px; } .real figure { order:-1; } }
 @media (max-width:560px){ .feature { padding-top:76px; } .feature .art { font-size:58px; top:12px; right:16px; } }
 @media (prefers-reduced-motion:reduce){ .gcard, .btn { transition:none; } .gcard:hover { transform:none; } }
+
+/* r38 phone audit: thumb-sized tap areas without changing the look */
+.foot-nav{gap:0 22px}.foot-nav a{display:inline-block;padding:9px 0}
 </style>
 </head>
 <body>
 <a class="skip" href="#top">Skip to the games</a>
+<style>/* r38: the shared header is drawn by a deferred script; its space is held from the first paint so the page never jumps down */#siteHeader:not(:has(.sh)){display:block;box-sizing:border-box;position:sticky;top:0;z-index:50;min-height:63px;background:rgba(251,250,247,.94);border-bottom:1px solid #e5e1d8}#siteHeader:not(:has(.sh)) noscript{display:none}@media (max-width:780px){#siteHeader:not(:has(.sh)){min-height:109px}}</style>
 <header id="siteHeader"><noscript><a href="/">118 Hillside Drive</a> | <a href="/tour/">3D tour</a> | <a href="/woodside/">Neighborhood</a> | <a href="/games/">Games</a> | <a href="/#contact">Schedule a showing</a></noscript></header>
-<script src="/assets/site-header.js" defer></script>
+<script src="/assets/site-header.js?v=38" defer></script>
 <main class="wrap" id="top">
   <h1>Play in the house</h1>
   <p class="lede">These games are set in the real house at 118 Hillside Drive, using its 3D model and its floor plan. The easiest suits a five-year-old, the hardest is an escape room for teens and adults, and they all work on a phone.</p>

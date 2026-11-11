@@ -23,10 +23,10 @@
     ['rear-yard-1282.jpg', 'Under the heritage oak', 'A paver terrace with an outdoor kitchen and a ceramic smoker under the pergola.'],
     ['hills-view-1284.jpg', 'Sunset from the balcony', 'Looking west to the hills at the end of the day.']
   ];
-  var css = '#intro28{position:fixed;inset:0;z-index:2147483000;background:#0e1113;color:#fff;font-family:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif;overflow:hidden;opacity:1;transition:opacity .7s ease}' +
+  var css = '#intro28{position:fixed;inset:0;z-index:2147483000;background:#0e1113 url("../images/front-exterior-800.jpg") center/cover no-repeat;color:#fff;font-family:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif;overflow:hidden;opacity:1;transition:opacity .7s ease}' +
     '#intro28.out{opacity:0;pointer-events:none}' +
     '#intro28 .sl{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease}#intro28 .sl.on{opacity:1}' +
-    '#intro28 .sl img{width:100%;height:100%;object-fit:cover;transform:scale(1.02);transition:transform 7s linear}#intro28 .sl.on img{transform:scale(1.1)}' +
+    '#intro28 .sl img{display:block;width:100%;height:100%;object-fit:cover;transform:scale(1.02);transition:transform 7s linear,opacity .6s ease}#intro28 .sl img:not(.in){opacity:0}#intro28 .sl.on img{transform:scale(1.1)}' +
     '#intro28 .sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,12,14,.35) 0%,rgba(10,12,14,0) 30%,rgba(10,12,14,0) 50%,rgba(10,12,14,.78) 100%)}' +
     '#intro28 .top{position:absolute;left:clamp(18px,4vw,48px);top:clamp(16px,3vw,32px);right:clamp(18px,4vw,48px);display:flex;justify-content:space-between;align-items:center;gap:12px}' +
     '#intro28 .brand{font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;letter-spacing:.14em;text-transform:uppercase}' +
@@ -46,15 +46,15 @@
     '#intro28 .ld b{display:block;font-weight:500;font-size:15.5px;font-variant-numeric:tabular-nums}#intro28 .ld span{display:block;font-size:13.5px;opacity:.85;line-height:1.3}' +
     '#intro28.ready .ld{display:none}@keyframes i28spin{to{transform:rotate(360deg)}}' +
     '#intro28 .bar{height:5px}' +
-    '@media (max-width:640px){#intro28 .ld{left:18px;right:18px;bottom:24px;max-width:none}#intro28 .cap{bottom:112px}}' +
+    '@media (max-width:640px){#intro28 .ld{left:18px;right:18px;bottom:calc(24px + env(safe-area-inset-bottom,0px));max-width:none}#intro28 .cap{bottom:calc(var(--ldh,74px) + 44px + env(safe-area-inset-bottom,0px))}}' +
     '@media (prefers-reduced-motion:reduce){#intro28 .ld i{animation-duration:2.4s}}' +
     '#intro28 .dots{display:flex;gap:5px}#intro28 .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}#intro28 .dots i.on{background:#fff}' +
-    '@media (max-width:640px){#intro28 .go{left:18px;right:18px;align-items:stretch;bottom:24px}#intro28 .go button{width:100%}#intro28.ready .cap{bottom:120px}#intro28 .dots{display:none}}' +
+    '@media (max-width:640px){#intro28 .go{left:18px;right:18px;align-items:stretch;bottom:calc(24px + env(safe-area-inset-bottom,0px))}#intro28 .go button{width:100%}#intro28.ready .cap{bottom:120px}#intro28 .dots{display:none}}' +
     '@media (prefers-reduced-motion:reduce){#intro28 .sl img,#intro28 .sl.on img{transform:none;transition:none}}' +
     '@media (min-width:641px) and (max-width:1100px){#intro28 .ld,#intro28 .go{bottom:24px}#intro28 .cap{bottom:128px}}';   // r35: between phone and wide desktop the status card sat on top of the caption
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   var el = document.createElement('div'); el.id = 'intro28'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Introducing 118 Hillside Drive while the 3D house loads');
-  var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 3 ? 'src' : 'data-src') + '="../images/' + s[0] + '"></div>'; }).join('');
+  var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 1 ? 'src' : 'data-src') + '="../images/' + s[0] + '"></div>'; }).join('');
   el.innerHTML = slides + '<div class="sh"></div>' +
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
     '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
@@ -64,8 +64,13 @@
   document.body.appendChild(el);
   var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');
   var k = 0, timer = null, done = false, readyAt = 0;
+  /* r38 (phone audit): a photo fades in only once it has arrived (the smaller front photo waits underneath, so the screen is never an empty dark box),
+     and the caption sits above the loading card however many lines that card takes */
+  Array.prototype.forEach.call(el.querySelectorAll('.sl img'), function(im, i){ function on(){ im.classList.add('in'); if(!i){ warm(1); warm(2); } } if(im.complete && im.naturalWidth) on(); else im.addEventListener('load', on); });
+  function fitCap(){ var d = el.querySelector('.ld'); if(d && d.offsetHeight) el.style.setProperty('--ldh', d.offsetHeight + 'px'); }
+  fitCap(); addEventListener('resize', fitCap); if(window.ResizeObserver){ try{ new ResizeObserver(fitCap).observe(el.querySelector('.ld')); }catch(e){} }
   function warm(i){ var im = sl[i % S.length].querySelector('img'); if(im && !im.getAttribute('src') && im.dataset.src) im.src = im.dataset.src; }
-  function show(i){ var nimg = sl[i % S.length].querySelector('img'); warm(i); if(!(nimg.complete && nimg.naturalWidth)) return;   // hold the current slide until the next photo is in
+  function show(i){ var nimg = sl[i % S.length].querySelector('img'); warm(i); if(!(nimg.complete && nimg.naturalWidth)) return; nimg.classList.add('in');   // hold the current slide until the next photo is in
     sl[k].classList.remove('on'); if(dots[k]) dots[k].classList.remove('on'); k = i % S.length; sl[k].classList.add('on'); if(dots[k]) dots[k].classList.add('on');
     warm(k + 1); warm(k + 2);
     cap.classList.add('swap'); setTimeout(function(){ h2.textContent = S[k][1]; p.textContent = S[k][2]; cap.classList.remove('swap'); }, reduce ? 0 : 320); }

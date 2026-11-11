@@ -40,7 +40,7 @@
     '#siteHeader .shPrice{font-size:14.5px;font-weight:400;letter-spacing:.01em;color:#1f1f1d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:lining-nums}' +
     '#siteHeader .shPrice small{font-size:inherit;color:#67665f}' +
     '#siteHeader .shBookBtn{flex:none;display:inline-flex;align-items:center;height:32px;padding:0 15px;border-radius:999px;background:#7d6038;color:#fff;font-size:14.5px;font-weight:500;letter-spacing:.01em;text-decoration:none;white-space:nowrap}' +
-    '#siteHeader .shBookBtn:active{background:#654d2c}}' +
+    '#siteHeader .shBookBtn:active{background:#654d2c}#siteHeader .shBookBtn{position:relative}#siteHeader .shBookBtn::after{content:"";position:absolute;inset:-6px -4px}}' +   /* r38: a 44 px tap area round the 32 px pill */
   '@media (max-width:359px){#siteHeader .shPrice small{display:none}}' +
   '#siteHeader .shBrand .s{display:none}' +
   '@media (max-width:520px){#siteHeader .sh{padding:0 10px;gap:6px}#siteHeader .shNav{gap:6px}#siteHeader .shBrand{font-size:22px;letter-spacing:.05em;font-weight:600}#siteHeader .shBrand .l{display:none}#siteHeader .shBrand .s{display:inline}#siteHeader .shBtn{height:40px;padding:0 11px;font-size:11.5px;letter-spacing:.06em}#siteHeader .shBurger{width:40px;height:40px}}' +

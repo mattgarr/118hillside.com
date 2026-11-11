@@ -255,13 +255,20 @@ footer p { margin: 0 0 8px; max-width: 900px; }
   .contact { padding: 76px 16px 72px; }
   .btn { padding: 11px 20px; }
 }
+
+/* r38 phone audit: thumb-sized tap areas without changing the look */
+.foot-nav{gap:0 22px}.foot-nav a{display:inline-block;padding:9px 0}
+.hook .rdots{top:6px;right:6px;gap:0}.hook .rdots button{width:40px;height:40px}
+.contact .copy{position:relative;min-height:34px;padding:5px 14px}.contact .copy::after{content:"";position:absolute;inset:-5px -2px}
+.contact .reach a{display:inline-block;padding:6px 0}
 </style>
 </head>
 <body>
 
 <a class="skip" href="#top">Skip to the page</a>
+<style>/* r38: the shared header is drawn by a deferred script; its space is held from the first paint so the page never jumps down */#siteHeader:not(:has(.sh)){display:block;box-sizing:border-box;position:sticky;top:0;z-index:50;min-height:63px;background:rgba(251,250,247,.94);border-bottom:1px solid #e5e1d8}#siteHeader:not(:has(.sh)) noscript{display:none}@media (max-width:780px){#siteHeader:not(:has(.sh)){min-height:109px}}</style>
 <header id="siteHeader"><noscript><a href="/">118 Hillside Drive</a> | <a href="/tour/">3D tour</a> | <a href="/woodside/">Neighborhood</a> | <a href="/games/">Games</a> | <a href="/#contact">Schedule a showing</a></noscript></header>
-<script src="/assets/site-header.js" defer></script>
+<script src="/assets/site-header.js?v=38" defer></script>
 
 <main id="top">
 <section class="hero" aria-label="118 Hillside Drive, for sale in Woodside, California">

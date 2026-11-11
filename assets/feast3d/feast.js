@@ -706,7 +706,7 @@
     #feDock{align-items:center;gap:8px;padding-left:10px;padding-right:10px}
     #feMapWrap{flex:none;flex-direction:row}#feMapBtn{display:inline-flex}
     #feMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:min(370px,calc(100% - 16px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
-    #feMap.on{display:block}#feMap .plan{width:100%;height:0;padding-bottom:70%}#feMap .pl{font-size:13.5px;padding:7px 11px}#feMap .tabs button{min-height:42px;font-size:14px}
+    #feMap.on{display:block}@media (orientation:portrait){#feMap.on{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 72px);transform:translateX(-50%)}}#feMap .plan{width:100%;height:0;padding-bottom:70%}#feMap .pl{font-size:13.5px;padding:7px 11px}#feMap .tabs button{min-height:42px;font-size:14px}
     #feMapX{display:grid;position:absolute;right:6px;top:4px;width:44px;height:44px;border:0;background:none;place-items:center;font-size:24px;color:var(--mut)}
     #feTags{justify-content:flex-end;gap:4px;padding-bottom:0}#feTags i{width:30px;height:40px;font-size:25px;line-height:44px}
     #feCoach{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 166px);font-size:14.5px}
