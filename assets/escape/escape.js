@@ -28,7 +28,7 @@
   /* ------------------------------------------------------------------ light through a window, projected onto a room floor (the engine doesn't draw indoor sun patches) */
   function makePatch(spec){ // spec: {win: openingId, room: spaceId, ppf, shadeTop, cutouts: [[ [x,y,z]... ]], strength}
     const B = H.BIM2S, o = B.meta.openings.find(q => q.id === spec.win), sp = B.meta.spaces.find(q => q.id === spec.room);
-    const poly = sp.polygon.map(p => W2(p[0], p[1])), xs = poly.map(p => p[0]), zs = poly.map(p => p[1]);
+    const poly = (sp.poly || sp.polygon).map(p => W2(p[0], p[1])), xs = poly.map(p => p[0]), zs = poly.map(p => p[1]);
     const bb = [Math.min(...xs), Math.min(...zs), Math.max(...xs), Math.max(...zs)], ppf = spec.ppf || 36, fy = (sp.floorZ || 0) + .02;
     const cv = document.createElement('canvas'); cv.width = Math.ceil((bb[2] - bb[0]) * ppf); cv.height = Math.ceil((bb[3] - bb[1]) * ppf); const g = cv.getContext('2d');
     const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
