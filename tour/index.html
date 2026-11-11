@@ -9239,7 +9239,9 @@ async function boot(){
         get flights(){ return flightN; },
         look(pos, at){ anim = null; glide = null; flightN++; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
         door28: window.DOOR28, door28Toggle: typeof door28Toggle === 'function' ? door28Toggle : null, POCKET31: window.POCKET31, R28W: window.R28W, BIM2S: typeof BIM2S !== 'undefined' ? BIM2S : null,
-        asBuilt(){ try{ if(ACTIVE_VAR !== 'asbuilt'){ ACTIVE_VAR = 'asbuilt'; applyVisibility(); } }catch(e){ console.warn('[games] asBuilt', e); } },   // games always play in the house as it is, whatever was last picked in Design
+        asBuilt(){ try{ if(ACTIVE_VAR !== 'asbuilt'){ ACTIVE_VAR = 'asbuilt'; applyVisibility(); } }catch(e){ console.warn('[games] asBuilt', e); }
+          /* r36: games are staged in the furnished house with its trees; switch both on for this visit and leave the visitor's saved tour choice as it was */
+          for(const [id, k] of [['furnBtn', 'hillside.furniture'], ['treesBtn', 'hillside.trees']]) try{ const el = document.getElementById(id); if(el && el.getAttribute('aria-pressed') === 'false'){ const was = localStorage.getItem(k); el.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){} },   // games always play in the house as it is, whatever was last picked in Design
         snapshot(type, q){ renderFrame(0); return canvas.toDataURL(type || 'image/jpeg', q || .92); },   // deck3d postcards: draw one frame through the real render path and read it back in the same task (the drawing buffer is not preserved)
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
