@@ -6190,6 +6190,7 @@ $('#lvSeg').addEventListener('keydown', e => { const L = ['main', 'upper', 'roof
 try{ if(localStorage.getItem('hillside.trees')==='0') vis.trees=false; }catch(e){}
 function applyVisibility(){
   const doll = isDoll();
+  if(doll){ vis.upper = vis.level !== 'main'; vis.roof = vis.level === 'roof'; }   // r35: one source of truth - the level in view. Design never set these two flags, so the upper storey stood whole behind its layout view
   const showRoof = !doll || vis.roof, showUpper = !doll || vis.upper;   // r35: Design follows the level buttons exactly as Dollhouse does
   grp('roof').visible = showRoof && showUpper; grp('vault').visible = grp('vaultUp').visible = showRoof && showUpper;
   grp('upper').visible = showUpper; grp('furnU').visible = showUpper;
