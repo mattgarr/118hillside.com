@@ -386,8 +386,9 @@
     else { base(1.2); add(sph(.7), M(G.col), [0, .8, 0]); }
     return g; }
   /*PIECES-END*/
-  const PAWN = {g: {}, hop: {},
-    build(id){ const g = buildPiece(THREE, LG.GUESTS[id], lin);
+  // Over the house a piece is drawn at twice its size and more, like a token on a board, so it reads from that far away; inside a room it is toy size.
+  const PAWN = {g: {}, hop: {}, K_OVER: 2.1, K_IN: 1.15,
+    build(id){ const g = buildPiece(THREE, LG.GUESTS[id], lin); g.userData.h = new THREE.Box3().setFromObject(g).max.y;
       g.traverse(o => { o.raycast = () => {}; if(o.isMesh){ o.castShadow = false; o.receiveShadow = false; } }); g.name = 'rfe-pawn:' + id; g.visible = false; H.scene.add(g); PAWN.g[id] = g; return g; },
     spot(slot){ const s = standOf(slot); return s.pawn || GEO[slot].c; },
     // every piece where its guest is; pieces upstairs go away with the upper level
@@ -397,11 +398,12 @@
         const st = standOf(slot); let yaw = st.pawnYaw != null ? st.pawnYaw : .9;
         if(st.pawnYaw == null && S.view === 'room' && S.room === slot){ const e = standOf(slot).pos; yaw = Math.atan2(-(e[2] - p[1]), e[0] - p[0]); }
         g.rotation.y = yaw;
+        const k = HOUSE.mode === 'over' ? PAWN.K_OVER : PAWN.K_IN; g.userData.k = k; if(!PAWN.hop[id]) g.scale.set(k, k, k);
         g.visible = !(HOUSE.mode === 'over' && !S.upperOn && LG.SLOTS[slot].lv === 'upper'); }
       wake(10); },
     drop(id){ PAWN.hop[id] = performance.now(); wake(40); },
-    step(now){ for(const id in PAWN.hop){ const g = PAWN.g[id], u = (now - PAWN.hop[id]) / 520; if(!g || u >= 1){ if(g){ g.scale.set(1, 1, 1); const sl = S.at[id]; if(sl) g.position.y = GEO[sl].fy + .02; } delete PAWN.hop[id]; continue; }
-        const sl = S.at[id]; if(!sl) continue; const b = Math.sin(Math.min(1, u * 1.25) * Math.PI) * 1.6 * (1 - u * .5), sq = u > .8 ? 1 - Math.sin((u - .8) / .2 * Math.PI) * .12 : 1; g.position.y = GEO[sl].fy + .02 + b; g.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq)); wake(3); } }};
+    step(now){ for(const id in PAWN.hop){ const g = PAWN.g[id], u = (now - PAWN.hop[id]) / 520, k = (g && g.userData.k) || 1; if(!g || u >= 1){ if(g){ g.scale.set(k, k, k); const sl = S.at[id]; if(sl) g.position.y = GEO[sl].fy + .02; } delete PAWN.hop[id]; continue; }
+        const sl = S.at[id]; if(!sl) continue; const b = Math.sin(Math.min(1, u * 1.25) * Math.PI) * 1.6 * k * (1 - u * .5), sq = u > .8 ? 1 - Math.sin((u - .8) / .2 * Math.PI) * .12 : 1; g.position.y = GEO[sl].fy + .02 + b; g.scale.set(k / Math.sqrt(sq), k * sq, k / Math.sqrt(sq)); wake(3); } }};
 
   /* floor tints: which rooms can take the guest in your hand, and the lids that keep rooms dark until their light comes on */
   const TINT = {m: {}, lid: {},
@@ -880,10 +882,11 @@
   const _v = new V3();
   function labelsStep(){ const show = S.view === 'over' && !rig.move && !S.busy, r = canvas.getBoundingClientRect(), F = freeRect(), placed = [], items = [];
     for(const id of ORDER){ const L = LB[id]; if((!show && S.view !== 'win') || (covered(id) && !occupant(id))){ if(L.on){ L.on = false; L.b.classList.remove('on'); } continue; }
-      const G = GEO[id]; _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 14 : 4.5), G.c[1]).project(camera);
-      const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z}); }
+      const G = GEO[id], occ = occupant(id), pc = occ && PAWN.g[occ], lift = !!(pc && pc.visible);   // with a piece in the room, the name goes just above its head
+      if(lift){ const q = PAWN.spot(id); _v.set(q[0], G.fy + (pc.userData.h || 3.5) * (pc.userData.k || 1) + .4, q[1]).project(camera); } else _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 14 : 4.5), G.c[1]).project(camera);
+      const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z, lift}); }
     // each name goes as near its room as it can without covering another: tried in a fixed order and in small steps, so a name moves little when another changes
-    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, cx = x => clamp(x, F.l + w / 2 + 2, F.r - w / 2 - 2), cy = y => clamp(y, F.t + h / 2, F.b - h / 2);
+    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, cx = x => clamp(x, F.l + w / 2 + 2, F.r - w / 2 - 2), cy = y => clamp(y, F.t + h / 2, F.b - h / 2); if(it.lift) it.y -= h / 2 + 2;
       let x = cx(it.x), y = cy(it.y); const hit = (xx, yy) => placed.some(q => !(xx + w / 2 + 4 < q[0] || xx - w / 2 - 4 > q[2] || yy + h / 2 + 2 < q[1] || yy - h / 2 - 2 > q[3]));
       for(const o of LB_TRY){ const xx = cx(it.x + o[0]), yy = cy(it.y + o[1]); if(!hit(xx, yy)){ x = xx; y = yy; break; } }
       placed.push([x - w / 2, y - h / 2, x + w / 2, y + h / 2]); L.x = x; L.y = y;
