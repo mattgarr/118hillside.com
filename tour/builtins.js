@@ -359,11 +359,10 @@ def('upperMicrowave', { w: 2.5, h: 1.4, d: 1.33, mountY: 4.6, kit: 0.14 }, funct
   var dw = (w - 0.12) * 0.74, x0 = -w / 2 + 0.06, x1 = x0 + dw;
   b.bb('stainless', x0 - 0.012, y0 + 0.05, zf - 0.012, x1 + 0.012, y1 - 0.05, zf + 0.004);                      // door frame lip
   b.bb('darkGlass', x0, y0 + 0.07, zf, x1, y1 - 0.07, zf + 0.012);                                              // door glass
-  b.bb('mwWindow', x0 + 0.16, y0 + 0.2, zf + 0.008, x1 - 0.16, y1 - 0.2, zf + 0.013);                            // the see-through window, a shade lighter
+  b.add('mwDoorFace', new THREE.PlaneGeometry(x1 - x0, h - 0.14), M((x0 + x1) / 2, (y0 + y1) / 2, zf + 0.0125), { keepUV: true });   // window mesh + reflections (r28)
   var cx0 = x1 + 0.05, cx1 = w / 2 - 0.06;
   b.bb('darkGlass', cx0, y0 + 0.07, zf, cx1, y1 - 0.07, zf + 0.01);                                             // control panel
-  b.bb('mwDisplay', cx0 + 0.07, y1 - 0.24, zf + 0.008, cx1 - 0.07, y1 - 0.15, zf + 0.012);                       // readout
-  for (i = 0; i < 12; i++) b.bb('mwKey', cx0 + 0.07 + (i % 3) * (cx1 - cx0 - 0.14) / 3 + 0.012, y1 - 0.38 - ((i / 3) | 0) * 0.1, zf + 0.008, cx0 + 0.07 + ((i % 3) + 1) * (cx1 - cx0 - 0.14) / 3 - 0.012, y1 - 0.32 - ((i / 3) | 0) * 0.1, zf + 0.011);
+  b.add('mwPanelFace', new THREE.PlaneGeometry(cx1 - cx0, h - 0.14), M((cx0 + cx1) / 2, (y0 + y1) / 2, zf + 0.0105), { keepUV: true });   // readout + touch keys (r28)
   b.bb('stainless', -w / 2, o.mountY, 0.02, w / 2, y0, zf);                                                     // trim kit band
   b.bb('blackMetal', -w / 2 + 0.12, o.mountY + 0.035, zf - 0.006, w / 2 - 0.12, y0 - 0.035, zf + 0.001);         // vent recess
   for (i = 0; i < 34; i++) { var vx = -w / 2 + 0.16 + i * (w - 0.32) / 33; b.bb('stainless', vx - 0.012, o.mountY + 0.04, zf - 0.003, vx + 0.012, y0 - 0.04, zf + 0.003); }   // slots
@@ -382,6 +381,29 @@ def('upperCubby', { w: 1.1, h: 2.6, d: 13 * IN, mountY: 4.6, shelves: 2, finish:
   }
 }, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Open end cubby for a run of wall cabinets (shelves, stacked plates).');
 MATS.glassCanopy = function () { return std({ color: 0xe8f2ee, metalness: 0.1, roughness: 0.04, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }); };
+MATS.mwDoorFace = function () {   // black glass door: a perforated window (dot mesh), a slim frame line and a soft reflection streak
+  var W = 512, H = 256, c = canvas(W, H), x = c.getContext('2d'), i, j;
+  x.fillStyle = '#0a0b0c'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#1b1f22'; x.fillRect(58, 44, W - 116, H - 88);
+  x.fillStyle = '#07080a'; for (j = 48; j < H - 46; j += 5) for (i = 62; i < W - 60; i += 5) { x.beginPath(); x.arc(i, j, 1.5, 0, 6.3); x.fill(); }
+  x.strokeStyle = 'rgba(140,150,158,.35)'; x.lineWidth = 2; x.strokeRect(56, 42, W - 112, H - 84);
+  var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.35, 'rgba(255,255,255,.07)'); g.addColorStop(.45, 'rgba(255,255,255,.16)'); g.addColorStop(.55, 'rgba(255,255,255,.04)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+  return std({ color: 0xffffff, map: t, roughness: 0.12, metalness: 0.2 });
+};
+MATS.mwPanelFace = function () {   // control panel: a lit clock readout, a 4 x 3 touch keypad, start / stop keys and the door button
+  var W = 128, H = 256, c = canvas(W, H), x = c.getContext('2d'), i;
+  x.fillStyle = '#0b0c0e'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#0f1a16'; x.fillRect(14, 22, W - 28, 30); x.fillStyle = '#a7f0cf'; x.font = 'bold 20px monospace'; x.textAlign = 'center'; x.fillText('12:00', W / 2, 44);
+  x.strokeStyle = 'rgba(170,178,186,.55)'; x.lineWidth = 1.5; x.fillStyle = 'rgba(200,206,212,.6)'; x.font = '9px sans-serif';
+  var labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'pop', '0', '+30'];
+  for (i = 0; i < 12; i++) { var cx = 22 + (i % 3) * 36, cy = 68 + ((i / 3) | 0) * 26; x.strokeRect(cx - 12, cy - 9, 24, 18); x.fillText(labels[i], cx, cy + 3); }
+  x.strokeRect(14, 178, 46, 20); x.strokeRect(W - 60, 178, 46, 20); x.fillText('stop', 37, 192); x.fillText('start', W - 37, 192);
+  x.fillStyle = 'rgba(120,128,136,.5)'; x.fillRect(22, 214, W - 44, 22); x.fillStyle = '#e8ecef'; x.fillText('door', W / 2, 229);
+  var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+  return std({ color: 0xffffff, map: t, roughness: 0.15, metalness: 0.15, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.18 });
+};
 MATS.mwWindow = function () { return std({ color: 0x23272a, metalness: 0.2, roughness: 0.08 }); };
 MATS.mwDisplay = function () { return std({ color: 0x0d1210, emissive: 0x9ce8c6, emissiveIntensity: 0.35, roughness: 0.3 }); };
 MATS.mwKey = function () { return std({ color: 0x2a2d30, metalness: 0.2, roughness: 0.35 }); };
