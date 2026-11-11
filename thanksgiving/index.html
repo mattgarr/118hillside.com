@@ -19459,7 +19459,7 @@ function r28AtticCabinet(){
    A tall pantry cabinet fills the bay between the fridge and the hall wall, matching the pantry on the fridge's other side. */
 const R28W = window.R28W = {shades: [], film: [], err: []};
 function r28Mat(kind){
-  if(R28W[kind]) return R28W[kind]; let m;
+  const ck = 'mat_' + kind; if(R28W[ck]) return R28W[ck]; let m;
   const lin = c => new THREE.Color(c).convertSRGBToLinear();
   if(kind === 'blackout') m = new THREE.MeshStandardMaterial({color: lin(0xe7e3db), roughness: .95, side: THREE.DoubleSide});
   else if(kind === 'filter') m = new THREE.MeshStandardMaterial({color: lin(0xf1ece2), roughness: .9, transparent: true, opacity: .84, side: THREE.DoubleSide, emissive: lin(0xfff4e2), emissiveIntensity: .14, depthWrite: false});
@@ -19470,7 +19470,7 @@ function r28Mat(kind){
     for(let k = 0; k < 5; k++){ const y = 60 + k * 95; const g = x.createLinearGradient(0, y - 30, 0, y + 30); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.22)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, y - 30, 512, 60); }
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping;
     m = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .55, transparent: true, opacity: .62, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false}); }
-  m.name = 'r28' + kind; return (R28W[kind] = m);
+  m.name = 'r28' + kind; return (R28W[ck] = m);
 }
 function r28Frame(id){   // an opening's world frame: centre, along-wall unit, unit pointing into the room, sill / head, width, wall thickness
   const o = (BIM2S.meta.openings || []).find(q => q.id === id); if(!o) return null;
@@ -19498,14 +19498,14 @@ function r28Shades(){
     R28W.shades.push(id); }
 }
 function r28Film(){
-  const SPEC = [['WN-L0-03', 'all'], ['WN-L0-07', 'bottom']];
+  const SPEC = [['WN-L0-03', 'all', 2], ['WN-L0-07', 'bottom', 1]];
   const rc = new THREE.Raycaster();
-  for(const [id, part] of SPEC){ const F = r28Frame(id); if(!F){ R28W.err.push('no opening ' + id); continue; }
+  for(const [id, part, units] of SPEC){ const F = r28Frame(id); if(!F){ R28W.err.push('no opening ' + id); continue; }
     // find the inner face of the glass: cast from the room toward the window centre and take the first glass hit
     const ym = (F.sill + F.head) / 2, O = new THREE.Vector3(F.cx + F.inn[0] * 3, ym, F.cz + F.inn[1] * 3); rc.set(O, new THREE.Vector3(-F.inn[0], 0, -F.inn[1])); rc.far = 4;
     const hits = rc.intersectObjects(withVar(['main']).filter(g => g.children.length), true), gh = hits.find(h => h.object.material && (h.object.material.transparent || /glass/i.test(h.object.material.name || h.object.name)));
     const d = gh ? gh.distance - 3 : 0; const dd = -d + .012;                                                  // distance into the room from the wall centre
-    const units = /-2$/.test(F.o.type) ? 2 : 1, fr = .2, mull = .22, uw = (F.W - 2 * fr - (units - 1) * mull) / units;
+    const fr = .2, mull = .22, uw = (F.W - 2 * fr - (units - 1) * mull) / units;
     const g = new THREE.Group(); g.name = 'r28film:' + id; grp('main').add(g);
     for(let k = 0; k < units; k++){ const a0 = -F.W / 2 + fr + k * (uw + mull), y0 = F.sill + fr, y1 = part === 'bottom' ? F.sill + (F.head - F.sill) * .5 : F.head - fr;
       const q = r28Quad(r28Mat('film'), F, a0, a0 + uw, y0, y1, dd, g); q.renderOrder = 3; q.userData.noAO = true; }
