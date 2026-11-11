@@ -905,7 +905,8 @@
 
   /* ================================================================== going into a room and coming back out */
   // with a guest in the room, look a little lower so their piece on the floor ahead is in the picture and not under the sun bar
-  function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face), here = S.L && Object.keys(S.at || {}).some(g => S.at[g] === slot && S.L.guests.indexOf(g) >= 0); return {pos: st.pos, yaw: a[0], pitch: a[1] - (here ? .22 : 0)}; }
+  function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face), here = S.L && Object.keys(S.at || {}).some(g => S.at[g] === slot && S.L.guests.indexOf(g) >= 0); if(!here) return {pos: st.pos, yaw: a[0], pitch: a[1]};
+    const pw = st.pawn || GEO[slot].c, ap = yp(st.pos, [pw[0], st.pos[1] - 5, pw[1]]); return {pos: st.pos, yaw: a[0] + angDiff(a[0], ap[0]) * .35, pitch: a[1] - .22}; }
   function reframe(){ const s = rig.st, F = freeRect(); s.offX = ((F.l + F.r) / 2) / F.W - .5; s.offY = phone() ? ((F.t + F.b) / 2) / F.Hh - .5 : 0; rig.sig = ''; }
   function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(68); s.zoom = 1; s.slow = false; S.lookBack = 0; }
   function peekPose(slot){ const G = GEO[slot], o = rig.orb, dx = Math.sin(o.th), dz = Math.cos(o.th); return {pos: [G.c[0] + dx * 13, G.fy + 30, G.c[1] + dz * 13], at: [G.c[0], G.fy + 1, G.c[1]], fov: 42, off: rig.off.slice()}; }
@@ -1149,7 +1150,7 @@
     // beds in the bedrooms and the oak outside the windows: the game needs the furniture and the trees on, and puts the visitor's own saved choice back straight away
     for(const [id, k] of [['furnBtn', 'hillside.furniture'], ['treesBtn', 'hillside.trees']]) try{ const b = document.getElementById(id); if(b && b.getAttribute('aria-pressed') === 'false'){ const was = localStorage.getItem(k); b.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){}
     const base = (document.currentScript && document.currentScript.src) || '';
-    loadScript('../assets/room3d/room-logic.js?v=2', () => loadScript('../assets/room3d/room-data.js?v=2', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
+    loadScript('../assets/room3d/room-logic.js?v=3', () => loadScript('../assets/room3d/room-data.js?v=2', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
         try{ measure(); buildUI(); buildLabels(); TINT.build(); S.view = 'title'; HOUSE.over(); orbitFit(); rigCut(orbitPose()); UI.live = true; applyHour(13, true); setTimeout(() => { try{ dev.verify(); }catch(e){ console.warn('[room] verify', e); } }, 4000); }catch(e){ console.error('[room] build', e); }
         requestAnimationFrame(frame);
         const first = () => { document.documentElement.classList.add('rfe-up'); const v = Q.get('puzzle'), n = parseInt(v, 10);

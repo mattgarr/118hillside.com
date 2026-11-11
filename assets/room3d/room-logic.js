@@ -77,7 +77,7 @@
     wheel:   {name: 'Nugget’s wheel', short: 'The wheel', kind: 't', col: '#8c5a3c', ico: 'wheel', bio: 'It squeaks, and it turns from dusk until dawn.', yay: 'Squeak. Squeak. Squeak.'},
     mabel:   {name: 'Mabel', kind: 't', col: '#2f8a80', ico: 'tortoise', bio: 'A tortoise who likes warm paving and takes her time. She sleeps in her shell, so she does not need a bedroom.', yay: 'Already outside. It took a while.'},
     lettuce: {name: 'Truffle’s lettuce', short: 'The lettuce', kind: 't', col: '#2f8f6b', ico: 'lettuce', bio: 'A tray of it, still growing. It needs daylight.', yay: 'Growing nicely.'},
-    scope:   {name: 'Olive’s telescope', short: 'The telescope', kind: 't', col: '#5b4a9c', ico: 'scope', bio: 'Somebody left it behind. Olive has claimed it as a perch.', yay: 'Pointed at the sky.'},
+    scope:   {name: 'Olive’s telescope', short: 'The telescope', kind: 't', col: '#5b4a9c', ico: 'scope', bio: 'It points at the sky. Olive has claimed it as a perch.', yay: 'Pointed at the sky.'},
     van:     {name: 'the van', short: 'The van', kind: 't', col: '#3d5a98', ico: 'van', bio: 'Electric, and nearly flat after bringing everyone here.', yay: 'Plugged in.'}
   };
   const isP = g => GUESTS[g].kind === 'p';
