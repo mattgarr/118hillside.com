@@ -51,7 +51,7 @@
       note: 'The front deck, with two loungers that look down the paver walk to Hillside Drive.'},
     entry:   {name: 'Entry', floor: 'main', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-6.5, -2.3],
       note: 'A cathedral ceiling, a starburst light, and iron-and-glass doors at both ends. The oak is straight ahead.'},
-    living:  {name: 'Living room', floor: 'main', pos: [1.8, EYE, -3.6], face: [10, 5.0, -2.9], map: [5.5, -3.4],
+    living:  {name: 'Living room', floor: 'main', pos: [1.8, EYE, -3.6], face: [8.5, 3.1, -3.0], map: [5.5, -3.4],
       note: 'Fir beams cross the vaulted ceiling. This room is part of the original 1920s house.'},
     kitchen: {name: 'Kitchen', floor: 'main', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [10.5, 10.4],
       note: 'Quartz counters, a long peninsula, a gas range under a glass hood, and a pantry beside the big fridge.'},
@@ -93,7 +93,7 @@
      at: where the gold ring sits.  pos/look/fit: the examine view.  prop: what stands there and where.  show: where a find hovers. */
   const SPOTS = {
     note:        {place: 'table', kind: 'note', label: 'The twins’ note', at: [0.2, -2.1, -43.6], pos: [3.3, .25, -43.9], look: [0.2, -2.25, -43.6], fit: {w: 2.2, h: 1.6}},
-    _table:      {place: 'table', kind: 'table', label: 'Dinner table', at: [-2.6, -2.0, -43.7], pos: [4.3, .35, -45.5], look: [-2.3, -2.0, -43.7], fit: {w: 7.6, h: 4.6}},
+    _table:      {place: 'table', kind: 'table', label: 'Dinner table', at: [-2.6, -2.0, -43.7], pos: [4.3, .35, -45.5], look: [-2.4, -.55, -43.7], fit: {w: 7.4, h: 5.6}},
     smoker:      {place: 'table', kind: 'smoker', label: 'Smoker', at: [0.65, -.9, -48.8], pos: [3.4, .3, -45.9], look: [0.65, -1.15, -48.8], fit: {w: 3.4, h: 3.6},
       title: 'The ceramic smoker', text: 'Marcus lit it at six this morning. The dial says the turkey needs a little longer, and the twins’ rules say it comes last.'},
     coolerLounge:{place: 'lounge', kind: 'cooler', label: 'Drinks fridge', at: [-20.9, -3.0, -22.6], pos: [-17.9, -1.5, -20.3], look: [-21.0, -3.15, -22.6], fit: {w: 2.6, h: 3.1}, center: [-21.8, -3.1, -22.6], hinge: 'min',
@@ -102,7 +102,7 @@
       title: 'The coffee bar drinks fridge', text: 'Smoked glass, under the coffee bar counter, with the microwave on the shelf above it.', act: 'Open it'},
     fridge:      {place: 'kitchen', kind: 'fridge', label: 'Big fridge', at: [18.4, 3.6, 8.0], pos: [17.2, 4.9, 10.7], look: [18.4, 3.3, 8.0], fit: {w: 3.3, h: 6.3},
       title: 'The big fridge', text: 'Four doors of stainless steel in the kitchen, with the pantry cupboard beside it.', act: 'Open it'},
-    boxDining:   {place: 'great', kind: 'box', label: 'Pie box', at: [10.7, 2.9, 20.15], pos: [14.6, 5.2, 18.9], look: [10.7, 2.7, 20.2], fit: {w: 2.6, h: 2}, prop: {at: [10.7, 2.5, 20.15], ry: .5},
+    boxDining:   {place: 'great', kind: 'box', label: 'Pie box', at: [10.35, 2.9, 22.45], pos: [14.4, 5.2, 25.2], look: [10.35, 2.7, 22.45], fit: {w: 2.6, h: 2}, prop: {at: [10.35, 2.5, 22.45], ry: .5},
       title: 'A box on the dining table', text: 'The dining table sits beside the great room’s wall of glass.', act: 'Lift the lid'},
     boxSitting:  {place: 'great', kind: 'box', label: 'Pie box', at: [10.87, 1.8, 29.62], pos: [11.3, 5.0, 32.6], look: [10.87, 1.55, 29.62], fit: {w: 2.6, h: 2}, prop: {at: [10.87, 1.4, 29.62], ry: -.3},
       title: 'A box on the sofa table', text: 'The low table in the sitting area, between the sofa and the big windows.', act: 'Lift the lid'},
@@ -112,7 +112,7 @@
       title: 'A box on the lounge table', text: 'The round glass table in the bonus lounge.', act: 'Lift the lid'},
     bagPrimary:  {place: 'primary', kind: 'bag', label: 'Paper bag', at: [-15.3, 7.8, -33.2], pos: [-12.3, 10.1, -31.0], look: [-15.3, 7.9, -33.2], fit: {w: 2.2, h: 2.6}, prop: {at: [-15.3, 7.21, -33.2], ry: 1.2}, decoy: 'mouse',
       title: 'A bag at the foot of the bed', text: 'On the bench in the primary bedroom. Look up and count the skylights.', act: 'Look in the bag'},
-    bagOffice:   {place: 'office', kind: 'bag', label: 'Paper bag', at: [-24.2, -1.5, -9.1], pos: [-27.0, -.5, -10.5], look: [-24.2, -1.45, -9.1], fit: {w: 2.2, h: 2.6}, prop: {at: [-24.2, -2.06, -9.1], ry: -1.3}, decoy: 'ball',
+    bagOffice:   {place: 'office', kind: 'bag', label: 'Paper bag', at: [-24.2, -1.5, -9.1], pos: [-27.4, -.5, -8.7], look: [-24.2, -1.45, -9.1], fit: {w: 2.2, h: 2.6}, prop: {at: [-24.2, -2.06, -9.1], ry: -1.3}, decoy: 'ball',
       title: 'A bag on the office desk', text: 'On the desk in the office downstairs. Look up and count the skylights.', act: 'Look in the bag'},
     bagLoft:     {place: 'loft', kind: 'bag', label: 'Paper bag', at: [-23.85, 7.6, -5.8], pos: [-20.7, 10.3, -8.4], look: [-23.85, 7.7, -5.8], fit: {w: 2.2, h: 2.6}, prop: {at: [-23.85, 7.03, -5.8], ry: -1.0}, decoy: 'acorn',
       title: 'A bag on the loft bench', text: 'On the bench at the top of the stairs. Look up and count the skylights.', act: 'Look in the bag'},
@@ -216,7 +216,10 @@
         hints: ['The front walk is on the street side of the house.', 'There are two loungers outside the front doors.', 'The front porch. After you.']}]}};
   const STEPS = HUNTS[HUNT].steps, LETTERS = 'THANKS';
   const HOURS = [15.0, 15.5, 16.0, 16.4, 16.8, 17.2];   // the sun, by how many dishes are on the table (the engine's mid-October sun)
-  const SLOT = {turkey: [0, 0, 0], potatoes: [-1.84, .04, 0], rolls: [-2.8, -.04, 0], pie: [1.88, -.04, 0], sauce: [2.66, .3, 0], cider: [2.8, -.3, .6], candles: [0, 0, 0]};
+  const SLOT = {turkey: [0, 0, 0], potatoes: [-1.84, .04, 0], rolls: [-2.8, -.04, 0], pie: [1.72, -.02, 0], sauce: [2.5, .34, 0], cider: [2.72, -.36, .6], candles: [0, 0, 0]};
+  const PLURAL = {candles: 1, rolls: 1, potatoes: 1};
+  // what is on the shelves of the two drinks fridges, front row, door side: [from, to] along the shelf, and the shelf heights
+  const STOCK = {coolerLounge: {a: [-21.42, -23.2], b: [-21.42, -22.0], ys: [-3.83, -3.19, -2.55], kind: 'soda'}, coolerCoffee: {a: [19.02, 12.1], b: [20.25, 12.1], ys: [.73, 1.37, 2.01], kind: 'milk'}};
   const TABLE = [-2.6, -2.27, -43.7];
 
   /* ================================================================== state */
@@ -414,14 +417,14 @@
     const T = new THREE.Group(); T.name = 'feast-table'; T.position.set(TABLE[0], TABLE[1], TABLE[2]); P.root.add(T); PROP.table = T;
     T.add(P.runner(6.7, 1.3));
     for(const s of [-1, 1]) [-2.75, -1.05, 1.05, 2.75].forEach((x, i) => { const st = P.setting(s > 0); st.position.set(x, .004, s * 1.22); st.rotation.y = s > 0 ? 0 : Math.PI; T.add(st); SETTINGS.push(st); });
-    const pk = [['#d9772b', .2, -3.28, .3], ['#efe6d2', .15, -3.05, -.36], ['#9aa884', .13, 3.3, .1], ['#d9772b', .12, .98, .42], ['#efe6d2', .11, -.98, -.42]];
+    const pk = [['#d9772b', .19, -3.36, .38], ['#efe6d2', .14, -3.3, -.42], ['#9aa884', .13, 3.3, .1], ['#d9772b', .12, .98, .42], ['#efe6d2', .11, -.98, -.42]];
     for(const [hex, r, x, z] of pk){ const p = P.pumpkin(r, hex); p.position.set(x, .012, z); p.rotation.y = x * 2; T.add(p); }
     [['#b5471d', -2.2, .48], ['#c98a12', -1.3, -.5], ['#8c2b3d', 1.35, .5], ['#c98a12', 2.3, -.46], ['#b5471d', .5, -.5], ['#8c2b3d', -.45, .52], ['#c98a12', 3.05, .42], ['#b5471d', -3.2, -.1]].forEach(([hex, x, z], i) => { const l = P.leaf(hex, .2 + (i % 3) * .03); l.position.set(x, .02, z); l.rotation.z = i * 1.1; T.add(l); });
     // the twins' note: a kraft tag lying on the runner by the near end of the table
-    noteProp = P.tag('?', true); noteProp.rotation.set(-Math.PI / 2, 0, .35); noteProp.position.set(2.75, .03, .32); T.add(noteProp);
+    noteProp = P.tag('?', true); noteProp.rotation.set(-Math.PI / 2, 0, .35); noteProp.position.set(3.2, .03, .08); T.add(noteProp);
     // the string for the letter tags, across the table, hung from the pergola
-    BUNT = P.bunting([-3.2, 2.85, -47.5], [-2.4, 2.85, -39.9], .5, 6); P.root.add(BUNT);
-    for(const e of [[-3.2, -47.5], [-2.4, -39.9]]){ const s = P.mesh(new THREE.CylinderGeometry(.008, .008, 2.3, 4), P.std('#b5894e', {roughness: 1}), e[0], 2.85 + 1.15, e[1]); P.root.add(s); }
+    BUNT = P.bunting([-3.2, 2.05, -47.5], [-2.4, 2.05, -39.9], .45, 6); P.root.add(BUNT);
+    for(const e of [[-3.2, -47.5], [-2.4, -39.9]]){ const s = P.mesh(new THREE.CylinderGeometry(.008, .008, 3.0, 4), P.std('#b5894e', {roughness: 1}), e[0], 2.05 + 1.5, e[1]); P.root.add(s); }
     // dishes: built once, hidden until found
     for(const id of Object.keys(P.DISH)){ const g = P.DISH[id](); g.visible = false; P.root.add(g); DISHOBJ[id] = g; }
     // bags and boxes
@@ -437,6 +440,8 @@
       if(kp) LIGHT.kitchen = lightPlane(kp, 0, [{id: 'WN-L1-02'}], {ppf: 22}); }catch(e){ console.warn('[feast] light', e); }
     try{ COOL.coolerLounge = hingeCooler(SPOTS.coolerLounge); COOL.coolerCoffee = hingeCooler(SPOTS.coolerCoffee); }catch(e){ console.warn('[feast] coolers', e); }
     buildSmoker();
+    for(const id in STOCK){ const K = STOCK[id], cols = ['#b5232c', '#2d6b3c', '#e0862a', '#c9ccd0', '#2f5fb8']; let n = 0;
+      K.ys.forEach((y, r) => { for(let i = 0; i < 5; i++){ if(r === 1 && i > 0 && i < 4) continue; const t = i / 4, it = K.kind === 'soda' ? P.can(cols[(n++) % 5]) : P.bottle((n++) % 3 ? 'milk' : 'water'); it.position.set(lerp(K.a[0], K.b[0], t), y + .012, lerp(K.a[1], K.b[1], t)); it.rotation.y = n; P.root.add(it); } }); }
     // where each dish starts
     stash(); makeCat();
     candleLight = new THREE.PointLight(lin('#ffc27a'), 0, 13, 1.6); candleLight.position.set(TABLE[0], TABLE[1] + 1.7, TABLE[2]); P.root.add(candleLight);
@@ -448,7 +453,7 @@
   // put every hidden dish where the twins left it
   function stash(){ for(const st of STEPS){ const sp = SPOTS[st.answer], g = DISHOBJ[st.dish]; g.visible = false; g.scale.setScalar(1); g.rotation.set(0, 0, 0); if(st.dish === 'candles') g.userData.spread(0);
       if(sp.kind === 'wall'){ const top = PROP.crate.position.clone(); top.y += PROP.crate.userData.top; g.position.copy(top); g.visible = true; }
-      else if(sp.kind === 'cooler'){ const c = COOL[st.answer]; g.position.copy(c ? c.inside : v3(sp.at)); }
+      else if(sp.kind === 'cooler'){ const K = STOCK[st.answer]; g.position.set((K.a[0] + K.b[0]) / 2, K.ys[1] + .012, (K.a[1] + K.b[1]) / 2); g.scale.setScalar(.58); g.rotation.y = st.answer === 'coolerLounge' ? 0 : -Math.PI / 2; g.visible = true; }
       else { const b = PROP[st.answer]; g.position.copy(b.position).add(b.userData.inside); } }
     const t = DISHOBJ.turkey; t.position.set(SMK.c[0], SMK.seam - .1, SMK.c[1]); t.scale.setScalar(.8); t.rotation.y = -.5; t.visible = true; dress(t, false); }
   function dress(t, on){ (t.userData.dress || []).forEach(o => o.visible = on); }
@@ -588,7 +593,7 @@
   #feTags i.on{opacity:1}#feTags i.pop{transform:rotate(var(--r,0deg)) scale(1.3)}
   #feTags i:not(.on){color:transparent}
   #feDockR{flex:0 0 288px}
-  #feCoach{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 262px);transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
+  #feCoach{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 84px);transform:translate(-50%,8px);background:rgba(22,28,48,.86);color:#fff;border-radius:999px;padding:10px 18px 10px 12px;font-size:15.5px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px)}
   #feCoach.on{opacity:1;transform:translate(-50%,0)}#feCoach svg{width:26px;height:26px;flex:none}
   #feCoach.look svg{animation:feSwipe 1.8s ease-in-out infinite}@keyframes feSwipe{0%,100%{transform:translateX(-5px)}50%{transform:translateX(5px)}}
   .feMk{position:absolute;left:0;top:0;width:60px;height:60px;margin:-30px 0 0 -30px;border:0;background:none;padding:0;pointer-events:auto;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;will-change:transform}
@@ -675,7 +680,7 @@
     #feMap.on{display:block}#feMap .plan{width:100%;height:0;padding-bottom:70%}#feMap .pl{font-size:13.5px;padding:7px 11px}#feMap .tabs button{min-height:42px;font-size:14px}
     #feMapX{display:grid;position:absolute;right:6px;top:4px;width:44px;height:44px;border:0;background:none;place-items:center;font-size:24px;color:var(--mut)}
     #feTags{justify-content:flex-end;gap:4px;padding-bottom:0}#feTags i{width:30px;height:40px;font-size:25px;line-height:44px}
-    #feCoach{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 150px);font-size:14.5px}
+    #feCoach{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 70px);font-size:14.5px}
     #feSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:560px;margin:0 auto;max-height:58vh;transform:translateY(20px);padding:16px 16px 14px}
     #feSheet.on{transform:none}#feSheet h3{font-size:24px}#feSheet p{font-size:15.5px}.feTagCard{font-size:20px}
     html.fe-ex #feDock{visibility:hidden}html.fe-ex #feBack{display:none}
@@ -749,6 +754,7 @@
   function setGoal(silent){ const K = $('#feGoalK'), N = $('#feGoalN'), T = $('#feGoalT'), A = $('#feGoalA'); let hand = false, k = 'Thanksgiving at Hillside', n = '', t = '', acts = '';
     if(S.phase === 'intro' || S.phase === 'boot') t = 'Tap the gold ring on the table and read the twins’ note.';
     else if(S.phase === 'hunt'){ const st = cur(); k = DISHCAP[st.dish] + ', from ' + st.who; n = 'Clue ' + (S.step + 1) + ' of 6'; t = st.clue; hand = true; if(st.map) acts = '<button class="feBtn sm" type="button" data-a="map">Look at the map</button>'; }
+    else if(S.phase === 'tag') t = 'Read the tag the twins tied to it.';
     else if(S.phase === 'carry'){ t = 'Carry ' + DISH[S.carry] + ' out to the table under the oak.'; acts = '<button class="feBtn sm dark" type="button" data-a="carry">Carry it there</button>'; }
     else if(S.phase === 'turkey') t = S.carry ? 'Carry the turkey to the table.' : 'The tags spell THANKS. Lift the lid on the smoker.';
     else if(S.phase === 'candles'){ t = 'Everything is on the table. Light the candles.'; acts = '<button class="feBtn sm gold" type="button" data-a="light">Light the candles</button>'; }
@@ -794,18 +800,19 @@
 
   /* ---- the map: three floors drawn from the model's own room outlines */
   const MAP = {floor: 'lower', dots: {}, key: ''};
-  function buildMap(){ const all = H.BIM2S.meta.spaces; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  function buildMap(){ const all = H.BIM2S.meta.spaces;
     const polys = {}; for(const [fl, , re] of FLOORS){ polys[fl] = all.filter(s => re.test(s.id) || (fl === 'main' && /^SP-LG-/.test(s.id))).map(s => ({id: s.id, p: (s.poly || s.polygon).map(q => W2(q[0], q[1]))})); }
     polys.lower.push({id: 'terrace', out: true, p: [[-10.5, -52], [3.2, -52], [3.2, -37], [11, -37], [11, -13], [-10.5, -13]]});
     polys.upper.push({id: 'balcony', out: true, p: [[-22.6, -46.2], [-12.8, -46.2], [-12.8, -40.2], [-22.6, -40.2]]});
     polys.main.push({id: 'porch', out: true, p: [[-10.1, 3], [4, 3], [4, 15.7], [-10.1, 15.7]]});
-    for(const fl in polys) for(const s of polys[fl]) for(const [x, z] of s.p){ x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
-    const w = 268, h = 188, k = Math.min(w / (z1 - z0), h / (x1 - x0)), ox = (w - (z1 - z0) * k) / 2, oy = (h - (x1 - x0) * k) / 2;
-    MAP.pt = (x, z) => [ox + (z - z0) * k, oy + (x1 - x) * k]; MAP.w = w; MAP.h = h; MAP.polys = polys;
+    MAP.w = 268; MAP.h = 188; MAP.polys = polys;
     $('#feTabs').innerHTML = FLOORS.map(([fl, name]) => `<button type="button" role="tab" data-f="${fl}" aria-pressed="false">${esc(name)}</button>`).join('');
     $$('#feTabs button').forEach(b => b.onclick = () => { SND.unlock(); SND.tap(); showFloor(b.dataset.f); });
     showFloor('lower'); }
-  function showFloor(fl){ MAP.floor = fl; const plan = $('#fePlan'), w = MAP.w, h = MAP.h;
+  function showFloor(fl){ MAP.floor = fl; const plan = $('#fePlan'), w = MAP.w, h = MAP.h; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for(const s of MAP.polys[fl]) for(const [x, z] of s.p){ x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+    // the plan is turned a quarter: +z runs to the right and +x runs up, the same on every floor
+    const k = Math.min((w - 16) / (z1 - z0), (h - 16) / (x1 - x0)), ox = (w - (z1 - z0) * k) / 2, oy = (h - (x1 - x0) * k) / 2; MAP.pt = (x, z) => [ox + (z - z0) * k, oy + (x1 - x) * k];
     let svg = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">`;
     for(const s of MAP.polys[fl]){ const d = s.p.map((q, i) => { const m = MAP.pt(q[0], q[1]); return (i ? 'L' : 'M') + m[0].toFixed(1) + ' ' + m[1].toFixed(1); }).join('') + 'Z';
       svg += `<path d="${d}" fill="${s.out ? '#e3e8dc' : '#ece6d8'}" stroke="${s.out ? '#aab49a' : '#a9a08b'}" stroke-width="${s.out ? .8 : 1}" ${s.out ? 'stroke-dasharray="3 2"' : ''} stroke-linejoin="round"/>`; }
@@ -839,13 +846,15 @@
       if(behind || x < r.left - 10 || x > r.left + r.width + 10 || y < r.top - 60 || y > r.top + r.height + 60){ docked = true; edge = (behind ? side < 0 : x < r.left + r.width / 2) ? 'L' : 'R'; }
       else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); if(x < r.left + 88) edge = 'L'; else if(x > r.left + r.width - 88) edge = 'R'; }
       items.push({m, x, y, edge, docked}); }
-    const pr = !phone() && placeE.classList.contains('on') ? placeE.getBoundingClientRect() : null, gr = !phone() ? goalE.getBoundingClientRect() : null;
-    for(const it of items){ if(it.docked) continue; if(pr && it.x < pr.right + 60 && it.y < pr.bottom + 40) it.y = pr.bottom + 40; else if(gr && it.x < gr.right + 60 && it.y < gr.bottom + 40) it.y = gr.bottom + 40; }
     items.sort((p, q) => p.docked - q.docked);
+    const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
+    add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#feMapBtn') : mapE); add($('#feBtns')); if(sayE.classList.contains('on')) add(sayE); add($('#feTags'));
     const box = it => it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 226, it.y + 32] : it.edge === 'R' ? [it.x - 226, it.y - 32, it.x + 32, it.y + 32] : [it.x - 78, it.y - 32, it.x + 78, it.y + 88];
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
     for(const it of items){ if(it.docked){ it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = r.top + Math.max(top + 24, r.height * .4); }
-      let bx = box(it), n = 0; while(placed.some(q => hit(bx, q)) && n++ < 14){ it.y += 34; if(it.y > r.top + bot) it.y = r.top + top + 24; bx = box(it); }
+      // step away from the HUD and from each other: down from the upper part of the screen, up from the lower part
+      const y0 = it.y; let dir = it.y > r.top + r.height * .62 ? -1 : 1, bx = box(it), n = 0, flipped = false;
+      while(obs.concat(placed).some(q => hit(bx, q)) && n++ < 30){ it.y += 34 * dir; if(it.y > r.top + bot || it.y < r.top + top){ if(flipped) break; flipped = true; dir = -dir; it.y = y0 + 34 * dir; } bx = box(it); }
       placed.push(bx); const m = it.m;
       m.b.style.transform = `translate(${it.x.toFixed(1)}px,${it.y.toFixed(1)}px)`; const cls = 'feMk ' + m.kind + ' on' + (m.hot ? ' hot' : '') + (it.edge ? ' edge ' + it.edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
@@ -907,7 +916,7 @@
     const b = el('i', {style: `position:fixed;left:${innerWidth * (freeArea().fx)}px;top:${innerHeight * freeArea().fy}px;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:3px solid rgba(255,255,255,.9);z-index:70;pointer-events:none;transition:transform .5s ease-out,opacity .5s;transform:scale(.3)`}); document.body.appendChild(b); requestAnimationFrame(() => { b.style.transform = 'scale(1.5)'; b.style.opacity = '0'; }); setTimeout(() => b.remove(), 600); }
 
   /* ---- opening things */
-  function emerge(g, from, to, s1, done){ g.visible = true; g.position.copy(from); const s0 = s1 * .25; tween(720, u => { const e = back3(u); g.position.lerpVectors(from, to, clamp(e, 0, 1.08)); g.scale.setScalar(lerp(s0, s1, clamp(e, 0, 1.1))); }, done); }
+  function emerge(g, from, to, s1, done){ const s0 = g.visible ? g.scale.x : s1 * .25; g.visible = true; g.position.copy(from); tween(720, u => { const e = back3(u); g.position.lerpVectors(from, to, clamp(e, 0, 1.08)); g.scale.setScalar(lerp(s0, s1, clamp(e, 0, 1.1))); }, done); }
   const showScale = id => { const g = DISHOBJ[id]; return clamp(.9 / Math.max(g.userData.h || .5, (g.userData.r || .4) * 2), .55, 1); };
   function openSpot(id){ const sp = SPOTS[id], st = cur(); if(S.phase !== 'hunt' || !st.spots.includes(id) || S.tried[id] || S.busy) return; const right = st.answer === id; S.busy = true; S.lastProgress = performance.now();
     const fin = () => { S.busy = false; if(right) foundDish(id); else wrongSpot(id); };
@@ -942,7 +951,7 @@
       tween(950, u => { const e = ease(u); g.position.lerpVectors(from, to, e); g.position.y += Math.sin(u * Math.PI) * .55; g.scale.setScalar(lerp(s0, 1, e)); g.rotation.y = lerp(r0, r1, e); if(id === 'candles') g.userData.spread(e); },
         () => { HELD.fly = false; HELD.g = null; S.carry = null; g.position.copy(to); g.scale.setScalar(1); SND.clink(); S.onTable.push(id); if(id === 'cider') SETTINGS.forEach(s => { s.userData.cider.visible = true; });
           if(id === 'turkey'){ S.busy = false; S.phase = 'candles'; setGoal(); S.ex.state = 'turkey'; sheetFor(S.ex); return; }
-          const i = S.step; later(350, () => hangTag(i, () => { S.busy = false; S.ex.state = 'tag'; sheetFor(S.ex); })); }); }}); }
+          const i = S.step; S.phase = 'tag'; setGoal(true); later(350, () => hangTag(i, () => { S.busy = false; S.ex.state = 'tag'; sheetFor(S.ex); })); }); }}); }
   function hangTag(i, done){ const piv = P.tag(LETTERS[i]), slot = BUNT.userData.slots[5 - i]; piv.position.copy(slot); piv.rotation.y = Math.PI / 2 + .1; P.root.add(piv); TAGS[i] = piv; SND.tag(i); S.tagsUp = i + 1; drawTags(i);
     tween(1300, u => { piv.scale.setScalar(Math.min(1, u * 5)); piv.rotation.x = .55 * Math.exp(-3.2 * u) * Math.cos(u * 9); }, done); }
   // the table, each time something lands on it: the tag it earned, and the next clue
@@ -952,7 +961,7 @@
     const last = i === STEPS.length - 1, nx = STEPS[i + 1];
     if(last) return sheet(`<h3>${esc(DISHCAP[st.dish])}, and the last tag</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('P.S. from Leo and Max', 'We did not lose dinner. We wanted you to see the whole house before everybody sits down. Happy Thanksgiving. P.P.S. Dad says the turkey is ready. Lift the lid.')}`,
       {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => { S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; setGoal(); SND.spell(); setTod('golden'); P.setLift(.9); back(() => later(300, () => { say('It spells THANKS. I knew that.', 4600, true); examine('smoker'); })); }}]});
-    return sheet(`<h3>${esc(DISHCAP[st.dish])} is on the table.</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('Clue ' + (i + 2) + ' of 6, from ' + nx.who, nx.clue)}${nx.map ? `<div class="feTagCard" style="padding:10px 12px 8px 12px"><img alt="A hand-drawn map of one floor of the house, with dots leading from the front doors to an X" src="${twinsMap(nx.map)}" style="margin:0"></div>` : ''}`,
+    return sheet(`<h3>${esc(DISHCAP[st.dish])} ${PLURAL[st.dish] ? 'are' : 'is'} on the table.</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('Clue ' + (i + 2) + ' of 6, from ' + nx.who, nx.clue)}${nx.map ? `<div class="feTagCard" style="padding:10px 12px 8px 12px"><img alt="A hand-drawn map of one floor of the house, with dots leading from the front doors to an X" src="${twinsMap(nx.map)}" style="margin:0"></div>` : ''}`,
       {noBack: true, acts: [{label: 'Start looking', cls: 'primary', go: () => nextStep()}]}); }
   function nextStep(){ S.step++; S.phase = 'hunt'; S.tried = {}; S.knocked = {}; S.hot = null; S.hintIx = 0; S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); setHour(HOURS[S.step] || 17.2); setGoal(); ga('feast3d_step', {step: S.step});
     back(() => { const n = S.step; if(n === 1) later(600, () => say('The sun moved while you were carrying that.', 4600, true)); else if(n === 3) later(600, () => say('Half of dinner is found. The other half is still clever.', 4800, true)); else if(n === 5) later(600, () => say('One more, and the sun is getting low.', 4600, true)); }); }

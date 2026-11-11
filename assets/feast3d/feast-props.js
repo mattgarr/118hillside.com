@@ -93,7 +93,7 @@
       const m = mesh(geo('leaf', () => new THREE.ShapeGeometry(sh, 6)), std(hex, {roughness: .9, side: THREE.DoubleSide, lift: .16})); m.rotation.x = -Math.PI / 2; m.scale.setScalar(s || .22); m.castShadow = false; return m; }
 
     /* ---------- the dishes ---------- */
-    function cider(){ const g = grp('cider'), glass = new THREE.MeshStandardMaterial({color: lin('#a9601c'), roughness: .1, metalness: 0, transparent: true, opacity: .93, emissive: lin('#8a4410'), emissiveIntensity: .4}); glass.userData.lift = .4; MATS.set('ciderGlass', glass);
+    function cider(){ const g = grp('cider'), glass = new THREE.MeshStandardMaterial({color: lin('#9a4f12'), roughness: .08, metalness: 0, transparent: true, opacity: .95, emissive: lin('#6a300a'), emissiveIntensity: .34}); glass.userData.lift = .34; MATS.set('ciderGlass', glass);
       g.add(mesh(lathe([[0, 0], [.19, 0], [.225, .03], [.23, .4], [.2, .52], [.1, .66], [.075, .76], [.09, .79], [.09, .84], [0, .84]], 28), glass));
       const hd = mesh(new THREE.TorusGeometry(.065, .02, 7, 16), glass, .13, .68, 0); g.add(hd);
       g.add(mesh(new THREE.CylinderGeometry(.062, .052, .1, 12), std('#c9a26b', {roughness: 1}), 0, .88, 0));
@@ -149,6 +149,11 @@
       for(let i = 0; i < 14; i++){ const a = R() * 6.28, rx = .6 + R() * .1, bm = mesh(geo('berry', () => new THREE.SphereGeometry(.03, 8, 6)), berry, Math.cos(a) * rx * 1.05, .075, Math.sin(a) * rx * .7); g.add(bm); dr.push(bm); }
       g.userData.h = .72; g.userData.r = .8; g.userData.steam = [0, .62, 0]; return g; }
     const DISH = {cider, pie, sauce, potatoes, candles, rolls, turkey};
+    /* what else is in the drinks fridges: cans and small bottles */
+    function can(hex){ const g = grp('can'); g.add(mesh(geo('can', () => new THREE.CylinderGeometry(.1, .1, .36, 14)), std(hex, {roughness: .35, metalness: .5, lift: .12}), 0, .18, 0)); g.add(mesh(geo('canTop', () => new THREE.CylinderGeometry(.092, .1, .02, 14)), metal('#c9ccd0', .3), 0, .37, 0)); return g; }
+    function bottle(kind){ const g = grp('bottle'), milk = kind === 'milk';
+      g.add(mesh(geo('bottle', () => lathe([[0, 0], [.09, 0], [.1, .02], [.1, .3], [.05, .42], [.045, .5], [0, .5]], 14)), milk ? std('#f6f3ea', {roughness: .4, lift: .16}) : std('#3f7d52', {roughness: .1, lift: .18, transparent: true, opacity: .9})));
+      g.add(mesh(geo('cap', () => new THREE.CylinderGeometry(.05, .05, .045, 10)), std(milk ? '#3b6fd8' : '#d8dbe0', {roughness: .5}), 0, .515, 0)); return g; }
 
     /* ---------- what is in the bags that hold no dinner ---------- */
     const DECOY = {
@@ -190,6 +195,6 @@
       for(let i = SPARK.length - 1; i >= 0; i--){ const s = SPARK[i]; s.age += dt; const u = s.age / .9; if(u >= 1){ root.remove(s.sp); s.sp.material.dispose(); SPARK.splice(i, 1); continue; } s.sp.position.addScaledVector(s.v, dt); s.v.y -= dt * 1.2; s.sp.material.opacity = .9 * (1 - u); s.sp.scale.setScalar(.1 + .16 * u); } }
     function active(){ return SPARK.length > 0 || POOL.some(p => p.live) || FL.some(f => f.k > .01); }
 
-    return {root, std, metal, mesh, lathe, grp, lin, canvasTex, setLift, bag, box, crate, tag, tagTex, bunting, runner, setting, pumpkin, leaf, DISH, DECOY, emitter, burst, flame, sparkle, tick, active, HAND};
+    return {root, std, metal, mesh, lathe, grp, lin, canvasTex, setLift, bag, box, crate, tag, tagTex, bunting, runner, setting, pumpkin, leaf, can, bottle, DISH, DECOY, emitter, burst, flame, sparkle, tick, active, HAND};
   };
 })();
