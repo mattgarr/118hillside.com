@@ -227,7 +227,13 @@
   function fly(v, dur, then){ const c = H.camera, d = new V3(); c.getWorldDirection(d); H.anim = null; FLY = {t0: performance.now(), dur: (reduce ? .01 : (dur || 1.5)) * 1000, p0: c.position.clone(), p1: new V3(...v.pos), l0: c.position.clone().addScaledVector(d, 30), l1: new V3(...v.look), z0: c.zoom, z1: v.zoom, then}; }
   function moveTo(p, then){ const v = view(p), far = H.camera.position.distanceTo(new V3(...v.pos)) > 46, land = () => { afterMove(p); then && then(); };
     if(far || p.inside || INSIDE) cut(p, land); else { fly(v, 1.5, null); land(); } }
-  function afterMove(p){ INSIDE = !!p.inside; P.apply(S, {inside: INSIDE}); placeCat(p); }
+  function afterMove(p){ INSIDE = !!p.inside; P.apply(dressed(), {inside: INSIDE}); placeCat(p); }
+  /* The yard trees arrive a moment after the house. The props measure the heritage oak once, the first time anything hangs on it, so nothing is hung on it
+     (or strung from it) until it is there; then the house is dressed again. */
+  let OAK_IN = false; const oakT0 = performance.now();
+  const oakIn = () => { if(OAK_IN) return true; let ok = false; try{ H.scene.traverse(o => { if(o.name === 'tree:OAK-BACK' && o.children.some(c => c.name === 'bark')) ok = true; }); }catch(e){} if(ok || performance.now() - oakT0 > 45000) OAK_IN = true; return OAK_IN; };
+  const dressed = () => oakIn() ? S : Object.assign({}, S, {oak: 'none', ter: []});
+  function oakWatch(){ if(oakIn()){ if(P && PHASE !== 'boot') try{ P.apply(S, {inside: INSIDE}); if(PLACE && PHASE !== 'start') reframe(.4); }catch(e){} return; } setTimeout(oakWatch, 500); }
   /* the panels changed (a card opened, the choices were folded away, the window was resized): frame the same place for the room there is now */
   function reframe(dur){ if(CUT || PHASE === 'boot' || !P || !PLACE) return; const v = view(PLACE); if(FLY){ FLY.l1.set(...v.look); FLY.z1 = v.zoom; return; } fly(v, dur || .6, null); }
   const _l = new V3();
@@ -396,7 +402,7 @@
     $('#dkNext').onclick = () => { if(fix) return refix(); if(last) return sunset(); goPlace(PLACES[i + 1].id); };
     const fold = $('#dkFold'), pn = $('#dkPanel'); fold.onclick = () => { const on = pn.classList.toggle('fold'); fold.textContent = on ? 'Show' : 'Hide'; fold.setAttribute('aria-label', on ? 'Show the choices' : 'Hide the choices'); fold.setAttribute('aria-expanded', !on); reframe(.5); }; if(pn.classList.contains('fold')){ fold.textContent = 'Show'; fold.setAttribute('aria-label', 'Show the choices'); fold.setAttribute('aria-expanded', 'false'); } }
   function refresh(keep){ renderPlaces(); renderBody(keep); renderFoot(); }
-  function applyAll(){ P.apply(S, {inside: !!PLACE.inside}); placeCat(PLACE); }
+  function applyAll(){ P.apply(dressed(), {inside: !!PLACE.inside}); placeCat(PLACE); }
   function pick(sid, v){ const st = SECT[sid], o = st.options.find(q => q.v === v); touched.add(st.key);
     let added = true; if(st.type === 'multi'){ const a = S[st.key], i = a.indexOf(v); if(i >= 0){ a.splice(i, 1); added = false; } else { a.push(v); say(o.say); } } else { S[st.key] = v; say(o.say); if(v === 'none') added = false; }
     if(st.key === 'wear') $('#dkAv').innerHTML = catHead('dkav');
@@ -502,13 +508,13 @@
   function begin(mode){ MODE = mode; S = clone(mode === 'story' ? STORY_START : FREE_START); PHASE = 'decor'; touched = new Set(); arrived = []; unread = 0; queue = []; visited = new Set(); lastScore = null; result.rang = false; ambience(); $$('#dkDusk,#dkArrive,#dkPhoto').forEach(e => e.remove());
     try{ H.setTOD(DAY); }catch(e){} P.setOn(1); PLACE = PLACES[0]; visited.add(PLACE.id); show('#dkTop', true); dimUI(false); $('#dkPanel').classList.remove('fold'); $('#dkAv').innerHTML = catHead('dkav'); badge(); refresh(); cut(PLACE, () => afterMove(PLACE));
     say(mode === 'story' ? 'It is December in Woodside and nothing is up yet. I have notes.' : 'No guests, no rules. Make it look like a holiday.', 'Tap me any time for a hint'); ga('deck_start', {mode}); if(mode === 'story') setTimeout(wave, 2600); }
-  function startCard(){ PHASE = 'start'; show('#dkTop', false); dimUI(true); try{ H.setTOD(DAY); }catch(e){} PLACE = PLACES[0]; INSIDE = false; setCam(view(PLACE)); P.apply(S, {}); P.setCat(null);
+  function startCard(){ PHASE = 'start'; show('#dkTop', false); dimUI(true); try{ H.setTOD(DAY); }catch(e){} PLACE = PLACES[0]; INSIDE = false; setCam(view(PLACE)); P.apply(dressed(), {}); P.setCat(null);
     card(`<div class="cat">${window.SNOWBALL.svg({id: 'dkst', seed: 7})}</div><h2>Deck the House with Snowball</h2>
       <p>Company is coming to 118 Hillside tonight, and they are bringing their animals. Each animal has sent a request. Read them, decorate the real house in 3D however you celebrate, then light it up at sunset and see who is happy.</p>
       <div class="row"><button class="dkBtn primary big" id="dkStory" type="button" data-focus>Start decorating</button></div><div class="row"><button class="dkBtn" id="dkFree" type="button">Just decorate</button></div>
       <p class="fine">Just decorate skips the guests. Good for small hands.</p>`);
     $('#dkStory').onclick = () => { closeCard(); begin('story'); }; $('#dkFree').onclick = () => { closeCard(); begin('free'); }; }
-  function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} const go = () => { P = window.DECKPROPS(H); tuneLight(); buildUI(); requestAnimationFrame(frame); try{ H.anim = null; }catch(e){}
+  function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} const go = () => { P = window.DECKPROPS(H); tuneLight(); buildUI(); requestAnimationFrame(frame); oakWatch(); try{ H.anim = null; }catch(e){}
       const n = location.hash.length > 1 ? decode(location.hash) : null; if(n){ S = n; shared = true; }
       const open = () => { if(shared) sharedStart(); else startCard(); };
       const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); open(); } }); mo.observe(document.body, {childList: true}); } else open(); };
