@@ -123,9 +123,12 @@ var SEASONS = [
       {id:'dinner',  icon:'🍗', title:'Dinner Rush',  blurb:'Get dinner on the table',     ages:'5+', c:'#eedfd2'},
       {id:'thankful',icon:'🍁', title:'Thankful Tree',blurb:'Fill the oak with thanks',    ages:'all', c:'#f2e2cf'}
     ]},
-  { id:'christmas', name:'Christmas', icon:'🎄', from:'12-01', to:'12-31', live:false, path:'../christmas/',
-    bg:'linear-gradient(135deg,#0f2a1f,#1f4d36 60%,#b8322a)', btn:'#fff', btnInk:'#123',
-    title:'Christmas', sub:'Coming in December.', games:[] }
+  { id:'holidays', name:'Holidays', icon:'❄️', from:'11-27', to:'12-31', live:true, path:'/games/deck/',
+    bg:'linear-gradient(135deg,#141c33,#26326a 55%,#5a3b6e)', btn:'#e8b84a', btnInk:'#2a1d07',
+    title:'Deck the House with Snowball', sub:'Decorate the real house for whatever you celebrate, with a black cat who has opinions. Then wait for dark and light it up.', feature:'/games/deck/',
+    games:[
+      {id:'deck', icon:'🐈‍⬛', title:'Deck the House', blurb:'Lights, menorah, kinara, diyas, a tree or not. Then light it up', ages:'all', c:'#dde3f2', href:'/games/deck/'}
+    ]}
 ];
 function md(d){ return ('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 function inSeason(s, t){ return t >= s.from && t <= s.to; }

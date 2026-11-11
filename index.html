@@ -116,7 +116,7 @@ strong { font-weight: 500; }
 .hook .rot .slide { grid-area: 1 / 1; opacity: 0; visibility: hidden; transition: opacity .8s ease, visibility 0s linear .8s; border-radius: 0; }
 .hook .rot .slide.on { opacity: 1; visibility: visible; transition: opacity .8s ease, visibility 0s; }
 .hook .rot .slide[data-id="room"] img { opacity: 1; object-position: 30% 40%; }
-.hook .rot .slide[data-id="room"] .hc, .hook .rot .slide[data-id="feast"] .hc { top: 0; justify-content: flex-end; background: linear-gradient(to top, rgba(16,24,30,.94) 0%, rgba(16,24,30,.7) 55%, rgba(16,24,30,.38) 100%); }
+.hook .rot .slide[data-id="room"] .hc, .hook .rot .slide[data-id="feast"] .hc, .hook .rot .slide[data-id="deck"] .hc { top: 0; justify-content: flex-end; background: linear-gradient(to top, rgba(16,24,30,.94) 0%, rgba(16,24,30,.7) 55%, rgba(16,24,30,.38) 100%); }
 .hook .rdots { position: absolute; z-index: 3; top: 14px; right: 14px; display: flex; gap: 4px; }
 .hook .rdots button { width: 28px; height: 28px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; }
 .hook .rdots button::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: 0 0 0 1px rgba(0,0,0,.25); transition: background .2s, transform .2s; }
@@ -418,7 +418,9 @@ footer p { margin: 0 0 8px; max-width: 900px; }
   var d = new Date(), md = ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   var SEASONAL = [
     {id:'feast', from:'11-01', to:'11-30', href:'games/feast/', img:'images/feast-hero.jpg', alt:'Grocery tags set out on the dining table at 118 Hillside Drive',
-     eyebrow:'A whole-house hunt', title:'Thanksgiving at Hillside', sub:'The twins hid the groceries all over the house. Follow their clues, then carry dinner out to the terrace.'}
+     eyebrow:'A whole-house hunt', title:'Thanksgiving at Hillside', sub:'The twins hid the groceries all over the house. Follow their clues, then carry dinner out to the terrace.'},
+    {id:'deck', from:'11-20', to:'12-31', href:'games/deck/', img:'images/deck-hero.jpg', alt:'118 Hillside Drive decorated for the holidays at dusk, with Snowball the cat on the porch',
+     eyebrow:'Decorate it your way', title:'Deck the House with Snowball', sub:'Lights, a menorah, a kinara, diyas or a tree. Decorate the real house with a black cat who has opinions, then light it up.'}
   ];
   var dots = document.getElementById('rotDots');
   SEASONAL.forEach(function(g){ if(md < g.from || md > g.to) return;

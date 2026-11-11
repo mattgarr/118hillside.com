@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Deck the House with Snowball | Decorate 118 Hillside Drive, Woodside</title>
+<meta name="description" content="Snowball is a black cat with yellow eyes and strong opinions. Decorate the real 118 Hillside Drive for whatever you celebrate, then light it up at dusk and send the postcard.">
+<link rel="canonical" href="https://118hillside.com/games/deck/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="118 Hillside Drive, Woodside">
+<meta property="og:title" content="Deck the House with Snowball | 118 Hillside Drive">
+<meta property="og:description" content="Decorate a real Woodside house for the holidays with a black cat named Snowball, then light it up at dusk.">
+<meta property="og:url" content="https://118hillside.com/games/deck/">
+<meta property="og:image" content="https://118hillside.com/images/deck-preview.jpg">
+<meta property="og:image:alt" content="118 Hillside Drive decorated for the holidays at dusk, with Snowball the cat on the porch">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Deck the House with Snowball | 118 Hillside Drive">
+<meta name="twitter:description" content="Decorate a real Woodside house for the holidays with a black cat named Snowball, then light it up at dusk.">
+<meta name="twitter:image" content="https://118hillside.com/images/deck-preview.jpg">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#18213a">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TML59CSLTY"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-TML59CSLTY");</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#18213a; --night2:#212c4a; --dusk:#2e3a60; --snow:#f6f5f1; --paper:#fbfaf7; --line:#e3e0d8;
+  --ink:#1f2a3a; --soft:#5c6575; --kraft:#dcc196; --kraft2:#cfae79; --kraft-ink:#3f2c17; --string:#8a6b47;
+  --berry:#9b2c3c; --gold:#e8b84a; --pine:#2d5a3e;
+  --serif:"Cormorant Garamond",Georgia,serif; --sans:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif; --hand:"Caveat Brush","Marker Felt",cursive;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--night);color:var(--snow);font:300 16px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+  background-image:radial-gradient(1200px 600px at 20% -10%,#2b3966 0%,rgba(43,57,102,0) 60%),radial-gradient(900px 500px at 110% 10%,#3a2f55 0%,rgba(58,47,85,0) 60%)}
+a{color:inherit} button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,3vw,32px);border-bottom:1px solid rgba(255,255,255,.08);background:rgba(24,33,58,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);position:sticky;top:0;z-index:30}
+.brand{font-family:var(--serif);font-size:18px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+.top nav{display:flex;gap:18px;font-size:14.5px;color:#c4cad8;align-items:center}
+.top nav a{text-decoration:none} .top nav a:hover{color:#fff}
+.iconbtn{border:0;background:none;padding:6px;border-radius:50%;cursor:pointer;color:#c4cad8;display:inline-grid;place-items:center}
+.iconbtn:hover{color:#fff;background:rgba(255,255,255,.08)}
+
+.deck{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,430px);gap:clamp(16px,2.2vw,32px);padding:clamp(14px,2.2vw,30px);max-width:1640px;margin:0 auto;align-items:start}
+.stagewrap{position:sticky;top:78px}
+.stage{position:relative;border-radius:18px;overflow:hidden;background:#0d1322;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06)}
+.stage svg.scene{display:block;width:100%;height:auto}
+.stage .label{position:absolute;left:14px;bottom:14px;background:rgba(14,19,34,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:999px;padding:6px 12px;font-size:13.5px;color:#e6e9f0;pointer-events:none}
+.stage .fade{position:absolute;inset:0;background:#0d1322;opacity:0;pointer-events:none;transition:opacity .35s ease}
+.stage.swap .fade{opacity:1}
+.scenes{display:flex;gap:6px;margin:12px 2px 0;flex-wrap:wrap}
+.scenes button{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#d9deea;border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer}
+.scenes button[aria-pressed=true]{background:var(--snow);color:var(--ink);border-color:var(--snow)}
+.lightup{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(closest-side,rgba(10,14,26,.15),rgba(10,14,26,.55));transition:opacity .6s}
+.lightup[hidden]{display:none}
+.lightup button{font-family:var(--serif);font-weight:600;font-size:clamp(24px,3vw,36px);border:0;border-radius:999px;padding:16px 34px;background:var(--gold);color:#2a1d07;cursor:pointer;box-shadow:0 0 0 8px rgba(232,184,74,.18),0 18px 50px rgba(0,0,0,.4)}
+.lightup button:hover{background:#f2c962}
+
+.panel{background:var(--paper);color:var(--ink);border-radius:20px;padding:20px 20px 16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.guide{display:grid;grid-template-columns:84px 1fr;gap:12px;align-items:center;margin-bottom:14px}
+.avatar{width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34416b,#1a2340);display:grid;place-items:end center;overflow:hidden;box-shadow:inset 0 0 0 3px rgba(255,255,255,.7)}
+.avatar svg{width:76px;height:auto;margin-bottom:-6px}
+.say{position:relative;margin:0;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 14px;font-family:var(--hand);font-size:20px;line-height:1.25;color:#2b2336;min-height:52px}
+.say::before{content:"";position:absolute;left:-8px;top:22px;width:14px;height:14px;background:#fff;border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.say.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.97);opacity:.4}100%{transform:none;opacity:1}}
+.who{display:block;font-family:var(--sans);font-size:12.5px;color:var(--soft);margin-top:2px}
+h1,h2{font-family:var(--serif);font-weight:600;line-height:1.02;margin:0 0 6px;color:var(--ink)}
+h1{font-size:clamp(38px,3.6vw,50px)}
+h2{font-size:clamp(28px,2.4vw,34px)}
+.help{margin:0 0 14px;color:var(--soft);font-size:15px;max-width:44ch}
+.story{font-family:var(--serif);font-size:19px;line-height:1.42;margin:0 0 14px;color:#2b3442}
+.field{display:grid;gap:6px;margin:4px 0 16px}
+.field label{font-size:14px;color:var(--soft)}
+.field input{font:inherit;font-size:17px;border:1px solid #d6d2c8;border-radius:12px;padding:11px 13px;background:#fff;color:var(--ink)}
+.sub{font-size:13.5px;color:var(--soft);margin:16px 0 8px;font-weight:400}
+
+.tags{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tag{position:relative;display:grid;grid-template-columns:46px 1fr;gap:10px;align-items:center;text-align:left;min-height:64px;padding:9px 10px 9px 24px;border:0;cursor:pointer;color:var(--kraft-ink);
+  background:linear-gradient(180deg,#e3c9a0,#d7ba8b);clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 calc(100% - 14px),0 14px);transition:transform .15s ease,filter .15s ease}
+.tag::before{content:"";position:absolute;left:9px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--paper);box-shadow:inset 0 1px 1px rgba(0,0,0,.25)}
+.tag:hover{filter:brightness(1.04)}
+.tag:focus-visible{outline:none;box-shadow:inset 0 0 0 3px var(--gold)}
+.tag .sw{width:46px;height:46px;border-radius:10px;background:#1c2642;display:grid;place-items:center;overflow:hidden}
+.tag .sw svg{width:46px;height:46px;display:block}
+.tag b{display:block;font-weight:500;font-size:14.5px;line-height:1.2}
+.tag small{display:block;font-size:12.5px;line-height:1.25;opacity:.78;margin-top:2px}
+.tag .sug{display:inline-block;font-family:var(--hand);font-size:14px;color:var(--berry);margin-top:2px}
+.tag[aria-pressed=true]{background:linear-gradient(180deg,#2a3558,#1f2948);color:#f6f2e8}
+.tag[aria-pressed=true]::before{background:var(--gold);box-shadow:0 0 0 3px rgba(232,184,74,.3)}
+.tag[aria-pressed=true] .sug{color:#f0b9c2}
+.tag[aria-pressed=true] .sw{background:#0f1529}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid #d6d2c8;background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer;color:var(--ink)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #cfcabe;background:#fff;color:var(--ink);border-radius:999px;padding:10px 18px;font-size:15px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:#a9a395}
+.btn.primary{background:var(--berry);border-color:var(--berry);color:#fff}
+.btn.primary:hover{background:#86222f}
+.btn.big{padding:13px 22px;font-size:16px}
+.btn[disabled]{opacity:.4;cursor:default}
+.dots{display:flex;gap:5px;align-items:center}
+.dots i{width:9px;height:9px;border-radius:50%;background:#dcd8cf;position:relative}
+.dots i.on{background:var(--gold)}
+.dots i.cur{background:var(--berry);transform:scale(1.25)}
+
+.final .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.final .cta{background:#1f2948;color:#f4f1e8;border-radius:16px;padding:16px;margin:14px 0 4px}
+.final .cta b{display:block;font-family:var(--serif);font-size:24px;font-weight:600;line-height:1.1;margin-bottom:4px}
+.final .cta span{display:block;font-size:14.5px;color:#cdd3e2;margin-bottom:12px}
+.final .recap{font-family:var(--serif);font-size:18px;line-height:1.4;color:#2b3442;margin:0}
+.meta{font-size:12.5px;color:var(--soft);margin:12px 0 0}
+.shared{background:#fff6e0;border:1px solid #efd9a2;border-radius:12px;padding:10px 12px;font-size:14.5px;margin-bottom:12px}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#fff;color:var(--ink);padding:10px 16px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;transition:.3s;pointer-events:none;z-index:50;font-size:15px}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.foot{max-width:1640px;margin:0 auto;padding:0 clamp(14px,2.2vw,30px) 30px;font-size:12.5px;color:#8f98ad}
+
+/* scene animation */
+svg.scene .dusk-only{transition:opacity 2.6s ease}
+svg.scene.day .dusk-only{opacity:0}
+svg.scene .lit{transition:opacity .7s ease}
+svg.scene .lit.off{opacity:0}
+.m-twinkle .b{animation:tw 2.4s ease-in-out infinite;animation-delay:calc(var(--d) * -1s)}
+@keyframes tw{0%,100%{opacity:1}50%{opacity:.28}}
+.m-chase .b{animation:ch 1.2s linear infinite;animation-delay:calc(var(--c) * -1s)}
+@keyframes ch{0%,49%{opacity:1}50%,100%{opacity:.18}}
+.m-breathe{animation:br 4.2s ease-in-out infinite}
+@keyframes br{0%,100%{opacity:1}50%{opacity:.42}}
+.fl{animation:flk 1.7s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%;animation-delay:calc(var(--d,0) * -1s)}
+@keyframes flk{0%,100%{transform:scale(1,1)}30%{transform:scale(.9,1.08)}60%{transform:scale(1.06,.94)}}
+.flake{animation:fall var(--dur) linear infinite;animation-delay:calc(var(--del) * -1s)}
+@keyframes fall{from{transform:translate(0,-30px)}to{transform:translate(var(--dx),var(--h))}}
+.staticflakes{display:none}
+.eyes{animation:blink 6s infinite;transform-box:fill-box;transform-origin:50% 50%}
+@keyframes blink{0%,95%,100%{transform:none}97%{transform:scaleY(.08)}}
+.tail{animation:tail 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:0% 100%}
+@keyframes tail{0%,100%{transform:rotate(0)}50%{transform:rotate(-6deg)}}
+.glint{animation:gl 3s ease-in-out infinite}
+@keyframes gl{0%,100%{opacity:.75}50%{opacity:1}}
+
+@media (max-width:980px){
+  .deck{grid-template-columns:minmax(0,1fr)}
+  .stagewrap{top:56px;z-index:10}
+  .stage{border-radius:14px}
+  .scenes{margin-top:8px}
+  .top nav a:first-child{display:none}
+}
+@media (max-width:480px){
+  .tags{grid-template-columns:1fr}
+  .tag{min-height:58px}
+  .panel{padding:16px 14px 14px;border-radius:16px}
+  .guide{grid-template-columns:64px 1fr}
+  .avatar{width:64px;height:64px}.avatar svg{width:58px}
+  .say{font-size:18px}
+  .stage .label{font-size:12px;left:8px;bottom:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  .m-twinkle .b,.m-chase .b,.m-breathe,.fl,.flake,.eyes,.tail,.glint,.say.pop{animation:none}
+  .flake{display:none}.staticflakes{display:inline}
+  svg.scene .dusk-only,svg.scene .lit{transition:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">118 Hillside Drive</a>
+  <nav><a href="/tour/">3D tour</a><a href="/games/">Games</a>
+    <button class="iconbtn" id="snd" type="button" aria-pressed="true" aria-label="Sound on"></button></nav>
+</header>
+<svg id="gdefs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs></defs></svg>
+<main class="deck">
+  <section class="stagewrap" aria-label="The house">
+    <div class="stage" id="stage">
+      <div id="sceneHost"></div>
+      <div class="fade"></div>
+      <span class="label" id="sceneLabel">Front of the house</span>
+      <div class="lightup" id="lightup" hidden><button type="button" id="lightBtn">Light it up</button></div>
+    </div>
+    <div class="scenes" id="sceneBtns" hidden></div>
+  </section>
+  <aside class="panel" id="panel" aria-live="polite">
+    <div class="guide">
+      <div class="avatar" id="avatar" aria-hidden="true"></div>
+      <p class="say" id="say"></p>
+    </div>
+    <div id="step"></div>
+    <div class="nav" id="nav">
+      <button class="btn" id="back" type="button">Back</button>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <button class="btn primary" id="next" type="button">Next</button>
+    </div>
+  </aside>
+</main>
+<p class="foot">Real photos of 118 Hillside Drive, Woodside. Decorations are illustrations, and the snow is wishful thinking. Snowball is real.</p>
+<div id="toast" role="status"></div>
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const ga = (n, p) => { try{ window.gtag && gtag('event', n, p || {}); }catch(e){} };
+const f = n => Math.round(n * 10) / 10;
+const rng = seed => { let s = (Math.abs(seed | 0) % 2147483646) + 1; return () => (s = (s * 16807) % 2147483647) / 2147483647; };
+const store = {get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+
+/* ---------- shared gradients (one hidden svg, so swatches and scenes can all use them) ---------- */
+const GD = $('#gdefs defs'), HAL = new Set();
+GD.innerHTML = `
+  <radialGradient id="flameHalo"><stop offset="0" stop-color="#ffd27a" stop-opacity=".9"/><stop offset=".35" stop-color="#ffb347" stop-opacity=".35"/><stop offset="1" stop-color="#ff9a2e" stop-opacity="0"/></radialGradient>
+  <linearGradient id="flameG" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff8a1e"/><stop offset=".55" stop-color="#ffd067"/><stop offset="1" stop-color="#fff6d8"/></linearGradient>
+  <radialGradient id="winG" cx=".5" cy=".7" r=".8"><stop offset="0" stop-color="#ffdca0"/><stop offset=".6" stop-color="#f3b469"/><stop offset="1" stop-color="#b8743a"/></radialGradient>
+  <radialGradient id="spill" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffcf8a" stop-opacity=".75"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="duskF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26326a"/><stop offset=".45" stop-color="#37447a"/><stop offset="1" stop-color="#363b5c"/></linearGradient>
+  <linearGradient id="bagG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7d08a"/><stop offset="1" stop-color="#e59a45"/></linearGradient>
+  <linearGradient id="brass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9c7a2e"/><stop offset=".5" stop-color="#e7c46a"/><stop offset="1" stop-color="#9c7a2e"/></linearGradient>
+  <radialGradient id="snowBall" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#e3ebf3"/><stop offset="1" stop-color="#b8c7d8"/></radialGradient>
+  <radialGradient id="eyeG" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#fff08a"/><stop offset=".6" stop-color="#f6c62e"/><stop offset="1" stop-color="#c98b0e"/></radialGradient>
+  <radialGradient id="eyeHalo"><stop offset="0" stop-color="#ffe46b" stop-opacity=".8"/><stop offset="1" stop-color="#ffe46b" stop-opacity="0"/></radialGradient>
+  <radialGradient id="redLan" cx=".4" cy=".4" r=".7"><stop offset="0" stop-color="#ffb08a"/><stop offset=".5" stop-color="#e2382b"/><stop offset="1" stop-color="#8f1518"/></radialGradient>
+  <radialGradient id="starLan" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#fff0b8"/><stop offset=".45" stop-color="#ffaa2b"/><stop offset="1" stop-color="#d4421f"/></radialGradient>
+  <radialGradient id="snowFloor" cx=".5" cy="0" r="1.1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe8f3"/></radialGradient>`;
+function halo(c){ const id = 'h' + c.slice(1); if(!HAL.has(id)){ HAL.add(id); GD.insertAdjacentHTML('beforeend', `<radialGradient id="${id}"><stop offset="0" stop-color="${c}" stop-opacity=".95"/><stop offset=".22" stop-color="${c}" stop-opacity=".5"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`); } return id; }
+
+/* ---------- geometry ---------- */
+function along(pts, step, off){ const out = []; let carry = off || 0;
+  for(let i = 0; i < pts.length - 1; i++){ const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], L = Math.hypot(x1 - x0, y1 - y0); let t = carry;
+    while(t <= L){ out.push([x0 + (x1 - x0) * t / L, y0 + (y1 - y0) * t / L]); t += step; } carry = t - L; }
+  return out; }
+function swag(a, b, sag, n){ n = n || 16; const p = []; for(let i = 0; i <= n; i++){ const t = i / n; p.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t + sag * 4 * t * (1 - t)]); } return p; }
+function swags(a, b, k, sag){ let p = []; for(let i = 0; i < k; i++){ const s = swag([a[0] + (b[0] - a[0]) * i / k, a[1] + (b[1] - a[1]) * i / k], [a[0] + (b[0] - a[0]) * (i + 1) / k, a[1] + (b[1] - a[1]) * (i + 1) / k], sag, 12); p = p.concat(i ? s.slice(1) : s); } return p; }
+const P = pts => 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join(' L');
+
+/* ---------- decorations (each takes a bottom-centre anchor and a scale) ---------- */
+function flame(x, y, s, d){ s = s || 1; return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"><circle cy="-4" r="13" fill="url(#flameHalo)"/><path class="fl" style="--d:${d || 0}" d="M0 -11 C3.2 -6.5 3.4 -2.6 0 0 C-3.4 -2.6 -3.2 -6.5 0 -11Z" fill="url(#flameG)"/></g>`; }
+function candle(x, y, s){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"><ellipse rx="10" ry="3.2" fill="url(#brass)"/><path d="M-6 -2 L6 -2 L4 -6 L-4 -6Z" fill="url(#brass)"/><rect x="-3.2" y="-34" width="6.4" height="28" rx="1.6" fill="#f4f0e6"/><circle cy="-40" r="15" fill="url(#flameHalo)"/><path d="M0 -46 C3 -42 3 -38 0 -36 C-3 -38 -3 -42 0 -46Z" fill="#ffe2a0"/></g>`; }
+function menorah(x, y, s, lit){ lit = lit == null ? 9 : lit; let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${s})">`;
+  g += `<path d="M-26 0 L26 0 L13 -9 L-13 -9Z" fill="url(#brass)"/><rect x="-3" y="-86" width="6" height="78" fill="url(#brass)"/>`;
+  for(let k = 1; k <= 4; k++){ const w = 15 * k; g += `<path d="M${-w} -84 C${-w} ${-84 + 12 * k} ${w} ${-84 + 12 * k} ${w} -84" fill="none" stroke="url(#brass)" stroke-width="3.4"/>`; }
+  const cups = []; for(let k = -4; k <= 4; k++) if(k) cups.push(k * 15);
+  const order = [60, 45, 30, 15, -15, -30, -45, -60];   // lit right to left as added, newest burns first
+  cups.forEach((cx, i) => { const on = order.indexOf(cx) < lit - 1; g += `<rect x="${cx - 4}" y="-89" width="8" height="5" rx="1" fill="url(#brass)"/><rect x="${cx - 2.2}" y="-104" width="4.4" height="15" rx="1" fill="${i % 2 ? '#dfe9ff' : '#a9c4ff'}"/>` + (on ? flame(cx, -105, .9, i * .37) : ''); });
+  g += `<rect x="-5" y="-102" width="10" height="5" rx="1" fill="url(#brass)"/><rect x="-2.4" y="-118" width="4.8" height="16" rx="1" fill="#f4f6ff"/>` + (lit ? flame(0, -119, 1, .2) : '');
+  return g + '</g>'; }
+function kinara(x, y, s, mat){ let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${s})">`;
+  if(mat) g += `<path d="M-74 6 L74 6 L62 -10 L-62 -10Z" fill="#7d2a1f"/>` + [['#c8302c', -8], ['#151515', -5], ['#2b8c4c', -2], ['#e1b33b', 1], ['#c8302c', 4]].map(([c, o]) => `<path d="M${-72 + Math.abs(o)} ${o + 3} L${72 - Math.abs(o)} ${o + 3}" stroke="${c}" stroke-width="2"/>`).join('') +
+    `<circle cx="-58" cy="-8" r="7" fill="#e8892a"/><circle cx="-47" cy="-6" r="6" fill="#b7262a"/><circle cx="58" cy="-7" r="6.5" fill="#7fae3a"/><path d="M48 -6 C52 -14 60 -16 62 -12" stroke="#e2c45a" stroke-width="4" fill="none"/>`;
+  g += `<path d="M-52 -2 L52 -2 L48 -12 L-48 -12Z" fill="#6b3d1f"/><path d="M-52 -2 L52 -2" stroke="#3e220f" stroke-width="2"/>`;
+  const col = ['#c8302c', '#c8302c', '#c8302c', '#141414', '#2b8c4c', '#2b8c4c', '#2b8c4c'];
+  col.forEach((c, i) => { const cx = -42 + i * 14, h = 32 - Math.abs(i - 3) * 2.2; g += `<rect x="${cx - 4.5}" y="-20" width="9" height="8" fill="#5a3218"/><rect x="${cx - 2.6}" y="${-20 - h}" width="5.2" height="${h}" rx="1" fill="${c}"/>` + flame(cx, -21 - h, .85, i * .29); });
+  return g + '</g>'; }
+function diya(x, y, s, d){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"><ellipse cy="1" rx="13" ry="3" fill="#000" opacity=".25"/><path d="M-11 -6 C-10 0 -5 2 1 2 C7 2 11 -1 13 -9 C8 -6 4 -5 0 -5 C-5 -5 -9 -6 -11 -6Z" fill="#b8532b"/><path d="M-11 -6 C-6 -4.6 4 -4.6 13 -9" fill="none" stroke="#e7a04a" stroke-width="1.4"/><circle cx="-3" cy="-1.5" r="1.1" fill="#f2c45e"/><circle cx="2" cy="-1.2" r="1.1" fill="#f2c45e"/>${flame(10, -9, .75, d)}</g>`; }
+function luminaria(x, y, s){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"><circle cy="-10" r="22" fill="url(#flameHalo)" opacity=".75"/><path d="M-9 0 L9 0 L8 -22 L-8 -22Z" fill="url(#bagG)"/><path d="M-8 -22 L8 -22 L7 -25 L-7 -25Z" fill="#f9e2b5"/><path d="M0 -15 l1.5 3 3 .4 -2.2 2.1 .6 3 -2.9 -1.5 -2.9 1.5 .6 -3 -2.2 -2.1 3 -.4Z" fill="#fff4cf"/></g>`; }
+function rangoli(x, y, rx, ry){ const k = ry / rx, cols = ['#e84a5f', '#ffb400', '#2f9c95', '#7b4fd6', '#ff7a00', '#f4f1ea']; let g = `<g${nf()}><g transform="translate(${f(x)} ${f(y)}) scale(1 ${f(k * 100) / 100})">`;
+  g += `<circle r="${rx}" fill="#f4f1ea" opacity=".9"/><circle r="${rx * .93}" fill="#e84a5f"/>`;
+  for(let i = 0; i < 16; i++){ const a = i / 16 * Math.PI * 2; g += `<ellipse cx="${f(Math.cos(a) * rx * .72)}" cy="${f(Math.sin(a) * rx * .72)}" rx="${f(rx * .2)}" ry="${f(rx * .09)}" transform="rotate(${f(a * 180 / Math.PI)} ${f(Math.cos(a) * rx * .72)} ${f(Math.sin(a) * rx * .72)})" fill="${cols[i % 2 ? 1 : 4]}"/>`; }
+  g += `<circle r="${rx * .5}" fill="#2f9c95"/>`;
+  for(let i = 0; i < 8; i++){ const a = i / 8 * Math.PI * 2 + .2; g += `<ellipse cx="${f(Math.cos(a) * rx * .32)}" cy="${f(Math.sin(a) * rx * .32)}" rx="${f(rx * .16)}" ry="${f(rx * .07)}" transform="rotate(${f(a * 180 / Math.PI)} ${f(Math.cos(a) * rx * .32)} ${f(Math.sin(a) * rx * .32)})" fill="#7b4fd6"/>`; }
+  g += `<circle r="${rx * .14}" fill="#ffb400"/>`;
+  for(let i = 0; i < 24; i++){ const a = i / 24 * Math.PI * 2; g += `<circle cx="${f(Math.cos(a) * rx * .97)}" cy="${f(Math.sin(a) * rx * .97)}" r="${f(rx * .035)}" fill="#fff"/>`; }
+  return g + '</g></g>'; }
+function hanger(x, y0, y, inner){ return `<path d="M${x} ${y0} L${x} ${y - 2}" stroke="#2a2a2a" stroke-width="1.2"/>` + inner; }
+function starLantern(x, y, s){ let pts = []; for(let i = 0; i < 16; i++){ const a = i / 16 * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 9 : 22; pts.push([Math.cos(a) * r, Math.sin(a) * r]); }
+  return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"><circle r="40" fill="url(#flameHalo)" opacity=".8"/><path d="${P(pts)}Z" fill="url(#starLan)" stroke="#ffd9a0" stroke-width=".8"/><circle r="6" fill="#fff3c8"/>` +
+    [-8, -3, 2, 7].map((t, i) => `<path d="M${t} 18 L${t + (i % 2 ? 1 : -1)} 44" stroke="${i % 2 ? '#ffcf3a' : '#e8402f'}" stroke-width="2.4"/>`).join('') + '</g>'; }
+function redLantern(x, y, s){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"><circle cy="14" r="36" fill="url(#flameHalo)" opacity=".55"/><rect x="-8" y="-2" width="16" height="5" rx="1.5" fill="#d9a63a"/><ellipse cy="15" rx="20" ry="15" fill="url(#redLan)"/>` +
+    [-12, -6, 0, 6, 12].map(t => `<path d="M${t} 1 C${t * 1.7} 9 ${t * 1.7} 21 ${t} 29" stroke="#a5191c" stroke-width=".8" fill="none" opacity=".6"/>`).join('') +
+    `<rect x="-8" y="28" width="16" height="5" rx="1.5" fill="#d9a63a"/><path d="M-3 33 L-4 52 M0 33 L0 54 M3 33 L4 52" stroke="#e23b2f" stroke-width="1.8"/></g>`; }
+function moravian(x, y, s){ let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"><circle r="46" fill="url(#flameHalo)" opacity=".9"/>`;
+  const R = rng(7); for(let i = 0; i < 14; i++){ const a = i / 14 * Math.PI * 2 + R() * .2, l = 21 + R() * 5, w = .2; g += `<path d="M${f(Math.cos(a - w) * 7)} ${f(Math.sin(a - w) * 7)} L${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)} L${f(Math.cos(a + w) * 7)} ${f(Math.sin(a + w) * 7)}Z" fill="${i % 2 ? '#fffbea' : '#f7e6b0'}" stroke="#e7cf8a" stroke-width=".5"/>`; }
+  return g + `<circle r="7" fill="#fff8de"/></g>`; }
+const WREATH = {
+  evergreen: {leaves: ['#1f5130', '#2d6b3c', '#3c7d48', '#245a35'], acc: 'berries', bow: '#c3262f'},
+  magnolia: {leaves: ['#2e4a2a', '#3d5d34', '#8a5a2b', '#a0703b'], big: true},
+  eucalyptus: {leaves: ['#8fa89b', '#a9bcb1', '#7d988a'], round: true, acc: 'silver', bow: '#eef0f2'},
+  citrus: {leaves: ['#2a5c38', '#36714a', '#245030'], acc: 'citrus', bow: '#a8722c'},
+  bluesilver: {leaves: ['#2a5c4a', '#35705a'], acc: 'ornaments', bow: '#d6dbe4'},
+  harvest: {leaves: ['#c99a3d', '#d8b25a', '#b8862f'], acc: 'harvest', bow: 'kente'}
+};
+function wreath(type, x, y, r, s){ const W = WREATH[type]; if(!W) return ''; const R = rng(type.length * 31); let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"${nf()}>`;
+  const n = W.big ? 26 : 54;
+  for(let i = 0; i < n; i++){ const a = i / n * Math.PI * 2 + R() * .2, rr = r + (R() - .5) * r * .32, cx = Math.cos(a) * rr, cy = Math.sin(a) * rr, rot = a * 180 / Math.PI + 70 + R() * 40;
+    const lw = W.big ? r * .34 : W.round ? r * .14 : r * .2, lh = W.big ? r * .14 : W.round ? r * .12 : r * .07;
+    g += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(lw)}" ry="${f(lh)}" transform="rotate(${f(rot)} ${f(cx)} ${f(cy)})" fill="${W.leaves[i % W.leaves.length]}"/>`; }
+  const ring = (k, fn) => { for(let i = 0; i < k; i++){ const a = i / k * Math.PI * 2 + R() * .3, rr = r + (R() - .5) * r * .3; g += fn(Math.cos(a) * rr, Math.sin(a) * rr, i); } };
+  if(W.acc === 'berries') ring(14, (cx, cy) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .06)}" fill="#c3262f"/>`);
+  if(W.acc === 'silver') ring(12, (cx, cy) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .05)}" fill="#e9edf1"/>`);
+  if(W.acc === 'citrus') ring(7, (cx, cy) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .13)}" fill="#f29c38"/><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .09)}" fill="#f7c172"/><path d="M${f(cx - r * .09)} ${f(cy)} L${f(cx + r * .09)} ${f(cy)} M${f(cx)} ${f(cy - r * .09)} L${f(cx)} ${f(cy + r * .09)}" stroke="#f29c38" stroke-width="${f(r * .015)}"/>`);
+  if(W.acc === 'ornaments') ring(12, (cx, cy, i) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .12)}" fill="${['#3b6fd8', '#d6dbe4', '#f4f6fa', '#284fa8'][i % 4]}"/><circle cx="${f(cx - r * .035)}" cy="${f(cy - r * .035)}" r="${f(r * .03)}" fill="#fff"/>`);
+  if(W.acc === 'harvest') ring(8, (cx, cy, i) => i % 2 ? `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(r * .08)}" ry="${f(r * .17)}" fill="#e8b84a" transform="rotate(${f(R() * 180)} ${f(cx)} ${f(cy)})"/>` : `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .07)}" fill="#b52a2a"/>`);
+  if(W.bow === 'kente') g += `<g transform="translate(0 ${f(r * 1.02)})"><path d="M0 0 L${f(-r * .5)} ${f(-r * .22)} L${f(-r * .5)} ${f(r * .2)}Z" fill="#c8302c"/><path d="M0 0 L${f(r * .5)} ${f(-r * .22)} L${f(r * .5)} ${f(r * .2)}Z" fill="#2b8c4c"/><circle r="${f(r * .1)}" fill="#151515"/></g>`;
+  else if(W.bow) g += `<g transform="translate(0 ${f(r * 1.02)})"><path d="M0 0 C${f(-r * .5)} ${f(-r * .4)} ${f(-r * .55)} ${f(r * .2)} 0 0Z M0 0 C${f(r * .5)} ${f(-r * .4)} ${f(r * .55)} ${f(r * .2)} 0 0Z" fill="${W.bow}"/><path d="M0 0 L${f(-r * .2)} ${f(r * .55)} M0 0 L${f(r * .22)} ${f(r * .5)}" stroke="${W.bow}" stroke-width="${f(r * .1)}"/><circle r="${f(r * .08)}" fill="${W.bow}"/></g>`;
+  if(type === 'bluesilver') g += `<path d="M0 ${f(-r * 1.2)} l${f(r * .08)} ${f(r * .16)} ${f(r * .16)} 0 ${f(-r * .13)} ${f(r * .1)} ${f(r * .05)} ${f(r * .17)} ${f(-r * .16)} ${f(-r * .1)} ${f(-r * .16)} ${f(r * .1)} ${f(r * .05)} ${f(-r * .17)} ${f(-r * .13)} ${f(-r * .1)} ${f(r * .16)} 0Z" fill="#e6ecf7"/>`;
+  return g + '</g>'; }
+function toran(x0, x1, y, s, side){ const R = rng(5); let g = `<g${nf()}>`, pts = swags([x0, y], [x1, y], 3, 10 * s);
+  along(pts, 6.5 * s).forEach((p, i) => { g += `<circle cx="${f(p[0])}" cy="${f(p[1] + R() * 1.5)}" r="${f(3.6 * s)}" fill="${i % 2 ? '#ffc21a' : '#ff8a1a'}"/>`; });
+  for(let i = 0; i <= 12; i++){ const x = x0 + (x1 - x0) * i / 12, yy = y + 10 * s * 4 * (i % 4 / 4) * (1 - i % 4 / 4) * 3 * 0 + 2; g += `<path d="M${f(x)} ${f(y + 3 * s)} C${f(x - 4 * s)} ${f(y + 10 * s)} ${f(x - 2 * s)} ${f(y + 18 * s)} ${f(x)} ${f(y + 20 * s)} C${f(x + 2 * s)} ${f(y + 18 * s)} ${f(x + 4 * s)} ${f(y + 10 * s)} ${f(x)} ${f(y + 3 * s)}Z" fill="${i % 2 ? '#2f7a3a' : '#3d8f46'}"/>`; }
+  if(side) [x0, x1].forEach(x => { for(let k = 0; k < 9; k++) g += `<circle cx="${f(x)}" cy="${f(y + k * 7 * s)}" r="${f(3.4 * s)}" fill="${k % 2 ? '#ffc21a' : '#ff8a1a'}"/>`; });
+  return g + '</g>'; }
+function garland(pts, s, lights, seed){ const R = rng(seed || 3), cols = ['#1d4a2c', '#2a6138', '#356f42', '#173d25']; let g = `<g${nf()}><path d="${P(pts)}" fill="none" stroke="#173d25" stroke-width="${f(7 * s)}" stroke-linecap="round" opacity=".9"/>`;
+  along(pts, 2.6 * s).forEach((p, i) => { const r = R(); g += `<ellipse cx="${f(p[0] + (R() - .5) * 6 * s)}" cy="${f(p[1] + (R() - .5) * 6 * s)}" rx="${f(4.2 * s)}" ry="${f(1.5 * s)}" transform="rotate(${f(r * 360)} ${f(p[0])} ${f(p[1])})" fill="${cols[i % 4]}"/>`; });
+  g += '</g>';
+  if(lights) g += `<g class="lit m-twinkle">` + bulbs(along(pts, 16 * s, 6), {colors: ['#ffd590'], r: 1.8 * s, h: 7 * s, seed: seed}) + '</g>';
+  return g; }
+function poinsettia(x, y, s){ const R = rng(11); let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"${nf()}><path d="M-14 0 L14 0 L17 -18 L-17 -18Z" fill="#e9e5dc"/><path d="M-17 -18 L17 -18" stroke="#cfc9bc" stroke-width="2"/>`;
+  for(let i = 0; i < 9; i++){ const a = i / 9 * Math.PI * 2; g += `<ellipse cx="${f(Math.cos(a) * 16)}" cy="${f(-30 + Math.sin(a) * 9)}" rx="11" ry="4.5" transform="rotate(${f(a * 180 / Math.PI)} ${f(Math.cos(a) * 16)} ${f(-30 + Math.sin(a) * 9)})" fill="#2d5a32"/>`; }
+  for(let i = 0; i < 12; i++){ const a = i / 12 * Math.PI * 2 + R() * .3, l = 10 + R() * 5; g += `<ellipse cx="${f(Math.cos(a) * l * .6)}" cy="${f(-34 + Math.sin(a) * l * .35)}" rx="${f(l * .6)}" ry="3.6" transform="rotate(${f(a * 180 / Math.PI)} ${f(Math.cos(a) * l * .6)} ${f(-34 + Math.sin(a) * l * .35)})" fill="${i % 3 ? '#c81e2c' : '#a3141f'}"/>`; }
+  return g + `<circle cx="-1" cy="-35" r="2" fill="#e8c23a"/><circle cx="2" cy="-33" r="1.6" fill="#7aa83a"/></g>`; }
+function tree(type, x, y, h, topper, seed){ const R = rng(seed || 9); let g = `<g transform="translate(${f(x)} ${f(y)})">`, body = '', lights = '';
+  if(type === 'none') return '';
+  if(type === 'olive'){ body += `<path d="${P([[-h * .14, 0], [h * .14, 0], [h * .17, -h * .2], [-h * .17, -h * .2]])}Z" fill="#c8c1b4"/><path d="M${f(-h * .17)} ${f(-h * .2)} L${f(h * .17)} ${f(-h * .2)}" stroke="#a69f91" stroke-width="${f(h * .015)}"/>`;
+    body += `<path d="M0 ${f(-h * .2)} C${f(-h * .03)} ${f(-h * .4)} ${f(h * .05)} ${f(-h * .5)} 0 ${f(-h * .62)} M0 ${f(-h * .45)} C${f(h * .1)} ${f(-h * .55)} ${f(h * .16)} ${f(-h * .6)} ${f(h * .2)} ${f(-h * .7)} M0 ${f(-h * .52)} C${f(-h * .1)} ${f(-h * .6)} ${f(-h * .18)} ${f(-h * .66)} ${f(-h * .22)} ${f(-h * .74)}" stroke="#6b5a45" stroke-width="${f(h * .022)}" fill="none" stroke-linecap="round"/>`;
+    for(let i = 0; i < 420; i++){ const a = R() * Math.PI * 2, r = Math.sqrt(R()), cx = Math.cos(a) * r * h * .3, cy = -h * .74 + Math.sin(a) * r * h * .22; body += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(h * .02)}" ry="${f(h * .0065)}" transform="rotate(${f(R() * 180)} ${f(cx)} ${f(cy)})" fill="${['#7f9478', '#93a88a', '#6c8266', '#a7b89c', '#5d7458'][i % 5]}"/>`; }
+    for(let i = 0; i < 80; i++){ const a = R() * Math.PI * 2, r = Math.sqrt(R()); lights += lightDot(Math.cos(a) * r * h * .3, -h * .74 + Math.sin(a) * r * h * .22, '#fff0c2', h * .006, h * .03, R); }
+    return g + `<g${nf()}>${body}</g><g class="lit m-twinkle">${lights}</g></g>`; }
+  const narrow = type === 'pencil' ? .15 : .34, top = -h, base = -h * .07, flock = type === 'flocked';
+  const wAt = yy => { const t = (yy - base) / (top - base); return h * narrow * Math.max(0, 1 - t) * (1 - .1 * Math.sin(t * Math.PI * 6) ** 2); };   // a slightly tiered cone
+  // stand
+  body += flock ? `<path d="M${f(-h * .3)} 0 C${f(-h * .2)} ${f(-h * .06)} ${f(h * .2)} ${f(-h * .06)} ${f(h * .3)} 0Z" fill="#f2f2ee"/>` : `<path d="M${f(-h * .11)} 0 L${f(h * .11)} 0 L${f(h * .095)} ${f(-h * .085)} L${f(-h * .095)} ${f(-h * .085)}Z" fill="#9a7a52"/><path d="M${f(-h * .11)} ${f(-h * .028)} L${f(h * .11)} ${f(-h * .028)} M${f(-h * .105)} ${f(-h * .058)} L${f(h * .105)} ${f(-h * .058)}" stroke="#7a5c38" stroke-width="${f(h * .006)}"/>`;
+  // dark core silhouette
+  const sil = []; for(let i = 0; i <= 40; i++){ const yy = base + (top - base) * i / 40; sil.push([-wAt(yy) * .92, yy]); } for(let i = 40; i >= 0; i--){ const yy = base + (top - base) * i / 40; sil.push([wAt(yy) * .92, yy]); }
+  body += `<path d="${P(sil)}Z" fill="${flock ? '#7f978a' : '#0f2618'}"/>`;
+  // branch tips: short strokes angled out and down, lighter toward the edges
+  const n = type === 'pencil' ? 700 : 1300, cols = flock ? ['#c9d6cf', '#e3ebe7', '#f4f7f5', '#9fb3a6'] : ['#173d25', '#1f4a2d', '#285a37', '#336b42', '#3e7b4b'];
+  for(let i = 0; i < n; i++){ const yy = base + (top - base) * Math.pow(R(), .8), w = wAt(yy), e = Math.pow(R(), .55), side = R() < .5 ? -1 : 1, xx = side * w * e;
+    const len = h * (.025 + R() * .035) * (1 - .4 * (yy - base) / (top - base)), c = cols[Math.min(cols.length - 1, Math.floor(e * cols.length * .999 + (R() - .5)))] || cols[0];
+    body += `<path d="M${f(xx)} ${f(yy)} l${f(side * len * .85)} ${f(len * .42)}" stroke="${c}" stroke-width="${f(h * .0065)}" stroke-linecap="round"/>`; }
+  if(flock) for(let i = 0; i < 260; i++){ const yy = base + (top - base) * R(), w = wAt(yy) * .95, xx = (R() * 2 - 1) * w; body += `<circle cx="${f(xx)}" cy="${f(yy)}" r="${f(h * (.004 + R() * .006))}" fill="#fff" opacity=".9"/>`; }
+  const inTree = () => { const yy = base + (top - base + h * .06) * Math.pow(R(), .85), w = wAt(yy) * .85; return [(R() * 2 - 1) * w, yy]; };
+  if(type === 'fir') for(let i = 0; i < 30; i++){ const [cx, cy] = inTree(); body += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(h * .015)}" fill="${['#b52230', '#d7a73a', '#2f5fb8', '#d9d9d9', '#8a1d2c'][i % 5]}"/><circle cx="${f(cx - h * .005)}" cy="${f(cy - h * .005)}" r="${f(h * .0045)}" fill="#fff" opacity=".85"/>`; }
+  const pal = type === 'fir' ? ['#ff4545', '#38d36a', '#3d8bff', '#ffc93d', '#ff6fd0'] : type === 'pencil' ? ['#ffcf6b'] : ['#ffe3a8'];
+  if(type === 'pencil'){ for(let i = 0; i < 110; i++){ const t = i / 110, yy = base + (top - base) * t * .97, ww = wAt(yy) * .9, a = t * Math.PI * 2 * 7; if(Math.cos(a) < -.15) continue; lights += lightDot(Math.sin(a) * ww, yy, pal[0], h * .005, h * .028, R); } }
+  else for(let i = 0; i < (type === 'fir' ? 110 : 130); i++){ const [cx, cy] = inTree(); lights += lightDot(cx, cy, pal[i % pal.length], h * .0055, h * .03, R); }
+  let tp = '';
+  if(topper === 'star') tp = `<g transform="translate(0 ${f(top - h * .015)})"><circle r="${f(h * .09)}" fill="url(#flameHalo)"/><path d="${starPath(h * .05, h * .021)}" fill="#f2c94c" stroke="#fff1b8" stroke-width="${f(h * .003)}"/></g>`;
+  if(topper === 'flake'){ halo('#eaf2ff'); tp = `<g transform="translate(0 ${f(top - h * .02)})" stroke="#f4f8ff" stroke-width="${f(h * .007)}" stroke-linecap="round"><circle r="${f(h * .08)}" fill="url(#heaf2ff)" stroke="none"/>${[0, 60, 120].map(a => `<path d="M0 ${f(-h * .045)} L0 ${f(h * .045)} M${f(-h * .015)} ${f(-h * .03)} L0 ${f(-h * .045)} L${f(h * .015)} ${f(-h * .03)}" transform="rotate(${a})"/>`).join('')}</g>`; }
+  return g + `<g${nf()}>${body}</g><g class="lit m-twinkle">${lights}${tp}</g></g>`; }
+function starPath(R1, R2){ const p = []; for(let i = 0; i < 10; i++){ const a = i / 10 * Math.PI * 2 - Math.PI / 2, r = i % 2 ? R2 : R1; p.push([Math.cos(a) * r, Math.sin(a) * r]); } return P(p) + 'Z'; }
+function lightDot(x, y, c, r, h, R){ return `<g class="b" style="--d:${f(R() * 3)}"><circle cx="${f(x)}" cy="${f(y)}" r="${f(h)}" fill="url(#${halo(c)})"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${c}"/></g>`; }
+function bulbs(pts, o){ const R = rng(o.seed || 1); let s = '';
+  pts.forEach((p, i) => { const c = o.colors[i % o.colors.length], dark = c === '#141414', x = p[0], y = p[1] + o.r * .7;
+    s += `<g class="b" style="--d:${f(R() * 3)};--c:${f((i % 4) * .3)}">` + (dark ? '' : `<circle cx="${f(x)}" cy="${f(y)}" r="${f(o.h)}" fill="url(#${halo(c)})"/>`) +
+      `<circle cx="${f(x)}" cy="${f(y)}" r="${f(o.r)}" fill="${c}"${dark ? ' stroke="#4a4a4a" stroke-width=".6"' : ''}/>` + (o.r > 2.5 && !dark ? `<circle cx="${f(x - o.r * .3)}" cy="${f(y - o.r * .3)}" r="${f(o.r * .32)}" fill="#fff" opacity=".85"/>` : '') + '</g>'; });
+  return s; }
+function cat(x, y, s, o){ o = o || {}; const id = 'c' + Math.round(x) + '_' + Math.round(y); let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${s}) translate(-106 -218)">`;
+  const rim = o.rim || '#4a5878';
+  g += `<g class="tail"><path d="M148 204 C188 200 198 150 174 126 C167 119 158 124 163 132 C180 152 174 186 146 190Z" fill="#0c0d12" stroke="${rim}" stroke-width="1.4" stroke-opacity=".55"/></g>`;
+  g += `<path d="M58 216 C40 204 38 160 56 128 C66 110 84 100 104 100 C132 100 154 126 156 166 C158 198 146 216 126 218Z" fill="#0c0d12" stroke="${rim}" stroke-width="1.6" stroke-opacity=".55"/>`;
+  g += `<ellipse cx="98" cy="160" rx="22" ry="34" fill="#1a1f2c" opacity=".55"/>`;
+  g += `<path d="M82 216 C80 190 84 162 92 148 L106 148 C108 170 106 198 104 216Z" fill="#101219"/><path d="M108 216 C108 194 112 168 118 152 L130 154 C132 178 130 200 128 216Z" fill="#101219"/>`;
+  g += `<ellipse cx="93" cy="216" rx="13" ry="5.5" fill="#15171f"/><ellipse cx="119" cy="216" rx="13" ry="5.5" fill="#15171f"/>`;
+  g += `<path d="M60 74 C58 56 60 36 66 20 C76 28 86 38 92 44 C100 42 110 42 118 44 C124 38 134 28 146 20 C152 36 154 56 152 74 C150 100 130 116 106 116 C82 116 62 100 60 74Z" fill="#0c0d12" stroke="${rim}" stroke-width="1.6" stroke-opacity=".6"/>`;
+  g += `<path d="M69 30 L84 45 L70 55Z" fill="#3b2b37"/><path d="M143 30 L128 45 L142 55Z" fill="#3b2b37"/>`;
+  if(o.glow) g += `<circle cx="88" cy="74" r="22" fill="url(#eyeHalo)"/><circle cx="124" cy="74" r="22" fill="url(#eyeHalo)"/>`;
+  g += `<g class="eyes"><path d="M76 74 C80 65 96 65 100 74 C96 83 80 83 76 74Z" fill="url(#eyeG)"/><path d="M112 74 C116 65 132 65 136 74 C132 83 116 83 112 74Z" fill="url(#eyeG)"/>` +
+    `<ellipse cx="88" cy="74" rx="2.6" ry="7.6" fill="#0a0a0a"/><ellipse cx="124" cy="74" rx="2.6" ry="7.6" fill="#0a0a0a"/><circle cx="91.5" cy="70.5" r="1.8" fill="#fff"/><circle cx="127.5" cy="70.5" r="1.8" fill="#fff"/></g>`;
+  g += `<path d="M102 90 L110 90 L106 95Z" fill="#3a2f3c"/><path d="M106 95 C104 99 100 100 97 99 M106 95 C108 99 112 100 115 99" stroke="#3a2f3c" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+  g += `<path d="M95 93 L58 88 M95 96 L58 99 M117 93 L154 88 M117 96 L154 99" stroke="#9aa3b8" stroke-width=".9" opacity=".75" stroke-linecap="round"/>`;
+  const w = o.wear;
+  if(w && w.startsWith('scarf')){ const c = {scarfRed: ['#c3262f', '#f4efe6'], scarfBlue: ['#2f5fb8', '#f4f6ff'], scarfGreen: ['#2d6b3c', '#e8b84a']}[w];
+    g += `<path d="M62 104 C82 124 130 124 150 104 L153 119 C132 139 80 139 60 119Z" fill="${c[0]}"/><path d="M68 112 C88 128 124 128 144 112" stroke="${c[1]}" stroke-width="3" fill="none" stroke-dasharray="7 6"/>` +
+      `<path d="M124 122 L140 166 L127 170 L114 126Z" fill="${c[0]}"/><path d="M128 164 L141 160 M127 156 L139 152" stroke="${c[1]}" stroke-width="2.4"/>` +
+      `<path d="M129 168 L127 176 M133 167 L132 175 M137 166 L137 174" stroke="${c[0]}" stroke-width="1.6"/>`; }
+  if(w === 'bell') g += `<path d="M66 108 C86 124 126 124 146 108" stroke="#b5232c" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="106" cy="125" r="8" fill="url(#brass)"/><path d="M100 127 L112 127" stroke="#6b5016" stroke-width="1.4"/><circle cx="106" cy="129" r="1.6" fill="#4a3a10"/>`;
+  return g + '</g>'; }
+function snowman(x, y, s, scarf){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"${ns()}><ellipse cy="2" rx="46" ry="9" fill="#cfdbe7"/><circle cy="-34" r="38" fill="url(#snowBall)"/><circle cy="-92" r="28" fill="url(#snowBall)"/><circle cy="-136" r="20" fill="url(#snowBall)"/>` +
+  `<path d="M-24 -96 L-62 -122 M-52 -115 L-60 -130 M24 -96 L60 -116 M50 -110 L62 -124" stroke="#5b4430" stroke-width="3" stroke-linecap="round"/>` +
+  `<circle cx="-7" cy="-140" r="2.6" fill="#1b1b1b"/><circle cx="7" cy="-140" r="2.6" fill="#1b1b1b"/><path d="M0 -134 L18 -130 L0 -129Z" fill="#ee7b22"/>` +
+  [-8, -3, 3, 8].map((t, i) => `<circle cx="${t}" cy="${-125 + Math.abs(t) * .25}" r="1.6" fill="#1b1b1b"/>`).join('') +
+  `<path d="M-20 -118 C-8 -110 8 -110 20 -118 L21 -110 C8 -102 -8 -102 -21 -110Z" fill="${scarf}"/><path d="M10 -108 L16 -86 L8 -85 L4 -106Z" fill="${scarf}"/>` +
+  [-74, -92].map(t => `<circle cy="${t}" r="3" fill="#1b1b1b"/>`).join('') + '</g>'; }
+function snowcat(x, y, s){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"${ns()}><ellipse cy="2" rx="52" ry="9" fill="#cfdbe7"/><path d="M-34 0 C-48 -30 -36 -72 0 -76 C36 -72 48 -30 34 0Z" fill="url(#snowBall)"/>` +
+  `<path d="M30 -4 C66 -6 70 -40 52 -52 C46 -56 42 -50 46 -46 C58 -34 54 -16 28 -14Z" fill="url(#snowBall)"/>` +
+  `<path d="M-30 -94 C-32 -112 -28 -126 -24 -136 L-10 -120 C-4 -122 4 -122 10 -120 L24 -136 C28 -126 32 -112 30 -94 C28 -76 16 -66 0 -66 C-16 -66 -28 -76 -30 -94Z" fill="url(#snowBall)"/>` +
+  `<circle cx="-11" cy="-98" r="4.4" fill="#e8b330"/><circle cx="11" cy="-98" r="4.4" fill="#e8b330"/><circle cx="-11" cy="-98" r="1.6" fill="#2a2a2a"/><circle cx="11" cy="-98" r="1.6" fill="#2a2a2a"/>` +
+  `<path d="M-2 -88 L2 -88 L0 -85Z" fill="#6b4e3a"/><path d="M-6 -86 L-36 -90 M-6 -84 L-36 -80 M6 -86 L36 -90 M6 -84 L36 -80" stroke="#5b4430" stroke-width="1.6" stroke-linecap="round"/></g>`; }
+function box(x, y, s, wear){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"${nf()}><ellipse cy="4" rx="70" ry="10" fill="#000" opacity=".25"/>` +
+  cat(4, -48, .42, {wear}) +
+  `<path d="M-58 0 L42 0 L42 -62 L-58 -62Z" fill="#c69a5f"/><path d="M42 0 L66 -14 L66 -74 L42 -62Z" fill="#a87d47"/><path d="M-58 -62 L42 -62 L66 -74 L-34 -74Z" fill="#7a5730"/>` +
+  `<path d="M-58 -62 L-72 -92 L28 -92 L42 -62Z" fill="#d6ab6f"/><path d="M42 -62 L66 -74 L72 -104 L48 -90Z" fill="#b88b52"/><path d="M-8 -30 L8 -30" stroke="#8d6a3a" stroke-width="3"/><path d="M-30 -40 L-12 -40 M-30 -34 L-18 -34" stroke="#3b3b3b" stroke-width="1.6" opacity=".55"/></g>`; }
+function paws(pts, s){ let g = ''; pts.forEach((p, i) => { const o = i % 2 ? 7 : -7; g += `<g transform="translate(${f(p[0] + o * s)} ${f(p[1])}) scale(${s})" fill="#9fb0c4" opacity=".75"><ellipse rx="3.4" ry="2.6"/><circle cx="-3.4" cy="-3.6" r="1.2"/><circle cx="-1.1" cy="-4.6" r="1.2"/><circle cx="1.3" cy="-4.6" r="1.2"/><circle cx="3.5" cy="-3.6" r="1.2"/></g>`; }); return g; }
+function snowfall(W, H, n, big, seed){ const R = rng(seed || 2); let a = `<g class="snowfall" style="--h:${H + 60}px">`, b = '<g class="staticflakes">';
+  for(let i = 0; i < n; i++){ const x = R() * W, r = (big ? 1.6 : 1.1) + R() * (big ? 3.2 : 2), dur = 7 + R() * 9, op = .55 + R() * .45;
+    a += `<circle class="flake" cx="${f(x)}" cy="-10" r="${f(r)}" fill="#fff" opacity="${f(op * 100) / 100}" style="--dur:${f(dur)}s;--del:${f(R() * dur)};--dx:${f((R() - .5) * 120)}px"/>`;
+    b += `<circle cx="${f(x)}" cy="${f(R() * H)}" r="${f(r)}" fill="#fff" opacity="${f(op * 100) / 100}"/>`; }
+  return a + '</g>' + b + '</g>'; }
+function stars(box, n, seed){ const R = rng(seed); let g = '<g class="dusk-only">'; for(let i = 0; i < n; i++){ const x = box[0] + R() * (box[2] - box[0]), y = box[1] + R() * (box[3] - box[1]); g += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.6 + R() * 1.2)}" fill="#fff" opacity="${f(.4 + R() * .6)}" class="${R() > .6 ? 'glint' : ''}"/>`; } return g + '</g>'; }
+
+/* ---------- light styles ---------- */
+const LIGHTS = {
+  warm: {colors: ['#ffcf7a'], r: 4.2, h: 14, step: 22},
+  multi: {colors: ['#ff4545', '#38d36a', '#3d8bff', '#ffc93d', '#ff6fd0'], r: 4.2, h: 14, step: 22},
+  icicle: {colors: ['#eaf6ff'], r: 2, h: 8, step: 10, icicle: true},
+  hanukkah: {colors: ['#4d8dff', '#f4f8ff'], r: 4.2, h: 14, step: 22},
+  kwanzaa: {colors: ['#e8383d', '#141414', '#2fbf62'], r: 4.2, h: 14, step: 22},
+  marigold: {colors: ['#ffb31a', '#ff8a00', '#ffd36b'], r: 2.3, h: 9, step: 11},
+  fairy: {colors: ['#fff1c9'], r: 1.8, h: 8, step: 8.5}
+};
+function lightString(paths, key, motion, seed){ const L = LIGHTS[key]; if(!L) return ''; let g = `<g class="lit" data-seq="1"><g class="m-${motion}">`, cord = '';
+  paths.forEach((p, k) => { cord += `<path d="${P(p)}" fill="none" stroke="#151c16" stroke-width="1.5" opacity=".8"/>`;
+    const pts = along(p, L.step, 4); g += bulbs(pts, Object.assign({seed: seed + k}, L));
+    if(L.icicle){ const R = rng(seed + k * 7); pts.forEach((q, i) => { if(i % 2) return; const n = 2 + Math.floor(R() * 4); for(let j = 1; j <= n; j++) g += lightDot(q[0], q[1] + j * 6, '#eaf6ff', 1.5, 6, R); }); } });
+  return cord + g + '</g></g>'; }
+
+/* ---------- the three scenes ---------- */
+const SCENES = {
+  front: {img: '../../images/front-exterior-1600.jpg', W: 1600, H: 936, label: 'Front of the house'},
+  living: {img: '../../images/living-room-1600.jpg', W: 1600, H: 946, label: 'Living room'},
+  yard: {img: '../../images/rear-yard-1282.jpg', W: 1282, H: 911, label: 'Terrace and the oak'}
+};
+const has = (k, v) => (S[k] || []).includes(v);
+let NIGHT = false; const nf = () => NIGHT ? ' filter="url(#nightF)"' : '', ns = () => NIGHT ? ' filter="url(#nightS)"' : '';
+const nightDefs = (b, sn) => `<filter id="nightF" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${b[0]} 0 0 0 0 0 ${b[1]} 0 0 0 0 0 ${b[2]} 0 0 0 0 0 1 0"/></filter><filter id="nightS" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${sn[0]} 0 0 0 0 0 ${sn[1]} 0 0 0 0 0 ${sn[2]} 0 0 0 0 0 1 0"/></filter>`;
+let BARE = false;
+function litWindows(sc, polys, id, warm){ // the photo itself, warmed, clipped to the glass: the rooms read as lit, with their furniture still in them
+  return {defs: `<clipPath id="${id}">${polys.map(([p]) => `<polygon points="${p}"/>`).join('')}</clipPath><filter id="${id}F" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${warm}"/></filter>`,
+    g: `<image href="${sc.img}" width="${sc.W}" height="${sc.H}" clip-path="url(#${id})" filter="url(#${id}F)"/>` + polys.filter(q => q[1] < 1).map(([p, o]) => `<polygon points="${p}" fill="#141a30" opacity="${f((1 - o) * 100) / 100}"/>`).join('') }; }
+function buildFront(){ const W = 1600, H = 936, sc = SCENES.front; let g = '', defs = nightDefs([.46, .5, .74], [.78, .84, .98]);
+  const snow = S.weather !== 'clear', full = S.weather === 'snowday';
+  defs += `<filter id="dustF" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".05 .11" numOctaves="4" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 2.4 0 0 0 -.72" result="m"/><feComposite in="m" in2="SourceGraphic" operator="in"/></filter>`;
+  defs += `<linearGradient id="snowNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6ecf6"/><stop offset="1" stop-color="#a9b6cf"/></linearGradient>`;
+  g += `<rect class="dusk-only" width="${W}" height="${H}" fill="url(#duskF)" style="mix-blend-mode:multiply"/>`;
+  if(!snow) g += stars([40, 10, 560, 150], 40, 3) + stars([1440, 4, 1600, 40], 8, 4) + `<g class="dusk-only"><circle cx="330" cy="78" r="15" fill="#fbf3d8" opacity=".95"/><circle cx="337" cy="73" r="14" fill="#27315e" opacity=".9"/></g>`;
+  const lw = litWindows(sc, [['1100,333 1188,318 1188,572 1100,550', 1], ['1222,284 1463,234 1465,658 1222,602', 1], ['690,365 868,365 868,518 690,518', 1], ['905,378 962,378 962,455 905,455', .9], ['997,362 1025,358 1025,445 997,447', .8], ['455,262 552,198 688,262', .7], ['598,415 620,412 620,550 598,552', .7], ['113,375 262,375 262,425 113,425', .4], ['290,375 440,375 440,425 290,425', .4]], 'fw', '1.05 .2 .05 0 .05 .1 .82 .05 0 .02 0 .05 .42 0 0 0 0 0 1 0');
+  defs += lw.defs;
+  g += `<g class="dusk-only lit" data-seq="0">${lw.g}` + [[517, 397], [1046, 402], [3, 398], [874, 410]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="38" fill="url(#spill)" style="mix-blend-mode:screen"/>`).join('') +
+    `<ellipse cx="778" cy="548" rx="190" ry="34" fill="url(#spill)" opacity=".45" style="mix-blend-mode:screen"/><ellipse cx="1300" cy="700" rx="230" ry="60" fill="url(#spill)" opacity=".3" style="mix-blend-mode:screen"/></g>`;
+  if(BARE) return {defs, g: g + cat(686, 552, .3, {glow: true})};
+  if(snow){ const sn = '#dfe6f2';
+    g += `<g opacity="${full ? 1 : .8}"><path d="M-2 289 L243 153 L594 340" fill="none" stroke="${sn}" stroke-width="${full ? 11 : 6}" stroke-linejoin="round"/><path d="M421 242 L552 162 L716 256" fill="none" stroke="${sn}" stroke-width="${full ? 9 : 5}"/>` +
+      `<path d="M548 312 L1028 312 L968 350 L612 350Z" fill="#c9d3e5" opacity="${full ? .95 : .55}"/><path d="M966 347 L1602 12" stroke="${sn}" stroke-width="${full ? 12 : 6}"/>` +
+      [[632, 918, 556], [627, 922, 581], [620, 926, 606], [615, 930, 631], [610, 936, 656]].map(([a, b, y]) => `<rect x="${a}" y="${y - 3}" width="${b - a}" height="${full ? 6 : 3}" fill="${sn}" opacity=".95"/>`).join('') +
+      `<path d="M640 524 L905 524 L1045 552 L632 552Z" fill="#cfd8e8" opacity="${full ? .9 : .45}"/></g>`;
+    const ground = `M0 724 L588 724 L608 684 L944 684 L1052 652 L1250 760 L1500 880 L1600 902 L1600 936 L0 936Z`;
+    g += full ? `<path d="${ground}" fill="url(#snowNight)"/><ellipse cx="780" cy="720" rx="260" ry="50" fill="url(#spill)" opacity=".35" style="mix-blend-mode:screen"/>` : `<path d="${ground}" fill="#c7d1e3" filter="url(#dustF)" opacity=".85"/>`; }
+  NIGHT = true;
+  if(has('path', 'rangoli')) g += rangoli(776, 716, 104, 22) + (has('path', 'diyas') || has('path', 'luminarias') ? `<ellipse cx="776" cy="716" rx="130" ry="34" fill="url(#spill)" opacity=".5" style="mix-blend-mode:screen"/>` : '');
+  if(full && S.yard === 'snowman') g += snowman(300, 850, 1.05, '#c3262f');
+  if(full && S.yard === 'snowcat') g += snowcat(300, 852, 1.15);
+  if(snow) g += paws([[700, 694], [672, 724], [640, 756], [604, 792], [566, 830], [526, 870], [486, 912]], 1.1);
+  const slots = {A: [1144, 556], B: [1288, 613], C: [1410, 642], D: [933, 453], E: [609, 549]};
+  if(has('win', 'tree')) g += tree('fir', 1398, 652, 214, 'star', 21);
+  if(has('win', 'menorah')) g += menorah(slots.B[0], slots.B[1], .78);
+  if(has('win', 'kinara')) g += kinara(slots.A[0], slots.A[1], .62);
+  if(has('win', 'candles')){ const free = ['D', 'E'].concat(has('win', 'kinara') ? [] : ['A'], has('win', 'menorah') ? [] : ['B'], has('win', 'tree') ? [] : ['C']);
+    free.forEach(k => { const s2 = k === 'D' || k === 'E' ? .62 : .9; g += candle(slots[k][0], slots[k][1], s2); }); }
+  if(S.door === 'toran') g += toran(694, 864, 370, 1, true);
+  else if(S.door && S.door !== 'none') g += `<path d="M778 365 L778 400" stroke="#5a141b" stroke-width="2"/>` + wreath(S.door, 778, 428, 26, 1);
+  if(has('path', 'garland')) g += garland(swags([906, 452], [1048, 452], 3, 9), 1, true, 4) + garland(swags([910, 456], [932, 652], 3, 6), .9, true, 6);
+  const hang = {star: starLantern, red: redLantern, moravian: moravian}[S.hang];
+  if(hang) g += `<g class="lit" data-seq="2">` + [[660, 404], [896, 404]].map(([x, y]) => hanger(x, 356, y - (S.hang === 'red' ? 0 : 22), hang(x, y, S.hang === 'moravian' ? .9 : 1))).join('') + '</g>';
+  if(has('path', 'diyas')){ let i = 0; g += `<g class="lit" data-seq="2">` + [[634, 556], [916, 556], [628, 581], [921, 581], [622, 606], [925, 606], [617, 631], [929, 631], [612, 656], [934, 656]].map(([x, y]) => diya(x, y, .95, (i++) * .31)).join('') + '</g>'; }
+  if(has('path', 'luminarias')) g += `<g class="lit" data-seq="2">` + [[952, 704], [992, 748], [1034, 796], [1080, 850], [1128, 906], [596, 712], [566, 764], [532, 822], [496, 884]].map(([x, y]) => luminaria(x, y, .9 + (y - 700) / 600)).join('') + '</g>';
+  if(S.lights !== 'none') g += lightString([[[0, 298], [243, 165], [590, 350]], [[425, 247], [552, 170], [712, 262]], [[612, 357], [966, 357]], [[968, 357], [1600, 24]]], S.lights, S.motion, 11);
+  g += cat(686, 552, .3, {glow: true, wear: S.wear});
+  if(snow) g += snowfall(W, H, full ? 140 : 60, full, 5);
+  NIGHT = false; return {defs, g}; }
+function buildLiving(){ const W = 1600, H = 946; let g = '', defs = nightDefs([.62, .53, .44], [.9, .9, .95]);
+  const snow = S.weather !== 'clear';
+  g += `<rect width="${W}" height="${H}" fill="#9a826b" opacity=".88" style="mix-blend-mode:multiply"/>`;
+  // night glass, traced around the sofa, pillows, orchid and both lamps that stand in front of it
+  const glass = ['845,332 932,332 932,424 872,424 872,540 852,540 852,488 845,488', '952,322 990,322 990,424 952,424', '990,322 1078,322 1078,510 1015,512 1004,498 990,498', '1096,310 1256,310 1256,540 1160,540 1155,516 1100,511 1096,511',
+    '1302,290 1546,290 1546,590 1425,590 1425,500 1465,500 1465,432 1335,432 1335,500 1365,500 1365,590 1302,590', '556,326 727,290 727,596 556,588'];
+  defs += `<clipPath id="lvGlass">${glass.map(p => `<polygon points="${p}"/>`).join('')}</clipPath><linearGradient id="ceilG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a7088"/><stop offset=".55" stop-color="#ffffff"/></linearGradient>`;
+  g += `<rect width="${W}" height="${H}" fill="url(#ceilG)" style="mix-blend-mode:multiply"/>` + glass.map(p => `<polygon points="${p}" fill="#121833" opacity=".93" style="mix-blend-mode:multiply"/>`).join('');
+  if(snow) g += `<g clip-path="url(#lvGlass)">${snowfall(W, H, 90, S.weather === 'snowday', 8)}</g>`;
+  g += `<g class="lit" data-seq="0">` + [[822, 462, 170, .9], [1398, 470, 220, .9], [430, 236, 170, .7]].map(([x, y, r, o]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#spill)" opacity="${o}" style="mix-blend-mode:screen"/>`).join('') +
+    `<ellipse cx="822" cy="462" rx="30" ry="26" fill="#fff4dc" opacity=".55" style="mix-blend-mode:screen"/><ellipse cx="1398" cy="468" rx="62" ry="36" fill="#fff4dc" opacity=".55" style="mix-blend-mode:screen"/>` +
+    [[455, 60], [583, 112], [672, 152], [757, 183], [825, 208], [890, 35], [965, 80], [1025, 128], [1048, 145], [1410, 8]].map(([x, y]) => `<circle cx="${x}" cy="${y + 6}" r="24" fill="url(#spill)" opacity=".75" style="mix-blend-mode:screen"/>`).join('') + '</g>';
+  NIGHT = true;
+  if(has('room', 'beams')) g += garland(swags([338, 18], [856, 214], 5, 16), 1.15, true, 12) + garland(swags([872, 18], [1068, 146], 2, 12), 1.05, true, 13);
+  if(S.tree && S.tree !== 'none') g += `<ellipse cx="640" cy="606" rx="190" ry="26" fill="url(#spill)" opacity=".75" style="mix-blend-mode:screen"/><circle cx="640" cy="420" r="230" fill="url(#spill)" opacity=".28" style="mix-blend-mode:screen"/>` + tree(S.tree, 640, 610, S.tree === 'olive' ? 360 : 410, S.topper, 41);
+  if(has('room', 'rangoli')) g += rangoli(430, 628, 74, 15) + `<ellipse cx="430" cy="628" rx="100" ry="26" fill="url(#spill)" opacity=".6" style="mix-blend-mode:screen"/><g class="lit">` + [[350, 630], [512, 630], [376, 619], [486, 619], [380, 641], [482, 641]].map(([x, y], i) => diya(x, y, .8, i * .4)).join('') + '</g>';
+  if(has('room', 'menorah')) g += `<ellipse cx="712" cy="640" rx="80" ry="50" fill="url(#spill)" opacity=".6" style="mix-blend-mode:screen"/>` + menorah(712, 686, .8);
+  if(has('room', 'kinara')) g += `<ellipse cx="1018" cy="650" rx="70" ry="40" fill="url(#spill)" opacity=".55" style="mix-blend-mode:screen"/>` + kinara(1012, 680, .7, true);
+  if(has('room', 'poinsettia')) g += poinsettia(1316, 616, .95) + poinsettia(1482, 616, .9);
+  if(has('room', 'box')) g += box(548, 880, 1.15, S.wear);
+  else g += cat(1132, 772, .34, {wear: S.wear});
+  NIGHT = false; return {defs, g}; }
+function buildYard(){ const W = 1282, H = 911, sc = SCENES.yard; let g = '', defs = nightDefs([.62, .64, .8], [.82, .86, .98]);
+  const snow = S.weather !== 'clear', full = S.weather === 'snowday';
+  defs += `<filter id="dustY" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".05 .12" numOctaves="4" seed="9" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 2.4 0 0 0 -.72" result="m"/><feComposite in="m" in2="SourceGraphic" operator="in"/></filter>`;
+  defs += `<linearGradient id="snowNightY" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfe6f2"/><stop offset="1" stop-color="#aab6cd"/></linearGradient>`;
+  g += `<rect width="${W}" height="${H}" fill="#4a5585" opacity=".42" style="mix-blend-mode:multiply"/>`;
+  const lw = litWindows(sc, [['0,240 40,250 40,410 0,410', 1], ['55,262 102,272 102,410 55,410', 1], ['112,278 150,286 150,410 112,410', 1], ['400,398 496,398 496,540 400,540', 1], ['345,212 400,212 400,278 345,278', 1], ['437,212 492,212 492,278 437,278', 1], ['622,208 736,208 736,290 622,290', 1], ['657,392 708,392 708,460 657,460', 1], ['808,392 920,392 920,488 808,488', 1]], 'yw', '1.08 .1 0 0 .03 .05 1 0 0 .02 0 .05 .8 0 0 0 0 0 1 0');
+  defs += lw.defs; g += `<g class="lit" data-seq="0">${lw.g}</g>`;
+  if(snow){ const mulch = 'M0 666 L150 668 L300 624 L420 600 L520 600 L540 642 L600 652 L668 636 L700 602 L790 626 L860 652 L960 668 L1100 670 L1225 662 L1260 645 L1282 640 L1282 911 L0 911Z';
+    g += full ? `<path d="${mulch}" fill="url(#snowNightY)"/><path d="M0 600 L180 598 L330 562 L510 548 L700 560 L880 562 L1000 600 L1250 618 L1260 645 L1225 662 L1100 670 L960 668 L860 652 L790 626 L700 602 L668 636 L600 652 L540 642 L520 600 L420 600 L300 624 L150 668 L0 666Z" fill="#d5dded" filter="url(#dustY)" opacity=".85"/>` : `<path d="${mulch}" fill="#cfd8e8" filter="url(#dustY)" opacity=".9"/>`;
+    g += (full ? `<path d="M100 197 L132 165 L446 165 L446 196Z" fill="#cfd8e8" opacity=".92"/><path d="M752 172 L828 172 L834 196 L756 196Z" fill="#cfd8e8" opacity=".85"/>` : '') + `<path d="M760 342 L1232 342" stroke="#dfe6f2" stroke-width="${full ? 6 : 3}"/>`; }
+  NIGHT = true;
+  if(full && S.yard === 'snowman') g += snowman(300, 790, 1.1, '#2f5fb8');
+  if(full && S.yard === 'snowcat') g += snowcat(300, 792, 1.2);
+  const oak = S.oak;
+  if(oak === 'branches' || oak === 'both'){ const R = rng(21); let lights = '';
+    const B = [[[548, 196], [470, 112], [430, 60], [386, 0]], [[560, 190], [560, 100], [574, 30], [580, 0]], [[600, 200], [680, 122], [740, 62], [800, 22], [850, 0]], [[620, 180], [760, 140], [880, 92], [960, 62], [1040, 42], [1140, 26]], [[700, 132], [820, 120], [900, 108], [990, 100]], [[640, 82], [700, 40], [760, 0]], [[480, 120], [410, 110], [350, 80]], [[860, 100], [930, 140], [1000, 160]]];
+    B.forEach(b => along(b, 7, R() * 7).forEach(p => { lights += lightDot(p[0] + (R() - .5) * 18, p[1] + (R() - .5) * 18, R() > .3 ? '#fff1c9' : '#ffd890', 1.4, 6.5, R); }));
+    g += `<g class="lit m-twinkle" data-seq="1">${lights}</g>`; }
+  if(oak === 'wrap' || oak === 'both'){ const R = rng(5); let lights = '';
+    const L = y => y > 500 ? 515 + (y - 500) / 120 * 15 : y > 300 ? 505 + (y - 300) / 200 * 10 : 490 + (y - 220) / 80 * 15, Rr = y => y > 500 ? 615 + (y - 500) / 120 * 40 : y > 300 ? 598 + (y - 300) / 200 * 17 : 600 - (y - 220) / 80 * 2;
+    for(let i = 0; i < 420; i++){ const t = i / 420, y = 618 - t * 400, a = t * Math.PI * 2 * 9, c = Math.cos(a); if(c < -.1 || i % 3) continue; const x = L(y) + (Rr(y) - L(y)) * (.5 + .5 * Math.sin(a)); lights += lightDot(x, y, '#ffd590', 1.9, 8, R); }
+    g += `<g class="lit m-twinkle" data-seq="1"><ellipse cx="570" cy="420" rx="90" ry="230" fill="url(#spill)" opacity=".25" style="mix-blend-mode:screen"/>${lights}</g>`; }
+  if(has('ter', 'bistro')){ let s2 = '<g class="lit" data-seq="1"><ellipse cx="800" cy="560" rx="380" ry="70" fill="url(#spill)" opacity=".35" style="mix-blend-mode:screen"/>'; [[[300, 392], [508, 346]], [[604, 346], [1004, 368]], [[604, 346], [1214, 352]]].forEach(([a, b], k) => { const p = swag(a, b, 34, 24); s2 += `<path d="${P(p)}" fill="none" stroke="#1b1b1b" stroke-width="1.3"/>` + bulbs(along(p, 30, 8), {colors: ['#ffd590'], r: 4.4, h: 16, seed: 70 + k}); }); g += s2 + '</g>'; }
+  if(has('ter', 'luminarias')) g += `<g class="lit" data-seq="2">` + [[60, 664], [160, 660], [262, 632], [360, 606], [700, 606], [780, 628], [858, 654], [960, 668], [1070, 670], [1176, 664]].map(([x, y]) => luminaria(x, y, 1.05)).join('') + '</g>';
+  if(has('ter', 'lanterns')) g += [[932, 536], [1032, 546]].map(([x, y]) => `<g transform="translate(${x} ${y})"><circle cy="-14" r="34" fill="url(#flameHalo)"/><path d="M-9 0 L9 0 L9 -24 L-9 -24Z M-6 -3 L6 -3 L6 -21 L-6 -21Z" fill="#2a2a2a" fill-rule="evenodd"/><path d="M-10 -24 L10 -24 L0 -32Z" fill="#2a2a2a"/>${flame(0, -6, .9, x / 100)}</g>`).join('');
+  if(has('ter', 'smoker')){ halo('#ff7a2a'); g += `<g class="lit"><circle cx="1116" cy="500" r="64" fill="url(#hff7a2a)"/><ellipse cx="1116" cy="512" rx="20" ry="5" fill="#ff8a3a" opacity=".85"/></g>`; }
+  g += cat(462, 590, .3, {glow: true, wear: S.wear});
+  if(snow) g += snowfall(W, H, full ? 130 : 55, full, 6);
+  NIGHT = false; return {defs, g}; }
+const BUILD = {front: buildFront, living: buildLiving, yard: buildYard};
+
+/* ---------- state and steps ---------- */
+const DEFAULT = {name: '', trad: [], lights: 'warm', motion: 'twinkle', door: 'evergreen', win: ['candles'], hang: 'none', path: [], tree: 'fir', topper: 'star', room: [], oak: 'both', ter: ['bistro'], weather: 'clear', yard: 'none', wear: 'none'};
+let S = JSON.parse(JSON.stringify(DEFAULT)), touched = new Set();
+const T = {christmas: 'Christmas', hanukkah: 'Hanukkah', kwanzaa: 'Kwanzaa', diwali: 'Diwali', solstice: 'the solstice', lunar: 'Lunar New Year', lights: 'just the lights'};
+const STEPS = [
+  {id: 'intro', scene: 'front'},
+  {id: 'trad', scene: 'front', title: 'What does this house celebrate?', help: 'Pick any that fit. Snowball will suggest decorations to match, and every option stays open either way.', type: 'multi', key: 'trad', options: [
+    {v: 'christmas', b: 'Christmas', n: 'Trees, wreaths, colored lights', say: 'A tree indoors. I have been waiting all year to sit under one.'},
+    {v: 'hanukkah', b: 'Hanukkah', n: 'The menorah, blue and white', say: 'Eight nights of candles in the window. I will supervise from a safe distance.'},
+    {v: 'kwanzaa', b: 'Kwanzaa', n: 'The kinara, red, black and green', say: 'Seven candles, seven principles. I respect anything with a schedule.'},
+    {v: 'diwali', b: 'Diwali', n: 'Diyas, rangoli, marigolds', say: 'Little lamps everywhere. Light wins. I am in favor.'},
+    {v: 'solstice', b: 'Winter solstice', n: 'Candles and evergreens on the longest night', say: 'The longest night of the year. Finally, a holiday for black cats.'},
+    {v: 'lunar', b: 'Lunar New Year', n: 'Red lanterns, a little early', say: 'Red lanterns in December. Planning ahead. I like it.'},
+    {v: 'lights', b: 'Just the lights', n: 'No tradition required', say: 'No theme, just glow. Honestly the purest option.'}]},
+  {id: 'lights', scene: 'front', title: 'The roofline', help: 'One string along every edge of the roof. Pick the lights, then how they move.', type: 'single', key: 'lights', options: [
+    {v: 'warm', b: 'Warm white', n: 'Classic C9 bulbs', t: ['christmas', 'solstice', 'lights'], say: 'Classic. The siding looks like it has been invited somewhere nice.'},
+    {v: 'multi', b: 'Old-school color', n: 'Red, green, blue and gold', t: ['christmas'], say: 'Bold. I approve of anything that blinks in five colors.'},
+    {v: 'icicle', b: 'Icicles', n: 'Cool white drips', say: 'Icicle lights in a town that rarely freezes. Optimistic.'},
+    {v: 'hanukkah', b: 'Blue and white', n: 'Hanukkah colors', t: ['hanukkah'], say: 'Blue and white. Calm, like a cold night with good manners.'},
+    {v: 'kwanzaa', b: 'Red, black and green', n: 'Kwanzaa colors', t: ['kwanzaa'], say: 'Red, black and green. The black bulbs and I have a lot in common.'},
+    {v: 'marigold', b: 'Marigold', n: 'Amber fairy lights', t: ['diwali'], say: 'Marigold. The whole roof looks like it is glowing from the inside.'},
+    {v: 'fairy', b: 'Fairy twinkle', n: 'Tiny warm lights, lots of them', t: ['solstice', 'lunar', 'lights'], say: 'Hundreds of tiny lights. I will try to count them. I will lose count.'},
+    {v: 'none', b: 'Leave the roof dark', n: 'Let everything else shine', say: 'Minimalist. Bold, for a house that is about to get very festive.'}],
+    seg: {key: 'motion', label: 'How they move', opts: [['steady', 'Steady'], ['twinkle', 'Twinkle'], ['chase', 'Chase'], ['breathe', 'Slow fade']], say: {chase: 'Lights that run along the gutter. I will be watching these all night.', steady: 'Steady. Nobody gets startled. Especially me.', breathe: 'In and out, very slowly. Like a nap.', twinkle: 'A little twinkle. Tasteful.'}}},
+  {id: 'door', scene: 'front', title: 'The front door', help: 'The iron-and-glass doors are the first thing guests see.', type: 'single', key: 'door', options: [
+    {v: 'evergreen', b: 'Evergreen and red bow', n: 'Fir, berries, a big bow', t: ['christmas'], say: 'Evergreen and a red bow. The doors look like they are expecting someone.'},
+    {v: 'magnolia', b: 'Magnolia leaves', n: 'Glossy green, bronze undersides', t: ['solstice', 'lights'], say: 'Magnolia. Very Southern. Very shiny. I would like to bat at it.'},
+    {v: 'eucalyptus', b: 'Eucalyptus and silver', n: 'Soft sage, a white ribbon', t: ['lights', 'solstice'], say: 'Eucalyptus smells like a spa. I do not go to spas. I could start.'},
+    {v: 'citrus', b: 'Dried orange and cinnamon', n: 'Smells like a kitchen in December', t: ['solstice'], say: 'Dried oranges. I will not eat them. Probably.'},
+    {v: 'bluesilver', b: 'Blue and silver', n: 'Ornaments and a star', t: ['hanukkah'], say: 'Blue and silver with a star on top. The doors look dressed for the occasion.'},
+    {v: 'harvest', b: 'Harvest wreath', n: 'Wheat, corn and red berries', t: ['kwanzaa'], say: 'Wheat and corn for the harvest. Mice would be impressed. I am, too.'},
+    {v: 'toran', b: 'Marigold toran', n: 'A garland across the doorway', t: ['diwali'], say: 'Marigolds across the doorway. Everyone who walks in gets a welcome.'},
+    {v: 'none', b: 'Just the doors', n: 'They are nice doors', say: 'The doors are nice on their own. I agree with the doors.'}]},
+  {id: 'win', scene: 'front', title: 'In the windows', help: 'What people see from the street.', type: 'multi', key: 'win', options: [
+    {v: 'candles', b: 'A candle in every window', n: 'Brass holders, warm bulbs', t: ['christmas', 'solstice'], say: 'A candle in every window, so anyone walking by knows someone is home.'},
+    {v: 'menorah', b: 'The menorah', n: 'In the front window, facing the street', t: ['hanukkah'], say: 'The menorah goes where the street can see it. That is the point.'},
+    {v: 'kinara', b: 'The kinara', n: 'Seven candles in the window', t: ['kwanzaa'], say: 'The kinara in the window. Red on the left, green on the right, black in the middle. Like me.'},
+    {v: 'tree', b: 'A tree through the glass', n: 'Lit, in the big window', t: ['christmas'], say: 'A tree you can see from the street. Neighbors will slow down.'}]},
+  {id: 'porch', scene: 'front', title: 'Porch and path', help: 'Something hanging from the porch, and something to light the way in.', type: 'single', key: 'hang', options: [
+    {v: 'star', b: 'Paper star lanterns', n: 'Akash kandil, glowing orange', t: ['diwali'], say: 'Paper stars with a light inside. They spin a little in the wind. Mesmerizing.'},
+    {v: 'red', b: 'Red lanterns', n: 'Round, gold trim, tassels', t: ['lunar'], say: 'Red lanterns for luck. I will take all the luck I can get.'},
+    {v: 'moravian', b: 'Moravian stars', n: 'White, many-pointed', t: ['christmas', 'solstice'], say: 'Stars with that many points. Somebody was very patient.'},
+    {v: 'none', b: 'Nothing hanging', n: 'Keep the porch clear', say: 'A clear porch. More room for me to sit on it.'}],
+    multi2: {key: 'path', label: 'Lighting the way in', options: [
+      {v: 'diyas', b: 'Diyas on the steps', n: 'Clay lamps, one at each end', t: ['diwali'], say: 'Clay lamps on every step. I will walk around them very carefully, which is how I walk anyway.'},
+      {v: 'luminarias', b: 'Luminarias', n: 'Paper bags along the walk', t: ['solstice', 'christmas'], say: 'Glowing paper bags. I am told I may not sit in them.'},
+      {v: 'garland', b: 'Garland on the railing', n: 'Evergreen and tiny lights', t: ['christmas'], say: 'Garland on the railing. It smells like a forest I have never been allowed to visit.'},
+      {v: 'rangoli', b: 'Rangoli', n: 'At the bottom of the steps', t: ['diwali'], say: 'A rangoli at the steps. Beautiful. I will not walk on it. Promise.'}]}},
+  {id: 'tree', scene: 'living', title: 'The living room', help: 'Under the beams, by the glass doors. Start with a tree, or not.', type: 'single', key: 'tree', options: [
+    {v: 'fir', b: 'Noble fir', n: 'Colored lights, glass ornaments', t: ['christmas'], say: 'A real tree, with ornaments at exactly my height. Thank you.'},
+    {v: 'flocked', b: 'Flocked white', n: 'Warm white lights', t: ['christmas', 'solstice'], say: 'A white tree. It will show every black hair I leave on it. Challenge accepted.'},
+    {v: 'pencil', b: 'Slim pencil tree', n: 'Gold lights, small footprint', say: 'Tall and narrow. Like me when I stretch.'},
+    {v: 'olive', b: 'Potted olive', n: 'Fairy lights, no tradition attached', t: ['lights', 'solstice', 'diwali', 'hanukkah', 'kwanzaa', 'lunar'], say: 'An olive tree in lights. Very Woodside. Very climbable.'},
+    {v: 'none', b: 'No tree this year', n: 'More room for everything else', say: 'No tree. I will find something else to climb. I always do.'}],
+    seg: {key: 'topper', label: 'On top', when: s => s.tree !== 'none' && s.tree !== 'olive', opts: [['star', 'Star'], ['flake', 'Snowflake'], ['none', 'Nothing']]}},
+  {id: 'room', scene: 'living', title: 'Around the room', help: 'The coffee table, the beams and the floor by the doors.', type: 'multi', key: 'room', options: [
+    {v: 'menorah', b: 'Menorah on the table', n: 'All the candles lit', t: ['hanukkah'], say: 'All nine lit. The helper candle is my favorite. It works the hardest.'},
+    {v: 'kinara', b: 'Kinara on a mkeka', n: 'With the harvest on the mat', t: ['kwanzaa'], say: 'The kinara on its mat, with the harvest around it. I will guard the fruit.'},
+    {v: 'beams', b: 'Garland on the beams', n: 'Evergreen swags with lights', t: ['christmas', 'solstice'], say: 'Garland up on the beams. Out of reach. For now.'},
+    {v: 'poinsettia', b: 'Poinsettias', n: 'Red, on the tables', t: ['christmas'], say: 'Poinsettias. I have been told to keep my distance. Fine.'},
+    {v: 'rangoli', b: 'Rangoli and diyas', n: 'On the floor by the doors', t: ['diwali'], say: 'Colors on the floor and lamps all around. The doorway feels like a welcome.'},
+    {v: 'box', b: 'A box for Snowball', n: 'Cardboard, empty, perfect', say: 'An empty box. Best present in the house, and it was free.'}]},
+  {id: 'oak', scene: 'yard', title: 'The heritage oak', help: 'It shades the whole terrace. It has also never been decorated.', type: 'single', key: 'oak', options: [
+    {v: 'wrap', b: 'Wrap the trunk', n: 'Warm lights, spiraled up', say: 'Lights around the trunk. Like a scarf for a tree.'},
+    {v: 'branches', b: 'Lights in the branches', n: 'Fairy lights in the canopy', say: 'Lights all the way up in the branches. Where the birds are. Interesting.'},
+    {v: 'both', b: 'Both', n: 'Trunk and canopy', say: 'The whole oak, lit. You can probably see it from the hills.'},
+    {v: 'none', b: 'Leave it natural', n: 'It has been fine for a long time', say: 'The oak is older than everyone here. Fair enough.'}]},
+  {id: 'ter', scene: 'yard', title: 'The terrace', help: 'Dinner out here, if it is not too cold.', type: 'multi', key: 'ter', options: [
+    {v: 'bistro', b: 'Bistro lights', n: 'Strung from the house to the oak', say: 'Big round bulbs over the table. Dinner looks better already.'},
+    {v: 'luminarias', b: 'Luminarias', n: 'Along the edge of the pavers', t: ['solstice', 'christmas'], say: 'A row of glowing bags around the terrace. Very welcoming. Still not allowed in them.'},
+    {v: 'lanterns', b: 'Lanterns on the table', n: 'Candles in black iron', say: 'Candles on the table. I will stay off the table. Mostly.'},
+    {v: 'smoker', b: 'Fire up the smoker', n: 'The ceramic smoker glowing', say: 'Whatever is in the smoker, I would like some of it.'}]},
+  {id: 'weather', scene: 'front', title: 'Now for the weather', help: 'Woodside does not get much snow. Today it can.', type: 'single', key: 'weather', options: [
+    {v: 'clear', b: 'Clear and cold', n: 'Stars and a sliver of moon', say: 'Clear and cold. Good night for staring out a window, which is my main hobby.'},
+    {v: 'dusting', b: 'A light dusting', n: 'Just enough to notice', say: 'A dusting. It is on the walkway. I have stepped in it. I have notes.'},
+    {v: 'snowday', b: 'A real snow day', n: 'Snow on the roofs, the walk, everything', say: 'So this is snow. Cold, wet, and somehow named after me.'}],
+    seg: {key: 'yard', label: 'In the snow', when: s => s.weather === 'snowday', opts: [['none', 'Nothing'], ['snowman', 'A snowman'], ['snowcat', 'A snow cat']], say: {snowman: 'A snowman. He looks like he would be nice to sit near.', snowcat: 'A snow cat. Finally, a sculpture of someone important.', none: 'Untouched snow. Except for my footprints.'}}},
+  {id: 'wear', scene: 'front', title: 'One more thing', help: 'Snowball would like to be festive, within reason.', type: 'single', key: 'wear', options: [
+    {v: 'none', b: 'Nothing, thanks', n: 'He is already a classic', say: 'I am already wearing black. It goes with everything.'},
+    {v: 'scarfRed', b: 'Red scarf', n: 'Striped, cozy', say: 'A red scarf. I look like I am about to go caroling. I am not.'},
+    {v: 'scarfBlue', b: 'Blue and white scarf', n: 'Stripes, very soft', say: 'Blue and white. Very dapper.'},
+    {v: 'scarfGreen', b: 'Green and gold scarf', n: 'Forest green, gold stripes', say: 'Green and gold. Matches my eyes. Mostly my eyes.'},
+    {v: 'bell', b: 'A collar with a bell', n: 'Jingles when he walks', say: 'A bell. So everyone hears me coming. Fine.'}]},
+  {id: 'final', scene: 'front'}
+];
+const sayDefault = {
+  intro: 'It is December in Woodside. The sun is going down. Nobody has decorated. I have notes.',
+  trad: 'Pick as many as you like. I celebrate anything that comes with a warm lap.',
+  lights: 'Let us start at the top. The roof is long, so choose carefully.',
+  door: 'The doors next. People will stand right here waiting for someone to answer.',
+  win: 'Now the windows. This is what the whole street sees.',
+  porch: 'The porch. Something overhead, something underfoot.',
+  tree: 'Inside now. This is where I spend most of my evenings.',
+  room: 'A few more things for the room. I will test all of them for comfort.',
+  oak: 'Out back. The oak is the biggest thing here, and it deserves some attention.',
+  ter: 'The terrace. Picture dinner out here.',
+  weather: 'And now, the part I have been nervous about.',
+  wear: 'Last thing. It is about me.'
+};
+
+/* ---------- rendering ---------- */
+let cur = 0, sceneNow = null, day = true, finalLit = false, viewScene = 'front', shared = false;
+function sceneSVG(key, extraClass){ const sc = SCENES[key], b = BUILD[key]();
+  return `<svg class="scene ${extraClass || ''}" viewBox="0 0 ${sc.W} ${sc.H}" role="img" aria-label="${esc(sc.label)}, decorated"><defs>${b.defs}</defs><image href="${sc.img}" width="${sc.W}" height="${sc.H}"/>${b.g}</svg>`; }
+function drawScene(key, opts){ opts = opts || {};
+  const host = $('#sceneHost'), stage = $('#stage'), changed = sceneNow !== key;
+  const paint = () => { BARE = day && cur === 0; host.innerHTML = sceneSVG(key, (day && key === 'front' ? 'day' : '') + (opts.dark ? ' darkall' : '')); $('#sceneLabel').textContent = SCENES[key].label; sceneNow = key; };
+  if(changed && sceneNow){ stage.classList.add('swap'); setTimeout(() => { paint(); stage.classList.remove('swap'); }, 330); } else paint(); }
+function suggested(o){ return (o.t || []).some(t => S.trad.includes(t)); }
+function sugLabel(o){ const t = (o.t || []).find(t => S.trad.includes(t)); return t ? (t === 'lights' ? 'Suggested' : 'Suggested for ' + T[t]) : ''; }
+function sw(stepId, v){ // option swatches, drawn with the same pieces as the scenes
+  const wrap = (inner, vb) => `<svg viewBox="${vb || '0 0 64 64'}" aria-hidden="true">${inner}</svg>`;
+  if(stepId === 'trad'){ const m = {christmas: tree('fir', 32, 58, 52, 'star', 3), hanukkah: menorah(32, 58, .4), kwanzaa: kinara(32, 50, .4), diwali: diya(30, 44, 1.6), solstice: candle(32, 56, 1), lunar: redLantern(32, 12, .9), lights: bulbs(along(swag([4, 20], [60, 20], 18), 9, 2), {colors: ['#ffcf7a'], r: 3.4, h: 10})}; return wrap(m[v]); }
+  if(stepId === 'lights'){ const L = LIGHTS[v]; if(!L) return wrap(`<path d="M8 40 L32 18 L56 40" stroke="#5d6a8a" stroke-width="3" fill="none"/>`); const p = swag([2, 22], [62, 22], 16); return wrap(`<path d="${P(p)}" stroke="#151c16" stroke-width="1.2" fill="none"/>` + bulbs(along(p, L.step * .55, 2), Object.assign({}, L, {r: Math.max(L.r * .8, 1.6), h: L.h * .8})) + (L.icicle ? along(p, 9, 3).map((q, i) => i % 2 ? '' : [1, 2, 3].map(j => `<circle cx="${f(q[0])}" cy="${f(q[1] + j * 6)}" r="1.4" fill="#eaf6ff"/>`).join('')).join('') : '')); }
+  if(stepId === 'door'){ if(v === 'none') return wrap(`<rect x="18" y="10" width="28" height="50" fill="none" stroke="#c8ccd6" stroke-width="2"/><path d="M32 10 L32 60" stroke="#c8ccd6" stroke-width="2"/>`); if(v === 'toran') return wrap(toran(6, 58, 18, .55, true)); return wrap(wreath(v, 32, 30, 17, 1)); }
+  if(stepId === 'win' || stepId === 'room'){ const m = {candles: candle(32, 58, 1.1), menorah: menorah(32, 60, .42), kinara: kinara(32, 50, .38, stepId === 'room'), tree: tree('fir', 32, 60, 54, 'star', 4), beams: garland(swags([2, 16], [62, 16], 2, 16), .7, true, 2), poinsettia: poinsettia(32, 58, 1.1), rangoli: rangoli(32, 34, 26, 14), box: box(34, 56, .38, S.wear)}; return wrap(m[v]); }
+  if(stepId === 'porch'){ const m = {star: starLantern(32, 26, .9), red: redLantern(32, 12, .95), moravian: moravian(32, 32, 1), none: `<path d="M6 14 L58 14" stroke="#c8ccd6" stroke-width="3"/>`, diyas: diya(30, 44, 1.6), luminarias: luminaria(32, 54, 1.6), garland: garland(swags([2, 26], [62, 26], 2, 12), .8, true, 2), rangoli: rangoli(32, 34, 26, 14)}; return wrap(m[v]); }
+  if(stepId === 'tree') return wrap(v === 'none' ? `<path d="M20 50 L44 50" stroke="#c8ccd6" stroke-width="2"/><path d="M32 14 L32 50" stroke="#c8ccd6" stroke-width="2" stroke-dasharray="3 4"/>` : tree(v, 32, 61, v === 'olive' ? 56 : 58, 'star', 7));
+  if(stepId === 'oak'){ const trunk = `<path d="M26 64 C28 46 26 34 22 24 C18 16 12 12 6 8 M30 30 C34 20 42 14 56 8 M28 40 C36 36 44 30 50 24" stroke="#4a3b2e" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M26 64 C28 46 26 34 22 24" stroke="#4a3b2e" stroke-width="9" fill="none"/>`, R = rng(3);
+    let l = ''; if(v === 'wrap' || v === 'both') for(let i = 0; i < 9; i++) l += lightDot(22 + (i % 2 ? 6 : 0), 60 - i * 4.4, '#ffd590', 1.6, 5, R); if(v === 'branches' || v === 'both') for(let i = 0; i < 26; i++) l += lightDot(6 + R() * 52, 4 + R() * 26, '#fff1c9', 1, 4, R); return wrap(trunk + l); }
+  if(stepId === 'ter'){ const m = {bistro: (() => { const p = swag([2, 14], [62, 14], 16); return `<path d="${P(p)}" stroke="#151c16" stroke-width="1.2" fill="none"/>` + bulbs(along(p, 12, 4), {colors: ['#ffd590'], r: 3.6, h: 10}); })(), luminarias: luminaria(20, 54, 1.3) + luminaria(44, 54, 1.3), lanterns: `<g transform="translate(32 54) scale(1.6)"><path d="M-9 0 L9 0 L9 -24 L-9 -24Z M-6 -3 L6 -3 L6 -21 L-6 -21Z" fill="#c8ccd6" fill-rule="evenodd"/><path d="M-10 -24 L10 -24 L0 -32Z" fill="#c8ccd6"/>${flame(0, -6, .9, 0)}</g>`, smoker: `<ellipse cx="32" cy="38" rx="20" ry="18" fill="#2e7b59"/><path d="M14 30 C22 26 42 26 50 30" stroke="#1d4f39" stroke-width="2" fill="none"/><circle cx="32" cy="42" r="22" fill="url(#h${'ff7a2a'})"/><path d="M24 58 L28 52 M40 58 L36 52" stroke="#555" stroke-width="3"/>`}; halo('#ff7a2a'); return wrap(m[v]); }
+  if(stepId === 'weather'){ const R = rng(v.length); let fl = ''; const n = {clear: 0, dusting: 10, snowday: 34}[v]; for(let i = 0; i < n; i++) fl += `<circle cx="${f(R() * 64)}" cy="${f(R() * 64)}" r="${f(1 + R() * 1.8)}" fill="#fff"/>`;
+    return wrap(v === 'clear' ? `<circle cx="38" cy="24" r="12" fill="#fbf3d8"/><circle cx="44" cy="20" r="11" fill="#1c2642"/>` + [[12, 14], [20, 40], [52, 46], [10, 52], [30, 52]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.2" fill="#fff"/>`).join('') : `<path d="M0 50 C16 44 40 46 64 50 L64 64 L0 64Z" fill="${v === 'snowday' ? '#eef3f8' : '#a8b4c8'}"/>` + fl); }
+  if(stepId === 'wear') return wrap(cat(32, 96, .44, {wear: v}), '0 0 64 64');
+  return ''; }
+function tagHTML(step, o, on){ const s = suggested(o) ? `<span class="sug">${esc(sugLabel(o))}</span>` : '';
+  return `<button type="button" class="tag" data-v="${o.v}" aria-pressed="${on}"><span class="sw">${sw(step, o.v)}</span><span><b>${esc(o.b)}</b><small>${esc(o.n)}</small>${s}</span></button>`; }
+function say(t){ const el = $('#say'); el.textContent = t; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+function applySuggestions(st){ if(touched.has(st.id) || !S.trad.length) return;
+  const pick = o => suggested(o);
+  if(st.type === 'single'){ const o = st.options.find(pick); if(o) S[st.key] = o.v; }
+  if(st.type === 'multi'){ const v = st.options.filter(pick).map(o => o.v); if(v.length) S[st.key] = [...new Set((st.id === 'trad' ? [] : S[st.key]).concat(v))]; }
+  if(st.multi2){ const v = st.multi2.options.filter(pick).map(o => o.v); if(v.length) S[st.multi2.key] = v; } }
+function renderStep(){ const st = STEPS[cur], box = $('#step');
+  $('#dots').innerHTML = STEPS.slice(1, -1).map((s, i) => `<i class="${i + 1 < cur ? 'on' : i + 1 === cur ? 'cur' : ''}"></i>`).join('');
+  $('#nav').hidden = st.id === 'final' || st.id === 'intro';
+  $('#back').disabled = cur <= 1;
+  $('#next').textContent = STEPS[cur + 1] && STEPS[cur + 1].id === 'final' ? 'Wait for dark' : 'Next';
+  $('#sceneBtns').hidden = st.id !== 'final';
+  $('#lightup').hidden = true;
+  if(st.id === 'intro') return renderIntro();
+  if(st.id === 'final') return renderFinal();
+  applySuggestions(st);
+  let h = `<h2>${esc(st.title)}</h2><p class="help">${esc(st.help)}</p><div class="tags" role="group" aria-label="${esc(st.title)}">`;
+  h += st.options.map(o => tagHTML(st.id, o, st.type === 'multi' ? S[st.key].includes(o.v) : S[st.key] === o.v)).join('') + '</div>';
+  if(st.seg && (!st.seg.when || st.seg.when(S))) h += `<p class="sub">${esc(st.seg.label)}</p><div class="seg" role="group" aria-label="${esc(st.seg.label)}">` + st.seg.opts.map(([v, l]) => `<button type="button" data-seg="${v}" aria-pressed="${S[st.seg.key] === v}">${esc(l)}</button>`).join('') + '</div>';
+  if(st.multi2) h += `<p class="sub">${esc(st.multi2.label)}</p><div class="tags" role="group" aria-label="${esc(st.multi2.label)}" data-m2="1">` + st.multi2.options.map(o => tagHTML('porch', o, S[st.multi2.key].includes(o.v))).join('') + '</div>';
+  box.innerHTML = h;
+  box.querySelectorAll('.tags:not([data-m2]) .tag').forEach(b => b.onclick = () => choose(st, b.dataset.v));
+  box.querySelectorAll('[data-m2] .tag').forEach(b => b.onclick = () => choose2(st, b.dataset.v));
+  box.querySelectorAll('.seg button').forEach(b => b.onclick = () => { S[st.seg.key] = b.dataset.seg; touched.add(st.id); chime(1.3); renderStep(); drawScene(st.scene); if(st.seg.say && st.seg.say[b.dataset.seg]) say(st.seg.say[b.dataset.seg]); });
+  if(!box.dataset.said || box.dataset.said !== st.id){ box.dataset.said = st.id; say(st.id === 'trad' && S.trad.length > 1 ? 'More than one holiday under one roof. There is room here for all of it.' : sayDefault[st.id]); }
+  drawScene(st.scene); }
+function choose(st, v){ touched.add(st.id); const o = st.options.find(x => x.v === v);
+  if(st.type === 'multi'){ const a = S[st.key], i = a.indexOf(v); if(i >= 0){ a.splice(i, 1); } else { a.push(v); if(o.say) say(o.say); }
+    if(st.id === 'trad' && a.length > 1 && i < 0) say(o.say + ' And more than one holiday under one roof. There is room here for all of it.'); }
+  else { S[st.key] = v; if(o.say) say(o.say); }
+  if(st.id === 'trad') STEPS.forEach(s => touched.delete(s.id === 'trad' ? '' : s.id)), touched.add('trad');
+  chime(1); renderStep(); drawScene(st.scene); ga('deck_pick', {step: st.id, v}); }
+function choose2(st, v){ touched.add(st.id); const a = S[st.multi2.key], i = a.indexOf(v), o = st.multi2.options.find(x => x.v === v); if(i >= 0) a.splice(i, 1); else { a.push(v); say(o.say); } chime(1.15); renderStep(); drawScene(st.scene); }
+function renderIntro(){ day = true;
+  $('#step').innerHTML = `<h1>Deck the House</h1><p class="story">Snowball is a black cat with yellow eyes, so his name is a joke he has heard many times. It is December at 118 Hillside Drive, the sun is going down, and nothing is decorated yet. He has opinions about all of it.</p>
+    <p class="help">Choose the lights, the door, the windows and the tree, inside and out, for whatever this house celebrates. Then wait for dark and light it up.</p>
+    <div class="field"><label for="nm">Whose house is it this year? (optional, goes on your postcard)</label><input id="nm" maxlength="32" placeholder="the Parks" autocomplete="off" value="${esc(S.name)}"></div>
+    <button class="btn primary big" id="begin" type="button">Wait for dusk</button>`;
+  say(sayDefault.intro); drawScene('front');
+  $('#nm').oninput = e => { S.name = e.target.value.trim(); };
+  $('#begin').onclick = () => { ga('deck_start'); chime(.8); day = false; const svg = $('#sceneHost svg'); if(svg) svg.classList.remove('day'); say('There it goes. Now we can see what we are doing.'); $('#begin').disabled = true; setTimeout(() => { cur = 1; renderStep(); }, 2300); }; }
+function recap(){ const bits = [];
+  const LP = {warm: 'warm white lights on the roof', multi: 'old-school colored lights on the roof', icicle: 'icicle lights along the roof', hanukkah: 'blue and white lights on the roof', kwanzaa: 'red, black and green lights on the roof', marigold: 'marigold lights on the roof', fairy: 'fairy lights along the roof'};
+  const DP = {evergreen: 'an evergreen wreath on the door', magnolia: 'a magnolia wreath on the door', eucalyptus: 'eucalyptus on the door', citrus: 'dried oranges on the door', bluesilver: 'a blue and silver wreath on the door', harvest: 'a harvest wreath on the door', toran: 'marigolds over the door'};
+  const TP = {fir: 'a noble fir inside', flocked: 'a flocked tree inside', pencil: 'a slim tree inside', olive: 'an olive tree in lights inside'};
+  if(LP[S.lights]) bits.push(LP[S.lights]); if(DP[S.door]) bits.push(DP[S.door]);
+  if(S.win.includes('menorah') || S.room.includes('menorah')) bits.push('the menorah lit'); if(S.win.includes('kinara') || S.room.includes('kinara')) bits.push('the kinara lit');
+  if(S.path.includes('diyas') || S.room.includes('rangoli')) bits.push('diyas burning'); if(TP[S.tree]) bits.push(TP[S.tree]);
+  if(S.oak !== 'none') bits.push('the oak lit out back'); if(S.weather === 'snowday') bits.push('snow on everything'); else if(S.weather === 'dusting') bits.push('a little snow');
+  const list = bits.length > 1 ? bits.slice(0, -1).join(', ') + ' and ' + bits[bits.length - 1] : bits[0] || 'a quiet, undecorated evening';
+  return `${S.name ? esc(cap(S.name)) + ': ' : ''}${esc(cap(list))}.`; }
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+function renderFinal(){ $('#nav').hidden = true; viewScene = 'front';
+  $('#step').innerHTML = `<div class="final">${shared ? `<div class="shared">Someone decorated 118 Hillside this way and sent it to you. Light it up, then do your own.</div>` : ''}<h2 id="fh">It is dark enough.</h2><p class="help" id="fsub">Snowball is in position. Light it up.</p><div id="fbody"></div></div>`;
+  say(shared ? 'Somebody decorated without me. Let us see how they did.' : 'Everything is in place. I am on the porch. Do the honors.');
+  finalLit = false; drawScene('front', {}); requestAnimationFrame(() => { lightsOff(); $('#lightup').hidden = false; });
+  $('#lightBtn').onclick = lightUp; }
+function lightsOff(){ const svg = $('#sceneHost svg'); if(!svg) return; svg.querySelectorAll('.lit').forEach(g => g.classList.add('off')); }
+function lightUp(){ $('#lightup').hidden = true; ga('deck_lightup', {shared}); const svg = $('#sceneHost svg'); const groups = [...svg.querySelectorAll('.lit')];
+  const seq = g => +(g.dataset.seq || 3); groups.sort((a, b) => seq(a) - seq(b)); let t = 300;
+  groups.forEach((g, i) => { setTimeout(() => { g.classList.remove('off'); chime(.7 + (i % 5) * .18, .05); }, t); t += i < 3 ? 650 : 260; });
+  setTimeout(() => { finalLit = true; bell(); showFinalBody(); }, t + 500); }
+function showFinalBody(){ $('#fh').textContent = 'Snowball approves.'; $('#fsub').textContent = recap();
+  say(S.weather === 'snowday' ? 'Lit up, snowed in, and I am wearing ' + (S.wear === 'none' ? 'nothing but my best expression' : 'something festive') + '. Best night of the year.' : 'Look at it. The whole street is going to slow down. Worth every minute.');
+  $('#sceneBtns').hidden = false; $('#sceneBtns').innerHTML = Object.keys(SCENES).map(k => `<button type="button" data-k="${k}" aria-pressed="${k === viewScene}">${SCENES[k].label}</button>`).join('');
+  $('#sceneBtns').querySelectorAll('button').forEach(b => b.onclick = () => { viewScene = b.dataset.k; $('#sceneBtns').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); drawScene(viewScene); ga('deck_view', {scene: viewScene}); });
+  $('#fbody').innerHTML = `<div class="row"><button class="btn" id="save" type="button">Save the postcard</button><button class="btn" id="share" type="button">Send your house</button></div>
+    <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive, a mile from Woodside's Town Center. The oak, the terrace and the porch are all there in person.</span><a class="btn primary big" href="/#contact" id="see">See it in person</a></div>
+    <div class="row"><a class="btn" href="/tour/" id="tourl">Walk through it in 3D</a><a class="btn" href="/games/feast/">Play Thanksgiving at Hillside</a><a class="btn" href="/games/room/">Play Room for Everyone</a><button class="btn" id="again" type="button">Decorate again</button></div>
+    <p class="meta">Decorations are illustrations on real photos of the house.</p>`;
+  $('#save').onclick = savePostcard; $('#share').onclick = shareHouse; $('#again').onclick = () => { ga('deck_again'); shared = false; history.replaceState(null, '', location.pathname); S = JSON.parse(JSON.stringify(DEFAULT)); touched = new Set(); day = true; cur = 0; renderStep(); };
+  $('#see').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#tourl').onclick = () => ga('deck_cta', {cta: 'tour'}); }
+
+/* ---------- postcard + sharing ---------- */
+async function dataURL(src){ const r = await fetch(src), b = await r.blob(); return await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }); }
+async function savePostcard(){ const btn = $('#save'); btn.disabled = true; btn.textContent = 'Making the postcard';
+  try{ const key = viewScene, sc = SCENES[key], host = document.createElement('div'); host.innerHTML = sceneSVG(key); const svg = host.firstChild;
+    svg.querySelector('defs').insertAdjacentHTML('afterbegin', GD.innerHTML); svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); svg.setAttribute('width', sc.W); svg.setAttribute('height', sc.H);
+    svg.querySelectorAll('.snowfall').forEach(n => n.remove()); svg.querySelectorAll('.staticflakes').forEach(n => n.removeAttribute('class'));
+    svg.querySelector('image').setAttribute('href', await dataURL(sc.img));
+    const blob = new Blob([new XMLSerializer().serializeToString(svg)], {type: 'image/svg+xml'}), url = URL.createObjectURL(blob);
+    const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const W = 1600, Hh = Math.round(W * sc.H / sc.W), band = 150, c = document.createElement('canvas'); c.width = W; c.height = Hh + band; const x = c.getContext('2d');
+    x.fillStyle = '#18213a'; x.fillRect(0, 0, W, Hh + band); x.drawImage(img, 0, 0, W, Hh); URL.revokeObjectURL(url);
+    await document.fonts.ready; x.fillStyle = '#f6f5f1'; x.font = '600 60px "Cormorant Garamond", Georgia, serif'; x.textBaseline = 'alphabetic';
+    x.fillText('Happy holidays from ' + (S.name || '118 Hillside'), 56, Hh + 76); x.font = '300 26px Jost, "Helvetica Neue", Arial, sans-serif'; x.fillStyle = '#c4cad8';
+    x.fillText('Decorated with Snowball at 118hillside.com/games/deck', 58, Hh + 118);
+    const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = c.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {scene: key});
+  }catch(e){ console.warn(e); toast('That did not work. Try a screenshot instead.'); }
+  btn.disabled = false; btn.textContent = 'Save the postcard'; }
+const KEYS = ['lights', 'motion', 'door', 'win', 'hang', 'path', 'tree', 'topper', 'room', 'oak', 'ter', 'weather', 'yard', 'wear', 'trad', 'name'];
+function encode(){ const o = {}; KEYS.forEach(k => o[k] = S[k]); return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function decode(h){ try{ const o = JSON.parse(decodeURIComponent(escape(atob(h.replace(/-/g, '+').replace(/_/g, '/'))))); const n = JSON.parse(JSON.stringify(DEFAULT)); KEYS.forEach(k => { if(o[k] != null && typeof o[k] === typeof n[k]) n[k] = Array.isArray(n[k]) ? o[k].filter(v => typeof v === 'string').slice(0, 12) : typeof n[k] === 'string' ? String(o[k]).slice(0, 32) : o[k]; }); return n; }catch(e){ return null; } }
+async function shareHouse(){ const url = 'https://118hillside.com/games/deck/#h=' + encode(), text = 'I decorated 118 Hillside Drive for the holidays with Snowball the cat. Light up my version, then do yours.';
+  ga('deck_share');
+  try{ if(navigator.share){ await navigator.share({title: 'Deck the House with Snowball', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(text + ' ' + url); toast('Link copied. Paste it anywhere.'); }catch(e){ toast(url); } }
+let tt = 0; function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); }
+
+/* ---------- sound (soft chimes, off with the speaker button) ---------- */
+let AC = null, sound = store.get('deck.snd') !== '0';
+const sndBtn = $('#snd'); const sndIcon = () => { sndBtn.innerHTML = sound ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg>' : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>'; sndBtn.setAttribute('aria-pressed', sound); sndBtn.setAttribute('aria-label', sound ? 'Sound on' : 'Sound off'); };
+sndIcon(); sndBtn.onclick = () => { sound = !sound; store.set('deck.snd', sound ? '1' : '0'); sndIcon(); };
+function tone(fr, t0, dur, vol){ const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = fr; g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .01); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur); o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + dur + .05); }
+function chime(k, v){ if(!sound) return; try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const t = AC.currentTime; tone(880 * (k || 1), t, .5, v || .06); tone(1320 * (k || 1), t + .03, .35, (v || .06) * .5); }catch(e){} }
+function bell(){ if(!sound) return; try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const t = AC.currentTime; [523.25, 659.25, 783.99, 1046.5].forEach((fr, i) => { tone(fr, t + i * .12, 1.6, .07); tone(fr * 2.01, t + i * .12, .8, .02); }); }catch(e){} }
+
+/* ---------- go ---------- */
+$('#avatar').innerHTML = `<svg viewBox="0 0 212 230">${cat(106, 226, 1, {})}</svg>`;
+$('#back').onclick = () => { if(cur > 1){ cur--; renderStep(); } };
+$('#next').onclick = () => { if(cur < STEPS.length - 1){ ga('deck_step', {step: STEPS[cur].id}); cur++; renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); } };
+const hm = /#h=([A-Za-z0-9_-]+)/.exec(location.hash);
+if(hm){ const n = decode(hm[1]); if(n){ S = n; shared = true; day = false; cur = STEPS.length - 1; } }
+renderStep();
+window.DECK = {get S(){ return S; }, set(o){ Object.assign(S, o); renderStep(); }, go(i){ day = false; cur = i; renderStep(); }, light: () => lightUp(), steps: STEPS.map(s => s.id), encode, scene: k => { viewScene = k; drawScene(k); }};
+})();
+</script>
+</body>
+</html>
