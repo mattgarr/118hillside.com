@@ -1,6 +1,6 @@
 /* Deck the House with Snowball, in 3D. Played inside the walkable model of 118 Hillside Drive (the house as it is today).
    Loaded by tour/index.html only on ?deck=1; talks to the engine through window.HILLSIDE. Decorations are built by deck-props.js.
-   Story: company is coming tonight and bringing their animals, and Snowball (an orange tabby) has collected a request from each one.
+   Story: Snowball’s animal friends are coming tonight, and Snowball (an orange tabby) has collected a request from each one.
    The requests arrive as you decorate. Each is a small riddle about light, color, warmth, movement, smell or a box, and can be read
    off the finished house. Traditions (the tree, the menorah, the kinara, the diyas and rangoli, the lanterns, the wreaths) are the
    player's own choice: no guest asks for one and none of them can be wrong. At sunset you light it up, the animals arrive one at a
@@ -28,21 +28,21 @@
      pos/look: where you stand on a wide screen; posP/lookP on a tall one. fit: the corners of the thing being decorated; the view is
      turned (and widened if it has to be) until all of them sit in the part of the screen the panels leave free. cat: where Snowball sits. */
   const PLACES = [
-    {id: 'street', label: 'Roofline', pos: [13, 2.6, 80], look: [0, 8, 20], posP: [10, 2.6, 84], lookP: [0, 8, 20], cat: [-1, 40], say: 'Start at the top. The roof is long, so choose carefully.', sections: ['lights'],
+    {id: 'street', label: 'Roofline', pos: [13, 2.6, 80], look: [0, 8, 20], posP: [10, 2.6, 84], lookP: [0, 8, 20], cat: [-1, 40], say: 'Start at the top. It’s a long roof, so choose wisely.', sections: ['lights'],
      fit: [[33.7, 7.9, 38.2], [18.4, 14.6, 38.2], [3.2, 7.9, 38.2], [-26.7, 5.5, 23.7], [-18, 10.9, 23.7], [-17.9, 18.6, -1.1], [-26.3, 13.4, -1.1]],
      pfit: [[1.3, -3.4, 57], [9.4, -3.2, 57]], pasp: 1.25,   // a picture from the street keeps the front of the walk in; on a tall screen it is a landscape card, so the house fills its width
      end: {wide: {pos: [8, 3, 74], look: [0, 6, 25], fit: [[33.7, 7.9, 38.2], [18.4, 15.4, 38.2], [3.2, 7.9, 38.2], [-22, 5.5, 23.7], [-22, -3.4, 23.7], [33.7, -3.4, 38.2], [4, -3.4, 44]]},   // the lit front, across a wide band (a phone, above its card)
        near: {pos: [-2.5, 3.4, 53], look: [-3, 5, 14], fit: [[-9, 9, 6.3], [2.8, 9, 6.3], [-9, -3.4, 24], [2.8, -3.4, 24], [-1, -3.6, 40], [-1, -1.4, 40]]}}},   // the lit doors, the tree through the glass, the walk and Snowball, beside a card
-    {id: 'door', label: 'Front door', pos: [-5.0, 4.6, 38], look: [-5.4, 2.0, 10], posP: [-5.2, 5.2, 44], lookP: [-5.4, 2.4, 10], cat: [-1.5, 13.4], say: 'The doors next. Every guest tonight comes in through here.', sections: ['door', 'hang', 'path'],
+    {id: 'door', label: 'Front door', pos: [-5.0, 4.6, 38], look: [-5.4, 2.0, 10], posP: [-5.2, 5.2, 44], lookP: [-5.4, 2.4, 10], cat: [-1.5, 13.4], say: 'Doors next. Every guest comes in this way.', sections: ['door', 'hang', 'path'],
      fit: [[-10.6, 8.4, 6.3], [3.9, 8.4, 6.3], [-10.6, -3.4, 24], [3.9, 3.3, 15.6], [-5, -3.4, 26]]},
-    {id: 'windows', label: 'Windows', pos: [-8.5, 2.4, 40.5], look: [0, 3, 12], cat: [-4, 24], say: 'Now the windows. This is what the whole street sees.', sections: ['win'],
+    {id: 'windows', label: 'Windows', pos: [-8.5, 2.4, 40.5], look: [0, 3, 12], cat: [-4, 24], say: 'Now the windows. The whole street sees these.', sections: ['win'],
      fit: [[-10.5, 5.2, 4.7], [-10.5, 0, 4.7], [4.2, 5.8, 29.6], [4.2, .8, 29.6], [2.4, 5.2, 5.5]]},
-    {id: 'living', label: 'Living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9], cat: [10.7, -3.2], say: 'Inside now. This is where I spend most of my evenings.', sections: ['tree', 'room'],
+    {id: 'living', label: 'Living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9], cat: [10.7, -3.2], say: 'Inside. This is where I spend my evenings. And mornings.', sections: ['tree', 'room'],
      fit: [[-3.2, 7.6, -5.2], [-6.2, .1, -5.6], [9, 8.5, -6], [9.4, .1, 1.2], [2.5, .1, -3.3]],
      catP: [.6, -1.6], fitP: [[-3.2, 7.5, -5.2], [-5.8, .2, -5.4], [2.5, .2, -3.3], [7.2, 2.6, -.6], [3.05, 8.4, -8]]},   // a tall screen leaves a short band: the tree, the table, the box and the far beam
-    {id: 'terrace', label: 'Terrace', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5], cat: [9.5, -39.5], say: 'Out back. Dinner is on the terrace tonight.', sections: ['ter'],
+    {id: 'terrace', label: 'Terrace', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5], cat: [9.5, -39.5], say: 'Out back. Dinner’s on the terrace tonight.', sections: ['ter'],
      fit: [[-9.6, 5.4, -37.3], [8.3, 5, -27], [.7, -4.4, -25.6], [3.8, -4.4, -51.2], [-6, -1, -44]]},
-    {id: 'oak', label: 'The oak', pos: [35, 2, -47], look: [8.3, 9, -27], posP: [39, 2, -52], lookP: [8.3, 9, -27], fitP: [[8.3, -.8, -27], [8.3, 12.5, -29], [0, 8, -29], [17, 8, -28]], cat: [14, -33], say: 'Last, the oak. It is the biggest thing here and it has never been decorated.', sections: ['oak', 'wear'],
+    {id: 'oak', label: 'The oak', pos: [35, 2, -47], look: [8.3, 9, -27], posP: [39, 2, -52], lookP: [8.3, 9, -27], fitP: [[8.3, -.8, -27], [8.3, 12.5, -29], [0, 8, -29], [17, 8, -28]], cat: [14, -33], say: 'Last, the oak. Biggest thing here, and it’s never been decorated.', sections: ['oak', 'wear'],
      fit: [[8.3, -4.4, -27], [8.3, 26, -30], [-9, 15, -30], [26, 15, -28]]}];
   const EXTRA = [   // more places to stand once the house is lit
     {id: 'walk', label: 'Front walk', pos: [-1.5, 2.6, 49], look: [-2.5, 6.2, 14], posP: [-1.5, 2.8, 56], lookP: [-2.5, 7, 14], cat: [-3.4, 36.5]},
@@ -56,100 +56,100 @@
 
   const SECT = {
     lights: {title: 'The roofline', help: 'One string along every edge of the roof. Pick the lights, then how they move.', type: 'single', key: 'lights', options: [
-      {v: 'warm', b: 'Warm white', n: 'Classic big bulbs', say: 'Classic. The siding looks like it has been invited somewhere nice.'},
-      {v: 'multi', b: 'Old-school color', n: 'Red, green, blue and gold', say: 'Five colors at once, and every one of them thinks it is the best.'},
+      {v: 'warm', b: 'Warm white', n: 'Classic big bulbs', say: 'Classic. The siding looks like it’s been invited somewhere nice.'},
+      {v: 'multi', b: 'Old-school color', n: 'Red, green, blue and gold', say: 'Five colors at once, and every one of them thinks it’s the best.'},
       {v: 'icicle', b: 'Icicles', n: 'Cool white drips', say: 'Icicle lights in a town that never freezes. Optimistic.'},
       {v: 'hanukkah', b: 'Blue and white', n: 'Hanukkah colors', say: 'Blue and white. Calm, like a clear night with good manners.'},
-      {v: 'kwanzaa', b: 'Red, black and green', n: 'Kwanzaa colors', say: 'Red, black and green. The roof is standing up a little straighter.'},
+      {v: 'kwanzaa', b: 'Red, black and green', n: 'Kwanzaa colors', say: 'Red, black and green. The roof’s standing a little straighter.'},
       {v: 'marigold', b: 'Marigold', n: 'Amber and gold fairy lights', say: 'Marigold. Very nearly my color. The roof has taste.'},
-      {v: 'fairy', b: 'Fairy twinkle', n: 'Tiny warm white lights, lots of them', say: 'Hundreds of tiny lights. I will try to count them. I will lose count.'},
+      {v: 'fairy', b: 'Fairy twinkle', n: 'Tiny warm white lights, lots of them', say: 'Hundreds of tiny lights. I’ll try to count them. I’ll lose count.'},
       {v: 'none', b: 'Leave the roof dark', n: 'Let everything else shine', say: 'A dark roof. Everything under it will have to work harder.'}],
-      seg: {key: 'motion', label: 'How they move', when: s => s.lights !== 'none', opts: [['steady', 'Steady'], ['twinkle', 'Twinkle'], ['chase', 'Chase'], ['breathe', 'Slow fade']], say: {chase: 'Lights that run along the gutter. I will be watching these all night.', steady: 'Steady. Nobody gets startled. Especially me.', breathe: 'In and out, very slowly. Like a nap.', twinkle: 'A little twinkle. Tasteful.'}}},
-    door: {title: 'On the front doors', help: 'However you celebrate. The iron-and-glass doors are the first thing anyone sees.', type: 'single', key: 'door', options: [
-      {v: 'evergreen', b: 'Evergreen and red bow', n: 'Fir, berries, a big bow', say: 'Evergreen and a red bow. The doors look like they are expecting someone.'},
-      {v: 'magnolia', b: 'Magnolia leaves', n: 'Glossy green, bronze undersides', say: 'Magnolia. Very Southern. Very shiny. I would like to bat at it.'},
-      {v: 'eucalyptus', b: 'Eucalyptus and silver', n: 'Soft sage, a white ribbon', say: 'Eucalyptus smells like a spa. I do not go to spas. I could start.'},
-      {v: 'citrus', b: 'Dried orange and cinnamon', n: 'Smells like a kitchen in December', say: 'Dried oranges. I will not eat them. Probably.'},
-      {v: 'bluesilver', b: 'Blue and silver', n: 'Ornaments and a star', say: 'Blue and silver with a star on top. The doors look dressed for the occasion.'},
-      {v: 'harvest', b: 'Harvest wreath', n: 'Wheat, corn and red berries', say: 'Wheat and corn for the harvest. Mice would be impressed. I am, too.'},
-      {v: 'toran', b: 'Marigold toran', n: 'A garland across the doorway', say: 'Marigolds across the doorway. Everyone who walks in gets a welcome.'},
-      {v: 'none', b: 'Just the doors', n: 'They are nice doors', say: 'The doors are nice on their own. I agree with the doors.'}]},
+      seg: {key: 'motion', label: 'How they move', when: s => s.lights !== 'none', opts: [['steady', 'Steady'], ['twinkle', 'Twinkle'], ['chase', 'Chase'], ['breathe', 'Slow fade']], say: {chase: 'Lights that run along the gutter. I’ll be chasing these all night.', steady: 'Steady. Nobody gets startled. Especially me.', breathe: 'In and out, very slowly. Like a nap.', twinkle: 'A little twinkle. Tasteful.'}}},
+    door: {title: 'On the front doors', help: 'However you celebrate. The iron-and-glass doors are the first thing you see.', type: 'single', key: 'door', options: [
+      {v: 'evergreen', b: 'Evergreen and red bow', n: 'Fir, berries, a big bow', say: 'Evergreen and a red bow. The doors look like they’re expecting guests.'},
+      {v: 'magnolia', b: 'Magnolia leaves', n: 'Glossy green, bronze undersides', say: 'Magnolia. Very Southern. Very shiny. I’d like to bat at it.'},
+      {v: 'eucalyptus', b: 'Eucalyptus and silver', n: 'Soft sage, a white ribbon', say: 'Eucalyptus smells like a spa. I don’t go to spas. I could start.'},
+      {v: 'citrus', b: 'Dried orange and cinnamon', n: 'Smells like a kitchen in December', say: 'Dried oranges. I won’t eat them. Probably.'},
+      {v: 'bluesilver', b: 'Blue and silver', n: 'Ornaments and a star', say: 'Blue and silver with a star on top. Very sharp doors.'},
+      {v: 'harvest', b: 'Harvest wreath', n: 'Wheat, corn and red berries', say: 'Wheat and corn. The mice will be impressed. So am I.'},
+      {v: 'toran', b: 'Marigold toran', n: 'A garland across the doorway', say: 'Marigolds across the doorway. Every guest gets a welcome.'},
+      {v: 'none', b: 'Just the doors', n: 'They’re nice doors', say: 'The doors are nice on their own. I agree with the doors.'}]},
     hang: {title: 'Hanging from the porch', help: 'Something overhead on the way up the steps.', type: 'single', key: 'hang', options: [
-      {v: 'star', b: 'Paper star lanterns', n: 'Akash kandil, glowing orange', say: 'Paper stars with a light inside. They spin a little in the wind. Mesmerizing.'},
-      {v: 'red', b: 'Red lanterns', n: 'Round, gold trim, tassels', say: 'Red lanterns for luck. I will take all the luck I can get.'},
-      {v: 'moravian', b: 'Moravian stars', n: 'White, many-pointed', say: 'Stars with that many points. Somebody was very patient.'},
-      {v: 'none', b: 'Nothing hanging', n: 'Keep the porch clear', say: 'A clear porch. More room for me to sit on it.'}]},
+      {v: 'star', b: 'Paper star lanterns', n: 'Akash kandil, glowing orange', say: 'Paper stars with a light inside. They spin in the wind. I can’t look away.'},
+      {v: 'red', b: 'Red lanterns', n: 'Round, gold trim, tassels', say: 'Red lanterns for luck. I’ll take all I can get.'},
+      {v: 'moravian', b: 'Moravian stars', n: 'White, many-pointed', say: 'Stars with that many points. I’d have given up at four.'},
+      {v: 'none', b: 'Nothing hanging', n: 'Keep the porch clear', say: 'A clear porch. More room for me.'}]},
     path: {title: 'Lighting the way in', help: 'Pick as many as you like.', type: 'multi', key: 'path', options: [
-      {v: 'diyas', b: 'Diyas on the steps', n: 'Clay lamps, one at each end', say: 'Clay lamps on every step. I will walk around them very carefully, which is how I walk anyway.'},
-      {v: 'luminarias', b: 'Luminarias', n: 'Paper bags along the walk', say: 'Glowing paper bags. I am told I may not sit in them.'},
-      {v: 'garland', b: 'Garland on the railing', n: 'Evergreen and tiny lights', say: 'Garland on the railing. It smells like a forest I have never been allowed to visit.'},
-      {v: 'rangoli', b: 'Rangoli', n: 'At the bottom of the steps', say: 'A rangoli at the steps. Beautiful. I will not walk on it. Promise.'}]},
+      {v: 'diyas', b: 'Diyas on the steps', n: 'Clay lamps, one at each end', say: 'Clay lamps on every step. I’ll walk around them very carefully, which is how I walk anyway.'},
+      {v: 'luminarias', b: 'Luminarias', n: 'Paper bags along the walk', say: 'Glowing paper bags. Apparently I can’t sit in them.'},
+      {v: 'garland', b: 'Garland on the railing', n: 'Evergreen and tiny lights', say: 'Garland on the railing. It smells like a forest I’ve never been allowed into.'},
+      {v: 'rangoli', b: 'Rangoli', n: 'At the bottom of the steps', say: 'A rangoli at the steps. Beautiful. I won’t walk on it. Promise.'}]},
     win: {title: 'In the windows', help: 'However you celebrate, this is what the street sees after dark. Pick as many as you like.', type: 'multi', key: 'win', options: [
       {v: 'candles', b: 'A candle in every window', n: 'Brass holders, one small flame each', say: 'A candle in every window. From the road the whole house looks awake.'},
-      {v: 'menorah', b: 'The menorah', n: 'In the front window, facing the street', say: 'The menorah goes where the street can see it. That is the point.'},
+      {v: 'menorah', b: 'The menorah', n: 'In the front window, facing the street', say: 'The menorah goes where the street can see it. That’s the point.'},
       {v: 'kinara', b: 'The kinara', n: 'Seven candles in the dining room window', say: 'The kinara in the window. Three red, one black, three green, all in a row.'},
-      {v: 'tree', b: 'A little tree by the door', n: 'Lit, where the street can see it', say: 'A tree you can see from the street. Cars will slow down.'}]},
+      {v: 'tree', b: 'A little tree by the door', n: 'Lit, where the street can see it', say: 'A tree you can see from the street. Very generous.'}]},
     tree: {title: 'A tree by the glass doors', help: 'Under the beams, where you can see it from the sofa. Or no tree at all.', type: 'single', key: 'tree', options: [
       {v: 'fir', b: 'Noble fir', n: 'Colored lights, glass ornaments', say: 'A real tree, with ornaments at exactly my height. Thank you.'},
-      {v: 'flocked', b: 'Flocked white', n: 'Warm white lights', say: 'A white tree. It will show every orange hair I leave on it. Challenge accepted.'},
+      {v: 'flocked', b: 'Flocked white', n: 'Warm white lights', say: 'A white tree. It’ll show every orange hair I leave on it. And I will.'},
       {v: 'pencil', b: 'Slim pencil tree', n: 'Gold lights, small footprint', say: 'Tall and narrow. Like me when I stretch.'},
       {v: 'olive', b: 'Potted olive', n: 'Fairy lights on silver leaves', say: 'An olive tree in lights. Very Woodside. Very climbable.'},
-      {v: 'none', b: 'No tree this year', n: 'More room for everything else', say: 'No tree. I will find something else to climb. I always do.'}],
-      seg: {key: 'topper', label: 'On top', when: s => s.tree !== 'none' && s.tree !== 'olive', opts: [['star', 'Gold star'], ['flake', 'White starburst'], ['none', 'Nothing']], say: {star: 'A gold star. I will not knock it off. Today.', flake: 'A white starburst. Pointy in six directions.', none: 'Nothing on top. The tree can speak for itself.'}}},
+      {v: 'none', b: 'No tree this year', n: 'More room for everything else', say: 'No tree. I’ll find something else to climb. I always do.'}],
+      seg: {key: 'topper', label: 'On top', when: s => s.tree !== 'none' && s.tree !== 'olive', opts: [['star', 'Gold star'], ['flake', 'White starburst'], ['none', 'Nothing']], say: {star: 'A gold star. I won’t knock it off. Today.', flake: 'A white starburst. Pointy in six directions.', none: 'Nothing on top. The tree’s fine as it is.'}}},
     room: {title: 'Around the room', help: 'However you celebrate: the coffee table, the beams and the floor by the doors. Pick as many as you like.', type: 'multi', key: 'room', options: [
       {v: 'menorah', b: 'Menorah on the table', n: 'All the candles lit', say: 'All nine lit. The helper candle is my favorite. It works the hardest.'},
-      {v: 'kinara', b: 'Kinara on a mkeka', n: 'With the harvest on the mat', say: 'The kinara on its mat, with the harvest around it. I will guard the fruit.'},
+      {v: 'kinara', b: 'Kinara on a mkeka', n: 'With the harvest on the mat', say: 'The kinara on its mat, with the harvest around it. I’ll guard the fruit.'},
       {v: 'beams', b: 'Garland on the beams', n: 'Evergreen swags with lights', say: 'Garland up on the beams. Out of reach. For now.'},
-      {v: 'poinsettia', b: 'Poinsettias', n: 'Red, beside the sofa', say: 'Poinsettias. I have been told to keep my distance. Fine.'},
-      {v: 'rangoli', b: 'Rangoli and diyas', n: 'On the floor by the doors', say: 'Colors on the floor and lamps all around. The doorway feels like a welcome.'},
+      {v: 'poinsettia', b: 'Poinsettias', n: 'Red, beside the sofa', say: 'Poinsettias. I’m supposed to keep my distance. Fine.'},
+      {v: 'rangoli', b: 'Rangoli and diyas', n: 'On the floor by the doors', say: 'Colors on the floor and lamps all around. The doorway looks happy to see you.'},
       {v: 'box', b: 'A box for Snowball', n: 'Cardboard, empty, perfect', say: 'An empty box. Best present in the house, and it was free.'}]},
-    ter: {title: 'The terrace', help: 'Dinner is out here tonight. Pick as many as you like.', type: 'multi', key: 'ter', options: [
+    ter: {title: 'The terrace', help: 'Dinner’s out here tonight. Pick as many as you like.', type: 'multi', key: 'ter', options: [
       {v: 'bistro', b: 'Bistro lights', n: 'Strung from the oak, over the table', say: 'Big round bulbs over the table. Dinner looks better already.'},
       {v: 'luminarias', b: 'Luminarias', n: 'Along the edge of the pavers', say: 'A row of glowing bags around the terrace. Very welcoming. Still not allowed in them.'},
-      {v: 'lanterns', b: 'Lanterns on the table', n: 'Candles in black iron', say: 'Candles on the table. I will stay off the table. Mostly.'},
-      {v: 'smoker', b: 'Fire up the smoker', n: 'The ceramic smoker glowing', say: 'Whatever is in the smoker, I would like some of it.'}]},
+      {v: 'lanterns', b: 'Lanterns on the table', n: 'Candles in black iron', say: 'Candles on the table. I’ll stay off the table. Mostly.'},
+      {v: 'smoker', b: 'Fire up the smoker', n: 'The ceramic smoker glowing', say: 'Whatever’s in the smoker, I’d like some.'}]},
     oak: {title: 'The heritage oak', help: 'It shades the whole terrace, and it has never been decorated.', type: 'single', key: 'oak', options: [
       {v: 'wrap', b: 'Wrap the trunk', n: 'Warm lights, spiraled up', say: 'Lights around the trunk. Like a scarf for a tree.'},
       {v: 'branches', b: 'Lights in the branches', n: 'Fairy lights in the canopy', say: 'Lights all the way up in the branches. Where the birds are. Interesting.'},
       {v: 'both', b: 'Both', n: 'Trunk and canopy', say: 'The whole oak, lit. You can probably see it from the hills.'},
-      {v: 'none', b: 'Leave it natural', n: 'It has been fine for a long time', say: 'The oak is older than the house. Fair enough.'}]},
+      {v: 'none', b: 'Leave it natural', n: 'It’s been fine for a long time', say: 'The oak is older than the house. Fair enough.'}]},
     wear: {title: 'One more thing', help: 'Snowball would like to be festive, within reason.', type: 'single', key: 'wear', options: [
-      {v: 'none', b: 'Nothing, thanks', n: 'He is already a classic', say: 'I am already wearing orange. It goes with the season.'},
-      {v: 'scarfRed', b: 'Red scarf', n: 'Striped, cozy', say: 'A red scarf. I look like I am about to go caroling. I am not.'},
+      {v: 'none', b: 'Nothing, thanks', n: 'He’s already a classic', say: 'I’m already wearing orange. It goes with everything.'},
+      {v: 'scarfRed', b: 'Red scarf', n: 'Striped, cozy', say: 'A red scarf. I look like I’m about to go caroling. I’m not.'},
       {v: 'scarfBlue', b: 'Blue and white scarf', n: 'Stripes, very soft', say: 'Blue and white. It sets off the orange. I checked.'},
-      {v: 'scarfGreen', b: 'Green and gold scarf', n: 'Forest green, gold stripes', say: 'Green and gold. Orange goes with both. I am very easy to dress.'},
-      {v: 'bell', b: 'A collar with a bell', n: 'Jingles when he walks', say: 'A bell. So everyone hears me coming. Fine.'}]}};
+      {v: 'scarfGreen', b: 'Green and gold scarf', n: 'Forest green, gold stripes', say: 'Green and gold. Orange goes with both. I’m very easy to dress.'},
+      {v: 'bell', b: 'A collar with a bell', n: 'Jingles when he walks', say: 'A bell. Now the birds hear me coming. Fine.'}]}};
 
   /* ---------- the guests: animals, each with a wish that comes from its nature ----------
      A wish is one or more needs; each need belongs to one place, can be checked from the state, and has its own hint. No need looks at a
      tradition as such: a menorah, a kinara, a diya or a little tree counts only as what it plainly is (a light in a window, a lamp on a step). */
   const COLORED = ['multi', 'hanukkah', 'kwanzaa', 'marigold'], STILL = ['steady', 'breathe'], LOW = ['luminarias', 'diyas'];
   const GUESTS = [
-    {id: 'pepper', name: 'Pepper', who: 'grey parrot', icon: '🦜', c: '#dfe4ea', place: 'street', msg: 'Color on the roof. Color on the roof. I am grey all over, so the roof will have to do it for both of us.',
-     needs: [{place: 'street', ok: s => COLORED.includes(s.lights), hint: 'Pepper wants a roof string with real color in it. White and warm white do not count.'}],
-     yes: 'Color on the roof. Color on the roof. Color on the roof.', no: 'No color up there. No color up there. I will be over here, being grey.'},
-    {id: 'clover', name: 'Clover', who: 'rabbit, shy', icon: '🐇', c: '#e2eed6', place: 'windows', msg: 'I will wait under the hedge until I am sure. A light in a window tells me it is safe. A roof that flashes or runs about tells me it is not.',
+    {id: 'pepper', name: 'Pepper', who: 'grey parrot', icon: '🦜', c: '#dfe4ea', place: 'street', msg: 'Color on the roof! Color on the roof! I’m grey all over, so the roof has to do it for both of us.',
+     needs: [{place: 'street', ok: s => COLORED.includes(s.lights), hint: 'Pepper wants a roof string with real color in it. White and warm white don’t count.'}],
+     yes: 'Color on the roof! Color on the roof! Color!', no: 'No color up there! No color! I’ll be over here, being grey.'},
+    {id: 'clover', name: 'Clover', who: 'shy rabbit', icon: '🐇', c: '#e2eed6', place: 'windows', msg: 'I’ll wait under the hedge until I’m sure. A light in a window means it’s safe. A roof that flashes or runs about means it isn’t.',
      needs: [{place: 'street', ok: s => s.lights === 'none' || STILL.includes(s.motion), hint: 'Clover needs the roof lights to hold still. Steady is fine, and so is a slow fade.'},
        {place: 'windows', ok: s => s.win.length > 0, hint: 'Clover is waiting for a light in a window. Any one of these will do.'}],
-     yes: 'A light in the window and a roof that holds still. I came all the way to the door.', no: 'I got as far as the hedge. It was a lot.'},
+     yes: 'A light in the window, and the roof held still. I made it all the way to the door.', no: 'I got as far as the hedge. It was a lot.'},
     {id: 'admiral', name: 'Admiral', who: 'goldfish, travels by bowl', icon: '🐟', c: '#d5e7f4', place: 'door', msg: 'I travel after sunset, for obvious reasons, and I travel by bowl. A bowl coming up a dark walk is a bowl that sloshes. Put some light down low on the way in.',
      needs: [{place: 'door', ok: s => s.path.some(v => LOW.includes(v)), hint: 'Admiral needs light down low on the way in. Paper bags along the walk would do it. So would lamps on the steps.'}],
      yes: 'Light all the way up the walk. Not a drop spilled.', no: 'A dark walk. There was sloshing. I will say no more.'},
-    {id: 'snowball', name: 'Snowball', who: 'orange tabby, lives here', icon: '🐈', c: '#f7dcbd', place: 'living', msg: 'I have asked for one thing. It is cardboard. It is empty.',
-     needs: [{place: 'living', ok: s => s.room.includes('box'), hint: 'It is a box. I would like the box.'}],
+    {id: 'snowball', name: 'Snowball', who: 'orange tabby, lives here', icon: '🐈', c: '#f7dcbd', place: 'living', msg: 'I’ve asked for one thing. It’s cardboard. It’s empty.',
+     needs: [{place: 'living', ok: s => s.room.includes('box'), hint: 'It’s a box. I’d like the box.'}],
      yes: 'The box is acceptable.', no: 'No box. I see how it is.'},
-    {id: 'biscuit', name: 'Biscuit', who: 'old golden dog', icon: '🐕', c: '#f4e3b6', place: 'terrace', msg: 'I do not do stairs any more, so I will come around the side to the terrace. I find my way by nose. Please give my nose something to find.',
+    {id: 'biscuit', name: 'Biscuit', who: 'old golden dog', icon: '🐕', c: '#f4e3b6', place: 'terrace', msg: 'I don’t do stairs any more, so I’ll come round the side to the terrace. I go by my nose. Please give my nose something good to find.',
      needs: [{place: 'terrace', ok: s => s.ter.includes('smoker'), hint: 'Biscuit follows his nose. Only one thing on the terrace smells like dinner.'}],
-     yes: 'I smelled the smoker from the road and followed it all the way round. Good terrace.', no: 'I came round to the terrace and sniffed. Nothing cooking. I will lie down here anyway.'},
-    {id: 'mabel', name: 'Mabel', who: 'tortoise', icon: '🐢', c: '#dce8cd', place: 'terrace', msg: 'By the time I have crossed the terrace it will be dark. Lights overhead are no use to me. I never look up. Something warm along the edge of the paving, please, down at my height.',
+     yes: 'I smelled the smoker from the road and followed it all the way round. Good terrace!', no: 'I came round and sniffed. Nothing cooking. I’ll lie here anyway, just in case.'},
+    {id: 'mabel', name: 'Mabel', who: 'tortoise', icon: '🐢', c: '#dce8cd', place: 'terrace', msg: 'By the time I’ve crossed the terrace, it’ll be dark. Lights overhead are no use to me. I don’t look up. Something warm along the edge of the paving, please. Down at my height.',
      needs: [{place: 'terrace', ok: s => s.ter.includes('luminarias'), hint: 'Mabel lives a few inches off the ground. She wants a warm glow along the edge of the pavers.'}],
-     yes: 'Warm light all along the pavers, right at my height. I may stay a while.', no: 'The paving was dark, so I stopped where I was. I am still there.'},
-    {id: 'nugget', name: 'Nugget', who: 'hamster, up all night', icon: '🐹', c: '#f1dfcf', place: 'oak', msg: 'I sleep all day, so I only ever see this house in the dark. If the big oak out back is just a shadow again, I am going straight back to bed.',
+     yes: 'Warm light all along the pavers, right at my height. I may stay a while.', no: 'The paving was dark, so I stopped where I was. I’m still there.'},
+    {id: 'nugget', name: 'Nugget', who: 'hamster, up all night', icon: '🐹', c: '#f1dfcf', place: 'oak', msg: 'I sleep all day, so I only ever see this house in the dark. If the big oak out back is just a shadow again, I’m going straight back to bed.',
      needs: [{place: 'oak', ok: s => s.oak !== 'none', hint: 'Nugget wants lights on the oak. Somewhere on it, at least.'}],
-     yes: 'The oak is lit. I ran four miles on my wheel to celebrate.', no: 'The oak was dark. I could not tell it from the sky. Back to bed.'},
+     yes: 'The oak is lit. I ran four miles on my wheel to celebrate.', no: 'The oak was dark. Couldn’t tell it from the sky. Back to bed.'},
     {id: 'juniper', name: 'Juniper', who: 'bantam hen, roosts in the oak', icon: '🐔', c: '#f0d9d2', place: 'oak', msg: 'I go to bed when the sun does, on my branch in the oak. Decorate what you like, but keep the lights out of my branches. A hen needs her dark.',
-     needs: [{place: 'oak', ok: s => s.oak === 'wrap' || s.oak === 'none', hint: 'Juniper sleeps up in the branches and wants them dark. The trunk is not the branches.'}],
-     yes: 'Not one bulb in my branches. I slept beautifully.', no: 'There are lights in my bedroom. I will be up all night, and I will be telling everyone.'}];
+     needs: [{place: 'oak', ok: s => s.oak === 'wrap' || s.oak === 'none', hint: 'Juniper sleeps up in the branches and wants them dark. The trunk isn’t the branches.'}],
+     yes: 'Not one bulb in my branches. I slept beautifully.', no: 'There are lights in my bedroom. I’ll be up all night, and I’ll be telling everyone.'}];
   GUESTS.forEach(g => { g.ok = s => g.needs.every(n => n.ok(s)); });
   /* each guest's avatar, drawn (emoji differ by platform and Pepper is a grey parrot): flat shapes on the guest's colour disc, in their real colours */
   const DRAW = {
@@ -164,7 +164,7 @@
   const icon = g => `<svg viewBox="0 0 48 48" aria-hidden="true">${DRAW[g.id] || ''}</svg>`;
   /* the ending never keeps score: a wish that did not come true is offered as an idea, one line per need, and only if the player feels like it */
   const IDEA = {pepper: ['Pepper would love some color on the roof.'], clover: ['Clover would come closer if the roof lights held still.', 'Clover would love a light in a window.'],
-    admiral: ['Admiral would love a little light down low on the walk.'], snowball: ['Snowball would not say no to a box.'], biscuit: ['Biscuit would love something cooking on the terrace.'],
+    admiral: ['Admiral would love a little light down low on the walk.'], snowball: ['Snowball wouldn’t say no to a box.'], biscuit: ['Biscuit would love something cooking on the terrace.'],
     mabel: ['Mabel would love a glow along the paving.'], nugget: ['Nugget would love some light on the oak.'], juniper: ['Juniper would sleep better with the oak branches dark.']};
   GUESTS.forEach(g => g.needs.forEach((n, i) => { n.idea = (IDEA[g.id] || [])[i] || ''; }));
   /* what is up, in words: for Snowball's last line and for the postcard caption. Each key gives the phrases for what the player chose there. */
@@ -489,13 +489,13 @@
     const n = $('#dkNew'); n.innerHTML = `<span class="k">${gs.length > 1 ? 'New messages' : 'New message'}. Tap to see them all.</span>` + gs.map(msgHTML).join('<div style="height:8px"></div>'); n.classList.add('on'); clearTimeout(newT);
     newT = setTimeout(() => { n.classList.remove('on'); setTimeout(pump, 500); }, (reduce ? 6500 : 5200) + (gs.length - 1) * 3500); }
   function flushMsgs(){ queue = []; GUESTS.forEach(g => { if(!arrived.includes(g.id)){ arrived.push(g.id); unread++; } }); badge(); }
-  function openMsgs(){ unread = 0; badge(); const d = el('div', {id: 'dkDrawer', class: 'dk'}, `<div class="d"><button class="dkBtn x" type="button">Close</button><h3>Tonight's guests</h3><p class="sub">Company is coming and bringing their animals. Each animal has asked for something. ${arrived.length < GUESTS.length ? 'More messages arrive as you go.' : ''}</p>` + arrived.slice().reverse().map(id => msgHTML(guest(id))).join('') + '</div>');
+  function openMsgs(){ unread = 0; badge(); const d = el('div', {id: 'dkDrawer', class: 'dk'}, `<div class="d"><button class="dkBtn x" type="button">Close</button><h3>Tonight's guests</h3><p class="sub">Snowball’s friends are coming tonight, and each one has asked for something. ${arrived.length < GUESTS.length ? 'More messages arrive as you go.' : ''}</p>` + arrived.slice().reverse().map(id => msgHTML(guest(id))).join('') + '</div>');
     document.body.appendChild(d); const close = () => d.remove(); d.querySelector('.x').onclick = close; d.onclick = e => { if(e.target === d) close(); }; d.querySelector('.x').focus(); ga('deck_msgs'); }
   function hint(){ sfx('purr', 1.1); if(PHASE !== 'decor' && PHASE !== 'fix'){ return; } ga('deck_hint', {place: PLACE.id});
-    if(MODE !== 'story'){ say(PLACE.say || 'Pick whatever looks right to you. I trust you.'); return; }
+    if(MODE !== 'story'){ say(PLACE.say || 'Pick whatever looks right. I trust you. Mostly.'); return; }
     const open = openNeeds(), here = open.filter(o => o.n.place === PLACE.id); if(here.length){ const o = here[(hint.n = (hint.n || 0) + 1) % here.length]; say(o.n.hint, 'About ' + o.g.name); return; }
-    if(open.length){ say('Nobody is waiting on anything here. Try ' + theName(placeOf(open[0].n.place)) + '.', 'About ' + open[0].g.name); return; }
-    say(arrived.length < GUESTS.length ? 'Everyone who has written so far is taken care of. Keep going.' : 'Everyone is taken care of. I checked twice.'); }
+    if(open.length){ say('Nobody needs anything here. Try ' + theName(placeOf(open[0].n.place)) + '.', 'About ' + open[0].g.name); return; }
+    say(arrived.length < GUESTS.length ? 'Everyone who’s written so far is sorted. Keep going.' : 'Everyone’s sorted. I checked twice.'); }
 
   /* ---------- sunset, lighting up, arrivals ---------- */
   function dimUI(on){ show('#dkPanel', !on); }
@@ -504,9 +504,9 @@
     setTimeout(() => { P.setOn(0); try{ H.setTOD('dusk'); }catch(e){}
       const d = el('div', {id: 'dkDusk', class: 'dk'}, `<button type="button" class="dkBtn gold big" id="dkLight">Light it up</button><button type="button" class="dkBtn" id="dkMore">Keep decorating</button>`); document.body.appendChild(d);
       setCam(view(PLACE)); afterMove(PLACE); setTimeout(() => veil.classList.remove('on'), 200);
-      $('#dkLight').onclick = lightUp; $('#dkMore').onclick = () => { d.remove(); PHASE = 'decor'; try{ H.setTOD(DAY); }catch(e){} P.setOn(1); dimUI(false); refresh(); ambience(); reframe(.6); say('Fine. A little more daylight.'); }; say('The sun is down. Ready when you are.'); try{ $('#dkLight').focus({preventScroll: true}); }catch(e){} }, reduce ? 10 : 600); }
+      $('#dkLight').onclick = lightUp; $('#dkMore').onclick = () => { d.remove(); PHASE = 'decor'; try{ H.setTOD(DAY); }catch(e){} P.setOn(1); dimUI(false); refresh(); ambience(); reframe(.6); say('Fine. A little more daylight.'); }; say('The sun’s down. Go on, light it up.'); try{ $('#dkLight').focus({preventScroll: true}); }catch(e){} }, reduce ? 10 : 600); }
   function lightUp(){ const d = $('#dkDusk'); if(d) d.remove(); if(PHASE === 'lighting') return; PHASE = 'lighting'; reframe(1.2); ga('deck_lightup', {mode: MODE, shared}); say('Oh.'); ambience(); let lastK = null, gi = 0;
-    P.lightUp((i, k) => { if(k !== lastK){ lastK = k; sfx('sparkle', gi++); } }, () => { sfx('chord'); say(MODE === 'story' && !shared ? 'Positions, everyone. I will be on the porch looking casual.' : 'Look at it. The whole street is going to slow down.'); setTimeout(() => { if(shared) return sharedDone(); if(MODE === 'story') arrivals(ARRIVE.map(guest), true); else result(); }, reduce ? 300 : 1500); }); }
+    P.lightUp((i, k) => { if(k !== lastK){ lastK = k; sfx('sparkle', gi++); } }, () => { sfx('chord'); say(MODE === 'story' && !shared ? 'Positions, everyone. I’ll be on the porch, looking casual.' : 'Look at it. The squirrels have stopped to stare.'); setTimeout(() => { if(shared) return sharedDone(); if(MODE === 'story') arrivals(ARRIVE.map(guest), true); else result(); }, reduce ? 300 : 1500); }); }
   let arrT = 0;
   function arrivals(list, first){ list = list.filter(g => g.ok(S)); if(!list.length) return result();   // only the animals whose wish came true walk up; the rest are ideas on the last card
     PHASE = 'arrive'; const box = el('div', {id: 'dkArrive', class: 'dk dkChip'}); document.body.appendChild(box); let i = 0, over = false;
@@ -520,18 +520,18 @@
 
   /* ---------- how the evening went ---------- */
   const DAY = 'afternoon';
-  function ctaHTML(){ return `<div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive, a mile from Woodside's Town Center. The oak, the terrace and the front porch are all there in person.</span><a class="dkBtn primary big" href="/#contact" id="dkSee">See it in person</a></div>`; }
+  function ctaHTML(){ return `<div class="cta"><b>The house is real, and it’s for sale.</b><span>118 Hillside Drive, a mile from Woodside's Town Center. The oak, the terrace and the front porch are all there in person.</span><a class="dkBtn primary big" href="/#contact" id="dkSee">See it in person</a></div>`; }
   /* Snowball's last word: warm, and about what the player actually put up. No tally, nothing to fix. */
   function snowLine(story){ const w = words(['roof', 'door', 'tree', 'oak', 'ter', 'path', 'win', 'hang', 'room'], S, 6).filter(x => !/box for Snowball/.test(x)).slice(0, 3), box = S.room.includes('box');
     if(!w.length) return box ? 'You kept it simple and gave me a box. The house glows from the inside, and so do I.' : 'You kept it simple, and the house glows from the inside. I like it like this.';
-    return 'I keep looking at ' + andList(w) + '.' + (box ? ' And thank you for the box.' : story ? ' Company is going to love it.' : ' It looks like a holiday out here.'); }
+    return 'I keep looking at ' + andList(w) + '.' + (box ? ' And thank you for the box.' : story ? ' My friends will love it.' : ' It looks like a holiday out here.'); }
   const openIdeas = () => { const o = []; ARRIVE.map(guest).forEach(g => g.needs.forEach(n => { if(!n.ok(S) && n.idea && !o.includes(n.idea)) o.push(n.idea); })); return o; };
   function result(){ PHASE = 'result'; $$('#dkArrive,#dkPhoto,#dkVF').forEach(e => e.remove()); dimUI(true); show('#dkTop', true); const story = MODE === 'story' && !shared, hp = story ? happy() : [], all = story && hp.length === GUESTS.length; if(story){ lastScore = hp.map(g => g.id); ga('deck_score', {happy: hp.length}); }
     if(PLACE.id !== 'street'){ PLACE = PLACES[0]; moveTo(PLACE); }
-    say(!story ? 'Look at it. The whole street is going to slow down.' : all ? 'Everyone got their wish, and I am in a box. Best night this house has had.' : 'Company is here. I am on the porch, looking casual.');
+    say(!story ? 'Look at it. The squirrels have stopped to stare.' : all ? 'Everyone got their wish, and I’m in a box. Perfect night.' : 'The guests are here. I’m on the porch, looking casual.');
     if(all && !result.rang){ result.rang = true; setTimeout(() => sfx('chord'), 400); } ambience();
     const ideas = story ? openIdeas().slice(0, 3) : [];
-    card((shot && shot.card ? `<img class="pc sm" alt="${esc(shot.alt)}" src="${shot.card}">` : '') + `<h2>${story ? 'Ready for company.' : 'All lit up.'}</h2>` +
+    card((shot && shot.card ? `<img class="pc sm" alt="${esc(shot.alt)}" src="${shot.card}">` : '') + `<h2>${story ? 'Ready for the guests.' : 'All lit up.'}</h2>` +
       `<div class="sb"><span class="av" aria-hidden="true">${catHead('dkres')}</span><p>${esc(snowLine(story))}</p></div>` +
       (hp.length ? `<ul class="w">${hp.map(g => `<li><span class="av" style="background:${g.c}" aria-hidden="true">${icon(g)}</span><span><b>${esc(g.name)}.</b> ${esc(g.yes)}</span></li>`).join('')}</ul>` : '') +
       (all ? `<p class="fine">Every animal got their wish tonight.</p>` : '') +
@@ -541,7 +541,7 @@
     $('#dkPc').onclick = () => photoMode(); if($('#dkSave')) $('#dkSave').onclick = savePostcard; $('#dkShare').onclick = share; $('#dkKeep').onclick = keepDecorating;
     $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#dkGames').onclick = () => ga('deck_cta', {cta: 'games'}); $('#dkAgain').onclick = again; reframe(.8); }
   function keepDecorating(){ const o = MODE === 'story' && !shared ? openNeeds()[0] : null; ga('deck_keep', {guest: o ? o.g.id : ''}); closeCard(); PHASE = 'fix'; ambience(); dimUI(false); $('#dkPanel').classList.remove('fold');
-    goPlace(o ? o.n.place : 'street', true); say(!o ? 'Add whatever you like. I will be right here.' : o.g.id === 'snowball' ? 'I had an idea about this room. It is cardboard.' : 'This is where ' + o.g.name + ' had an idea.', o ? 'Tap me for a hint' : null); }
+    goPlace(o ? o.n.place : 'street', true); say(!o ? 'Add whatever you like. I’ll be right here.' : o.g.id === 'snowball' ? 'I had an idea about this room. It’s cardboard.' : 'This is where ' + o.g.name + ' had an idea.', o ? 'Tap me for a hint' : null); }
   function again(){ ga('deck_again'); closeCard(); $$('#dkPhoto,#dkVF').forEach(e => e.remove()); shared = false; SV = null; shot = null; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} begin(MODE === 'free' ? 'free' : 'story'); }
   const SHARE_TEXT = 'I decorated 118 Hillside Drive for the holidays with Snowball the cat. Light up my version, then do yours.';
   /* with a postcard, share the picture itself (where the device can share files) and a link that opens on the same view; otherwise the link */
@@ -553,7 +553,7 @@
   function copyOld(t){ let ok = false; const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px';
     document.body.appendChild(ta); try{ ta.focus({preventScroll: true}); ta.select(); ta.setSelectionRange(0, t.length); ok = document.execCommand('copy'); }catch(e){ ok = false; } ta.remove(); return !!ok; }
   async function copyText(t){ try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(t); return true; } }catch(e){} return copyOld(t); }
-  function showLink(url){ $$('#dkLink').forEach(e => e.remove()); const d = el('div', {id: 'dkLink', class: 'dk dkChip', role: 'dialog', 'aria-label': 'Your link'}, `<b>Copy your link</b><span>This browser would not copy it for you. Select it and copy it yourself.</span><input readonly value="${esc(url)}" aria-label="Link to your house"><button type="button" class="dkBtn">Close</button>`);
+  function showLink(url){ $$('#dkLink').forEach(e => e.remove()); const d = el('div', {id: 'dkLink', class: 'dk dkChip', role: 'dialog', 'aria-label': 'Your link'}, `<b>Copy your link</b><span>This browser wouldn’t copy it. Select it and copy it yourself.</span><input readonly value="${esc(url)}" aria-label="Link to your house"><button type="button" class="dkBtn">Close</button>`);
     document.body.appendChild(d); const i = d.querySelector('input'); i.addEventListener('keydown', e => e.stopPropagation()); i.onfocus = () => i.select(); try{ i.focus({preventScroll: true}); i.select(); }catch(e){} d.querySelector('button').onclick = () => d.remove(); }
 
   /* ---------- photo mode and the postcard ----------
@@ -574,7 +574,7 @@
       return n > 0 && hit >= Math.min(2, n); }); }
   function photoMode(){ closeCard(); PHASE = 'photo'; dimUI(true); show('#dkTop', false); ga('deck_photo_mode'); $$('#dkPhoto,#dkVF').forEach(e => e.remove()); const all = PLACES.concat(EXTRA);
     const bar = el('div', {id: 'dkPhoto', class: 'dk dkChip'}, `<div class="pl" role="tablist" aria-label="Places to stand">${all.map(p => `<button type="button" data-p="${p.id}" aria-pressed="${p === PLACE}">${esc(p.label === 'Roofline' ? 'From the street' : p.label)}</button>`).join('')}</div>
-      <div class="act"><span>Drag to look around. The postcard is what is inside the frame.</span><button type="button" class="dkBtn" id="dkPhDone">Done</button><button type="button" class="dkBtn gold" id="dkSnap">${ICON.cam}Take the picture</button></div>`);
+      <div class="act"><span>Drag to look around. The postcard is what’s in the frame.</span><button type="button" class="dkBtn" id="dkPhDone">Done</button><button type="button" class="dkBtn gold" id="dkSnap">${ICON.cam}Take the picture</button></div>`);
     document.body.appendChild(el('div', {id: 'dkVF', 'aria-hidden': 'true'})); document.body.appendChild(bar); placeFinder();
     bar.querySelectorAll('.pl button').forEach(b => b.onclick = () => { PLACE = placeOf(b.dataset.p); placeFinder(); moveTo(PLACE); bar.querySelectorAll('.pl button').forEach(x => x.setAttribute('aria-pressed', x === b)); ga('deck_view', {place: PLACE.id}); });
     $('#dkPhDone').onclick = endPhoto; $('#dkSnap').onclick = snap; reframe(.6); }
@@ -584,7 +584,7 @@
     (function wait(){ const still = !FLY && !CUT && !veil.classList.contains('on') && (INSIDE || oakIn()); if(!still && performance.now() - t0 < 5000) return setTimeout(wait, 80); requestAnimationFrame(() => requestAnimationFrame(take)); })(); }
   function take(){ snapping = false; const btn = $('#dkSnap'); if(btn) btn.disabled = false; if(PHASE !== 'photo') return;
     let url = null, crop = null, v = null; try{ const c = H.canvas, r = c.getBoundingClientRect(), k = c.width / r.width; v = finder(); crop = [v[0] * k, v[1] * k, v[2] * k, v[3] * k].map(Math.round); url = H.snapshot('image/jpeg', .93); }catch(e){ console.warn('[deck3d] snapshot', e); }
-    if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.'); return; }
+    if(!url || url.length < 2000){ toast('That didn’t work here. Try a screenshot instead.'); return; }
     sfx('shutter'); const fl = $('#dkFlash'); fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on');
     const cam = H.camera, d = new V3(); cam.getWorldDirection(d); const ws = words(seen(v), S, 3), pw = PLACE_WORDS[PLACE.id] || cap(theName(PLACE));
     shot = {url, crop, place: PLACE.id, caption: ws.length ? pw + ': ' + andList(ws) + '.' : pw + ', lit for the evening.', view: {place: PLACE.id, tall: !!(portrait() && PLACE.posP), pos: cam.position.toArray(), look: cam.position.clone().addScaledVector(d, 30).toArray(), zoom: cam.zoom}};
@@ -607,9 +607,9 @@
     return c; }
   function finishShot(){ shot.card = pcCanvas.toDataURL('image/jpeg', .9); shot.alt = 'Your postcard of 118 Hillside Drive at dusk. ' + shot.caption + ' Underneath it says happy holidays from ' + (S.name.trim() || '118 Hillside') + '.'; shot.file = null;
     const s = shot; try{ pcCanvas.toBlob(b => { if(b && s === shot) try{ s.file = new File([b], 'holidays-at-118-hillside.png', {type: 'image/png'}); }catch(e){} }, 'image/png'); }catch(e){} }
-  function savePostcard(){ if(!pcCanvas || !shot) return; const fail = () => toast('That did not work here. Try a screenshot instead.'), give = href => { const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = href; document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {place: shot.place}); };
+  function savePostcard(){ if(!pcCanvas || !shot) return; const fail = () => toast('That didn’t work here. Try a screenshot instead.'), give = href => { const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = href; document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {place: shot.place}); };
     try{ if(pcCanvas.toBlob) pcCanvas.toBlob(b => { try{ if(!b) return give(pcCanvas.toDataURL('image/png')); const u = URL.createObjectURL(b); give(u); setTimeout(() => URL.revokeObjectURL(u), 20000); }catch(e){ fail(); } }, 'image/png'); else give(pcCanvas.toDataURL('image/png')); }catch(e){ fail(); } }
-  async function postcardCard(){ try{ pcCanvas = await compose(); finishShot(); }catch(e){ console.warn('[deck3d] postcard', e); toast('That did not work here. Try a screenshot instead.'); return; } if(PHASE !== 'photo') return;
+  async function postcardCard(){ try{ pcCanvas = await compose(); finishShot(); }catch(e){ console.warn('[deck3d] postcard', e); toast('That didn’t work here. Try a screenshot instead.'); return; } if(PHASE !== 'photo') return;
     card(`<img class="pc" alt="${esc(shot.alt)}" src="${shot.card}"><label for="dkName">Who is it from? This goes on the card.</label><input id="dkName" maxlength="32" autocomplete="off" placeholder="118 Hillside" value="${esc(S.name)}">
       <div class="row"><button class="dkBtn primary" id="dkSave" type="button" data-focus>Save the postcard</button><button class="dkBtn" id="dkShare2" type="button">Share the postcard</button></div>
       <div class="row"><button class="dkBtn" id="dkRetake" type="button">${ICON.cam}Take another</button><button class="dkBtn" id="dkPcDone" type="button">Done</button></div>`);
@@ -618,19 +618,19 @@
   /* ---------- a house someone sent you ---------- */
   function sharedStart(){ PHASE = 'shared'; MODE = 'free'; ambience(); show('#dkTop', true); badge(); P.setOn(0); try{ H.setTOD('dusk'); }catch(e){} PLACE = (SV && placeOf(SV.place)) || PLACES[0]; setCam(view(PLACE)); afterMove(PLACE); $('#dkAv').innerHTML = catHead('dkav');
     say('Someone decorated this one for you. Go on, switch it on.'); const who = S.name ? esc(S.name.charAt(0).toUpperCase() + S.name.slice(1)) : 'A friend';
-    card(`<div class="cat">${window.SNOWBALL.svg({id: 'dksh', seed: 7, wear: S.wear !== 'none' ? S.wear : null})}</div><h2>${who} decorated a house for you.</h2><p>It is 118 Hillside Drive in Woodside, dressed for the holidays with help from Snowball the cat. The sun is down. One switch left.</p><div class="row"><button class="dkBtn gold big" id="dkGo" type="button" data-focus>Light it up</button></div>`, {clear: true});
+    card(`<div class="cat">${window.SNOWBALL.svg({id: 'dksh', seed: 7, wear: S.wear !== 'none' ? S.wear : null})}</div><h2>${who} decorated a house for you.</h2><p>It’s 118 Hillside Drive in Woodside, dressed for the holidays with help from Snowball the cat. The sun’s down. One switch left.</p><div class="row"><button class="dkBtn gold big" id="dkGo" type="button" data-focus>Light it up</button></div>`, {clear: true});
     $('#dkGo').onclick = () => { closeCard(); lightUp(); }; }
-  function sharedDone(){ PHASE = 'result'; card(`<h2>${S.name ? 'Happy holidays from ' + esc(S.name) + '.' : 'Happy holidays.'}</h2><p>Walk around the house they decorated, then do your own. Company is coming, and their animals have requests.</p>
+  function sharedDone(){ PHASE = 'result'; card(`<h2>${S.name ? 'Happy holidays from ' + esc(S.name) + '.' : 'Happy holidays.'}</h2><p>Have a look around, then do your own. Snowball’s friends are coming, and they all have requests.</p>
       <div class="row"><button class="dkBtn primary" id="dkMine" type="button" data-focus>Decorate your own</button><button class="dkBtn" id="dkPc" type="button">${ICON.cam}Take a picture</button></div>` + ctaHTML() + `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a></div>`, {side: true});
     $('#dkMine').onclick = () => { ga('deck_shared_own'); shared = false; SV = null; shot = null; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} closeCard(); startCard(); }; $('#dkPc').onclick = () => photoMode(); $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); reframe(.8); }
 
   /* ---------- start ---------- */
   function begin(mode){ MODE = mode; S = clone(mode === 'story' ? STORY_START : FREE_START); PHASE = 'decor'; touched = new Set(); arrived = []; unread = 0; queue = []; visited = new Set(); lastScore = null; shot = null; result.rang = false; ambience(); $$('#dkDusk,#dkArrive,#dkPhoto,#dkVF').forEach(e => e.remove());
     try{ H.setTOD(DAY); }catch(e){} P.setOn(1); PLACE = PLACES[0]; visited.add(PLACE.id); show('#dkTop', true); dimUI(false); $('#dkPanel').classList.remove('fold'); $('#dkAv').innerHTML = catHead('dkav'); badge(); refresh(); cut(PLACE, () => afterMove(PLACE));
-    say(mode === 'story' ? 'It is December in Woodside and nothing is up yet. I have notes.' : 'No guests, no rules. Make it look like a holiday.', 'Tap me any time for a hint'); ga('deck_start', {mode}); if(mode === 'story') setTimeout(wave, 2000); }
+    say(mode === 'story' ? 'It’s December in Woodside and nothing’s up yet. I have notes.' : 'No guests, no rules. Make it look like a holiday.', 'Tap me any time for a hint'); ga('deck_start', {mode}); if(mode === 'story') setTimeout(wave, 2000); }
   function startCard(){ PHASE = 'start'; show('#dkTop', false); dimUI(true); try{ H.setTOD(DAY); }catch(e){} PLACE = PLACES[0]; INSIDE = false; setCam(view(PLACE)); P.apply(dressed(), {}); P.setCat(null);
     card(`<div class="cat">${window.SNOWBALL.svg({id: 'dkst', seed: 7})}</div><h2>Deck the House with Snowball</h2>
-      <p>Company is coming to 118 Hillside tonight, and they are bringing their animals. Each animal has sent a request. Read them, decorate the real house in 3D however you celebrate, then light it up at sunset and see who is happy.</p>
+      <p>Snowball’s friends are coming over tonight, and every one of them has sent a request. Read them, decorate the real house in 3D however you celebrate, then light it up at sunset and see who’s happy.</p>
       <div class="row"><button class="dkBtn primary big" id="dkStory" type="button" data-focus>Start decorating</button></div><div class="row"><button class="dkBtn" id="dkFree" type="button">Just decorate</button></div>
       <p class="fine">Just decorate skips the guests. Good for small hands.</p>`);
     $('#dkStory').onclick = () => { closeCard(); begin('story'); }; $('#dkFree').onclick = () => { closeCard(); begin('free'); }; }
