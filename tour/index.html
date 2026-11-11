@@ -1533,6 +1533,14 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
 <style>/* perf: poster behind the loading text */
 .loading.poster::before{content:'';position:absolute;inset:-12px;background:var(--poster) center/cover no-repeat;filter:blur(3px) saturate(.92);opacity:.5}
 .loading.poster>div{position:relative;background:var(--paper);padding:18px 26px 16px;border-radius:14px;box-shadow:0 6px 30px rgba(0,0,0,.18)}
+/* r36 owner: the old instruction card never shows. If the photo slideshow is absent, the wait is the house photo with one small status pill */
+.loading.poster::before{inset:0!important;filter:none!important;opacity:1!important}
+.loading>div{position:absolute!important;right:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;padding:10px 16px!important;border-radius:999px!important;background:rgba(20,20,18,.78)!important;box-shadow:0 6px 24px rgba(0,0,0,.28)!important;text-align:left}
+.loading>div>b,.loading .loadnote{display:none!important}
+.loading>div::before{content:'';flex:0 0 auto;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:ld36 1s linear infinite}
+@keyframes ld36{to{transform:rotate(360deg)}}
+.loading #loadtxt{color:#fff!important;font:500 13px/1.2 "Jost","Avenir Next",Arial,sans-serif!important;letter-spacing:.01em!important;text-transform:none!important}
+@media (prefers-reduced-motion: reduce){.loading>div::before{animation:none}}
 html.hwload .loading{background:#110a1d}
 html.hwload .loading.poster::before{inset:0;filter:none;opacity:1}
 html.hwload .loading>div{background:rgba(17,10,29,.82);color:#f3e6d0;box-shadow:0 6px 30px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,122,26,.35)}
@@ -20079,7 +20087,7 @@ function r28AtticCabinet(){
   const P = door28Part(it, 1, [cx, 0, cz]); P.rec.parentKey = vname('main');                         // open at rest: the leaf's leading stile in the jamb
   obox('doorPaint', P.key, O, u, n, 0, wl - d, yl, yl + H, 0, T); cupPull(P.key, O, u, n, (wl - d) / 2, yl + 36 * I, T);
   collider(xf, z0, xh, z1, 0, HEAD); it.coll = COLLIDERS[COLLIDERS.length - 1]; it.coll.pass = true;
-  it.gap = new THREE.Box3(new THREE.Vector3(xf - .05, 0, z0), new THREE.Vector3(xh + .05, HEAD - .1, z1)); it.c0 = [cx, cz]; it.n3 = new THREE.Vector3(-1, 0, 0);   // tap the open doorway from the kitchen to close it
+  it.gap = new THREE.Box3(new THREE.Vector3(xf - .05, yl, z0 - .12), new THREE.Vector3(xh + .05, HEAD - .1, z0 + jt + gap + (wl - d) + .28)); it.c0 = [cx, cz]; it.n3 = new THREE.Vector3(-1, 0, 0);   // r36 owner: an open doorway is for walking through. Only the leaf's edge in the jamb (and a hand's width beside it) closes the door
   POCKET31.items.push(it);
   // the attic cabinet, centred over the door
   if(window.FIX && FIX.make){ const cab = FIX.make('upperCabinet', {w: CW, h: CH, d: .3, mountY: CAB_Y, glass: false, style: 'raised', pull: 'none', hw: 'satinNickel', led: false, contents: false});
