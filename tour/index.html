@@ -19817,13 +19817,26 @@ function bim3GarageTracks(){ let n = 0; if(!/[?&]b3tracks=1/.test(location.searc
    low end ('L') every leaf slides toward the high end as far as it can: onto the last leaf's slot, but never through a leaf ahead of it on its own
    track; 'R' is the mirror. The lead panel moves first and picks the others up as it reaches them. Which end opens is decided when a closed door
    is told to open: by where it was clicked (nearer end), or by where a walked route crosses it. The stack that is left standing keeps a collider. */
+/* r38 owner 11/11: "for the triple sliders in the bedroom closets they are on 3 tracks so all three doors stack against each side when opened".
+   The model hangs a closet bypass door on two tracks (outer panels share the front one), so a panel could only reach the middle. A bypass door
+   gets one track per panel: depths a panel thickness plus a small gap apart, centred in the wall (kept inside its faces), ordered as the model
+   had them front to back (ties by position). Then every panel slides all the way to the far jamb and the stack is n deep. */
+function bim3BypassTracks(it, P){
+  const n = P.length, nv = it.o.normal || [0, 1], n3 = new THREE.Vector3(nv[1], 0, nv[0]); if(n < 2) return;
+  const dep = p => p.lf.hinge[0][0] * nv[0] + p.lf.hinge[0][1] * nv[1], O = (BIM2S.meta.openings || []).find(q => q.id === it.id) || {};
+  const t = Math.max(...P.map(p => p.lf.t || .1146)), th = O.thickness || .375, d0 = P.map(dep), cen = (Math.min(...d0) + Math.max(...d0)) / 2;
+  const pitch = Math.max(t + .004, Math.min(t + .02, (th - t - .01) / (n - 1)));
+  const ord = P.map((p, i) => i).sort((a, b) => (d0[a] - d0[b]) || (a - b));
+  ord.forEach((i, r) => { const p = P[i], d = cen + (r - (n - 1) / 2) * pitch; p.base.addScaledVector(n3, d - d0[i]); p.piv.position.copy(p.base); p.trk = r; p.dep = d; });
+  it.sl3 = {pitch, gap: pitch - t, cen, wall: th}; }
 function bim3Slide(it, side, c, ax, W){
   const P = it.parts.filter(p => p.s != null).sort((a, b) => a.s - b.s), n = P.length; if(!n) return; const last = P[n - 1], first = P[0];
+  if(/BYPASS/.test(it.b3kind || '')) try{ bim3BypassTracks(it, P); }catch(e){ console.warn('[bim3] bypass tracks', e); }
   for(let i = n - 1; i >= 0; i--){ let lim = last.s + last.w - P[i].w; for(let j = i + 1; j < n; j++) if(P[j].trk === P[i].trk){ lim = Math.min(lim, P[j].pL - P[i].w); break; } P[i].pL = Math.max(P[i].s, lim); P[i].dL = P[i].pL - P[i].s; }
   for(let i = 0; i < n; i++){ let lim = first.s; for(let j = i - 1; j >= 0; j--) if(P[j].trk === P[i].trk){ lim = Math.max(lim, P[j].pR + P[j].w); break; } P[i].pR = Math.min(P[i].s, lim); P[i].dR = P[i].s - P[i].pR; }
   const alongZ = Math.abs(ax[0]) > .5, mid = c[0] * ax[0] + c[1] * ax[1];
-  it.sl = {side, P, mid, alongZ, DL: Math.max(...P.map(p => p.dL)), DR: Math.max(...P.map(p => p.dR)), lo: mid - W / 2, hi: mid + W / 2, openL: Math.min(...P.map(p => p.pL)), openR: Math.max(...P.map(p => p.pR + p.w))}; }
-function bim3SlideSide(it, a){ const S = it.sl; if(!S || it.t > .02 || DOOR28.moving.has(it)) return; S.side = a < 0 ? 'L' : 'R'; }   // a = how far along the opening from its middle (BIM axis); only a closed door changes its mind
+  it.sl = {side, P, mid, alongZ, DL: Math.max(...P.map(p => p.dL)), DR: Math.max(...P.map(p => p.dR)), lo: mid - W / 2, hi: mid + W / 2, openL: Math.min(...P.map(p => p.pL)), openR: Math.max(...P.map(p => p.pR + p.w)), pm: (first.s + last.s + last.w) / 2 - mid, together: /BYPASS/.test(it.b3kind || '')}; }
+function bim3SlideSide(it, a){ const S = it.sl; if(!S || it.t > .02 || DOOR28.moving.has(it)) return; S.side = a < (S.pm || 0) ? 'L' : 'R'; }   // a = how far along the opening from its middle (BIM axis); only a closed door changes its mind
 function bim3SlideAt(it, x, z){ const o = it.o, ax = (BIM2S.meta.openings.find(q => q.id === it.id) || {}).axis || [1, 0]; return (z - o.center[0]) * ax[0] + (x - o.center[1]) * ax[1]; }   // world point -> a
 function bim3SlideColl(it){ const S = it.sl, q = it.coll; if(!q) return;
   if(!it.coll2){ COLLIDERS.push(it.coll2 = Object.assign({}, q, {pass: true, r37: true})); }
@@ -19834,7 +19847,7 @@ function bim3DoorPose(it){
   for(const p of it.parts){
     if(p.sign != null) p.piv.rotation.y = p.sign * (p.ang * e - p.ang0);
     else if(/POCKET/.test(k)) p.piv.position.copy(p.base).addScaledVector(p.u3, p.d * (e - p.f0));
-    else if(p.dL != null){ const S = it.sl, d = S.side === 'L' ? p.dL : p.dR, D = S.side === 'L' ? S.DL : S.DR, x = e * D; p.piv.position.copy(p.base).addScaledVector(p.u3, (S.side === 'L' ? 1 : -1) * clamp(x - (D - d), 0, d)); }
+    else if(p.dL != null){ const S = it.sl, d = S.side === 'L' ? p.dL : p.dR, D = S.side === 'L' ? S.DL : S.DR, x = e * D; p.piv.position.copy(p.base).addScaledVector(p.u3, (S.side === 'L' ? 1 : -1) * (S.together ? e * d : clamp(x - (D - d), 0, d))); }   // r38: bypass panels all arrive together (the farthest travels farthest)
     else if(p.secH){ // r5: the section's bottom and top edges ride the track (up the jamb, round radius R, back under the ceiling)
       const a = bim3TrackPt(p, p.j * p.secH + e * p.Ltot), b = bim3TrackPt(p, (p.j + 1) * p.secH + e * p.Ltot), phi = Math.atan2(b[0] - a[0], b[1] - a[1]);
       p.piv.quaternion.setFromAxisAngle(p.axW, p.sg * phi); const lb = new THREE.Vector3(0, p.j * p.secH, 0).applyQuaternion(p.piv.quaternion);
