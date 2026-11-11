@@ -49,7 +49,8 @@
     '@media (prefers-reduced-motion:reduce){#intro28 .ld i{animation-duration:2.4s}}' +
     '#intro28 .dots{display:flex;gap:5px}#intro28 .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}#intro28 .dots i.on{background:#fff}' +
     '@media (max-width:640px){#intro28 .go{left:18px;right:18px;align-items:stretch;bottom:24px}#intro28 .go button{width:100%}#intro28.ready .cap{bottom:120px}#intro28 .dots{display:none}}' +
-    '@media (prefers-reduced-motion:reduce){#intro28 .sl img,#intro28 .sl.on img{transform:none;transition:none}}';
+    '@media (prefers-reduced-motion:reduce){#intro28 .sl img,#intro28 .sl.on img{transform:none;transition:none}}' +
+    '@media (min-width:641px) and (max-width:1100px){#intro28 .ld,#intro28 .go{bottom:24px}#intro28 .cap{bottom:128px}}';   // r35: between phone and wide desktop the status card sat on top of the caption
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   var el = document.createElement('div'); el.id = 'intro28'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Introducing 118 Hillside Drive while the 3D house loads');
   var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 3 ? 'src' : 'data-src') + '="../images/' + s[0] + '"></div>'; }).join('');
@@ -69,19 +70,49 @@
     cap.classList.add('swap'); setTimeout(function(){ h2.textContent = S[k][1]; p.textContent = S[k][2]; cap.classList.remove('swap'); }, reduce ? 0 : 320); }
   h2.textContent = S[0][1]; p.textContent = S[0][2];
   timer = setInterval(function(){ show(k + 1); }, 3600);
-  // progress: the page writes "Rendering the first view... 95%" (or a phase name) into #loadtxt
-  var lt = document.getElementById('loadtxt'), pct = 4;
-  function prog(){ var m = lt && /(\d{1,3})\s*%/.exec(lt.textContent || ''); if(m) pct = Math.max(pct, +m[1]); else pct = Math.min(90, pct + 1.5); bar.style.width = (done ? 100 : pct) + '%'; var pe = document.getElementById('i28pct'); if(pe) pe.textContent = 'Loading ' + (game ? 'the game' : 'the 3D house') + '… ' + Math.round(done ? 100 : pct) + '%'; }
-  var pi = setInterval(prog, 400); prog();
-  function leave(){ if(el.classList.contains('out')) return; store.set('intro28.seen', '1'); clearInterval(timer); clearInterval(pi); el.classList.add('out');
+  /* r35 progress (owner 11/10: "the rendering first view sits there for a long time"): the page writes its phase and a percentage into
+     #loadtxt ("Furnishing the rooms... 55%"), then "Rendering the first view... 95%" while a gate (window.__reveal) waits for textures, shaders
+     and exposure; after the loading card lifts, trees and reflections go in (window.__boot22). Each of those is said here in plain words, and
+     the number never stands still: inside a phase it keeps creeping toward (never onto) the next mark. */
+  var lt = document.getElementById('loadtxt'), pe = document.getElementById('i28pct'), what = 'Loading ' + (game ? 'the game' : 'the 3D house');
+  var pct = 4, shown = 4, label = what, stageAt = t0, lastT = t0, lifted = 0, liftedVis = 0, G0 = -1, rafN = 0;
+  var PH = [[/first view/i, 'Rendering the first view'], [/Finishing/i, 'Finishing the materials'], [/details/i, 'Adding the details'], [/Laying out/i, 'Laying out the garden'], [/Furnishing/i, 'Furnishing the rooms'],
+    [/Building/i, 'Building the house'], [/Loading the house/i, 'Loading the house'], [/the lot/i, 'Loading the lot'], [/materials/i, 'Loading the materials']];
+  function prog(){
+    var now = performance.now(), txt = (lt && lt.textContent) || '', m = /(\d{1,3})\s*%/.exec(txt), lab = null, i, R = window.__reveal, B = window.__boot22;
+    if(lt && lt.querySelector && lt.querySelector('.err')){ leave(); return; }   // the page could not load: show its message, not pictures
+    if(m) pct = Math.max(pct, Math.min(95, +m[1]));
+    for(i = 0; i < PH.length; i++) if(PH[i][0].test(txt)){ lab = PH[i][1]; break; }
+    if(lifted){ var left = (B && B.left) || {}; lab = left.trees ? 'Planting the trees' : left.probes ? 'Polishing the reflections' : 'Opening the doors'; pct = Math.max(pct, 97); }
+    else if(lab === PH[0][1] && R && R.unmet){ var u = R.unmet; lab = u.tex ? 'Loading the textures' : u.env ? 'Setting up the sky' : u.compile ? 'Preparing the graphics' : (u.meter != null || u.meterSettling != null) ? 'Balancing the light' : u.dark != null ? 'Letting the light in' : lab; }
+    if(lab && lab !== label){ label = lab; stageAt = now; }
+    var cap = lifted ? 99.4 : pct >= 95 ? 98.4 : Math.min(94, pct + 9), dt = Math.min(1000, now - lastT); lastT = now;
+    shown = Math.max(shown, pct); if(shown < cap) shown += (cap - shown) * (1 - Math.exp(-dt / 5000));
+    var say = label, held = now - stageAt; if(!done && held > 4500 && Math.floor(held / 3500) % 2) say = 'Nearly there';   // a long phase: the words still change
+    bar.style.width = (done ? 100 : shown) + '%'; if(pe) pe.textContent = (done ? what : say) + '… ' + Math.round(done ? 100 : shown) + '%'; }
+  var pi = setInterval(prog, 250), wi = 0; prog();
+  if(lt && window.MutationObserver) new MutationObserver(function(){ if(!done) prog(); }).observe(lt, {childList: true, characterData: true, subtree: true});
+  function leave(){ if(el.classList.contains('out')) return; store.set('intro28.seen', '1'); clearInterval(timer); clearInterval(pi); clearInterval(wi); el.classList.add('out');
     try{ window.gtag && gtag('event', 'intro28_enter', {seen_before: seen, wait_ms: Math.round(performance.now() - t0)}); }catch(e){}
     setTimeout(function(){ el.remove(); }, 800); }
   el.querySelector('.go button').addEventListener('click', leave);
   document.addEventListener('keydown', function(e){ if(done && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') && document.getElementById('intro28')){ e.preventDefault(); leave(); } }, true);
   function ready(){ if(done) return; done = true; readyAt = performance.now(); prog(); el.classList.add('ready');
     var waited = readyAt - t0;
-    if(waited < 1400 || seen) setTimeout(leave, seen ? 900 : 200);   // quick loads and returning visitors walk straight in
+    if(waited < 1400 || seen) setTimeout(leave, seen ? 350 : 200);   // quick loads and returning visitors walk straight in
     else el.querySelector('.go button').focus({preventScroll: true}); }
-  new MutationObserver(function(){ if(L.classList.contains('done')) ready(); }).observe(L, {attributes: true, attributeFilter: ['class']});
-  if(L.classList.contains('done')) ready();
+  /* r35: "ready" is the view, not the flag. #loading.done only starts the loading card's fade, and it can be set by a timeout before a frame
+     has been drawn (a background tab). The pictures stay until the card has faded out, frames are really being drawn after that, and the
+     trees and reflections that go in after the first view are done (or 6 s on screen have passed). Time in a hidden tab does not count. */
+  function renders(){ try{ return window.__gov && __gov.G ? __gov.G.renders | 0 : -1; }catch(e){ return -1; } }
+  function watch(){
+    if(done || el.classList.contains('out')) return;
+    if(!lifted){ if(!L.classList.contains('done')) return; lifted = performance.now(); G0 = renders(); (function f(){ rafN++; if(!done && rafN < 600) requestAnimationFrame(f); })(); prog(); }
+    if(document.hidden) return; liftedVis += 200;
+    var faded = +getComputedStyle(L).opacity < .05, r = renders(), drawn = r >= 0 && G0 >= 0 ? r - G0 >= 3 : rafN >= 8, B = window.__boot22, refined = !B || B.done || B.off;
+    if(seen && B && B.settled) refined = true;   // a returning visitor goes in as soon as the view is drawn and the rooms have settled; the page's own "Refining the view" covers the trees
+    if((faded && drawn && (refined || liftedVis > 6000)) || liftedVis > 15000) ready(); }
+  wi = setInterval(watch, 200);
+  new MutationObserver(watch).observe(L, {attributes: true, attributeFilter: ['class']});
+  watch();
 })();
