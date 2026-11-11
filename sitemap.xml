@@ -35,6 +35,13 @@
     <image:image><image:loc>https://118hillside.com/images/games-preview.jpg</image:loc></image:image>
   </url>
   <url>
+    <loc>https://118hillside.com/games/room/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <image:image><image:loc>https://118hillside.com/images/room-preview.jpg</image:loc></image:image>
+  </url>
+  <url>
     <loc>https://118hillside.com/thanksgiving/</loc>
     <lastmod>2026-11-07</lastmod>
     <changefreq>monthly</changefreq>

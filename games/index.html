@@ -32,7 +32,7 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());var _gi=0;try{var _q=location.search;if(/[?&]internal=1/.test(_q))localStorage.setItem("ga_internal","1");if(/[?&]internal=0/.test(_q))localStorage.removeItem("ga_internal");_gi=localStorage.getItem("ga_internal")==="1";}catch(e){}gtag("config","G-TML59CSLTY",_gi?{traffic_type:"internal"}:{});</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root { --bg:#fbfaf7; --paper:#fff; --ink:#1f1f1d; --muted:#67665f; --line:#e5e1d8; --gold:#a8865b; --dark:#171716;
   --serif:"Cormorant Garamond", Georgia, serif; --sans:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif; }
@@ -47,6 +47,16 @@ a { color:inherit; }
 .eyebrow { font-size:12px; font-weight:500; letter-spacing:.22em; text-transform:uppercase; margin:0 0 8px; }
 h1 { font-family:var(--serif); font-weight:500; font-size:clamp(30px,5vw,48px); line-height:1.05; margin:28px 0 6px; letter-spacing:.02em; }
 .lede { color:var(--muted); margin:0 0 22px; }
+/* evergreen: Room for Everyone */
+.ever { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); background:#eef1ef; border:1px solid var(--line); border-radius:10px; overflow:hidden; text-decoration:none; margin:0 0 18px; }
+.ever img { width:100%; height:100%; object-fit:cover; object-position:62% 30%; display:block; min-height:220px; }
+.ever .tx { padding:24px 24px 22px; display:flex; flex-direction:column; gap:8px; justify-content:center; }
+.ever .t { font-family:var(--serif); font-size:clamp(28px,4vw,40px); font-weight:600; line-height:1.02; }
+.ever .s { color:#3b4950; max-width:44ch; }
+.ever .tape { align-self:flex-start; margin-top:8px; background:#66ade6; color:#0f3556; font-family:"Caveat Brush",cursive; font-size:24px; padding:8px 20px 6px; transform:rotate(-1.5deg);
+  clip-path:polygon(0 8%,4% 0,7% 9%,10% 2%,90% 0,93% 9%,96% 1%,100% 7%,98% 50%,100% 93%,96% 100%,93% 91%,90% 100%,10% 98%,7% 91%,4% 100%,0 92%,2% 50%); }
+.ever:hover .tape { transform:rotate(-1.5deg) translateY(-1px); }
+@media (max-width:700px){ .ever { grid-template-columns:1fr; } .ever img { min-height:180px; max-height:220px; } }
 /* featured season */
 .feature { position:relative; border-radius:10px; overflow:hidden; color:#fff; padding:26px 24px; min-height:200px; display:flex; flex-direction:column; justify-content:flex-end; gap:8px; text-decoration:none; }
 .feature .t { font-family:var(--serif); font-size:clamp(28px,4vw,40px); font-weight:500; line-height:1.05; }
@@ -78,7 +88,11 @@ h1 { font-family:var(--serif); font-weight:500; font-size:clamp(30px,5vw,48px); 
 <script src="/assets/site-header.js" defer></script>
 <main class="wrap">
   <h1>Play in the house</h1>
-  <p class="lede">Family games inside the 3D model of the home. Works on phones.</p>
+  <p class="lede">Puzzles and seasonal games set in the real house. They work on phones too.</p>
+  <a class="ever" href="/games/room/" onclick="try{gtag('event','games_pick',{season:'always',game:'room'})}catch(e){}">
+    <span class="tx"><span class="t">Room for Everyone</span><span class="s">A puzzle on the real floor plan of this house. Find every household the rooms that fit how they live: the night-shift nurse, the grandparents who want the coffee close, the dog who needs the yard.</span><span class="tape">Play the floor plan</span></span>
+    <img src="/images/room-preview.jpg" alt="Names on painter's tape placed on the floor plan of 118 Hillside Drive" loading="lazy">
+  </a>
   <a class="feature" id="feature" href="#"></a>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="grid" id="grid"></div>
