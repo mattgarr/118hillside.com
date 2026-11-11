@@ -42,6 +42,16 @@
   addEventListener('error', e => { if(/feast/.test(String(e.filename || ''))) ERRS.push('error: ' + String(e.message).slice(0, 200) + ' @' + e.lineno); });
   addEventListener('unhandledrejection', e => { const t = String(e.reason && e.reason.stack || e.reason); if(/feast/.test(t)) ERRS.push('rejection: ' + t.slice(0, 200)); });
 
+  /* r38 loading (owner on a phone: "slow to load, and it's not clear anything is happening"). The loading card (assets/intro28.js) shows
+     this game's steps from window.__game28 and keeps the pictures up until the start card is under them. The game's own files and fonts
+     start loading the moment this script runs, in parallel with the house finishing, instead of one after another once it has finished. */
+  const G28 = window.__game28 = {id: 'feast', step: 'Loading the game', k: .05, ready: false, t0: performance.now(), marks: {}};
+  const prog = (step, k) => { G28.step = step; G28.k = Math.max(G28.k, k); G28.marks[step] = Math.round(performance.now()); };
+  const need = (src, has) => has ? Promise.resolve() : new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { oops('could not load ' + src); res(); }; document.head.appendChild(s); });
+  const DEPS = Promise.all([need('../assets/snowball.js?v=37', !!window.SNOWBALL), need('../assets/feast3d/feast-props.js?v=2', !!window.FEASTPROPS)]).then(() => prog('Fetching Snowball', .25));
+  if(!document.querySelector('link[href*="Caveat+Brush"]')) document.head.appendChild(el('link', {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@300;400;500&display=swap'}));
+  const paint = () => new Promise(r => { let k = 0; const go = () => { if(!k++) setTimeout(r, 0); }; requestAnimationFrame(go); setTimeout(go, 120); });   // let the loading card show the new step before a long piece of work
+
   /* ================================================================== which clue set */
   let HUNT = ((/[?&]hunt=([ab])\b/i.exec(location.search) || [])[1] || '').toLowerCase();
   if(!HUNT){ const last = store.get('feast3d.last'); HUNT = last === 'a' ? 'b' : last === 'b' ? 'a' : (new Date().getDate() % 2 ? 'a' : 'b'); }
@@ -73,9 +83,9 @@
       note: 'A cathedral ceiling, a walk-in closet, and stacking glass doors to a private balcony.'},
     balcony: {name: 'Balcony', floor: 'upper', pos: [-17.7, L2 + EYE, -41.7], face: [-23.2, 10.2, -47.4], map: [-17.7, -44],
       note: 'A private balcony off the primary bedroom that looks west over the hills.'}};
-  const CATSAYS = {lounge: 'Movie night is down here. I get the good pouf.', office: 'The door shuts. I have opinions about that.', porch: 'I watch the front walk from the window. Nobody gets past me.',
-    entry: 'Come in, look up, then straight through the glass to the oak.', living: 'The beams are a hundred years old. I have climbed none of them. Yet.', kitchen: 'Four doors on that fridge and I cannot open one of them.',
-    coffee: 'This is the coffee bar. I call it the cupboard with the treats.', great: 'The sofa is mine from nine until five.', loft: 'Top of the stairs. Best place to watch the whole house.', primary: 'Four skylights over this bed. I have napped under each one.', balcony: 'I watch birds from here. They know.'};
+  const CATSAYS = {lounge: 'Movie night happens down here. The good pouf is mine.', office: 'This door shuts. I have opinions about that.', porch: 'I watch the front walk from the window. No squirrel gets past me.',
+    entry: 'Look up. Now look at the oak. Now look at me.', living: 'These beams are a hundred years old. I’ve climbed none of them. Yet.', kitchen: 'Four doors on that fridge, and not one of them opens for me.',
+    coffee: 'It’s a coffee bar. I call it the treat cupboard.', great: 'The sofa is mine from nine to five. And five to nine.', loft: 'Top of the stairs. I can see everything from here. Everything.', primary: 'Four skylights over this bed. I’ve napped under every one.', balcony: 'I watch birds from here. They know.'};
   const ORDER = ['table', 'lounge', 'office', 'porch', 'entry', 'living', 'kitchen', 'coffee', 'great', 'loft', 'primary', 'balcony'];
   const FLOORS = [['upper', 'Upstairs', /^SP-L2-/], ['main', 'Main floor', /^SP-L1-/], ['lower', 'Downstairs', /^SP-L0-/]];
   // walkable graph: the main-floor edges are the ones escape.js ray-checked; the rest were ray-checked the same way (FEAST3D.audit()).
@@ -108,7 +118,7 @@
     note:        {place: 'table', kind: 'note', label: 'Snowball’s note', at: [0.2, -2.1, -43.6], pos: [3.3, .25, -43.9], look: [0.2, -2.25, -43.6], fit: {w: 2.2, h: 1.6}},
     _table:      {place: 'table', kind: 'table', label: 'Dinner table', at: [-2.6, -2.0, -43.7], pos: [4.3, .35, -45.5], look: [-2.4, -.55, -43.7], fit: {w: 7.4, h: 5.6}},
     smoker:      {place: 'table', kind: 'smoker', label: 'Smoker', at: [0.65, -.9, -48.8], pos: [3.4, .3, -45.9], look: [0.65, -1.15, -48.8], fit: {w: 3.4, h: 3.6},
-      title: 'The ceramic smoker', text: 'It was lit early this morning. The dial says the turkey needs a little longer, and Snowball’s rules say it comes last.'},
+      title: 'The ceramic smoker', text: 'Lit at dawn. The dial says not yet, and Snowball says the turkey comes last.'},
     coolerLounge:{place: 'lounge', kind: 'cooler', label: 'Drinks fridge', at: [-20.9, -3.0, -22.6], pos: [-17.9, -1.5, -20.3], look: [-21.0, -3.15, -22.6], fit: {w: 2.6, h: 3.1}, center: [-21.8, -3.1, -22.6], hinge: 'min',
       title: 'The lounge drinks fridge', text: 'Under the counter in the bonus lounge, a few steps from the glass doors to the terrace.', act: 'Open it'},
     coolerCoffee:{place: 'coffee', kind: 'cooler', label: 'Drinks fridge', at: [19.64, 1.9, 11.5], pos: [19.64, 2.3, 8.3], look: [19.64, 1.72, 11.7], fit: {w: 2.5, h: 3.1}, center: [19.64, 1.45, 12.5], hinge: 'min',
@@ -157,77 +167,77 @@
   const HUNTS = {
     a: {by: 'Snowball', steps: [
       {dish: 'cider', who: 'Snowball', spots: ['coolerLounge', 'fridge', 'coolerCoffee'], answer: 'coolerLounge',
-        clue: 'The cider is somewhere cold. This house has three cold places. Mine is the only one you can reach from the dinner table without using the stairs. Biscuit carried it, and Biscuit does not do stairs.',
-        wrong: {fridge: 'Butter, eggs, and more whipped cream than one pie needs. No cider. This fridge is also a full flight of stairs above the table.', coolerCoffee: 'Oat milk and sparkling water for the coffee bar. No cider, and the table is a floor below.'},
-        found: 'Cold cider, right where Snowball said. The lounge opens straight onto the terrace, so it is a short walk to the table.',
-        thanks: 'Thankful for the downstairs fridge. It is a short trot from the terrace, and the door opens with one paw.',
-        hints: ['The dinner table is outside, on the terrace. Start there and count stairs.', 'One room opens onto the terrace through glass doors. It has a fridge of its own.', 'The bonus lounge. I will walk you there.']},
+        clue: 'The cider’s somewhere cold, and this house has three cold places. Biscuit carried it from this table, and Biscuit doesn’t do stairs.',
+        wrong: {fridge: 'Butter, eggs and far too much whipped cream. No cider. And this fridge is a whole flight of stairs above the table.', coolerCoffee: 'Oat milk and fizzy water. No cider, and the table’s a floor down.'},
+        found: 'Cold cider, right where Snowball said. The lounge opens straight onto the terrace, so it’s a short walk to the table.',
+        thanks: 'Thankful for the downstairs fridge. A short trot from the terrace, and the door opens with one paw.',
+        hints: ['The table’s outside on the terrace. Start there and count the stairs.', 'One room opens onto the terrace through glass doors, and it has its own fridge.', 'The bonus lounge. I’ll walk you.']},
       {dish: 'pie', who: 'Snowball', spots: ['boxDining', 'boxLiving', 'boxBistro'], answer: 'boxDining',
-        clue: 'The pie is having a nap in the sun. I recommend it. There are three pie boxes on three tables, and two are fakes. Only one table has sun on it right now.',
-        wrong: {boxLiving: 'Napkins, nicely folded. This table is in the shade all afternoon.', boxBistro: 'Napkins. There is no sun down here until tomorrow morning.'},
-        found: 'Still warm. The afternoon sun comes through the great room windows and lands on this table.',
+        clue: 'The pie is napping in the sun. Highly recommend. There are three pie boxes on three tables, and two are fakes. Only one of those tables has sun on it right now.',
+        wrong: {boxLiving: 'Napkins, nicely folded. This table’s in the shade all afternoon.', boxBistro: 'Napkins. No sun down here until tomorrow morning.'},
+        found: 'Still warm. The afternoon sun comes through the great room windows and lands right on this table.',
         thanks: 'Thankful for the big windows. I get a new sunny spot every hour.',
-        hints: ['Sun comes in through glass. Find out which side of the house has it this afternoon.', 'The great room has large windows facing the low sun. I am lying in the warm bit.', 'The dining table in the great room. Come on.']},
+        hints: ['Find the side of the house the afternoon sun is on.', 'The great room’s large windows face the low sun. I’m lying in the warm bit.', 'The dining table in the great room. Come on.']},
       {dish: 'sauce', who: 'Snowball', spots: ['bagPrimary', 'bagOffice', 'bagLoft'], answer: 'bagPrimary',
         clue: 'The cranberry sauce is in the room with four windows in the ceiling. Not two. Four. I counted twice, lying on my back.',
-        wrong: {bagOffice: 'Biscuit’s tennis ball. The office has two skylights, which is two short.', bagLoft: 'One acorn from the oak. There are two skylights over the loft. Keep counting.'},
-        found: 'Cranberry sauce, under four skylights. Each one has a shade you can close from bed.',
-        thanks: 'Thankful for the windows in the ceiling. Sun by day and stars after dark. I have checked both.',
+        wrong: {bagOffice: 'Biscuit’s tennis ball. The office has two skylights, which is two short.', bagLoft: 'An acorn from the oak. Two skylights over the loft. Keep counting.'},
+        found: 'Cranberry sauce, under four skylights. Each one has a shade you can close without getting out of bed.',
+        thanks: 'Thankful for the windows in the ceiling. Sun by day, stars at night. I’ve checked both.',
         hints: ['Look up. Some rooms have windows in the ceiling.', 'The office and the loft have two each. Try the top floor, past the loft.', 'The primary bedroom has four. Follow me.']},
       {dish: 'potatoes', who: 'Snowball', spots: ['wallPanel', 'wallMirror', 'wallArt'], answer: 'wallPanel',
-        clue: 'The sweet potatoes are in my secret den. One wall in the lounge downstairs is really a door. It has no handle. Knock before you push.',
-        wrong: {wallMirror: 'It does not move. That one is a wall.', wallArt: 'It does not move. That one is a wall, and now the painting is crooked. You straighten it.'},
-        found: 'The wall swings open. There is a little room under the stairs, and the sweet potatoes are in it.',
-        thanks: 'Thankful for the secret door. It is the one room where nobody looks for me.',
-        hints: ['Downstairs, in the bonus lounge. Use your knuckles.', 'A hollow wall sounds different. Try the corner by the glass doors, where the stairs go over.', 'This one. I sleep in here on Tuesdays.']},
+        clue: 'The sweet potatoes are in my secret den. One wall in the downstairs lounge is really a door. No handle. Knock before you push.',
+        wrong: {wallMirror: 'Doesn’t budge. That one’s just a wall.', wallArt: 'Doesn’t budge. Just a wall, and now the painting’s crooked. You can fix that.'},
+        found: 'The wall swings open onto a little room under the stairs. The sweet potatoes are inside.',
+        thanks: 'Thankful for the secret door. Best napping spot in the house, and it has no handle.',
+        hints: ['Downstairs, in the bonus lounge. Use your knuckles.', 'A hollow wall sounds different. Try the corner by the glass doors, under the stairs.', 'This one. I sleep in here on Tuesdays.']},
       {dish: 'candles', who: 'Snowball', spots: ['bagGreat', 'bagEntry', 'bagKitchen'], answer: 'bagGreat', map: 'great',
-        clue: 'X marks the candles. I drew you a map of one floor. I did not write which floor. That would be too easy.',
-        wrong: {bagEntry: 'A pine cone. You are close to the front doors, but the dots on the map go much further in.', bagKitchen: 'A rubber duck. The dots on the map go past the kitchen.'},
+        clue: 'X marks the candles. I drew you a map of one floor. Which floor, I’m not saying. Too easy.',
+        wrong: {bagEntry: 'A pine cone. You’re right by the front doors, but the dots go much further in.', bagKitchen: 'A rubber duck. The dots keep going, past the kitchen.'},
         found: 'Four candles in brass holders, beside the sofa at the far end of the great room.',
         thanks: 'Thankful for the long room. Kitchen at one end, sofa at the other, and I can hear a tin open from either.',
-        hints: ['The map shows the front doors. Start there and follow the dots.', 'It is the main floor. The X is at the far end of the long room, past the kitchen and the dining table.', 'Beside the sofa in the great room. This way.']},
+        hints: ['The map shows the front doors. Start there and follow the dots.', 'It’s the main floor. The X is at the far end of the long room, past the kitchen and the dining table.', 'Beside the sofa in the great room. This way.']},
       {dish: 'rolls', who: 'Snowball', spots: ['bagBalcony', 'bagPorch', 'bagSofa'], answer: 'bagBalcony',
-        clue: 'The rolls are keeping warm in the last of the sun. There are three places to sit outside. Only one of them faces the sunset.',
-        wrong: {bagPorch: 'One red leaf. The porch faces the street and gets its sun in the morning.', bagSofa: 'A rubber duck. The terrace is already in the shade of the house.'},
+        clue: 'The rolls are keeping warm in the last of the sun. There are three places to sit outside, and only one of them faces the sunset.',
+        wrong: {bagPorch: 'One red leaf. The porch faces the street and gets its sun in the morning.', bagSofa: 'A rubber duck. The terrace is already in the house’s shade.'},
         found: 'Warm rolls, facing the western hills. The balcony gets the last sun of the day.',
-        thanks: 'Thankful for the balcony. Best sunset in the house, and the birds know I am watching.',
-        hints: ['Find the sun. It is low now, so it is easy.', 'The sun goes down behind the hills. One seat upstairs looks straight at them.', 'The balcony, off the primary bedroom. After you.']}]},
+        thanks: 'Thankful for the balcony. Best sunset in the house, and the birds know I’m watching.',
+        hints: ['Find the sun. It’s low now, so that’s easy.', 'The sun goes down behind the hills. One seat upstairs looks straight at them.', 'The balcony, off the primary bedroom. After you.']}]},
     b: {by: 'Biscuit', steps: [
       {dish: 'cider', who: 'Biscuit', spots: ['coolerCoffee', 'fridge', 'coolerLounge'], answer: 'coolerCoffee',
-        clue: 'The cider is somewhere cold. This house has three cold places. Mine is the only one with a microwave right above it. I always know where the microwave is.',
-        wrong: {fridge: 'Butter, eggs, and more whipped cream than one pie needs. No cider, and no microwave over this one.', coolerLounge: 'Sodas for movie night. No cider, and no microwave down here.'},
+        clue: 'The cider’s somewhere cold. There are three cold places in this house, and only mine has a microwave right above it. I always know where the microwave is.',
+        wrong: {fridge: 'Butter, eggs and far too much whipped cream. No cider, and no microwave over this one.', coolerLounge: 'Sodas for movie night. No cider, and no microwave down here.'},
         found: 'Cold cider, under the microwave at the coffee bar.',
-        thanks: 'Thankful for the coffee bar. The microwave beeps and then there is food. Every time.',
-        hints: ['Find the microwave first. It is not over the stove.', 'There is a small bar beside the kitchen for coffee. Look under its counter.', 'The coffee bar. I will show you.']},
+        thanks: 'Thankful for the coffee bar. The microwave beeps, and then there’s food. Every single time.',
+        hints: ['Find the microwave first. It’s not over the stove.', 'There’s a little coffee bar beside the kitchen. Look under its counter.', 'The coffee bar. I’ll show you.']},
       {dish: 'pie', who: 'Biscuit', spots: ['boxLiving', 'boxDining', 'boxSitting'], answer: 'boxLiving',
-        clue: 'A pie should cool out of the sun. So should a dog. There are three pie boxes on three tables, and two of those tables are in the sun right now.',
-        wrong: {boxDining: 'Napkins. This table is in full sun, and Biscuit would not approve.', boxSitting: 'Napkins. The sun is all over this table.'},
+        clue: 'A pie should cool out of the sun. So should a dog. Three pie boxes, three tables, and two of those tables are in the sun right now.',
+        wrong: {boxDining: 'Napkins. This table’s in full sun. Biscuit would not approve.', boxSitting: 'Napkins. The sun is all over this table.'},
         found: 'Cool and safe. The living room keeps its shade all afternoon.',
-        thanks: 'Thankful for the living room. It stays cool all afternoon, and the beams are even older than I am.',
+        thanks: 'Thankful for the living room. It stays cool all afternoon, and the beams are even older than me.',
         hints: ['Two of the tables are by the big west windows. Look at the floor around them.', 'The great room is full of sun. The other table is under the beams.', 'The living room coffee table. Come on.']},
       {dish: 'sauce', who: 'Biscuit', spots: ['bagOffice', 'bagLoft', 'bagPrimary'], answer: 'bagOffice',
-        clue: 'The cranberry sauce is under two windows in the ceiling. It is not in a bedroom, and it is not at the top of the stairs. I have never been to the top of the stairs.',
+        clue: 'The cranberry sauce is under two windows in the ceiling. Not in a bedroom, and not at the top of the stairs. I’ve never been to the top of the stairs.',
         wrong: {bagLoft: 'One acorn from the oak. Two skylights, yes, but this is the top of the stairs.', bagPrimary: 'Snowball’s toy mouse. This is a bedroom, and it has four skylights.'},
         found: 'Cranberry sauce, on the office desk under two skylights.',
         thanks: 'Thankful for the office. Two skylights, a door that shuts, and a quiet floor to lie on.',
-        hints: ['Look up. Three rooms have bags, and all three have skylights.', 'It is downstairs. The room with a desk in it.', 'The office. Follow me.']},
+        hints: ['Look up. Three rooms have bags, and all three have skylights.', 'It’s downstairs. The room with the desk.', 'The office. Follow me.']},
       {dish: 'potatoes', who: 'Biscuit', spots: ['wallPanel', 'wallMirror', 'wallArt'], answer: 'wallPanel',
-        clue: 'The sweet potatoes are in Snowball’s secret den. It is under the stairs, behind a door that looks like a wall. I found it with my nose. Knock first.',
-        wrong: {wallMirror: 'It does not move. That one is a wall.', wallArt: 'It does not move. That one is a wall, and now the painting is crooked. You straighten it.'},
-        found: 'The wall swings open. There is a little room under the stairs, and the sweet potatoes are in it.',
+        clue: 'The sweet potatoes are in Snowball’s secret den, under the stairs, behind a door that looks like a wall. I found it with my nose. Knock first.',
+        wrong: {wallMirror: 'Doesn’t budge. That one’s just a wall.', wallArt: 'Doesn’t budge. Just a wall, and now the painting’s crooked. You can fix that.'},
+        found: 'The wall swings open onto a little room under the stairs. The sweet potatoes are inside.',
         thanks: 'Thankful for the secret door. For a long time I thought it was a wall.',
         hints: ['The stairs come down into the bonus lounge. Look at the walls there.', 'A hollow wall sounds different. Try the corner by the glass doors.', 'This one. I sleep in here on Tuesdays.']},
       {dish: 'candles', who: 'Biscuit', spots: ['bagKitchen', 'bagEntry', 'bagGreat'], answer: 'bagKitchen', map: 'kitchen',
-        clue: 'X marks the candles. Snowball drew the map, because my paws are too big for the pencil. He would not say which floor it is.',
-        wrong: {bagEntry: 'A pine cone. You are close to the front doors, but the dots on the map go further in.', bagGreat: 'One red leaf. The dots on the map stop before they get this far.'},
+        clue: 'X marks the candles. Snowball drew the map, because my paws are too big for the pencil. He won’t say which floor.',
+        wrong: {bagEntry: 'A pine cone. You’re right by the front doors, but the dots go further in.', bagGreat: 'One red leaf. The dots stop well before here.'},
         found: 'Four candles in brass holders, on the kitchen peninsula.',
-        thanks: 'Thankful for the peninsula. It is very long, and things fall off both sides.',
-        hints: ['The map shows the front doors. Start there and follow the dots.', 'It is the main floor. The dots stop in the kitchen.', 'On the peninsula. This way.']},
+        thanks: 'Thankful for the peninsula. It’s very long, and food falls off both sides.',
+        hints: ['The map shows the front doors. Start there and follow the dots.', 'It’s the main floor. The dots stop in the kitchen.', 'On the peninsula. This way.']},
       {dish: 'rolls', who: 'Biscuit', spots: ['bagPorch', 'bagBalcony', 'bagSofa'], answer: 'bagPorch',
-        clue: 'The rolls are on a seat outside. It is the only one where you can watch who is coming up the front walk. That is my job.',
-        wrong: {bagBalcony: 'A pine cone, enjoying the hills. You cannot see the front walk from up here.', bagSofa: 'A rubber duck. From the terrace you can see the oak, but not the street.'},
+        clue: 'The rolls are on a seat outside, the only one with a view of the front walk. Watching the front walk is my job.',
+        wrong: {bagBalcony: 'A pine cone, enjoying the hills. You can’t see the front walk from up here.', bagSofa: 'A rubber duck. From the terrace you can see the oak, but not the street.'},
         found: 'Warm rolls on the porch lounger, with a clear view down the walk to Hillside Drive.',
-        thanks: 'Thankful for the front porch. I can see who is coming before the doorbell goes.',
+        thanks: 'Thankful for the front porch. I see every squirrel on the front walk. Every one.',
         hints: ['The front walk is on the street side of the house.', 'There are two loungers outside the front doors.', 'The front porch. After you.']}]}};
   const STEPS = HUNTS[HUNT].steps, LETTERS = 'THANKS';
   const HOURS = [15.0, 15.5, 16.0, 16.4, 16.8, 17.2];   // the sun, by how many dishes are on the table (the engine's mid-October sun)
@@ -667,6 +677,9 @@
   #feVoice b{font-weight:500;font-size:16px}#feVoice small{color:#6a7282;font-size:13px;margin-left:6px}#feVoice p{margin:2px 0 0;font-size:16.5px;line-height:1.3}
   #feFade{position:fixed;inset:0;z-index:58;background:#0d111f;opacity:0;pointer-events:none;transition:opacity .32s ease}
   #feFade.on{opacity:1;pointer-events:auto}
+  #feFade[data-say]::after{content:attr(data-say);position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:#f3ead9;font:600 30px/1.1 "Cormorant Garamond",Georgia,serif;letter-spacing:.01em}
+  .feBtn.wait{cursor:progress;opacity:1}.feBtn.wait::before{content:'';flex:none;width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:feSpin .8s linear infinite}
+  @keyframes feSpin{to{transform:rotate(360deg)}}
   #feFlash{position:fixed;inset:0;z-index:95;background:#fff;opacity:0;pointer-events:none}#feFlash.on{animation:feFl .5s}@keyframes feFl{10%{opacity:.85}100%{opacity:0}}
   #feCard{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(14,19,34,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);font-family:Jost,"Avenir Next",Arial,sans-serif;padding:16px;overflow:auto;animation:feIn .45s ease;color:#1f2a3a}
   #feCard.side{background:none;backdrop-filter:none;-webkit-backdrop-filter:none;place-items:center end;pointer-events:none;padding-right:max(18px,env(safe-area-inset-right))}#feCard.side .c{pointer-events:auto;max-width:430px;max-height:calc(100% - 8px);overflow:auto}
@@ -781,9 +794,9 @@
 
   /* ---- objective: one line, always */
   function setGoal(silent){ const K = $('#feGoalK'), N = $('#feGoalN'), T = $('#feGoalT'), A = $('#feGoalA'); let hand = false, k = 'Thanksgiving at Hillside', n = '', t = '', acts = '';
-    if(S.phase === 'intro' || S.phase === 'boot') t = 'Tap the gold ring on the table and read the note Snowball left.';
+    if(S.phase === 'intro' || S.phase === 'boot') t = 'Tap the gold ring on the table. Snowball left you a note.';
     else if(S.phase === 'hunt'){ const st = cur(); k = DISHCAP[st.dish] + ', from ' + st.who; n = 'Clue ' + (S.step + 1) + ' of 6'; t = st.clue; hand = true; if(st.map) acts = '<button class="feBtn sm" type="button" data-a="map">Look at the map</button>'; }
-    else if(S.phase === 'tag') t = 'Read the tag that was tied to it.';
+    else if(S.phase === 'tag') t = 'Read the tag tied to it.';
     else if(S.phase === 'carry'){ t = 'Carry ' + DISH[S.carry] + ' out to the table under the oak.'; acts = '<button class="feBtn sm dark" type="button" data-a="carry">Carry ' + (PLURAL[S.carry] ? 'them' : 'it') + ' there</button>'; }
     else if(S.phase === 'turkey') t = S.carry ? 'Carry the turkey to the table.' : 'The tags spell THANKS. Lift the lid on the smoker.';
     else if(S.phase === 'candles'){ t = 'Everything is on the table. Light the candles.'; acts = '<button class="feBtn sm gold" type="button" data-a="light">Light the candles</button>'; }
@@ -946,8 +959,8 @@
     if(phone() && S.ex && !rig.move && !S.busy) later(60, () => { if(S.ex && !rig.move) frameExamine(.5); }); }
   const tagCard = (small, text, big) => `<div class="feTagCard">${big ? `<span class="big">${esc(big)}</span>` : ''}<small>${esc(small)}</small>${esc(text)}</div>`;
   function sheetFor(ex){ const id = ex.id, sp = SPOTS[id], st = S.phase === 'hunt' ? cur() : null;
-    if(id === 'note') return sheet(`<h3>The dinner hunt</h3>${tagCard('Rules, by Snowball', 'One. Every clue is true. Two. No asking Biscuit. He cannot keep a secret. Three. The turkey comes last.')}${tagCard('Clue 1 of 6, from ' + STEPS[0].who, STEPS[0].clue)}`,
-      {noBack: true, acts: [{label: 'Start looking', cls: 'primary', go: () => { if(S.phase === 'intro'){ S.phase = 'hunt'; S.step = 0; S.hintIx = 0; setGoal(); ga('feast3d_step', {step: 0}); } back(() => { if(!S.saidStart){ S.saidStart = true; later(500, () => say('I know where all of it is. Ask if you get stuck. I like being asked.', 5600)); } }); }}]});
+    if(id === 'note') return sheet(`<h3>The dinner hunt</h3>${tagCard('House rules, by Snowball', 'One. Don’t ask Biscuit. He’ll tell you everything. Two. The turkey comes last. Three. Don’t sit in my chair.')}${tagCard('Clue 1 of 6, from ' + STEPS[0].who, STEPS[0].clue)}`,
+      {noBack: true, acts: [{label: 'Start looking', cls: 'primary', go: () => { if(S.phase === 'intro'){ S.phase = 'hunt'; S.step = 0; S.hintIx = 0; setGoal(); ga('feast3d_step', {step: 0}); } back(() => { if(!S.saidStart){ S.saidStart = true; later(500, () => say('I know where all of it is. Ask me. I love being asked.', 5600)); } }); }}]});
     if(id === '_table') return sheetTable(ex);
     if(id === 'smoker') return sheetSmoker(ex);
     if(ex.state === 'found') return sheet(`<h3>You found ${esc(DISH[st.dish])}.</h3><p>${esc(st.found)}</p>`, {noBack: true, acts: [{label: PLURAL[st.dish] ? 'Carry them to the table' : 'Carry it to the table', cls: 'primary', go: () => back(() => carryNow())}]});
@@ -973,7 +986,7 @@
     if(sp.kind === 'bag' || sp.kind === 'box'){ const kind = sp.kind === 'box' ? 'napkins' : sp.decoy, d = P.DECOY[kind](); P.root.add(d); const b = PROP[id], from = b.position.clone().add(b.userData.inside);
       if(sp.kind === 'box'){ d.position.copy(from); d.scale.setScalar(1.25); } else emerge(d, from, showAt(id), 1.7); PROP[id + ':decoy'] = d; }
     if(S.ex) S.ex.state = 'wrong'; sheetFor(S.ex);
-    if(S.peeks === 1) later(700, () => say('Not there. The clue is true, so read it again.', 4600)); else if(S.peeks === 4) later(700, () => say('Guessing works eventually. So does asking me.', 5000)); }
+    if(S.peeks === 1) later(700, () => say('Nope. Read my clue again. Slowly.', 4600)); else if(S.peeks === 4) later(700, () => say('You could keep guessing. Or you could ask me.', 5000)); }
   function foundDish(id){ const sp = SPOTS[id], st = cur(), g = DISHOBJ[st.dish]; SND.find(); ga('feast3d_found', {step: S.step, dish: st.dish, peeks: S.peeks, hints: S.hints}); S.hot = null;
     const to = sp.kind === 'wall' ? g.position.clone().add(new V3(0, .42, 0)) : showAt(id);
     emerge(g, g.position.clone(), to, sp.kind === 'wall' ? 1 : showScale(st.dish), () => { g.userData.spin = true; });
@@ -1000,44 +1013,58 @@
     tween(1300, u => { piv.scale.setScalar(Math.min(1, u * 5)); piv.rotation.x = .55 * Math.exp(-3.2 * u) * Math.cos(u * 9); }, done); }
   // the table, each time something lands on it: the tag it earned, and the next clue
   function sheetTable(ex){ const i = S.step, st = STEPS[i];
-    if(ex.state === 'turkey') return sheet(`<h3>The turkey is on the table.</h3><p>Everything Snowball put away is here, the cider is poured, and the sun is nearly down. One thing left.</p>`, {noBack: true, acts: [{label: 'Light the candles', cls: 'gold', go: () => lightCandles()}]});
-    if(ex.state !== 'tag') return sheet(`<h3>The table under the oak</h3><p>${S.carry ? 'Setting it down.' : 'Eight places, a linen runner and a few small pumpkins. The middle of the table is waiting for dinner.'}</p>`, {noBack: !!S.carry});
+    if(ex.state === 'turkey') return sheet(`<h3>The turkey is on the table.</h3><p>Everything Snowball hid is back, the cider’s poured, and the sun is nearly down. One thing left.</p>`, {noBack: true, acts: [{label: 'Light the candles', cls: 'gold', go: () => lightCandles()}]});
+    if(ex.state !== 'tag') return sheet(`<h3>The table under the oak</h3><p>${S.carry ? 'Setting it down.' : 'A linen runner, a few small pumpkins, and a big empty space in the middle for dinner.'}</p>`, {noBack: !!S.carry});
     const last = i === STEPS.length - 1, nx = STEPS[i + 1];
-    if(last) return sheet(`<h3>${esc(DISHCAP[st.dish])}, and the last tag</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('P.S. from Snowball and Biscuit', 'We did not lose dinner. We wanted you to see the whole house before everyone sits down. Happy Thanksgiving. P.P.S. Biscuit says the turkey is ready, and his nose is never wrong. Lift the lid.')}`,
-      {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => { tidy(STEPS.length - 1); S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; setGoal(); SND.spell(); setTod('golden'); P.setLift(.9); back(() => later(300, () => { say('It spells THANKS. I knew that.', 4600, true); examine('smoker'); })); }}]});
+    if(last) return sheet(`<h3>${esc(DISHCAP[st.dish])}, and the last tag</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('P.S. from Snowball and Biscuit', 'We didn’t lose dinner. We just wanted you to see the whole house first. Happy Thanksgiving. P.P.S. Biscuit says the turkey’s ready. His nose is never wrong. Lift the lid.')}`,
+      {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => toSmoker()}]});
     return sheet(`<h3>${esc(DISHCAP[st.dish])} ${PLURAL[st.dish] ? 'are' : 'is'} on the table.</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('Clue ' + (i + 2) + ' of 6, from ' + nx.who, nx.clue)}`,
       {noBack: true, acts: [nx.map ? {label: 'Look at the map', cls: 'primary', go: () => { nextStep(); later(900, openClue); }} : {label: 'Start looking', cls: 'primary', go: () => nextStep()}]}); }
   function tidy(i){ const st = STEPS[i]; if(!st) return; for(const id of st.spots){ try{ if(COOL[id]) COOL[id].set(0); for(const k of [id, id + ':decoy']){ const g = PROP[k]; if(g && g.visible){ const s0 = g.scale.x; tween(260, u => g.scale.setScalar(Math.max(.001, s0 * (1 - u))), () => { g.visible = false; }); } } }catch(e){ oops('tidy', e); } } }
   function nextStep(){ tidy(S.step); S.step++; S.phase = 'hunt'; S.tried = {}; S.knocked = {}; S.hot = null; S.hintIx = 0; S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); setHour(HOURS[S.step] || 17.2); setGoal(); ga('feast3d_step', {step: S.step});
-    back(() => { const n = S.step; if(n === 1) later(600, () => say('The sun moved while you were carrying that.', 4600, true)); else if(n === 3) later(600, () => say('Half of dinner is found. The other half is still clever.', 4800, true)); else if(n === 5) later(600, () => say('One more, and the sun is getting low.', 4600, true)); }); }
+    back(() => { const n = S.step; if(n === 1) later(600, () => say('The sun moved while you were carrying that. Keep an eye on it.', 4600, true)); else if(n === 3) later(600, () => say('Half of dinner, found. The other half is better hidden.', 4800, true)); else if(n === 5) later(600, () => say('One more. The sun’s getting low, and so is my patience.', 4600, true)); }); }
 
   /* ---- the smoker and the turkey */
+  // r38: from the last tag straight to the smoker. The button answers at once (pressed, a spinner, "Out to the smoker…"); the clock moves to
+  // golden hour once that frame is on screen, and the camera turns from the table to the smoker in one move (it used to go back to the
+  // standing point, wait, and set off again: two seconds of travel after the stall). If the lamp shaders are not warm yet (a very quick
+  // hunt), a short fade with the same words covers the compile instead of a frozen picture.
+  const TIMING = {};
+  function toSmoker(){ if(S.phase === 'turkey' || !S.ex) return; const b = sheetE.querySelector('[data-i="0"]'), t0 = performance.now(), T = TIMING.smoker = {warm: !!WARM.end};
+    if(b){ b.disabled = true; b.classList.add('wait'); b.textContent = 'Out to the smoker…'; }
+    tidy(STEPS.length - 1); S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; S.busy = true; setGoal(); SND.spell(); ga('feast3d_smoker', {warm: !!WARM.end});
+    // Back from the smoker on a narrow screen faces between the table and the smoker, so both stay in the picture (straight at the table, the smoker sat cut off at the edge)
+    const pose = () => { const p = standPose('table'), a = aspect() < 1 ? yp(PLACES.table.pos, [-0.4, -1.9, -46.4]) : [p.yaw, p.pitch]; S.ex = {id: 'smoker', back: {yaw: a[0], pitch: a[1]}, mode: 'look'}; setMarks(); sheetFor(S.ex); sheetE.classList.remove('on'); };
+    const there = () => { S.busy = false; sheetE.classList.add('on'); T.framed = Math.round(performance.now() - t0); say('It spells THANKS. I knew that.', 4600, true); };
+    if(WARM.end) paint().then(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); T.tod = Math.round(performance.now() - t0); pose(); frameExamine(.85, there); });
+    else { fadeE.dataset.say = 'Out to the smoker…'; fadeThrough(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); pose(); frameExamine(.05, () => { const w = () => fadeE.classList.contains('on') ? later(80, w) : there(); w(); }); }, 650);
+      const clr = () => fadeE.classList.contains('on') ? later(150, clr) : later(400, () => { delete fadeE.dataset.say; }); later(900, clr); } }
   function sheetSmoker(ex){ const sp = SPOTS.smoker;
     if(S.phase !== 'turkey') return sheet(`<h3>${esc(sp.title)}</h3><p>${esc(sp.text)}</p>`);
-    if(ex.state === 'open') return sheet(`<h3>The turkey</h3><p>All day over oak and apple wood, and it is the color of a good violin. It has been here the whole time, and you could smell it from the balcony.</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => { const t = DISHOBJ.turkey; dress(t, true); S.carry = 'turkey'; HELD.g = t; HELD.s = heldScale(t); setGoal(); if(SMK.emit) SMK.emit.rate = 1.2; back(() => { tween(1100, u => SMK.set(1 - ease(u))); setDown(); }); }}]});
-    return sheet(`<h3>${esc(sp.title)}</h3><p>The dial has reached its mark. The tags are up, the table is set, and Biscuit’s nose says it is time.</p>`, {acts: [{label: 'Lift the lid', cls: 'primary', go: () => liftLid()}]}); }
+    if(ex.state === 'open') return sheet(`<h3>The turkey</h3><p>Smoked all day over oak and apple wood, and the color of a good violin. It was here the whole time. You could smell it from the balcony.</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => { const t = DISHOBJ.turkey; dress(t, true); S.carry = 'turkey'; HELD.g = t; HELD.s = heldScale(t); setGoal(); if(SMK.emit) SMK.emit.rate = 1.2; back(() => { tween(1100, u => SMK.set(1 - ease(u))); setDown(); }); }}]});
+    return sheet(`<h3>${esc(sp.title)}</h3><p>The dial’s on its mark, the tags are up, and Biscuit’s nose says it’s time.</p>`, {acts: [{label: 'Lift the lid', cls: 'primary', go: () => liftLid()}]}); }
   function liftLid(){ if(S.busy || S.lidUp) return; S.busy = true; S.lidUp = true; SND.lid(); ga('feast3d_lid');
     if(SMK.emit){ P.burst(SMK.emit, 16); SMK.emit.rate = 5; later(5000, () => { SMK.emit.rate = 1.6; SMK.emit.at.y = SMK.seam + .3; }); }
     const e2 = P.emitter({at: new V3(SMK.c[0], SMK.seam + .2, SMK.c[1]), rate: 7, size: .9, rise: .9, drift: [.25, .2], life: 2.2, alpha: .3, grow: 2}); later(3200, () => { e2.on = false; });
     tween(1500, u => SMK.set(ease(u)), () => { P.sparkle(new V3(SMK.c[0], SMK.seam + .6, SMK.c[1]), 12); SND.find(); later(500, () => { S.busy = false; if(S.ex){ S.ex.state = 'open'; sheetFor(S.ex); } }); }); }
 
   /* ---- candles, dusk, what the animals think of it, the end */
-  function lightCandles(){ if(S.lit || S.busy || rig.move) return; S.lit = true; S.busy = true; S.phase = 'end'; ga('feast3d_candles'); const c = DISHOBJ.candles;
+  function lightCandles(){ if(S.lit || S.busy || rig.move) return; S.lit = true; S.busy = true; S.phase = 'end'; ga('feast3d_candles'); const c = DISHOBJ.candles, ct0 = performance.now(), CT = TIMING.candles = {warm: !!WARM.end};
     sheetE.classList.remove('on'); document.documentElement.classList.add('fe-cine'); for(const m of marks) m.b.classList.remove('on'); sayE.classList.remove('on');
     c.userData.sticks.forEach((st, i) => { const at = new V3(); st.getWorldPosition(at); at.y += st.userData.top; const f = P.flame(at, 1); flames.push(f); later(500 + i * 420, () => { SND.flame(i); tween(500, u => f.on(u)); }); });
     later(500, () => tween(2600, u => { candleLight.intensity = 1.5 * u; }));
     // the sun goes: the model's own dusk, with the house lights on
-    later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt(CHAIR); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
+    later(2500, () => fadeThrough(() => { CT.dusk = Math.round(performance.now() - ct0); setTod('dusk'); requestAnimationFrame(() => requestAnimationFrame(() => { CT.duskDrawn = Math.round(performance.now() - ct0); })); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt(CHAIR); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
     later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.3] : [-.17, 0]}, {dur: 9}); });
     later(4600, () => { SND.bell(); voices(() => finish()); }); }
   const SHOT = () => aspect() < 1 ? {pos: [8.4, .7, -46.6], pos2: [7.2, .6, -46.2], look: [-2.4, -1.5, -43.3], fov: 80} : {pos: [8.3, .55, -47.1], pos2: [7.3, .5, -46.7], look: [-2.6, -1.3, -43.0], fov: 56};
   // who speaks once the candles are lit: the accomplice, two of the house's other animals, and Snowball last (a: Snowball's trail, b: Biscuit's)
   const PAWSVG = '<svg viewBox="0 0 44 44" aria-hidden="true"><g fill="currentColor"><ellipse cx="22" cy="29" rx="10" ry="8.4"/><ellipse cx="8.6" cy="18" rx="4" ry="5.2" transform="rotate(-24 8.6 18)"/><ellipse cx="16.6" cy="10" rx="4" ry="5.4" transform="rotate(-8 16.6 10)"/><ellipse cx="27.4" cy="10" rx="4" ry="5.4" transform="rotate(8 27.4 10)"/><ellipse cx="35.4" cy="18" rx="4" ry="5.2" transform="rotate(24 35.4 18)"/></g></svg>';
   const VOICES = [
-    {n: 'Biscuit', w: 'the golden dog', c: '#b9822e', a: 'I carried the cider. One jug, no stairs, and I did not lick it.', b: 'That was my trail. You followed it better than I do.'},
+    {n: 'Biscuit', w: 'the golden dog', c: '#b9822e', a: 'I carried the cider. One jug, no stairs, and I didn’t lick it. Much.', b: 'That was my trail! You followed it better than I do. Now, about those rolls.'},
     {n: 'Mabel', w: 'the tortoise', c: '#5f7a4a', a: 'I set off for the table when you found the cider. Nearly there.', b: 'I set off for the table when you found the cider. Nearly there.'},
     {n: 'Pepper', w: 'the grey parrot', c: '#6c7480', a: 'Secret door! Secret door! Secret door!', b: 'Secret door! Secret door! Secret door!'},
-    {n: 'Snowball', w: 'the cat of the house', c: '#d9772b', a: 'You found all of it before sunset. I am nearly impressed.', b: 'You found all of it before sunset. I am nearly impressed.'}];
+    {n: 'Snowball', w: 'the orange tabby', c: '#d9772b', a: 'You found all of it before sunset. I’m almost impressed.', b: 'You found all of it before sunset. I’m almost impressed.'}];
   function voices(done){ let i = 0; const next = () => { if(i >= VOICES.length){ voiceE.classList.remove('on'); return later(500, done); } const g = VOICES[i++];
       voiceE.classList.remove('on'); later(i === 1 ? 0 : 320, () => { voiceE.innerHTML = `<span class="av" style="background:${g.c}">${PAWSVG}</span><div><b>${esc(g.n)}</b><small>${esc(g.w)}</small><p>${esc(g[HUNT])}</p></div>`; voiceE.classList.add('on'); if(i > 1) SND.tag(i); later(reduce ? 3400 : 2900, next); }); }; next(); }
   function leaves(){ if(reduce) return; const cols = ['#b5471d', '#c98a12', '#8c2b3d', '#d9772b']; for(let i = 0; i < 16; i++){ const l = el('i', {class: 'feLeaf', 'aria-hidden': 'true'}); l.style.left = (Math.random() * 100) + 'vw'; l.style.background = cols[i % 4]; l.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px'); l.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg'); l.style.animationDuration = (4 + Math.random() * 4) + 's'; l.style.animationDelay = (Math.random() * 2.5) + 's'; document.body.appendChild(l); setTimeout(() => l.remove(), 11000); } }
@@ -1048,9 +1075,9 @@
   function finishCard(){ const t = elapsed(), perfect = S.hints === 0 && S.peeks === 0, oth = HUNTS[other()].by; closeCard();
     const c = el('div', {id: 'feCard', class: 'side'}, `<div class="c" role="dialog" aria-labelledby="feH"><p class="k">Thanksgiving at Hillside · ${esc(HUNTS[HUNT].by)}’s trail</p><h2 id="feH">Dinner is on the table.</h2>
       ${perfect ? '<span class="stamp">A perfect hunt</span>' : ''}
-      <p class="lede">Everything Snowball put away is under the oak, the candles are lit, and the house lights have come on. He says you may have the first roll. Biscuit has asked for the second.</p>
+      <p class="lede">Everything Snowball hid is under the oak, the candles are lit and the house lights are on. He says you can have the first roll. Biscuit has called the second.</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint from Snowball' : 'hints from Snowball'}</span></div><div><b>${S.peeks}</b><span>${S.peeks === 1 ? 'wrong guess' : 'wrong guesses'}</span></div></div>
-      <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California. The terrace under the oak, the door under the stairs and the four skylights over the bed are all there in person.</span>
+      <div class="cta"><b>The house is real, and it’s for sale.</b><span>118 Hillside Drive is in Woodside, California. The terrace under the oak, the door under the stairs and the four skylights over the bed are all really there.</span>
         <div class="acts"><a class="feBtn primary" href="/#contact" id="feSee" style="min-height:52px;font-size:17px">See it in person</a><a class="feBtn light" href="/tour/" id="feFree">Explore the house</a></div></div>
       <div class="acts" style="margin-bottom:10px"><button class="feBtn gold" type="button" id="fePic">${ICO.cam}Take a picture of the table</button><button class="feBtn" type="button" id="feShare">Share</button></div>
       <div class="more"><button class="feBtn" type="button" id="feAgain">Play again on ${esc(oth)}’s trail</button><a class="feBtn" href="/games/" id="feGames">More games</a></div></div>`);
@@ -1068,7 +1095,7 @@
     if(await copyText(text + ' ' + url)) btn.textContent = 'Link copied'; else showLink(btn, url); }
   /* the picture: exactly what the canvas shows, with a caption underneath */
   let shot = null;
-  function snap(){ let url = null; const off = rig.off; try{ rig.off = [0, 0]; rig.sig = ''; rigStep(performance.now(), 0); url = H.snapshot('image/jpeg', .93); }catch(e){ oops('snapshot', e); } rig.off = off; rig.sig = ''; wake(6); if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.', 3200); return; }
+  function snap(){ let url = null; const off = rig.off; try{ rig.off = [0, 0]; rig.sig = ''; rigStep(performance.now(), 0); url = H.snapshot('image/jpeg', .93); }catch(e){ oops('snapshot', e); } rig.off = off; rig.sig = ''; wake(6); if(!url || url.length < 2000){ toast('That didn’t work here. Try a screenshot instead.', 3200); return; }
     SND.shutter(); const fl = $('#feFlash'); fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); shot = url; ga('feast3d_photo'); setTimeout(pictureCard, reduce ? 0 : 260); }
   async function compose(){ const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = shot; });
     let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0; const ar = sw / sh; if(ar > 1.9){ const w2 = sh * 1.9; sx = (sw - w2) / 2; sw = w2; } else if(ar < .72){ const h2 = sw / .72; sy = (sh - h2) * .5; sh = h2; }
@@ -1079,43 +1106,82 @@
     x.fillStyle = '#c4cad8'; x.font = `300 ${Math.round(25 * k)}px Jost, "Helvetica Neue", Arial, sans-serif`; x.fillText('Dinner found with Snowball the cat at 118hillside.com/games/feast', Math.round(58 * k), Hh + Math.round(116 * k));
     if(perfect){ x.save(); x.translate(W - Math.round(100 * k), Hh + Math.round(band / 2 - 4)); x.rotate(-.18); x.scale(k, k); x.beginPath(); for(let q = 0; q < 32; q++){ const a = q / 32 * Math.PI * 2, r = q % 2 ? 50 : 57; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); } x.closePath(); x.fillStyle = '#e8b84a'; x.fill(); x.fillStyle = '#2a1d07'; x.textAlign = 'center'; x.font = '600 22px "Cormorant Garamond", Georgia, serif'; x.fillText('A perfect', 0, -4); x.fillText('hunt', 0, 20); x.restore(); }
     return c; }
-  async function pictureCard(){ let cv = null; try{ cv = await compose(); }catch(e){ oops('picture', e); toast('That did not work here. Try a screenshot instead.', 3200); return; } closeCard();
+  async function pictureCard(){ let cv = null; try{ cv = await compose(); }catch(e){ oops('picture', e); toast('That didn’t work here. Try a screenshot instead.', 3200); return; } closeCard();
     const c = el('div', {id: 'feCard'}, `<div class="c" role="dialog" aria-label="Your picture"><img class="pc" alt="Your picture: the Thanksgiving table at dusk, with a caption underneath" src="${cv.toDataURL('image/jpeg', .9)}">
       <div class="acts"><button class="feBtn primary" type="button" id="feSave">Save the picture</button><button class="feBtn" type="button" id="feShare2">Share</button><button class="feBtn" type="button" id="feRetake">Back to the table</button></div>
-      <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California. Come and stand on the terrace.</span><div class="acts"><a class="feBtn primary" href="/#contact" id="feSee2">See it in person</a></div></div></div>`);
+      <div class="cta"><b>The house is real, and it’s for sale.</b><span>118 Hillside Drive is in Woodside, California. Come and stand on the terrace.</span><div class="acts"><a class="feBtn primary" href="/#contact" id="feSee2">See it in person</a></div></div></div>`);
     document.body.appendChild(c);
-    $('#feSave').onclick = () => { const fail = () => toast('That did not work here. Try a screenshot instead.', 3200), give = href => { const a = document.createElement('a'); a.download = 'thanksgiving-at-118-hillside.png'; a.href = href; document.body.appendChild(a); a.click(); a.remove(); $('#feSave').textContent = 'Saved'; ga('feast3d_save'); };
+    $('#feSave').onclick = () => { const fail = () => toast('That didn’t work here. Try a screenshot instead.', 3200), give = href => { const a = document.createElement('a'); a.download = 'thanksgiving-at-118-hillside.png'; a.href = href; document.body.appendChild(a); a.click(); a.remove(); $('#feSave').textContent = 'Saved'; ga('feast3d_save'); };
       try{ if(cv.toBlob) cv.toBlob(b => { try{ if(!b) return give(cv.toDataURL('image/png')); const u = URL.createObjectURL(b); give(u); setTimeout(() => URL.revokeObjectURL(u), 20000); }catch(e){ fail(); } }, 'image/png'); else give(cv.toDataURL('image/png')); }catch(e){ fail(); } };
     $('#feShare2').onclick = () => share($('#feShare2')); $('#feRetake').onclick = () => finishCard(); $('#feSee2').onclick = () => ga('feast3d_cta', {cta: 'see_in_person_picture'}); }
 
   /* ================================================================== hints: Snowball, three levels for the step you are on */
   function hint(){ if(!S.started || S.done || rig.move || S.busy) return; let tiers = null; const tk = k => () => { const go = () => { if(S.place !== k) goTo(k); }; go(); };
-    if(S.phase === 'intro') tiers = [['Tap the gold ring on the table. That is my note.'], ['The glowing ring, on the table in front of you.'], ['Fine. I will open it.', () => examine('note')]];
+    if(S.phase === 'intro') tiers = [['Tap the gold ring on the table. That’s my note.'], ['The glowing ring. On the table. Right in front of you.'], ['Fine. I’ll open it.', () => examine('note')]];
     else if(S.phase === 'hunt'){ const st = cur(), ans = st.answer, pl = SPOTS[ans].place; tiers = [[st.hints[0]], [st.hints[1], () => { catAt(catNear(ans)); }], [st.hints[2], () => { S.hot = ans; for(const id of st.spots) if(id !== ans) S.tried[id] = S.tried[id] || 'skip'; catAt(catNear(ans)); if(S.place !== pl) goTo(pl); else setMarks(); }]]; }
-    else if(S.phase === 'carry') tiers = [['Take it out to the table under the oak. The map knows the way.'], ['Downstairs and outside. Tap Terrace on the map.'], ['Follow me.', () => carryNow()]];
-    else if(S.phase === 'turkey') tiers = S.carry ? [['The table is right behind you.', () => { if(!S.ex) setDown(); }]] : [['The smoker is the black dome in the outdoor kitchen, by the terrace table.', tk('table')], ['Tap the gold ring on the smoker, then lift the lid.', tk('table')], ['I will do it. Stand back.', () => { const go = () => { if(S.ex && S.ex.id === 'smoker'){ liftLid(); return; } examine('smoker', {done: () => later(300, liftLid)}); }; if(S.place !== 'table') goTo('table', {done: () => later(200, go)}); else go(); }]];
-    else if(S.phase === 'candles') tiers = [['Everything is on the table. Tap Light the candles.'], ['Light the candles. I will keep my tail out of the way.'], ['I will do it. Watch the wicks.', () => lightCandles()]];
+    else if(S.phase === 'carry') tiers = [['Out to the table under the oak. The map knows the way.'], ['Downstairs and outside. Tap Terrace on the map.'], ['Follow me.', () => carryNow()]];
+    else if(S.phase === 'turkey') tiers = S.carry ? [['The table is right behind you.', () => { if(!S.ex) setDown(); }]] : [['The smoker’s the black dome in the outdoor kitchen, by the table.', tk('table')], ['Tap the gold ring on the smoker, then lift the lid.', tk('table')], ['I’ll do it. Stand back.', () => { const go = () => { if(S.ex && S.ex.id === 'smoker'){ liftLid(); return; } examine('smoker', {done: () => later(300, liftLid)}); }; if(S.place !== 'table') goTo('table', {done: () => later(200, go)}); else go(); }]];
+    else if(S.phase === 'candles') tiers = [['Everything’s on the table. Tap Light the candles.'], ['Light the candles. I’ll keep my tail out of it.'], ['Fine, I’ll do it. Watch the wicks.', () => lightCandles()]];
     if(!tiers) return;
-    if(S.ex && S.ex.locked){ say(S.ex.id === 'note' ? 'Read my note, then start looking.' : S.ex.state === 'found' || S.ex.state === 'open' ? 'You found it. Carry it out to the table.' : S.ex.state === 'turkey' ? 'Light the candles.' : 'Read the tag. The next clue is on it.', 5000); return; }
+    if(S.ex && S.ex.locked){ say(S.ex.id === 'note' ? 'Read my note, then start looking.' : S.ex.state === 'found' || S.ex.state === 'open' ? 'You found it. Carry it out to the table.' : S.ex.state === 'turkey' ? 'Light the candles.' : 'Read the tag. Your next clue is right under it.', 5000); return; }
     const i = Math.min(S.hintIx, tiers.length - 1), t = tiers[i]; S.hintIx = Math.min(i + 1, tiers.length - 1);
     if(S.phase !== 'candles') S.hints++;   /* asking how to light the candles does not cost the perfect hunt */
     S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); ga('feast3d_hint', {phase: S.phase, step: S.step, tier: i + 1});
     const run = () => { if(t[1]) t[1](); say(t[0], 7500); }; S.hintAt = performance.now();
     if(S.ex && t[1] && !(S.phase === 'turkey' && S.ex.id === 'smoker')) back(run); else run(); }
 
+  /* ================================================================== shader warm-up
+     r38 (owner on a phone: "it's slow when it goes to the smoker at the end, that was very slow"). By day every house lamp is at zero and
+     the engine keeps zero-intensity lamps out of the shader light loop. "Go to the smoker" turns the clock to golden hour, the lamps come
+     on (14 lights), and every material in view needed a new program at once: about 12 for the view itself and 56 more for the two mirror
+     probes by the lounge, which re-capture for the new light in linear output. Measured on a desktop GPU: 330 + 370 + 140 ms of compiles
+     before the camera moved; several seconds on a phone, with the button showing nothing. The candles (dusk) use the same lamp set.
+     So the hunt compiles those programs ahead, in small slices while nothing is moving, with the lamps counted in and nothing drawn: the
+     engine's own idle warm-up trick (a scene proxy that hands compile() a few objects at a time, the real lights in their loop). */
+  const WARM = {load: null, end: null, endOn: false};
+  // one object per distinct material set (and the geometry features that change a program), nearest the dinner table first
+  function warmList(root, pick){ const seen = new Set(), out = [], T = v3(TABLE), w = new V3();
+    root.traverse(o => { const m = o.material; if(!m || !(o.isMesh || o.isPoints || o.isLine || o.isSprite) || (pick && !pick(o))) return; const g = o.geometry, at = g && g.attributes || {};
+      const k = (Array.isArray(m) ? m.map(x => x.uuid).join('+') : m.uuid) + (o.isInstancedMesh ? 'i' : '') + (o.isSkinnedMesh ? 's' : '') + (at.tangent ? 't' : '') + (at.color ? 'c' : '') + (g && g.morphAttributes && g.morphAttributes.position ? 'm' : '');
+      if(seen.has(k)) return; seen.add(k); o.getWorldPosition(w); out.push([w.distanceTo(T), o]); });
+    return out.sort((a, b) => a[0] - b[0]).map(x => x[1]); }
+  const feastObjs = () => warmList(H.scene, o => { for(let p = o; p; p = p.parent) if(/^feast/.test(p.name || '') || p === (P && P.root)) return true; return false; });
+  function warm(objs, encs, lamps, ok, budget, step){ return new Promise(done => {
+    const R = H.renderer, sc = H.scene, proxy = Object.create(sc); let batch = []; proxy.traverseVisible = cb => sc.traverseVisible(cb); proxy.traverse = cb => { for(const o of batch) cb(o); };
+    const rts = [...new Set(encs)].map(enc => { const rt = new THREE.WebGLRenderTarget(1, 1); rt.texture.encoding = enc; rt.texture.generateMipmaps = false; return rt; });
+    let e = 0, i = 0, n = 4; const t0 = performance.now(), p0 = R.info.programs.length, total = objs.length * rts.length || 1;
+    const slice = () => {
+      if(!ok()) return setTimeout(slice, 400);
+      const flips = []; if(lamps) sc.traverse(o => { if(o.isLight && !o.visible && o.userData.perfOff && (o.isPointLight || o.isSpotLight || o.isRectAreaLight)){ o.visible = true; flips.push(o); } });
+      const prev = R.getRenderTarget(), ts = performance.now();
+      try{ while(e < rts.length && performance.now() - ts < budget){
+          if(i >= objs.length){ e++; i = 0; continue; }
+          R.setRenderTarget(rts[e]); batch = objs.slice(i, i + n); i += batch.length; const tb = performance.now(); R.compile(proxy, camera); const d = performance.now() - tb;
+          n = d < 4 ? Math.min(64, n * 2) : d > 12 ? Math.max(1, n >> 1) : n; } }   // few objects per call while programs are being built, many once they are all cached
+      catch(err){ oops('warm', err); e = rts.length; }
+      finally{ batch = []; for(const l of flips) l.visible = false; R.setRenderTarget(prev); }
+      if(step) step(Math.min(1, (e * objs.length + i) / total));
+      if(e < rts.length) return setTimeout(slice, lamps ? 40 : 0);
+      rts.forEach(rt => rt.dispose()); done({ms: Math.round(performance.now() - t0), progs: R.info.programs.length - p0, objs: objs.length}); };
+    slice(); }); }
+  // the end of the hunt: everything (the probes see the whole house), lamps on, for the screen and for the probes, only while the camera rests
+  function warmEnd(){ if(WARM.endOn) return; WARM.endOn = true; const t0 = performance.now();
+    later(1500, () => warm(warmList(H.scene), [H.renderer.outputEncoding, THREE.LinearEncoding], true, () => S.started && !rig.move && !S.busy && !document.hidden && !TW.length, 10)
+      .then(r => { WARM.end = Object.assign(r, {after: Math.round(performance.now() - t0)}); }).catch(e => oops('warm end', e))); }
+
   /* ================================================================== start */
   function startCard(){ const best = store.get('feast3d.best.' + HUNT);
     const c = el('div', {id: 'feCard'}, `<div class="c" role="dialog" aria-labelledby="feH"><p class="k">A game in the real house</p><h2 id="feH">Thanksgiving at Hillside</h2>
-      <p class="lede">Dinner was ready. Then Snowball, the cat of the house, put it away, with help from an old golden dog called Biscuit. Now it is hidden all over the house.</p>
-      <div class="note"><p>Everyone sits down at sunset. Every dish is somewhere sensible, and we left clues. Carry it all out to the table under the oak and nobody needs to know.</p><p class="sig">${PAWSVG.replace('aria-hidden="true"', 'class="paw" role="img" aria-label="Signed with a small paw print"')}${PAWSVG.replace('aria-hidden="true"', 'class="paw big" role="img" aria-label="and a large one"')}</p><p class="ps">P.S. I know where all of it is. Ask me if you get stuck.</p></div>
+      <p class="lede">Dinner was ready. Then Snowball, the orange tabby who runs this house, hid it, with help from Biscuit, an old golden dog. Now it’s all over the house.</p>
+      <div class="note"><p>We hid dinner. Sorry. Not very sorry. We left you clues. Get it all out to the table under the oak by sunset and we’ll call it even.</p><p class="sig">${PAWSVG.replace('aria-hidden="true"', 'class="paw" role="img" aria-label="Signed with a small paw print"')}${PAWSVG.replace('aria-hidden="true"', 'class="paw big" role="img" aria-label="and a large one"')}</p><p class="ps">P.S. I know where all of it is. Ask nicely.</p></div>
       <ul class="how"><li>${ICO.drag}Drag to look around</li><li>${ICO.disc}Tap a white circle to walk there</li><li>${ICO.ring}Tap a gold ring to look closer</li></ul>
       <div class="acts"><button class="feBtn primary" type="button" id="feGo" style="min-width:170px;min-height:52px;font-size:17px">Start the hunt</button><button class="feBtn" type="button" id="feSnd0"></button></div>
-      <p class="foot">About ten minutes, for ages seven and up. Today you are on ${esc(HUNTS[HUNT].by)}’s trail${best ? ', and your best time on it is ' + fmtT(best.time) : ''}. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it is for sale.</p></div>`);
+      <p class="foot">About ten minutes, for ages seven and up. Today you’re on ${esc(HUNTS[HUNT].by)}’s trail${best ? ', and your best time on it is ' + fmtT(best.time) : ''}. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it’s for sale.</p></div>`);
     document.body.appendChild(c); const s0 = $('#feSnd0'), d0 = () => { s0.innerHTML = (SND.muted ? ICO.mute : ICO.sound) + '<span>' + (SND.muted ? 'Sound is off' : 'Sound is on') + '</span>'; s0.setAttribute('aria-pressed', String(!SND.muted)); };
     s0.onclick = () => { SND.setMuted(!SND.muted); d0(); UI.drawSnd(); if(!SND.muted) SND.goal(); }; d0(); try{ $('#feGo').focus({preventScroll: true}); }catch(e){}
     $('#feGo').onclick = () => { SND.unlock(); SND.tap(); $('#feGo').disabled = true; fadeThrough(() => { c.remove(); begin(); }, 420); }; }
   function begin(){ document.documentElement.classList.remove('fe-pre'); const p = standPose('table'); rigCut(PLACES.table.pos, p.yaw, p.pitch, p.fov); S.started = true; S.phase = 'intro'; S.t0 = S.lastProgress = performance.now(); ga('feast3d_start');
-    setGoal(true); arrive('table', true); catAt(CHAIR); }
+    setGoal(true); arrive('table', true); catAt(CHAIR); warmEnd(); }
 
   /* ================================================================== frame loop */
   let lastT = performance.now();
@@ -1128,19 +1194,24 @@
     }catch(e){ if(!frame.err){ frame.err = true; oops('frame', e); } } }
 
   /* ================================================================== boot: after the house is ready */
-  function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} S.staged = asStaged();
-    let need = 2; const go = () => { if(--need > 0) return;
-      const fonts = () => { try{ return Promise.race([Promise.all([document.fonts.load('40px "Caveat Brush"'), document.fonts.load('600 40px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2500))]); }catch(e){ return Promise.resolve(); } };
-      try{ buildUI(); }catch(e){ oops('ui', e); }
-      fonts().then(() => { try{ buildWorld(); setHour(HOURS[0]);
-          const a = yp([12.5, .9, -38.5], [-2.6, -1.6, -44]); rigCut([12.5, .9, -38.5], a[0], a[1], aspect() < 1 ? 80 : 58); UI.live = true; }catch(e){ oops('build', e); }
-        requestAnimationFrame(frame);
-        const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
-            if(o < .03 || n++ > 40){ document.documentElement.classList.add('fe-up'); startCard(); } else setTimeout(w, 120); })(); };
-        const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); clear(); } }); mo.observe(document.body, {childList: true}); } else clear(); }); };
-    loadScript('../assets/snowball.js?v=36', !!window.SNOWBALL, go); loadScript('../assets/feast3d/feast-props.js?v=2', !!window.FEASTPROPS, go); }
+  async function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} S.staged = asStaged();
+    const fonts = () => { try{ return Promise.race([Promise.all([document.fonts.load('40px "Caveat Brush"'), document.fonts.load('600 40px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2500))]); }catch(e){ return Promise.resolve(); } };
+    prog('Fetching Snowball', .1); await DEPS; prog('Loading the paw-writing', .2); await fonts(); prog('Hiding the dishes', .3); await paint();
+    try{ buildUI(); }catch(e){ oops('ui', e); }
+    try{ buildWorld(); setHour(HOURS[0]);
+      const a = yp([12.5, .9, -38.5], [-2.6, -1.6, -44]); rigCut([12.5, .9, -38.5], a[0], a[1], aspect() < 1 ? 80 : 58); UI.live = true; }catch(e){ oops('build', e); }
+    requestAnimationFrame(frame);
+    // the table's shaders, compiled now behind the pictures instead of on the first frame of the start card
+    prog('Setting the table', .55); await paint();
+    try{ const r = await warm(feastObjs(), [H.renderer.outputEncoding, THREE.LinearEncoding], false, () => true, 24, k => prog('Setting the table', .55 + .4 * k)); WARM.load = r; }catch(e){ oops('warm', e); }
+    G28.k = 1; G28.ready = true; G28.at = Math.round(performance.now());
+    // the start card goes up under the pictures as they lift (it used to wait until they had gone, which left the house bare for a moment)
+    const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
+        if(o < .03 || n++ > 40){ document.documentElement.classList.add('fe-up'); startCard(); } else setTimeout(w, 120); })(); };
+    const intro = document.getElementById('intro28'), lifting = () => { const i = document.getElementById('intro28'); return !i || i.classList.contains('out'); };
+    if(intro && !lifting()){ const mo = new MutationObserver(() => { if(lifting()){ mo.disconnect(); clear(); } }); mo.observe(document.body, {childList: true}); mo.observe(intro, {attributes: true, attributeFilter: ['class']}); } else clear(); }
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
-    if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
+    if((fr > 8 && !up) || n > 240) setTimeout(() => boot().catch(e => oops('boot', e)), 150); else setTimeout(() => wait(n + 1), 120); })(0);
 
   /* ================================================================== QA hook */
   const rc = new THREE.Raycaster();
@@ -1149,7 +1220,7 @@
   function ray(o, d, far){ rc.set(v3(o), v3(d).normalize()); rc.far = far || 40; let hs = []; try{ hs = rc.intersectObjects(H.scene.children, true); }catch(e){} for(const h of hs) if(solid(h)) return h; return null; }
   function clearAt(p, hs){ let min = 99, who = ''; for(const dy of (hs || [0, -2, -3.8])) for(let i = 0; i < 12; i++){ const a = i / 12 * Math.PI * 2, h = ray([p[0], p[1] + dy, p[2]], [Math.cos(a), 0, Math.sin(a)], 10); if(h && h.distance < min){ min = h.distance; who = (h.object.name || h.object.parent.name) + '@' + dy; } } return {min: +min.toFixed(2), who}; }
   function clearSeg(a, b){ const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], len = Math.hypot(d[0], d[1], d[2]); let worst = null; for(const dy of [0, -1.6, -3.4, -4.7]) for(const s of [-.5, 0, .5]){ const nx = -d[2] / len * s, nz = d[0] / len * s, h = ray([a[0] + nx, a[1] + dy, a[2] + nz], d, len); if(h && (!worst || h.distance < worst.d)) worst = {d: +h.distance.toFixed(2), who: h.object.name || h.object.parent.name, dy}; } return worst; }
-  window.FEAST3D = {errors: ERRS, S, rig, SITE, HELD, PLACES, SPOTS, STEPS, HUNTS, LIGHT, COOL, SMK, PROP, DISHOBJ, get hunt(){ return HUNT; }, get P(){ return P; }, sound: SND, goTo, examine, back, hint, openSpot, knock, carryNow, setDown, liftLid, lightCandles, setHour, setTod, catAt, say, snap, finish, ray, clearAt, clearSeg, sunDir,
+  window.FEAST3D = {errors: ERRS, S, rig, WARM, TIMING, G28, SITE, HELD, PLACES, SPOTS, STEPS, HUNTS, LIGHT, COOL, SMK, PROP, DISHOBJ, get hunt(){ return HUNT; }, get P(){ return P; }, sound: SND, goTo, examine, back, hint, openSpot, knock, carryNow, setDown, liftLid, lightCandles, setHour, setTod, catAt, say, snap, finish, ray, clearAt, clearSeg, sunDir,
     state: () => ({phase: S.phase, step: S.step, place: S.place, ex: S.ex && {id: S.ex.id, state: S.ex.state, mode: S.ex.mode}, busy: S.busy, move: !!rig.move, carry: S.carry, onTable: S.onTable.slice(), hints: S.hints, peeks: S.peeks, tod: S.tod, hour: S.hour, done: S.done, tw: TW.length,
       marks: marks.filter(m => m.on).map(m => { const q = m.b.getBoundingClientRect(); return {k: m.kind, key: m.key, label: m.label, x: Math.round(q.left + q.width / 2), y: Math.round(q.top + q.height / 2), edge: /edge/.test(m.b.className)}; })}),
     view(pos, look, fov){ const a = yp(pos, look); rigCut(pos, a[0], a[1], fov || 62); },
