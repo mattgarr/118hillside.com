@@ -142,7 +142,6 @@
     rig.zoom = 1; rig.fov = rig.move.fov0; rig.lim = null; return dur; }
   const _p = new THREE.Vector3(), _t = new THREE.Vector3();
   function rigStep(now, dt){
-    if(window.NAVL) window.NAVL.dirty = false;   // the tour eases a tilted view back to level; here the view stays exactly where the player leaves it
     const m = rig.move;
     if(m){ const u = clamp((now - m.t0) / m.dur, 0, 1), e = ease(u);
       if(m.curve){ m.curve.getPointAt(e, _p); rig.pos.copy(_p); } else rig.pos.lerpVectors(m.v[0], m.v[m.v.length - 1], e);
