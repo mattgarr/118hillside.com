@@ -47,17 +47,17 @@
       note: 'A big screen, a drinks counter with its own fridge, and stacking glass doors that open straight onto the terrace.'},
     office:  {name: 'Office', floor: 'lower', pos: [-27.8, L0 + EYE, -10.6], face: [-24.3, -1.9, -8.0], map: [-27, -7.5],
       note: 'A quiet room downstairs with a door that shuts, lit from above by two skylights.'},
-    porch:   {name: 'Front porch', floor: 'main', pos: [-6.4, EYE, 5.4], face: [0.4, 2.3, 12.6], map: [-8.5, 12.5],
+    porch:   {name: 'Front porch', floor: 'main', pos: [-6.4, EYE, 5.4], face: [0.4, 2.3, 12.6], map: [-6.5, 11.8],
       note: 'The front deck, with two loungers that look down the paver walk to Hillside Drive.'},
-    entry:   {name: 'Entry', floor: 'main', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-5.5, -5.2],
+    entry:   {name: 'Entry', floor: 'main', pos: [-5.6, EYE, -0.6], face: [-5.3, 4.7, -8], map: [-6.0, -5.0],
       note: 'A cathedral ceiling, a starburst light, and iron-and-glass doors at both ends. The oak is straight ahead.'},
-    living:  {name: 'Living room', floor: 'main', pos: [1.8, EYE, -3.6], face: [8.5, 3.1, -3.0], map: [7.5, -3.4],
+    living:  {name: 'Living room', floor: 'main', pos: [1.8, EYE, -3.6], face: [8.5, 3.1, -3.0], map: [8.5, -3.5],
       note: 'Fir beams cross the vaulted ceiling. This room is part of the original 1920s house.'},
-    kitchen: {name: 'Kitchen', floor: 'main', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [9.0, 11.6],
+    kitchen: {name: 'Kitchen', floor: 'main', pos: [12.8, EYE, 8.4], face: [11.2, 3.7, 20], map: [13.0, 13.5],
       note: 'Quartz counters, a long peninsula, a gas range under a glass hood, and a pantry beside the big fridge.'},
-    coffee:  {name: 'Coffee bar', floor: 'main', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [21.4, 8.8],
+    coffee:  {name: 'Coffee bar', floor: 'main', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [23.5, 9.0],
       note: 'A coffee bar tucked in beside the kitchen, with a drinks fridge under the counter and a microwave above it.'},
-    great:   {name: 'Great room', floor: 'main', pos: [11.2, EYE, 31.95], face: [10.7, 3.3, 22.0], fov: 56, map: [10.4, 29.5],
+    great:   {name: 'Great room', floor: 'main', pos: [11.2, EYE, 31.95], face: [10.7, 3.3, 22.0], fov: 56, map: [9.0, 30.5],
       note: 'The kitchen, the dining table and this sitting area share one long room with a wall of glass.'},
     loft:    {name: 'Loft', floor: 'upper', pos: [-19.5, L2 + EYE, -11.5], face: [-23.6, 8.2, -6.2], map: [-21.3, -8],
       note: 'A sitting area at the top of the stairs, with cable railings and skylights overhead.'},
@@ -105,7 +105,7 @@
       title: 'The lounge drinks fridge', text: 'Under the counter in the bonus lounge, a few steps from the glass doors to the terrace.', act: 'Open it'},
     coolerCoffee:{place: 'coffee', kind: 'cooler', label: 'Drinks fridge', at: [19.64, 1.9, 11.5], pos: [19.64, 2.3, 8.3], look: [19.64, 1.72, 11.7], fit: {w: 2.5, h: 3.1}, center: [19.64, 1.45, 12.5], hinge: 'min',
       title: 'The coffee bar drinks fridge', text: 'Smoked glass, under the coffee bar counter, with the microwave on the shelf above it.', act: 'Open it'},
-    fridge:      {place: 'kitchen', kind: 'fridge', label: 'Big fridge', at: [18.4, 3.6, 8.0], pos: [17.2, 4.9, 10.7], look: [18.4, 3.3, 8.0], fit: {w: 3.3, h: 6.3},
+    fridge:      {place: 'kitchen', kind: 'fridge', label: 'Big fridge', at: [18.4, 3.6, 8.0], pos: [15.4, 4.8, 11.1], look: [18.4, 3.3, 8.0], fit: {w: 3.4, h: 5.6},
       title: 'The big fridge', text: 'Four doors of stainless steel in the kitchen, with the pantry cupboard beside it.', act: 'Open it'},
     boxDining:   {place: 'great', kind: 'box', label: 'Pie box', at: [10.35, 2.9, 22.45], pos: [14.4, 5.2, 25.2], look: [10.35, 2.7, 22.45], fit: {w: 2.6, h: 2}, prop: {at: [10.35, 2.5, 22.45], ry: .5},
       title: 'A box on the dining table', text: 'The dining table sits beside the great room’s wall of glass.', act: 'Lift the lid'},
@@ -866,12 +866,15 @@
     items.sort((p, q) => (p.docked - q.docked) || ((p.m.kind === 'walk') - (q.m.kind === 'walk')));
     const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
     add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#feMapBtn') : mapE); add($('#feBtns')); if(sayE.classList.contains('on')) add(sayE); add($('#feTags'));
-    const box = it => it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 226, it.y + 32] : it.edge === 'R' ? [it.x - 226, it.y - 32, it.x + 32, it.y + 32] : [it.x - 78, it.y - 32, it.x + 78, it.y + 88];
+    if(coachE.classList.contains('on')) add(coachE);
+    const wOf = m => m.w || (m.w = Math.max(40, (m.b.querySelector('span') || {}).offsetWidth || 90));
+    const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
     for(const it of items){ if(it.docked){ it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = r.top + Math.max(top + 24, r.height * .4); }
-      // step away from the HUD and from each other: down from the upper part of the screen, up from the lower part
-      const y0 = it.y; let dir = it.y > r.top + r.height * .62 ? -1 : 1, bx = box(it), n = 0, flipped = false;
-      while(obs.concat(placed).some(q => hit(bx, q)) && n++ < 30){ it.y += 34 * dir; if(it.y > r.top + bot || it.y < r.top + top){ if(flipped) break; flipped = true; dir = -dir; it.y = y0 + 34 * dir; } bx = box(it); }
+      // keep clear of the HUD and of each other: the nearest free place above or below, and where it was if there is none
+      const y0 = it.y, all = obs.concat(placed), free = y => { it.y = y; const q = box(it); return !all.some(o => hit(q, o)); };
+      if(!free(y0)){ let ok = false; for(let k = 1; k <= 24 && !ok; k++) for(const d of (y0 > r.top + r.height * .55 ? [-1, 1] : [1, -1])){ const y = y0 + d * 30 * k; if(y < r.top + top || y > r.top + bot) continue; if(free(y)){ ok = true; break; } } if(!ok) it.y = y0; }
+      const bx = box(it);
       placed.push(bx); const m = it.m;
       m.b.style.transform = `translate(${it.x.toFixed(1)}px,${it.y.toFixed(1)}px)`; const cls = 'feMk ' + m.kind + ' on' + (m.hot ? ' hot' : '') + (it.edge ? ' edge ' + it.edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
@@ -891,7 +894,7 @@
     if(SMK.emit) SMK.emit.rate = k === 'table' ? (S.phase === 'turkey' || S.phase === 'candles' || S.phase === 'end' ? 3.2 : 2) : 0;
     S.lastProgress = performance.now(); ga('feast3d_place', {place: k});
     if(k === 'table' && S.carry) later(250, setDown);
-    else if(fresh && CATSAYS[k] && S.phase === 'hunt' && !S.carry) later(1400, () => { if(S.place === k && !S.ex && !rig.move && !sayE.classList.contains('on')) say(CATSAYS[k], 5200, true); }); }
+    else if(fresh && CATSAYS[k] && S.phase === 'hunt' && !S.carry) later(1400, () => { if(S.place === k && !S.ex && !rig.move && !sayE.classList.contains('on') && !(performance.now() - (S.hintAt || -1e9) < 12000)) say(CATSAYS[k], 5200, true); }); }
   function goTo(k, opts){ opts = opts || {}; if(!PLACES[k] || S.busy || rig.move || S.done || S.ex) return false;
     if(k === S.place){ const p = standPose(k); rig.lim = null; rig.tyaw = rig.yaw + angDiff(rig.yaw, p.yaw); rig.tpitch = p.pitch; rig.zoom = 1; if(opts.done) opts.done(); return true; }
     const r = route(S.place, k), pose = standPose(k); S.busy = true; if(k === 'balcony' || S.place === 'balcony') door('D-L2-01', true); if(k === 'table' || k === 'lounge') door('D-L0-10', true); S.coach.walk = true; placeE.classList.remove('on'); sayE.classList.remove('on'); for(const m of marks){ m.on = false; m.b.classList.remove('on'); }
@@ -1065,7 +1068,7 @@
     if(S.ex && S.ex.locked){ say(S.ex.id === 'note' ? 'Read their note, then start looking.' : S.ex.state === 'found' || S.ex.state === 'open' ? 'You found it. Carry it out to the table.' : S.ex.state === 'turkey' ? 'Light the candles.' : 'Read the tag. The next clue is on it.', 5000); return; }
     const i = Math.min(S.hintIx, tiers.length - 1), t = tiers[i]; S.hintIx = Math.min(i + 1, tiers.length - 1);
     S.hints++; S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); ga('feast3d_hint', {phase: S.phase, step: S.step, tier: i + 1});
-    const run = () => { say(t[0], 7500); if(t[1]) t[1](); };
+    const run = () => { if(t[1]) t[1](); say(t[0], 7500); }; S.hintAt = performance.now();
     if(S.ex && t[1] && !(S.phase === 'turkey' && S.ex.id === 'smoker')) back(run); else run(); }
 
   /* ================================================================== start */

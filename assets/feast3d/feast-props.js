@@ -93,7 +93,7 @@
       const m = mesh(geo('leaf', () => new THREE.ShapeGeometry(sh, 6)), std(hex, {roughness: .9, side: THREE.DoubleSide, lift: .16})); m.rotation.x = -Math.PI / 2; m.scale.setScalar(s || .22); m.castShadow = false; return m; }
 
     /* ---------- the dishes ---------- */
-    function cider(){ const g = grp('cider'), glass = new THREE.MeshStandardMaterial({color: lin('#9a4f12'), roughness: .08, metalness: 0, transparent: true, opacity: .95, emissive: lin('#6a300a'), emissiveIntensity: .34}); glass.userData.lift = .34; MATS.set('ciderGlass', glass);
+    function cider(){ const g = grp('cider'), glass = new THREE.MeshStandardMaterial({color: lin('#8a430f'), roughness: .07, metalness: 0, transparent: true, opacity: .96, emissive: lin('#4d2407'), emissiveIntensity: .24}); glass.userData.lift = .24; MATS.set('ciderGlass', glass);
       g.add(mesh(lathe([[0, 0], [.19, 0], [.225, .03], [.23, .4], [.2, .52], [.1, .66], [.075, .76], [.09, .79], [.09, .84], [0, .84]], 28), glass));
       const hd = mesh(new THREE.TorusGeometry(.065, .02, 7, 16), glass, .13, .68, 0); g.add(hd);
       g.add(mesh(new THREE.CylinderGeometry(.062, .052, .1, 12), std('#c9a26b', {roughness: 1}), 0, .88, 0));
