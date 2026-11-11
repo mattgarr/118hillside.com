@@ -1371,7 +1371,7 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
     </nav>
     <div class="spacer"></div>
     <button type="button" class="phonly phmore" id="phMore" aria-haspopup="true" aria-expanded="false" aria-controls="phMenu" aria-label="More options"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><circle cx="4.5" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="15.5" cy="10" r="1.7"/></svg></button>
-    <!-- v27 ui27 --><button type="button" class="tod vbtn27" id="viewBtn" aria-haspopup="true" aria-expanded="false" aria-controls="phMenu" title="View options: trees, furniture, landscape, colors, quality, time of day, Halloween"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 6h8M15 6h2M3 14h2M9 14h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="13" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="14" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>View</span><svg class="car" viewBox="0 0 10 10" width="9" height="9" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="tod" id="navHelp" aria-label="How to move around" title="How to move around"><b aria-hidden="true">?</b></button><button type="button" class="tod fsbtn27" id="fsBtn" aria-label="Full screen (F)" title="Full screen, hides the controls (F)"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="qrow" id="phMenu" role="group" aria-label="View options">
+    <!-- v27 ui27 --><button type="button" class="tod vbtn27" id="viewBtn" aria-haspopup="true" aria-expanded="false" aria-controls="phMenu" title="View options: trees, furniture, landscape, colors, quality, time of day"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 6h8M15 6h2M3 14h2M9 14h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="13" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="14" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>View</span><svg class="car" viewBox="0 0 10 10" width="9" height="9" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="tod" id="navHelp" aria-label="How to move around" title="How to move around"><b aria-hidden="true">?</b></button><button type="button" class="tod fsbtn27" id="fsBtn" aria-label="Full screen (F)" title="Full screen, hides the controls (F)"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="qrow" id="phMenu" role="group" aria-label="View options">
     <button type="button" class="tod phonly phit" id="phDoll"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 9.5L10 4l7 5.5M5 8.2V16h10V8.2M5 12h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Dollhouse view</span></button>
     <button class="tod" id="treesBtn" aria-pressed="true" aria-label="Show or hide trees" title="Show or hide trees"><svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M10 18v-5M10 13c-4 0-6-2.2-6-5a4.5 4.5 0 0 1 3-4.2A4 4 0 0 1 13.4 4 4.5 4.5 0 0 1 16 8c0 2.8-2 5-6 5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Trees</span></button>
     <button class="tod" id="furnBtn" aria-pressed="true" aria-label="Show or hide the furniture" title="Furniture on or off"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 15v-4.5a1.5 1.5 0 0 1 3 0V12h8v-1.5a1.5 1.5 0 0 1 3 0V15H3zM5 9V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M4.5 15v2M15.5 15v2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Furniture</span></button>
@@ -9246,7 +9246,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=1' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=1' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=36' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=1' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=1' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=37' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
@@ -12641,6 +12641,17 @@ function v27Flagstones(){
   const ms = new THREE.Mesh(g, mat); ms.name = 'v27-flagstones'; ms.receiveShadow = true; ms.castShadow = false; grp('land').add(ms); window.__V27FLAG = n; window.__V26FLAG = n; }
 
 /* ===== v28 GAME (patch_v28_game.py): Snowball's potion hunt (Tonight version) + the shared games menu ===== */
+/* r36: the Halloween and Thanksgiving mini-games (potion hunt, pumpkin maze, hide and seek, turkey trot and the rest) are retired. Their code stays below, because
+   it is woven through this file, but every way in is closed here, before any of it runs: nothing draws the old "Games" pill or its View-menu row, nothing opens the
+   old "Choose your game" card, and nothing can start a mini-game. An old link (?game=maze) or a stray "Other games" button opens the picker of the current games
+   instead (assets/games-menu.js). Every later `window.HWGAMES = window.HWGAMES || ...` below keeps this object. */
+window.HWGAMES = (function(){ var noop = function(){}, G = {games: [], active: null, retired: true};
+  var current = function(){ try{ window.GAMESMENU && GAMESMENU.open(document.querySelector('.v31games')); }catch(e){} };
+  G.register = function(g){ if(g && !G.games.some(function(x){ return x.id === g.id; })) G.games.push(g); };
+  G.start = current; G.stop = function(){ G.active = null; }; G.loadSfx = function(cb){ cb && cb(); }; G.sfx = noop; G.track = noop;
+  Object.defineProperty(G, '_renderMenu', {get: function(){ return noop; }, set: noop});   // the old menu, its pill and its row are never built
+  Object.defineProperty(G, 'openMenu', {get: function(){ return current; }, set: noop});
+  return G; })();
 window.HWGAMES = window.HWGAMES || (function(){
   var G = {games: [], active: null};
   G.register = function(g){ if (!G.games.some(function(x){return x.id===g.id;})) G.games.push(g); G._renderMenu && G._renderMenu(); };
@@ -15468,7 +15479,7 @@ const UI27 = (() => {
   function blocked(){
     if(!AUTO) return 'automation';
     if(revealAt == null || performance.now() - revealAt < CFG.GRACE) return 'grace';
-    if(root.classList.contains('vmo27') || root.classList.contains('phm') || document.querySelector('.qpop:not([hidden])')) return 'menu';
+    if(root.classList.contains('vmo27') || root.classList.contains('phm') || document.querySelector('.qpop:not([hidden]), #holPanel:not([hidden])')) return 'menu';
     if(overUI){ const el = px >= 0 ? document.elementFromPoint(px, py) : null; overUI = !!(el && el.closest && el.closest(UI_SEL)); if(overUI) return 'hover'; }   // re-checked: the UI under a still pointer may have gone (clean view)
     const ng = document.querySelector('.navguide'); if(ng && !ng.hidden) return 'guide';
     const bz = document.getElementById('busy24'); if(bz && bz.classList.contains('on')) return 'busy';
@@ -17509,17 +17520,15 @@ window.CORN31 = CORNMAZE;
   // ☰ glyph
   const more = document.getElementById('phMore');
   if(more) more.innerHTML = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
-  // Games button (phone only; hidden with ?nogame=1)
+  // Games button (hidden with ?nogame=1). r36 (owner 11/11: "it brings up a picker of legacy games... also it transitions to thanksgiving mode... it also hangs
+  // a few seconds without any feedback"): one tap opens the picker of the five current games (assets/games-menu.js) at once. It no longer switches a holiday
+  // dress on and no longer opens the retired mini-games' menu. If the picker's script did not load, the games page has the same five.
   if(!/[?&]nogame=1\b/.test(location.search)){
-    const g = document.createElement('button'); g.type = 'button'; g.className = 'v31games'; g.textContent = 'Games'; g.setAttribute('aria-label', 'Games');
+    const g = document.createElement('button'); g.type = 'button'; g.className = 'v31games'; g.textContent = 'Games'; g.setAttribute('aria-label', 'Games'); g.setAttribute('aria-haspopup', 'dialog'); g.setAttribute('aria-expanded', 'false');
     tabs.appendChild(g);
-    g.addEventListener('click', () => {
-      const H = window.HALLOWEEN, T = window.THANKSGIVING, pill = () => document.getElementById('hwGamesPill'), open = () => { try { const pp = pill(); if(pp) pp.click(); else if(window.HWGAMES && HWGAMES.openMenu) HWGAMES.openMenu(); } catch(e) { console.warn(e); } };
-      if((H && H.isOn) || (T && T.isOn)) return open();
-      const now = new Date(), useT = T && now.getMonth() === 10;          // November -> Thanksgiving if built, else Halloween
-      const M = useT ? T : H; if(!M) return open();
-      M.on(); let n = 0; const wait = () => { if((M.isOn && pill()) || n++ > 80) open(); else setTimeout(wait, 100); }; wait();
-    });
+    g.addEventListener('click', e => { e.stopPropagation();
+      try{ if(window.GAMESMENU && GAMESMENU.open(g)) return; }catch(x){ console.warn('[games]', x); }
+      const p = location.pathname; location.href = p.replace(/[^\/]*$/, '').replace(/[^\/]+\/$/, '') + 'games/' + (/index\.html$/.test(p) ? 'index.html' : ''); });
   }
   // Walk / Photos into the ☰ menu (top), phone only
   const menu = document.getElementById('phMenu');
@@ -21734,6 +21743,26 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
     if(fresh35){ fresh35 = false; if(!REVEAL.done && REVEAL.texOK && REVEAL.reads.length === n0) REVEAL.reads.push(METER.want); }
     return r; };
 }
+/* r36 holiday decor (owner 11/11: "a 'see the house decorated for the holidays' type of thing... make that easy to find and it doesn't require going into
+   games mode"): the engine's side of assets/holiday/holiday.js, which adds the Holiday decor control (Halloween, Thanksgiving, Winter holidays, No decorations).
+   A small host object, not window.HILLSIDE: that name means "a game is running" all over this file. The Winter holidays dress is built by the Deck the House
+   props (assets/deck3d/deck-props.js) on this host; it adds no lights to the scene, so nothing recompiles when it goes up or comes down. */
+{ const HH = window.HOLIDAY_HOST = {THREE, camera, scene, renderer, STOPS, SUN_DIR, grp, busy: BUSY24, on: {mode: null, vis: null, tod: null},
+    get BIM2S(){ return typeof BIM2S !== 'undefined' ? BIM2S : null; }, get tod(){ return TOD_KEY; }, get mode(){ return mode; }, get level(){ return vis.level; }, get variant(){ return ACTIVE_VAR; },
+    get ready(){ try{ return !!(MODEL && BIM && FURN.items().length); }catch(e){ return false; } },
+    shown: k => !!(GROUPS[k] && GROUPS[k].visible),                                   // 'roof', 'trees', 'furn': what the tour is drawing now
+    inside: p => { try{ return !!bim2SpaceAt(p.x, p.z, p.y); }catch(e){ return false; } },
+    setMode: (m, o) => setMode(m, o), flyTo: (pos, look, dur) => flyTo(pos, look, 'look', dur),
+    look(pos, at){ anim = null; glide = null; flightN++; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
+    todGet: () => ({key: TOD_KEY, manual: todManual}),
+    /* a time of day chosen from the holiday control holds like one chosen from the Time of day button (manual), and is handed back exactly as it was found */
+    todSet(key, manual){ todManual = manual !== false; if(todManual) try{ window.__story && window.__story.apply(); }catch(e){} if(TOD_KEY !== key) setTOD(key); if(!todManual) try{ window.__story && window.__story.apply(); }catch(e){} }};
+  const tell = (k, v) => { try{ HH.on[k] && HH.on[k](v); }catch(e){ console.warn('[holiday] ' + k, e); } };
+  const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); tell('mode', mode); return r; };
+  const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); tell('vis'); return r; };
+  const _st = setTOD; setTOD = function(){ const r = _st.apply(this, arguments); tell('tod', TOD_KEY); return r; }; }
 boot();
 })();
 </script>
+<script src="../assets/games-menu.js?v=1" defer></script>
+<script src="../assets/holiday/holiday.js?v=1" defer></script>

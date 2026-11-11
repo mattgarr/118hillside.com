@@ -1,10 +1,13 @@
 /* Deck the House with Snowball (3D): the decorations.
    Everything here is built from three.js primitives inside the walkable model of 118 Hillside Drive (feet, y up).
    window.DECKPROPS(H) returns {apply(state, ctx), setOn, lightUp, tick, ...}; assets/deck3d/deck.js drives it.
+   The tour's "Holiday decor" control (assets/holiday/holiday.js) builds its Winter holidays dress from the same props:
+   window.DECKPROPS(host, {porchLight: false}) plus the state keys the game never sets (tree 'classic', room2, ter2, oakFront).
    Lights are GPU points (one draw call per string) plus instanced bulbs, so a few thousand of them stay cheap on phones. */
 (function(){
   'use strict';
-  window.DECKPROPS = function(H){
+  window.DECKPROPS = function(H, opt){
+    opt = opt || {};
     const THREE = H.THREE, V3 = THREE.Vector3, noop = function(){};
     const root = new THREE.Group(); root.name = 'deck3d'; H.scene.add(root);
     const col = hex => new THREE.Color(hex).convertSRGBToLinear();
@@ -13,7 +16,7 @@
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const Y = new V3(0, 1, 0);
     /* one warm light under the porch eave, on after dark, so the wreath, the toran and the little tree keep their color at night */
-    const porch = new THREE.PointLight(col('#ffd7a6'), 0, 18, 1.6); porch.position.set(-5.7, 7.1, 6.6); porch.name = 'deck-porch-light'; root.add(porch);
+    const porch = new THREE.PointLight(col('#ffd7a6'), 0, 18, 1.6); porch.position.set(-5.7, 7.1, 6.6); porch.name = 'deck-porch-light'; if(opt.porchLight !== false) root.add(porch);   // the tour leaves it out: a light added to a running scene recompiles every lit material
 
     /* ---------- materials and shared geometry ---------- */
     const MATS = new Map();
@@ -83,7 +86,8 @@
     const shown = o => { for(let p = o; p; p = p.parent) if(!p.visible) return false; return true; };
     const solid = h => h.object.isMesh && shown(h.object) && !(h.object.parent && /^tree/.test(h.object.parent.name)) && !/leaf|^find-|^esc-/.test(h.object.name) && !(h.object.material && h.object.material.transparent && h.object.material.opacity < .5);
     function down(x, z, y0, far){ rc.set(new V3(x, y0 == null ? 30 : y0, z), new V3(0, -1, 0)); rc.far = far || 60; let hs = []; try{ hs = rc.intersectObjects(H.scene.children, true); }catch(e){} for(const h of hs) if(solid(h)) return h; return null; }
-    const floorY = (x, z, y0, dflt) => { const h = down(x, z, y0); return h ? h.point.y : dflt; };
+    const FY = new Map(); let REC = null;   // ground heights worked out ahead of time by prewarm(); empty in the game, where every height is a fresh ray
+    const floorY = (x, z, y0, dflt) => { const k = x.toFixed(2) + ',' + z.toFixed(2) + ',' + (y0 == null ? '' : y0); if(FY.has(k)){ const v = FY.get(k); return v == null ? dflt : v; } if(REC){ REC.push([x, z, y0, k]); return dflt; } const h = down(x, z, y0); return h ? h.point.y : dflt; };
     const blobTex = () => tex('blob', () => canvasTex(64, 64, (x, w) => { const g = x.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); g.addColorStop(0, 'rgba(0,0,0,.55)'); g.addColorStop(.6, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, w, w); }));
     function blob(g, x, y, z, r, op){ const m = new THREE.Mesh(G.disc, std('#000000', {map: blobTex(), transparent: true, opacity: op || .8, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2})); m.position.set(x, y + .012, z); m.scale.set(r, 1, r); m.renderOrder = 2; g.add(m); return m; }
     const grp = name => { const g = new THREE.Group(); g.name = 'deck-' + name; g.userData.sets = []; return g; };
@@ -208,8 +212,8 @@
     /* ---------- trees ---------- */
     const needleTex = () => tex('needle', () => canvasTex(64, 128, (x, w, h) => { const g = x.createLinearGradient(0, h, 0, 0); g.addColorStop(0, '#8d8d8d'); g.addColorStop(.7, '#d6d6d6'); g.addColorStop(1, '#ffffff'); x.fillStyle = g; x.fillRect(0, 0, w, h); const R = rng(8);
       for(let i = 0; i < 260; i++){ x.strokeStyle = R() > .5 ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.2)'; x.lineWidth = 1; const px = R() * w, py = R() * h; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (R() - .5) * 5, py - 6 - R() * 12); x.stroke(); } }));
-    const ORN = {fir: ['#c81e2b', '#e0b33c', '#1f5fbf', '#c9d0d8', '#1d8a4a', '#b8327a'], flocked: ['#d9b866', '#e9edf1', '#c9a24a', '#b8c4d0'], pencil: ['#e0b33c', '#c9a24a', '#f0d27a'], small: ['#c81e2b', '#e0b33c']};
-    const TLITE = {fir: ['#ff4136', '#2fd158', '#3a82ff', '#ffc928', '#ff8a1e'], flocked: ['#ffe0b0'], pencil: ['#ffcf6a'], small: ['#ffe0b0']};
+    const ORN = {classic: ['#b3141f', '#e0b33c', '#c9a24a', '#f1e3b4', '#8e1f2b', '#e0b33c'], fir: ['#c81e2b', '#e0b33c', '#1f5fbf', '#c9d0d8', '#1d8a4a', '#b8327a'], flocked: ['#d9b866', '#e9edf1', '#c9a24a', '#b8c4d0'], pencil: ['#e0b33c', '#c9a24a', '#f0d27a'], small: ['#c81e2b', '#e0b33c']};
+    const TLITE = {classic: ['#ffe0b0'], fir: ['#ff4136', '#2fd158', '#3a82ff', '#ffc928', '#ff8a1e'], flocked: ['#ffe0b0'], pencil: ['#ffcf6a'], small: ['#ffe0b0']};
     function conifer(g, o){ const R = rng(o.seed || 11), h = o.h, r = o.r, kind = o.kind, y0 = h * .12, t3 = new THREE.Group(); t3.position.set(o.x, o.y, o.z); g.add(t3);
       const flock = kind === 'flocked', greens = flock ? ['#eef2ee', '#dfe8e2', '#d2ded4', '#f6f8f6'] : ['#1c4a2c', '#25593a', '#1f5133', '#2f6a41'];
       t3.add(mesh(G.cyl, std('#4a3424'), 0, (y0 + .4) / 2, 0, .1, y0 + .4, .1));
@@ -309,15 +313,21 @@
     const BOX_AT = [2.5, 0, -3.3];
 
     /* ---------- the heritage oak and the terrace ---------- */
-    let OAK = null;
-    function oakInfo(){ if(OAK) return OAK; let bark = null; H.scene.traverse(o => { if(o.name === 'tree:OAK-BACK') bark = o.children.find(c => c.name === 'bark') || bark; }); if(!bark) return (OAK = {trunk: [], canopy: []});
+    const OAKS = {};
+    function oakInfo(name){ name = name || 'tree:OAK-BACK'; let OAK = OAKS[name]; if(OAK) return OAK; let bark = null; H.scene.traverse(o => { if(o.name === name) bark = o.children.find(c => c.name === 'bark') || bark; }); if(!bark) return {trunk: [], canopy: []};   // not remembered: the trees are planted a moment after the house
       bark.updateWorldMatrix(true, false); const P = bark.geometry.attributes.position, v = new V3(), V = []; for(let i = 0; i < P.count; i++){ v.fromBufferAttribute(P, i).applyMatrix4(bark.matrixWorld); V.push(v.clone()); }
       const low = V.filter(q => q.y < -1.5 && q.y > -5); let cx = 8.3, cz = -27.2; if(low.length){ cx = low.reduce((s, q) => s + q.x, 0) / low.length; cz = low.reduce((s, q) => s + q.z, 0) / low.length; }
       const g0 = floorY(cx + 2.6, cz, 6, -4.8), trunk = []; let px = cx, pz = cz;
       for(let y = g0 + .3; y < g0 + 9.5; y += .3){ const sl = V.filter(q => Math.abs(q.y - y) < .7 && Math.hypot(q.x - px, q.z - pz) < 2.4); if(sl.length < 4) continue; const mx = sl.reduce((s, q) => s + q.x, 0) / sl.length, mz = sl.reduce((s, q) => s + q.z, 0) / sl.length, r = sl.reduce((s, q) => s + Math.hypot(q.x - mx, q.z - mz), 0) / sl.length;
         if(r > 1.9 && y > g0 + 3) break; px = mx; pz = mz; trunk.push({y, x: mx, z: mz, r: clamp(r, .7, y < g0 + 2 ? 1.75 : 1.45)}); }
       const top = trunk.length ? trunk[trunk.length - 1].y : g0 + 7;
-      OAK = {trunk, canopy: V.filter(q => q.y > top + 1.5 && q.y < top + 24 && Math.hypot(q.x - cx, q.z - cz) < 24), cx, cz, g0, top}; return OAK; }
+      OAK = OAKS[name] = {trunk, canopy: V.filter(q => q.y > top + 1.5 && q.y < top + 24 && Math.hypot(q.x - cx, q.z - cz) < 24), cx, cz, g0, top}; return OAK; }
+    /* a trunk wrapped in one warm string; the tour's holiday dress also wraps the leaning oak by the street */
+    function trunkWrap(g, o, seq, seed){ if(o.trunk.length < 3) return; const pts = [], T = o.trunk, y0 = T[0].y, y1 = T[T.length - 1].y; let a = 0;
+      for(let y = y0; y < y1; ){ const f = (y - y0) / .3, i = Math.min(T.length - 2, Math.floor(f)), k = clamp(f - i, 0, 1), cx = lerp(T[i].x, T[i + 1].x, k), cz = lerp(T[i].z, T[i + 1].z, k), r = lerp(T[i].r, T[i + 1].r, k) * 1.08 + .08;
+        pts.push({p: new V3(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r), c: '#ffd596', s: .62, q: pts.length * .25, r: .035}); const da = .24 / r; a += da; y += da / 6.283 * .62; }
+      lightSet(g, pts, {mode: 1, seq, body: true, seed}); }
+    function buildOakFront(S){ if(!S.oakFront) return null; const o = oakInfo('tree:OAK-FRONT'); if(o.trunk.length < 3) return null; const g = grp('oakfront'); trunkWrap(g, o, 1, 22); return g; }
     function buildOak(S){ if(S.oak === 'none') return null; const o = oakInfo(), g = grp('oak'), R = rng(9);
       if((S.oak === 'wrap' || S.oak === 'both') && o.trunk.length > 2){ const pts = [], T = o.trunk, y0 = T[0].y, y1 = T[T.length - 1].y; let a = 0;
         for(let y = y0; y < y1; ){ const f = (y - y0) / .3, i = Math.min(T.length - 2, Math.floor(f)), k = clamp(f - i, 0, 1), cx = lerp(T[i].x, T[i + 1].x, k), cz = lerp(T[i].z, T[i + 1].z, k), r = lerp(T[i].r, T[i + 1].r, k) * 1.08 + .08;
@@ -397,7 +407,10 @@
     const FEAT = {
       roof: {sig: S => S.lights, build: buildRoof}, door: {sig: S => S.door, build: buildDoor}, hang: {sig: S => S.hang, build: buildHang}, path: {sig: S => (S.path || []).slice().sort().join(), build: buildPath},
       win: {sig: (S, c) => (S.win || []).slice().sort().join() + (c.inside ? '|in' : '|out'), build: buildWin}, tree: {sig: S => S.tree + '|' + S.topper, build: buildTree}, room: {sig: S => (S.room || []).slice().sort().join(), build: buildRoom},
-      oak: {sig: S => S.oak, build: buildOak}, ter: {sig: S => (S.ter || []).slice().sort().join(), build: buildTer}, yard: {sig: S => S.weather + '|' + S.yard, build: buildWeather}};
+      oak: {sig: S => S.oak, build: buildOak}, ter: {sig: S => (S.ter || []).slice().sort().join(), build: buildTer}, yard: {sig: S => S.weather + '|' + S.yard, build: buildWeather},
+      /* second layers, set only by the tour's holiday dress, so it can show and hide parts on their own (the beam garland with the roof, the strings in the oak with the trees) */
+      room2: {sig: S => (S.room2 || []).slice().sort().join(), build: (S, c) => S.room2 && S.room2.length ? buildRoom({room: S.room2}, c) : null}, ter2: {sig: S => (S.ter2 || []).slice().sort().join(), build: S => S.ter2 && S.ter2.length ? buildTer({ter: S.ter2}) : null},
+      oakFront: {sig: S => S.oakFront ? '1' : '', build: buildOakFront}};
     const LIVE = {};
     function bake(g){ const by = new Map(), list = [], v = new V3(), nm = new THREE.Matrix3(); g.updateMatrixWorld(true);
       g.traverse(o => { if(!o.isMesh || o.isInstancedMesh || o.userData.own) return; const m = o.material; if(!m || Array.isArray(m) || m.transparent || !o.geometry || !o.geometry.attributes.position) return; list.push(o); });
@@ -406,8 +419,12 @@
         for(let i = 0; i < P.count; i++){ v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); e.pos.push(v.x, v.y, v.z); if(N) v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); else v.set(0, 1, 0); e.nor.push(v.x, v.y, v.z); e.uv.push(T ? T.getX(i) : 0, T ? T.getY(i) : 0); }
         if(geo !== o.geometry) geo.dispose(); if(o.parent) o.parent.remove(o); });
       by.forEach((e, m) => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(e.pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(e.nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(e.uv, 2)); const me = new THREE.Mesh(geo, m); me.userData.own = true; g.add(me); }); }
-    function kill(k){ const L = LIVE[k]; if(!L || !L.g) return; L.g.userData.sets.forEach(s => { SETS.delete(s); if(s.flames) FLICK.delete(s.flames); }); root.remove(L.g);
-      L.g.traverse(o => { if(o.userData.own && o.geometry && o.geometry.dispose) o.geometry.dispose(); if(o.isInstancedMesh){ FLICK.delete(o); if(o.dispose) o.dispose(); } const m = o.material; if(m && m.userData && m.userData.own) m.dispose(); }); L.g = null; }
+    function scrap(g){ g.userData.sets.forEach(s => { SETS.delete(s); if(s.flames) FLICK.delete(s.flames); }); if(g.parent) g.parent.remove(g);
+      g.traverse(o => { if(o.userData.own && o.geometry && o.geometry.dispose) o.geometry.dispose(); if(o.isInstancedMesh){ FLICK.delete(o); if(o.dispose) o.dispose(); } const m = o.material; if(m && m.userData && m.userData.own) m.dispose(); }); }
+    function kill(k){ const L = LIVE[k]; if(!L || !L.g) return; scrap(L.g); L.g = null; }
+    /* the tour only: find the ground under everything a state stands on the walk, a few rays per frame, before it is built (a ray into the terrain takes about 30 ms) */
+    function prewarm(S, done){ const rec = REC = []; let g = null; try{ g = buildPath(S); }catch(e){} REC = null; if(g) try{ scrap(g); }catch(e){} let i = 0;
+      (function step(){ const t0 = performance.now(); while(i < rec.length && performance.now() - t0 < 34){ const q = rec[i++]; if(!FY.has(q[3])){ const h = down(q[0], q[1], q[2]); FY.set(q[3], h ? h.point.y : null); } } if(i < rec.length) requestAnimationFrame(step); else if(done) done(rec.length); })(); }
     function apply(S, ctx){ ctx = ctx || {}; const changed = []; for(const k in FEAT){ const f = FEAT[k], sig = f.sig(S, ctx); if(LIVE[k] && LIVE[k].sig === sig) continue; kill(k); let g = null; try{ g = f.build(S, ctx); }catch(e){ console.warn('[deck3d] ' + k, e); }
         LIVE[k] = {sig, g}; if(g){ try{ bake(g); }catch(e){ console.warn('[deck3d] bake ' + k, e); } g.traverse(o => { o.raycast = noop; }); root.add(g); changed.push(k); } }
       const mode = MODES[S.motion] == null ? 1 : MODES[S.motion]; if(LIVE.roof && LIVE.roof.g) LIVE.roof.g.userData.sets.forEach(s => { s.mat.uniforms.uMode.value = reduce ? 0 : mode; });
@@ -421,6 +438,6 @@
     function tick(t, tod){ U.time.value = t; flick(t); const night = tod === 'dusk'; U.halo.value = night ? 1 : .5; porch.intensity = night ? .85 : 0; const k = SKY[tod] || SKY.afternoon; SNOW.u.uLight.value.setRGB(k[0][0], k[0][1], k[0][2]); SNOW.u.uSunC.value.setRGB(k[1][0] * .5, k[1][1] * .5, k[1][2] * .5); if(H.SUN_DIR) SNOW.u.uSun.value.copy(H.SUN_DIR);
       if(SNOW.fall && SNOW.fall.visible) SNOW.fall.material.uniforms.uCam.value.copy(H.camera.position); for(const key in LIVE){ const g = LIVE[key].g; if(g && g.userData.tick) g.userData.tick(t); } }
     function count(){ let pts = 0, meshes = 0; root.traverse(o => { if(o.isPoints) pts += o.geometry.attributes.position.count; if(o.isMesh) meshes++; }); return {points: pts, meshes, sets: SETS.size}; }
-    return {root, apply, setOn, lightUp, tick, setCat, count, oakInfo, floorY, BOX_AT, TREE_AT, SNOWMAN_AT, get on(){ return ON; }};
+    return {root, apply, setOn, lightUp, tick, setCat, count, oakInfo, floorY, prewarm, group: k => (LIVE[k] && LIVE[k].g) || null, BOX_AT, TREE_AT, SNOWMAN_AT, get on(){ return ON; }};
   };
 })();
