@@ -398,7 +398,7 @@
         const st = standOf(slot); let yaw = st.pawnYaw != null ? st.pawnYaw : .9;
         if(st.pawnYaw == null && S.view === 'room' && S.room === slot){ const e = standOf(slot).pos; yaw = Math.atan2(-(e[2] - p[1]), e[0] - p[0]); }
         g.rotation.y = yaw;
-        const k = HOUSE.mode === 'over' ? PAWN.K_OVER : PAWN.K_IN; g.userData.k = k; if(!PAWN.hop[id]) g.scale.set(k, k, k);
+        const k = HOUSE.mode === 'over' ? PAWN.K_OVER * clamp(560 / Math.max(320, canvas.clientWidth || innerWidth), 1, 1.75) : PAWN.K_IN;   // a phone sees the house smaller, so its pieces grow to stay readable g.userData.k = k; if(!PAWN.hop[id]) g.scale.set(k, k, k);
         g.visible = !(HOUSE.mode === 'over' && !S.upperOn && LG.SLOTS[slot].lv === 'upper'); }
       wake(10); },
     drop(id){ PAWN.hop[id] = performance.now(); wake(40); },
