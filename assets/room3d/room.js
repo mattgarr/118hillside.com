@@ -206,11 +206,12 @@
   function placeFov(base){ base = base || 64; const a = aspect(); if(a >= 1.25) return base; const t = Math.tan(base / 2 * Math.PI / 180) * 1.25 / a; return Math.min(88, 2 * Math.atan(t) * 180 / Math.PI); }
   function wake(n){ rig.wakeN = Math.max(rig.wakeN, n || 20); }
   // the part of the screen the house (or the room) can use, in pixels
-  function freeRect(){ const W = innerWidth, Hh = innerHeight; let l = 12, t = 84, r = W - 12, b = Hh - 16;
-    const pn = $('#rfePanel'), top = $('#rfeTop');
-    if(phone()){ t = (top ? top.getBoundingClientRect().bottom : 120) + 6; if(pn && S.view !== 'room'){ const q = pn.getBoundingClientRect(); if(q.height > 10) b = q.top - 60; } else b = Hh - 150; }
+  function freeRect(){ const W = innerWidth, Hh = innerHeight; let l = 12, t = 84, r = W - 12, b = Hh - 16; const pn = $('#rfePanel'), box = q => { const e = $(q); return e ? e.getBoundingClientRect() : null; };
+    if(phone()){ l = 6; r = W - 6;
+      if(S.view === 'room'){ const rc = box('#rfeRoom'), dk = box('#rfeSun'); t = (rc && rc.height > 10 ? rc.bottom : 150) + 6; b = (dk && dk.height > 10 ? dk.top : Hh - 190) - 6; }
+      else { const g = box('#rfeGoal'), q = pn ? pn.getBoundingClientRect() : null; t = (g && g.height > 10 ? g.bottom : 120) + 6; b = (q && q.height > 10 ? q.top : Hh - 300) - 58; } }
     else { if(pn){ const q = pn.getBoundingClientRect(); if(q.width > 10) l = q.right + 14; } b = Hh - 78; }
-    if(r - l < 120){ l = 12; r = W - 12; } if(b - t < 120){ t = 60; b = Hh - 60; } return {l, t, r, b, W, Hh}; }
+    if(r - l < 120){ l = 6; r = W - 6; } if(b - t < 110){ t = 60; b = Hh - 60; } return {l, t, r, b, W, Hh}; }
   // where the orbit puts the camera, fitted so the house fills the free part of the screen
   function orbitFit(){ const o = rig.orb, F = freeRect(), cam = orbitFit.cam || (orbitFit.cam = new THREE.PerspectiveCamera()); cam.fov = o.fov; cam.aspect = F.W / F.Hh; cam.updateProjectionMatrix();
     const T = new V3(o.T[0], o.T[1], o.T[2]), sp = Math.sin(o.phi), dir = new V3(sp * Math.sin(o.th), Math.cos(o.phi), sp * Math.cos(o.th));
@@ -221,11 +222,11 @@
     let cx = 0, cy = 0; const _q = new V3();
     for(let i = 0; i < 22; i++){ const r = (lo + hi) / 2; cam.position.copy(T).addScaledVector(dir, r); cam.lookAt(T); cam.updateMatrixWorld(true); let x0 = 9, x1 = -9, y0 = 9, y1 = -9, bad = false;
       for(const p of pts){ _q.copy(p).project(cam); if(_q.z > 1) bad = true; x0 = Math.min(x0, _q.x); x1 = Math.max(x1, _q.x); y0 = Math.min(y0, _q.y); y1 = Math.max(y1, _q.y); }
-      if(!bad && (x1 - x0) / 2 <= hw * .9 && (y1 - y0) / 2 <= hh * .84){ hi = r; cx = (x0 + x1) / 2; cy = (y0 + y1) / 2; } else lo = r; }
+      if(!bad && (x1 - x0) / 2 <= hw * (phone() ? .97 : .9) && (y1 - y0) / 2 <= hh * (phone() ? .92 : .84)){ hi = r; cx = (x0 + x1) / 2; cy = (y0 + y1) / 2; } else lo = r; }
     o.fit = hi; o.offFit = [((F.l + F.r) / 2) / F.W - .5 - cx / 2, ((F.t + F.b) / 2) / F.Hh - .5 + cy / 2]; }
   function orbitPose(){ const o = rig.orb, r = o.fit * o.zoom, sp = Math.sin(o.phi), T = [o.T[0] + o.pan[0], o.T[1], o.T[2] + o.pan[1]];
     return {pos: [T[0] + r * sp * Math.sin(o.th), T[1] + r * Math.cos(o.phi), T[2] + r * sp * Math.cos(o.th)], at: T, fov: o.fov, off: (o.offFit || [0, 0]).slice()}; }
-  function standPose(){ const s = rig.st, cp = Math.cos(s.pitch), p = s.pos; return {pos: [p.x, p.y, p.z], at: [p.x - Math.sin(s.yaw) * cp * 10, p.y + Math.sin(s.pitch) * 10, p.z - Math.cos(s.yaw) * cp * 10], fov: clamp(s.fov * s.zoom, 20, 88), off: [s.offX || 0, 0]}; }
+  function standPose(){ const s = rig.st, cp = Math.cos(s.pitch), p = s.pos; return {pos: [p.x, p.y, p.z], at: [p.x - Math.sin(s.yaw) * cp * 10, p.y + Math.sin(s.pitch) * 10, p.z - Math.cos(s.yaw) * cp * 10], fov: clamp(s.fov * s.zoom, 20, 88), off: [s.offX || 0, s.offY || 0]}; }
   function rigDrag(dx, dy){ if(!live()) return; S.dragPx += Math.abs(dx) + Math.abs(dy); S.lastAct = performance.now();
     if(S.view === 'over' || S.view === 'win'){ const o = rig.orb; o.th -= dx * .0052; o.phi = clamp(o.phi - dy * .004, .12, 1.12); }
     else if(S.view === 'room'){ const s = rig.st, k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05; s.tyaw += dx * k; s.tpitch = clamp(s.tpitch + dy * k, -1.15, 1.25); } }
@@ -513,6 +514,7 @@
   .rfeBtn.light{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);color:#fff}.rfeBtn.light:hover{background:rgba(255,255,255,.2);border-color:#fff}
   .rfeBtn.shadow{box-shadow:0 8px 30px rgba(15,20,35,.25)}
   #rfeLift[aria-pressed=true],#rfeCluesBtn[aria-pressed=true]{background:#1f2948;border-color:#1f2948;color:#fff}
+  #rfeLift.pulse{animation:rfeNudge 1.6s ease-in-out infinite}
   #rfeTip{font-size:14.500px;color:#fff;background:rgba(22,28,48,.78);border-radius:999px;padding:9px 16px;pointer-events:none;opacity:0;transition:opacity .4s;align-self:center;max-width:100%;box-sizing:border-box;text-align:center}
   #rfeTip.on{opacity:1}
   /* inside a room */
@@ -522,15 +524,15 @@
   #rfeRoom .lv{font-size:13px;color:var(--mut);margin:1px 0 6px}
   #rfeRoom ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
   #rfeRoom li{display:flex;gap:8px;align-items:flex-start;font-size:14.500px;line-height:1.3}#rfeRoom li svg{width:18px;height:18px;flex:none;margin-top:1px;color:#8a5e00}
-  #rfeRoom li.todo{color:var(--mut)}#rfeRoom li.todo svg{color:#a9a595}
+  #rfeRoom li.todo{color:var(--mut)}#rfeRoom li.todo svg{color:#a9a595}#rfeRoom .hd b{text-align:center}
   #rfeRoom li.new{animation:rfeFlash 1.2s ease;border-radius:8px}
   #rfeRoom .cap{margin:8px 0 0;padding:8px 10px;background:#f4ecd8;border-radius:10px;font:500 16.500px/1.3 "Cormorant Garamond",Georgia,serif;color:#33290f;display:none}
   #rfeRoom .cap.on{display:block}
   #rfeSun{flex:1 1 300px;max-width:520px;padding:9px 16px 11px;display:none}
-  #rfeSun .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);gap:8px}
+  #rfeSun .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);gap:8px;white-space:nowrap}#rfeSunNow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
   #rfeSunNow::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;border:1.500px solid #a9a595;margin-right:6px;vertical-align:-1px;box-sizing:border-box}#rfeSunNow.on{color:#7a5300}#rfeSunNow.on::before{background:#f2b632;border-color:#d98f0c;box-shadow:0 0 6px #f2b632}
   #rfeSun .top b{font-size:18.500px;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
-  #rfeSun .top button{border:1px solid #d6d2c8;background:#fff;border-radius:999px;min-height:34px;padding:0 12px 0 8px;display:inline-flex;align-items:center;gap:4px;font-size:13.500px;color:var(--ink)}#rfeSun .top button svg{width:16px;height:16px}
+  #rfeSun .top button{flex:none;border:1px solid #d6d2c8;background:#fff;border-radius:999px;min-height:36px;padding:0 12px 0 8px;display:inline-flex;align-items:center;gap:4px;font-size:13.500px;color:var(--ink)}#rfeSun .top button svg{width:16px;height:16px}
   #rfeSun.key{box-shadow:0 0 0 2px #e8b84a,0 0 26px rgba(232,184,74,.55),0 8px 30px rgba(15,20,35,.2)}
   #rfeSlider{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;margin:2px 0 0;display:block;cursor:pointer;pointer-events:auto}
   #rfeSlider::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:linear-gradient(90deg,#f0b98a 0%,#f7e3a8 14%,#cfe4f3 34%,#cfe4f3 62%,#f7dc9c 82%,#ee9d6c 100%);box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
@@ -593,7 +595,7 @@
     #rfeBtns{order:0;align-self:flex-end}#rfeGoal{order:1;width:auto;padding:8px 12px 9px}#rfeGoal p{font-size:17.500px}#rfeSay{order:2;align-self:flex-end;font-size:18.500px}
     #rfeHint{padding:4px 12px 4px 4px;min-height:46px}#rfeHint small{display:none}#rfeHint .av{width:38px;height:38px}.rfeIco{width:46px;height:46px}
     #rfeMenu{top:calc(max(8px,env(safe-area-inset-top)) + 52px);right:8px}
-    #rfePanel{left:8px;right:8px;top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:auto;max-height:43vh}
+    #rfePanel{left:8px;right:8px;top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:auto;max-height:38vh}
     #rfeStory{display:none}
     #rfePanel h3{padding:8px 14px 2px}
     #rfeTray{flex-wrap:nowrap;overflow-x:auto;padding:4px 10px 8px;gap:6px;scrollbar-width:none;pointer-events:auto;touch-action:pan-x}#rfeTray::-webkit-scrollbar{display:none}
@@ -602,11 +604,12 @@
     #rfeDock{left:0;padding:0 8px;bottom:calc(var(--panel-h,0px) + max(8px,env(safe-area-inset-bottom)) + 8px);gap:8px}
     #rfeTip{font-size:13.500px;padding:7px 12px}
     html.rfe-in #rfePanel{display:none}html.rfe-in.rfe-clues #rfePanel{display:flex;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 62px);max-height:52vh;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
-    html.rfe-in #rfeDock{bottom:max(8px,env(safe-area-inset-bottom));flex-wrap:wrap}
+    html.rfe-in #rfeDock{bottom:max(8px,env(safe-area-inset-bottom));flex-wrap:wrap;gap:6px}html.rfe-in #rfeGoal{display:none}
+    html.rfe-in .rfeBtn{flex:1 1 auto;padding:0 10px;font-size:14.500px;gap:6px}#rfeBack span::after{content:""}#rfeSun .ticks{display:none}#rfeSun .top b{font-size:17px}#rfeSunNow{font-size:12.500px}#rfePlay span{display:none}#rfeSun .top button{padding:0 9px}
     html.rfe-in #rfeCluesBtn{display:inline-flex}
     #rfeSun{flex:1 1 100%;max-width:none;order:-1;padding:7px 14px 9px}
-    #rfeRoom{left:8px;right:8px;top:var(--top-h,120px);width:auto;padding:8px 10px 10px 12px}#rfeRoom .hd b{font-size:21px}#rfeRoom li{font-size:13.500px}
-    #rfeRoom ul{grid-template-columns:1fr 1fr;gap:3px 10px}#rfeRoom .cap{font-size:15.500px}
+    #rfeRoom{left:8px;right:8px;top:var(--top-h,66px);width:auto;padding:6px 8px 8px 8px}#rfeRoom .hd b{font-size:21px}#rfeRoom li{font-size:13.500px}#rfeRoom .lv{text-align:center;margin:0 0 4px}
+    #rfeRoom ul{gap:2px;padding:0 4px}#rfeRoom .cap{font-size:15.500px;margin-top:6px}#rfeRoom .hd button{width:44px;height:44px}
     #rfeWho{right:8px;left:8px;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 58px)}
     .rfeBtn{padding:0 14px;font-size:15px}
     .rfeLb .nm{font-size:12px;padding:4px 9px}.rfeLb .oc{font-size:15px}
@@ -663,12 +666,13 @@
     sl.addEventListener('pointerdown', () => { SND.unlock(); S.sweeping = false; $('#rfeSun').classList.remove('key'); });
     $('#rfePlay').onclick = () => { SND.unlock(); watchDay(); };
     addEventListener('pointerdown', e => { if(anyMenu() && !e.target.closest('#rfeMenu,#rfeMenuBtn,#rfeWho,#rfeWhoBtn')) closeMenus(); }, true);
-    addEventListener('resize', () => { orbitFit(); layoutVars(); }); }
+    addEventListener('resize', () => { layoutVars(); orbitFit(); if(S.view === 'room') reframe(); });
+    try{ new ResizeObserver(() => { layoutVars(); if(S.view === 'over' && !rig.move) orbitFit(); }).observe($('#rfePanel')); }catch(e){} }
   const UI = {};
   const anyMenu = () => !!($('#rfeMenu') && ($('#rfeMenu').classList.contains('on') || $('#rfeWho').classList.contains('on')));
   function closeMenus(){ const m = $('#rfeMenu'); if(!m) return; m.classList.remove('on'); $('#rfeMenuBtn').setAttribute('aria-expanded', 'false'); $('#rfeWho').classList.remove('on'); $('#rfeWhoBtn').setAttribute('aria-expanded', 'false'); }
   function layoutVars(){ const pn = $('#rfePanel'), top = $('#rfeTop'); if(!pn) return; const st = document.documentElement.style;
-    st.setProperty('--panel-h', (phone() && S.view !== 'room' ? Math.round(pn.getBoundingClientRect().height) : 0) + 'px'); st.setProperty('--top-h', Math.round(top.getBoundingClientRect().bottom + 6) + 'px'); }
+    st.setProperty('--panel-h', (phone() && S.view !== 'room' ? Math.round(pn.getBoundingClientRect().height) : 0) + 'px'); st.setProperty('--top-h', Math.round(($('#rfeBtns').getBoundingClientRect().bottom || 60) + 6) + 'px'); }
   let toastT = 0; function toast(m, ms){ toastE.textContent = m; toastE.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastE.classList.remove('on'), ms || 2400); }
   let sayT = 0; function say(m, ms, quiet){ sayE.innerHTML = '<small>Snowball</small>' + esc(m); sayE.classList.add('on'); clearTimeout(sayT); sayT = setTimeout(() => sayE.classList.remove('on'), ms || 6000); if(!quiet) SND.hint(); }
   function setGoal(t, quiet){ const g = $('#rfeGoalT'); if(g.textContent === t) return; g.textContent = t; if(quiet) return; const c = $('#rfeGoal'); c.classList.remove('new'); void c.offsetWidth; c.classList.add('new'); }
@@ -702,8 +706,8 @@
       const go = li.querySelector('.go'); if(go) go.onclick = () => { SND.unlock(); if(S.view === 'room' && S.room !== go.dataset.slot) hop(go.dataset.slot); else if(S.view === 'over') enter(go.dataset.slot); };
       ol.appendChild(li); });
     $('#rfeDone').textContent = ok + ' of ' + S.L.clues.length + ' met'; return prev; }
-  const missTxt = m => { const r = LG.SLOTS[m[0]].name; return m[1] === 'light' ? `Snowball has not watched the light in the ${r} yet. Go and look.` : m[2] ? `Snowball has not seen that in the ${r} yet. Go and look.` : `Snowball has not been inside the ${r} yet. Go and look.`; };
-  function refresh(flash){ renderTray(); const prev = renderClues(flash); drawLabels(); PAWN.sync(); objective(); return prev; }
+  const missTxt = m => { const r = LG.SLOTS[m[0]].name; return m[1] === 'light' ? `Not checked yet. Go and watch the light in the ${r}.` : `Not checked yet. Go and look in the ${r}.`; };
+  function refresh(flash){ renderTray(); const prev = renderClues(flash); drawLabels(); PAWN.sync(); objective(); layoutVars(); return prev; }
   function objective(){ if(!S.L || S.done) return; const left = S.L.guests.filter(g => !S.at[g]), bad = S.status.filter(x => x.s === 'bad').length, uns = S.status.filter(x => x.s === 'unseen').length;
     if(S.view === 'room'){ const r = RINGS[S.room] || [], todo = r.filter(q => !hasNote(S.room, q.note)).length;
       setGoal(todo ? 'Look around. Tap a gold ring to note what is here.' : !SAVE.light[S.room] ? 'Drag the sun across the day and watch the floor.' : 'You have seen this room. Choose who sleeps here, or go back out.', true); return; }
@@ -714,12 +718,13 @@
     else if(left.length) setGoal(left.length === 1 ? nmOf(left[0]) + ' still ' + LG.vb(left[0], 'needs', 'need') + ' a room.' : left.length + ' guests still need a room.', true);
     else setGoal('Everyone has a room.', true); }
   function select(g){ if(S.done) return; S.sel = g; if(g) SND.pick(); renderTray(); renderClues(); drawLabels(); objective();
-    if(g && S.view === 'over'){ tip(LG.isP(g) ? 'Tap one of the six bedrooms' : 'Tap a room that is not a bedroom'); } else tip(''); }
+    if(g && S.view === 'over'){ tip(LG.isP(g) ? 'Tap one of the six bedrooms' : 'Tap a room that is not a bedroom'); } else tip('');
+    $('#rfeLift').classList.toggle('pulse', !!g && S.view === 'over' && ORDER.some(id => covered(id) && fits(g, id))); }
   function place(g, slot, opts){ opts = opts || {}; if(S.done || !S.L || S.L.guests.indexOf(g) < 0) return false;
     if(!fits(g, slot)){ toast(LG.isP(g) ? `The ${LG.SLOTS[slot].name.toLowerCase()} is not a bedroom. People sleep in the six bedrooms.` : `${nmOf(g)} ${LG.vb(g, 'goes', 'go')} in a room that is not a bedroom: the loft, the office, the lounge or the garage.`, 3800); SND.bad(); return false; }
     if(!S.t0) S.t0 = performance.now(); const was = S.status.map(x => x.s), prevSlot = S.at[g], occ = occupant(slot);
     if(occ && occ !== g){ if(prevSlot && fits(occ, prevSlot)) S.at[occ] = prevSlot; else delete S.at[occ]; }
-    S.at[g] = slot; S.sel = null; S.lastAct = performance.now(); tip(''); if(!PAWN.g[g]) PAWN.build(g); refresh(true); PAWN.drop(g); if(occ && occ !== g && S.at[occ]) PAWN.drop(occ);
+    S.at[g] = slot; S.sel = null; S.lastAct = performance.now(); tip(''); $('#rfeLift').classList.remove('pulse'); if(!PAWN.g[g]) PAWN.build(g); refresh(true); PAWN.drop(g); if(occ && occ !== g && S.at[occ]) PAWN.drop(occ);
     const now = S.status.map(x => x.s), newBad = now.some((s, i) => s === 'bad' && was[i] !== 'bad'), newOk = now.some((s, i) => s === 'ok' && was[i] !== 'ok');
     SND.place(); if(newBad){ if(!opts.hint) S.clean = false; setTimeout(() => SND.bad(), 260); } else if(newOk) setTimeout(() => SND.ok(), 240);
     ga('rfe3d_place', {level: S.L.id}); if(solved()) setTimeout(win, 700); else coachAfterPlace(); return true; }
@@ -757,7 +762,7 @@
   const covered = id => S.upperOn ? !!UNDER[id] : LG.SLOTS[id].lv === 'upper';
   const _v = new V3();
   function labelsStep(){ const show = S.view === 'over' && !rig.move && !S.busy, r = canvas.getBoundingClientRect(), F = freeRect(), placed = [], items = [];
-    for(const id of ORDER){ const L = LB[id]; if(!show && S.view !== 'win'){ if(L.on){ L.on = false; L.b.classList.remove('on'); } continue; }
+    for(const id of ORDER){ const L = LB[id]; if((!show && S.view !== 'win') || (covered(id) && !occupant(id))){ if(L.on){ L.on = false; L.b.classList.remove('on'); } continue; }
       const G = GEO[id]; _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 15 : 7.5), G.c[1]).project(camera);
       const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z}); }
     items.sort((a, b) => a.z - b.z);
@@ -779,14 +784,15 @@
 
   /* ================================================================== going into a room and coming back out */
   function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
-  function setStand(slot){ const v = standView(slot), s = rig.st, F = freeRect(); s.offX = phone() ? 0 : ((F.l + F.r) / 2) / F.W - .5; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(64); s.zoom = 1; }
+  function reframe(){ const s = rig.st, F = freeRect(); s.offX = ((F.l + F.r) / 2) / F.W - .5; s.offY = phone() ? ((F.t + F.b) / 2) / F.Hh - .5 : 0; rig.sig = ''; }
+  function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(64); s.zoom = 1; }
   function peekPose(slot){ const G = GEO[slot], o = rig.orb, dx = Math.sin(o.th), dz = Math.cos(o.th); return {pos: [G.c[0] + dx * 13, G.fy + 30, G.c[1] + dz * 13], at: [G.c[0], G.fy + 1, G.c[1]], fov: 42, off: rig.off.slice()}; }
   function enter(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'over') return; S.busy = true; S.sel = null; tip(''); closeMenus(); SND.dive(); ga('rfe3d_enter', {room: slot});
     if(!S.t0) S.t0 = performance.now(); if(covered(slot)) setUpper(!S.upperOn, true);
     rigFly(peekPose(slot), {dur: .85, done: () => { dissolve(() => { S.view = 'room'; S.room = slot; HOUSE.inside(); setStand(slot); rigCut(standPose()); document.documentElement.classList.add('rfe-in'); arrive(slot); }, () => { S.busy = false; }); }}); }
   function hop(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'room' || slot === S.room) return; S.busy = true; closeMenus(); SND.dive();
     dissolve(() => { S.room = slot; setStand(slot); rigCut(standPose()); arrive(slot); }, () => { S.busy = false; }); }
-  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: false, hi: false}; S.sweeping = false; SUN.show(slot); setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars();
+  function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: false, hi: false}; S.sweeping = false; SUN.show(slot); setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars(); reframe();
     renderClues(true); objective(); $('#rfeSun').classList.toggle('key', !SAVE.light[slot]); S.lastAct = performance.now(); document.documentElement.classList.remove('rfe-clues'); $('#rfeCluesBtn').setAttribute('aria-pressed', 'false');
     $('#rfeWhoBtn span').textContent = LG.SLOTS[slot].bed ? 'Who sleeps here' : 'What goes here'; }
   function leave(then){ if(S.view !== 'room' || S.busy || rig.move) return; const slot = S.room; S.busy = true; closeMenus(); SND.back(); S.sweeping = false;
@@ -797,11 +803,12 @@
   /* ---- the card for the room you are standing in */
   function drawRoom(fresh){ const slot = S.room; if(!slot) return; const sl = LG.SLOTS[slot], r = RINGS[slot] || [], occ = occupant(slot); let li = '';
     li += SAVE.light[slot] ? `<li${fresh === 'light' ? ' class="new"' : ''}>${nIco(sl.none ? 'none' : sl.am ? 'am' : sl.pm ? 'pm' : 'mid')}<span>${esc(SUN.text(slot))}</span></li>` : `<li class="todo">${nIco('mid')}<span>Light: drag the sun across a midsummer day</span></li>`;
-    for(const q of r){ const got = hasNote(slot, q.note); li += got ? `<li${fresh === q.note ? ' class="new"' : ''}>${nIco(NOTE_ICO[q.note])}<span>${esc(NOTE_TXT[q.note])}</span></li>` : `<li class="todo">${nIco('win')}<span>${esc(q.label)}: not looked at yet</span></li>`; }
-    const i = ORDER.indexOf(slot), prev = ORDER[(i + ORDER.length - 1) % ORDER.length], next = ORDER[(i + 1) % ORDER.length];
+    for(const q of r) if(hasNote(slot, q.note)) li += `<li${fresh === q.note ? ' class="new"' : ''}>${nIco(NOTE_ICO[q.note])}<span>${esc(NOTE_TXT[q.note])}</span></li>`;
+    const todo = r.filter(q => !hasNote(slot, q.note)).length; if(todo) li += `<li class="todo">${ICO.ring}<span>${todo === 1 ? 'One more thing' : todo + ' things'} to notice: tap the gold ${todo === 1 ? 'ring' : 'rings'}</span></li>`;
+    const i = ORDER.indexOf(slot), prev = ORDER[(i + ORDER.length - 1) % ORDER.length], next = ORDER[(i + 1) % ORDER.length], cap = UI.cap && UI.capSlot === slot;
     $('#rfeRoom').innerHTML = `<div class="hd"><button type="button" id="rfePrev" aria-label="Previous room: ${esc(LG.SLOTS[prev].name)}">${ICO.back}</button><b>${esc(sl.name)}</b><button type="button" id="rfeNext" aria-label="Next room: ${esc(LG.SLOTS[next].name)}">${ICO.fwd}</button></div>
-      <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(nmOf(occ)) : ''}</div><ul>${li}</ul><p class="cap${UI.cap && UI.capSlot === slot ? ' on' : ''}">${UI.cap && UI.capSlot === slot ? esc(UI.cap) : ''}</p>`;
-    $('#rfePrev').onclick = () => { SND.unlock(); hop(prev); }; $('#rfeNext').onclick = () => { SND.unlock(); hop(next); }; }
+      <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(nmOf(occ)) : ''}</div><ul>${li}</ul><p class="cap${cap ? ' on' : ''}">${cap ? esc(UI.cap) : ''}</p>`;
+    $('#rfePrev').onclick = () => { SND.unlock(); hop(prev); }; $('#rfeNext').onclick = () => { SND.unlock(); hop(next); }; if(S.view === 'room') requestAnimationFrame(reframe); }
   function openWho(){ const slot = S.room, w = $('#rfeWho'), occ = occupant(slot); let h = `<h4>${esc(LG.SLOTS[slot].name)}</h4>`;
     const list = S.L.guests.filter(g => fits(g, slot) && g !== occ); if(!list.length) h += `<h4>${LG.SLOTS[slot].bed ? 'Nobody on this guest list needs another bed.' : 'Nothing on this guest list goes in a room like this.'}</h4>`;
     for(const g of list.sort((a, b) => (S.at[a] ? 1 : 0) - (S.at[b] ? 1 : 0))) h += `<button type="button" data-g="${g}"><span class="em" style="background:${LG.GUESTS[g].col}">${gIco(g)}</span><span>${esc(nmOf(g))}<small>${S.at[g] ? 'Move from the ' + esc(LG.SLOTS[S.at[g]].name) : 'No room yet'}</small></span></button>`;
@@ -819,7 +826,7 @@
     UI.cap = m.q.t; UI.capSlot = slot; if(fresh){ SND.note(); ga('rfe3d_note', {room: slot, note: m.q.note}); } else SND.tap();
     setMarks(); drawRoom(fresh ? m.q.note : null); renderClues(true); objective(); S.lastAct = performance.now(); }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || S.view !== 'room';
-    const rc = $('#rfeRoom').getBoundingClientRect(), top = phone() ? rc.bottom + 34 : 96, bot = r.height - (phone() ? 170 : 150), padX = 40, placed = [];
+    const rc = $('#rfeRoom').getBoundingClientRect(), F = freeRect(), top = phone() ? F.t + 30 : 96, bot = phone() ? F.b - 52 : r.height - 150, padX = 40, placed = [];
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '';
