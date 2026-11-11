@@ -10019,7 +10019,8 @@ function lightMeterPoll(){
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
     const gl = r.getContext(), prev = r.getRenderTarget(); METER.mat.uniforms.tDiffuse.value = read.texture; r.setRenderTarget(METER.rt); METER.quad.render(r);
-    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 16 * 16 * 4, gl.STREAM_READ);   /* r37: a fresh store for each read (orphans the one the last read may still be using; the reused buffer made the driver warn) */
+    gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     METER.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); METER.eAt = r.toneMappingExposure; r.setRenderTarget(prev); }};
 function lightMeterMul(dt){
   const Mt = LIGHT.meter; dt = Math.min(.1, dt || .016);
