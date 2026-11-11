@@ -207,12 +207,10 @@
     if(d.some(x => x)) return null; n.name = m[2] ? nameFromLink(m[2]) : ''; return n; }
   function decodeOld(h){ try{ const o = JSON.parse(decodeURIComponent(escape(atob(h.replace(/-/g, '+').replace(/_/g, '/'))))); const n = clone(DEFAULT); KEYS.forEach(k => { if(o[k] != null && typeof o[k] === typeof n[k]) n[k] = Array.isArray(n[k]) ? o[k].filter(v => typeof v === 'string').slice(0, 12) : typeof n[k] === 'string' ? String(o[k]).slice(0, 32) : o[k]; }); return n; }catch(e){ return null; } }
   function decode(h){ try{ h = String(h == null ? '' : h).replace(/^#/, ''); try{ h = decodeURIComponent(h); }catch(e){} h = stripView(h); const old =/^h=([A-Za-z0-9_-]+)/.exec(h); return old ? decodeOld(old[1]) : decodeShort(h); }catch(e){ return null; } }
-  /* A link sent from a postcard also carries where the picture was taken, after a "!": the place, whether the tall-screen spot was used,
-     and the direction and zoom of the view (#d...~Name!terrace.w.123.-5.85). Names never contain "!", and links without it open as before. */
-  function viewCode(v){ if(!v || !placeOf(v.place)) return ''; const d = new V3(...v.look).sub(new V3(...v.pos)).normalize(), yaw = Math.round((Math.atan2(d.x, -d.z) * 180 / Math.PI + 360) % 360), pitch = Math.round(Math.asin(Math.max(-1, Math.min(1, d.y))) * 180 / Math.PI);
-    return '!' + v.place + '.' + (v.tall ? 'p' : 'w') + '.' + yaw + '.' + pitch + '.' + Math.round(Math.max(.3, Math.min(3, v.zoom || 1)) * 100); }
-  function decodeView(h){ try{ h = String(h == null ? '' : h); try{ h = decodeURIComponent(h); }catch(e){} const m = /!([a-z]+)\.([pw])\.(\d{1,3})\.(-?\d{1,2})\.(\d{2,3})(?![\w.])/.exec(h); if(!m || !placeOf(m[1])) return null;
-      const yaw = +m[3] * Math.PI / 180, pitch = Math.max(-80, Math.min(80, +m[4])) * Math.PI / 180; return {place: m[1], tall: m[2] === 'p', dir: [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)], zoom: Math.max(.3, Math.min(3, +m[5] / 100))}; }catch(e){ return null; } }
+  /* A link sent from a postcard also carries the place it was taken from, after a "!" (#d...~Name!terrace), so the recipient opens there.
+     Names never contain "!", and links without it open as before. */
+  const viewCode = v => v && placeOf(v.place) ? '!' + v.place : '';
+  function decodeView(h){ try{ h = String(h == null ? '' : h); try{ h = decodeURIComponent(h); }catch(e){} const m = /!([a-z]+)(?![a-z])/.exec(h); return m && placeOf(m[1]) ? {place: m[1]} : null; }catch(e){ return null; } }
   const stripView = h => String(h == null ? '' : h).replace(/(!|%21)[^&?#\/]*$/, '');
   function shareLink(s, v){ const c = encode(s), i = c.indexOf('~'); return 'https://118hillside.com/games/deck/#' + (i < 0 ? c : c.slice(0, i) + '~' + encodeURIComponent(c.slice(i + 1))) + viewCode(v); }
 
@@ -258,15 +256,8 @@
   const stand = p => portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look];
   function catAt(p){ if(!P || !p.cat) return null; if(p.id === 'living' && S.room.includes('box')) return [P.BOX_AT[0], P.BOX_AT[1] + .12, P.BOX_AT[2]];
     const c = portrait() && p.catP ? p.catP : p.cat, k = c === p.cat ? 'catY' : 'catYP'; if(p[k] == null) p[k] = P.floorY(c[0], c[1], stand(p)[0][1] + 1.5, p.inside ? 0 : -3.5); return [c[0], p[k] + .02, c[1]]; }
-  let SV = null;   // the view a shared postcard was taken from: the recipient opens on it
-  function view(p){ if(SV && shared && SV.place === p.id){   // the sender's view, turned so the middle of their picture sits in the middle of whatever part of this screen is clear
-      const pos = SV.tall && p.posP ? p.posP : p.pos, P0 = new V3(...pos), f0 = new V3(...SV.dir).normalize(), cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), pm = cam.projectionMatrix.elements;
-      const fx0 = R[0] / R[4] * 2 - 1 + (pm[8] || 0), fx1 = R[2] / R[4] * 2 - 1 + (pm[8] || 0), fy1 = 1 - R[1] / R[5] * 2 + (pm[9] || 0), fy0 = 1 - R[3] / R[5] * 2 + (pm[9] || 0);
-      const zb = baseZoom(), z = Math.max(Math.min(zb, Math.max(.5, tv / 1.48, th / 1.54)), Math.min(SV.zoom, (fx1 - fx0) / 2 * th / (tv / SV.zoom * 4 / 3) * .95, zb * 1.5));   // as close as the sender was, unless their card would not fit across the clear part
-      const a = (fx0 + fx1) / 2 * th / z, b = (fy0 + fy1) / 2 * tv / z, f = f0.clone(), r = new V3(), u = new V3();
-      for(let it = 0; it < 12; it++){ r.crossVectors(f, UP).normalize(); u.crossVectors(r, f); f.copy(f0).addScaledVector(r, -a).addScaledVector(u, -b).normalize(); }
-      return {pos, look: P0.clone().addScaledVector(f, 30).toArray(), zoom: z}; }
-    const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = (portrait() && p.fitP ? p.fitP : p.fit).concat(PHASE === 'photo' && p.pfit ? p.pfit : []); return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
+  let SV = null;   // where a shared postcard was taken: the recipient opens there, framed for their own screen
+  function view(p){ const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = (portrait() && p.fitP ? p.fitP : p.fit).concat(PHASE === 'photo' && p.pfit ? p.pfit : []); return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
   function setCam(v){ H.look(v.pos, v.look); anchor = new V3(...v.pos); FLY = null; ZOOM = v.zoom; }
   function cut(p, then){ if(reduce){ setCam(view(p)); then && then(); return; } CUT++; veil.classList.add('on'); setTimeout(() => { CUT--; setCam(view(p)); then && then(); setTimeout(() => veil.classList.remove('on'), 120); }, 260); }
   function fly(v, dur, then){ const c = H.camera, d = new V3(); c.getWorldDirection(d); H.anim = null; FLY = {t0: performance.now(), dur: (reduce ? .01 : (dur || 1.5)) * 1000, p0: c.position.clone(), p1: new V3(...v.pos), l0: c.position.clone().addScaledVector(d, 30), l1: new V3(...v.look), z0: c.zoom, z1: v.zoom, then}; }
@@ -531,7 +522,7 @@
   async function share(){ const v = shot && shot.view, url = shareLink(S, v), f = shot && shot.file; ga('deck_share', {postcard: !!shot});
     try{ if(f && navigator.share && navigator.canShare && navigator.canShare({files: [f]})){ await navigator.share({files: [f], title: 'Happy holidays from 118 Hillside', text: SHARE_TEXT + ' ' + url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
     try{ if(navigator.share){ await navigator.share({title: 'Deck the House with Snowball', text: SHARE_TEXT, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
-    try{ await navigator.clipboard.writeText(SHARE_TEXT + ' ' + url); toast(v ? 'Link copied. It opens on the view in your postcard.' : 'Link copied. Paste it anywhere.'); }catch(e){ toast(url, 6000); } }
+    try{ await navigator.clipboard.writeText(SHARE_TEXT + ' ' + url); toast(v ? 'Link copied. It opens where you took your postcard.' : 'Link copied. Paste it anywhere.'); }catch(e){ toast(url, 6000); } }
 
   /* ---------- photo mode and the postcard ----------
      The postcard is the viewfinder: the camera frames the place for it, the shutter waits until the camera has landed and everything is drawn,
