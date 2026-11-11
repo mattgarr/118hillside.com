@@ -153,7 +153,7 @@
     S.pocket = pd;
     // interactables
     ITEMS = [
-      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [20.9, 4.5, 8.4], look: [19.6, 1.5, 11.6]}, open: openFridge},
+      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [18.5, 5.0, 8.9], look: [19.7, 1.4, 11.8]}, open: openFridge},
       {id: 'pocket', label: 'Pocket door', p: [22.0, 3.6, 9.5], view: {pos: [17.2, 4.6, 9.6], look: [22.0, 3.7, 9.5]}, open: openPocket},
       {id: 'paper', label: 'Paper on the glass', p: [5.0, 3.8, 22.0], view: {pos: [9.6, 4.4, 21.0], look: [4.8, 3.8, 21.6]}, open: openPaper},
       {id: 'floor', label: 'Dining floor', p: [10.4, .3, 24.4], hidden: true, view: {pos: [10.4, 7.2, 31.0], look: [10.4, 0, 24.4], kind: 'orbit'}, open: () => {}}];
@@ -266,16 +266,20 @@
   function screenOf(p){ _v.set(p[0], p[1], p[2]).project(H.camera); const r = H.canvas.getBoundingClientRect(); if(_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05) return null; return [r.left + (_v.x + 1) / 2 * r.width, r.top + (1 - _v.y) / 2 * r.height]; }
   function visible(p){ const s = screenOf(p); if(!s) return null; const d = H.camera.position.distanceTo(_v.set(p[0], p[1], p[2])); if(d > 22) return null;
     const h = H.pick(s[0], s[1]); if(h && h.distance < d - 1.2) return null; return s; }
-  function frame(){ if(!S.started){ requestAnimationFrame(frame); return; }
+  // stay where the game put you: the camera only moves when the game moves it (look around freely, but no drifting into cabinets)
+  let anchor = null, flying = true;
+  function hold(){ if(H.anim){ flying = true; return; } if(flying){ flying = false; anchor = H.camera.position.clone(); return; } if(anchor && H.camera.position.distanceTo(anchor) > .35) H.camera.position.copy(anchor); }
+  H.canvas.addEventListener('pointerdown', () => { if(S.started && H.nav === 'orbit' && !H.anim){ const d = new THREE.Vector3(); H.camera.getWorldDirection(d); const c = H.camera.position; H.look(c.toArray(), [c.x + d.x * 8, c.y + d.y * 8, c.z + d.z * 8]); } }, true);
+  function frame(){ try{ if(S.started) hold(); }catch(e){} if(!S.started){ requestAnimationFrame(frame); return; }
     for(const it of ITEMS){ if(it.hidden) continue; let m = marks.get(it.id); if(!m){ m = el('button', {class: 'escMark', type: 'button', 'aria-label': it.label}, `<span>${esc(it.label)}</span>`); m.onclick = e => { e.stopPropagation(); interact(it); }; document.body.appendChild(m); marks.set(it.id, m); }
       const s = (performance.now() % 3 < 1 || !m._s) ? visible(it.p) : m._s; m._s = s;
       if(s && !S.done && !panel.classList.contains('on')){ m.style.left = s[0] + 'px'; m.style.top = s[1] + 'px'; m.classList.add('on'); m.classList.toggle('seen', !!S.seen[it.id]); } else m.classList.remove('on'); }
     const e = elapsed(); const te = $('#escTime'); if(te && !S.done) te.textContent = fmtT(e);
     requestAnimationFrame(frame); }
   function interact(it){ S.seen[it.id] = true; ga('esc_look', {item: it.id}); if(it.view) flyView(it.view, .9); it.open(it); }
-  H.hooks.click = (cx, cy) => { if(!S.started || S.done) return false; let best = null;
+  H.hooks.click = (cx, cy) => { if(!S.started) return true; if(S.done) return true; let best = null;
     for(const it of ITEMS){ if(it.hidden) continue; const s = screenOf(it.p); if(!s) continue; const d = Math.hypot(s[0] - cx, s[1] - cy); if(d < 60 && (!best || d < best.d)) best = {it, d}; }
-    if(best && visible(best.it.p)){ interact(best.it); return true; } return false; };
+    if(best && visible(best.it.p)) interact(best.it); return true; };   // every tap is ours: no walking off into the furniture mid-puzzle
 
   /* ------------------------------------------------------------------ Easy: the three things */
   function openPocket(){ const pd = S.pocket, closed = S.doorShut != null ? S.doorShut : (pd ? pd.t < .5 : false);
