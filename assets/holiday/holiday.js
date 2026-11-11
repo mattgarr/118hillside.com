@@ -51,7 +51,7 @@
   const ctx = () => ({inside: true});   // window candles and the menorah sit on the inside sill, where they would really be; the glass shows them from the street
   /* parts follow what the tour is showing: nothing is left on a roof or in a tree that is not drawn */
   function syncVis(){ const P = W.P; if(!P) return; const show = W.on && H.mode !== 'design'; P.root.visible = show; if(!show) return;
-    const roof = H.shown('roof'), trees = H.shown('trees'), furn = H.shown('furn'), asBuilt = H.variant === 'asbuilt';
+    const fb = document.getElementById('furnBtn'), roof = H.shown('roof'), trees = H.shown('trees'), furn = !fb || fb.getAttribute('aria-pressed') !== 'false', asBuilt = H.variant === 'asbuilt';   // Furniture off empties the rooms piece by piece, so the button is the record of it
     const set = (k, v) => { const g = P.group(k); if(g) g.visible = !!v; };
     set('roof', roof); set('room2', roof && asBuilt);                 // roofline strings and the beam garland go with the roof
     set('oak', trees); set('oakFront', trees); set('ter2', trees && roof);   // strings in the oaks, and the bistro strings that hang from one, go with the trees
@@ -71,10 +71,12 @@
     step('Lighting the walk…'); await new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; try{ P.prewarm(WINTER, f); }catch(e){ f(); } setTimeout(f, 6000); });
     await add('Lighting the walk…', ['path']);
     await add('Trimming the tree…', ['tree', 'topper', 'room', 'room2']);
-    step('Stringing lights in the oak…'); for(let i = 0; i < 40 && !window.__perfTrees; i++) await sleep(250);   // the trees are planted a moment after the house
+    /* the two oaks are planted a moment after the house (and after the first view): wait a little for them, and if they are later still, string them when they arrive */
+    const oaks = () => { try{ return P.oakInfo().trunk.length > 2 && P.oakInfo('tree:OAK-FRONT').trunk.length > 2; }catch(e){ return true; } };
+    step('Stringing lights in the oak…'); for(let i = 0; i < 24 && !oaks(); i++) await sleep(250);
     await add('Stringing lights in the oak…', ['oak', 'oakFront', 'ter', 'ter2']);
     W.S = S; W.built = true;
-    if(!window.__perfTrees && !W.late) W.late = setInterval(() => { if(!window.__perfTrees) return; clearInterval(W.late); W.late = 0; try{ P.apply(Object.assign({}, S, {oak: 'none', oakFront: false, ter2: []}), ctx()); P.apply(S, ctx()); syncVis(); }catch(e){} }, 1000); }
+    if(!oaks() && !W.late){ let n = 0; W.late = setInterval(() => { if(!oaks() && ++n < 90) return; clearInterval(W.late); W.late = 0; try{ P.apply(Object.assign({}, S, {oak: 'none', oakFront: false, ter2: []}), ctx()); P.apply(S, ctx()); syncVis(); }catch(e){} }, 1000); } }
   function winterOff(){ if(!W.on) return; W.on = false; if(W.raf){ cancelAnimationFrame(W.raf); W.raf = 0; } if(W.P) W.P.root.visible = false;
     if(W.todMine && W.tod0){ mine = true; try{ H.todSet(W.tod0.key, W.tod0.manual); }catch(e){} mine = false; } W.tod0 = null; W.todMine = false; }
   /* dusk and back. The lights are on by day too; at dusk they come on one string at a time. */
@@ -108,6 +110,7 @@
   function putAway(){ try{ if(W.on) winterOff(); if(HW() && HW().isOn) HW().off(); if(TG() && TG().isOn) TG().off(); }catch(e){ console.warn('[holiday] put away', e); } show.stop(); render(); }
   H.on.mode = m => { if(m === 'design' && current() !== 'none' && !busy) putAway(); else { syncVis(); render(); } };
   H.on.vis = () => { syncVis(); };
+  document.addEventListener('click', () => { if(W.on) setTimeout(syncVis, 90); }, true);   // Furniture, Trees and the level buttons: follow whatever the tap changed
   H.on.tod = () => { if(!mine && W.on) W.todMine = false; render(); };
 
   /* ---------- the control ---------- */
@@ -286,8 +289,8 @@
 
   /* ---------- ?holiday=winter|thanksgiving|halloween (&dusk=1): open the tour already dressed, once the first view is up ---------- */
   { const m = /[?&]holiday=(winter|thanksgiving|halloween)\b/.exec(location.search), wantDusk = /[?&]dusk=1\b/.test(location.search);
-    if(m){ const kind = m[1], t0 = performance.now(); (function wait(){ const L = document.getElementById('loading'), up = L && !L.classList.contains('done');
-        if((up || !H.ready) && performance.now() - t0 < 180000) return setTimeout(wait, 300);
+    if(m){ const kind = m[1], t0 = performance.now(); (function wait(){ const L = document.getElementById('loading'), up = (L && !L.classList.contains('done')) || !!document.getElementById('intro28');   // the loading pictures stay up until a first-time visitor taps "Step inside"
+        if((up || !H.ready) && performance.now() - t0 < 600000) return setTimeout(wait, 300);
         setTimeout(async () => { if(current() !== 'none' || H.mode === 'design') return; const ok = await set(kind, {from: 'link'}); if(!ok) return;
           if(kind === 'winter' && wantDusk) dusk(true);
           if(H.mode === 'tour' && !/[?&]stop=/.test(location.search)) show.start({auto: false}); }, 700); })(); } }
