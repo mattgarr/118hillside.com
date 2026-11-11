@@ -88,7 +88,7 @@
   /* ---------- state ---------- */
   let busy = null, lastMs = {};
   const current = () => (HW() && HW().isOn) ? 'halloween' : (TG() && TG().isOn) ? 'thanksgiving' : W.on ? 'winter' : 'none';
-  function status(label){ const B = H.busy, e = document.getElementById('busy24'); if(e && e.classList.contains('on')){ const s = e.querySelector('span'); if(s) s.textContent = label; } else if(B && B.start && !B.active){ try{ B.start(btn && btn.offsetParent ? btn : null, label, true); }catch(x){} }
+  function status(label){ const B = H.busy, e = document.getElementById('busy24'); if(e && e.classList.contains('on')){ const s = e.querySelector('span'); if(s) s.textContent = label; } else if(B && B.start && !B.active){ try{ B.start(btn, label, true); }catch(x){} }
     const live = $('#holLive'); if(live) live.textContent = label; const row = busy && panel ? panel.querySelector('[data-k="' + busy + '"] .s') : null; if(row) row.textContent = label; }
   async function settle(){ const B = H.busy; if(B && B.active){ try{ B.settle(); }catch(e){} for(let i = 0; i < 50 && B.active; i++) await sleep(100); if(B.active) try{ B.end(); }catch(e){} } }
   async function set(kind, o){ o = o || {};
