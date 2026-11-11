@@ -111,6 +111,19 @@ strong { font-weight: 500; }
 @media (max-width: 760px) { .hero-cta { right: 50%; transform: translateX(50%); bottom: 16px; } }
 .hook .games .hc { background: linear-gradient(to top, rgba(10,10,10,.88) 0%, rgba(10,10,10,.6) 45%, rgba(10,10,10,0) 80%); text-shadow: 0 1px 6px rgba(0,0,0,.8); }
 .hook .games .btn { text-shadow: none; }
+/* featured-game rotator: the 3D tour card stays put, the game card cycles */
+.hook .rot { position: relative; display: grid; border-radius: 6px; overflow: hidden; background: #000; min-height: 230px; }
+.hook .rot .slide { grid-area: 1 / 1; opacity: 0; visibility: hidden; transition: opacity .8s ease, visibility 0s linear .8s; border-radius: 0; }
+.hook .rot .slide.on { opacity: 1; visibility: visible; transition: opacity .8s ease, visibility 0s; }
+.hook .rot .slide[data-id="room"] img { opacity: 1; object-position: 30% 40%; }
+.hook .rot .slide[data-id="room"] .hc { top: 0; justify-content: flex-end; background: linear-gradient(to top, rgba(16,24,30,.94) 0%, rgba(16,24,30,.7) 55%, rgba(16,24,30,.38) 100%); }
+.hook .rdots { position: absolute; z-index: 3; top: 14px; right: 14px; display: flex; gap: 4px; }
+.hook .rdots button { width: 28px; height: 28px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.hook .rdots button::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: 0 0 0 1px rgba(0,0,0,.25); transition: background .2s, transform .2s; }
+.hook .rdots button[aria-current="true"]::after { background: #fff; transform: scale(1.25); }
+.hook .rall { position: absolute; z-index: 3; top: 16px; right: 80px; min-height: 0; background: rgba(15,15,15,.55); color: #fff; font-size: 13px; padding: 5px 11px; border-radius: 999px; text-decoration: none; }
+.hook .rall:hover { background: rgba(15,15,15,.8); }
+@media (prefers-reduced-motion: reduce) { .hook .rot .slide { transition: none; } }
 /* stats */
 .stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper); }
 .stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; }
@@ -231,10 +244,14 @@ footer p { margin: 0 0 8px; max-width: 900px; }
       <img src="images/tour-preview.jpg" alt="3D model of 118 Hillside Drive from above" loading="eager" width="1600" height="900">
       <span class="hc"><span class="eyebrow">Interactive 3D tour</span><span class="ht">Walk through every room</span><span class="hs">Stop by stop, dollhouse view, furniture on or off, paint and landscape ideas.</span><span class="btn">Start the tour &rarr;</span></span>
     </a>
-    <a class="games" href="games/" aria-label="Browse the family games played inside the 3D house">
-      <img src="images/games-preview.jpg" alt="The Pumpkin Patch Maze game in the backyard of the 3D house" loading="eager" width="1280" height="752">
-      <span class="hc"><span class="eyebrow">For kids &amp; families</span><span class="ht">Play in the house</span><span class="hs">Seasonal games inside the 3D house: mazes, hide-and-seek with Snowball the cat, and more.</span><span class="btn">Browse games &rarr;</span></span>
-    </a>
+    <div class="games rot" id="gameRot" aria-roledescription="carousel" aria-label="Featured games">
+      <a class="slide on" href="games/room/" data-id="room" aria-label="Play Room for Everyone, a puzzle on the floor plan of the house">
+        <img src="images/room-hero.jpg" alt="Names on painter's tape placed on the floor plan of 118 Hillside Drive, with the real room photos showing through" loading="eager" width="1280" height="752">
+        <span class="hc"><span class="eyebrow">Play the floor plan</span><span class="ht">Room for Everyone</span><span class="hs">Find the night-shift nurse, the grandparents and the dog who needs the yard each the room that fits.</span><span class="btn">Play &rarr;</span></span>
+      </a>
+      <div class="rdots" id="rotDots"></div>
+      <a class="rall" href="games/">All games</a>
+    </div>
   </div>
 </section>
 
@@ -392,6 +409,34 @@ footer p { margin: 0 0 8px; max-width: 900px; }
     if (e.key === 'ArrowLeft') show(i - 1);
     if (e.key === 'ArrowRight') show(i + 1);
   });
+})();
+</script>
+<script>
+/* featured games: Room for Everyone always; seasonal games join during their season */
+(function(){
+  var rot = document.getElementById('gameRot'); if(!rot) return;
+  var d = new Date(), md = ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  var SEASONAL = [
+    {id:'thanksgiving', from:'11-01', to:'11-30', href:'thanksgiving/?game=menu', img:'tour/thumbs/tg_poster.jpg', alt:'The dining table set for Thanksgiving in the 3D house',
+     eyebrow:'Thanksgiving in the house', title:'Dinner at Hillside', sub:'Catch Tom the turkey, rake the leaf pile and get dinner on the table before the guests arrive.'}
+  ];
+  var dots = document.getElementById('rotDots');
+  SEASONAL.forEach(function(g){ if(md < g.from || md > g.to) return;
+    var a = document.createElement('a'); a.className = 'slide'; a.href = g.href; a.dataset.id = g.id;
+    a.innerHTML = '<img src="' + g.img + '" alt="' + g.alt + '" loading="lazy" width="1600" height="1000"><span class="hc"><span class="eyebrow">' + g.eyebrow + '</span><span class="ht">' + g.title + '</span><span class="hs">' + g.sub + '</span><span class="btn">Play &rarr;</span></span>';
+    rot.insertBefore(a, dots); });
+  var slides = [].slice.call(rot.querySelectorAll('.slide')); if(slides.length < 2) return;
+  var i = 0, timer = null, paused = false, reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  slides.forEach(function(sl, k){ var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Show ' + sl.querySelector('.ht').textContent);
+    b.onclick = function(){ show(k); restart(); }; dots.appendChild(b);
+    sl.addEventListener('click', function(){ try{ gtag('event', 'home_game_click', {game: sl.dataset.id}); }catch(e){} }); });
+  function show(k){ i = (k + slides.length) % slides.length;
+    slides.forEach(function(sl, j){ sl.classList.toggle('on', j === i); sl.setAttribute('aria-hidden', j === i ? 'false' : 'true'); sl.tabIndex = j === i ? 0 : -1; });
+    [].forEach.call(dots.children, function(b, j){ b.setAttribute('aria-current', j === i ? 'true' : 'false'); }); }
+  function restart(){ clearInterval(timer); if(reduce) return; timer = setInterval(function(){ if(!paused && !document.hidden) show(i + 1); }, 6500); }
+  rot.addEventListener('mouseenter', function(){ paused = true; }); rot.addEventListener('mouseleave', function(){ paused = false; });
+  rot.addEventListener('focusin', function(){ paused = true; }); rot.addEventListener('focusout', function(){ paused = false; });
+  show(0); restart();
 })();
 </script>
 </body>
