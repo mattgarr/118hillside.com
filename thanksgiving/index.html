@@ -19664,7 +19664,10 @@ function bim3GarageFace(){
       cabinet 4 ft wide and bare wall in the corner. KX-24 becomes the middle cabinet and carries its two neighbours, so they hide,
       show and pick with it (design concepts hide as-built fixtures by id).
    K2 base run on the same wall: the photo shows, from the doorway end, a narrow door (knob top-left), the dishwasher, then a narrow
-      fixed panel up to the inside corner. The model had the dishwasher hard in the corner and a 2-ft drawer base at the doorway.
+      front up to the inside corner. The model had the dishwasher hard in the corner and a 2-ft drawer base at the doorway.
+      r36 owner 11/10: that corner is a lazy Susan. Its door is two leaves meeting at the inside corner: the leaf on this wall (no
+      knob in the photo) and a leaf on the window-wall run with the round knob at its far edge (the knob the photo shows there). The
+      blind corner box stops at the leaves, and the two drawer bases beyond the Susan share what is left of the window-wall run.
    K3 single doors beside an appliance: the knob goes next to the appliance, the hinge on the far side (owner 11/10: both cabinets
       beside the microwave). FIX hangs every single door on its left unless told otherwise, so one of each pair was backwards.
    W1 interior wall faces the compiled model sided as exterior (Hardie lap): the wall behind the great-room shelves (W-L1-010) and
@@ -19682,7 +19685,12 @@ function r35Fixtures(list){
       {on: 'KX-24', id: 'KX-24B', kind: 'upperCabinet', dx: 2 * d, opts: Object.assign({}, g.opts), oneLight: .5 * d}); }
   if(dw && dw.kind === 'dishwasher' && at(dw, 5.32, 8) && b2 && b2.kind === 'baseCabinet' && at(b2, 5.32, 10) && wide(b2, 2)){   // K2
     set(dw, 9, {}); const g = set(b2, 10.5, {w: 1, doors: 'doors', pull: 'knob', hinge: 'right'});
-    extra.push({on: 'KX-02', id: 'KX-02A', kind: 'baseCabinet', dx: -3, opts: Object.assign({}, g.opts, {doors: 'panel'})}); }
+    const c0 = by('KX-00'), c3 = by('KX-03'), c4 = by('KX-04'), base = (f, a, b, w) => !!(f && f.kind === 'baseCabinet' && at(f, a, b) && wide(f, w));
+    const susan = base(c0, 5.32, 5.95, 2.1) && base(c3, 8.275, 4.9, 1.75) && base(c4, 10.025, 4.9, 1.75);
+    extra.push({on: 'KX-02', id: 'KX-02A', kind: 'baseCabinet', dx: susan ? -3.05 : -3, opts: Object.assign({}, g.opts, {w: susan ? 1.1 : 1, doors: 'panel'})});
+    if(susan){ const mv = (f, x, o) => { const q = set(f, f.at[1], o); q.at[0] = x; return q; };
+      set(c0, 5.9, {w: 2}); const h = mv(c3, 9.025, {w: 1.25}); mv(c4, 10.275, {w: 1.25});
+      extra.push({on: 'KX-03', id: 'KX-03A', kind: 'baseCabinet', dx: 1.165, opts: Object.assign({}, h.opts, {w: 1.08, doors: 'doors', pull: 'knob', hinge: 'right'})}); } }
   for(const [id, a, b] of [['KX-CUBBY', 13.548, 17.99], ['KX-18', 13.548, 17.99], ['KX-08', 15.08, 9.81]]){                     // K3
     const f = by(id); if(f && at(f, a, b) && !(f.opts || {}).hinge){ set(f, f.at[1], {hinge: 'right'}); R35.hinge.push(id); } }
   return {list: out, extra};
