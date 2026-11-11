@@ -9822,6 +9822,100 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   sync();
   window.__phDoll = {sync, bar};
 })();
+/* r38 back to the tour (owner 11/11: "if I click off and enter walk mode it's not clear how to get back to tour mode. There should be a back to tour
+   without having to go up to the main menu"). In Walk, Dollhouse, Design and Photos the stop card carries one button, "Back to the tour · <stop>",
+   in the place the tour's own Next button sits (desktop) or across the foot of the sheet (phone); the gallery has the same button at its foot.
+   Where it goes: from Walk, the tour stop nearest where you are standing (same level, the room you are in first); from Dollhouse, Design and Photos
+   (opened from the tour), the stop you were last on. The move is the tour's own (walked when the route is short, a quick dissolve when it is not). The Tour tab (the TOUR
+   pill on a phone) does the same from any other mode, and on a phone it is marked as the current view in Tour. Esc in Walk does it too.
+   Hidden in games (the tour UI is theirs there). */
+(function back38(){
+  const card = $('#card'), gal = $('#gallery'), root = document.documentElement; if(!card || !gal) return;
+  const st = document.createElement('style'); st.id = 'back38css';
+  st.textContent =
+    '#bk38,#bk38g{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin:0;border:0;cursor:pointer;font:inherit;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent}' +
+    '#bk38 .bk38c,#bk38g .bk38c{flex:0 0 auto;width:8px;height:8px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateX(2px) rotate(45deg)}' +
+    '#bk38 .bk38t,#bk38g .bk38t{flex:0 0 auto}#bk38 .bk38s,#bk38g .bk38s{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:400}' +
+    '#bk38 .bk38s::before,#bk38g .bk38s::before{content:"\\00b7";margin-right:8px}' +
+    'html.bk38game #bk38,html.bk38game #bk38g{display:none!important}' +
+    /* desktop: the expanded card ends with it (it stays in view while the card scrolls); the compact card leads with it, where the tour arrows sit */
+    'html:not(.ph) #bk38{position:sticky;bottom:0;z-index:2;width:calc(100% - 28px);margin:6px 14px 14px;padding:0 16px;border-radius:999px;font-size:14px;box-shadow:0 1px 2px rgba(40,50,20,.18),0 0 0 6px var(--paper,#fbfaf7)}' +
+    'html:not(.ph) .card.min #bk38{position:relative;order:-2;flex:0 1 auto;width:auto;max-width:100%;min-width:0;min-height:38px;margin:0 2px 0 0;padding:0 16px;box-shadow:0 1px 2px rgba(40,50,20,.18);font-size:13.5px}' +
+    'html:not(.ph) .card.min #bk38::after{content:"";position:absolute;left:0;right:0;top:-3px;bottom:-3px}' +   /* a 44 px tall target */
+    'html:not(.ph) .card.min.bk38on{flex-wrap:wrap;row-gap:4px;width:auto;min-width:min(470px, calc(100% - 260px))}' +
+    'html:not(.ph) .card.min.bk38on[data-m27="doll"]{max-width:calc(100% - 200px)}' +
+    'html:not(.ph) .card.min.bk38on .tb{flex:1 1 auto}' +
+    /* the compact Dollhouse row already holds the level buttons: the tab above names the view, so the row drops its 'Dollhouse' word (and, as the window narrows, the stop name and the title) to keep one line */
+    'html:not(.ph) .card.min.bk38on[data-m27="doll"] .eyebrow{display:none}' +
+    '@media (max-width:980px){html:not(.ph) .card.min.bk38on[data-m27="doll"] #bk38 .bk38s{display:none}}' +
+    '@media (max-width:860px){html:not(.ph) .card.min.bk38on[data-m27="doll"] .tb{display:none}html:not(.ph) .card.min.bk38on[data-m27="doll"]{max-width:calc(100% - 150px)}}' +
+    /* phone: its own row across the foot of the sheet, under the thumb */
+    'html.ph #card.bk38on{grid-template-areas:"prev head next" "body body body" "act act act" "bk38 bk38 bk38"}' +
+    'html.ph #bk38{grid-area:bk38;width:100%;min-height:46px;padding:0 14px;border-radius:12px;background:var(--ph-hi);color:var(--ph-ink);font-size:15px;font-family:var(--sf)}' +
+    'html.ph .card:not(.min) #bk38{margin-top:6px}' +
+    'html.ph.bk38card .navguide.ng-ph:not([hidden]){bottom:var(--bk38up,calc(140px + env(safe-area-inset-bottom,0px)))}' +   /* the one-time 'how to move' card sits above the sheet and its button */
+    /* the gallery: the same button at its foot, where the stop card was */
+    '#bk38g{position:sticky;bottom:max(16px, calc(env(safe-area-inset-bottom,0px) + 8px));z-index:3;width:max-content;max-width:min(430px, 100%);margin:28px 0 0;padding:0 20px;border-radius:999px;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.22)}' +
+    'html.ph #bk38g{width:100%;max-width:none;min-height:48px;border-radius:14px;font-size:15px;font-family:var(--sf);background:#1f1f1d;color:#fbfaf7}' +
+    /* phone TOUR pill: a back chevron in the other views; in Tour, a mark under the word (it is where you are) */
+    'html.ph .tab[data-mode="tour"][aria-selected="false"]::before{content:"";display:inline-block;width:6px;height:6px;margin:0 7px 1px 1px;border-left:1.8px solid currentColor;border-bottom:1.8px solid currentColor;transform:rotate(45deg)}' +
+    'html.ph .tab[data-mode="tour"][aria-selected="true"]::after{content:"";position:absolute;left:50%;bottom:7px;width:16px;height:2px;margin-left:-8px;border-radius:1px;background:currentColor;opacity:.8}';
+  document.head.appendChild(st);
+  const mk = id => { const b = document.createElement('button'); b.type = 'button'; b.id = id; b.className = 'btn primary'; b.hidden = true;
+    b.innerHTML = '<span class="bk38c" aria-hidden="true"></span><span class="bk38t">Back to the tour</span><span class="bk38s"></span>'; return b; };
+  const btn = mk('bk38'), gbtn = mk('bk38g'); card.appendChild(btn); gal.appendChild(gbtn);
+  const game = () => { try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)) || /\b(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)\b/.test(root.className); }catch(e){ return false; } };
+  const galOpen = () => !gal.hidden;
+  let near = -1;
+  // Walk: the stop nearest the walker. A stop on another level counts 30 ft further; a stop that shows the room you are in counts 12 ft nearer.
+  function nearest(){
+    const P = camera.position, cr = curRoom && curRoom.id; let best = -1, bs = 1e9, cur = 1e9;
+    for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; if(!s || s.aerial || !s.pos) continue;
+      const L = s.level === 'outside' ? LV.outside : LV[s.level]; let d = Math.hypot(s.pos[0] - P.x, s.pos[2] - P.z);
+      if(L != null && Math.abs(L - feet) > 2.5) d += 30; if(cr && s.rooms && s.rooms.includes(cr)) d -= 12;
+      if(d < bs){ bs = d; best = i; } if(i === near) cur = d; }
+    if(near >= 0 && near < STOPS.length && cur - bs < 3) return near;   // a little hysteresis, so the name does not flicker between two stops
+    return best >= 0 ? best : stopIdx; }
+  function target(){ if(mode === 'walk'){ near = nearest(); return near; } return clamp(stopIdx, 0, STOPS.length - 1); }   // (Photos opened from Walk: still where you were standing)
+  function label(b, i){ const s = STOPS[i], t = s ? s.t : ''; const sp = b.querySelector('.bk38s'); if(sp.textContent !== t) sp.textContent = t; sp.hidden = !t;
+    const a = 'Back to the tour' + (t ? ', at ' + t : ''); if(b.getAttribute('aria-label') !== a) b.setAttribute('aria-label', a); }
+  function lift(){ let t = card.getBoundingClientRect().top; const lb = document.querySelector('.phlvbar:not([hidden])'); if(lb){ const r = lb.getBoundingClientRect(); if(r.height) t = Math.min(t, r.top); }
+    root.style.setProperty('--bk38up', Math.max(0, Math.round(innerHeight - t + 10)) + 'px'); }
+  if(window.ResizeObserver) new ResizeObserver(() => { if(!btn.hidden) lift(); }).observe(card);
+  function sync(){
+    const g = game(); root.classList.toggle('bk38game', g);
+    const onCard = !g && mode !== 'tour' && !galOpen(), onGal = !g && galOpen();
+    if(btn.hidden === onCard) btn.hidden = !onCard; if(gbtn.hidden === onGal) gbtn.hidden = !onGal; card.classList.toggle('bk38on', onCard);
+    root.classList.toggle('bk38card', onCard); if(onCard) lift();
+    if(onCard || onGal){ const i = target(); label(onCard ? btn : gbtn, i); }
+    // the gallery's own top button goes back to the view you came from: name it
+    const gx = gal.querySelector('.gx36'); if(gx){ const t = mode === 'walk' ? (DESIGN.walking() ? 'Back to the design' : 'Back to walking') : mode === 'doll' ? 'Back to the dollhouse' : mode === 'design' ? 'Back to the design' : 'Back to the 3D tour'; if(gx.textContent !== t) gx.textContent = t; }
+  }
+  function go(){
+    if(game()) return; const i = target(); near = -1;
+    try{ if(window.__phone && window.__phone.setMenu) window.__phone.setMenu(false); }catch(e){}
+    stopIdx = i; setMode('tour');   // setMode closes the gallery and runs the tour's own move to the stop
+    sync(); }
+  btn.addEventListener('click', e => { e.stopPropagation(); go(); });
+  gbtn.addEventListener('click', e => { e.stopPropagation(); go(); });
+  // the Tour tab (the phone's TOUR pill) from any other view: the same move, to the same stop
+  const tabs = document.querySelector('.bar .tabs');
+  if(tabs) tabs.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.tab[data-mode="tour"]'); if(!t || game()) return;
+    if(mode !== 'tour' || galOpen()){ e.stopPropagation(); go(); } }, true);
+  { const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); try{ sync(); }catch(e){} return r; }; }
+  new MutationObserver(() => sync()).observe(gal, {attributes: true, attributeFilter: ['hidden']});
+  // Esc in Walk: back to the tour, unless Esc is closing something else (a menu, the help card, a dialog, full screen) or a field has the keys
+  const busy = () => !!(!$('#lb').hidden || galOpen() || /\b(clean27|phm|vmo27)\b/.test(root.className) || document.querySelector('dialog[open], .qpop:not([hidden]), .navguide:not([hidden]), [aria-modal="true"]:not([hidden]):not(#lb)') ||
+    document.fullscreenElement || document.webkitFullscreenElement);
+  let wasBusy = false; setInterval(() => { wasBusy = busy(); if((mode === 'walk' && !btn.hidden) || game() !== root.classList.contains('bk38game')) sync(); }, 250);   // (what a capture-phase Esc handler closes first still counts as open)
+  addEventListener('keydown', e => {
+    if(e.key !== 'Escape' || e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    if(mode !== 'walk' || DESIGN.walking() || game() || wasBusy || busy()) return;
+    const tg = e.target; if(tg && (/INPUT|TEXTAREA|SELECT/.test(tg.tagName) || tg.isContentEditable)) return;
+    e.preventDefault(); go(); });
+  sync();
+  window.__back38 = {sync, go, target, nearest: () => nearest()};
+})();
 /* v26 S1: daylight exterior stops show the listing shoot's sun (their photos' light) */
 for(const st of STOPS) if(st.level === 'outside' && !st.tod && !st.aerial) st.tod = 'morning';
 for(const st of STOPS) st.tod = 'dusk';   // v27details T1: every stop at dusk (a viewer's own choice still wins: todManual)
