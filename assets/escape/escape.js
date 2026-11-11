@@ -79,7 +79,7 @@
   /* ================================================================== the engine keeps out of the way */
   const css0 = `html.esc header.bar, html.esc #card, html.esc #mini, html.esc #cv27, html.esc #labels, html.esc #wplabels, html.esc #ovtag, html.esc #tod, html.esc #viewBtn,
     html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp, html.esc #pad, html.esc #peek27, html.esc #v33disc, html.esc #hint, html.esc #joy,
-    html.esc .navguide, html.esc .phtoast, html.esc #wptip, html.esc #door28tip, html.esc #door28hint, html.esc .qhint, html.esc .phlvbar, html.esc #ov{display:none!important}
+    html.esc .navguide, html.esc .phtoast, html.esc .perfpill, html.esc #wptip, html.esc #door28tip, html.esc #door28hint, html.esc .qhint, html.esc .phlvbar, html.esc #ov{display:none!important}
     html.esc #c{cursor:grab;touch-action:none} html.esc.esc-drag #c{cursor:grabbing}`;
   document.head.appendChild(el('style', {}, css0)); document.documentElement.classList.add('esc');
   H.hooks.click = () => true;
@@ -402,7 +402,7 @@
   const css = `
   #escRoot{--ink:#1f2a3a;--mut:#5c6575;--navy:#1f2948;--paper:#fbfaf7;--gold:#c98a12;--wine:#9b2c3c;position:fixed;inset:0;z-index:60;pointer-events:none;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
   #escRoot button{font:inherit;color:inherit;cursor:pointer}
-  #escRoot .chip{pointer-events:auto;background:rgba(251,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.2)}
+  #escRoot .escChip{pointer-events:auto;background:rgba(251,250,247,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.2)}
   #escTop{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left))}
   #escGoal{padding:11px 16px 12px;max-width:380px;min-width:0;border-left:4px solid var(--gold);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
   #escGoal .k{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--mut);letter-spacing:.02em}
@@ -550,22 +550,22 @@
     const cat = window.SNOWBALL ? SNOWBALL.svg({id: 'sbhud', seed: 7}).replace(/viewBox="[^"]+"/, 'viewBox="110 10 280 300"') : '';
     root = el('div', {id: 'escRoot'}, `
       <div id="escTop">
-        <div class="chip" id="escGoal" role="status" aria-live="polite"><div class="k"><b>Pop the Cork</b><span id="escTime">0:00</span></div><p id="escGoalT"></p></div>
+        <div class="escChip" id="escGoal" role="status" aria-live="polite"><div class="k"><b>Pop the Cork</b><span id="escTime">0:00</span></div><p id="escGoalT"></p></div>
         <div id="escBtns">
-          <button class="chip" id="escHint" type="button" aria-label="Ask Snowball for a hint"><span class="av">${cat}</span><span class="tx"><b>Ask Snowball</b><small>For a hint</small></span></button>
-          <button class="chip escIco" id="escSnd" type="button" aria-label="Sound"></button>
-          <button class="chip escIco" id="escMenuBtn" type="button" aria-label="Menu" aria-expanded="false">${ICO.menu}</button>
+          <button class="escChip" id="escHint" type="button" aria-label="Ask Snowball for a hint"><span class="av">${cat}</span><span class="tx"><b>Ask Snowball</b><small>For a hint</small></span></button>
+          <button class="escChip escIco" id="escSnd" type="button" aria-label="Sound"></button>
+          <button class="escChip escIco" id="escMenuBtn" type="button" aria-label="Menu" aria-expanded="false">${ICO.menu}</button>
         </div>
       </div>
-      <div class="chip" id="escMenu" role="menu"><button type="button" role="menuitem" id="escRestart">Start again</button><button type="button" role="menuitem" id="escAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
+      <div class="escChip" id="escMenu" role="menu"><button type="button" role="menuitem" id="escRestart">Start again</button><button type="button" role="menuitem" id="escAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
       <div id="escSay" aria-live="polite"></div>
       <div id="escPlace" aria-live="polite"></div>
       <div id="escMarks"></div>
       <div id="escCoach" role="status"></div>
       <div id="escDock">
-        <div id="escMapWrap"><button class="chip" id="escMapBtn" type="button" aria-expanded="false">${ICO.pin}<span id="escMapNow">Entry</span><small>Map</small></button>
-          <div class="chip" id="escMap"><h4><span>You are in the <b id="escMapName">entry</b></span></h4><button type="button" id="escMapX" aria-label="Close the map">×</button><div class="plan" id="escPlan"></div></div></div>
-        <div class="chip" id="escSun"><div class="top"><span id="escSunL">Time of day</span><b id="escClock">10:00 AM</b></div>
+        <div id="escMapWrap"><button class="escChip" id="escMapBtn" type="button" aria-expanded="false">${ICO.pin}<span id="escMapNow">Entry</span><small>Map</small></button>
+          <div class="escChip" id="escMap"><h4><span>You are in the <b id="escMapName">entry</b></span></h4><button type="button" id="escMapX" aria-label="Close the map">×</button><div class="plan" id="escPlan"></div></div></div>
+        <div class="escChip" id="escSun"><div class="top"><span id="escSunL">Time of day</span><b id="escClock">10:00 AM</b></div>
           <input id="escSlider" type="range" min="7" max="19" step=".25" value="10" aria-label="Time of day">
           <div class="ticks" aria-hidden="true"><span>7 AM</span><span>10</span><span>1 PM</span><span>4</span><span>7 PM</span></div></div>
         <div id="escDockR"></div>
