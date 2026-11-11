@@ -5640,11 +5640,12 @@ function orbitLand(pos, look){   // v22 flash22 F3: where applyOrbit (ground cle
 /* NAV r34 (owner 11/10: 'it puts me against the floor', 'put us back on the lower floor'): a flight to a standing view always arrives.
    Touching the view mid-flight (drag, wheel, pad, a game's turn button) used to stop the camera wherever it was - between floors, in a
    wall, up in the roof. Now the viewer gets the look direction at once and the position keeps gliding to the flight's destination. */
-function navGlide(){ if(!anim || anim.kind !== 'look') return; glide = {t0: anim.t0, dur: anim.dur, from: anim.from, to: anim.to, lift: anim.lift, last: null};
+function navGlide(){ if(!anim || anim.kind !== 'look') return; glide = {t0: anim.t0, dur: anim.dur, from: anim.from, to: anim.to, lift: anim.lift, last: null, path: anim.path || null};
   lensTw = {t0: performance.now(), dur: Math.max(.01, anim.dur - (performance.now() - anim.t0) / 1000), f0: camera.fov, s0: camera.userData.sy || 0}; }
 function navGlideStep(){ const g = glide, P = camera.position; if(g.last && P.distanceToSquared(g.last) > 1e-6){ glide = null; return; }   // something else placed the camera: let it
   const tt = Math.min(1, (performance.now() - g.t0) / 1000 / g.dur), t = tt < .5 ? 4 * tt ** 3 : 1 - Math.pow(-2 * tt + 2, 3) / 2;
-  P.lerpVectors(g.from, g.to, t); if(g.lift) P.y += Math.sin(t * Math.PI) * g.lift; g.last = P.clone();
+  if(g.path){ if(tt >= 1) P.copy(g.to); else r36PathPos(g.path, r36Ease(tt) * g.path.L, P); } else {   /* r36: the taken-over walk keeps to its route */
+  P.lerpVectors(g.from, g.to, t); if(g.lift) P.y += Math.sin(t * Math.PI) * g.lift; } g.last = P.clone();
   if(tt >= 1){ glide = null; if(mode === 'walk'){ try{ feet = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); }catch(e){} } } }
 function navStandable(P){   // a place a person could be standing: eye 3.5-7.5 ft over the floor under it, clear of walls
   try{ const fl = walkSurfaceAt(P.x, P.z, P.y - EYE + .6), h = P.y - fl; if(!(h >= 3.5 && h <= 7.5)) return false;
@@ -5682,7 +5683,9 @@ function flyTo(pos, look, kind='look', dur, lens){
   dur = dur ?? clamp(dist/26,.9,2.6); if(reduceMotion) dur=.01;
   anim={t0:performance.now(), dur, from, to, fromT, toT, kind, fov0:camera.fov, fov1:lens.fov, sy0:camera.userData.sy||0, sy1:lens.sy||0, lift: dist>40? Math.min(30,dist*.25):0};
 }
-function interrupt(){ if(ovOn){ photoMode=false; const o = $('#ov'); o.style.transition = 'opacity .28s ease-out'; hidePhoto(); setTimeout(() => { o.style.transition = ''; }, 400); } if(!anim) return; nav=anim.kind; if(nav==='orbit'){ target.copy(curT); orbitFromCamera(); } else { lookFromCamera(); navGlide(); } anim=null; updateLegend(); }
+function interrupt(){ if(ovOn){ photoMode=false; const o = $('#ov'); o.style.transition = 'opacity .28s ease-out'; hidePhoto(); setTimeout(() => { o.style.transition = ''; }, 400); } if(!anim) return;
+  if(anim.path && anim.tour){ camera.position.copy(anim.to); camera.lookAt(anim.toT); lookFromCamera(); nav = 'look'; anim = null; updateLegend(); return; }   /* r36: a tap or drag during a walked tour move skips to the stop */
+  nav=anim.kind; if(nav==='orbit'){ target.copy(curT); orbitFromCamera(); } else { lookFromCamera(); navGlide(); } anim=null; updateLegend(); }
 function updateLegend(){
   const h=$('#hint'); h.hidden=false;
   if(nav==='orbit'){ h.innerHTML = coarse ? 'Drag to turn · Pinch to zoom · Two fingers to move' : 'Drag to turn · <kbd>Shift</kbd>-drag to move · <kbd>Ctrl</kbd>/<kbd>⌘</kbd>-drag to look around · Scroll to zoom'; return; }   // v24 N1
@@ -6611,7 +6614,30 @@ function navQA(){
         const g = geo(m); if(g) R.fail('games', id, g);
         if(!orb){ go(views[0]); finish(); go(w); mid(.5); interrupt(); step(1); finish(); const m2 = probe(); if(dist(m2, m.pos) > .05) R.fail('games', id + ' interrupted', 'stranded at ' + m2.pos);
           const p0 = -.9; pitch = p0; navTouched(); step(1); await wait(1500); step(30); if(Math.abs(pitch - p0) > .01) R.fail('games', id + ' look down', 'the tilt went back toward level: ' + r2(p0) + ' -> ' + r2(pitch)); } } } };
-  async function navCheck(o = {}){ const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
+  /* r36: the walkable area. Samples standing places on every level and fails if an eye there is within the near-clip distance (0.45 ft) of a wall,
+     built-in or piece of furniture, or inside one. 'before' counts the same test over everywhere the older rule (walls only) let a walker stand.
+     Then every tour move in order, forward and back: walked or cut, never a flight, and a walked route never leaves allowed ground. */
+  SEC.area = async R => { const G = r36Grids(), c = G.c, per = o.areaPer || 45; setMode('walk'); finish(); let nA = 0, badA = 0, nB = 0, badB = 0; const t0 = performance.now();
+    for(const g of G.LVS){ const A = [], B = [];
+      for(let j = 0; j < G.NZ; j++) for(let i = 0; i < G.NX; i++){ const q = j * G.NX + i; if(!g.base[q] || g.door[q]) continue; const x = G.X0 + (i + .5) * c, z = G.Z0 + (j + .5) * c; if(!bim2InFootprint(x, z, .5)) continue;
+        if(g.ok[q]) A.push([x, z]); const pp = {x, z}; collide(pp, g.L); if(Math.abs(pp.x - x) + Math.abs(pp.z - z) < .02) B.push([x, z]); }
+      const take = (L, n) => { const out = [], st = Math.max(1, Math.floor(L.length / n)); for(let k = (st * 7 >> 4); k < L.length; k += st) out.push(L[k]); return out; };
+      const test = (x, z) => { camera.position.set(x, g.L + EYE, z); feet = g.L; camera.updateMatrixWorld(); const m = probe(); return {m, bad: !!m.inC || m.inside >= 5 || m.clr < .45}; };
+      for(const [x, z] of take(B, per)){ nB++; if(test(x, z).bad) badB++; } await pause();
+      for(const [x, z] of take(A, per)){ nA++; const t = test(x, z); R.row('area', g.name + '@' + x + ',' + z, t.m); if(t.bad){ badA++; R.fail('area', g.name + '@' + x + ',' + z, t.m.inC ? 'inside a wall' : t.m.inside >= 5 ? 'inside ' + t.m.insWhat : 'eye ' + t.m.clr + ' ft from ' + t.m.what); } } await pause(); }
+    R.note('area', 'near-clip', 'before (walls only): ' + badB + ' of ' + nB + ' sampled standing places are within 0.45 ft of a surface or inside one; after (walkable area): ' + badA + ' of ' + nA + '; cells ' + R36N.stats.cells.join(', ') + '; grid built in ' + R36N.stats.ms + ' ms');
+    setMode('tour'); finish(); };
+  SEC.moves = async R => { const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)); let walked = 0, cut = 0, flown = 0; tour(seq[0]);
+    for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
+      if(A && A.path){ walked++; const P = A.path; let off = 0, f = P.pts[0].y - EYE;
+        for(let k = 2; k < P.pts.length - 2; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0) off++; }
+        if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > R36N.MAXS + .01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
+        R.note('moves', id, 'walk ' + r2(P.L) + ' ft in ' + r2(A.dur) + ' s' + (P.doors.length ? ', doors ' + P.doors.map(d => d.it.id).join(' ') : '')); for(const f2 of [.25, .5, .75]){ mid(f2); R.row('moves', id + '@' + f2, probe()); } }
+      else if(A && A.cut){ cut++; R.note('moves', id, 'cut'); } else if(A){ flown++; if(A.kind === 'look' && A.from.distanceTo(A.to) > 3) R.fail('moves', id, 'a straight flight of ' + r2(A.from.distanceTo(A.to)) + ' ft'); else R.note('moves', id, A.kind === 'orbit' ? 'orbit flight outdoors' : 'turn'); }
+      finish(); const m = probe(); if(dist(m, FRAME_FOR(b).pos) > (look(b) ? .05 : .8)) R.fail('moves', id, 'ended at ' + m.pos + ', not at the stop'); }
+    R.note('moves', 'summary', walked + ' walked, ' + cut + ' cut, ' + flown + ' flown / turned'); tour(0); };
+  let o = {};
+  async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
     const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
     for(const k of todo){ try{ await SEC[k](R); }catch(e){ R.fail(k, '-', 'check threw: ' + (e && e.message || e)); } await pause(); }
     try{ keys['arrowup'] = false; if(!window.HILLSIDE){ setMode('tour'); showStop(saved.stopIdx); finish(); } }catch(e){}
@@ -7120,10 +7146,10 @@ function navWalk(dt){
     const sn = Math.sin(yaw), cs = Math.cos(yaw);
     const p = {x: P.x + (-sn * NAV.v + cs * NAV.vs) * dt, z: P.z + (-cs * NAV.v - sn * NAV.vs) * dt}; collide(p, feet);
     p.x = clamp(p.x, -180, 180); p.z = clamp(p.z, -180, 180);
-    if(navStepOK(P.x, P.z, p.x, p.z, sCur)){ P.x = p.x; P.z = p.z; }
+    if(r36WalkOK(P.x, P.z, p.x, p.z, sCur)){ P.x = p.x; P.z = p.z; }
     else { const a = {x: p.x, z: P.z}, b = {x: P.x, z: p.z}; collide(a, feet); collide(b, feet);
-      if(Math.abs(p.x - P.x) > 1e-4 && navStepOK(P.x, P.z, a.x, a.z, sCur)){ P.x = a.x; P.z = a.z; }
-      else if(Math.abs(p.z - P.z) > 1e-4 && navStepOK(P.x, P.z, b.x, b.z, sCur)){ P.x = b.x; P.z = b.z; }
+      if(Math.abs(p.x - P.x) > 1e-4 && r36WalkOK(P.x, P.z, a.x, a.z, sCur)){ P.x = a.x; P.z = a.z; }
+      else if(Math.abs(p.z - P.z) > 1e-4 && r36WalkOK(P.x, P.z, b.x, b.z, sCur)){ P.x = b.x; P.z = b.z; }
       else { NAV.v *= .3; NAV.vs *= .3; } }
   }
   const tgt = navSupport(P.x, P.z, feet), ramp = navOnRamp(P.x, P.z);
@@ -7211,8 +7237,9 @@ function tick(qa){
   lensStep();
   if(anim){
     const tt=Math.min(1,(performance.now()-anim.t0)/1000/anim.dur); const t = tt<.5 ? 4*tt**3 : 1-Math.pow(-2*tt+2,3)/2;
+    if(anim.path) r36PathStep(anim, tt); else {   /* r36: a walked route (see R36N) */
     camera.position.lerpVectors(anim.from, anim.to, t); if(anim.lift) camera.position.y += Math.sin(t*Math.PI)*anim.lift;
-    curT.lerpVectors(anim.fromT, anim.toT, t); camera.lookAt(curT);
+    curT.lerpVectors(anim.fromT, anim.toT, t); camera.lookAt(curT); }
     if(Math.abs(anim.fov0-anim.fov1)>.01 || anim.sy0 || anim.sy1 || Math.abs(camera.zoom-lensZoom(camera.fov))>1e-3) applyLens(lerp(anim.fov0,anim.fov1,t), lerp(anim.sy0,anim.sy1,t));
     if(tt>=1){ const k=anim.kind, ph=anim.photo; anim=null; nav=k; if(k==='orbit'){ target.copy(curT); orbitFromCamera(); } else lookFromCamera(); updateLegend(); if(ph!=null && mode==='tour' && photoMode) showPhoto(ph); }
   } else {
@@ -7234,7 +7261,7 @@ function tick(qa){
   if(hoverAt && nav==='look' && !anim && !ptrs.size){ wpHover=pickWaypoint(hoverAt[0],hoverAt[1]); }
   { const tq = mode==='tour';   // v22 frame22 R7: tour stops show no floor rings except the one under the pointer
     for(const g of WPS){ const on=g===wpHover, u=g.userData; u.ring.visible = u.disc.visible = on || !tq; u.ring.material.opacity=on?1:.85; u.disc.material.opacity=on?.5:.22; g.scale.setScalar(on?1.18:1); } }
-  const tip=$('#wptip'); if(wpHover){ const r=canvas.getBoundingClientRect(); tip.textContent='Walk to '+wpHover.userData.label; tip.style.left=(hoverXY[0]-r.left)+'px'; tip.style.top=(hoverXY[1]-r.top)+'px'; tip.hidden=false; ring.visible=false; canvas.className='go'; hoverAt=null; } else tip.hidden=true;
+  const tip=$('#wptip'); if(wpHover){ const r=canvas.getBoundingClientRect(); tip.textContent=(Math.hypot(wpHover.userData.x-camera.position.x,wpHover.userData.z-camera.position.z)>60?'Go to ':'Walk to ')+wpHover.userData.label; tip.style.left=(hoverXY[0]-r.left)+'px'; tip.style.top=(hoverXY[1]-r.top)+'px'; tip.hidden=false; ring.visible=false; canvas.className='go'; hoverAt=null; } else tip.hidden=true;
   if(hoverAt && nav==='look' && !anim && !ptrs.size){ const h=pick(hoverAt[0],hoverAt[1]); hoverAt=null;
     if(h && h.face && h.face.normal.y>.6 && h.distance<90){ ring.position.set(h.point.x,h.point.y+.05,h.point.z); ring.visible=true; canvas.className='go'; } else { ring.visible=false; canvas.className='grab'; } }
   else if(nav!=='look' || anim){ ring.visible=false; if(!ptrs.size) canvas.className='grab'; }
@@ -21825,6 +21852,222 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
   const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); tell('mode', mode); return r; };
   const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); tell('vis'); return r; };
   const _st = setTOD; setTOD = function(){ const r = _st.apply(this, arguments); tell('tod', TOD_KEY); return r; }; }
+/* ===== r36 NAV (owner 11/11): where a visitor may stand, and how every move gets there =====
+   "all moves should feel continuous so you can build a mental model of how it all fits together" / "make sure we don't pass thru walls when
+   walking... let's take paths that navigate thru doors... unless user is obviously trying to instantly relocate" / "make it so I don't end up
+   getting to walk into weird nooks and crannies like I can end up inside a closet with clipping on the closet built-ins".
+   A  Walkable area. One grid per level (0.5 ft cells over the house and its decks): a cell is allowed when the level's floor is under it, no wall
+      is within 1.0 ft, no furniture, cabinet, appliance or built-in within 0.9 ft, it is not a reach-in closet or storage space, and it joins
+      the rest of the level on foot (pockets behind beds and beside cabinets drop out). Doorways are always open. Arrow keys / pad / stick slide
+      along its edge; a tap or 'Walk to' that lands outside it goes to the nearest allowed spot, facing what was tapped.
+   B  Routes. A* over the same grid (plus stairs and the ground outside), string-pulled and rounded. Tour Next / Back / pills, tap-to-walk, white
+      circles, 'Walk to' and the plan all use it: a route of up to ~66 ft is walked at a constant brisk pace (2-6 s) facing the way of travel and
+      easing onto the destination's own view; doors on the way open ahead of you. Anything further, unreachable, or under reduced motion is a cut
+      (a 350 ms dissolve), never a flight through structure. window.HILLSIDE games and flyTo itself are untouched.
+   C  Doors open by themselves as you walk up to them; the 'You are in' line reads the space under your feet, indoors and out. */
+const R36N = window.R36N = {on: !/[?&]nav36-off\b/.test(location.search), cell: .5, RW: 1.0, RF: .9, PACE: 8.5, MAXS: 6, CAP: 66, lv: null, key: '', rev: 0, chk: 0, cache: new Map(), stats: {}, last: null};
+const r36Excl = s => /CLOSET|STORAGE/.test(s.id || '') && !/DRESSING/.test(s.id || '');
+function r36DoorKind(it){   // 'closet' doors never open for a walker and are walls to the planner
+  if(it.r36k) return it.r36k; let k = 'door';
+  try{ if(/BYPASS|HIDDEN/.test(it.b3kind || '') || it.kind === 'swing31') k = 'closet';
+    else if(it.c0 && it.n3 && typeof BIM2S !== 'undefined' && BIM2S){ const y = it.coll ? it.coll.y0 : 0;
+      for(const sg of [1.5, -1.5]){ const x = it.c0[0] + it.n3.x * sg, z = it.c0[1] + it.n3.z * sg, s = BIM2S.spaceUnderFeet(z, x, y + .3); if(s && Math.abs(s.floorZ - y) < 1.2 && r36Excl(s)) k = 'closet'; } } }catch(e){}
+  return it.r36k = k; }
+function r36Doors(){ return DOOR28.items.filter(it => it.coll && it.c0 && it.n3 && door28Live(it) && r36DoorKind(it) === 'door'); }
+function r36Key(){ let k = ACTIVE_VAR + '|' + COLLIDERS.length + '|' + FLOORS.length + '|' + R36N.rev; try{ for(const g of withVar(['furn', 'furnU'])) k += '|' + (g.visible ? 1 : 0) + g.children.length; }catch(e){} return k; }
+function r36Grids(){
+  const now = performance.now(); if(R36N.lv && now - R36N.chk < 700) return R36N.lv; R36N.chk = now;
+  const key = r36Key(); if(R36N.lv && key === R36N.key) return R36N.lv;
+  const t0 = now; R36N.key = key; R36N.cache.clear(); navPassTag();
+  const c = R36N.cell, B = dollBox(), X0 = Math.floor(B.min.x - 8), Z0 = Math.floor(B.min.z - 8), NX = Math.ceil((B.max.x + 8 - X0) / c), NZ = Math.ceil((B.max.z + 8 - Z0) / c), n = NX * NZ;
+  const LVS = [['lower', LV.lower], ['garage', LV.garage], ['main', LV.main], ['upper', LV.upper]].map(([name, L]) => ({name, L, base: new Uint8Array(n), blk: new Uint8Array(n), fb: new Uint8Array(n), door: new Uint8Array(n), ok: new Uint8Array(n)}));
+  const G = {X0, Z0, NX, NZ, c, LVS}, cx = i => X0 + (i + .5) * c, cz = j => Z0 + (j + .5) * c, ci = x => Math.floor((x - X0) / c), cj = z => Math.floor((z - Z0) / c);
+  G.idx = (x, z) => { const i = ci(x), j = cj(z); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
+  const doors = r36Doors(), dcoll = new Set(DOOR28.items.filter(it => it.coll).map(it => it.coll)), open = new Set(doors.map(it => it.coll));
+  for(const g of LVS){ const L = g.L;
+    for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const y = walkSurfaceAt(cx(i), cz(j), L + .3); if(Math.abs(y - L) < .4) g.base[j * NX + i] = 1; }
+    for(const q of COLLIDERS){ if(q.y1 <= L + .7 || q.y0 >= L + 5.6 || (q.v && q.v !== ACTIVE_VAR)) continue; if(dcoll.has(q) ? open.has(q) : q.pass) continue;
+      const R = R36N.RW, i0 = Math.max(0, ci(q.x0 - R)), i1 = Math.min(NX - 1, ci(q.x1 + R)), j0 = Math.max(0, cj(q.z0 - R)), j1 = Math.min(NZ - 1, cj(q.z1 + R));
+      for(let j = j0; j <= j1; j++) for(let i = i0; i <= i1; i++){ const x = cx(i), z = cz(j), dx = x - clamp(x, q.x0, q.x1), dz = z - clamp(z, q.z0, q.z1); if(dx * dx + dz * dz >= R * R) continue;
+        if(q.cut && q.cut.some(f => Math.abs(f.y - L) < 1.2 && onFloor(f, x, z))) continue; g.blk[j * NX + i] = 1; } }
+    try{ for(const s of BIM2S.spaces){ if(!r36Excl(s) || Math.abs(s.floorZ - L) > .6) continue; const P = s.poly || (s.raw && s.raw.polygon); if(!P) continue;
+        let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9; for(const p of P){ a0 = Math.min(a0, p[1]); a1 = Math.max(a1, p[1]); b0 = Math.min(b0, p[0]); b1 = Math.max(b1, p[0]); }
+        for(let j = Math.max(0, cj(b0 - .3)); j <= Math.min(NZ - 1, cj(b1 + .3)); j++) for(let i = Math.max(0, ci(a0 - .3)); i <= Math.min(NX - 1, ci(a1 + .3)); i++) if(BIM2S.contains(s, cz(j), cx(i))) g.blk[j * NX + i] = 1; } }catch(e){}
+    for(const it of doors){ const q = it.coll; if(q.y1 <= L + .7 || q.y0 >= L + 5.6 || Math.abs(q.y0 - L) > 1.3) continue; const W = it.o.width || 3, ux = -it.n3.z, uz = it.n3.x, hw = Math.max(.3, W / 2 - .45);
+      for(let a = -hw; a <= hw + 1e-6; a += .25) for(let d = -2; d <= 2 + 1e-6; d += .25){ const k = G.idx(it.c0[0] + ux * a + it.n3.x * d, it.c0[1] + uz * a + it.n3.z * d); if(k >= 0) g.door[k] = 1; } } }
+  // furniture, cabinets, appliances, built-ins: every triangle that crosses a level's standing band marks the cells under its edges
+  const mark = (g, x, z) => { const k = G.idx(x, z); if(k >= 0) g.fb[k] = 1; }, V = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]; let nt = 0;
+  const seen = new Set(), doMesh = m => { if(!m.isMesh || m.isInstancedMesh || !m.geometry || seen.has(m)) return; seen.add(m); const mt = m.material; if(mt && mt.visible === false) return;
+    const P = m.geometry.attributes.position; if(!P) return; const I = m.geometry.index, nT = (I ? I.count : P.count) / 3; m.updateWorldMatrix(true, false);
+    if(!m.geometry.boundingBox) m.geometry.computeBoundingBox(); const bb = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld); if(bb.max.y - bb.min.y < .25 && bb.max.x - bb.min.x > 2) return;   // rugs, mats
+    for(let t = 0; t < nT; t++){ let y0 = 1e9, y1 = -1e9; for(let q = 0; q < 3; q++){ V[q].fromBufferAttribute(P, I ? I.getX(3 * t + q) : 3 * t + q).applyMatrix4(m.matrixWorld); y0 = Math.min(y0, V[q].y); y1 = Math.max(y1, V[q].y); }
+      for(const g of LVS){ if(y1 < g.L + .9 || y0 > g.L + 5.6) continue; nt++;
+        for(let q = 0; q < 3; q++){ const a = V[q], b = V[(q + 1) % 3]; mark(g, a.x, a.z); const len = Math.hypot(b.x - a.x, b.z - a.z); if(len > .45){ const k = Math.ceil(len / .4); for(let s = 1; s < k; s++) mark(g, a.x + (b.x - a.x) * s / k, a.z + (b.z - a.z) * s / k); } } } } };
+  try{ for(const g of withVar(['furn', 'furnU', 'yard'])) if(g.visible) g.traverseVisible(doMesh);
+    for(const F of FIXOBJ){ if(!F.obj || (F.v && F.v !== ACTIVE_VAR)) continue; let vis = true; for(let o = F.obj; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) F.obj.traverseVisible(doMesh); }
+    for(const m of (BIM2S.meshes || [])) if(/^builtins\|/.test(m.name || '')){ let vis = true; for(let o = m; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) doMesh(m); } }catch(e){ console.warn('[r36 nav] furniture', e); }
+  const rr = Math.ceil(R36N.RF / c), disc = []; for(let dj = -rr; dj <= rr; dj++) for(let di = -rr; di <= rr; di++) if((di * di + dj * dj) * c * c <= R36N.RF * R36N.RF + .01) disc.push([di, dj]);
+  for(const g of LVS){ for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++) if(g.fb[j * NX + i]) for(const [di, dj] of disc){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ) g.blk[b * NX + a] = 1; }
+    const free = new Uint8Array(n); for(let k = 0; k < n; k++) free[k] = g.base[k] && (g.door[k] || !g.blk[k]) ? 1 : 0;
+    // keep what joins a tour stop or a room marker on foot (level to level through the stair cells, which are not on any grid: seed every level)
+    const st = [], seed = (x, z) => { let k = G.idx(x, z); if(k < 0) return; if(!free[k]){ let bd = 1e9, bk = -1; const i0 = ci(x), j0 = cj(z); for(let dj = -8; dj <= 8; dj++) for(let di = -8; di <= 8; di++){ const a = i0 + di, b = j0 + dj; if(a < 0 || b < 0 || a >= NX || b >= NZ || !free[b * NX + a]) continue; const d = di * di + dj * dj; if(d < bd){ bd = d; bk = b * NX + a; } } k = bk; } if(k >= 0 && !g.ok[k]){ g.ok[k] = 1; st.push(k); } };
+    for(const s of STOPS){ if(s.aerial) continue; const fr = FRAME_FOR(s), f = walkSurfaceAt(fr.pos[0], fr.pos[2], fr.pos[1] - EYE + .6); if(Math.abs(f - g.L) < .6 || (LV[s.level] === g.L)) seed(fr.pos[0], fr.pos[2]); }
+    for(const r of ROOMS){ if(LV[r.level] === g.L && r.level !== 'outside') seed(r.at[0], r.at[1]); }
+    while(st.length){ const k = st.pop(), i = k % NX, j = (k - i) / NX; for(const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const a = i + di, b = j + dj; if(a < 0 || b < 0 || a >= NX || b >= NZ) continue; const q = b * NX + a; if(free[q] && !g.ok[q]){ g.ok[q] = 1; st.push(q); } } }
+    g.free = free; g.n = g.ok.reduce((s, v) => s + v, 0); }
+  R36N.lv = G; R36N.stats = {ms: Math.round(performance.now() - t0), tris: nt, cells: LVS.map(g => g.name + ' ' + g.n), grid: [NX, NZ]};
+  return G; }
+/* 1 allowed, 0 not, 2 = no opinion (stairs, slopes, far outside: the older rules alone decide) */
+function r36At(x, z, f){ if(!R36N.on) return 2; let G; try{ G = r36Grids(); }catch(e){ console.warn('[r36 nav] grid', e); R36N.on = false; return 2; }
+  const k = G.idx(x, z); if(k < 0) return 2; for(const g of G.LVS) if(Math.abs(f - g.L) < .45 && g.base[k]) return g.ok[k] ? 1 : 0; return 2; }
+function r36Level(f){ const G = r36Grids(); for(const g of G.LVS) if(Math.abs(f - g.L) < .45) return g; return null; }
+function r36Nearest(x, z, f, rad){ if(r36At(x, z, f) !== 0) return {x, z, d: 0}; const G = R36N.lv, g = r36Level(f); if(!g) return null; const c = G.c, i0 = Math.floor((x - G.X0) / c), j0 = Math.floor((z - G.Z0) / c), R = Math.ceil((rad || 8) / c); let bd = 1e9, b = null;
+  for(let dj = -R; dj <= R; dj++) for(let di = -R; di <= R; di++){ const a = i0 + di, q = j0 + dj; if(a < 0 || q < 0 || a >= G.NX || q >= G.NZ || !g.ok[q * G.NX + a]) continue; const px = G.X0 + (a + .5) * c, pz = G.Z0 + (q + .5) * c, d = Math.hypot(px - x, pz - z); if(d < bd){ bd = d; b = {x: px, z: pz, d}; } }
+  return b && b.d <= (rad || 8) ? b : null; }
+function r36WalkOK(x0, z0, x1, z1, s){   // a walking step keeps footing (the older rule) and stays in the walkable area; a walker who is outside it may always move toward it
+  if(!navStepOK(x0, z0, x1, z1, s)) return false; if(r36At(x1, z1, feet) !== 0) return true; if(r36At(x0, z0, feet) !== 0) return false;
+  const q = r36Nearest(x0, z0, feet, 10); return !q || (q.x - x0) * (x1 - x0) + (q.z - z0) * (z1 - z0) > 0; }
+/* ---- routes */
+function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by A to a node by B, or null
+  const G = r36Grids(), c = G.c, NX = G.NX, NZ = G.NZ, doors = r36Doors(), was = doors.map(it => it.coll.pass); for(const it of doors) it.coll.pass = true;
+  try{
+    const lvOf = (k, f) => { for(let q = 0; q < G.LVS.length; q++) if(Math.abs(f - G.LVS[q].L) < .45 && G.LVS[q].base[k]) return q; return -1; };
+    const freeOK = (x, z, f) => { const p = {x, z}; collide(p, f); return Math.abs(p.x - x) + Math.abs(p.z - z) < .04; };
+    const mk = (i, j, fh, from) => { if(i < 0 || j < 0 || i >= NX || j >= NZ) return null; const k = j * NX + i, x = G.X0 + (i + .5) * c, z = G.Z0 + (j + .5) * c; let l = lvOf(k, fh);
+      if(l >= 0) return G.LVS[l].ok[k] ? {id: (l * NZ + j) * NX + i, i, j, x, z, f: G.LVS[l].L} : null;
+      const f = navSupport(x, z, fh); if(Math.abs(f - fh) > 1.05) return null; l = lvOf(k, f); if(l >= 0) return G.LVS[l].ok[k] ? {id: (l * NZ + j) * NX + i, i, j, x, z, f: G.LVS[l].L} : null;
+      if(from && !navStepOK(from.x, from.z, x, z, from.f)) return null; if(!freeOK(x, z, f)) return null;
+      return {id: ((4 + Math.round((f + 12) * 1.5)) * NZ + j) * NX + i, i, j, x, z, f}; };
+    const near = P => { const i0 = Math.floor((P.x - G.X0) / c), j0 = Math.floor((P.z - G.Z0) / c); let b = null, bd = 1e9; for(let dj = -10; dj <= 10; dj++) for(let di = -10; di <= 10; di++){ const d = Math.hypot((i0 + di + .5) * c + G.X0 - P.x, (j0 + dj + .5) * c + G.Z0 - P.z); if(d >= bd || d > 5) continue; const nd = mk(i0 + di, j0 + dj, P.f, null); if(nd && Math.abs(nd.f - P.f) < 1.3){ b = nd; bd = d; } } return b; };
+    const S = near(A), E = near(B); if(!S || !E) return null;
+    const open = [], gS = new Map(), came = new Map(), node = new Map(), h = n => Math.hypot(n.x - E.x, n.z - E.z) + Math.abs(n.f - E.f) * 1.2;
+    const push = (n, pr) => { open.push([pr, n]); let k = open.length - 1; while(k > 0){ const p = (k - 1) >> 1; if(open[p][0] <= open[k][0]) break; [open[p], open[k]] = [open[k], open[p]]; k = p; } };
+    const pop = () => { const t = open[0], l = open.pop(); if(open.length){ open[0] = l; let k = 0; for(;;){ const a = 2 * k + 1, b = a + 1; let m = k; if(a < open.length && open[a][0] < open[m][0]) m = a; if(b < open.length && open[b][0] < open[m][0]) m = b; if(m === k) break; [open[m], open[k]] = [open[k], open[m]]; k = m; } } return t[1]; };
+    gS.set(S.id, 0); node.set(S.id, S); push(S, h(S)); let it = 0, found = null; const done = new Set();
+    while(open.length && it++ < 90000){ const n = pop(); if(done.has(n.id)) continue; done.add(n.id); if(n.id === E.id){ found = n; break; } const g0 = gS.get(n.id);
+      const nb = {}; for(const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
+        if(di && dj && (!nb[di + ',0'] || !nb['0,' + dj])) continue; const m = mk(n.i + di, n.j + dj, n.f, n); if(!di || !dj) nb[di + ',' + dj] = m; if(!m || done.has(m.id)) continue;
+        const cost = g0 + Math.hypot(di, dj) * c + Math.abs(m.f - n.f) * .6; if(cost < (gS.has(m.id) ? gS.get(m.id) : 1e9)){ gS.set(m.id, cost); came.set(m.id, n.id); node.set(m.id, m); push(m, cost + h(m)); } } }
+    if(!found) return null; const raw = []; for(let id = found.id; id != null; id = came.get(id)) raw.push(node.get(id)); raw.reverse();
+    // string-pull: skip ahead while the straight line between two nodes stays on allowed ground
+    const los = (a, b) => { const L = Math.hypot(b.x - a.x, b.z - a.z), k = Math.max(1, Math.ceil(L / .25)); let f = a.f; for(let s = 1; s < k; s++){ const x = a.x + (b.x - a.x) * s / k, z = a.z + (b.z - a.z) * s / k, r = r36At(x, z, f); if(r === 0) return false;
+        if(r === 2){ const y = navSupport(x, z, f); if(Math.abs(y - f) > .5 || !freeOK(x, z, y)) return false; f = y; } else { const g = r36Level(f); if(g) f = g.L; } } return Math.abs(f - b.f) < .6; };
+    const out = [raw[0]]; let a = 0; while(a < raw.length - 1){ let b = Math.min(raw.length - 1, a + 60); while(b > a + 1 && !los(raw[a], raw[b])) b--; out.push(raw[b]); a = b; }
+    return out;
+  } finally { doors.forEach((it, q) => { it.coll.pass = was[q]; }); } }
+function r36Route(from, to, ff, tf){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
+  const key = [from.x, from.y, from.z, to.x, to.y, to.z].map(v => v.toFixed(1)).join(',') + R36N.key; if(R36N.cache.has(key)) return R36N.cache.get(key);
+  let res = null; try{ const way = r36Plan({x: from.x, z: from.z, f: ff}, {x: to.x, z: to.z, f: tf});
+    if(way){ // round the corners (two passes of corner cutting keep the line inside the pulled corridor), then sample every 0.5 ft and set the eye over the floor
+      let P = way.map(n => [n.x, n.z, n.f]); for(let pass = 0; pass < 2; pass++){ const Q = [P[0]]; for(let i = 1; i < P.length - 1; i++){ const a = P[i - 1], b = P[i], d = P[i + 1], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lb = Math.hypot(d[0] - b[0], d[1] - b[1]), ka = Math.min(.25, 1.2 / Math.max(la, .01)), kb = Math.min(.25, 1.2 / Math.max(lb, .01));
+          Q.push([b[0] + (a[0] - b[0]) * ka, b[1] + (a[1] - b[1]) * ka, b[2] + (a[2] - b[2]) * ka], [b[0] + (d[0] - b[0]) * kb, b[1] + (d[1] - b[1]) * kb, b[2] + (d[2] - b[2]) * kb]); } Q.push(P[P.length - 1]); P = Q; }
+      const pts = [from.clone()]; let f = P[0][2];
+      for(let i = 0; i < P.length - 1; i++){ const a = P[i], b = P[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]), k = Math.max(1, Math.ceil(L / .5)); for(let s = (i ? 1 : 0); s <= k; s++){ const x = a[0] + (b[0] - a[0]) * s / k, z = a[1] + (b[1] - a[1]) * s / k; f = navSupport(x, z, a[2] + (b[2] - a[2]) * s / k + .3); pts.push(new THREE.Vector3(x, f + EYE, z)); } }
+      pts.push(to.clone());
+      for(let pass = 0; pass < 3; pass++) for(let i = 2; i < pts.length - 2; i++) pts[i].y = (pts[i - 1].y + pts[i].y * 2 + pts[i + 1].y) / 4;   // stair nosings and thresholds become one even climb
+      { const n = pts.length, k0 = Math.min(6, n - 2), y0 = pts[0].y, y1 = pts[n - 1].y; for(let i = 1; i <= k0; i++){ const w = i / (k0 + 1); pts[i].y = lerp(y0, pts[i].y, w); pts[n - 1 - i].y = lerp(y1, pts[n - 1 - i].y, w); } }
+      const cum = [0]; for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
+      const doors = []; for(const it of r36Doors()){ const q = it.coll; for(let i = 0; i < pts.length; i++){ const p = pts[i]; if(p.x > q.x0 - .25 && p.x < q.x1 + .25 && p.z > q.z0 - .25 && p.z < q.z1 + .25 && p.y - EYE > q.y0 - 1.5 && p.y - EYE < q.y1 - 2){ doors.push({it, s: cum[i]}); break; } } }
+      res = {pts, cum, L: cum[cum.length - 1], doors}; } }catch(e){ console.warn('[r36 nav] route', e); }
+  if(R36N.cache.size > 400) R36N.cache.clear(); R36N.cache.set(key, res); return res; }
+function r36PathPos(p, s, out){ const c = p.cum; let lo = 0, hi = c.length - 1; s = clamp(s, 0, p.L); while(hi - lo > 1){ const m = (lo + hi) >> 1; if(c[m] <= s) lo = m; else hi = m; } const d = c[hi] - c[lo]; return out.lerpVectors(p.pts[lo], p.pts[hi], d > 1e-6 ? (s - c[lo]) / d : 0); }
+const r36Ease = t => { const a = .16, v = 1 / (1 - a); return t < a ? v * t * t / (2 * a) : t > 1 - a ? 1 - v * (1 - t) * (1 - t) / (2 * a) : v * (t - a / 2); };
+function r36OpenDoor(it){ if(DOOR28.moving.has(it)){ if(it.dir < 0) it.dir = 1; return; } if(it.t < .5) door28Toggle(it); }
+const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
+function r36PathStep(a, tt){   // one frame of a walked move: position on the route, eyes ahead, then onto the destination's own view
+  const p = a.path; if(tt >= 1){ camera.position.copy(a.to); curT.copy(a.toT); camera.lookAt(curT); return; }
+  let s = r36Ease(tt) * p.L;
+  for(const d of p.doors){ if(d.s - s < 10 && s - d.s < 1.5){ r36OpenDoor(d.it); if(d.s - s < 2.4 && d.s - s > -.4 && d.it.t < .55 && a.sHold != null){ s = Math.min(s, a.sHold); a.t0 += performance.now() - (a.lastNow || performance.now()); } } }   // wait at a door that is still swinging
+  a.sHold = s; a.lastNow = performance.now(); r36PathPos(p, s, camera.position);
+  const ah = r36PathPos(p, Math.min(p.L, s + 5), R36V), dx = ah.x - camera.position.x, dz = ah.z - camera.position.z, dy = ah.y - camera.position.y, hz = Math.hypot(dx, dz);
+  let yw = a.yaw0, pt = a.pitch0;
+  if(p.L > 5 && hz > .3){ const w0 = smooth(0, Math.min(.22, 3 / p.L + .08), tt), yP = Math.atan2(-dx, -dz), pP = clamp(Math.atan2(dy, hz) * .55, -.3, .3); yw = a.yaw0 + angDiff(a.yaw0, yP) * w0; pt = a.pitch0 + (pP - a.pitch0) * w0; }
+  const rem = p.L - s, w1 = p.L > 5 ? 1 - smooth(0, Math.min(p.L * .45, 9), rem) : smooth(0, 1, tt); yw = yw + angDiff(yw, a.yaw1) * w1; pt = pt + (a.pitch1 - pt) * w1;
+  camera.rotation.order = 'YXZ'; camera.rotation.set(pt, yw, 0); camera.getWorldDirection(R36V2); curT.copy(camera.position).addScaledVector(R36V2, 10); }
+function r36Snap(){ if(!anim || !anim.path) return; anim.t0 = -1e9; }   // skip to the destination (the next frame lands on it)
+/* a relocation: the last drawn frame stays over the canvas and dissolves into the destination (no flight through structure) */
+function r36Cut(a, label){
+  try{ renderFrame(0); const r = canvas.getBoundingClientRect(), par = canvas.parentElement, pr = par.getBoundingClientRect(); let ov = document.getElementById('r36cut');
+    if(!ov){ ov = document.createElement('canvas'); ov.id = 'r36cut'; ov.setAttribute('aria-hidden', 'true'); ov.style.cssText = 'position:absolute;pointer-events:none;z-index:2;opacity:0'; par.insertBefore(ov, canvas.nextSibling); }
+    const k = Math.min(1, 900 / Math.max(1, canvas.width)); ov.width = Math.max(2, Math.round(canvas.width * k)); ov.height = Math.max(2, Math.round(canvas.height * k)); ov.getContext('2d').drawImage(canvas, 0, 0, ov.width, ov.height);
+    ov.style.left = (r.left - pr.left) + 'px'; ov.style.top = (r.top - pr.top) + 'px'; ov.style.width = r.width + 'px'; ov.style.height = r.height + 'px'; ov.style.borderRadius = getComputedStyle(canvas).borderRadius;
+    ov.style.transition = 'none'; ov.style.opacity = '1'; void ov.offsetWidth; ov.style.transition = 'opacity .36s ease-in-out'; requestAnimationFrame(() => { ov.style.opacity = '0'; }); }catch(e){}
+  if(a){ a.path = null; a.lift = 0; a.dur = .001; a.t0 = performance.now(); a.cut = true; }
+  if(label) r36Say(label); R36N.last = {kind: 'cut', label: label || ''}; }
+function r36Say(text){ try{ let el = document.getElementById('r36say'); if(!el){ el = document.createElement('div'); el.id = 'r36say'; el.className = 'wptip'; el.setAttribute('role', 'status'); el.style.cssText = 'left:50%;top:18%;transform:translate(-50%,-50%);transition:opacity .3s;pointer-events:none'; const w = document.getElementById('wptip'); (w && w.parentElement || document.body).appendChild(el); }
+    el.textContent = text; el.hidden = false; el.style.opacity = '1'; clearTimeout(r36Say.t); r36Say.t = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => { el.hidden = true; }, 320); }, 1500); }catch(e){} }
+/* turn the straight flight flyTo just set up into a walked route. 1 = walking, 0 = no walk within the 6 s rule (the caller cuts), -1 = leave it be */
+function r36Pathify(a, o){ o = o || {};
+  if(!R36N.on || !a || a.kind !== 'look') return -1;
+  const P = a.from, Q = a.to, d = Math.hypot(Q.x - P.x, Q.z - P.z); if(d < .05 && Math.abs(Q.y - P.y) < .3) return -1;   // a turn in place
+  const fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6), ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return 0;
+  let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return 0;
+  if(reduceMotion) return 0;
+  const R = r36Route(P, Q, fa, fb); if(!R || R.L > R36N.CAP) return 0;
+  a.path = R; a.lift = 0; a.dur = clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS); a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
+  { const dir = new THREE.Vector3(); camera.getWorldDirection(dir); a.yaw0 = Math.atan2(-dir.x, -dir.z); a.pitch0 = Math.asin(clamp(dir.y, -1, 1)); }
+  if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)], dx = e.x - b.x, dz = e.z - b.z, L = Math.hypot(dx, dz); if(L > .5){ const cp = Math.cos(o.pitch || 0); a.toT.set(Q.x + dx / L * 20 * cp, Q.y + Math.sin(o.pitch || 0) * 20, Q.z + dz / L * 20 * cp); } }
+  { const [y1, p1] = lookYawPitch([Q.x, Q.y, Q.z], [a.toT.x, a.toT.y, a.toT.z]); a.yaw1 = y1; a.pitch1 = p1; }
+  R36N.last = {kind: 'walk', L: +R.L.toFixed(1), dur: +a.dur.toFixed(2), doors: R.doors.map(q => q.it.id)}; return 1; }
+function r36LineClear(A, B){ try{ const d = B.clone().sub(A), L = d.length(); if(L < 1) return true; const rc = new THREE.Raycaster(A, d.normalize(), 0, L); for(const h of rc.intersectObjects(withVar(['main', 'upper', 'roof', 'ceil']).filter(g => g.visible), true)){ const m = h.object.material; if(h.object.isSprite || (m && m.transparent && m.opacity < .5)) continue; return false; } }catch(e){} return true; }
+function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)); }catch(e){ return false; } }
+/* tour: Next / Back / pills / keys */
+{ const _ss36 = showStop; showStop = function(i, fly){
+    if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); lookFromCamera(); nav = 'look'; anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
+    const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
+    try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
+        if(a.kind === 'look'){ const k = r36Pathify(a, {level: LV[s.level]}); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
+        else if(reduceMotion || (!s.aerial && !(STOPS[was] && STOPS[was].aerial) && P0.y < 40 && !r36LineClear(P0, a.to))) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
+    return r; }; }
+/* walk: taps, white circles, the plan */
+{ const _mt36 = moveTo; moveTo = function(x, z, f, face){
+    if(!R36N.on || r36Game()) return _mt36.apply(this, arguments);
+    const P0 = camera.position.clone(), tx = x, tz = z, wasWalk = mode === 'walk'; let snapped = false, auto = false;
+    try{ const q = r36Nearest(x, z, f, 9); if(q && q.d > 0){ x = q.x; z = q.z; snapped = q.d > 1; } }catch(e){}
+    if(!face){ if(snapped) face = [tx, tz]; else { const dx = x - P0.x, dz = z - P0.z, d = Math.hypot(dx, dz); auto = d > 1.5; face = auto ? [x + dx / d * 10, z + dz / d * 10] : [x - Math.sin(yaw) * 10, z - Math.cos(yaw) * 10]; } }
+    const r = _mt36.call(this, x, z, f, face);
+    try{ const a = anim; if(a && a.kind === 'look'){ const k = r36Pathify(a, {faceTravel: auto, pitch: pitch}); if(k === 0 && (Math.hypot(a.to.x - P0.x, a.to.z - P0.z) > 3 || Math.abs(a.to.y - P0.y) > 1.5 || !r36LineClear(P0, a.to))) r36Cut(a, r36WhereAt(a.to.x, a.to.z, feet).name); } }catch(e){ console.warn('[r36 nav] move', e); }
+    return r; }; }
+/* walk: 'Walk to' a room = its guided-tour view, level, standing in the walkable area */
+function r36GoRoom(r){
+  interrupt(); if(mode !== 'walk') setMode('walk', {keep: true}); if(nav !== 'look'){ nav = 'look'; lookFromCamera(); }
+  const s = STOPS.find(q => q.rooms[0] === r.id && !q.aerial && (q.nav || 'look') === 'look'); let pos, look, f;
+  if(s){ const fr = FRAME_FOR(s); f = LV[s.level] != null && s.level !== 'outside' ? LV[s.level] : walkSurfaceAt(fr.pos[0], fr.pos[2], fr.pos[1] - EYE + .6); let x = fr.pos[0], z = fr.pos[2];
+    const f2 = walkSurfaceAt(x, z, f + .6); if(Math.abs(f2 - f) < 1.2) f = f2; const q = r36Nearest(x, z, f, 8); if(q){ x = q.x; z = q.z; }
+    pos = [x, f + EYE, z]; look = [x + fr.look[0] - fr.pos[0], f + EYE, z + fr.look[2] - fr.pos[2]]; }
+  else { const [ax, az] = r.id === 'street' ? wp(1165, 2700) : r.at, base = r.level === 'outside' ? ground(ax, az) : LV[r.level]; f = walkSurfaceAt(ax, az, base + .3); let x = ax, z = az; const q = r36Nearest(x, z, f, 9); if(q){ x = q.x; z = q.z; }
+    let v = null; try{ v = roomView(x, z, f); }catch(e){} if(v){ const q2 = r36Nearest(v[0], v[1], f, 6); if(q2){ x = q2.x; z = q2.z; } }
+    const fc = v ? v[2] : [x - Math.sin(yaw) * 10, z - Math.cos(yaw) * 10]; pos = [x, f + EYE, z]; look = [fc[0], f + EYE, fc[1]]; if(Math.hypot(look[0] - x, look[2] - z) < .5) look = [x, f + EYE, z - 10]; }
+  const P0 = camera.position.clone(); pitch = 0; flyTo(pos, look, 'look', 1.2); if(!anim) return; anim.lift = 0; feet = f;
+  const k = r36Pathify(anim, {level: f}); if(k !== 1 && (k === 0 || !r36LineClear(P0, anim.to))) r36Cut(anim, r.name); }
+{ const _bw36 = buildWaypoints; buildWaypoints = function(){ const r = _bw36.apply(this, arguments); try{ const sel = $('#goto'); sel.onchange = () => { const rm = ROOMS[+sel.value]; sel.value = ''; if(rm) r36GoRoom(rm); }; }catch(e){} return r; }; }
+/* walk: doors open as you come up to them */
+function r36WalkDoors(){ if((r36WalkDoors.n = (r36WalkDoors.n || 0) + 1) % 3) return; const P = camera.position, mv = NAV.v || (joy ? -joy.dy * 3 : 0); if(Math.abs(mv) < .5 && !NAV.vs) return;
+  const sg = mv >= 0 ? 1 : -1, hx = -Math.sin(yaw) * sg, hz = -Math.cos(yaw) * sg;
+  for(const it of r36Doors()){ if(it.t > .5 || (DOOR28.moving.has(it) && it.dir > 0)) continue; const q = it.coll; if(feet < q.y0 - 2.5 || feet > q.y0 + 2.5) continue;
+    const rx = it.c0[0] - P.x, rz = it.c0[1] - P.z, dn = Math.abs(rx * it.n3.x + rz * it.n3.z), lat = Math.abs(-rx * it.n3.z + rz * it.n3.x), W = it.o.width || 3, reach = /SECTIONAL/.test(it.b3kind || '') ? 7 : 5.2;
+    if(dn < reach && lat < W / 2 + .4 && (rx * hx + rz * hz > .15 * Math.hypot(rx, rz) || dn < 1.4)) r36OpenDoor(it); } }
+{ const _nw36 = navWalk; navWalk = function(dt){ const r = _nw36.apply(this, arguments); if(R36N.on) try{ r36WalkDoors(); }catch(e){} return r; }; }
+/* the open garage doorway is for walking through (as the kitchen pocket door): a tap on the floor seen through it walks in; the raised door itself still closes it */
+{ const _dh36 = door28Hit; door28Hit = function(cx, cy){ const it = _dh36.apply(this, arguments); try{ if(it && /SECTIONAL/.test(it.b3kind || '') && it.t > .5){ const h = pick(cx, cy); if(h && h.face && h.face.normal.y > .6) return null; } }catch(e){} return it; }; }
+/* 'You are in': the space under the feet; outdoors the deck slab or the nearest outdoor place, never an indoor room */
+const R36OUT = {'SL-DK-FRONT': 'frontdeck', 'SL-DK-BALC': 'balcony'}, R36HALL = {lhall: 'Lower hall', mainhall: 'Bedroom hallway', uhall: 'Primary hall'};
+function r36WhereAt(x, z, f){
+  let s = null; try{ s = BIM2S.spaceUnderFeet(z, x, f); }catch(e){}
+  if(s && Math.abs(s.floorZ - f) < 2.6){ const id = GRID2ROOM[s.tourRoom] || s.tourRoom, lvl = {L0: 'lower', LG: 'garage', L1: 'main', L2: 'upper'}[s.storey] || 'main';
+    if(/CLOSET|STORAGE/.test(s.id) && !/DRESSING/.test(s.id)) return {name: (s.raw && s.raw.name) || s.name || 'Closet', level: lvl, ph: [], key: s.id};
+    if(/STAIR/.test(s.id) && ROOM.stairs) return ROOM.stairs; if(id && ROOM[id]) return ROOM[id];
+    return {name: R36HALL[s.tourRoom] || (s.raw && s.raw.name) || s.name || 'Hall', level: lvl, ph: [], key: s.id}; }
+  try{ for(const sl of (BIM2S.meta.slabs || [])){ if(sl.interior || Math.abs(sl.z - f) > .8 || !inPoly(sl.outline, z, x)) continue; const id = R36OUT[sl.id]; if(id && ROOM[id]) return ROOM[id]; if(sl.id === 'SL-DK-REAR') return {name: 'Rear deck', level: 'main', ph: (ROOM.entry || {ph: []}).ph, key: sl.id}; } }catch(e){}
+  let best = null, bd = 1e9; for(const r of ROOMS){ if(r.level !== 'outside') continue; const d = Math.hypot(x - r.at[0], z - r.at[1]); if(d < bd){ bd = d; best = r; } }
+  if(z > 3 && best && best.id !== 'street' && ROOM.street) best = ROOM.street;   // the front of the house (drive, walk, steps) is the street side
+  return best || ROOMS[0]; }
+{ const _uw36 = updateWalkRoom; updateWalkRoom = function(force){ if(!R36N.on) return _uw36.apply(this, arguments); if(DESIGN.walkRoom(force)) return;
+    let r = null; try{ r = navOnStair() && ROOM.stairs ? ROOM.stairs : r36WhereAt(camera.position.x, camera.position.z, feet); }catch(e){ return _uw36.apply(this, arguments); }
+    if(r && (force || r !== curRoom) && !(curRoom && r.key && curRoom.key === r.key && !force)){ curRoom = r; $('#title').textContent = r.name; $('#lvl').textContent = LEVEL_TXT[r.level] || ''; $('#dims').textContent = r.dims || ''; $('#eyebrow').textContent = 'Walk · you are in';
+      $('#blurb').textContent = ''; $('#blurb').hidden = true; strip(r.ph || [], r.name); } }; }
+R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
+setTimeout(() => { try{ if(R36N.on && MODEL) r36Grids(); }catch(e){} }, 2500);
 boot();
 })();
 </script>
