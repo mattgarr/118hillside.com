@@ -22411,7 +22411,7 @@ const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
    2  the head follows the way ahead (a chord 4.5 ft down the route), held within a 14 degree band of it by the shortest, least-turning line
       (a taut string), so wiggles in the route move nothing; it eases out of the starting view and onto the stop's own view over a stretch of the
       walk sized to the turn, the short way round;
-   3  the walking speed is planned from that: it eases in and out, and slows wherever the head would otherwise turn faster than R37S.YAW deg/s,
+   3  the walking speed is planned from that: it eases in and out, and slows wherever the head would otherwise turn faster than R36N.YAW deg/s (50; 60 on walks over 45 ft),
       on stairs and through doorways;
    4  the whole move is integrated once, ahead of time, at 240 steps a second (a critically damped follower with feed-forward, its rate and
       acceleration capped), and each frame reads the plan at its own time, so 30, 60 and 120 fps show the same motion.
@@ -22543,7 +22543,7 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
       for(let i = 0; i < N; i++){ const s = sAt(i), w = smooth(0, 1, s / L), base = y0 + d * w, wl = smooth(0, 4, s) * (1 - smooth(L - 5, L, s)); g[i] = base + M * Math.tanh(angDiff(base, psi[i]) / M) * wl; gp[i] = lerp(lerp(a.pitch0, tp[i], wl), a.pitch1, w * w); }
       const h = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'direct', g, gp}); taut(h, 1.6); cands.push({k: 'direct+', g: h, gp}); } }
   // speed: cruise, slower where the head would turn faster than the cap, on stairs and in doorways; eased in and out
-  const Vc = L > S.PACE * S.MAXS ? clamp(L / 6.6, S.PACE, 12.5) : S.PACE;
+  const Vc = L > S.PACE * S.MAXS ? clamp(L / 5.6, S.PACE, 13) : S.PACE;
   const pace = (g, gp) => { const v = new Float64Array(N);
     for(let i = 0; i < N; i++){ const i0 = Math.max(0, i - 1), i1 = Math.min(N - 1, i + 1), d1 = Math.abs(g[i1] - g[i0]) / ((i1 - i0) * ds) / DG, d2 = i0 < i && i1 > i ? Math.abs(g[i1] - 2 * g[i] + g[i0]) / ds / ds / DG : 0, s = sAt(i), p1 = Math.abs(gp[i1] - gp[i0]) / ((i1 - i0) * ds) / DG;
       let m = Math.min(Vc, YAW * .88 / Math.max(1e-6, d1), Math.sqrt(YACC * .6 / Math.max(1e-6, d2)), S.PYAW * .8 / Math.max(1e-6, p1));
