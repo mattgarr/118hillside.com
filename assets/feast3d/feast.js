@@ -405,6 +405,15 @@
           const coals = P.mesh(new THREE.RingGeometry(.2, .97, 36), new THREE.MeshBasicMaterial({color: new THREE.Color(1.0, .32, .08), transparent: true, opacity: .55}), SMK.c[0], SMK.seam - .095, SMK.c[1]); coals.rotation.x = -Math.PI / 2; P.root.add(coals); } } }catch(e){ console.warn('[feast] smoker', e); SMK.pivot = null; }
     SMK.emit = P.emitter({at: new V3(SMK.c[0], -.12, SMK.c[1]), rate: 0, size: .5, rise: .8, drift: [.34, .1], life: 3.4, color: '#dfe3e8', alpha: .34, grow: 2.6}); }
 
+  // the game is played in the house as it is staged: furniture on, nothing moved or removed. What the visitor chose in the tour's
+  // Design tab is put back in storage afterwards, so their own arrangement is still there when they return to the tour.
+  function asStaged(){ try{ const F = window.__hillsideDesign && window.__hillsideDesign.FURN; if(!F) return 'no handle';
+      const ls = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } }, put = (k, v) => { try{ if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} };
+      const o = ls('hillside.furniture'), e = ls('hillside.furniture.edits.v1'); let did = '';
+      if(!F.isOn()){ F.setOn(true); put('hillside.furniture', o); did += 'on '; }
+      const ed = F.edits(); if(ed && (Object.keys(ed.mv || {}).length || (ed.rm || []).length)){ F.reset(); put('hillside.furniture.edits.v1', e); did += 'reset'; }
+      return did || 'as staged'; }catch(e){ console.warn('[feast] furniture', e); return 'error'; } }
+
   /* ================================================================== props in the house */
   let P = null;
   const PROP = {}, DISHOBJ = {}, TAGS = [], SETTINGS = [];
@@ -1077,7 +1086,7 @@
     }catch(e){ if(!frame.err){ frame.err = true; console.error('[feast] frame', e); } } }
 
   /* ================================================================== boot: after the house is ready */
-  function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){}
+  function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} S.staged = asStaged();
     let need = 2; const go = () => { if(--need > 0) return;
       const fonts = () => { try{ return Promise.race([Promise.all([document.fonts.load('40px "Caveat Brush"'), document.fonts.load('600 40px "Cormorant Garamond"')]), new Promise(r => setTimeout(r, 2500))]); }catch(e){ return Promise.resolve(); } };
       try{ buildUI(); }catch(e){ console.error('[feast] ui', e); }
