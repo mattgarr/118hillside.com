@@ -1362,6 +1362,8 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
 })();</script>
 
 <style>/* perf: poster behind the loading text */
+/* r38: until the 3D poster or the photo introduction is in, the loading cover is the front photo (preloaded in the head), never a blank sheet */
+.loading{background:var(--paper) url(../images/front-exterior-800.jpg) center/cover no-repeat}
 .loading.poster::before{content:'';position:absolute;inset:-12px;background:var(--poster) center/cover no-repeat;filter:blur(3px) saturate(.92);opacity:.5}
 .loading.poster>div{position:relative;background:var(--paper);padding:18px 26px 16px;border-radius:14px;box-shadow:0 6px 30px rgba(0,0,0,.18)}
 /* r36 owner: the old instruction card never shows. If the photo slideshow is absent, the wait is the house photo with one small status pill */
