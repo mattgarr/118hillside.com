@@ -19784,6 +19784,14 @@ function r28Quad(mat, F, a0, a1, y0, y1, d, g){   // a flat panel in the opening
 function r28Box(mat, F, a0, a1, y0, y1, d0, d1, g){
   const m = new THREE.Mesh(new THREE.BoxGeometry(a1 - a0, y1 - y0, d1 - d0), mat), am = (a0 + a1) / 2, dm = (d0 + d1) / 2;
   m.position.set(F.cx + F.u[0] * am + F.inn[0] * dm, (y0 + y1) / 2, F.cz + F.u[1] * am + F.inn[1] * dm); m.rotation.y = Math.atan2(F.inn[0], F.inn[1]); m.castShadow = m.receiveShadow = true; g.add(m); return m; }
+function r35Head(F, d, n){   // r35: the underside of the head in the shade's own plane. The model's opening is the rough opening; the window unit's head jamb
+  // hangs below it and hid the top of an inside-mounted shade (the honeycomb headrail could not be seen). Look up the plane from high in the opening.
+  const def = F.head - .03; try{ const rc = new THREE.Raycaster(), up = new THREE.Vector3(0, 1, 0), P = new THREE.Vector3(), y = F.sill + (F.head - F.sill) * .82, ys = [];
+    const objs = withVar(['main', 'upper']).filter(g => g.children.length);
+    for(let k = 0; k < n; k++) for(const fr of [.3, .7]){ const a = -F.W / 2 + (k + fr) * F.W / n; P.set(F.cx + F.u[0] * a + F.inn[0] * d, y, F.cz + F.u[1] * a + F.inn[1] * d); rc.set(P, up); rc.far = F.head - y + .06;
+      let hy = F.head; for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if((m && m.transparent) || !h.object.isMesh) continue; hy = h.point.y; break; } ys.push(hy); }
+    ys.sort((a, b) => a - b); const med = ys[Math.floor(ys.length / 2)]; (R28W.heads || (R28W.heads = {}))[F.o.id] = +(F.head - med).toFixed(3);
+    return Math.max(F.head - .32, Math.min(F.head, med)) - .006; }catch(e){ return def; } }
 function r28Shades(){
   // r35 owner 11/10: exactly four rolls in the house - one across the primary-bedroom slider (blackout), one on each of the two large
   // great-room picture panes, one on the large kitchen window at the sink. Fully up at rest (cassette, hem bar tucked under it); a tap lowers.
@@ -19792,7 +19800,7 @@ function r28Shades(){
   R28W.rolls = 0;
   for(const [id, kind, n] of SPEC){ const F = r28Frame(id); if(!F){ R28W.err.push('no opening ' + id); continue; }
     const g = new THREE.Group(); g.name = 'r28shade:' + id; grp(F.storey === 'L2' ? 'upper' : 'main').add(g);
-    const d = F.T / 2 - .12, top = F.head - .02, cas = .28, fab = r28Mat(kind), pw = (F.W - .08) / n, S = {full: top - cas - F.sill - .07}, parts = [], cols = [];
+    const d = F.T / 2 - .12, top = r35Head(F, d, n), cas = .28, fab = r28Mat(kind), pw = (F.W - .08) / n, S = {full: top - cas - F.sill - .07}, parts = [], cols = [];
     for(let k = 0; k < n; k++){ const a0 = -F.W / 2 + .04 + k * pw + .02, a1 = a0 + pw - .04; cols.push(a0 + (a1 - a0) * .25, (a0 + a1) / 2, a0 + (a1 - a0) * .75);
       r28Box(r28Mat('cassette'), F, a0, a1, top - cas, top, d - .14, d + .14, g);                     // cassette
       const f = r28Quad(fab, F, a0 + .03, a1 - .03, -1, 0, d, g); f.geometry.translate(0, -.5, 0); f.position.y = top - cas; f.receiveShadow = true; f.castShadow = kind === 'blackout';   // a unit-tall cloth hung from the cassette: scale.y is the drop
@@ -19863,7 +19871,7 @@ function r29Cells(){   // owner 11/10: every other window blind in the house is 
     // The hardware, measured off the listing photos (living room and bedroom, shades raised: the whole raised assembly is about 4" tall):
     // a slim extruded-aluminium headrail 1-1/2" tall x 2" deep with a squared face and end caps, inside the top of the opening; a dark hairline
     // under its lip; the packed cells about 1-1/2" (a little more on a tall window); a 3/4" x 1-3/4" bottom rail in the same painted metal.
-    const d = F.T / 2 - .1, top = F.head - .03, HR = .125, RV = .008, BR = .0625, pw = (F.W - .08) / n, parts = [], cols = [], S = {full: 0, up: 0};
+    const d = F.T / 2 - .1, top = r35Head(F, d, n), HR = .125, RV = .008, BR = .0625, pw = (F.W - .08) / n, parts = [], cols = [], S = {full: 0, up: 0};
     const fit = lo => { S.full = Math.max(.4, top - HR - RV - lo - BR); S.up = Math.min(.16, Math.max(.11, S.full * .03)); }; fit(F.sill); const full0 = S.full;
     for(let k = 0; k < n; k++){ const a0 = -F.W / 2 + .04 + k * pw + .015, a1 = a0 + pw - .03; cols.push(a0 + (a1 - a0) * .25, (a0 + a1) / 2, a0 + (a1 - a0) * .75);
       r28Box(r28Mat('rail'), F, a0 + .01, a1 - .01, top - HR, top, d - .083, d + .083, g);                            // headrail
