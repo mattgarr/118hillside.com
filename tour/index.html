@@ -5653,11 +5653,11 @@ function orbitLand(pos, look){   // v22 flash22 F3: where applyOrbit (ground cle
 /* NAV r34 (owner 11/10: 'it puts me against the floor', 'put us back on the lower floor'): a flight to a standing view always arrives.
    Touching the view mid-flight (drag, wheel, pad, a game's turn button) used to stop the camera wherever it was - between floors, in a
    wall, up in the roof. Now the viewer gets the look direction at once and the position keeps gliding to the flight's destination. */
-function navGlide(){ if(!anim || anim.kind !== 'look') return; glide = {t0: anim.t0, dur: anim.dur, from: anim.from, to: anim.to, lift: anim.lift, last: null, path: anim.path || null};
+function navGlide(){ if(!anim || anim.kind !== 'look') return; glide = {t0: anim.t0, dur: anim.dur, from: anim.from, to: anim.to, lift: anim.lift, last: null, path: anim.path || null, tl: anim.path && anim.tl || null};
   lensTw = {t0: performance.now(), dur: Math.max(.01, anim.dur - (performance.now() - anim.t0) / 1000), f0: camera.fov, s0: camera.userData.sy || 0}; }
 function navGlideStep(){ const g = glide, P = camera.position; if(g.last && P.distanceToSquared(g.last) > 1e-6){ glide = null; return; }   // something else placed the camera: let it
   const tt = Math.min(1, (performance.now() - g.t0) / 1000 / g.dur), t = tt < .5 ? 4 * tt ** 3 : 1 - Math.pow(-2 * tt + 2, 3) / 2;
-  if(g.path){ if(tt >= 1) P.copy(g.to); else r36PathPos(g.path, r36Ease(tt) * g.path.L, P); } else {   /* r36: the taken-over walk keeps to its route */
+  if(g.path){ if(tt >= 1) P.copy(g.to); else r36PathPos(g.path, g.tl ? r37At(g.tl, (performance.now() - g.t0) / 1000, {}).s : r36Ease(tt) * g.path.L, P); } else {   /* r36: the taken-over walk keeps to its route */
   P.lerpVectors(g.from, g.to, t); if(g.lift) P.y += Math.sin(t * Math.PI) * g.lift; } g.last = P.clone();
   if(tt >= 1){ glide = null; if(mode === 'walk'){ try{ feet = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); }catch(e){} } } }
 function navStandable(P){   // a place a person could be standing: eye 3.5-7.5 ft over the floor under it, clear of walls
@@ -6649,7 +6649,7 @@ function navQA(){
     for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
       if(A && A.path){ walked++; const P = A.path; let off = 0, f = P.pts[0].y - EYE;
         for(let k = 7; k < P.pts.length - 7; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0){ const q = r36Nearest(v.x, v.z, f, 3); if(!q || q.d > .8) off++; } }
-        if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > 8.01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
+        if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > R37S.CHK.dur) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
         R.note('moves', id, 'walk ' + r2(P.L) + ' ft in ' + r2(A.dur) + ' s' + (P.doors.length ? ', doors ' + P.doors.map(d => d.it.id).join(' ') : '')); for(const f2 of [.25, .5, .75]){ mid(f2); R.row('moves', id + '@' + f2, probe()); } }
       else if(A && A.cut){ cut++; R.note('moves', id, 'cut'); } else if(A){ flown++; if(A.kind === 'look' && A.from.distanceTo(A.to) > 3) R.fail('moves', id, 'a straight flight of ' + r2(A.from.distanceTo(A.to)) + ' ft'); else R.note('moves', id, A.kind === 'orbit' ? 'orbit flight outdoors' : 'turn'); }
       finish(); const m = probe(); if(dist(m, FRAME_FOR(b).pos) > (look(b) ? .05 : .8)) R.fail('moves', id, 'ended at ' + m.pos + ', not at the stop'); }
@@ -6665,25 +6665,31 @@ function navQA(){
   SEC.smooth = async R => { const dt0 = o.smoothDt || 1 / 60, CHK = R37S.CHK, D = 180 / Math.PI;
     const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)), rows = [], realNow = performance.now.bind(performance), V = new V3();
     let vt = realNow(); const yawOf = () => { camera.getWorldDirection(V); return Math.atan2(-V.x, -V.z); };
-    const run = (A, dt, keepTrace) => { const m = {dur: 0, rate: 0, acc: 0, total: 0, net: 0, rev: 0, v: 0, a: 0, ay: 0, clr: 99, trace: keepTrace ? [] : null};
+    const run = (A, dt, keepTrace) => { const m = {dur: 0, rate: 0, acc: 0, total: 0, net: 0, rev: 0, v: 0, a: 0, ay: 0, clr: 99, trace: keepTrace ? [] : null, revAt: [], aAt: 0, clrAt: 0, clrWhat: '', arrive: null, path: o.smoothTrace ? [] : null};
       let py = yawOf(), uw = 0, pr = null, dir = 0, opp = 0, P1 = camera.position.clone(), P2 = null, t = 0, n = 0;
       while(anim === A && t < 25){ vt += dt * 1000; tick0(true); t += dt; n++; camera.updateMatrixWorld();
         const y = yawOf(), d = angDiff(py, y); py = y; uw += d; m.total += Math.abs(d); const rate = d / dt * D; m.rate = Math.max(m.rate, Math.abs(rate)); if(pr != null) m.acc = Math.max(m.acc, Math.abs(rate - pr) / dt); pr = rate;
-        if(Math.abs(d) * D > 1e-4){ const sg = Math.sign(d); if(!dir){ if(Math.abs(uw) * D > 1.5) dir = Math.sign(uw); } else if(sg !== dir){ opp += Math.abs(d) * D; if(opp > 1.5){ m.rev++; dir = sg; opp = 0; } } else opp = 0; }
+        if(Math.abs(d) * D > 1e-4){ const sg = Math.sign(d); if(!dir){ if(Math.abs(uw) * D > 1.5) dir = Math.sign(uw); } else if(sg !== dir){ opp += Math.abs(d) * D; if(opp > 1.5){ m.rev++; m.revAt.push(+t.toFixed(2)); dir = sg; opp = 0; } } else opp = 0; }
         const P = camera.position; m.v = Math.max(m.v, P.distanceTo(P1) / dt);
-        if(P2){ const ax = (P.x - 2 * P1.x + P2.x) / dt / dt, ay = (P.y - 2 * P1.y + P2.y) / dt / dt, az = (P.z - 2 * P1.z + P2.z) / dt / dt; m.a = Math.max(m.a, Math.hypot(ax, ay, az)); m.ay = Math.max(m.ay, Math.abs(ay)); }
+        if(P2){ const ax = (P.x - 2 * P1.x + P2.x) / dt / dt, ay = (P.y - 2 * P1.y + P2.y) / dt / dt, az = (P.z - 2 * P1.z + P2.z) / dt / dt; const aa = Math.hypot(ax, ay, az); if(aa > m.a){ m.a = aa; m.aAt = +t.toFixed(2); } m.ay = Math.max(m.ay, Math.abs(ay)); }
         P2 = P1.clone(); P1.copy(P);
-        if(keepTrace) m.trace.push([t, uw]); if(n % 6 === 0 && anim === A) m.clr = Math.min(m.clr, probe().clr); }
+        if(keepTrace) m.trace.push([t, uw]); if(m.path && n % 3 === 0) m.path.push([+t.toFixed(2), +(uw * D).toFixed(1), +P.x.toFixed(2), +P.z.toFixed(2), +P.y.toFixed(2)]); if(m.arrive == null && P.distanceTo(A.to) < .01) m.arrive = t;
+        if(n % 6 === 0 && anim === A){ const pr2 = probe(); if(pr2.clr < m.clr){ m.clr = pr2.clr; m.clrAt = +t.toFixed(2); m.clrWhat = pr2.what + ' @' + pr2.pos; } } }
       m.dur = t; m.net = Math.abs(uw); return m; };
     const rr = v => +(+v).toFixed(1), fps = [];
     R37S.qaNoDraw = true; performance.now = () => vt;
+    const record = (id, A, x) => { const L = A.path.L, m = run(A, dt0, true), row = Object.assign({id, L: rr(L), dur: +m.dur.toFixed(2), rate: rr(m.rate), acc: rr(m.acc), total: rr(m.total * D), net: rr(m.net * D), excess: rr((m.total - m.net) * D), rev: m.rev, v: rr(m.v), a: rr(m.a), ay: rr(m.ay), clr: +m.clr.toFixed(2), trace: m.trace, settle: m.arrive == null ? null : +(m.dur - m.arrive).toFixed(2), revAt: m.revAt, aAt: m.aAt, clrAt: m.clrAt, clrWhat: m.clrWhat, path: m.path, plan: A.r37k || ''}, x);
+      rows.push(row); finish();
+      const bad = []; if(m.rate > CHK.rate) bad.push('yaw rate ' + row.rate + ' deg/s'); if(m.acc > CHK.acc) bad.push('yaw acceleration ' + row.acc + ' deg/s2'); if(m.rev > CHK.rev) bad.push(m.rev + ' turning reversals'); if(m.dur > CHK.dur) bad.push('takes ' + row.dur + ' s');
+      if(bad.length) R.fail('smooth', id, bad.join(', ')); R.note('smooth', id, L.toFixed(1) + ' ft ' + row.dur + ' s; yaw max ' + row.rate + ' deg/s, ' + row.acc + ' deg/s2, turned ' + row.total + ' for net ' + row.net + ' deg (' + row.rev + ' reversals); speed max ' + row.v + ' ft/s, accel ' + row.a + ' ft/s2 (vertical ' + row.ay + '); clearance ' + row.clr + ' ft'); };
     try{ tour(seq[0]);
       for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
-        if(!A || !A.path){ finish(); continue; } const L = A.path.L, m = run(A, dt0, true), row = {id, L: rr(L), dur: +m.dur.toFixed(2), rate: rr(m.rate), acc: rr(m.acc), total: rr(m.total * D), net: rr(m.net * D), excess: rr((m.total - m.net) * D), rev: m.rev, v: rr(m.v), a: rr(m.a), ay: rr(m.ay), clr: +m.clr.toFixed(2), from: seq[q - 1], to: seq[q], trace: m.trace};
-        rows.push(row); finish();
-        const bad = []; if(m.rate > CHK.rate) bad.push('yaw rate ' + row.rate + ' deg/s'); if(m.acc > CHK.acc) bad.push('yaw acceleration ' + row.acc + ' deg/s2'); if(m.rev > CHK.rev) bad.push(m.rev + ' turning reversals'); if(m.dur > CHK.dur) bad.push('takes ' + row.dur + ' s');
-        if(bad.length) R.fail('smooth', id, bad.join(', ')); R.note('smooth', id, L.toFixed(1) + ' ft ' + row.dur + ' s; yaw max ' + row.rate + ' deg/s, ' + row.acc + ' deg/s2, turned ' + row.total + ' for net ' + row.net + ' deg (' + row.rev + ' reversals); speed max ' + row.v + ' ft/s, accel ' + row.a + ' ft/s2 (vertical ' + row.ay + '); clearance ' + row.clr + ' ft'); }
-      if(o.smoothFps){ const worst = rows.slice().sort((x, y) => y.rate + y.excess / 4 - x.rate - x.excess / 4).slice(0, 5);
+        if(!A || !A.path){ finish(); continue; } record(id, A, {from: seq[q - 1], to: seq[q]}); }
+      // Walk: 'Walk to' every room in turn (the same walking as a tap on the floor or a white circle)
+      if(o.smoothWalk !== false){ setMode('walk'); finish(); let prev = 'start';
+        for(const r of ROOMS){ if(r.level === 'outside' && r.id !== 'street') continue; await pause(); r36GoRoom(r); const A = anim; if(A && A.path) record('walk:' + prev + '>' + r.id, A, {walk: true}); else finish(); prev = r.id; }
+        setMode('tour'); finish(); }
+      if(o.smoothFps){ const worst = rows.filter(r => !r.walk).sort((x, y) => y.rate + y.excess / 4 - x.rate - x.excess / 4).slice(0, 5);
         for(const w of worst){ for(const dt of [1 / 30, 1 / 120]){ await pause(); tour(w.from); showStop(w.to); const A = anim; if(!A || !A.path){ finish(); continue; } const m = run(A, dt, true); finish();
             let dev = 0; for(const [t, y] of m.trace){ const tr = w.trace; let k = 0; while(k < tr.length - 1 && tr[k + 1][0] < t) k++; if(k >= tr.length - 1) continue; const u = (t - tr[k][0]) / Math.max(1e-6, tr[k + 1][0] - tr[k][0]); if(u < 0 || u > 1) continue; dev = Math.max(dev, Math.abs(y - (tr[k][1] + (tr[k + 1][1] - tr[k][1]) * u)) * D); }
             fps.push({id: w.id, fps: Math.round(1 / dt), rate: rr(m.rate), acc: rr(m.acc), dur: +m.dur.toFixed(2), dev: +dev.toFixed(2)});
@@ -22352,11 +22358,25 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
     if(way && !R36N.noClear) for(const it of r36Doors()){ if(!/SECTIONAL/.test(it.b3kind || '') || !it.c0) continue; const q = it.coll; let hit = false;
       for(let i = 0; i < way.length - 1 && !hit; i++){ const a = way[i], b = way[i + 1], k = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .4)); for(let u = 0; u <= k; u++){ const x = a.x + (b.x - a.x) * u / k, z = a.z + (b.z - a.z) * u / k; if(x > q.x0 - .3 && x < q.x1 + .3 && z > q.z0 - .3 && z < q.z1 + .3 && Math.abs(a.f - q.y0) < 2.5){ hit = true; break; } } }
       if(hit){ const C = {x: it.c0[0], z: it.c0[1], f: q.y0}, w1 = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, C), w2 = w1 && r36Plan(C, {x: to.x, z: to.z, f: tf, rooms: rooms || null}); if(w1 && w2) way = w1.concat(w2.slice(1)); break; } }
+    /* r37: no doubling back at either end: the walk leaves its start (and reaches its end) by the farthest route point in plain sight on foot (the planner starts and ends at a
+       grid node near each end, which could lie behind you or a step down a stair: the walk went past it and came back) */
+    if(way && way.length > 1 && !R36N.noRelax) try{ const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
+      try{ const free = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; };
+        const sight = (ax, az, af, bx, bz, bf, offA, offB) => { const L = Math.hypot(bx - ax, bz - az), k = Math.max(1, Math.ceil(L / .25)); let f = af;
+          for(let q = 1; q < k; q++){ const u = q / k, x = lerp(ax, bx, u), z = lerp(az, bz, u), y = navSupport(x, z, f + .5); if(Math.abs(y - f) > .5 || !free(x, z, y)) return false; f = y;
+            if((!offA || u * L > 1.5) && (!offB || (1 - u) * L > 1.5) && r36At(x, z, f) === 0) return false; } return Math.abs(f - bf) < .6; };
+        const offA = r36At(from.x, from.z, ff) !== 1, offB = r36At(to.x, to.z, tf) !== 1;
+        for(let j = Math.min(way.length - 1, 60); j >= 1; j--) if(sight(from.x, from.z, ff, way[j].x, way[j].z, way[j].f, offA, false)){ way = way.slice(j); break; }
+        for(let j = Math.max(0, way.length - 61); j < way.length - 1; j++) if(sight(way[j].x, way[j].z, way[j].f, to.x, to.z, tf, false, offB)){ way = way.slice(0, j + 1); break; }
+      } finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }catch(e){ console.warn('[r37 nav] ends', e); }
     if(way){ // round the corners (two passes of corner cutting keep the line inside the pulled corridor), then sample every 0.5 ft and set the eye over the floor
       let P = way.map(n => [n.x, n.z, n.f]); for(let pass = 0; pass < 2; pass++){ const Q = [P[0]]; for(let i = 1; i < P.length - 1; i++){ const a = P[i - 1], b = P[i], d = P[i + 1], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lb = Math.hypot(d[0] - b[0], d[1] - b[1]), ka = Math.min(.25, 1.2 / Math.max(la, .01)), kb = Math.min(.25, 1.2 / Math.max(lb, .01));
           Q.push([b[0] + (a[0] - b[0]) * ka, b[1] + (a[1] - b[1]) * ka, b[2] + (a[2] - b[2]) * ka], [b[0] + (d[0] - b[0]) * kb, b[1] + (d[1] - b[1]) * kb, b[2] + (d[2] - b[2]) * kb]); } Q.push(P[P.length - 1]); P = Q; }
-      const pts = [from.clone()]; let f = P[0][2];
+      let pts = [from.clone()]; let f = P[0][2];
+      const lead = (A, B, fa, fb, ya, yb) => { const L = Math.hypot(B[0] - A[0], B[2] - A[2]), k = Math.floor(L / .5); for(let q = 1; q < k; q++){ const u = q / k, x = lerp(A[0], B[0], u), z = lerp(A[2], B[2], u), fi = lerp(fa, fb, u), y = navSupport(x, z, fi + .3); pts.push(new THREE.Vector3(x, Math.abs(y - fi) < .6 ? y + EYE : lerp(ya, yb, u), z)); } };   // r37: the stretch from the start to the route (and from the route to the end) is sampled too
+      if(!R36N.noRelax) lead([from.x, 0, from.z], [P[0][0], 0, P[0][1]], ff, P[0][2], from.y, P[0][2] + EYE);
       for(let i = 0; i < P.length - 1; i++){ const a = P[i], b = P[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]), k = Math.max(1, Math.ceil(L / .5)); for(let s = (i ? 1 : 0); s <= k; s++){ const x = a[0] + (b[0] - a[0]) * s / k, z = a[1] + (b[1] - a[1]) * s / k; f = navSupport(x, z, a[2] + (b[2] - a[2]) * s / k + .3); pts.push(new THREE.Vector3(x, f + EYE, z)); } }
+      if(!R36N.noRelax){ const e = P[P.length - 1]; lead([e[0], 0, e[1]], [to.x, 0, to.z], e[2], tf, e[2] + EYE, to.y); }
       pts.push(to.clone());
       /* r37: keep a shoulder's width off a wall that runs beside the route (the line used to brush siding and door jambs). Each point is nudged away from an obstacle on one side only, the nudges are smoothed, and a nudge is kept only where the ground is still walkable */
       if(!R36N.noClear) try{ const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
@@ -22370,8 +22390,9 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
           D[0] = [0, 0]; D[n - 1] = [0, 0]; for(let i = 1; i < n - 1; i++) if(ok(i) && Math.hypot(D[i][0], D[i][1]) >= .04){ const q = pts[i], f = q.y - EYE; q.x += D[i][0]; q.z += D[i][1]; q.y = navSupport(q.x, q.z, f + .3) + EYE; }
           for(let pass = 0; pass < 5; pass++) for(let i = 2; i < n - 2; i++){ const q = pts[i], f = q.y - EYE, x = (pts[i - 1].x + q.x * 2 + pts[i + 1].x) / 4, z = (pts[i - 1].z + q.z * 2 + pts[i + 1].z) / 4; if(Math.hypot(x - q.x, z - q.z) < .01 || !r36At(x, z, f) || !fr(x, z, f)) continue; const y = navSupport(x, z, f + .3); if(Math.abs(y - f) < .3){ q.x = x; q.z = z; q.y = y + EYE; } }   // and no kinks left in the line
         } finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }catch(e){ console.warn('[r37 nav] clearance', e); }
-      for(let pass = 0; pass < 3; pass++) for(let i = 2; i < pts.length - 2; i++) pts[i].y = (pts[i - 1].y + pts[i].y * 2 + pts[i + 1].y) / 4;   // stair nosings and thresholds become one even climb
-      { const n = pts.length, k0 = Math.min(6, n - 2), y0 = pts[0].y, y1 = pts[n - 1].y; for(let i = 1; i <= k0; i++){ const w = i / (k0 + 1); pts[i].y = lerp(y0, pts[i].y, w); pts[n - 1 - i].y = lerp(y1, pts[n - 1 - i].y, w); } }
+      if(!R36N.noRelax) pts = r37Relax(pts);   // r37: rounded corners, the middle of each doorway
+      for(let pass = 0; pass < (R36N.noRelax ? 3 : 10); pass++) for(let i = 2; i < pts.length - 2; i++) pts[i].y = (pts[i - 1].y + pts[i].y * 2 + pts[i + 1].y) / 4;   // r37: 10 passes (was 3), so a landing is a gentle change of slope   // stair nosings and thresholds become one even climb
+      { const n = pts.length, k0 = Math.min(R36N.noRelax ? 6 : 10, Math.floor((n - 2) / 2)), y0 = pts[0].y, y1 = pts[n - 1].y; for(let i = 1; i <= k0; i++){ const w = R36N.noRelax ? i / (k0 + 1) : smooth(0, 1, i / (k0 + 1)); pts[i].y = lerp(y0, pts[i].y, w); pts[n - 1 - i].y = lerp(y1, pts[n - 1 - i].y, w); } }
       const cum = [0]; for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
       const doors = []; for(const it of r36Doors()){ const q = it.coll; for(let i = 0; i < pts.length; i++){ const p = pts[i]; if(p.x > q.x0 - .25 && p.x < q.x1 + .25 && p.z > q.z0 - .25 && p.z < q.z1 + .25 && p.y - EYE > q.y0 - 1.5 && p.y - EYE < q.y1 - 2){ doors.push({it, s: cum[i], x: p.x, z: p.z}); break; } } }
       res = {pts, cum, L: cum[cum.length - 1], doors}; } }catch(e){ console.warn('[r36 nav] route', e); }
@@ -22380,7 +22401,186 @@ function r36PathPos(p, s, out){ const c = p.cum; let lo = 0, hi = c.length - 1; 
 const r36Ease = t => { const a = .16, v = 1 / (1 - a); return t < a ? v * t * t / (2 * a) : t > 1 - a ? 1 - v * (1 - t) * (1 - t) / (2 * a) : v * (t - a / 2); };
 function r36OpenDoor(it, x, z){ if(DOOR28.moving.has(it)){ if(it.dir < 0) it.dir = 1; return; } if(it.t < .5){ if(it.sl && x != null){ it.r37a = null; try{ bim3SlideSide(it, bim3SlideAt(it, x, z)); }catch(e){} } door28Toggle(it); } }
 const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
-function r36PathStep(a, tt){   // one frame of a walked move: position on the route, eyes ahead, then onto the destination's own view
+/* ===== r37 SMOOTH WALKING (owner 11/11: "smooth out the walking view... the head spins are jarring... in reality people keep their heads pointed
+   without a ton of turning - in the walk it's very jarring and not smoothed out"). Before: the eyes pointed at a spot 5 ft down the route every
+   frame, so each corner of the pulled line, and each zig of the grid, turned the head as fast as the walk took it (up to several hundred deg/s),
+   and the view was then swung onto the stop's own view over the last 9 ft. Now, for every walked move (tour Next / Back / pills, tap-to-walk,
+   white circles, 'Walk to', the plan):
+   1  the route is rounded: the line is relaxed sideways (never along itself) toward a smooth curve, a point moving only where the ground stays
+      walkable and clear, and kept to the middle of each doorway it goes through;
+   2  the head follows the way ahead (a chord 4.5 ft down the route), held within a 14 degree band of it by the shortest, least-turning line
+      (a taut string), so wiggles in the route move nothing; it eases out of the starting view and onto the stop's own view over a stretch of the
+      walk sized to the turn, the short way round;
+   3  the walking speed is planned from that: it eases in and out, and slows wherever the head would otherwise turn faster than R37S.YAW deg/s,
+      on stairs and through doorways;
+   4  the whole move is integrated once, ahead of time, at 240 steps a second (a critically damped follower with feed-forward, its rate and
+      acceleration capped), and each frame reads the plan at its own time, so 30, 60 and 120 fps show the same motion.
+   A door on the way opens a second ahead of you; if one is still swinging the walk eases to a stop before it. Free walking and drag-to-look
+   are not touched. */
+Object.assign(R36N, {YAW: 50, YACC: 120, YAWL: 60, YACCL: 145, LONG: 45, PYAW: 30, PACC: 70, TUBE: 18, TUBEL: 22, LA: 4.5, ACC: 5.5, DEC: 4.5});   // deg/s, deg/s2, ft, ft/s2 (a walk over LONG ft may turn up to YAWL: a two-flight move turns about 450 deg)
+function r37Dist(g){   // clearance (ft) from each walkable cell of a level grid to the nearest cell that is not (chamfer transform), kept on the grid
+  if(g.dist) return g.dist; const G = R36N.lv, NX = G.NX, NZ = G.NZ, n = NX * NZ, D = new Float32Array(n), b = Math.SQRT2;
+  for(let k = 0; k < n; k++) D[k] = g.ok[k] ? 1e6 : 0;
+  for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const k = j * NX + i; if(!D[k]) continue; let v = D[k]; if(i > 0) v = Math.min(v, D[k - 1] + 1);
+    if(j > 0){ v = Math.min(v, D[k - NX] + 1); if(i > 0) v = Math.min(v, D[k - NX - 1] + b); if(i < NX - 1) v = Math.min(v, D[k - NX + 1] + b); } D[k] = v; }
+  for(let j = NZ - 1; j >= 0; j--) for(let i = NX - 1; i >= 0; i--){ const k = j * NX + i; if(!D[k]) continue; let v = D[k]; if(i < NX - 1) v = Math.min(v, D[k + 1] + 1);
+    if(j < NZ - 1){ v = Math.min(v, D[k + NX] + 1); if(i < NX - 1) v = Math.min(v, D[k + NX + 1] + b); if(i > 0) v = Math.min(v, D[k + NX - 1] + b); } D[k] = v; }
+  for(let k = 0; k < n; k++) D[k] = Math.min(D[k], 40) * G.c; return g.dist = D; }
+function r37Clr(x, z, f){   // clearance inside the walkable area at a standing place (bilinear), or null off the level grids
+  const G = R36N.lv; if(!G) return null; let g = null; const k0 = G.idx(x, z); if(k0 < 0) return null; for(const q of G.LVS) if(Math.abs(f - q.L) < .45 && q.base[k0]){ g = q; break; } if(!g) return null;
+  const D = r37Dist(g), u = (x - G.X0) / G.c - .5, v = (z - G.Z0) / G.c - .5, i = Math.floor(u), j = Math.floor(v), a = u - i, c = v - j; if(i < 0 || j < 0 || i >= G.NX - 1 || j >= G.NZ - 1) return null;
+  const k = j * G.NX + i; return (D[k] * (1 - a) + D[k + 1] * a) * (1 - c) + (D[k + G.NX] * (1 - a) + D[k + G.NX + 1] * a) * c; }
+function r37Posed(it, t, fn){ const t0 = it.t; try{ it.t = t; door28Pose(it); for(const pt of it.parts) if(pt.piv) pt.piv.updateMatrixWorld(true); return fn(); }catch(e){ return null; } finally { it.t = t0; try{ door28Pose(it); for(const pt of it.parts) if(pt.piv) pt.piv.updateMatrixWorld(true); }catch(e){} } }
+function r37Leaves(){   // where each swinging leaf stands when open (2D boxes): the walking line keeps off it
+  const out = []; for(const it of r36Doors()){ if(it.sl || !it.parts || !it.parts.some(pt => pt.sign != null && pt.piv)) continue;
+    const bs = r37Posed(it, 1, () => it.parts.filter(pt => pt.sign != null && pt.piv).map(pt => new THREE.Box3().setFromObject(pt.piv))) || [];
+    for(const bx of bs) if(!bx.isEmpty() && bx.max.y - bx.min.y > 3) out.push({x0: bx.min.x, x1: bx.max.x, z0: bx.min.z, z1: bx.max.z, y0: bx.min.y, y1: bx.max.y}); }
+  return out; }
+function r37Span(it){   // the part of a door's opening you walk through, across the opening from its middle: where the leaves stand when shut (a door with sidelights is not glass wall to wall)
+  if(it.r37span !== undefined) return it.r37span; let sp = null;
+  if(!it.sl && !/SECTIONAL/.test(it.b3kind || '') && it.parts && it.parts.some(pt => pt.piv)){ const ux = -it.n3.z, uz = it.n3.x;
+    const r = r37Posed(it, 0, () => { let a = 1e9, b = -1e9; for(const pt of it.parts){ if(!pt.piv) continue; const bx = new THREE.Box3().setFromObject(pt.piv); if(bx.isEmpty()) continue;
+        for(const x of [bx.min.x, bx.max.x]) for(const z of [bx.min.z, bx.max.z]){ const l = (x - it.c0[0]) * ux + (z - it.c0[1]) * uz; a = Math.min(a, l); b = Math.max(b, l); } } return b > a ? [a, b] : null; });
+    const W = it.o.width || 3; if(r && r[1] - r[0] > 1.5 && r[1] - r[0] < W + .5) sp = r; }
+  return it.r37span = sp; }
+function r37Relax(pts){   // 1: rounds the route (pts at ~0.5 ft): an elastic band, pulled straight and pushed off the edges of the walkable area and off open door leaves
+  const n0 = pts.length; if(n0 < 6) return pts;
+  const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
+  try{
+    // work at ~1 ft spacing
+    const cum = [0]; for(let i = 1; i < n0; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z));
+    const L = cum[n0 - 1]; if(L < 4) return pts; const n = Math.max(5, Math.round(L)) + 1, X = [], Z = [], F = [];
+    for(let k = 0, j = 0; k < n; k++){ const s = L * k / (n - 1); while(j < n0 - 2 && cum[j + 1] < s) j++; const d = cum[j + 1] - cum[j], u = d > 1e-6 ? clamp((s - cum[j]) / d, 0, 1) : 0;
+      X.push(lerp(pts[j].x, pts[j + 1].x, u)); Z.push(lerp(pts[j].z, pts[j + 1].z, u)); F.push(lerp(pts[j].y, pts[j + 1].y, u) - EYE); }
+    const LB = r37Leaves(), leafD = (x, z, f) => { let best = 99, dx = 0, dz = 0; for(const b of LB){ if(b.y1 < f + .7 || b.y0 > f + 5.6) continue; const cx = clamp(x, b.x0, b.x1), cz = clamp(z, b.z0, b.z1), d = Math.hypot(x - cx, z - cz); if(d < best){ best = d; dx = d > 1e-6 ? (x - cx) / d : 0; dz = d > 1e-6 ? (z - cz) / d : 0; } } return [best, dx, dz]; };
+    const fr = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; };
+    const F0 = F.slice(), okAt = (x, z, f, k) => { const r = r36At(x, z, f); if(r === 0 || !fr(x, z, f) || leafD(x, z, f)[0] < .9) return false; const y = navSupport(x, z, f + .3), out = r === 2 && !bim2InFootprint(x, z, .5);
+      return Math.abs(y - f) < (out ? .45 : .2) && (k == null || Math.abs(y - F0[k]) < (out ? .6 : .2)) ? y : false; };
+    // doorway bands: across the opening the line keeps to the middle (a funnel 2.2 ft either side of the door plane)
+    const band = []; for(let k = 0; k < n; k++){ let b = null; for(const it of drs){ const q = it.coll; if(F[k] < q.y0 - 1.5 || F[k] > q.y1 - 2) continue; const rx = X[k] - it.c0[0], rz = Z[k] - it.c0[1], dn = rx * it.n3.x + rz * it.n3.z, lat = -rx * it.n3.z + rz * it.n3.x, W = it.o.width || 3;
+        if(Math.abs(dn) < 2.2 && Math.abs(lat) < W / 2 + .6){ const sp = r37Span(it), lc = sp ? (sp[0] + sp[1]) / 2 : 0, hw = sp ? (sp[1] - sp[0]) / 2 - 1.0 : W / 2 - 1.15; b = {it, lc, hw: Math.max(.12, hw) + Math.max(0, Math.abs(dn) - .7) * .9}; break; } } band.push(b); }
+    const ok = []; for(let k = 0; k < n; k++) ok.push(okAt(X[k], Z[k], F[k]) !== false);
+    const put = (k, x, z) => { const y = okAt(x, z, F[k], k); if(y === false && ok[k]) return false; X[k] = x; Z[k] = z; if(y !== false){ ok[k] = true; F[k] = y; } else ok[k] = false; return true; };
+    const project = k => { const b = band[k]; if(!b) return; const it = b.it, rx = X[k] - it.c0[0], rz = Z[k] - it.c0[1], dn = rx * it.n3.x + rz * it.n3.z, lat = -rx * it.n3.z + rz * it.n3.x, cl = clamp(lat, b.lc - b.hw, b.lc + b.hw); if(Math.abs(cl - lat) < 1e-4) return;
+      put(k, it.c0[0] + it.n3.x * dn - it.n3.z * cl, it.c0[1] + it.n3.z * dn + it.n3.x * cl); };
+    for(let k = 1; k < n - 1; k++) project(k);
+    const DS = 1.3, E = .3, wEnd = k => Math.min(1, k / 2, (n - 1 - k) / 2);   // the band settles where it is 1.3 ft inside the walkable area, if the room allows
+    for(let it = 0; it < 90; it++){ let moved = 0; const X0 = X.slice(), Z0 = Z.slice();
+      for(let k = 1; k < n - 1; k++){ const tx = X0[k + 1] - X0[k - 1], tz = Z0[k + 1] - Z0[k - 1], tl = Math.hypot(tx, tz); if(tl < 1e-4) continue; const nx = -tz / tl, nz = tx / tl, x = X0[k], z = Z0[k], f = F[k];
+        let m = (((X0[k - 1] + X0[k + 1]) / 2 - x) * nx + ((Z0[k - 1] + Z0[k + 1]) / 2 - z) * nz) * .5;   // straighten (sideways only)
+        const c = r37Clr(x, z, f); if(c != null && c < DS){ const gx = ((r37Clr(x + E, z, f) ?? c) - (r37Clr(x - E, z, f) ?? c)) / (2 * E), gz = ((r37Clr(x, z + E, f) ?? c) - (r37Clr(x, z - E, f) ?? c)) / (2 * E); m += (DS - c) * (gx * nx + gz * nz) * .35 * wEnd(k); }
+        const [ld, lx, lz] = leafD(x, z, f); if(ld < 1.8) m += (1.8 - ld) * (lx * nx + lz * nz) * .4;
+        m = clamp(m, -.25, .25); if(Math.abs(m) < .002) continue;
+        for(const q of [1, .5, .25]) if(put(k, x + nx * m * q, z + nz * m * q)){ moved++; break; } project(k); }
+      if(!moved) break; }
+    // corners: the relaxed line, simplified to its turning points; each turning point becomes the widest arc (up to 7 ft radius) that stays walkable and in the middle of a doorway
+    const DGR = Math.PI / 180, V = [[X[0], Z[0], F[0]]];
+    { const keep = new Uint8Array(n), st = [[0, n - 1]]; keep[0] = keep[n - 1] = 1;
+      while(st.length){ const [a, b] = st.pop(); if(b - a < 2) continue; let md = 0, mi = -1; const ax = X[a], az = Z[a], bx = X[b], bz = Z[b], L2 = Math.max(1e-9, (bx - ax) * (bx - ax) + (bz - az) * (bz - az));
+        for(let k = a + 1; k < b; k++){ const u = clamp(((X[k] - ax) * (bx - ax) + (Z[k] - az) * (bz - az)) / L2, 0, 1), d = Math.hypot(X[k] - ax - (bx - ax) * u, Z[k] - az - (bz - az) * u) + Math.abs(F[k] - lerp(F[a], F[b], u)) * 2; if(d > md){ md = d; mi = k; } }
+        if(md > .12){ keep[mi] = 1; st.push([a, mi], [mi, b]); } }
+      for(let k = 1; k < n; k++) if(keep[k]) V.push([X[k], Z[k], F[k]]); }
+    const inBand = (x, z, f) => { for(const it of drs){ const q = it.coll; if(f < q.y0 - 1.5 || f > q.y1 - 2) continue; const rx = x - it.c0[0], rz = z - it.c0[1], dn = rx * it.n3.x + rz * it.n3.z, lat = -rx * it.n3.z + rz * it.n3.x, W = it.o.width || 3;
+        if(Math.abs(dn) >= 2.2 || Math.abs(lat) >= W / 2 + .6) continue; const sp = r37Span(it), lc = sp ? (sp[0] + sp[1]) / 2 : 0, hw = sp ? (sp[1] - sp[0]) / 2 - 1.0 : W / 2 - 1.15; return Math.abs(lat - lc) <= Math.max(.12, hw) + Math.max(0, Math.abs(dn) - .7) * .9 + .12; } return true; };
+    const nv = V.length, arcs = new Array(nv).fill(null);
+    for(let i = 1; i < nv - 1; i++){ const P = V[i - 1], Q = V[i], S = V[i + 1], l1 = Math.hypot(P[0] - Q[0], P[1] - Q[1]), l2 = Math.hypot(S[0] - Q[0], S[1] - Q[1]); if(l1 < 1e-3 || l2 < 1e-3) continue;
+      const ux = (P[0] - Q[0]) / l1, uz = (P[1] - Q[1]) / l1, wx = (S[0] - Q[0]) / l2, wz = (S[1] - Q[1]) / l2, A = Math.acos(clamp(ux * wx + uz * wz, -1, 1)); if(Math.PI - A < 1.5 * DGR || A < 1e-3) continue;
+      const tH = Math.tan(A / 2), tmax = Math.min(i === 1 ? l1 * .9 : l1 * .5, i === nv - 2 ? l2 * .9 : l2 * .5), qOK = okAt(Q[0], Q[1], Q[2]) !== false, bx = ux + wx, bz = uz + wz, bl = Math.hypot(bx, bz); if(bl < 1e-6) continue;
+      for(let r = Math.min(7, tmax * tH); r > .2; r *= .8){ const t = r / tH, cd = r / Math.sin(A / 2), cx = Q[0] + bx / bl * cd, cz = Q[1] + bz / bl * cd, t1x = Q[0] + ux * t, t1z = Q[1] + uz * t, t2x = Q[0] + wx * t, t2z = Q[1] + wz * t;
+        const a1 = Math.atan2(t1z - cz, t1x - cx), da = angDiff(a1, Math.atan2(t2z - cz, t2x - cx)), ns = Math.max(2, Math.ceil(Math.abs(da) * r / .4)), f1 = lerp(Q[2], P[2], t / l1), f2 = lerp(Q[2], S[2], t / l2); let good = true;
+        for(let q = 0; q <= ns && good; q++){ const a = a1 + da * q / ns, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r, f = lerp(f1, f2, q / ns); if(!inBand(x, z, f) || (okAt(x, z, f) === false && (qOK || !fr(x, z, f)))) good = false; }
+        if(good){ arcs[i] = {t1x, t1z, f1, f2, cx, cz, r, a1, da}; break; } } }
+    const out = [pts[0].clone()]; let cur = [V[0][0], V[0][1], V[0][2]];
+    const emit = (x, z, f) => { const y = navSupport(x, z, f + .3); out.push(new THREE.Vector3(x, (Math.abs(y - f) < .6 ? y : f) + EYE, z)); };
+    const lineTo = (x, z, f) => { const L = Math.hypot(x - cur[0], z - cur[1]), k = Math.max(1, Math.ceil(L / .5)); for(let q = 1; q <= k; q++){ const u = q / k; emit(lerp(cur[0], x, u), lerp(cur[1], z, u), lerp(cur[2], f, u)); } cur = [x, z, f]; };
+    for(let i = 1; i < nv; i++){ const Q = V[i], A = arcs[i]; if(!A){ lineTo(Q[0], Q[1], Q[2]); continue; }
+      lineTo(A.t1x, A.t1z, A.f1); const k = Math.max(2, Math.ceil(Math.abs(A.da) * A.r / .5)); for(let q = 1; q <= k; q++){ const a = A.a1 + A.da * q / k; emit(A.cx + Math.cos(a) * A.r, A.cz + Math.sin(a) * A.r, lerp(A.f1, A.f2, q / k)); }
+      const e = out[out.length - 1]; cur = [e.x, e.z, A.f2]; }
+    out[out.length - 1] = pts[n0 - 1].clone();
+    for(let pass = 0; pass < 8; pass++) for(let i = 2; i < out.length - 2; i++){ const q = out[i], f = q.y - EYE, x = (out[i - 1].x + q.x * 2 + out[i + 1].x) / 4, z = (out[i - 1].z + q.z * 2 + out[i + 1].z) / 4;
+      if(Math.hypot(x - q.x, z - q.z) < .003 || !fr(x, z, f) || leafD(x, z, f)[0] < .6) continue; const y = navSupport(x, z, f + .3); if(Math.abs(y - f) < .2){ q.x = x; q.z = z; q.y = y + EYE; } }
+    return out;
+  } catch(e){ console.warn('[r37 nav] relax', e); return pts; }
+  finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }
+function r37Taut(lo, hi){   // the shortest line through a band: from (0, lo[0]) to (n-1, lo[n-1]), lo[i] <= y[i] <= hi[i] (unit spacing)
+  const n = lo.length, y = new Float64Array(n); let cx = 0, cy = lo[0]; y[0] = cy;
+  const seg = (j, yj) => { for(let k = cx + 1; k <= j; k++) y[k] = cy + (yj - cy) * (k - cx) / (j - cx); cx = j; cy = yj; };
+  while(cx < n - 1){ let smin = -Infinity, smax = Infinity, jmin = cx, jmax = cx, next = null;
+    for(let j = cx + 1; j < n; j++){ const d = j - cx, sl = (lo[j] - cy) / d, sh = (hi[j] - cy) / d;
+      if(sl > smax){ next = [jmax, cy + smax * (jmax - cx)]; break; } if(sh < smin){ next = [jmin, cy + smin * (jmin - cx)]; break; }
+      if(sh < smax){ smax = sh; jmax = j; } if(sl > smin){ smin = sl; jmin = j; } }
+    if(!next) next = [n - 1, clamp(lo[n - 1], cy + smin * (n - 1 - cx), cy + smax * (n - 1 - cx))];
+    if(next[0] <= cx) next = [cx + 1, clamp(cy, lo[cx + 1], hi[cx + 1])]; seg(next[0], next[1]); }
+  return y; }
+function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n, s, yaw, pitch}
+  const p = a.path, L = p.L, S = R36N, DG = Math.PI / 180, LONG = L > S.LONG, YAW = LONG ? S.YAWL : S.YAW, YACC = LONG ? S.YACCL : S.YACC, TUBE = LONG ? S.TUBEL : S.TUBE, ds = .25, N = Math.max(3, Math.ceil(L / ds) + 1), sAt = i => L * i / (N - 1), V = new THREE.Vector3(), W = new THREE.Vector3();
+  const sm = (A, k, pin) => { for(let it = 0; it < k; it++){ const B = A.slice(); for(let i = 1; i < A.length - 1; i++) A[i] = (B[i - 1] + 2 * B[i] + B[i + 1]) / 4; if(!pin){ A[0] = (2 * B[0] + B[1]) / 3; A[A.length - 1] = (2 * B[A.length - 1] + B[A.length - 2]) / 3; } } return A; };
+  // travel heading and the slope along the way (looked at a little on stairs)
+  const psi = new Float64Array(N), tp = new Float64Array(N), slope = new Float64Array(N); let last = a.yaw0;
+  for(let i = 0; i < N; i++){ const s = sAt(i), s2 = Math.min(L, s + S.LA), s1 = Math.max(0, Math.min(s, s2 - 2)); r36PathPos(p, s1, V); r36PathPos(p, s2, W); const dx = W.x - V.x, dz = W.z - V.z, hz = Math.hypot(dx, dz);
+    const y = hz > .3 ? Math.atan2(-dx, -dz) : last; psi[i] = i ? psi[i - 1] + angDiff(psi[i - 1], y) : y; last = y; tp[i] = hz > .3 ? clamp(Math.atan2(W.y - V.y, hz) * .45, -.2, .2) : 0; slope[i] = hz > .3 ? Math.abs(W.y - V.y) / hz : 0; }
+  sm(tp, 30, true); tp[0] = tp[N - 1] = 0;
+  const y0 = a.yaw0, y1 = a.yaw1;
+  // heading candidates: 'travel' faces the way ahead (easing out of the start view and onto the stop's); 'direct' turns once, start view to stop
+  // view, leaning at most 30 deg toward the way ahead (a short move back the way you came is a step back, not a turn around and a turn back)
+  // the least-turning heading within TUBE degrees of a candidate: the taut string through that band (both ends pinned), its corners then rounded
+  const taut = g => { const lo = new Float64Array(N), hi = new Float64Array(N); for(let i = 0; i < N; i++){ const t = TUBE * DG * Math.min(1, sAt(i) / 2, (L - sAt(i)) / 2); lo[i] = g[i] - t; hi[i] = g[i] + t; }
+    g.set(r37Taut(lo, hi)); sm(g, 60, true); };
+  const turns = g => { let tv = 0, rev = 0, dir = 0, opp = 0, acc = 0; for(let i = 1; i < N; i++){ const d = g[i] - g[i - 1]; tv += Math.abs(d); if(Math.abs(d) < 1e-9) continue; const sg = Math.sign(d);
+      if(!dir){ acc += d; if(Math.abs(acc) > 1.5 * DG) dir = Math.sign(acc); } else if(sg !== dir){ opp += Math.abs(d); if(opp > 1.5 * DG){ rev++; dir = sg; opp = 0; } } else opp = 0; } return {tv: tv / DG, rev}; };
+  const alts = d => Math.abs(d) > 110 * DG ? [d, d - Math.sign(d) * 2 * Math.PI] : [d];   // a turn of about half a circle may go either way round: the way that keeps turning the same way
+  const cands = [];
+  if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1); for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + d * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp}); }
+  else {
+    for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1u = psi[N - 1] + d1, dd = Math.abs(d0) / DG, da = Math.abs(d1) / DG;
+      const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, L * .7);
+      for(let i = 0; i < N; i++){ const s = sAt(i), wd = smooth(0, Ld, s), wa = smooth(L - La, L, s); g[i] = lerp(lerp(y0u, psi[i], wd), y1u, wa); gp[i] = lerp(lerp(a.pitch0, tp[i], wd), a.pitch1, wa); }
+      g[0] = y0 + Math.round((y0u - y0) / (2 * Math.PI)) * 2 * Math.PI; taut(g); sm(gp, 24, true); cands.push({k: 'travel', g, gp}); }
+    if(L < 40) for(const d of alts(angDiff(y0, y1))){ const g = new Float64Array(N), gp = new Float64Array(N), M = 30 * DG;
+      for(let i = 0; i < N; i++){ const s = sAt(i), w = smooth(0, 1, s / L), base = y0 + d * w, wl = smooth(0, 4, s) * (1 - smooth(L - 5, L, s)); g[i] = base + M * Math.tanh(angDiff(base, psi[i]) / M) * wl; gp[i] = lerp(lerp(a.pitch0, tp[i], wl), a.pitch1, w * w); }
+      taut(g); sm(gp, 24, true); cands.push({k: 'direct', g, gp}); } }
+  // speed: cruise, slower where the head would turn faster than the cap, on stairs and in doorways; eased in and out
+  const Vc = L > S.PACE * S.MAXS ? clamp(L / 6.6, S.PACE, 12.5) : S.PACE;
+  const pace = (g, gp) => { const v = new Float64Array(N);
+    for(let i = 0; i < N; i++){ const i0 = Math.max(0, i - 1), i1 = Math.min(N - 1, i + 1), d1 = Math.abs(g[i1] - g[i0]) / ((i1 - i0) * ds) / DG, d2 = i0 < i && i1 > i ? Math.abs(g[i1] - 2 * g[i] + g[i0]) / ds / ds / DG : 0, s = sAt(i), p1 = Math.abs(gp[i1] - gp[i0]) / ((i1 - i0) * ds) / DG;
+      let m = Math.min(Vc, YAW * .88 / Math.max(1e-6, d1), Math.sqrt(YACC * .6 / Math.max(1e-6, d2)), S.PYAW * .8 / Math.max(1e-6, p1));
+      if(slope[i] > .25) m = Math.min(m, Math.min(Vc, 9.5) * .75); for(const q of p.doors) if(Math.abs(q.s - s) < 2) m = Math.min(m, Vc * .8); v[i] = Math.max(.8, m); }
+    v[0] = 0; for(let i = 1; i < N; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] * v[i - 1] + 2 * S.ACC * ds)); v[N - 1] = 0; for(let i = N - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * S.DEC * ds));
+    const tS = new Float64Array(N); for(let i = 1; i < N; i++) tS[i] = tS[i - 1] + 2 * ds / Math.max(.05, v[i - 1] + v[i]); return tS; };
+  // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk)
+  for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.tv = q.tv; c.rev = q.rev; c.cost = c.tS[N - 1] + c.tv / 90 + c.rev * 1.5 + (c.k === 'direct' ? .6 : 0); }
+  const C = cands.reduce((x, c) => !x || c.cost < x.cost ? c : x, null), g = C.g, gp = C.gp, tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev).join(',');
+  // s(t) on a 240 Hz clock, its speed softened (no sudden change of pace), then the head integrated along it
+  const dt = 1 / 240, T1 = tS[N - 1], n1 = Math.ceil(T1 / dt) + 1, sT = new Float64Array(n1);
+  for(let k = 0, i = 0; k < n1; k++){ const t = Math.min(T1, k * dt); while(i < N - 2 && tS[i + 1] < t) i++; const u = clamp((t - tS[i]) / Math.max(1e-9, tS[i + 1] - tS[i]), 0, 1); sT[k] = lerp(sAt(i), sAt(i + 1), u); }
+  { const vt = new Float64Array(n1); for(let k = 1; k < n1; k++) vt[k] = (sT[k] - sT[k - 1]) / dt; const R = 36, ker = []; let kw = 0; for(let j = -R; j <= R; j++){ const w = Math.exp(-j * j / (2 * 14 * 14)); ker.push(w); kw += w; }
+    const vs = new Float64Array(n1); for(let k = 0; k < n1; k++){ let acc = 0; for(let j = -R; j <= R; j++){ const q = k + j; if(q > 0 && q < n1) acc += vt[q] * ker[j + R]; } vs[k] = acc / kw; }
+    let tot = 0; for(let k = 1; k < n1; k++) tot += vs[k] * dt; const sc = tot > 1e-6 ? L / tot : 1; sT[0] = 0; for(let k = 1; k < n1; k++) sT[k] = Math.min(L, sT[k - 1] + vs[k] * dt * sc); sT[n1 - 1] = L; }
+  const G = (A, s) => { const f = clamp(s / L, 0, 1) * (N - 1), i = Math.min(N - 2, Math.floor(f)); return lerp(A[i], A[i + 1], f - i); };
+  const ys = [], ps = [], ss = []; let y = g[0], w = 0, pt = gp[0], pw = 0; const wn = 9, YW = YAW * DG, YA = YACC * DG, PW = S.PYAW * DG, PA = S.PACC * DG;
+  for(let k = 0; k < n1 + 240 * 3; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], tg = G(g, sN), tr = (tg - G(g, s)) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt;
+    ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - g[N - 1]) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
+    let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -YA, YA); w = clamp(w + ac * dt, -YW, YW); y += w * dt;
+    ac = clamp(wn * wn * (pg - pt) + 2 * wn * (prr - pw), -PA, PA); pw = clamp(pw + ac * dt, -PW, PW); pt += pw * dt; }
+  ys[ys.length - 1] = g[N - 1]; ps[ps.length - 1] = gp[N - 1];
+  const nT = ss.length; a.tl = {dt, n: nT, s: Float64Array.from(ss), yaw: Float64Array.from(ys), pitch: Float64Array.from(ps)}; a.dur = Math.max(.05, (nT - 1) * dt);
+  a.dts = p.doors.map(q => { let k = 0; while(k < nT - 1 && ss[k] < q.s - .3) k++; return k * dt; });
+  a.tv = 0; a.rate = 1; a.t0m = a.t0; a.lastNow = a.t0; return a.tl; }
+function r37At(T, tv, out){ const f = clamp(tv / T.dt, 0, T.n - 1), k = Math.min(T.n - 2, Math.floor(f)), u = f - k; out.s = lerp(T.s[k], T.s[k + 1], u); out.yaw = lerp(T.yaw[k], T.yaw[k + 1], u); out.pitch = lerp(T.pitch[k], T.pitch[k + 1], u); return out; }
+const R37O = {s: 0, yaw: 0, pitch: 0};
+function r36PathStep(a, tt){   // one frame of a walked move (r37: read from the plan at this frame's time)
+  const p = a.path; if(tt >= 1){ camera.position.copy(a.to); curT.copy(a.toT); camera.lookAt(curT); return; }
+  const T = a.tl; if(!T) return r36PathStepFlat(a, tt);
+  const now = performance.now();
+  if(a.t0 !== a.t0m){ a.tv = Math.max(0, (now - a.t0) / 1000); a.rate = 1; }   // someone set the clock (the ?qa=1 check, a skip): go there
+  else { const rd = clamp((now - a.lastNow) / 1000, 0, .1); let hold = false;
+    for(let i = 0; i < p.doors.length; i++){ const d = p.doors[i], tA = a.dts[i]; if(a.tv > tA + .6) continue; const togo = d.s - r37At(T, a.tv, R37O).s;
+      if(tA - a.tv < (d.it.dur || .8) + 1.1 || togo < 7) r36OpenDoor(d.it, d.x, d.z); if(tA - a.tv < .6 && d.it.t < .85) hold = true; }   // wait at a door that is still swinging
+    a.rate += ((hold ? 0 : 1) - a.rate) * Math.min(1, rd * 7); if(!hold && a.rate > .985) a.rate = 1; a.tv += rd * a.rate; }
+  a.lastNow = now; a.t0 = a.t0m = now - a.tv * 1000;   // the frame loop's own clock follows the plan's (a wait at a door pushes the end out)
+  const o = r37At(T, a.tv, R37O); r36PathPos(p, o.s, camera.position);
+  camera.rotation.order = 'YXZ'; camera.rotation.set(o.pitch, o.yaw, 0); camera.getWorldDirection(R36V2); curT.copy(camera.position).addScaledVector(R36V2, 10); }
+function r36PathStepFlat(a, tt){   // r36's frame (kept for a move with no plan)
   const p = a.path; if(tt >= 1){ camera.position.copy(a.to); curT.copy(a.toT); camera.lookAt(curT); return; }
   let s = r36Ease(tt) * p.L;
   for(const d of p.doors){ const sp = a.sHold == null ? s : a.sHold; if(d.s - s < Math.max(10, p.L / Math.max(a.dur, .5) * ((d.it.dur || .8) + .35) + 2) && sp - d.s < 1.5){ r36OpenDoor(d.it, d.x, d.z); if(d.s - s < 2.4 && sp - d.s < .4 && d.it.t < .85 && a.sHold != null){ s = Math.min(s, Math.max(sp, d.s - 2.4)); a.t0 += performance.now() - (a.lastNow || performance.now()); } } }   // (r37: measured from last frame's place, so a slow frame cannot step over the door)   // wait at a door that is still swinging
@@ -22419,6 +22619,7 @@ function r36Pathify(a, o){ o = o || {};
         if(view(dx, dz) < 4){ let best = null, bs = 0; for(let k = -5; k <= 5; k++){ if(!k) continue; const an = k * Math.PI / 12, vx = dx * Math.cos(an) - dz * Math.sin(an), vz = dx * Math.sin(an) + dz * Math.cos(an), d = view(vx, vz) - Math.abs(k) * .6; if(d > bs){ bs = d; best = [vx, vz]; } } if(best && bs > 5){ dx = best[0]; dz = best[1]; } } }catch(e){}
       const cp = Math.cos(o.pitch || 0); a.toT.set(Q.x + dx * 20 * cp, Q.y + Math.sin(o.pitch || 0) * 20, Q.z + dz * 20 * cp); } }
   { const [y1, p1] = lookYawPitch([Q.x, Q.y, Q.z], [a.toT.x, a.toT.y, a.toT.z]); a.yaw1 = y1; a.pitch1 = p1; }
+  if(!R36N.noPlan) try{ r37Plan(a); }catch(e){ console.warn('[r37 nav] plan', e); a.tl = null; }   // r37: the head, the pace and the timing of the whole move
   R36N.last = {kind: 'walk', L: +R.L.toFixed(1), dur: +a.dur.toFixed(2), doors: R.doors.map(q => q.it.id)}; return 1; }
 function r36LineClear(A, B){ try{ const d = B.clone().sub(A), L = d.length(); if(L < 1) return true; const rc = new THREE.Raycaster(A, d.normalize(), 0, L); for(const h of rc.intersectObjects(withVar(['main', 'upper', 'roof', 'ceil']).filter(g => g.visible), true)){ const m = h.object.material; if(h.object.isSprite || (m && m.transparent && m.opacity < .5)) continue; return false; } }catch(e){} return true; }
 function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)); }catch(e){ return false; } }
@@ -22498,7 +22699,7 @@ function r36WhereAt(x, z, f){
 function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golden' ? .045 : .08, g = GROUPS.terrain; if(!g) return; g.traverse(o => { if(o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(k, k, k * .96); }); }
 { const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
 /* r37 smooth walking: the caps the ?qa=1 'smooth' check holds every walked move to; qaNoDraw lets that check step frames without drawing them */
-const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false};
+const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false, anim: () => anim};
 { const _rf37 = renderFrame; renderFrame = function(){ if(R37S.qaNoDraw){ if(DOOR28.moving.size) try{ door28Step(); }catch(e){} return; } return _rf37.apply(this, arguments); }; }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 { let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)
