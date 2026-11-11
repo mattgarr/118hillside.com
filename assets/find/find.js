@@ -218,7 +218,7 @@
   /* ---------- UI ---------- */
   const css = `
   html.fnd #mini, html.fnd #cv27, html.fnd header.bar nav.tabs, html.fnd header.bar .plate, html.fnd #aboutBtn, html.fnd #card, html.fnd #labels, html.fnd #wplabels, html.fnd #ovtag, html.fnd #tod, html.fnd #viewBtn, html.fnd #hwBtn, html.fnd #tgBtn, html.fnd #phMore, html.fnd .g28pill, html.fnd #navHelp, html.fnd #hint, html.fnd #pad, html.fnd #gotoWrap, html.fnd #toggles, html.fnd #note, html.fnd #peek27, html.fnd .wptip{display:none!important}
-  html.fnd #v33disc{top:22px!important;left:12px!important;z-index:59}
+  html.fnd #v33disc{z-index:59}   /* r35: the notice now sits bottom right and keeps itself clear of the bar (its own placer, in the page) */
   html.fnd:not(.fnd-on) #fndTop, html.fnd:not(.fnd-on) #fndBar, html.fnd:not(.fnd-on) #fndWarm{display:none}
   .fnd-chip{background:rgba(251,250,247,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:18px;box-shadow:0 8px 30px rgba(15,20,35,.2);color:#1f2a3a;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif}
   #fndTop{position:fixed;left:12px;right:12px;top:62px;z-index:60;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}
