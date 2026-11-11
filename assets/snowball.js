@@ -1,5 +1,5 @@
 /* Snowball: the owner's black shorthair with yellow eyes, drawn as one shared SVG so every game uses the same cat.
-   SNOWBALL.svg({pose, wear, glow, id}) -> '<svg ...>' string. Poses: 'sit' (three-quarter, sitting), 'peek' (head and paws over an edge).
+   SNOWBALL.svg({pose, wear, bell, glow, id, eyes}) -> '<svg ...>' string (eyes: 'closed' for a blink frame). Poses: 'sit' (three-quarter, sitting), 'peek' (head and paws over an edge).
    SNOWBALL.g(...) -> the same drawing as a <g> (viewBox units 0..400 x 0..470) for embedding in another SVG. */
 (function(){
   'use strict';
@@ -60,6 +60,8 @@
     if(w && w.startsWith('scarf')){ const c = {scarfRed: ['#b3232c', '#f1ebe0'], scarfBlue: ['#2b58ad', '#f1f4fb'], scarfGreen: ['#285f37', '#e3b545']}[w] || ['#b3232c', '#f1ebe0'];
       g += `<path d="M146 196 C178 222 236 224 266 194 L272 214 C240 248 174 248 140 216Z" fill="${c[0]}"/><path d="M150 208 C184 232 234 232 266 206" stroke="${c[1]}" stroke-width="4" fill="none" stroke-dasharray="10 8"/>` +
         `<path d="M226 226 L248 292 L230 298 L212 232Z" fill="${c[0]}"/><path d="M234 286 L248 281 M231 274 L245 269" stroke="${c[1]}" stroke-width="3.4"/><path d="M233 296 l-2 12 M239 294 l-1 12 M245 291 l0 12" stroke="${c[0]}" stroke-width="2.2"/>`; }
+    // bell: true hangs his little gold bell on whatever he is wearing (the scarf, or a thin dark collar); wear: 'bell' is the red collar with the bell
+    if(o.bell && w !== 'bell') g += `${w ? '' : '<path d="M152 202 C184 222 234 222 262 200" stroke="#2a2d36" stroke-width="5" fill="none" stroke-linecap="round"/>'}<circle cx="204" cy="${w ? 236 : 222}" r="11" fill="#d9b24e" stroke="#8a6a1c" stroke-width="1"/><circle cx="201" cy="${w ? 232 : 218}" r="3.4" fill="#fff5c8" opacity=".85"/><path d="M195 ${w ? 239 : 225} L213 ${w ? 239 : 225}" stroke="#6b5016" stroke-width="1.8"/><circle cx="204" cy="${w ? 242 : 228}" r="2" fill="#4a3a10"/>`;
     if(w === 'bell') g += `<path d="M150 200 C182 222 236 222 264 198" stroke="#9e1f28" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="208" cy="224" r="11" fill="#d9b24e"/><circle cx="205" cy="220" r="3.4" fill="#fff5c8" opacity=".8"/><path d="M199 227 L217 227" stroke="#6b5016" stroke-width="1.8"/><circle cx="208" cy="230" r="2" fill="#4a3a10"/>`;
     // ears: outer, inner with a warm tone, and pale tufts
     g += `<g filter="url(#${id}fz)"><path d="${smooth(EAR_L, false)}Z" fill="#0f1014"/><path d="${smooth(EAR_R, false)}Z" fill="#0f1014"/></g>`;
@@ -83,8 +85,11 @@
       `<path d="M${f(pupil + w * .12)} ${f(-h * .62)} C${f(pupil + w * .5)} ${f(-h * .66)} ${f(pupil + w * .72)} ${f(-h * .42)} ${f(pupil + w * .74)} ${f(-h * .18)} C${f(pupil + w * .56)} ${f(-h * .4)} ${f(pupil + w * .36)} ${f(-h * .5)} ${f(pupil + w * .12)} ${f(-h * .62)}Z" fill="#fff" opacity=".85"/>` +
       `<circle cx="${f(pupil - w * .38)}" cy="${f(h * .34)}" r="${f(w * .07)}" fill="#fff" opacity=".5"/>` +
       `<path d="M${-w * .7} ${f(h * .78)} C${-w * .3} ${f(h * 1.0)} ${w * .3} ${f(h * 1.0)} ${w * .7} ${f(h * .72)}" stroke="#2c3240" stroke-width="1" fill="none" opacity=".6"/></g>`;
-    if(glow) g += `<circle cx="166" cy="136" r="40" fill="url(#${id}g)"/><circle cx="229" cy="134" r="36" fill="url(#${id}g)"/>`;
-    g += `<g class="sbEyes">${eye(166, 136, 21, 17, -7, 1)}${eye(229, 134, 19, 16, 6, -1)}</g>`;
+    if(glow && o.eyes !== 'closed') g += `<circle cx="166" cy="136" r="40" fill="url(#${id}g)"/><circle cx="229" cy="134" r="36" fill="url(#${id}g)"/>`;
+    // eyes: 'closed' draws shut lids instead (a blink frame for animated uses); anything else is the open amber eyes
+    const lid = (cx, cy, w, tilt) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path d="M${-w} -1 C${f(-w * .5)} ${f(w * .4)} ${f(w * .5)} ${f(w * .4)} ${w} -2" stroke="#020203" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M${-w} 2 C${f(-w * .5)} ${f(w * .4 + 3)} ${f(w * .5)} ${f(w * .4 + 3)} ${w} 1" stroke="#4a5266" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".7"/></g>`;
+    if(o.eyes === 'closed') g += `<g class="sbEyes">${lid(166, 137, 20, -7)}${lid(229, 135, 18, 6)}</g>`;
+    else g += `<g class="sbEyes">${eye(166, 136, 21, 17, -7, 1)}${eye(229, 134, 19, 16, 6, -1)}</g>`;
     // nose, mouth, whisker pads, whiskers
     g += `<path d="M184 165 C191 161 202 161 209 165 C207 172 201 177 197 179 C192 177 186 172 184 165Z" fill="#2a2228"/><path d="M188 166 C194 164 200 164 205 166" stroke="#6a5b64" stroke-width="1.6" fill="none" opacity=".8"/><path d="M197 156 L197 164" stroke="#262b35" stroke-width="5" opacity=".5" filter="url(#${id}bs)"/>` +
       `<path d="M197 179 L197 186 M197 186 C192 192 184 192 180 188 M197 186 C202 192 210 192 214 188" stroke="#060607" stroke-width="2" fill="none" stroke-linecap="round"/>`;
@@ -100,5 +105,5 @@
     return g; }
   function g(o){ o = o || {}; return o.pose === 'peek' ? peekG(o) : sitG(o); }
   function svg(o){ o = o || {}; const vb = o.pose === 'peek' ? '100 60 220 260' : '96 18 304 462'; return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${g(o)}</svg>`; }
-  window.SNOWBALL = {svg, g, viewBox: {sit: [96, 18, 304, 462]}};
+  window.SNOWBALL = {svg, g, viewBox: {sit: [96, 18, 304, 462]}, v: 36};
 })();
