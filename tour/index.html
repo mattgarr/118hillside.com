@@ -6649,7 +6649,7 @@ function navQA(){
     for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
       if(A && A.path){ walked++; const P = A.path; let off = 0, f = P.pts[0].y - EYE;
         for(let k = 7; k < P.pts.length - 7; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0){ const q = r36Nearest(v.x, v.z, f, 3); if(!q || q.d > .8) off++; } }
-        if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > R36N.MAXS + .01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
+        if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > 8.01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
         R.note('moves', id, 'walk ' + r2(P.L) + ' ft in ' + r2(A.dur) + ' s' + (P.doors.length ? ', doors ' + P.doors.map(d => d.it.id).join(' ') : '')); for(const f2 of [.25, .5, .75]){ mid(f2); R.row('moves', id + '@' + f2, probe()); } }
       else if(A && A.cut){ cut++; R.note('moves', id, 'cut'); } else if(A){ flown++; if(A.kind === 'look' && A.from.distanceTo(A.to) > 3) R.fail('moves', id, 'a straight flight of ' + r2(A.from.distanceTo(A.to)) + ' ft'); else R.note('moves', id, A.kind === 'orbit' ? 'orbit flight outdoors' : 'turn'); }
       finish(); const m = probe(); if(dist(m, FRAME_FOR(b).pos) > (look(b) ? .05 : .8)) R.fail('moves', id, 'ended at ' + m.pos + ', not at the stop'); }
@@ -22334,8 +22334,8 @@ function r36Pathify(a, o){ o = o || {};
   let fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); if(o.level0 != null && Math.abs(fa - o.level0) > .6 && P.y - fa > 7 && Math.abs(P.y - o.level0 - EYE) < 1.2) fa = o.level0; const ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return 0;
   let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return 0;
   if(reduceMotion) return 0;
-  const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > R36N.CAP) return 0;
-  a.path = R; a.lift = 0; a.dur = clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS); a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
+  const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > (o.cap || R36N.CAP)) return 0;
+  a.path = R; a.lift = 0; a.dur = R.L > R36N.PACE * R36N.MAXS ? clamp(R.L / 11.5, R36N.MAXS, 8) : clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS);   /* r37: a tour move of two stair flights is walked a little faster (up to 11.5 ft/s, 8 s) rather than cut */ a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
   { const dir = new THREE.Vector3(); camera.getWorldDirection(dir); a.yaw0 = Math.atan2(-dir.x, -dir.z); a.pitch0 = Math.asin(clamp(dir.y, -1, 1)); }
   if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)]; let dx = e.x - b.x, dz = e.z - b.z; const L = Math.hypot(dx, dz);
     if(L > .5){ dx /= L; dz /= L;
@@ -22352,7 +22352,7 @@ function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
-        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true};
+        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 92};
         if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
         else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
         else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
