@@ -1037,7 +1037,7 @@
     const pose = () => { const p = standPose('table'), a = aspect() < 1 ? yp(PLACES.table.pos, [-0.4, -1.9, -46.4]) : [p.yaw, p.pitch]; S.ex = {id: 'smoker', back: {yaw: a[0], pitch: a[1]}, mode: 'look'}; setMarks(); sheetFor(S.ex); sheetE.classList.remove('on'); };
     const there = () => { S.busy = false; sheetE.classList.add('on'); T.framed = Math.round(performance.now() - t0); say('It spells THANKS. I knew that.', 4600, true); };
     if(WARM.end) paint().then(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); T.tod = Math.round(performance.now() - t0); pose(); frameExamine(.85, there); });
-    else { fadeE.dataset.say = 'Out to the smoker…'; fadeThrough(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); pose(); frameExamine(.05, there); }, 650);
+    else { fadeE.dataset.say = 'Out to the smoker…'; fadeThrough(() => { T.feedback = Math.round(performance.now() - t0); setTod('golden'); P.setLift(.9); pose(); frameExamine(.05, () => { const w = () => fadeE.classList.contains('on') ? later(80, w) : there(); w(); }); }, 650);
       const clr = () => fadeE.classList.contains('on') ? later(150, clr) : later(400, () => { delete fadeE.dataset.say; }); later(900, clr); } }
   function sheetSmoker(ex){ const sp = SPOTS.smoker;
     if(S.phase !== 'turkey') return sheet(`<h3>${esc(sp.title)}</h3><p>${esc(sp.text)}</p>`);
