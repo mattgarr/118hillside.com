@@ -8712,9 +8712,10 @@ async function boot(){
         get mode(){ return mode; }, get nav(){ return nav; }, set nav(v){ nav = v; }, get anim(){ return anim; }, set anim(v){ anim = v; },
         look(pos, at){ anim = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
         door28: window.DOOR28, door28Toggle: typeof door28Toggle === 'function' ? door28Toggle : null, POCKET31: window.POCKET31, R28W: window.R28W, BIM2S: typeof BIM2S !== 'undefined' ? BIM2S : null,
+        asBuilt(){ try{ if(ACTIVE_VAR !== 'asbuilt'){ ACTIVE_VAR = 'asbuilt'; applyVisibility(); } }catch(e){ console.warn('[games] asBuilt', e); } },   // games always play in the house as it is, whatever was last picked in Design
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=31' : '../assets/escape/escape.js?v=30'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=32' : '../assets/escape/escape.js?v=32'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = {camera, target, scene, STOPS, flyTo, setMode, showStop, look(pos, at){ anim = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); }};   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();

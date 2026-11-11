@@ -335,7 +335,7 @@
       try{ await navigator.clipboard.writeText(text + ' ' + url); toast('Link copied.'); }catch(e){ toast(url); } }; }
 
   /* ------------------------------------------------------------------ boot: after the house is ready */
-  function boot(){ loadSnowball(() => { try{ buildUI(); buildEasy(); applyHour(L.start, true); setSlider(L.start); makeCat(); }catch(e){ console.error('[escape] build', e); }
+  function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} loadSnowball(() => { try{ buildUI(); buildEasy(); applyHour(L.start, true); setSlider(L.start); makeCat(); }catch(e){ console.error('[escape] build', e); }
     requestAnimationFrame(frame); const go = () => startCard();
     const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); go(); } }); mo.observe(document.body, {childList: true}); } else go(); }); }
   // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
