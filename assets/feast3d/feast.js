@@ -74,8 +74,8 @@
     balcony: {name: 'Balcony', floor: 'upper', pos: [-17.7, L2 + EYE, -41.7], face: [-23.2, 10.2, -47.4], map: [-17.7, -44],
       note: 'A private balcony off the primary bedroom that looks west over the hills.'}};
   const CATSAYS = {lounge: 'Movie night is down here. I get the good pouf.', office: 'The door shuts. I have opinions about that.', porch: 'I watch the front walk from the window. Nobody gets past me.',
-    entry: 'Everyone who comes in looks up, then straight through at the oak.', living: 'The beams are a hundred years old. I have climbed none of them. Yet.', kitchen: 'Four doors on that fridge and I cannot open one of them.',
-    coffee: 'They call this the coffee bar. I call it the cupboard with the treats.', great: 'The sofa is mine from nine until five.', loft: 'Top of the stairs. Best place to watch everybody.', primary: 'I am not allowed on this bed. I am on it most days.', balcony: 'I watch birds from here. They know.'};
+    entry: 'Come in, look up, then straight through the glass to the oak.', living: 'The beams are a hundred years old. I have climbed none of them. Yet.', kitchen: 'Four doors on that fridge and I cannot open one of them.',
+    coffee: 'This is the coffee bar. I call it the cupboard with the treats.', great: 'The sofa is mine from nine until five.', loft: 'Top of the stairs. Best place to watch the whole house.', primary: 'Four skylights over this bed. I have napped under each one.', balcony: 'I watch birds from here. They know.'};
   const ORDER = ['table', 'lounge', 'office', 'porch', 'entry', 'living', 'kitchen', 'coffee', 'great', 'loft', 'primary', 'balcony'];
   const FLOORS = [['upper', 'Upstairs', /^SP-L2-/], ['main', 'Main floor', /^SP-L1-/], ['lower', 'Downstairs', /^SP-L0-/]];
   // walkable graph: the main-floor edges are the ones escape.js ray-checked; the rest were ray-checked the same way (FEAST3D.audit()).
@@ -1050,9 +1050,9 @@
       ${perfect ? '<span class="stamp">A perfect hunt</span>' : ''}
       <p class="lede">Everything Snowball put away is under the oak, the candles are lit, and the house lights have come on. He says you may have the first roll. Biscuit has asked for the second.</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint from Snowball' : 'hints from Snowball'}</span></div><div><b>${S.peeks}</b><span>${S.peeks === 1 ? 'wrong guess' : 'wrong guesses'}</span></div></div>
-      <div class="acts"><button class="feBtn gold" type="button" id="fePic">${ICO.cam}Take a picture of the table</button><button class="feBtn" type="button" id="feShare">Share</button></div>
       <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California. The terrace under the oak, the door under the stairs and the four skylights over the bed are all there in person.</span>
         <div class="acts"><a class="feBtn primary" href="/#contact" id="feSee" style="min-height:52px;font-size:17px">See it in person</a><a class="feBtn light" href="/tour/" id="feFree">Explore the house</a></div></div>
+      <div class="acts" style="margin-bottom:10px"><button class="feBtn gold" type="button" id="fePic">${ICO.cam}Take a picture of the table</button><button class="feBtn" type="button" id="feShare">Share</button></div>
       <div class="more"><button class="feBtn" type="button" id="feAgain">Play again on ${esc(oth)}’s trail</button><a class="feBtn" href="/games/" id="feGames">More games</a></div></div>`);
     document.body.appendChild(c);
     $('#feSee').onclick = () => ga('feast3d_cta', {cta: 'see_in_person'}); $('#feFree').onclick = () => ga('feast3d_cta', {cta: 'explore'}); $('#feGames').onclick = () => ga('feast3d_cta', {cta: 'games'});
@@ -1060,9 +1060,12 @@
     $('#feShare').onclick = () => share($('#feShare')); $('#fePic').onclick = () => snap();
     try{ $('#fePic').focus({preventScroll: true}); }catch(e){} }
   function closeCard(){ $$('#feCard').forEach(c => c.remove()); }
+  // copies text; when the async clipboard is refused (an unfocused page, an in-app browser) it falls back to a hidden textarea and the copy command
+  async function copyText(text){ try{ await navigator.clipboard.writeText(text); return true; }catch(e){} try{ const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return !!ok; }catch(e){ return false; } }
+  function showLink(btn, url){ let i = btn.parentNode.querySelector('input.shareLink'); if(!i){ i = document.createElement('input'); i.className = 'shareLink'; i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Link to this game'); i.style.cssText = 'flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1.5px solid #d9a24a;border-radius:12px;font:14px Jost,sans-serif;color:#1f2433;background:#fff'; btn.parentNode.appendChild(i); } btn.textContent = 'Copy the link below'; i.focus(); i.select(); }
   async function share(btn){ const url = SITE.page('/games/feast/'), text = `Thanksgiving at Hillside: Snowball the cat hid dinner all over 118 Hillside Drive, and I got it to the table under the oak in ${fmtT(elapsed())}. Your turn.`; ga('feast3d_share');
     try{ if(navigator.share){ await navigator.share({title: 'Thanksgiving at Hillside', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
-    try{ await navigator.clipboard.writeText(text + ' ' + url); btn.textContent = 'Link copied'; }catch(e){ btn.textContent = url; } }
+    if(await copyText(text + ' ' + url)) btn.textContent = 'Link copied'; else showLink(btn, url); }
   /* the picture: exactly what the canvas shows, with a caption underneath */
   let shot = null;
   function snap(){ let url = null; const off = rig.off; try{ rig.off = [0, 0]; rig.sig = ''; rigStep(performance.now(), 0); url = H.snapshot('image/jpeg', .93); }catch(e){ oops('snapshot', e); } rig.off = off; rig.sig = ''; wake(6); if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.', 3200); return; }
@@ -1091,11 +1094,12 @@
     else if(S.phase === 'hunt'){ const st = cur(), ans = st.answer, pl = SPOTS[ans].place; tiers = [[st.hints[0]], [st.hints[1], () => { catAt(catNear(ans)); }], [st.hints[2], () => { S.hot = ans; for(const id of st.spots) if(id !== ans) S.tried[id] = S.tried[id] || 'skip'; catAt(catNear(ans)); if(S.place !== pl) goTo(pl); else setMarks(); }]]; }
     else if(S.phase === 'carry') tiers = [['Take it out to the table under the oak. The map knows the way.'], ['Downstairs and outside. Tap Terrace on the map.'], ['Follow me.', () => carryNow()]];
     else if(S.phase === 'turkey') tiers = S.carry ? [['The table is right behind you.', () => { if(!S.ex) setDown(); }]] : [['The smoker is the black dome in the outdoor kitchen, by the terrace table.', tk('table')], ['Tap the gold ring on the smoker, then lift the lid.', tk('table')], ['I will do it. Stand back.', () => { const go = () => { if(S.ex && S.ex.id === 'smoker'){ liftLid(); return; } examine('smoker', {done: () => later(300, liftLid)}); }; if(S.place !== 'table') goTo('table', {done: () => later(200, go)}); else go(); }]];
-    else if(S.phase === 'candles') tiers = [['The candles are on the table. There is a button for them.'], ['Light the candles. I will keep my tail out of the way.'], ['Fine.', () => lightCandles()]];
+    else if(S.phase === 'candles') tiers = [['Everything is on the table. Tap Light the candles.'], ['Light the candles. I will keep my tail out of the way.'], ['I will do it. Watch the wicks.', () => lightCandles()]];
     if(!tiers) return;
     if(S.ex && S.ex.locked){ say(S.ex.id === 'note' ? 'Read my note, then start looking.' : S.ex.state === 'found' || S.ex.state === 'open' ? 'You found it. Carry it out to the table.' : S.ex.state === 'turkey' ? 'Light the candles.' : 'Read the tag. The next clue is on it.', 5000); return; }
     const i = Math.min(S.hintIx, tiers.length - 1), t = tiers[i]; S.hintIx = Math.min(i + 1, tiers.length - 1);
-    S.hints++; S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); ga('feast3d_hint', {phase: S.phase, step: S.step, tier: i + 1});
+    if(S.phase !== 'candles') S.hints++;   /* asking how to light the candles does not cost the perfect hunt */
+    S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); ga('feast3d_hint', {phase: S.phase, step: S.step, tier: i + 1});
     const run = () => { if(t[1]) t[1](); say(t[0], 7500); }; S.hintAt = performance.now();
     if(S.ex && t[1] && !(S.phase === 'turkey' && S.ex.id === 'smoker')) back(run); else run(); }
 

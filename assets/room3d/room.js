@@ -398,7 +398,7 @@
         const st = standOf(slot); let yaw = st.pawnYaw != null ? st.pawnYaw : .9;
         if(st.pawnYaw == null && S.view === 'room' && S.room === slot){ const e = standOf(slot).pos; yaw = Math.atan2(-(e[2] - p[1]), e[0] - p[0]); }
         g.rotation.y = yaw;
-        const k = HOUSE.mode === 'over' ? PAWN.K_OVER : PAWN.K_IN; g.userData.k = k; if(!PAWN.hop[id]) g.scale.set(k, k, k);
+        const k = HOUSE.mode === 'over' ? PAWN.K_OVER * clamp(560 / Math.max(320, canvas.clientWidth || innerWidth), 1, 1.75) : PAWN.K_IN; /* a phone sees the house smaller, so its pieces grow to stay readable */ g.userData.k = k; if(!PAWN.hop[id]) g.scale.set(k, k, k);
         g.visible = !(HOUSE.mode === 'over' && !S.upperOn && LG.SLOTS[slot].lv === 'upper'); }
       wake(10); },
     drop(id){ PAWN.hop[id] = performance.now(); wake(40); },
@@ -904,7 +904,9 @@
     $('#rfeLift').classList.remove('pulse'); orbitFit(); drawLabels(); PAWN.sync(); wake(80); if(!on && !SAVE.tips.lift && !S.done){ SAVE.tips.lift = 1; save(); toast('Two bedrooms, a bath and the lounge sit under the primary suite.', 4200); } }
 
   /* ================================================================== going into a room and coming back out */
-  function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
+  // with a guest in the room, look a little lower so their piece on the floor ahead is in the picture and not under the sun bar
+  function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face), here = S.L && Object.keys(S.at || {}).some(g => S.at[g] === slot && S.L.guests.indexOf(g) >= 0); if(!here) return {pos: st.pos, yaw: a[0], pitch: a[1]};
+    const pw = st.pawn || GEO[slot].c, ap = yp(st.pos, [pw[0], st.pos[1] - 5, pw[1]]); return {pos: st.pos, yaw: a[0] + angDiff(a[0], ap[0]) * .35, pitch: a[1] - .22}; }
   function reframe(){ const s = rig.st, F = freeRect(); s.offX = ((F.l + F.r) / 2) / F.W - .5; s.offY = phone() ? ((F.t + F.b) / 2) / F.Hh - .5 : 0; rig.sig = ''; }
   function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(68); s.zoom = 1; s.slow = false; S.lookBack = 0; }
   function peekPose(slot){ const G = GEO[slot], o = rig.orb, dx = Math.sin(o.th), dz = Math.cos(o.th); return {pos: [G.c[0] + dx * 13, G.fy + 30, G.c[1] + dz * 13], at: [G.c[0], G.fy + 1, G.c[1]], fov: 42, off: rig.off.slice()}; }
@@ -1063,6 +1065,9 @@
   function bubble(slot, g){ const b = el('div', {class: 'rfeSayG'}, `<small>${esc(shortOf(g))}</small>${esc(LG.GUESTS[g].yay)}`); $('#rfeLabels').appendChild(b); BUB.push({b, slot, t: performance.now()}); requestAnimationFrame(() => b.classList.add('on'));
     setTimeout(() => { b.classList.remove('on'); setTimeout(() => b.remove(), 500); }, 2500); }
   function bubStep(){ for(let i = BUB.length - 1; i >= 0; i--){ const q = BUB[i]; if(!q.b.parentNode){ BUB.splice(i, 1); continue; } const L = LB[q.slot], w = q.b.offsetWidth || 160, F = freeRect(); q.b.style.transform = `translate(${clamp(L.x + 14, F.l, F.r - w).toFixed(1)}px,${(L.y - 62).toFixed(1)}px)`; } }
+  // copies text; when the async clipboard is refused (an unfocused page, an in-app browser) it falls back to a hidden textarea and the copy command
+  async function copyText(text){ try{ await navigator.clipboard.writeText(text); return true; }catch(e){} try{ const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return !!ok; }catch(e){ return false; } }
+  function showLink(btn, url){ let i = btn.parentNode.querySelector('input.shareLink'); if(!i){ i = document.createElement('input'); i.className = 'shareLink'; i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Link to this game'); i.style.cssText = 'flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1.5px solid #d9a24a;border-radius:12px;font:14px Jost,sans-serif;color:#1f2433;background:#fff'; btn.parentNode.appendChild(i); } btn.textContent = 'Copy the link below'; i.focus(); i.select(); }
   function endCard(){ const L = S.L, t = elapsed(), i = LG.LEVELS.indexOf(L), nx = nextLevel(), last = nx === 'daily' && !!SAVE.solved['day' + LG.dayNumber(new Date())];
     const nextTxt = last ? 'Play one again' : nx === 'daily' ? 'Play today’s guest list' : 'Next puzzle: ' + LG.LEVELS[nx].title;
     const learned = {warm: 'You have just learned what the listing takes a page to say: a primary suite upstairs with its own bath, three bedrooms beside the kitchen, and two more downstairs.',
@@ -1083,7 +1088,7 @@
     $('#rfeStay').onclick = () => { closeCard(); const b = el('button', {class: 'rfeBtn dark shadow', type: 'button', id: 'rfeBackCard', style: 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:75'}, 'Back to the results'); document.body.appendChild(b); b.onclick = () => { b.remove(); endCard(); }; };
     $('#rfeShare').onclick = async () => { const url = 'https://118hillside.com/games/room/' + (L.daily ? '?puzzle=daily' : '?puzzle=' + (i + 1)), text = L.daily ? `I found a room for every animal on today’s guest list at 118 Hillside Drive in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.` : `I found a room for every animal at 118 Hillside Drive: “${L.title}” in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.`; ga('rfe3d_share');
       try{ if(navigator.share){ await navigator.share({title: 'Room for Everyone', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
-      try{ await navigator.clipboard.writeText(text + ' ' + url); $('#rfeShare').textContent = 'Link copied'; }catch(e){ $('#rfeShare').textContent = url; } };
+      if(await copyText(text + ' ' + url)) $('#rfeShare').textContent = 'Link copied'; else showLink($('#rfeShare'), url); };
     try{ $('#rfeNextB').focus({preventScroll: true}); }catch(e){} }
 
   /* ================================================================== frame loop */
@@ -1145,7 +1150,7 @@
     // beds in the bedrooms and the oak outside the windows: the game needs the furniture and the trees on, and puts the visitor's own saved choice back straight away
     for(const [id, k] of [['furnBtn', 'hillside.furniture'], ['treesBtn', 'hillside.trees']]) try{ const b = document.getElementById(id); if(b && b.getAttribute('aria-pressed') === 'false'){ const was = localStorage.getItem(k); b.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){}
     const base = (document.currentScript && document.currentScript.src) || '';
-    loadScript('../assets/room3d/room-logic.js?v=2', () => loadScript('../assets/room3d/room-data.js?v=2', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
+    loadScript('../assets/room3d/room-logic.js?v=3', () => loadScript('../assets/room3d/room-data.js?v=2', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
         try{ measure(); buildUI(); buildLabels(); TINT.build(); S.view = 'title'; HOUSE.over(); orbitFit(); rigCut(orbitPose()); UI.live = true; applyHour(13, true); setTimeout(() => { try{ dev.verify(); }catch(e){ console.warn('[room] verify', e); } }, 4000); }catch(e){ console.error('[room] build', e); }
         requestAnimationFrame(frame);
         const first = () => { document.documentElement.classList.add('rfe-up'); const v = Q.get('puzzle'), n = parseInt(v, 10);

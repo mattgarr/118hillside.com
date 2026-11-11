@@ -10,19 +10,21 @@
 <meta property="og:title" content="3D Tour of 118 Hillside Drive, Woodside, CA">
 <meta property="og:description" content="Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.">
 <meta property="og:url" content="https://118hillside.com/tour/">
-<meta property="og:image" content="https://118hillside.com/images/tour-preview.jpg">
-<meta property="og:image:alt" content="3D model of 118 Hillside Drive from above">
+<meta property="og:image" content="https://118hillside.com/images/tour-share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The back of 118 Hillside Drive at dusk in the 3D tour: the heritage oak, the terrace and outdoor kitchen, and the hills beyond">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="3D Tour of 118 Hillside Drive, Woodside, CA">
 <meta name="twitter:description" content="Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.">
-<meta name="twitter:image" content="https://118hillside.com/images/tour-preview.jpg">
+<meta name="twitter:image" content="https://118hillside.com/images/tour-share.jpg">
 <meta name="geo.region" content="US-CA">
 <meta name="geo.placename" content="Woodside">
 <meta name="geo.position" content="37.43822;-122.25428">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://118hillside.com/tour/#page","url":"https://118hillside.com/tour/","name":"3D Tour of 118 Hillside Drive, Woodside, CA","description":"Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.","inLanguage":"en-US","primaryImageOfPage":"https://118hillside.com/images/tour-preview.jpg","isPartOf":{"@type":"WebSite","@id":"https://118hillside.com/#website","url":"https://118hillside.com/","name":"118 Hillside Drive, Woodside"},"about":{"@type":"SingleFamilyResidence","@id":"https://118hillside.com/#residence","name":"118 Hillside Drive, Woodside, CA 94062","address":{"@type":"PostalAddress","streetAddress":"118 Hillside Drive","addressLocality":"Woodside","addressRegion":"CA","postalCode":"94062","addressCountry":"US"},"url":"https://118hillside.com/"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"118 Hillside Drive","item":"https://118hillside.com/"},{"@type":"ListItem","position":2,"name":"3D Tour of 118 Hillside Drive, Woodside, CA","item":"https://118hillside.com/tour/"}]}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://118hillside.com/tour/#page","url":"https://118hillside.com/tour/","name":"3D Tour of 118 Hillside Drive, Woodside, CA","description":"Interactive 3D tour of 118 Hillside Drive, a six-bedroom home for sale in Woodside, CA: walk every room, see the dollhouse view, and try furniture, paint and landscape ideas.","inLanguage":"en-US","primaryImageOfPage":"https://118hillside.com/images/tour-share.jpg","isPartOf":{"@type":"WebSite","@id":"https://118hillside.com/#website","url":"https://118hillside.com/","name":"118 Hillside Drive, Woodside"},"about":{"@type":"SingleFamilyResidence","@id":"https://118hillside.com/#residence","name":"118 Hillside Drive, Woodside, CA 94062","address":{"@type":"PostalAddress","streetAddress":"118 Hillside Drive","addressLocality":"Woodside","addressRegion":"CA","postalCode":"94062","addressCountry":"US"},"url":"https://118hillside.com/"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"118 Hillside Drive","item":"https://118hillside.com/"},{"@type":"ListItem","position":2,"name":"3D Tour of 118 Hillside Drive, Woodside, CA","item":"https://118hillside.com/tour/"}]}}]}</script>
 <!-- seo:end -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TML59CSLTY"></script>
@@ -9379,7 +9381,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=2' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=2' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=44' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=39' : '../assets/escape/escape.js?v=37'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? '../assets/feast3d/feast.js?v=5' : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=7' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=46' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=40' : '../assets/escape/escape.js?v=39'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
