@@ -67,7 +67,7 @@
     const S = Object.assign({}, BLANK), add = async (label, keys) => { step(label); await paint(); keys.forEach(k => { S[k] = WINTER[k]; }); P.apply(S, ctx()); syncVis(); await paint(); };
     P.apply(S, ctx());
     await add('Hanging the lights…', ['lights', 'motion']);
-    await add('Putting the wreath on the doors…', ['door', 'win']);
+    await add('Hanging the wreath…', ['door', 'win']);
     step('Lighting the walk…'); await new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; try{ P.prewarm(WINTER, f); }catch(e){ f(); } setTimeout(f, 6000); });
     await add('Lighting the walk…', ['path']);
     await add('Trimming the tree…', ['tree', 'topper', 'room', 'room2']);
@@ -123,7 +123,8 @@
   #phMenu #holRow{display:flex;align-items:center;gap:8px;width:100%}
   #phMenu #holRow .v31val{margin-left:auto;opacity:.7;font-style:normal}
   html:not(.ph) #phMenu #holRow .v31val{font-weight:400;color:var(--muted);opacity:1}
-  @media (max-width:1019px){html:not(.ph) #holBtn .hl36{display:none}}
+  @media (max-width:1019px){html:not(.ph) #holBtn .hl36{display:none}}   /* a narrow desktop window: the icon alone, then (where even that would push the header onto a second row) only the row in the View menu */
+  @media (max-width:911px){html:not(.ph) #holBtn{display:none!important}}
   #holPanel{position:fixed;z-index:62;top:var(--holTop,78px);right:var(--holRight,16px);width:316px;max-width:calc(100vw - 24px);max-height:calc(100vh - var(--holTop,78px) - 14px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:14px 10px 10px;
     border-radius:16px;border:1px solid var(--rim27,rgba(255,255,255,.6));background:var(--glass-hi,rgba(255,252,247,.94));-webkit-backdrop-filter:var(--bf27,none);backdrop-filter:var(--bf27,none);color:var(--ink,#1e1b17);
     box-shadow:0 2px 4px rgba(40,30,20,.06),0 16px 40px rgba(40,30,20,.22);font:400 14px/1.35 Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
