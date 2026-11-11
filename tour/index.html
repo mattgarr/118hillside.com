@@ -22175,7 +22175,9 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
       const f = navSupport(x, z, fh); if(Math.abs(f - fh) > 1.05) return null; l = lvOf(k, f); if(l >= 0) return G.LVS[l].ok[k] ? {id: (l * NZ + j) * NX + i, i, j, x, z, f: G.LVS[l].L} : null;
       if(from && !navStepOK(from.x, from.z, x, z, from.f)) return null; if(!freeOK(x, z, f)) return null;
       return {id: ((4 + Math.round((f + 12) * 1.5)) * NZ + j) * NX + i, i, j, x, z, f}; };
-    const near = P => { const i0 = Math.floor((P.x - G.X0) / c), j0 = Math.floor((P.z - G.Z0) / c); let b = null, bd = 1e9; for(let dj = -18; dj <= 18; dj++) for(let di = -18; di <= 18; di++){ const d = Math.hypot((i0 + di + .5) * c + G.X0 - P.x, (j0 + dj + .5) * c + G.Z0 - P.z); if(d >= bd || d > 9) continue; const nd = mk(i0 + di, j0 + dj, P.f, null); if(nd && Math.abs(nd.f - P.f) < 1.3){ b = nd; bd = d; } } return b; };
+    const near = P => { const i0 = Math.floor((P.x - G.X0) / c), j0 = Math.floor((P.z - G.Z0) / c); let b = null, bd = 1e9; for(let dj = -18; dj <= 18; dj++) for(let di = -18; di <= 18; di++){ const d = Math.hypot((i0 + di + .5) * c + G.X0 - P.x, (j0 + dj + .5) * c + G.Z0 - P.z); if(d > 9) continue; const nd = mk(i0 + di, j0 + dj, P.f, null); if(!nd || Math.abs(nd.f - P.f) >= 1.3) continue; let sc = d;
+        if(P.rooms){ let sp = null; try{ sp = BIM2S.spaceUnderFeet(nd.z, nd.x, nd.f + .1); }catch(e){} if(!(sp && P.rooms.includes(GRID2ROOM[sp.tourRoom] || sp.tourRoom))) sc += 20; }   // a stop's own room first (a camera hovering over the stairwell is nearer the bath behind the wall)
+        if(sc < bd){ b = nd; bd = sc; } } return b; };
     const S = near(A), E = near(B); R36N.dbg = {S, E}; if(!S || !E) return null;
     const open = [], gS = new Map(), came = new Map(), node = new Map(), h = n => Math.hypot(n.x - E.x, n.z - E.z) + Math.abs(n.f - E.f) * 1.2;
     const push = (n, pr) => { open.push([pr, n]); let k = open.length - 1; while(k > 0){ const p = (k - 1) >> 1; if(open[p][0] <= open[k][0]) break; [open[p], open[k]] = [open[k], open[p]]; k = p; } };
@@ -22192,9 +22194,9 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
     const out = [raw[0]]; let a = 0; while(a < raw.length - 1){ let b = Math.min(raw.length - 1, a + 60); while(b > a + 1 && !los(raw[a], raw[b])) b--; out.push(raw[b]); a = b; }
     return out;
   } finally { doors.forEach((it, q) => { it.coll.pass = was[q]; }); } }
-function r36Route(from, to, ff, tf){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
+function r36Route(from, to, ff, tf, rooms){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
   const key = [from.x, from.y, from.z, to.x, to.y, to.z].map(v => v.toFixed(1)).join(',') + R36N.key; if(R36N.cache.has(key)) return R36N.cache.get(key);
-  let res = null; try{ const way = r36Plan({x: from.x, z: from.z, f: ff}, {x: to.x, z: to.z, f: tf});
+  let res = null; try{ const way = r36Plan({x: from.x, z: from.z, f: ff}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
     if(way){ // round the corners (two passes of corner cutting keep the line inside the pulled corridor), then sample every 0.5 ft and set the eye over the floor
       let P = way.map(n => [n.x, n.z, n.f]); for(let pass = 0; pass < 2; pass++){ const Q = [P[0]]; for(let i = 1; i < P.length - 1; i++){ const a = P[i - 1], b = P[i], d = P[i + 1], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lb = Math.hypot(d[0] - b[0], d[1] - b[1]), ka = Math.min(.25, 1.2 / Math.max(la, .01)), kb = Math.min(.25, 1.2 / Math.max(lb, .01));
           Q.push([b[0] + (a[0] - b[0]) * ka, b[1] + (a[1] - b[1]) * ka, b[2] + (a[2] - b[2]) * ka], [b[0] + (d[0] - b[0]) * kb, b[1] + (d[1] - b[1]) * kb, b[2] + (d[2] - b[2]) * kb]); } Q.push(P[P.length - 1]); P = Q; }
@@ -22240,7 +22242,7 @@ function r36Pathify(a, o){ o = o || {};
   const fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6), ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return 0;
   let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return 0;
   if(reduceMotion) return 0;
-  const R = r36Route(P, Q, fa, fb); if(!R || R.L > R36N.CAP) return 0;
+  const R = r36Route(P, Q, fa, fb, o.rooms); if(!R || R.L > R36N.CAP) return 0;
   a.path = R; a.lift = 0; a.dur = clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS); a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
   { const dir = new THREE.Vector3(); camera.getWorldDirection(dir); a.yaw0 = Math.atan2(-dir.x, -dir.z); a.pitch0 = Math.asin(clamp(dir.y, -1, 1)); }
   if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)], dx = e.x - b.x, dz = e.z - b.z, L = Math.hypot(dx, dz); if(L > .5){ const cp = Math.cos(o.pitch || 0); a.toT.set(Q.x + dx / L * 20 * cp, Q.y + Math.sin(o.pitch || 0) * 20, Q.z + dz / L * 20 * cp); } }
@@ -22253,7 +22255,7 @@ function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); lookFromCamera(); nav = 'look'; anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
-        if(a.kind === 'look'){ const k = r36Pathify(a, {level: LV[s.level]}); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
+        if(a.kind === 'look'){ const k = r36Pathify(a, {level: LV[s.level], rooms: s.rooms}); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
         else if(reduceMotion || (!s.aerial && !(STOPS[was] && STOPS[was].aerial) && P0.y < 40 && !r36LineClear(P0, a.to))) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
     return r; }; }
 /* walk: taps, white circles, the plan */
