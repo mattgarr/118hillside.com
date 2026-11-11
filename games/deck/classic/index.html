@@ -880,5 +880,12 @@ renderStep();
 window.DECK = {get S(){ return S; }, get mode(){ return MODE; }, happy: () => happy().map(g => g.id), set(o){ Object.assign(S, o); renderStep(); }, go(i){ day = false; cur = i; renderStep(); }, light: () => lightUp(), steps: STEPS.map(s => s.id), encode, decode, shareLink, keys: KEYS, link: LINK, options: (() => { const o = {}; STEPS.forEach(st => { if(st.key) o[st.key] = st.options.map(x => x.v); if(st.seg) o[st.seg.key] = st.seg.opts.map(x => x[0]); if(st.multi2) o[st.multi2.key] = st.multi2.options.map(x => x.v); }); return o; })(), scene: k => { viewScene = k; drawScene(k); }};
 })();
 </script>
+<script>
+/* preview hosts: when the site is served from a sub-path (a test mirror), point root links like /games/ at that copy; no effect on 118hillside.com */
+(function(){ if(window.__siteLinks) return; window.__siteLinks = 1; var m = /githack/.test(location.host) ? location.pathname.match(/^(\/[^\/]+\/[^\/]+\/[^\/]+)\//) : location.pathname.match(/^(.*)\/(tour|thanksgiving|halloween|games|woodside)\//), base = m ? m[1] : ''; if(!base) return;
+  document.addEventListener('click', function(e){ var a = e.target && e.target.closest && e.target.closest('a[href]'); if(!a) return; var h = a.getAttribute('href'); if(!h || h.charAt(0) !== '/' || h.charAt(1) === '/' || h.indexOf(base + '/') === 0) return;
+    a.setAttribute('href', base + h.replace(/^([^?#]*\/)(?=[?#]|$)/, '$1index.html')); }, true);
+})();
+</script>
 </body>
 </html>
