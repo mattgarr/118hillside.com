@@ -137,7 +137,7 @@
         g.add(inst(G.sphLo, std('#ffffff', {roughness: .9}), items)); g.add(inst(G.leaf, std('#ffffff', {roughness: .6}), leaves));
         lightSet(g, along([new V3(x0, y + .08, z), new V3(x1, y + .08, z)], .5, .2).map(q => ({p: q.p, c: '#ffb648', s: .7})), {mode: 1, seq: 1});
         return g; }
-      const cx = d.x, cy = 5.25, R0 = .74, tube = .2, w = new THREE.Group(); w.position.set(cx, cy, z + .1); g.add(w);
+      const cx = d.x, cy = 5.25, R0 = .74, tube = .2, w = new THREE.Group(); w.position.set(cx, cy, z + .1); g.add(w); w.userData.sets = g.userData.sets;   // its lights register with the door group's sets
       const ring = mesh(new THREE.TorusGeometry(R0, tube * .7, 8, 28), std(kind === 'harvest' ? '#8a6a34' : kind === 'bluesilver' ? '#2b3a55' : '#1d3a25')); w.add(ring);
       /* the wreath hangs on the door leaf, so it swings with it: each frame it takes the leaf's pose relative to the closed door */
       { const rest = {p: w.position.clone(), q: w.quaternion.clone()}, st = {piv: null, m0: null, tried: 0}, A = new THREE.Matrix4(), B = new THREE.Matrix4(), sc = new V3();
