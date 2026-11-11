@@ -1872,12 +1872,12 @@ const ROOMS = [
  {id:'living',   name:'Living room', dims:'14′1″ × 14′7″', level:'main', at:wp(1480,1830), ph:[44,23]},
  {id:'kitchen',  name:'Kitchen', dims:'17′2″ × 10′0″', level:'main', at:wp(1640,2160), ph:[1,11,0,49,48,'x01']},
  {id:'great',    name:'Dining & sitting area', dims:'13′9″ × 21′6″', level:'main', at:wp(1590,2600), ph:[15,34,16,12,31,41,'x02','x03']},
- {id:'mainbeds', name:'Main-level bedrooms', dims:'9′9″ × 11′6″ · 10′10″ × 10′0″ · 11′10″ × 12′2″', level:'main', at:wp(1950,2700), ph:[62,74,73]},
+ {id:'mainbeds', name:'Main-level bedrooms', dims:'9′9″ × 11′6″ · 10′10″ × 10′0″ · 11′10″ × 12′2″', level:'main', at:wp(1950,2700), ph:[74,62,73,64,'x04']},
  {id:'mainbath', name:'Hall bath', dims:'6′4″ × 8′6″', level:'main', at:wp(2065,2160), ph:[57,22]},
  {id:'stairs',   name:'Stairs', level:'main', at:wp(960,1700), ph:[36,40]},
  {id:'rec',      name:'Bonus lounge', dims:'12′1″ × 13′3″', level:'lower', at:wp(855,1390), ph:[65,56,72]},
- {id:'lbed1',    name:'Lower-level bedroom 1', dims:'11′3″ × 12′5″', level:'lower', at:wp(865,740), ph:[63,58]},
- {id:'lbed2',    name:'Lower-level bedroom 2', dims:'11′3″ × 14′9″', level:'lower', at:wp(610,1000), ph:[64,'x04']},
+ {id:'lbed1',    name:'Lower-level bedroom 1', dims:'11′3″ × 12′5″', level:'lower', at:wp(865,740), ph:[63]},
+ {id:'lbed2',    name:'Lower-level bedroom 2', dims:'11′3″ × 14′9″', level:'lower', at:wp(610,1000), ph:[58]},
  {id:'office',   name:'Skylit office', dims:'7′7″ × 9′3″', level:'lower', at:wp(585,1710), ph:[20]},
  {id:'lbath',    name:'Lower-level bath', dims:'5′7″ × 9′9″', level:'lower', at:wp(945,1050), ph:[60,68,55,'x05']},
  {id:'laundry',  name:'Laundry room', dims:'6′8″ × 6′3″', level:'lower', at:wp(555,1385), ph:[4]},
@@ -1902,7 +1902,15 @@ const STOPS = [
     -> bonus lounge -> (stacking doors) terrace -> backyard -> back in through the lounge and along the hall -> (the house door, D-L0-03) garage
     -> out the garage door to the driveway -> the front of the house at dusk, where the closing card comes up (SELL36).
     The opening aerial is gone: the tour starts on the street view, which matches the listing's first photo. Everything finds a stop by its id.
-    Titles are the rooms' own names (ROOMS), and each caption says what is in view, in the landing page's plain voice. */
+    Titles are the rooms' own names (ROOMS), and each caption says what is in view, in the landing page's plain voice.
+    r38 (owner: "the tour should showcase all rooms"): seven more stops, 25 in all, still one walk with no doubling back:
+    ... dining and sitting area -> (pocket door) front bedroom -> back through the kitchen into the bedroom hall -> middle bedroom (end of the
+    hall) -> hall bath -> back bedroom (other end of the hall) -> kitchen, living room, foyer -> stairs ... balcony -> (cut) lower-level
+    bedroom 1 (south end of the lower hall) -> lower-level bath -> lower-level bedroom 2 -> up the hall, through the lounge to the lower entry ->
+    laundry room -> skylit office -> bonus lounge -> terrace ... The three main-level bedrooms are one model room ('mainbeds'), so each of their
+    stops carries its own photos (ph) and size (dims). The bedrooms are named by where they sit (the model numbers them the other way round:
+    front = BED3, middle = BED2, back = BED1). Photos p64 and x04 are the back bedroom (vaulted ceiling, upper cabinets over the closet: they
+    were filed under lower-level bedroom 2), and p58 is lower-level bedroom 2 (skylight, one window: it was filed under bedroom 1). */
  {id:'street', t:'From the street', lvl:'Woodside, California', dims:'Six bedrooms · three full baths', photo:69, level:'outside', nav:'orbit', rooms:['street'], pos:S(1168,2975,2.0), look:S(1168,2150,1.6),
   p:'The paver driveway runs up to the garage on the left. Beside it, the front steps climb to the porch and the iron-and-glass front doors. The large windows on the right are the dining and sitting area.'},
  {id:'porch', t:'Front porch', photo:71, level:'main', rooms:['frontdeck'], pos:S(1170,2480,2.4), look:S(1166,1900,4.6),
@@ -1915,10 +1923,16 @@ const STOPS = [
   p:'The kitchen is all white, with Cambria Brittanicca quartz counters, a large peninsula, and a Bosch gas range and dishwasher.'},
  {id:'great', t:'Dining & sitting area', photo:15, level:'main', rooms:['great'], pos:S(1626,2420,EYE), look:S(1585,2860,4.2),
   p:'The kitchen opens to the dining table and a sitting area. Together they are the great room. Large windows face the front of the house, and butcher-block shelves sit over built-in cabinets on the left.'},
- {id:'mainbeds', t:'Main-level bedrooms', photo:74, level:'main', rooms:['mainbeds','mainbath'], pos:S(2065,2865,EYE), look:S(1850,2600,3.6),
-  p:'This is one of three bedrooms on the main level. They share a hall with a full bath that has a Carrara marble-topped vanity, and a hall closet has hookups for a second washer and dryer.'},
+ {id:'mainbeds', t:'Front bedroom', dims:'11′10″ × 12′2″', ph:[74,62], photo:74, level:'main', rooms:['mainbeds'], pos:S(2065,2865,EYE), look:S(1850,2600,3.6),
+  p:'The first of three bedrooms on the main level opens off the dining area through a pocket door. It has a vaulted ceiling and two windows toward the street.'},
+ {id:'middlebed', t:'Middle bedroom', dims:'10′10″ × 10′0″', ph:[], level:'main', rooms:['mainbeds'], pos:[24.6,EYE,15.4], look:[30.5,EYE,22.6],
+  p:'The middle bedroom is at the end of the bedroom hall, with a vaulted ceiling and a wide window.'},
+ {id:'hallbath', t:'Hall bath', level:'main', rooms:['mainbath'], pos:[31.0,EYE,9.6], look:[25.8,EYE,5.8],
+  p:'The full bath on the bedroom hall has a Carrara marble-topped vanity and a tub with a shower.'},
+ {id:'backbed', t:'Back bedroom', dims:'9′9″ × 11′6″', ph:[73,64,'x04'], photo:73, level:'main', rooms:['mainbeds'], pos:[19.4,EYE,3.8], look:[25.6,EYE,-6.4],
+  p:'The back bedroom, at the other end of the hall, is staged here as a gym and office.'},
  {id:'stairs', t:'Stairs', photo:36, level:'main', rooms:['stairs'], pos:S(1150,1790,EYE), look:S(820,1650,7.4),
-  p:'Back at the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'},
+  p:'Back through the kitchen and living room to the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'},
  {id:'loft', t:'Loft', photo:37, cam:'loft', level:'upper', rooms:['loft'], pos:SU(1900,1262,LV.upper+EYE), look:SU(2090,1545,LV.upper+6.0),
   p:'The loft is a sitting area at the top of the stairs, with a window seat and cable railings over the stairwell. The primary suite is through the door.'},
  {id:'pbath', t:'Primary bath & closet', photo:45, level:'upper', rooms:['pbath','closet'], pos:SU(2092,1198,LV.upper+EYE), look:SU(2140,925,LV.upper+4.4),
@@ -1927,8 +1941,16 @@ const STOPS = [
   p:'The primary bedroom has a cathedral ceiling with four skylights, each with a remote-controlled shade. Stacking glass doors open to the balcony.'},
  {id:'balcony', t:'Balcony', photo:19, tod:'golden', level:'upper', rooms:['balcony'], fixed:true, pos:[-17.9,LV.upper+5.2,-39.5], look:[-17.4,LV.upper+1.4,-60],
   p:'The balcony is off the primary bedroom. It faces west, toward the hills and the sunset.'},
- {id:'lower', t:'Lower-level bedrooms & office', photo:63, level:'lower', rooms:['lbed1','lbed2','office','lbath','laundry'], pos:S(1000,890,LV.lower+EYE), look:S(820,640,LV.lower+3.4),
-  p:'Two flights down, this is one of two bedrooms on the lower level. The skylit office, a full bath with a dual-sink vanity and heated floors, and the main laundry room with its washer and dryer are along the same hall.'},
+ {id:'lower', t:'Lower-level bedroom 1', photo:63, level:'lower', rooms:['lbed1'], pos:S(1000,890,LV.lower+EYE), look:S(820,640,LV.lower+3.4),
+  p:'Two flights down, this is the first of two bedrooms on the lower level, at the end of the hall. It has windows on two walls.'},
+ {id:'lbath', t:'Lower-level bath', photo:60, level:'lower', rooms:['lbath'], pos:[-14.3,LV.lower+EYE,-32.0], look:[-10.9,LV.lower+EYE,-35.3],
+  p:'The full bath on the lower hall has a dual-sink vanity and heated floors.'},
+ {id:'lbed2', t:'Lower-level bedroom 2', photo:58, level:'lower', rooms:['lbed2'], pos:[-24.6,LV.lower+EYE,-27.2], look:[-28.0,LV.lower+EYE,-39.5],
+  p:'The second bedroom on the lower level is across the hall from the bath, with skylights overhead.'},
+ {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], pos:[-25.3,LV.lower+EYE,-17.6], look:[-27.2,LV.lower+EYE,-23.3],
+  p:'The main laundry room, with the washer and dryer, is off the lower level’s own entrance.'},
+ {id:'office', t:'Skylit office', photo:20, level:'lower', rooms:['office'], pos:[-28.1,LV.lower+EYE,-10.1], look:[-26.0,LV.lower+EYE,-2.7],
+  p:'The skylit office is across the entrance from the laundry room, with windows on two walls.'},
  {id:'lounge', t:'Bonus lounge', photo:65, level:'lower', rooms:['rec'], pos:S(740,1545,LV.lower+EYE), look:S(1010,1290,LV.lower+4.8),
   p:'The bonus lounge has a refreshment counter with a beverage cooler, in-wall surround audio and a 65-inch Samsung TV. The glass door on the left leads outside, and stacking glass doors on the other side of the room open to the terrace.'},
  {id:'terrace', t:'Terrace & outdoor kitchen', photo:8, level:'outside', rooms:['terrace'], pos:S(1580,1010,1.0), look:S(1035,1210,2.4),
@@ -6328,6 +6350,11 @@ const STOP_CAMS = window.STOP_CAMS = {
   primary:  {photo:'p06', pos:[-12.66, 9.25, -28.22], dir:[-0.7021, 0, -0.7121], hfov:102.1, sy:0.002, err:19},        // NE corner: bed, slider, glazed gable
   pbath:    {photo:'p45', pos:[-14.24, 9.49, -22.88], dir:[0.6625, 0, 0.7491], hfov:97.7, sy:-0.014, err:24},          // windows + curbless shower
   balcony:  {photo:'p19', pos:[-17.73, 9.57, -39.60], dir:[-0.0464, 0, -0.9989], hfov:80.9, sy:-0.026, err:1},         // from the slider: parapet, chairs, western hills
+  backbed:  {photo:'p73', pos:[19.40, 5.00, 3.80], dir:[0.5194, 0, -0.8545], hfov:100, sy:0, err:null},   // r38: SW corner of the back bedroom: window left, leaning mirrors right (the gym in p73)
+  lbath:    {photo:'p60', pos:[-14.30, 0.44, -32.00], dir:[0.7176, 0, -0.6965], hfov:98, sy:0, err:null},   // r38: past the open door: vanity, mirror and blue tile left, window and towel rings ahead
+  lbed2:    {photo:'p58', pos:[-24.60, 0.44, -27.20], dir:[-0.2664, 0, -0.9639], hfov:100, sy:0, err:null},   // r38: closet end: art wall left, bed under the window
+  laundry:  {photo:'p04', pos:[-25.30, 0.44, -17.60], dir:[-0.3162, 0, -0.9487], hfov:77, sy:0, ar:0.667, err:null},   // r38: doorway: window left (portrait photo)
+  office:   {photo:'p20', pos:[-28.10, 0.44, -10.10], dir:[0.2730, 0, 0.9620], hfov:77, sy:0, ar:0.667, err:null},   // r38: beside the cube shelf: desk wall left, corner windows ahead-right (portrait photo)
   lower:    {photo:'p63', pos:[-19.03, 0.82, -38.79], dir:[0.5848, 0, -0.8112], hfov:111.8, sy:-0.160, err:21},        // lower bedroom corner, both windows
   lounge:   {photo:'p65', pos:[-12.07, -0.49, -15.78], dir:[-0.8506, 0, -0.5258], hfov:97.0, sy:0.005, err:11},        // refreshment wall + glass door
   terrace:  {photo:'p08', pos:[13.84, -1.72, -32.91], dir:[-0.9985, 0, 0.0556], hfov:91.1, sy:0.093, err:14},          // rear facade, lounge, outdoor kitchen
@@ -6412,12 +6439,19 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   kitchen: {at: [16.0, 20.5], to: [6, 8]},   // from the hall end across the island -> range hood, cabinets, fridge, front window
   great: {at: [15.2, 17.6], to: [11.2, 31.5], ph: [8.6, 31]},   // r36: where the kitchen meets the room, in the clear aisle by the built-ins, facing the way photo p15 faces: shelves and cabinets left, dining table, sitting area, the large windows right. Was over the coffee table looking back at the kitchen:     // sitting-area corner down the long axis -> dining, glass wall, kitchen beyond
   mainbeds: {at: [18.5, 35.0], to: [26.4, 28.8], hf: 100, eye: 4.8, rise: -.12},   // r36: just inside the door, where photo p74 was taken and facing the same way: bed, closet doors, window. Was over the bed facing a corner:     // headboard corner, low with a falling front (rise) -> bed in front, both windows leading, closet doors to the side
+  middlebed: {at: [24.6, 15.4], to: [30.5, 22.6], hf: 100},   // r38: just inside the door from the hall, past its open leaf: the bed on the far wall, the wide window left
+  hallbath: {at: [31.0, 9.6], to: [25.8, 5.8], hf: 100},   // r38: the window corner by the tub, looking back past the open door's edge to the marble-topped vanity and the hall (photo p57's spot, by the door, has the open leaf in front of the vanity)
+  backbed: {at: [19.4, 3.8], to: [25.6, -6.4], hf: 100},   // r38: SW corner, the way photo p73 faces: window left, leaning mirrors right, the oval desk
   stairs: {at: [-9.5, -3], to: [-18.5, -8], hf: 100, rise: .08},   // foyer edge, square to the stair hall -> open treads and cable rails of both flights as one sculptural run, landing bench, loft rail and window light above
   loft: {at: [-13.5, -10.8], to: [-24.7, -2.8], rise: .2},   // stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
   primary: {at: [-10.2, -27.5], to: [-24, -40]},   // loft-side corner -> bed, skylights, glazed gable, slider to the balcony
   pbath: {at: [-14.4, -23.0], to: [-7.76, -15.52], hf: 100},   // r36: photo p45's own spot and direction: window, curbless shower behind its glass. Was turned 60 degrees from the photo:     // just inside the door -> double vanity + round mirrors, window, curbless shower glass
   balcony: {at: [-14.5, -41.1], to: [-28, -54], rise: -.18, ph: [-24, -56], riseP: .08},   // balcony corner by the house wall (downspout + siding frame the left edge) -> chairs and deck, parapet, oak, the valley and hills at golden hour; the frame falls (rise) to trade sky for deck
   lower: {at: [-18.75, -38.5], to: [-12.65, -47.0], hf: 100, rise: -.14},   // r36: in the doorway, wider and with the frame lowered so the whole bed, the floor and both windows show (photo p63's direction):     // doorway corner -> bed, both windows
+  lbath: {at: [-14.3, -32.0], to: [-10.9, -35.3], hf: 100},   // r38: past the open door's edge (it stands in front of the vanity's west end): mirror, blue tile and sink left, window and towel rings ahead (photo p60)
+  lbed2: {at: [-24.6, -27.2], to: [-28.0, -39.5], hf: 100},   // r38: closet end, beside the open door: art wall left, bed under the window, a skylight overhead (photo p58)
+  laundry: {at: [-25.3, -17.6], to: [-27.2, -23.3], hf: 100},   // r38: in the doorway: window left, washer and dryer under it (photo p04)
+  office: {at: [-28.1, -10.1], to: [-26.0, -2.7], hf: 100, rise: .12},   // r38: by the cube shelf, past the open door: desk wall left, corner windows ahead, the frame risen for the skylit ceiling (photo p20)
   lounge: {at: [-14.4, -15.4], to: [-23.5, -21.0], hf: 100},   // r36: three feet further in than photo p65, same direction, so the cafe table is no longer in the foreground: the glass door, TV, refreshment counter and beverage cooler:     // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
   terrace: {at: [8, -20], to: [-8, -36]},   // out on the gravel under the oak -> rear facade, lounge set, outdoor kitchen + pergola, hills
   yard: {at: [31.21, -12.08], to: [23.69, -18.67]},   // NE corner of the yard -> heritage oak, house, pergola
@@ -6500,7 +6534,7 @@ function showStop(i, fly=true){
   $('#title').textContent = s.t;
   const r = ROOM[s.rooms[0]]; $('#dims').textContent = s.dims || (s.rooms.length===1 && r.dims ? r.dims : '');
   $('#blurb').textContent = s.p; $('#blurb').hidden=false;
-  const ph = roomsPhotos(s.rooms); strip(ph, s.t); $('#photosBtn').onclick=()=>openLB(ph,0,s.t);
+  const ph = s.ph || roomsPhotos(s.rooms); strip(ph, s.t); $('#photosBtn').onclick=()=>openLB(ph,0,s.t); $('#photosBtn').hidden = !ph.length;   // r38: a stop may carry its own photos (one of the three main-level bedrooms); none -> no button
   $('#prev').disabled = stopIdx===0; $('#next').disabled = stopIdx===STOPS.length-1;
   $('#count').textContent = ph.length+(ph.length===1?' photo':' photos');   // frame22 R9: the garage stop has one photo
   hidePhoto(); if(fly){ const fr = FRAME_FOR(s); LENS = fr.lens; lensTw = null; flyTo(fr.pos, fr.look, s.nav||'look', undefined, fr.lens); anim.photo = s.photo; }
@@ -22659,14 +22693,18 @@ function r36Pathify(a, o){ o = o || {};
   R36N.last = {kind: 'walk', L: +R.L.toFixed(1), dur: +a.dur.toFixed(2), doors: R.doors.map(q => q.it.id)}; return 1; }
 function r36LineClear(A, B){ try{ const d = B.clone().sub(A), L = d.length(); if(L < 1) return true; const rc = new THREE.Raycaster(A, d.normalize(), 0, L); for(const h of rc.intersectObjects(withVar(['main', 'upper', 'roof', 'ceil']).filter(g => g.visible), true)){ const m = h.object.material; if(h.object.isSprite || (m && m.transparent && m.opacity < .5)) continue; return false; } }catch(e){} return true; }
 function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)); }catch(e){ return false; } }
+/* r38: a tour move whose planned walk would take longer than the 10 s rule (R37S.CHK.dur: the upper balcony down both flights to the far end of the
+   lower hall is 12-13 s) is the quick dissolve instead. Decided per move from the plan itself, so it holds for any stop order. */
+function r38Long(a){ try{ return !!(a && a.path && a.tl && a.dur > R38.MAXD); }catch(e){ return false; } }
+const R38 = window.R38 = {MAXD: 10.0};
 /* tour: Next / Back / pills / keys */
 { const _ss36 = showStop; showStop = function(i, fly){
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
         const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 100};
-        if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
-        else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
+        if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
+        else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
         else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
     return r; }; }
 /* walk: taps, white circles, the plan */
