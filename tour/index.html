@@ -22320,7 +22320,7 @@ const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
 function r36PathStep(a, tt){   // one frame of a walked move: position on the route, eyes ahead, then onto the destination's own view
   const p = a.path; if(tt >= 1){ camera.position.copy(a.to); curT.copy(a.toT); camera.lookAt(curT); return; }
   let s = r36Ease(tt) * p.L;
-  for(const d of p.doors){ if(d.s - s < 10 && s - d.s < 1.5){ r36OpenDoor(d.it, d.x, d.z); if(d.s - s < 2.4 && d.s - s > -.4 && d.it.t < .55 && a.sHold != null){ s = Math.min(s, a.sHold); a.t0 += performance.now() - (a.lastNow || performance.now()); } } }   // wait at a door that is still swinging
+  for(const d of p.doors){ if(d.s - s < Math.max(10, p.L / Math.max(a.dur, .5) * ((d.it.dur || .8) + .35) + 2) && s - d.s < 1.5){ r36OpenDoor(d.it, d.x, d.z); if(d.s - s < 2.4 && d.s - s > -.4 && d.it.t < .85 && a.sHold != null){ s = Math.min(s, a.sHold); a.t0 += performance.now() - (a.lastNow || performance.now()); } } }   // wait at a door that is still swinging
   a.sHold = s; a.lastNow = performance.now(); r36PathPos(p, s, camera.position);
   const ah = r36PathPos(p, Math.min(p.L, s + 5), R36V), dx = ah.x - camera.position.x, dz = ah.z - camera.position.z, dy = ah.y - camera.position.y, hz = Math.hypot(dx, dz);
   let yw = a.yaw0, pt = a.pitch0;
