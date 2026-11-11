@@ -19389,6 +19389,47 @@ function bim3GarageFace(){
       pl.receiveShadow = true; p.piv.add(pl); n++; } }
   BIM3.report.garageFace = n; return n; }
 { const _b3gf = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3gf.apply(this, arguments); try{ bim3GarageFace(); }catch(e){ console.warn('[bim3] garage face', e); } return r; }; }
+/* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
+   the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
+   both sides, flush cup pulls) that slides into the wall on the coffee-bar side and can be closed; the wall closed above it; and the attic
+   storage cabinet the owner built over it: two raised-panel doors, 36" wide x 30" high, bottom at 8'-5", centred on the door, satin-nickel
+   knobs, opening to the attic over the hall. The gap, the wall faces and the ceiling are probed from the built house. */
+function r28AtticCabinet(){
+  const HEAD = 6.7813, CW = 3, CH = 2.5, CAB_Y = 8 + 5 / 12, objs = withVar(['main', 'ceil', 'vault', 'vaultUp', 'roof']).filter(g => g.children.length), rc = new THREE.Raycaster();
+  const hit = (o, d, far) => { rc.set(new THREE.Vector3(...o), new THREE.Vector3(...d)); rc.far = far; return rc.intersectObjects(objs, true).find(q => q.object.isMesh && q.object.visible) || null; };
+  const wallAt = z => !!hit([20.5, 7.5, z], [1, 0, 0], 2.2);
+  if(wallAt(9.5)) return 'closed';
+  let z0 = 9.5, z1 = 9.5; while(z0 > 6.5 && !wallAt(z0 - .05)) z0 -= .05; while(z1 < 12.5 && !wallAt(z1 + .05)) z1 += .05;
+  const hf = hit([20.5, 7.5, z0 - .3], [1, 0, 0], 3), xf = hf ? hf.point.x : 22.03;                 // kitchen face
+  const hh = hit([25, 5, z0 - .3], [-1, 0, 0], 4), xh = hh && hh.point.x > xf + .2 && hh.point.x < xf + .9 ? hh.point.x : xf + .45;   // hall face
+  const TW = xh - xf, cx = xf + TW / 2, cz = (z0 + z1) / 2, W = z1 - z0, u = [0, 1], n = [1, 0];
+  const ceil = z => { const h = hit([xf - .05, 7.5, z], [0, 1, 0], 9); return h ? h.point.y : 12.5; };
+  const yTop = Math.max(ceil(z0 + .1), ceil(cz), ceil(z1 - .1)) + .05;
+  // the wall over the door: set a hair behind the wall faces so the old faces win where they overlap
+  let wm = null; grp('main').traverse(o => { if(!wm && o.isMesh && /^walls\|L1\|paint-int/.test(o.name)) wm = o.material; });
+  const infill = new THREE.Mesh(new THREE.BoxGeometry(TW - .006, yTop - HEAD, W + .24), Array.isArray(wm) ? wm[0] : (wm || M.wall));
+  infill.position.set(cx, (HEAD + yTop) / 2, cz); infill.castShadow = infill.receiveShadow = true; infill.name = 'r28infill'; grp('main').add(infill);
+  // the pocket door: jambs, casing both faces, a Craftsman leaf that slides toward +z into the coffee-bar-side wall
+  const S = DOOR_SPEC, I = DOOR_IN, jt = S.jamb * I, gap = S.hingeGap * I, T = S.T * I, yl = S.undercut * I, H = HEAD - (S.undercut + S.topGap + S.jamb) * I;
+  jambLining('main', cx, cz, u, n, W, 0, HEAD, -TW / 2, TW / 2);
+  for(const sd of [-1, 1]) craftsmanCasing({g: 'main', cx, cz, u, n, side: sd, d0: TW / 2, a0: -W / 2, a1: W / 2, y0: 0, y1: HEAD});
+  const wl = W - 2 * jt - 2 * gap, O = [cx - T / 2, z0 + jt + gap], d = wl - .18;
+  const it = door28Item({id: 'R28-POCKET', note: '', normal: [0, 1], center: [cz, cx], width: W, isExternal: false}, 'pocket');
+  it.dur = .7; it.t = 1; it.u3 = new THREE.Vector3(0, 0, 1); it.ps = 1; it.d = d; it.yl = yl; it.H = H;
+  const L = door28Part(it, 0, [cx, 0, cz]); L.rec.parentKey = vname('main');
+  craftsmanLeaf(L.key, O, u, n, wl, yl, H); cupPull(L.key, O, u, n, 2.5 * I, yl + 36 * I, T);
+  const P = door28Part(it, 1, [cx, 0, cz]); P.rec.parentKey = vname('main');                         // open at rest: the leaf's leading stile in the jamb
+  obox('doorPaint', P.key, O, u, n, d, wl, yl, yl + H, 0, T); cupPull(P.key, O, u, n, d + .1, yl + 36 * I, T);
+  collider(xf, z0, xh, z1, 0, HEAD); it.coll = COLLIDERS[COLLIDERS.length - 1]; it.coll.pass = true;
+  it.gap = new THREE.Box3(new THREE.Vector3(xf - .05, 0, z0), new THREE.Vector3(xh + .05, HEAD - .1, z1)); it.c0 = [cx, cz]; it.n3 = new THREE.Vector3(-1, 0, 0);   // tap the open doorway from the kitchen to close it
+  POCKET31.items.push(it);
+  // the attic cabinet, centred over the door
+  if(window.FIX && FIX.make){ const cab = FIX.make('upperCabinet', {w: CW, h: CH, d: .3, mountY: CAB_Y, glass: false, style: 'raised', pull: 'knob', hw: 'satinNickel', led: false, contents: false});
+    cab.position.set(xf + .24, 0, cz); cab.rotation.y = -Math.PI / 2; cab.userData.el = 'r28-attic-cabinet';
+    cab.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } }); grp('main').add(cab); }
+  return {z0: +z0.toFixed(2), z1: +z1.toFixed(2), xf: +xf.toFixed(2), xh: +xh.toFixed(2), yTop: +yTop.toFixed(2)};
+}
+{ const _r28a = bim2BuildHouse; bim2BuildHouse = function(){ const r = _r28a.apply(this, arguments); try{ BIM3.report.r28attic = r28AtticCabinet(); }catch(e){ console.warn('[r28] attic cabinet', e); } return r; }; }
 /* G35-6 shingle courses run parallel to the eave (v33 roofs; QA ext_W_mid): the package UVs are a BIM-frame box projection (u = BIM x,
    v = BIM y on near-horizontal faces), which lays courses along x. On a roof face that slopes along BIM x (eave along y, e.g. RF-L02) that put the
    courses down the slope; there the face's u/v swap so the texture's courses follow the eave. */
