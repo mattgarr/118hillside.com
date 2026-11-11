@@ -775,11 +775,12 @@
       const G = GEO[id]; _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 14 : 4.5), G.c[1]).project(camera);
       const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z}); }
     // each name goes as near its room as it can without covering another: tried in a fixed order and in small steps, so a name moves little when another changes
-    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, x = clamp(it.x, F.l + w / 2 + 2, F.r - w / 2 - 2), y0 = clamp(it.y, F.t + h / 2, F.b - h / 2); let y = y0;
-      const hit = yy => placed.some(q => !(x + w / 2 + 4 < q[0] || x - w / 2 - 4 > q[2] || yy + h / 2 + 2 < q[1] || yy - h / 2 - 2 > q[3]));
-      for(const dy of [0, 14, -14, 28, -28, 42, -42, 56, -56, 70]){ const yy = clamp(y0 + dy, F.t + h / 2, F.b - h / 2); if(!hit(yy)){ y = yy; break; } }
+    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, cx = x => clamp(x, F.l + w / 2 + 2, F.r - w / 2 - 2), cy = y => clamp(y, F.t + h / 2, F.b - h / 2);
+      let x = cx(it.x), y = cy(it.y); const hit = (xx, yy) => placed.some(q => !(xx + w / 2 + 4 < q[0] || xx - w / 2 - 4 > q[2] || yy + h / 2 + 2 < q[1] || yy - h / 2 - 2 > q[3]));
+      for(const o of LB_TRY){ const xx = cx(it.x + o[0]), yy = cy(it.y + o[1]); if(!hit(xx, yy)){ x = xx; y = yy; break; } }
       placed.push([x - w / 2, y - h / 2, x + w / 2, y + h / 2]); L.x = x; L.y = y;
       L.b.style.transform = `translate(${(x - w / 2).toFixed(1)}px,${(y - h / 2).toFixed(1)}px)`; if(!L.on){ L.on = true; L.b.classList.add('on'); } } }
+  const LB_TRY = (() => { const o = []; for(const dx of [0, -44, 44, -88, 88, -132, 132]) for(const dy of [0, 14, -14, 28, -28, 42, -42, 56, -56, 70, -70]) o.push([dx, dy]); return o.sort((a, b) => (Math.abs(a[0]) * .7 + Math.abs(a[1])) - (Math.abs(b[0]) * .7 + Math.abs(b[1]))); })();
   // which room is under a point on the screen: a label first, then the floors you can see
   const _ray = new THREE.Raycaster(), _n = new THREE.Vector2();
   function slotAt(cx, cy){ for(const id of ORDER){ const L = LB[id]; if(!L.on) continue; const q = L.b.getBoundingClientRect(); if(cx >= q.left - 10 && cx <= q.right + 10 && cy >= q.top - 10 && cy <= q.bottom + 10) return id; }
@@ -932,7 +933,7 @@
     const nextTxt = last ? 'Play one again' : nx === 'daily' ? 'Play today’s guest list' : 'Next puzzle: ' + LG.LEVELS[nx].title;
     const learned = {warm: 'You have just learned what the listing takes a page to say: a primary suite upstairs with its own bath, three bedrooms beside the kitchen, and two more downstairs.',
       sun: 'Now you know where the light goes in this model of the house: morning sun at the front, evening sun at the back, and a bedroom the old oak keeps in shade.',
-      drums: 'Three levels, and you can close a door on any of them. That is why a drum kit and a light sleeper can share this house.',
+      drums: 'Three levels, with a flight of stairs between each. That is how a drum kit and a light sleeper can share this house.',
       stars: 'A loft, a skylit office and a lounge that opens onto the terrace, on top of six bedrooms. There is a room here for whatever people bring with them.',
       full: 'Six bedrooms on three levels, three full baths, and still a loft, an office, a lounge and a garage left over. Room for everyone.'}[L.id] || 'Six bedrooms on three levels, with a loft, a skylit office and a lounge besides. Every day the guest list changes and they all still fit.';
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">${i >= 0 ? 'Puzzle ' + (i + 1) + ' of ' + LG.LEVELS.length + ' · ' + esc(L.title) : 'Today’s guest list'}</p><h2 id="rfeH">Everyone has a room.</h2>
