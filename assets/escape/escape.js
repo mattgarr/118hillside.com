@@ -209,7 +209,7 @@
           tg.globalAlpha = 1; tg.shadowBlur = 0; tg.globalCompositeOperation = 'source-over';
           g.shadowBlur = 0; g.drawImage(api.tmp, 0, 0); g.restore(); }
         if(any){ g.save(); g.globalCompositeOperation = 'destination-in'; g.beginPath(); poly.forEach((p, i) => { const q = px({x: p[0], z: p[1]}); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); g.restore(); }
-        mesh.visible = any; const gain = opts.gain || 1.55; mat.color.setRGB(gain, gain * .94, gain * .8); tex.needsUpdate = true; }};
+        mesh.visible = any; const gain = opts.gain || 1.45; mat.color.setRGB(gain, gain * .94, gain * .8); tex.needsUpdate = true; }};
     LIGHT.rooms.push(api); return api; }
 
   /* ================================================================== paper strips on the glass: three boxy figures, card or tracing paper */
@@ -289,7 +289,7 @@
     const host = H.grp('main');
     // a champagne bottle lying on the middle shelf
     const prof = [[0, 0], [.13, 0], [.145, .02], [.145, .52], [.12, .62], [.06, .78], [.05, .97], [.058, .975], [.058, 1.0], [0, 1.0]].map(p => new THREE.Vector2(p[0], p[1]));
-    const glassM = new THREE.MeshStandardMaterial({color: lin(0x10402a), roughness: .22, metalness: .1, emissive: lin(0x0c3a22), emissiveIntensity: .3});
+    const glassM = new THREE.MeshStandardMaterial({color: lin(0x0d3a25), roughness: .22, metalness: .1, emissive: lin(0x0a3320), emissiveIntensity: .32});
     const foilM = new THREE.MeshStandardMaterial({color: lin(0xd2a646), roughness: .35, metalness: .7, emissive: lin(0x8a6418), emissiveIntensity: .7});
     const labelM = new THREE.MeshStandardMaterial({color: lin(0xf1ead8), roughness: .8, emissive: lin(0xf1ead8), emissiveIntensity: .35});
     const bottle = new THREE.Group(); bottle.name = 'esc-bottle';
@@ -300,7 +300,7 @@
     bottle.rotation.z = Math.PI / 2; bottle.rotation.y = .12; bottle.position.set(20.16, 1.37 + .152, 12.5); bottle.traverse(o => { o.raycast = () => {}; }); host.add(bottle); FR.bottle = bottle;
     // warm light spilling out when it opens
     const gc = document.createElement('canvas'); gc.width = gc.height = 128; const gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(255,226,170,1)'); gr.addColorStop(.4, 'rgba(255,205,130,.45)'); gr.addColorStop(1, 'rgba(255,190,110,0)'); gx.fillStyle = gr; gx.fillRect(0, 0, 128, 128);
-    const glow = FR.glow = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0})); glow.position.set(19.64, 1.7, 11.9); glow.scale.set(3.4, 3.4, 1); glow.raycast = () => {}; glow.renderOrder = 6; host.add(glow);
+    const glow = FR.glow = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0})); glow.position.set(19.64, 1.75, 13.2); glow.scale.set(2.7, 2.9, 1); glow.raycast = () => {}; glow.renderOrder = 6; host.add(glow);
     // the keypad lock stuck to the glass
     const lc = document.createElement('canvas'); lc.width = 256; lc.height = 128; FR.lockCv = lc; const lt = FR.lockTex = new THREE.CanvasTexture(lc); lt.encoding = THREE.sRGBEncoding; lt.anisotropy = 4;
     const lock = FR.lock = new THREE.Mesh(new THREE.BoxGeometry(.5, .25, .035), [0, 1, 2, 3].map(() => new THREE.MeshStandardMaterial({color: lin(0x1a1c22), roughness: .5, metalness: .4})).concat([new THREE.MeshBasicMaterial({map: lt, toneMapped: false}), new THREE.MeshStandardMaterial({color: lin(0x1a1c22)})]));
@@ -325,7 +325,7 @@
     x.beginPath(); x.arc(220, 64, 15, 0, Math.PI * 2); x.fillStyle = state === 'open' ? '#55e08a' : '#e2503f'; x.fill(); FR.lockTex.needsUpdate = true; wake(4); }
   function openFridgeDoor(){ FR.anim = {t0: performance.now(), dur: reduce ? 10 : 1100}; SND.fridge(); }
   function fridgeStep(now){ if(!FR.anim) return; const u = clamp((now - FR.anim.t0) / FR.anim.dur, 0, 1), e = 1 - Math.pow(1 - u, 3); FR.open = e;
-    if(FR.pivot) FR.pivot.rotation.y = e * 1.78; if(FR.glow) FR.glow.material.opacity = .42 * e; wake(3); if(u >= 1) FR.anim = null; }
+    if(FR.pivot) FR.pivot.rotation.y = e * 1.78; if(FR.glow) FR.glow.material.opacity = .75 * e; wake(3); if(u >= 1) FR.anim = null; }
 
   /* ================================================================== Snowball in the house (a billboard of the shared drawing) */
   let CAT = null;
@@ -523,7 +523,7 @@
     #escTop{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}#escL,#escR{display:contents}
     #escBtns{order:0;align-self:flex-end}#escGoal{order:1;max-width:none;padding:9px 14px 10px}#escGoal p{font-size:18.5px}#escSay{order:2;align-self:flex-end}
     #escHint{padding:5px 12px 5px 5px;min-height:48px}#escHint small{display:none}.escIco{width:48px;height:48px}
-    #escPlace{order:3;max-width:none;padding:8px 14px 10px}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
+    #escPlace{position:fixed;left:10px;right:10px;max-width:520px;margin:0 auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 170px);padding:8px 14px 10px}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
     #escDock{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}
     #escMapWrap{flex:none;order:0;flex-direction:row}#escMapBtn{display:inline-flex}
     #escMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 24px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
@@ -652,7 +652,7 @@
     for(const w of (WALKS[S.place] || [])) mark('walk', PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     for(const id in SPOTS){ const sp = SPOTS[id]; if(sp.from.includes(S.place) && (!sp.when || sp.when())) mark('look', sp.label(), sp.at(), () => examine(id), 's:' + id); } }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || !S.started || S.done || !!S.ex;
-    const top = phone() ? 210 : 96, bot = r.height - (phone() ? 196 : 150), padX = 40, items = [], placed = [];
+    const top = phone() ? 210 : 96, bot = r.height - (phone() ? (placeE.classList.contains('on') ? 276 : 196) : 150), padX = 40, items = [], placed = [];
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '', docked = false;
@@ -674,7 +674,7 @@
   function coach(){ if(!S.started || S.done){ coachE.classList.remove('on'); return; } const c = S.coach; let k = '';
     if(!c.look){ if(S.dragPx > 140){ c.look = true; } else k = 'look'; }
     if(!k && !c.walk) k = 'walk'; if(!k && !c.tap && S.place === 'coffee' && !S.ex) k = 'tap';
-    if(S.ex || rig.move || mapOpen() || S.stage !== 'arrive' || (phone() && placeE.classList.contains('on'))) k = '';
+    if(S.ex || rig.move || mapOpen() || S.stage !== 'arrive') k = '';
     if(k === UI.coachK) return; UI.coachK = k; coachE.className = k ? 'on ' + k : '';
     if(k) coachE.innerHTML = k === 'look' ? ICO.drag + '<span>Drag to look around</span>' : k === 'walk' ? ICO.disc + '<span>Tap a white circle to walk there</span>' : ICO.ring + '<span>Tap a gold ring to look closer</span>'; }
 
@@ -791,7 +791,7 @@
     const c = el('div', {id: 'escCard'}, `<div class="c" role="dialog" aria-labelledby="escH" style="position:relative;overflow:hidden"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Cork popped.</h2>
       <p class="lede">The guests are at the door and the house is lit for the evening. Elena owes you the first slice of cake.</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint from Snowball' : 'hints from Snowball'}</span></div></div>
-      <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California, with six bedrooms and three full baths. The afternoon sun really does come through the dining room like that. Come and stand in it.</span>
+      <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California, with six bedrooms and three full baths. The afternoon sun really does come through the great room like that. Come and stand in it.</span>
         <div class="acts"><a class="escBtn primary" href="/#contact" id="escSee" style="min-height:52px;font-size:17px">See it in person</a><a class="escBtn light" href="/tour/" id="escFree">Explore the house freely</a></div></div>
       <div class="more"><button class="escBtn" type="button" id="escShare">Share</button><button class="escBtn" type="button" id="escAgain">Play again</button><a class="escBtn" href="/games/">More games</a></div></div>`);
     document.body.appendChild(c); const card = c.querySelector('.c');
