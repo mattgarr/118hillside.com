@@ -12,7 +12,7 @@
   var GAMES = {
     feast: {q: 'feast=1', title: 'Thanksgiving at Hillside', age: 'Ages 7 and up', line: 'Snowball hid dinner all over the house. Follow his clues and carry it to the table.'},
     deck: {q: 'deck=1', title: 'Deck the House with Snowball', age: 'All ages', line: 'Company is coming. Decorate the house in 3D and light it up at dusk.'},
-    snowball: {q: 'snowball=1', title: 'Where’s Snowball?', age: 'Ages 5 and up', line: 'Snowball is hiding somewhere in the house. Work out which room, then spot him.'},
+    snowball: {q: 'snowball=1', title: 'Where’s Snowball?', age: 'Ages 5 and up', line: 'Snowball’s hiding, and he’s good at it. Work out which room, then spot him.'},
     escape: {q: 'escape=easy', title: 'Locked In at Hillside', age: 'Teens and adults', line: 'An escape room. Slide the doors, move the sun, and read the light.'},
     room: {q: 'room=1', title: 'Room for Everyone', age: 'Ages 10 and up', line: 'A logic puzzle. The house is full of visiting animals, and each one needs the right room.'}};
   /* seasons as on the games page: Thanksgiving leads from 1 to 27 November, Deck the House from 28 November to 6 January and the rest of the year */
