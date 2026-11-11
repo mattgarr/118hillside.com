@@ -91,7 +91,7 @@ h1 { font-family:var(--serif); font-weight:500; font-size:clamp(30px,5vw,48px); 
   <p class="lede">Puzzles and seasonal games set in the real house. They work on phones too.</p>
   <a class="ever" href="/games/room/" onclick="try{gtag('event','games_pick',{season:'always',game:'room'})}catch(e){}">
     <span class="tx"><span class="t">Room for Everyone</span><span class="s">A puzzle on the real floor plan of this house. Find every household the rooms that fit how they live: the night-shift nurse, the grandparents who want the coffee close, the dog who needs the yard.</span><span class="tape">Play the floor plan</span></span>
-    <img src="/images/room-preview.jpg" alt="Names on painter's tape placed on the floor plan of 118 Hillside Drive" loading="lazy">
+    <img src="/images/room-hero.jpg" alt="Names on painter's tape placed on the floor plan of 118 Hillside Drive" loading="lazy">
   </a>
   <a class="feature" id="feature" href="#"></a>
   <div class="tabs" role="tablist" id="tabs"></div>
@@ -114,8 +114,9 @@ var SEASONS = [
     ]},
   { id:'thanksgiving', name:'Thanksgiving', icon:'🦃', from:'11-01', to:'11-30', live:true, path:'../thanksgiving/',
     bg:'linear-gradient(135deg,#3a2414,#8a4b1c 55%,#d99a3c)', btn:'#ffd27a', btnInk:'#2a1806',
-    title:'Thanksgiving dinner', sub:'Catch Tom, rake the leaves, get dinner on the table and fill the Thankful Tree.',
+    title:'Thanksgiving at Hillside', sub:'The twins put the groceries away, so dinner is hidden all over the house. Follow their clues, then get it all to the terrace table.', feature:'/games/feast/',
     games:[
+      {id:'feast',   icon:'🥧', title:'Thanksgiving at Hillside', blurb:'The twins hid the groceries. Find them, then set the table', ages:'6+', c:'#efe2cc', href:'/games/feast/'},
       {id:'turkey',  icon:'🦃', title:'Turkey Trot',  blurb:'Tom is too excited for dinner', ages:'4+', c:'#f3dfc8'},
       {id:'corn',    icon:'🌽', title:'Corn Maze',    blurb:'Lead Tom out of the corn',    ages:'4+', c:'#f6eac0'},
       {id:'leaves',  icon:'🍂', title:'Leaf Pile',    blurb:'Rake it up, jump right in',   ages:'3+', c:'#f4d9c4'},
@@ -135,7 +136,7 @@ var featured = (q && SEASONS.filter(function(s){ return s.id===q[1]; })[0])
   || live.filter(function(s){ return inSeason(s, today); })[0]
   || live[live.length-1];
 var current = featured;
-function href(s, g){ return s.path + (g ? '?game=' + g.id : '?game=menu'); }
+function href(s, g){ if(g && g.href) return g.href; if(!g && s.feature) return s.feature; return s.path + (g ? '?game=' + g.id : '?game=menu'); }
 function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function renderFeature(){
   var s = featured, f = document.getElementById('feature');

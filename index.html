@@ -116,7 +116,7 @@ strong { font-weight: 500; }
 .hook .rot .slide { grid-area: 1 / 1; opacity: 0; visibility: hidden; transition: opacity .8s ease, visibility 0s linear .8s; border-radius: 0; }
 .hook .rot .slide.on { opacity: 1; visibility: visible; transition: opacity .8s ease, visibility 0s; }
 .hook .rot .slide[data-id="room"] img { opacity: 1; object-position: 30% 40%; }
-.hook .rot .slide[data-id="room"] .hc { top: 0; justify-content: flex-end; background: linear-gradient(to top, rgba(16,24,30,.94) 0%, rgba(16,24,30,.7) 55%, rgba(16,24,30,.38) 100%); }
+.hook .rot .slide[data-id="room"] .hc, .hook .rot .slide[data-id="feast"] .hc { top: 0; justify-content: flex-end; background: linear-gradient(to top, rgba(16,24,30,.94) 0%, rgba(16,24,30,.7) 55%, rgba(16,24,30,.38) 100%); }
 .hook .rdots { position: absolute; z-index: 3; top: 14px; right: 14px; display: flex; gap: 4px; }
 .hook .rdots button { width: 28px; height: 28px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; }
 .hook .rdots button::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: 0 0 0 1px rgba(0,0,0,.25); transition: background .2s, transform .2s; }
@@ -417,13 +417,13 @@ footer p { margin: 0 0 8px; max-width: 900px; }
   var rot = document.getElementById('gameRot'); if(!rot) return;
   var d = new Date(), md = ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   var SEASONAL = [
-    {id:'thanksgiving', from:'11-01', to:'11-30', href:'thanksgiving/?game=menu', img:'tour/thumbs/tg_poster.jpg', alt:'The dining table set for Thanksgiving in the 3D house',
-     eyebrow:'Thanksgiving in the house', title:'Dinner at Hillside', sub:'Catch Tom the turkey, rake the leaf pile and get dinner on the table before the guests arrive.'}
+    {id:'feast', from:'11-01', to:'11-30', href:'games/feast/', img:'images/feast-hero.jpg', alt:'Grocery tags set out on the dining table at 118 Hillside Drive',
+     eyebrow:'A whole-house hunt', title:'Thanksgiving at Hillside', sub:'The twins hid the groceries all over the house. Follow their clues, then carry dinner out to the terrace.'}
   ];
   var dots = document.getElementById('rotDots');
   SEASONAL.forEach(function(g){ if(md < g.from || md > g.to) return;
     var a = document.createElement('a'); a.className = 'slide'; a.href = g.href; a.dataset.id = g.id;
-    a.innerHTML = '<img src="' + g.img + '" alt="' + g.alt + '" loading="lazy" width="1600" height="1000"><span class="hc"><span class="eyebrow">' + g.eyebrow + '</span><span class="ht">' + g.title + '</span><span class="hs">' + g.sub + '</span><span class="btn">Play &rarr;</span></span>';
+    a.innerHTML = '<img src="' + g.img + '" alt="' + g.alt + '" loading="lazy" width="1280" height="752"><span class="hc"><span class="eyebrow">' + g.eyebrow + '</span><span class="ht">' + g.title + '</span><span class="hs">' + g.sub + '</span><span class="btn">Play &rarr;</span></span>';
     rot.insertBefore(a, dots); });
   var slides = [].slice.call(rot.querySelectorAll('.slide')); if(slides.length < 2) return;
   var i = 0, timer = null, paused = false, reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
