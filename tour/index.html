@@ -9175,7 +9175,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=34' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=36' : '../assets/escape/escape.js?v=35'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=35' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=37' : '../assets/escape/escape.js?v=36'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
