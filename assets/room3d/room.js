@@ -526,6 +526,7 @@
   #rfeRoom .hd{display:flex;align-items:center;gap:4px}#rfeRoom .hd b{flex:1;min-width:0;font:600 24px/1.1 "Cormorant Garamond",Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #rfeRoom .hd button{width:40px;height:40px;border:1px solid #d6d2c8;background:#fff;border-radius:50%;display:grid;place-items:center;padding:0;flex:none}#rfeRoom .hd button svg{width:18px;height:18px}
   #rfeRoom .lv{font-size:13px;color:var(--mut);margin:1px 0 6px}
+  #rfeRoom .wh{margin:0 0 7px;font-size:13.500px;line-height:1.3;color:#3b4350}
   #rfeRoom ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
   #rfeRoom li{display:flex;gap:8px;align-items:flex-start;font-size:14.500px;line-height:1.3}#rfeRoom li svg{width:18px;height:18px;flex:none;margin-top:1px;color:#8a5e00}
   #rfeRoom li.todo{color:var(--mut)}#rfeRoom li.todo svg{color:#a9a595}#rfeRoom .hd b{text-align:center}
@@ -614,7 +615,7 @@
     html.rfe-in .rfeBtn{flex:1 1 auto;padding:0 10px;font-size:14.500px;gap:6px}#rfeBack span::after{content:""}#rfeSun .ticks{display:none}#rfeSun .top b{font-size:17px}#rfeSunNow{font-size:12.500px}#rfePlay span{display:none}#rfeSun .top button{padding:0 9px}
     html.rfe-in #rfeCluesBtn{display:inline-flex}
     #rfeSun{flex:1 1 100%;max-width:none;order:-1;padding:7px 14px 9px}
-    #rfeRoom{left:8px;right:8px;top:var(--top-h,66px);width:auto;padding:6px 8px 8px 8px}#rfeRoom .hd b{font-size:21px}#rfeRoom li{font-size:13.500px}#rfeRoom .lv{text-align:center;margin:0 0 4px}
+    #rfeRoom{left:8px;right:8px;top:var(--top-h,66px);width:auto;padding:6px 8px 8px 8px}#rfeRoom .hd b{font-size:21px}#rfeRoom li{font-size:13.500px}#rfeRoom .lv{text-align:center;margin:0 0 3px}#rfeRoom .wh{text-align:center;font-size:12.500px;margin-bottom:5px}
     #rfeRoom ul{gap:2px;padding:0 4px}#rfeRoom .cap{font-size:15.500px;margin-top:6px}#rfeRoom .hd button{width:44px;height:44px}
     #rfeWho{right:8px;left:8px;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 58px)}
     .rfeBtn{padding:0 14px;font-size:15px}
@@ -776,7 +777,7 @@
     // each name goes as near its room as it can without covering another: tried in a fixed order and in small steps, so a name moves little when another changes
     for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, x = clamp(it.x, F.l + w / 2 + 2, F.r - w / 2 - 2), y0 = clamp(it.y, F.t + h / 2, F.b - h / 2); let y = y0;
       const hit = yy => placed.some(q => !(x + w / 2 + 4 < q[0] || x - w / 2 - 4 > q[2] || yy + h / 2 + 2 < q[1] || yy - h / 2 - 2 > q[3]));
-      for(const dy of [0, 14, -14, 28, -28, 42, -42, 56]){ const yy = clamp(y0 + dy, F.t + h / 2, F.b - h / 2); if(!hit(yy)){ y = yy; break; } }
+      for(const dy of [0, 14, -14, 28, -28, 42, -42, 56, -56, 70]){ const yy = clamp(y0 + dy, F.t + h / 2, F.b - h / 2); if(!hit(yy)){ y = yy; break; } }
       placed.push([x - w / 2, y - h / 2, x + w / 2, y + h / 2]); L.x = x; L.y = y;
       L.b.style.transform = `translate(${(x - w / 2).toFixed(1)}px,${(y - h / 2).toFixed(1)}px)`; if(!L.on){ L.on = true; L.b.classList.add('on'); } } }
   // which room is under a point on the screen: a label first, then the floors you can see
@@ -815,7 +816,7 @@
     const todo = r.filter(q => !hasNote(slot, q.note)).length; if(todo) li += `<li class="todo">${ICO.ring}<span>${todo === 1 ? 'One more thing' : todo + ' things'} to notice: tap the gold ${todo === 1 ? 'ring' : 'rings'}</span></li>`;
     const i = ORDER.indexOf(slot), prev = ORDER[(i + ORDER.length - 1) % ORDER.length], next = ORDER[(i + 1) % ORDER.length], cap = UI.cap && UI.capSlot === slot;
     $('#rfeRoom').innerHTML = `<div class="hd"><button type="button" id="rfePrev" aria-label="Previous room: ${esc(LG.SLOTS[prev].name)}">${ICO.back}</button><b>${esc(sl.name)}</b><button type="button" id="rfeNext" aria-label="Next room: ${esc(LG.SLOTS[next].name)}">${ICO.fwd}</button></div>
-      <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(nmOf(occ)) : ''}</div><ul>${li}</ul><p class="cap${cap ? ' on' : ''}">${cap ? esc(UI.cap) : ''}</p>`;
+      <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(nmOf(occ)) : ''}</div><p class="wh">${esc(LG.WHERE[slot])}</p><ul>${li}</ul><p class="cap${cap ? ' on' : ''}">${cap ? esc(UI.cap) : ''}</p>`;
     $('#rfePrev').onclick = () => { SND.unlock(); hop(prev); }; $('#rfeNext').onclick = () => { SND.unlock(); hop(next); }; if(S.view === 'room') requestAnimationFrame(reframe); }
   function openWho(){ const slot = S.room, w = $('#rfeWho'), occ = occupant(slot); let h = `<h4>${esc(LG.SLOTS[slot].name)}</h4>`;
     const list = S.L.guests.filter(g => fits(g, slot) && g !== occ); if(!list.length) h += `<h4>${LG.SLOTS[slot].bed ? 'Nobody on this guest list needs another bed.' : 'Nothing on this guest list goes in a room like this.'}</h4>`;
@@ -884,7 +885,7 @@
       <ul class="how"><li>${ICO.bed}Tap a guest, then a room</li><li>${ICO.house}Tap a room on its own to go inside</li><li>${ICO.ring}Tap gold rings and drag the sun to see what a room has</li></ul>
       ${first ? '' : levelList()}
       <div class="acts"><button class="rfeBtn primary" type="button" id="rfeGo" style="min-width:150px;min-height:52px;font-size:17px">${first ? 'Meet the guests' : nx === 'daily' ? 'Play today’s guest list' : 'Play puzzle ' + (nx + 1)}</button>${sndBtn()}</div>
-      <p class="foot">Five puzzles and a new one every day, each with exactly one answer. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it is for sale.</p></div>`);
+      <p class="foot">Five puzzles and a new one every day, each with exactly one answer. The house is real: 118 Hillside Drive in Woodside, California, and it is for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day.</p></div>`);
     document.body.appendChild(c); bindSnd0(); const go = v => { SND.unlock(); SND.tap(); introCard(v === 'daily' ? LG.daily(LG.dayNumber(new Date())) : LG.LEVELS[v]); };
     $('#rfeGo').onclick = () => go(nx); $$('#rfeCard .lv button').forEach(b => b.onclick = () => go(b.dataset.lv === 'daily' ? 'daily' : +b.dataset.lv)); try{ $('#rfeGo').focus({preventScroll: true}); }catch(e){} }
   function introCard(L){ closeCard(); if(!L){ titleCard(); return; } const i = LG.LEVELS.indexOf(L);
@@ -929,7 +930,7 @@
   function endCard(){ const L = S.L, t = elapsed(), i = LG.LEVELS.indexOf(L), nx = nextLevel(), last = nx === 'daily' && !!SAVE.solved['day' + LG.dayNumber(new Date())];
     const nextTxt = last ? 'Play one again' : nx === 'daily' ? 'Play today’s guest list' : 'Next puzzle: ' + LG.LEVELS[nx].title;
     const learned = {warm: 'You have just learned what the listing takes a page to say: a primary suite upstairs with its own bath, three bedrooms beside the kitchen, and two more downstairs.',
-      sun: 'Now you know where the light goes: morning sun at the front, evening sun at the back, and one bedroom the old oak keeps in shade all day.',
+      sun: 'Now you know where the light goes in this model of the house: morning sun at the front, evening sun at the back, and a bedroom the old oak keeps in shade.',
       drums: 'Three levels, and you can close a door on any of them. That is why a drum kit and a light sleeper can share this house.',
       stars: 'A loft, a skylit office and a lounge that opens onto the terrace, on top of six bedrooms. There is a room here for whatever people bring with them.',
       full: 'Six bedrooms on three levels, three full baths, and still a loft, an office, a lounge and a garage left over. Room for everyone.'}[L.id] || 'Six bedrooms on three levels, with a loft, a skylit office and a lounge besides. Every day the guest list changes and they all still fit.';

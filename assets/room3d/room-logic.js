@@ -25,6 +25,11 @@
     lounge:  {name: 'Bonus lounge',   sp: 'SP-L0-LOUNGE',  lv: 'lower',  bed: 0, out: 1, none: 1, tv: 1, views: ['terrace']},
     garage:  {name: 'Garage',         sp: 'SP-LG-GARAGE',  lv: 'garage', bed: 0, ev: 1}
   };
+  const WHERE = {primary: 'The only bedroom upstairs. It sits over the two lower bedrooms.', loft: 'At the top of the stairs, beside the primary suite.',
+    garden: 'On the bedroom hallway, with the Middle bedroom and the hall bath.', middle: 'On the bedroom hallway, with the Garden bedroom and the hall bath. The Front bedroom is through one wall.',
+    front: 'Opens off the dining area, not the bedroom hallway. The Middle bedroom is through one wall.', corner: 'On the lower hallway, with the Side bedroom and the lower bath. The primary suite is overhead.',
+    side: 'On the lower hallway, with the Corner bedroom and the lower bath. The primary suite is overhead.', office: 'By the lower level’s own front door.',
+    lounge: 'Opens onto the terrace. The primary bath is overhead, not a bedroom.', garage: 'A level of its own, a few steps up from the lower level. Nothing sleeps above it.'};
   const SLOT_IDS = Object.keys(SLOTS), BEDS = SLOT_IDS.filter(s => SLOTS[s].bed), SPARE = SLOT_IDS.filter(s => !SLOTS[s].bed);
   const LEVEL_NAME = {upper: 'upper level', main: 'main level', lower: 'lower level', garage: 'garage'};
   const LEVEL_RANK = {lower: 0, garage: 0.5, main: 1, upper: 2};
@@ -267,7 +272,7 @@
       hints: {biscuit: ['One room that is not a bedroom has doors straight onto the terrace.', 'Go into the Bonus lounge and look at the glass doors.'],
         hosts: ['Same as ever: the bedroom with its own bath.', 'The Primary suite, upstairs.'],
         drums: ['The drums need a level where nobody sleeps. Elena and Marcus are upstairs, and the garage is out.', 'That leaves one room on the lower level, so nobody sleeps down there tonight.'],
-        wren: ['If nobody sleeps downstairs, three guests share the main level. Which bedroom there has no bedroom through the wall?', 'Lift the upper level off and look at the main level from above. One bedroom stands apart from the other two.'],
+        wren: ['If nobody sleeps downstairs, three guests share the main level. One bedroom there has no bedroom through any wall.', 'Lift the upper level off and look at the main level from above. One bedroom stands apart from the other two.'],
         rosa: ['Two bedrooms on the main level open onto the same short hallway.', 'Wren has one of them. Rosa and Luis take the other.'],
         nico: ['One bed left on the main level.', 'The Front bedroom.']},
       epi: 'Nico played until nine. Wren slept through it. Nobody can explain this.'},
@@ -287,10 +292,10 @@
       order: ['scope', 'iris', 'desk', 'june', 'dev', 'wren', 'walt'],
       hints: {scope: ['Two rooms are on the upper level, and only one of them is not a bedroom.', 'The Loft, at the top of the stairs.'],
         iris: ['Iris sleeps on the telescope’s level.', 'There is one bedroom up there.'],
-        desk: ['Which room that is not a bedroom has skylights?', 'It says so on the door: the Skylit office.'],
-        june: ['Which bedroom has a window onto the terrace? Look out of the windows downstairs.', 'One lower bedroom looks straight at the outdoor kitchen.'],
+        desk: ['One room that is not a bedroom has skylights.', 'It says so on the door: the Skylit office.'],
+        june: ['Look out of the windows downstairs. One of them faces the terrace.', 'One lower bedroom looks straight at the outdoor kitchen.'],
         dev: ['Dev sleeps on his desk’s level, and June has one of the two bedrooms there.', 'The Side bedroom.'],
-        wren: ['Iris is upstairs, so Wren cannot sleep under her. Which other bedroom looks at the oak?', 'The Garden bedroom, on the main level.'],
+        wren: ['Iris is upstairs, so Wren cannot sleep under her. One other bedroom looks at the oak.', 'The Garden bedroom, on the main level.'],
         walt: ['Two bedrooms get the morning sun. One shares Wren’s hallway.', 'The Front bedroom.']},
       epi: 'Forty-one meteors. Walt slept through every one.'},
     {id: 'full', title: 'Full house',
@@ -318,6 +323,6 @@
       epi: 'Six bedrooms, all full, and the drums in the one place nobody could object.'}
   ];
 
-  return {SLOTS, SLOT_IDS, BEDS, SPARE, LEVEL_NAME, LEVEL_RANK, HALLS, WALLS, WALLS_UNSURE, OVER, GUESTS, KINDS, ASK, REL, WITH, LEVELS, WORLDS,
+  return {SLOTS, WHERE, SLOT_IDS, BEDS, SPARE, LEVEL_NAME, LEVEL_RANK, HALLS, WALLS, WALLS_UNSURE, OVER, GUESTS, KINDS, ASK, REL, WITH, LEVELS, WORLDS,
     has, noteOf, isP, nm, vb, isRel, test, needs, whoOf, solutions, prove, depth, spare, rng, build, daily, dayNumber};
 });
