@@ -28,10 +28,10 @@
 (function(){
   var q = location.search ? location.search.slice(1) : '', h = location.hash || '', ok = false;
   try{ var c = document.createElement('canvas'); ok = !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl'))); }catch(e){}
-  if(/(^|&)classic(=|&|$)/.test(q)) ok = false;
+  var gl = ok; if(/(^|&)classic(=|&|$)/.test(q)) ok = false;
   if(!/(^|&)puzzle=/.test(q)) q = q.replace(/(^|&)level=(\d+)/, '$1puzzle=$2');
   var b = (location.pathname.match(/^(.*)\/games\//) || [])[1] || '', ix = b ? 'index.html' : '';
-  window.__base = b;
+  window.__base = b; window.__gl = gl;
   if(ok){ document.documentElement.className = 'go'; location.replace(b + '/tour/' + ix + '?room=1' + (q ? '&' + q : '') + h); }
 })();
 </script>
@@ -60,11 +60,17 @@ html.go .going{display:block}html.go .card{display:none}
 <main class="card">
   <p class="k">Room for Everyone</p>
   <h1>This game needs a device that can draw 3D</h1>
-  <p>Room for Everyone is played inside a 3D model of 118 Hillside Drive, and this browser cannot draw it. A newer phone, tablet or computer will open it from the same link.</p>
+  <p id="why">Room for Everyone is played inside a 3D model of 118 Hillside Drive, and this browser cannot draw it. A newer phone, tablet or computer will open it from the same link.</p>
   <p>The house is real, in Woodside, California, and it is for sale. The photos show every room the animals argue over.</p>
   <div class="btns"><a class="btn primary" href="/#gallery">See the photos</a><a class="btn" href="/#contact">Book a showing</a><a class="btn" href="/games/">Other games</a></div>
 </main>
 <script>
+/* a ?classic link opened on a device that can draw 3D: say that the floor-plan version has gone, and offer the game */
+(function(){ if(!window.__gl) return; var c = document.querySelector('.card');
+  c.querySelector('h1').textContent = 'The floor-plan version has been retired';
+  c.querySelector('#why').textContent = 'Room for Everyone is now played inside a 3D model of 118 Hillside Drive, and this device can draw it.';
+  var a = document.createElement('a'); a.className = 'btn primary'; a.href = '/tour/?room=1'; a.textContent = 'Play it in 3D';
+  var bs = c.querySelector('.btns'); bs.querySelector('.primary').className = 'btn'; bs.insertBefore(a, bs.firstChild); })();
 /* on a preview copy served from a sub-path, point the root links at that copy; no effect on 118hillside.com */
 (function(){ var b = window.__base; if(!b) return; var as = document.querySelectorAll('a[href^="/"]');
   for(var i = 0; i < as.length; i++){ var h = as[i].getAttribute('href'); as[i].setAttribute('href', b + h.replace(/^([^?#]*\/)(?=[?#]|$)/, '$1index.html')); } })();

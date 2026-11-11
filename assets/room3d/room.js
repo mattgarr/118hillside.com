@@ -390,7 +390,7 @@
   const PAWN = {g: {}, hop: {}, K_OVER: 2.4, K_IN: 1,
     build(id){ const g = buildPiece(THREE, LG.GUESTS[id], lin); g.userData.h = new THREE.Box3().setFromObject(g).max.y;
       g.traverse(o => { o.raycast = () => {}; if(o.isMesh){ o.castShadow = false; o.receiveShadow = false; } }); g.name = 'rfe-pawn:' + id; g.visible = false; H.scene.add(g); PAWN.g[id] = g; return g; },
-    spot(slot){ const s = standOf(slot); return s.pawn || GEO[slot].c; },
+    spot(slot){ const s = standOf(slot); return (HOUSE.mode === 'over' && s.over) || s.pawn || GEO[slot].c; },
     // every piece where its guest is; pieces upstairs go away with the upper level
     sync(){ if(!S.L) return; for(const id of Object.keys(PAWN.g)){ const g = PAWN.g[id], slot = S.at[id], on = !!slot && S.L.guests.indexOf(id) >= 0;
         if(!on){ g.visible = false; continue; } const p = PAWN.spot(slot), G = GEO[slot]; g.position.set(p[0], G.fy + .02, p[1]);
