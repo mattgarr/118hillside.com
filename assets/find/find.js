@@ -32,7 +32,7 @@
      spots: p = where his paws are (world feet), n = finishes the sentence "He was ...", d = how hidden from the place you would spot him
        (0 in plain sight, 1 easy once you turn, 2 partly behind something, 3 only ears, eyes or a tail), w = you have to walk to the other standing place, box = he brought a cardboard box.
      cam = details of the room's real photo for the Snowball cam [across 0..1, down 0..1, what it shows]; each is something no other room's photo has.
-     grp = what a room shares with others: a space, a view into each other's photo, or a look (the three bedrooms all show a made bed). Two rooms with a group in common
+     grp = what a room shares with others: a space, a view into each other's photo, or a look (the three bedrooms all show a made bed; the balcony and the terrace are both sunsets). Two rooms with a group in common
      are never offered as choices together. fit = which part of a tall photo the choice button shows. Facts come from the site's own copy. */
   const ROOM = {
     entry:   {name: 'Entry', at: 'in the entry', photo: '../images/entry-800.jpg', ar: .586, grp: ['front'], fy: 0, cam: [[.5, .05, 'the starburst light']],
@@ -64,7 +64,7 @@
     pbath:   {name: 'Primary bath', at: 'in the primary bath', photo: '../images/primary-bath-800.jpg', ar: .68, grp: ['pbath'], fy: 5.57, cam: [[.88, .36, 'the brass shower'], [.2, .62, 'the towels on their rings']],
       fact: 'Heated floors, two sinks, and a shower big enough for two.', say: 'The floor in here is warm.', v: [[-13.5, -22, 180, 27, 100]],
       spots: [{p: [-10, 8.43, -25.1], n: 'on the bathroom counter', d: 1}, {p: [-9.5, 5.6, -19.1], n: 'in the gap by the shower glass', d: 1}, {p: [-11.5, 5.6, -19.1], n: 'in the shower, behind the glass', d: 2}, {p: [-14, 5.6, -16.1], n: 'round the little wall by the shower', d: 3}]},
-    balcony: {name: 'Balcony', at: 'on the balcony', photo: '../images/hills-view-800.jpg', ar: .71, grp: ['suite'], fy: 5.57, tod: 'golden', cam: [[.42, .34, 'the hills at sunset'], [.22, .52, 'the tall pine and the hills']],
+    balcony: {name: 'Balcony', at: 'on the balcony', photo: '../images/hills-view-800.jpg', ar: .71, grp: ['suite', 'outside'], fy: 5.57, tod: 'golden', cam: [[.42, .34, 'the hills at sunset'], [.22, .52, 'the tall pine and the hills']],
       fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.8, -41.3, 250, 110, 180]],
       spots: [{p: [-20.5, 6.91, -44.5], n: 'on a balcony chair', d: 1}, {p: [-21.5, 5.6, -43.5], n: 'behind a balcony chair', d: 2}, {p: [-14, 5.6, -45.5], n: 'in the corner behind a balcony chair', d: 3}]},
     lower:   {name: 'Downstairs bedroom', at: 'in the downstairs bedroom', photo: '../images/bedroom-800.jpg', ar: .68, grp: ['bed'], fy: -4.56, cam: [[.75, .34, 'the picture on the green wall'], [.12, .42, 'the dark round picture']],
@@ -74,7 +74,7 @@
       fact: 'Made for movie nights, with a big TV and a refreshment counter.', say: 'I am ready for movie night.', v: [[-13, -17.5, 255, 195, 330], [-19.3, -22.5, 60, 120]],
       spots: [{p: [-22, -1.52, -19], n: 'on the counter under the big screen', d: 1}, {p: [-15.5, -4.5, -21.5], n: 'under the glass table', d: 2}, {p: [-19.5, -4.5, -13], n: 'behind the two footstools', d: 2}, {p: [-18, -4.5, -24.5], n: 'behind the table and chairs', d: 2},
         {p: [-20, -4.53, -11], n: 'in the doorway to the stairs', d: 2, w: 1}, {p: [-11.5, -4.53, -23.5], n: 'behind a chair, by the glass doors', d: 3}]},
-    terrace: {name: 'Terrace', at: 'on the terrace', photo: '../images/rear-yard-800.jpg', ar: .71, grp: ['terrace'], fy: -4.75, tod: 'golden', open: true, cam: [[.74, .45, 'the trunk of the big oak'], [.9, .72, 'the outdoor kitchen under its pergola']],
+    terrace: {name: 'Terrace', at: 'on the terrace', photo: '../images/rear-yard-800.jpg', ar: .71, grp: ['outside'], fy: -4.75, tod: 'golden', open: true, cam: [[.74, .45, 'the trunk of the big oak'], [.3, .5, 'the back of the house, lit up']],
       fact: 'An outdoor kitchen under a pergola, beside the heritage oak.', say: 'I was guarding the barbecue.', v: [[.4, -31, 274, 197, 120], [-2, -39.5, 200, 330]],
       spots: [{p: [-5, -3.21, -33], n: 'on the outdoor sofa', d: 1}, {p: [-8.5, -1.72, -39.5], n: 'on the outdoor kitchen counter', d: 1}, {p: [-2.5, -4.72, -40.5], n: 'beside the outdoor dining chairs', d: 2}, {p: [.5, -4.72, -41], n: 'by the outdoor dining table', d: 2}, {p: [1, -4.72, -38.5], n: 'behind the woven chair', d: 3}]}};
   const stopOf = id => H.STOPS.find(s => s.id === id), stopIx = id => H.STOPS.findIndex(s => s.id === id);

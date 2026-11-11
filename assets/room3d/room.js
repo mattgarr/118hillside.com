@@ -1,7 +1,7 @@
 /* Room for Everyone, in 3D: a logic puzzle played inside the 3D model of 118 Hillside Drive (the house as it is today).
    Loaded by tour/index.html only on ?room=...; talks to the engine through window.HILLSIDE.
 
-   Guests arrive with clues. You decide who sleeps where. Every puzzle has exactly one answer (room-logic.js proves it, and
+   Animal guests arrive with clues. You decide who gets which room. Every puzzle has exactly one answer (room-logic.js proves it, and
    solve.js prints the proof), but some of what you need is not written down: where the morning sun lands, which windows look at
    the oak, which rooms have skylights. You find those out by going into the rooms and looking, and Snowball only checks a clue
    against things you have seen.
@@ -69,7 +69,9 @@
       {note: 'sky', sky: ['SK-R07', 'SK-R08', 'SK-R09', 'SK-R10'], label: 'Skylights', t: 'Four skylights in the cathedral ceiling, each with its own shade.'},
       {note: 'view:oak', op: 'WN-L2-05', label: 'Garden window', t: 'The heritage oak fills this window.'},
       {note: 'bath', op: 'D-L2-04', y: 3.6, label: 'Door to the bath', t: 'Through here the suite has a hall of its own, a walk-in closet and a bath with two skylights. Nobody else in the house uses it.'}],
-    loft: [{note: 'x:loft', op: 'WN-L2-11', label: 'Gable windows', t: 'A sitting loft at the top of the stairs, with tall windows in the gable. The primary suite is the only bedroom up here.'}],
+    loft: [{note: 'x:loft', op: 'WN-L2-11', label: 'Gable windows', t: 'A sitting loft at the top of the stairs, with tall windows in the gable. The primary suite is the only bedroom up here.'},
+      // SK-R03 and SK-R04 are over the stair hall beside the loft, not over the loft's own floor: the model's rooms say so, and so does the puzzle
+      {note: 'x:stairsky', beside: 1, sky: ['SK-R03', 'SK-R04'], label: 'Skylights over the stairs', t: 'These two skylights are over the stair hall, beside the loft. The loft has none in its own ceiling.'}],
     garden: [{note: 'view:oak', op: 'WN-L1-06', label: 'Window', t: 'This window looks into the back garden, straight at the heritage oak.'}],
     middle: [{note: 'view:side', op: 'WN-L1-08', label: 'Window', t: 'A wide window onto the side garden. The hall bath is the next door along the hallway.'}],
     front: [{note: 'view:street', op: 'WN-L1-05', label: 'Windows', t: 'Two windows over the front garden, toward Hillside Drive.'},
@@ -77,22 +79,22 @@
     corner: [{note: 'film', op: 'WN-L0-03', label: 'Rainbow window', t: 'Rainbow film on every pane. When the sun comes through it, the floor goes all colours.'},
       {note: 'view:terrace', op: 'WN-L0-06', label: 'Terrace window', t: 'This one looks onto the terrace and the outdoor kitchen under the pergola.'}],
     side: [{note: 'film', op: 'WN-L0-07', label: 'Rainbow window', t: 'Rainbow film on the lower panes, clear glass above.'},
-      {note: 'sky', sky: ['SK-R05', 'SK-R06'], label: 'Skylights', t: 'Two skylights over the far end of the room.'}],
+      {note: 'sky', sky: ['SK-R05', 'SK-R06'], label: 'Skylights', t: 'Two skylights in this room’s own ceiling, one toward each end.'}],
     office: [{note: 'sky', sky: ['SK-R11', 'SK-R12'], label: 'Skylights', t: 'Two skylights and windows on two walls. The lower level’s own front door is just outside this room.'}],
     lounge: [{note: 'door', also: ['view:terrace'], op: 'D-L0-10', y: 3.4, label: 'Glass doors', t: 'Three glass panels stack open onto the terrace, under the heritage oak.'},
-      {note: 'tv', at: [-22.6, 1.0, -20.4], label: 'Big screen', t: 'A 65-inch screen with speakers in the walls, and a drinks fridge beside it.'}],
-    garage: [{note: 'ev', op: 'D-LG-01', y: 4.2, label: 'Garage door', t: 'An oversized garage with a tall ceiling. It has a 50-amp outlet for charging an electric car.'}]};
+      {note: 'tv', at: [-22.6, 1.0, -20.4], label: 'Big screen', t: 'A big screen on the wall with speakers built in around it, and a drinks fridge beside it.'}],
+    garage: [{note: 'ev', op: 'D-LG-01', y: 4.2, label: 'Garage door', t: 'An oversized garage with a tall ceiling. It has a 50-amp, 240-volt outlet, the kind an electric car or an RV plugs into.'}]};
   function ringAt(slot, r){ if(r._at) return r._at; let p = null;
     if(r.at) p = r.at.slice();
     else if(r.op){ const op = opening(r.op); if(op){ const y = r.y != null ? GEO[slot].fy + r.y : (op.o.sill + op.o.head) / 2, v = op.P(0, y, .35); p = [v.x, v.y, v.z]; } }
-    else if(r.sky){ const st = standOf(slot); let best = null;   // the skylight you can see best from where you stand: not the one right overhead
-      for(const id of r.sky){ const it = skyItem(id), q = it && it.rects && it.rects[0]; if(!q) continue; const d = Math.hypot(q.c.x - st.pos[0], q.c.z - st.pos[2]), sc = Math.abs(d - 5); if(!best || sc < best.sc) best = {sc, c: q.c}; }
+    else if(r.sky){ const st = standOf(slot); let best = null;   // the skylight you can see best from where you stand: near, but not right overhead
+      for(const id of r.sky){ const it = skyItem(id), q = it && it.rects && it.rects[0]; if(!q) continue; const d = Math.hypot(q.c.x - st.pos[0], q.c.z - st.pos[2]), sc = Math.abs(d - 2.2); if(!best || sc < best.sc) best = {sc, c: q.c}; }   // the glass at the top of a well is only seen from nearly under it
       if(best) p = [best.c.x, best.c.y - .4, best.c.z]; }
     if(!p) p = [GEO[slot].c[0], GEO[slot].fy + 6.5, GEO[slot].c[1]]; r._at = p; return p; }
   const NOTE_TXT = {bath: 'A bath of its own', door: 'A door straight outside', sky: 'Skylights', film: 'Rainbow film on a window', 'view:oak': 'Looks at the old oak', 'view:terrace': 'Looks onto the terrace',
-    'view:street': 'Looks toward the street', 'view:hills': 'Looks west to the hills', 'view:side': 'Looks onto the side garden', tv: 'The big screen', ev: 'A 50-amp outlet for a car',
-    'x:loft': 'Tall gable windows', 'x:pocket': 'Opens off the dining area'};
-  const NOTE_ICO = {bath: 'bath', door: 'door', sky: 'sky', film: 'film', 'view:oak': 'oak', 'view:terrace': 'terrace', 'view:street': 'street', 'view:hills': 'hills', 'view:side': 'leaf', tv: 'tv', ev: 'ev', 'x:loft': 'win', 'x:pocket': 'win'};
+    'view:street': 'Looks toward the street', 'view:hills': 'Looks west to the hills', 'view:side': 'Looks onto the side garden', tv: 'The big screen', ev: 'A 50-amp, 240-volt outlet',
+    'x:loft': 'Tall gable windows', 'x:pocket': 'Opens off the dining area', 'x:stairsky': 'Skylights over the stairs beside it, none of its own'};
+  const NOTE_ICO = {bath: 'bath', door: 'door', sky: 'sky', film: 'film', 'view:oak': 'oak', 'view:terrace': 'terrace', 'view:street': 'street', 'view:hills': 'hills', 'view:side': 'leaf', tv: 'tv', ev: 'ev', 'x:loft': 'win', 'x:pocket': 'win', 'x:stairsky': 'sky'};
   const hasNote = (slot, n) => !!(SAVE.notes[slot] && SAVE.notes[slot][n]);
   // what you know: a thing a room has, once you have looked at it; a thing it lacks, once you have been inside; its light, once you have watched it
   const known = (slot, note, has) => note === 'light' ? !!SAVE.light[slot] : has ? hasNote(slot, note) : !!SAVE.seen[slot];
@@ -107,13 +109,14 @@
     if(force || now - todAt > 420) go(); else todTimer = setTimeout(go, 200); }
   // how much of the sun reaches one opening at an hour (0..1): from the rays cast in the model, half-hourly from 7:00
   function litOf(str, h){ if(!str) return 1; const x = clamp((h - H0) * 2, 0, str.length - 1), i = Math.floor(x), f = x - i, a = +str[i] / 9, b = +str[Math.min(str.length - 1, i + 1)] / 9; return lerp(a, b, f); }
+  const SKY_NOON = lin('#4a9fee'), SKY_LOW = lin('#f2b27a');   // what a skylight shows from inside: midday blue, warm when the sun is low
   const SUN = {rooms: {}, cur: null,
     // every opening of a room that the sun can come through: its glass as a quad, which way it faces, and its measured share of sun
     openings(slot){ const out = [], D = (DATA.sun || {})[slot] || [];
       for(const d of D){ if(d.id){ const op = opening(d.id); if(!op) continue; const half = op.o.width / 2 - .22, bot = op.o.sill + .15, top = op.o.head - .15;
           out.push({id: d.id, lit: d.lit, n: new V3(op.out[0], 0, op.out[1]), quad: [op.P(-half, bot), op.P(half, bot), op.P(half, top), op.P(-half, top)], film: d.id === 'WN-L0-03' ? 1 : d.id === 'WN-L0-07' ? .55 : 0}); }
         else if(d.sk){ const it = skyItem(d.sk), r = it && it.rects && it.rects[0]; if(!r) continue; const c = new V3(r.c.x, r.c.y, r.c.z), u = new V3(r.u.x, r.u.y, r.u.z).multiplyScalar(r.hu), v = new V3(r.v.x, r.v.y, r.v.z).multiplyScalar(r.hv);
-          out.push({id: d.sk, lit: d.lit, n: new V3(0, 1, 0), sky: true, quad: [c.clone().sub(u).sub(v), c.clone().add(u).sub(v), c.clone().add(u).add(v), c.clone().sub(u).add(v)]}); } }
+          out.push({id: d.sk, lit: d.lit, n: new V3(0, 1, 0), rn: new V3(r.n.x, r.n.y, r.n.z), sky: true, quad: [c.clone().sub(u).sub(v), c.clone().add(u).sub(v), c.clone().add(u).add(v), c.clone().sub(u).add(v)]}); } }
       return out; },
     strength(o, h){ const s = sunAt(h); const inc = s.v.dot(o.n); return clamp((s.alt - .03) / .09, 0, 1) * clamp(inc / .16, 0, 1) * smooth(.36, .62, litOf(o.lit, h)); },   // under about four rays in nine it is dapple, not sun
     // the hours a room has direct sun, as the game states them
@@ -136,9 +139,15 @@
       for(const o of O){ const q = o.quad, d = o.sky ? new V3(0, -.12, 0) : o.n.clone().multiplyScalar(-.1), a = []; for(const i of [0, 1, 2, 0, 2, 3]) a.push(q[i].x + d.x, q[i].y + d.y, q[i].z + d.z);
         const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(a, 3)); gg.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2));
         o.glow = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({color: 0xffe2a8, map: o.film ? SUN.rainbow() : null, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide}));
-        o.glow.renderOrder = 5; o.glow.raycast = () => {}; o.glow.visible = false; o.glow.name = 'rfe-glow'; H.scene.add(o.glow); }
+        o.glow.renderOrder = 5; o.glow.raycast = () => {}; o.glow.visible = false; o.glow.name = 'rfe-glow'; H.scene.add(o.glow);
+        // seen from inside, a skylight is a patch of sky. The model's own sky is nearly the colour of the ceiling from below, so each pane gets
+        // a plain sky-coloured sheet just outside its glass, shown only while you stand in the room
+        if(o.sky && o.rn){ const up = o.rn.clone().multiplyScalar(-.3), b = []; for(const i of [0, 1, 2, 0, 2, 3]) b.push(q[i].x + up.x, q[i].y + up.y, q[i].z + up.z);
+          const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(b, 3));
+          o.pane = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({color: SKY_NOON.clone(), toneMapped: false, fog: false, side: THREE.DoubleSide})); o.pane.raycast = () => {}; o.pane.visible = false; o.pane.name = 'rfe-skypane'; H.scene.add(o.pane); } }
       const api = {slot, mesh, O, level: 0,
         update(){ const s = sunAt(S.hour), d = s.v, low = 1 - Math.min(1, d.y / .5); g.clearRect(0, 0, cv.width, cv.height); let any = 0;
+          for(const o of O) if(o.pane){ o.pane.visible = S.view === 'room'; o.pane.material.color.copy(SKY_NOON).lerp(SKY_LOW, low * low); }
           const proj = v => { const t = (v.y - fy) / Math.max(.02, d.y); return new V3(v.x - d.x * t, fy, v.z - d.z * t); };
           for(const o of O){ const k = SUN.strength(o, S.hour); o.s = k; const lit = k >= .3 && S.view === 'room'; o.glow.visible = lit; o.glow.material.opacity = lit ? k * (o.film ? .5 : .32) : 0; if(k < .3) continue; any = Math.max(any, k); const q = o.quad.map(proj).map(px);
             g.save(); g.globalAlpha = k; g.beginPath(); q.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath();
@@ -151,7 +160,7 @@
           api.level = any; mesh.visible = any > 0 && S.view === 'room'; const gain = 1.5; mat.color.setRGB(gain, gain * .94, gain * .8); tex.needsUpdate = true; }};
       SUN.rooms[slot] = api; return api; },
     rainbow(){ if(SUN._rb) return SUN._rb; const c = document.createElement('canvas'); c.width = 128; c.height = 4; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 128, 0); ['#ff6b6b', '#ffb347', '#fff275', '#7be495', '#6ec5ff', '#b28dff', '#ff8ad4', '#ffb347', '#7be495'].forEach((q, i, a) => gr.addColorStop(i / (a.length - 1), q)); g.fillStyle = gr; g.fillRect(0, 0, 128, 4); return (SUN._rb = new THREE.CanvasTexture(c)); },
-    show(slot){ for(const k in SUN.rooms){ SUN.rooms[k].mesh.visible = false; for(const o of SUN.rooms[k].O) o.glow.visible = false; } SUN.cur = slot ? SUN.build(slot) : null; if(SUN.cur) SUN.cur.update(); }};
+    show(slot){ for(const k in SUN.rooms){ SUN.rooms[k].mesh.visible = false; for(const o of SUN.rooms[k].O){ o.glow.visible = false; if(o.pane) o.pane.visible = false; } } SUN.cur = slot ? SUN.build(slot) : null; if(SUN.cur) SUN.cur.update(); }};
 
   /* ================================================================== the engine keeps out of the way */
   const css0 = `html.rfe header.bar, html.rfe #card, html.rfe #mini, html.rfe #cv27, html.rfe #labels, html.rfe #wplabels, html.rfe #ovtag, html.rfe #tod, html.rfe #viewBtn,
@@ -231,7 +240,7 @@
   function standPose(){ const s = rig.st, cp = Math.cos(s.pitch), p = s.pos; return {pos: [p.x, p.y, p.z], at: [p.x - Math.sin(s.yaw) * cp * 10, p.y + Math.sin(s.pitch) * 10, p.z - Math.cos(s.yaw) * cp * 10], fov: clamp(s.fov * s.zoom, 20, 88), off: [s.offX || 0, s.offY || 0]}; }
   function rigDrag(dx, dy){ if(!live()) return; S.dragPx += Math.abs(dx) + Math.abs(dy); S.lastAct = performance.now();
     if(S.view === 'over' || S.view === 'win'){ const o = rig.orb; o.th -= dx * .0052; o.phi = clamp(o.phi - dy * .004, .12, 1.12); }
-    else if(S.view === 'room'){ const s = rig.st, k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05; s.tyaw += dx * k; s.tpitch = clamp(s.tpitch + dy * k, -1.15, 1.25); } }
+    else if(S.view === 'room'){ const s = rig.st, k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05; s.tyaw += dx * k; s.tpitch = clamp(s.tpitch + dy * k, -1.15, 1.25); s.slow = false; S.lookBack = 0; } }
   function rigZoom(f){ if(!live()) return; if(S.view === 'over' || S.view === 'win'){ const o = rig.orb; o.zoom = clamp(o.zoom * f, .3, 1.15); } else if(S.view === 'room'){ const s = rig.st; s.zoom = clamp(s.zoom * f, .5, 1); } }
   function rigPan(dx, dy){ if(!live() || S.view !== 'over') return; const o = rig.orb, k = o.fit * o.zoom * 2 * Math.tan(o.fov * Math.PI / 360) / Math.max(200, canvas.clientHeight);
     const rx = Math.cos(o.th), rz = -Math.sin(o.th), fx = -Math.sin(o.th), fz = -Math.cos(o.th);   // screen right and screen up, on the ground
@@ -247,7 +256,7 @@
       rig.at.lerpVectors(m.from.at, m.to.at, e); rig.fov = lerp(m.from.fov, m.to.fov, e); rig.off = [lerp(m.from.off[0], m.to.off[0], e), lerp(m.from.off[1], m.to.off[1], e)];
       if(u >= 1){ rig.move = null; if(m.done) try{ m.done(); }catch(err){ console.error('[room] arrive', err); } } }
     else if(S.view === 'over' || S.view === 'win' || S.view === 'title'){ const p = orbitPose(); rig.pos.set(...p.pos); rig.at.set(...p.at); rig.fov = p.fov; rig.off = p.off; }
-    else if(S.view === 'room'){ const s = rig.st, k = 1 - Math.exp(-dt * 16); s.yaw += angDiff(s.yaw, s.tyaw) * k; s.pitch += (s.tpitch - s.pitch) * k;
+    else if(S.view === 'room'){ const s = rig.st, k = 1 - Math.exp(-dt * (s.slow && !reduce ? 4.5 : 16)); s.yaw += angDiff(s.yaw, s.tyaw) * k; s.pitch += (s.tpitch - s.pitch) * k;
       if(Math.abs(angDiff(s.yaw, s.tyaw)) < 2e-4) s.yaw = s.tyaw; if(Math.abs(s.tpitch - s.pitch) < 2e-4) s.pitch = s.tpitch;
       const p = standPose(); rig.pos.set(...p.pos); rig.at.set(...p.at); rig.fov = p.fov; rig.off = p.off; }
     if(rig.wakeN > 0){ rig.wakeN--; rig.jit = rig.jit ? 0 : 2e-4; }
@@ -278,38 +287,123 @@
     setTimeout(() => { img.classList.add('out'); setTimeout(fin, 520); }, 90); }
 
   /* ================================================================== guests as game pieces */
-  const PAWN = {g: {}, hop: {},
-    mat(col, o){ return new THREE.MeshStandardMaterial(Object.assign({color: lin(col), roughness: .38, metalness: .05}, o || {})); },
-    peg(col, h){ const g = new THREE.Group(), m = PAWN.mat(col), prof = [[0, 0], [.62, 0], [.66, .12], [.5, .9], [.36, 2.0], [.3, 2.55], [.2, 2.75], [0, 2.8]].map(p => new THREE.Vector2(p[0], p[1] * h / 3.7));
-      g.add(new THREE.Mesh(new THREE.LatheGeometry(prof, 24), m)); const head = new THREE.Mesh(new THREE.SphereGeometry(.46, 20, 14), m); head.position.y = 3.2 * h / 3.7; g.add(head); return g; },
-    build(id){ const G = LG.GUESTS[id], g = new THREE.Group(), col = G.col, cream = PAWN.mat('#f1e9d6', {roughness: .6}), dark = PAWN.mat('#2a2d36', {roughness: .5});
-      const add = (geo, m, p, r) => { const x = new THREE.Mesh(geo, m); if(p) x.position.set(p[0], p[1], p[2]); if(r) x.rotation.set(r[0], r[1], r[2]); g.add(x); return x; };
-      if(G.kind === 'p'){ if(G.pl){ const a = PAWN.peg(col, 3.9), b = PAWN.peg(col, 3.5); a.position.x = -.55; b.position.x = .6; b.position.z = .15; g.add(a, b); } else g.add(PAWN.peg(col, 3.8)); }
-      else if(G.ico === 'drum'){ const m = PAWN.mat(col); add(new THREE.CylinderGeometry(.95, .95, .9, 24), m, [0, 1.0, 0], [Math.PI / 2, 0, 0]); add(new THREE.CylinderGeometry(.9, .9, .92, 24), cream, [0, 1.0, 0], [Math.PI / 2, 0, 0]);
-        add(new THREE.CylinderGeometry(.5, .5, .4, 20), m, [-1.2, 1.7, .3]); add(new THREE.CylinderGeometry(.47, .47, .42, 20), cream, [-1.2, 1.71, .3]); add(new THREE.CylinderGeometry(.04, .04, 1.5, 8), dark, [-1.2, .75, .3]);
-        add(new THREE.CylinderGeometry(.62, .62, .04, 24), PAWN.mat('#d9b24a', {metalness: .7, roughness: .3}), [1.15, 2.6, .2], [.12, 0, .1]); add(new THREE.CylinderGeometry(.04, .04, 2.6, 8), dark, [1.15, 1.3, .2]); }
-      else if(G.ico === 'dog'){ const m = PAWN.mat(col, {roughness: .7}); const body = add(new THREE.SphereGeometry(.6, 18, 12), m, [0, 1.0, 0]); body.scale.set(1.6, .9, .85);
-        add(new THREE.SphereGeometry(.45, 18, 12), m, [.95, 1.55, 0]); const sn = add(new THREE.SphereGeometry(.22, 12, 10), m, [1.38, 1.45, 0]); sn.scale.set(1.3, .8, .9); add(new THREE.SphereGeometry(.08, 8, 6), dark, [1.64, 1.5, 0]);
-        for(const z of [-.3, .3]){ const e = add(new THREE.SphereGeometry(.2, 10, 8), PAWN.mat('#7a5226', {roughness: .8}), [.85, 1.75, z]); e.scale.set(.6, 1.2, .5); }
-        for(const [x, z] of [[-.6, -.3], [-.6, .3], [.55, -.3], [.55, .3]]) add(new THREE.CylinderGeometry(.13, .11, .7, 10), m, [x, .35, z]);
-        add(new THREE.CylinderGeometry(.07, .04, .7, 8), m, [-1.05, 1.45, 0], [0, 0, .9]); }
-      else if(G.ico === 'desk'){ const wood = PAWN.mat('#b98a55', {roughness: .6}); add(new THREE.BoxGeometry(2.6, .12, 1.3), wood, [0, 2.3, 0]); for(const [x, z] of [[-1.15, -.5], [1.15, -.5], [-1.15, .5], [1.15, .5]]) add(new THREE.CylinderGeometry(.07, .07, 2.3, 8), dark, [x, 1.15, z]);
-        for(const x of [-.6, .6]){ add(new THREE.BoxGeometry(1.0, .7, .06), dark, [x, 3.0, -.3], [0, x * -.25, 0]); add(new THREE.BoxGeometry(.9, .6, .02), PAWN.mat(col, {emissive: lin(col), emissiveIntensity: .5}), [x, 3.0, -.26], [0, x * -.25, 0]); add(new THREE.CylinderGeometry(.05, .05, .35, 8), dark, [x, 2.5, -.3]); } }
-      else if(G.ico === 'scope'){ const m = PAWN.mat(col); for(let i = 0; i < 3; i++){ const a = i * 2.094; add(new THREE.CylinderGeometry(.05, .05, 2.9, 8), dark, [Math.cos(a) * .55, 1.35, Math.sin(a) * .55], [Math.sin(a) * .38, 0, -Math.cos(a) * .38]); }
-        add(new THREE.CylinderGeometry(.26, .2, 2.6, 18), m, [0, 3.0, 0], [0, 0, -1.05]); add(new THREE.CylinderGeometry(.28, .28, .14, 18), cream, [1.1, 3.65, 0], [0, 0, -1.05]); }
-      else if(G.ico === 'car'){ const m = PAWN.mat(col, {roughness: .25, metalness: .3}); add(new THREE.BoxGeometry(5.6, 1.1, 2.5), m, [0, 1.15, 0]); const cab = add(new THREE.BoxGeometry(3.0, 1.0, 2.2), PAWN.mat('#dfe8ee', {roughness: .2}), [-.2, 2.1, 0]);
-        for(const [x, z] of [[-1.8, -1.25], [-1.8, 1.25], [1.8, -1.25], [1.8, 1.25]]) add(new THREE.CylinderGeometry(.55, .55, .35, 18), dark, [x, .55, z], [Math.PI / 2, 0, 0]); cab.scale.x = 1; }
+  /*PIECES*/
+  /* One game piece per guest, made of plain shapes so each reads from above and from across a room: the animal in its own colours,
+     on a round base in the guest's colour (the same colour as its medallion in the guest list and the tint on its floor).
+     Every figure faces +x and stands on the floor at y = 0. Sizes are in feet; the pieces are toys, not life size. */
+  function buildPiece(THREE, G, lin){
+    const g = new THREE.Group(), fig = new THREE.Group(); g.add(fig);
+    const M = (col, o) => new THREE.MeshStandardMaterial(Object.assign({color: lin(col), roughness: .6, metalness: 0}, o || {}));
+    const add = (geo, m, p, r, s) => { const x = new THREE.Mesh(geo, m); if(p) x.position.set(p[0], p[1], p[2]); if(r) x.rotation.set(r[0], r[1], r[2]); if(s) x.scale.set(s[0], s[1], s[2]); fig.add(x); return x; };
+    const sph = (r, w, h) => new THREE.SphereGeometry(r, w || 20, h || 14), cyl = (a, b, h, n) => new THREE.CylinderGeometry(a, b, h, n || 16), cone = (r, h, n) => new THREE.ConeGeometry(r, h, n || 14), box = (x, y, z) => new THREE.BoxGeometry(x, y, z);
+    const dark = M('#22252d', {roughness: .3}), white = M('#f7f3ea'), wood = M('#9a7650', {roughness: .75}), pink = M('#e79a96');
+    const pair = (geo, m, p, r, s) => { add(geo, m, p, r, s); add(geo, m, [p[0], p[1], -p[2]], r ? [-r[0], -r[1], r[2]] : null, s); };   // the same part on both sides
+    const eyes = (x, y, z, r) => pair(sph(r || .085, 10, 8), dark, [x, y, z]);
+    const base = r => { const b = new THREE.Mesh(cyl(r * .94, r, .24, 36), M(G.col, {roughness: .45})); b.position.y = .12; g.add(b);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(r * .9, .035, 6, 40), M('#fff6de', {roughness: .5})); rim.rotation.x = Math.PI / 2; rim.position.y = .25; g.add(rim); fig.position.y = .24; };
+    const k = G.ico;
+    if(k === 'duck'){ base(1.3); const body = M('#f8f5ec'), bill = M('#f29a2e');
+      add(sph(.85), body, [-.08, .95, 0], null, [1.3, .95, 1]); add(cone(.3, .65), body, [-1.08, 1.4, 0], [0, 0, 1]);
+      add(cyl(.3, .4, .75), body, [.58, 1.7, 0], [0, 0, -.25]); add(sph(.47), body, [.74, 2.28, 0]);
+      add(sph(.26), bill, [1.2, 2.17, 0], null, [1.4, .42, .95]); eyes(.98, 2.42, .3, .075);
+      pair(sph(.55), M('#e6e0d0'), [-.15, 1.1, .78], null, [1.15, .62, .28]); pair(sph(.24), bill, [.25, .08, .36], null, [1.4, .3, .9]); }
+    else if(k === 'dog'){ base(1.3); const fur = M('#d9a443', {roughness: .75}), pale = M('#eccb82', {roughness: .75}), ear = M('#b47f2b', {roughness: .8});
+      add(sph(.76), fur, [-.15, .95, 0], null, [.98, 1.18, .92]); add(sph(.5), pale, [.3, 1.0, 0], null, [.7, 1.05, .8]);
+      add(sph(.6), fur, [.32, 2.18, 0]); add(sph(.3), pale, [.86, 2.02, 0], null, [1.35, .82, .92]); add(sph(.115, 10, 8), dark, [1.24, 2.1, 0]); eyes(.76, 2.34, .3);
+      pair(sph(.3), ear, [.22, 2.06, .6], [-.28, 0, 0], [.6, 1.3, .36]);
+      pair(cyl(.16, .14, 1.0), fur, [.52, .5, .3]); pair(sph(.2), pale, [.64, .1, .3], null, [1.35, .6, 1]); pair(sph(.45), fur, [-.25, .42, .55], null, [1.1, .8, .6]);
+      add(cyl(.1, .06, .95), fur, [-.98, .42, 0], [0, 0, 1.15]); }
+    else if(k === 'fish'){ base(1.25); const glass = M('#e4f4f9', {transparent: true, opacity: .16, roughness: .05, depthWrite: false}), water = M('#7fd0e8', {transparent: true, opacity: .26, roughness: .1, depthWrite: false, side: THREE.DoubleSide}), gold = M('#ff6a00', {emissive: lin('#ff5a00'), emissiveIntensity: .55, roughness: .4});
+      add(cyl(.5, .66, .46), M('#efe6d2'), [0, .23, 0]);
+      add(sph(.36), gold, [.12, 1.36, 0], null, [1.45, 1, .78]); add(cone(.34, .5, 4), gold, [-.6, 1.36, 0], [0, 0, -Math.PI / 2], [1, 1, .35]); add(cone(.15, .3, 4), gold, [.02, 1.78, 0], [0, 0, .5], [1, 1, .35]); eyes(.46, 1.45, .2, .06);
+      const w = add(new THREE.SphereGeometry(.93, 24, 12, 0, Math.PI * 2, .9, Math.PI - .9), water, [0, 1.42, 0]); w.renderOrder = 6; const top = add(new THREE.CircleGeometry(.73, 24), water, [0, 2.0, 0], [-Math.PI / 2, 0, 0]); top.renderOrder = 6;
+      const b = add(sph(1.0, 24, 18), glass, [0, 1.42, 0]); b.renderOrder = 7; add(new THREE.TorusGeometry(.5, .06, 8, 28), M('#e8f4f8', {transparent: true, opacity: .7, roughness: .1}), [0, 2.3, 0], [Math.PI / 2, 0, 0]).renderOrder = 7; }
+    else if(k === 'rooster'){ base(1.3); const body = M('#b8562c'), neck = M('#e3a43b'), red = M('#d7332f'), yel = M('#f2b632'), tail = M('#1f4f43');
+      add(sph(.8), body, [-.05, 1.3, 0], null, [1.15, 1, .9]); add(cyl(.33, .5, .95), neck, [.48, 2.05, 0], [0, 0, -.3]); add(sph(.39), neck, [.68, 2.64, 0]);
+      for(const [x, y] of [[.5, 3.04], [.69, 3.12], [.88, 3.02]]) add(sph(.17, 12, 10), red, [x, y, 0], null, [1, 1, .5]);
+      add(cone(.12, .36), yel, [1.12, 2.6, 0], [0, 0, -Math.PI / 2]); add(sph(.13, 12, 10), red, [.98, 2.3, 0], null, [.8, 1.5, .6]); eyes(.86, 2.74, .27, .06);
+      pair(sph(.55), M('#8f4021'), [-.1, 1.35, .72], null, [1.1, .7, .25]);
+      for(const [x, y, a] of [[-.82, 2.2, .2], [-.98, 2.0, .5], [-1.14, 1.72, .85]]) add(sph(.3), tail, [x, y, 0], [0, 0, a], [.5, 2.2, .26]);
+      pair(cyl(.06, .06, .7), yel, [.08, .35, .25]); pair(sph(.16, 12, 8), yel, [.2, .05, .25], null, [1.6, .3, 1]); }
+    else if(k === 'lizard'){ base(1.3); const skin = M('#d99e45', {roughness: .8}), pale = M('#e6b962', {roughness: .8}), beard = M('#8a5f22', {roughness: .8});
+      const rock = add(new THREE.SphereGeometry(1.1, 9, 6), M('#8f867a', {roughness: .9, flatShading: true}), [-.05, .26, 0], null, [1.05, .36, .88]); rock.rotation.y = .4;
+      add(sph(.5), skin, [-.15, .86, 0], null, [1.65, .55, 1.08]); add(sph(.36), pale, [.82, 1.12, 0], null, [1.25, .78, 1.15]); add(sph(.3), beard, [.76, .9, 0], null, [1, .62, 1.3]);
+      pair(cone(.07, .22, 8), beard, [.74, .98, .44], [Math.PI / 2, 0, 0]); eyes(1.0, 1.25, .27, .06);
+      add(cone(.25, 1.25), skin, [-1.02, .76, .32], [0, .55, 1.42]);
+      pair(cyl(.1, .08, .55), skin, [.42, .7, .62], [-.9, 0, 0]); pair(cyl(.1, .08, .55), skin, [-.6, .66, .64], [-.9, 0, 0]);
+      for(let i = 0; i < 5; i++) add(cone(.055, .16, 6), beard, [-.7 + i * .26, 1.14 - Math.abs(i - 2) * .03, 0]); }
+    else if(k === 'owl'){ base(1.2); const buff = M('#d8b57a', {roughness: .8}), wing = M('#b68b50', {roughness: .8});
+      add(cyl(.42, .5, .8), wood, [0, .4, 0]);
+      add(sph(.72), buff, [0, 1.66, 0], null, [.9, 1.2, .85]); add(sph(.6), white, [.22, 1.6, 0], null, [.75, 1.1, .62]);
+      add(sph(.56), buff, [.05, 2.6, 0], null, [1, .92, 1.05]);
+      pair(sph(.33), white, [.47, 2.64, .2], null, [.36, 1.05, .95]); add(sph(.22), white, [.5, 2.38, 0], null, [.36, .9, .9]);
+      eyes(.6, 2.7, .2, .095); add(cone(.07, .2, 8), M('#e2c08e'), [.64, 2.48, 0], [0, 0, -2.2]);
+      pair(sph(.6), wing, [-.1, 1.62, .62], null, [.5, 1.25, .3]); pair(sph(.12, 10, 8), M('#e2b04a'), [.22, .84, .2]); }
+    else if(k === 'hamster'){ base(1.2); const fur = M('#e2a95b', {roughness: .8}), pale = M('#f1cd92', {roughness: .8}), cream = M('#fbf3e2', {roughness: .8});
+      add(sph(.85), fur, [0, .92, 0], null, [1, 1.1, 1]); add(sph(.7), cream, [.28, .82, 0], null, [.7, 1, .85]);
+      add(sph(.6), fur, [.12, 1.72, 0]); pair(sph(.42), pale, [.42, 1.5, .38]);
+      pair(sph(.2, 12, 10), M('#c98a6a'), [0, 2.26, .42], null, [.5, 1, 1]); eyes(.62, 1.85, .26, .095); add(sph(.075, 10, 8), pink, [.76, 1.66, 0]);
+      pair(sph(.14, 10, 8), pink, [.64, 1.12, .22]); pair(sph(.2, 12, 8), pink, [.36, .08, .4], null, [1.4, .5, 1]); }
+    else if(k === 'rabbit'){ base(1.25); const fur = M('#cfc2b2', {roughness: .85}), inner = M('#eeb7b0', {roughness: .8});
+      add(sph(.8), fur, [-.12, .82, 0], null, [1.1, 1, .95]); add(sph(.55), fur, [.48, 1.72, 0]);
+      pair(sph(.2), fur, [.34, 2.72, .2], [.12, 0, .15], [.72, 3.3, .46]); pair(sph(.13), inner, [.42, 2.72, .2], [.12, 0, .15], [.5, 3.6, .46]);
+      eyes(.86, 1.85, .3, .085); add(sph(.07, 10, 8), pink, [1.02, 1.68, 0]); pair(sph(.2), white, [.84, 1.56, .14], null, [.8, .7, .8]);
+      add(sph(.25), white, [-.98, .72, 0]); pair(sph(.18, 12, 8), fur, [.55, .1, .28], null, [1.3, .6, 1]); pair(sph(.25, 12, 8), fur, [.02, .1, .56], null, [1.6, .5, .8]); }
+    else if(k === 'parrot'){ base(1.2); const grey = M('#8b929b', {roughness: .75}), pale = M('#aab0b7', {roughness: .75}), wing = M('#727983', {roughness: .75}), red = M('#d63a2e');
+      add(cyl(.07, .07, 1.5), wood, [0, .75, 0]); add(cyl(.07, .07, 1.3), wood, [0, 1.5, 0], [Math.PI / 2, 0, 0]); add(cyl(.4, .46, .1), wood, [0, .05, 0]);
+      add(sph(.3), red, [-.42, 1.5, 0], [0, 0, -.5], [.55, 1.7, .6]);
+      add(sph(.58), grey, [-.05, 2.26, 0], [0, 0, -.15], [.9, 1.35, .85]); add(sph(.45), pale, [.2, 3.1, 0]);
+      pair(sph(.22, 12, 10), white, [.47, 3.16, .22], null, [.42, 1, 1]); eyes(.56, 3.18, .25, .06);
+      add(sph(.2, 12, 10), dark, [.62, 2.98, 0], null, [1.1, 1.2, .7]); add(cone(.1, .26, 8), dark, [.73, 2.8, 0], [0, 0, Math.PI]);
+      pair(sph(.5), wing, [-.15, 2.2, .5], null, [.45, 1.3, .3]); pair(sph(.09, 8, 6), dark, [.06, 1.58, .15]); }
+    else if(k === 'guinea'){ base(1.3); const brown = M('#7d4e2a', {roughness: .85}), ginger = M('#d98a3d', {roughness: .85}), cream = M('#f6efe2', {roughness: .85}); fig.scale.set(1.12, 1.12, 1.12);
+      add(sph(.72), cream, [-.1, .74, 0], null, [1.45, .95, 1.05]); add(sph(.66), brown, [-.6, .76, 0], null, [1, .94, 1.07]);
+      add(sph(.55), ginger, [.78, .86, 0], null, [1.1, .95, 1]); add(sph(.3), cream, [1.06, .95, 0], null, [1, .9, .45]);
+      pair(sph(.17, 12, 10), M('#a56a4a'), [.6, 1.32, .42], null, [.4, .9, 1.1]); eyes(1.08, 1.03, .34, .08); add(sph(.07, 10, 8), pink, [1.36, .82, 0]);
+      pair(sph(.14, 10, 8), pink, [.62, .07, .38], null, [1.4, .5, 1]); pair(sph(.14, 10, 8), pink, [-.62, .07, .4], null, [1.4, .5, 1]); }
+    else if(k === 'tortoise'){ base(1.4); const shell = M('#7b7a3c', {roughness: .7}), rim = M('#5c592b', {roughness: .7}), scute = M('#9a9750', {roughness: .7}), skin = M('#b0a862', {roughness: .85});
+      add(new THREE.SphereGeometry(1, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2), shell, [-.08, .42, 0], null, [1.12, .88, .95]); add(cyl(1.0, 1.04, .16, 28), rim, [-.08, .42, 0], null, [1.12, 1, .95]);
+      add(sph(.33), scute, [-.08, 1.2, 0], null, [1.1, .3, 1]); for(const [x, z] of [[.5, 0], [-.66, 0], [-.08, .52], [-.08, -.52]]) add(sph(.3), scute, [x, 1.0, z], null, [1, .3, 1]);
+      add(cyl(.17, .2, .55), skin, [1.02, .62, 0], [0, 0, -1.1]); add(sph(.3), skin, [1.3, .78, 0]); eyes(1.46, .86, .2, .055);
+      pair(cyl(.2, .22, .46), skin, [.6, .23, .64]); pair(cyl(.2, .22, .46), skin, [-.76, .23, .64]); add(cone(.1, .3, 8), skin, [-1.28, .38, 0], [0, 0, Math.PI / 2]); }
+    else if(k === 'wheel'){ base(1.3); const steel = M('#c9ced6', {metalness: .6, roughness: .35}), tread = M('#7fcfe0', {roughness: .6, side: THREE.DoubleSide}), frame = M(G.col);
+      for(const z of [-.34, .34]) add(new THREE.TorusGeometry(1.15, .07, 8, 36), steel, [0, 1.42, z]);
+      add(new THREE.CylinderGeometry(1.15, 1.15, .66, 36, 1, true), tread, [0, 1.42, 0], [Math.PI / 2, 0, 0]);
+      for(let i = 0; i < 3; i++) add(cyl(.035, .035, 2.3, 6), steel, [0, 1.42, -.34], [0, 0, i * Math.PI / 3]);
+      add(cyl(.1, .1, .9, 10), steel, [0, 1.42, -.1], [Math.PI / 2, 0, 0]);
+      for(const s of [-1, 1]) add(cyl(.07, .07, 1.62, 8), frame, [s * .42, .7, -.52], [0, 0, s * .52]); add(box(1.9, .12, .5), frame, [0, .06, -.52]); }
+    else if(k === 'lettuce'){ base(1.3); const leaf = M('#6fb53a', {roughness: .8, flatShading: true}), heart = M('#b4de62', {roughness: .8}), soil = M('#4a3526', {roughness: .95});
+      for(const x of [-.95, .95]) for(const z of [-.45, .45]) add(cyl(.07, .07, .7, 8), wood, [x, .35, z]);
+      add(box(2.3, .38, 1.3), M('#b98a55', {roughness: .7}), [0, .86, 0]); add(box(2.14, .1, 1.14), soil, [0, 1.04, 0]);
+      for(const x of [-.7, 0, .7]) for(const z of [-.3, .3]){ const h = add(new THREE.SphereGeometry(.31, 7, 5), leaf, [x, 1.24, z], [0, x * 2 + z * 3, 0], [1, .78, 1]); h.rotation.x = .2 * z; add(sph(.16, 8, 6), heart, [x, 1.4, z]); } }
+    else if(k === 'scope'){ base(1.2); const tube = M(G.col, {roughness: .35}), cream = M('#f1e9d6');
+      for(let i = 0; i < 3; i++){ const a = i * 2.094; add(cyl(.055, .055, 2.6, 8), dark, [Math.cos(a) * .52, 1.2, Math.sin(a) * .52], [Math.sin(a) * .4, 0, -Math.cos(a) * .4]); }
+      add(sph(.16, 12, 10), dark, [0, 2.4, 0]); add(cyl(.27, .21, 2.5, 18), tube, [.05, 2.75, 0], [0, 0, -1.05]); add(cyl(.29, .29, .16, 18), cream, [1.1, 3.35, 0], [0, 0, -1.05]); add(cyl(.1, .1, .3, 10), dark, [-1.1, 2.1, 0], [0, 0, -1.05]); }
+    else if(k === 'van'){ const paint = M(G.col, {roughness: .3, metalness: .25}), glass = M('#dfe9ef', {roughness: .15}), lamp = M('#fff3c4', {emissive: lin('#ffe9a8'), emissiveIntensity: .5});
+      add(box(5.2, 1.9, 2.4), paint, [0, 1.45, 0]); add(box(1.5, .75, 2.44), glass, [1.55, 1.9, 0]); add(box(.06, .8, 2.0), glass, [2.6, 1.9, 0]); add(box(1.9, .6, 2.44), glass, [-.9, 1.95, 0]);
+      for(const [x, z] of [[-1.6, -1.2], [-1.6, 1.2], [1.6, -1.2], [1.6, 1.2]]) add(cyl(.52, .52, .3, 18), dark, [x, .52, z], [Math.PI / 2, 0, 0]);
+      pair(box(.06, .2, .4), lamp, [2.61, 1.0, .8]); add(box(.3, .3, .06), M('#f2b632'), [-2.0, 1.2, 1.21]); }
+    else { base(1.2); add(sph(.7), M(G.col), [0, .8, 0]); }
+    return g; }
+  /*PIECES-END*/
+  // Over the house a piece is drawn at twice its size and more, like a token on a board, so it reads from that far away; inside a room it is toy size.
+  const PAWN = {g: {}, hop: {}, K_OVER: 2.4, K_IN: 1,
+    build(id){ const g = buildPiece(THREE, LG.GUESTS[id], lin); g.userData.h = new THREE.Box3().setFromObject(g).max.y;
       g.traverse(o => { o.raycast = () => {}; if(o.isMesh){ o.castShadow = false; o.receiveShadow = false; } }); g.name = 'rfe-pawn:' + id; g.visible = false; H.scene.add(g); PAWN.g[id] = g; return g; },
-    spot(slot){ const s = standOf(slot); return s.pawn || GEO[slot].c; },
+    spot(slot){ const s = standOf(slot); return (HOUSE.mode === 'over' && s.over) || s.pawn || GEO[slot].c; },
     // every piece where its guest is; pieces upstairs go away with the upper level
     sync(){ if(!S.L) return; for(const id of Object.keys(PAWN.g)){ const g = PAWN.g[id], slot = S.at[id], on = !!slot && S.L.guests.indexOf(id) >= 0;
         if(!on){ g.visible = false; continue; } const p = PAWN.spot(slot), G = GEO[slot]; g.position.set(p[0], G.fy + .02, p[1]);
-        g.rotation.y = (standOf(slot).pawnYaw != null ? standOf(slot).pawnYaw : 0);
+        // over the house a piece faces the way the house is first seen from; in the room you are standing in, it turns to look at you
+        const st = standOf(slot); let yaw = st.pawnYaw != null ? st.pawnYaw : .9;
+        if(st.pawnYaw == null && S.view === 'room' && S.room === slot){ const e = standOf(slot).pos; yaw = Math.atan2(-(e[2] - p[1]), e[0] - p[0]); }
+        g.rotation.y = yaw;
+        const k = HOUSE.mode === 'over' ? PAWN.K_OVER : PAWN.K_IN; g.userData.k = k; if(!PAWN.hop[id]) g.scale.set(k, k, k);
         g.visible = !(HOUSE.mode === 'over' && !S.upperOn && LG.SLOTS[slot].lv === 'upper'); }
       wake(10); },
     drop(id){ PAWN.hop[id] = performance.now(); wake(40); },
-    step(now){ for(const id in PAWN.hop){ const g = PAWN.g[id], u = (now - PAWN.hop[id]) / 520; if(!g || u >= 1){ if(g){ g.scale.set(1, 1, 1); const sl = S.at[id]; if(sl) g.position.y = GEO[sl].fy + .02; } delete PAWN.hop[id]; continue; }
-        const sl = S.at[id]; if(!sl) continue; const b = Math.sin(Math.min(1, u * 1.25) * Math.PI) * 1.6 * (1 - u * .5), sq = u > .8 ? 1 - Math.sin((u - .8) / .2 * Math.PI) * .12 : 1; g.position.y = GEO[sl].fy + .02 + b; g.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq)); wake(3); } }};
+    step(now){ for(const id in PAWN.hop){ const g = PAWN.g[id], u = (now - PAWN.hop[id]) / 520, k = (g && g.userData.k) || 1; if(!g || u >= 1){ if(g){ g.scale.set(k, k, k); const sl = S.at[id]; if(sl) g.position.y = GEO[sl].fy + .02; } delete PAWN.hop[id]; continue; }
+        const sl = S.at[id]; if(!sl) continue; const b = Math.sin(Math.min(1, u * 1.25) * Math.PI) * 1.6 * k * (1 - u * .5), sq = u > .8 ? 1 - Math.sin((u - .8) / .2 * Math.PI) * .12 : 1; g.position.y = GEO[sl].fy + .02 + b; g.scale.set(k / Math.sqrt(sq), k * sq, k / Math.sqrt(sq)); wake(3); } }};
 
   /* floor tints: which rooms can take the guest in your hand, and the lids that keep rooms dark until their light comes on */
   const TINT = {m: {}, lid: {},
@@ -386,22 +480,24 @@
 
   /* ================================================================== icons */
   const svg = (d, vb) => `<svg viewBox="${vb || '0 0 24 24'}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-  const GI = {   // one small drawing per guest
-    key: '<circle cx="8" cy="12" r="3.6"/><path d="M11.600 12H21M17.500 12v3M20.500 12v2.200"/>',
-    cups: '<path d="M4 8h8v4.500a4 4 0 0 1-8 0zM12 9.200h1.400a1.900 1.900 0 0 1 0 3.800H12M4.500 19.500h13M15.500 4.500c0 1.200 1 1.200 1 2.400M19 5.500c0 1 .8 1 .8 2"/>',
-    moon: '<path d="M19.500 14.200A8 8 0 1 1 9.800 4.500a6.400 6.400 0 0 0 9.700 9.700z"/>',
-    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2.400M12 18.600V21M3 12h2.400M18.600 12H21M5.600 5.600l1.700 1.700M16.700 16.700l1.700 1.700M5.600 18.400l1.700-1.700M16.700 7.300l1.700-1.700"/>',
-    brush: '<path d="M18.600 3.400l2 2-9.400 9.400-2.700.7.700-2.700zM8.200 15.600c-2.600 0-3.200 2.100-3.200 3.900 2.200.4 4.900-.2 4.900-2.300"/>',
-    star: '<path d="M12 3.600l2.500 5.300 5.800.7-4.300 4 1.100 5.800L12 16.600l-5.100 2.800L8 13.600l-4.300-4 5.800-.7z"/>',
-    sticks: '<path d="M5 19.500L17.200 5.200M19 19.500L6.800 5.200"/><circle cx="18" cy="4.300" r="1.300"/><circle cx="6" cy="4.300" r="1.300"/>',
-    feather: '<path d="M19.500 4C13 4 8 8.200 8 14.500V17M8 17c5.200 0 9.500-3.400 10.500-8.500M8 17l-3 3.500M11 12.500h4.500M10.500 9.800h6"/>',
-    prism: '<path d="M11 4.500L19 18H3zM1.500 12.500l5.500-.8M15.200 11.600l6.800-2M15.900 13l6.100.6M16.600 14.500l5.400 3"/>',
-    laptop: '<rect x="5" y="5" width="14" height="10" rx="1.300"/><path d="M2.800 18.600h18.400"/>',
-    drum: '<ellipse cx="12" cy="9.500" rx="7.500" ry="3"/><path d="M4.500 9.500v6c0 1.700 3.400 3 7.500 3s7.500-1.300 7.500-3v-6M8 3.500l3 4.500M16 3.500l-3 4.500"/>',
-    dog: '<path d="M5 9.500L6.800 5l3.200 3h4l3.200-3L19 9.500V14a7 7 0 0 1-14 0z"/><circle cx="9.500" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="14.500" cy="12" r=".9" fill="currentColor" stroke="none"/><path d="M10.800 15.300h2.400L12 16.700z" fill="currentColor"/>',
-    desk: '<path d="M3 11h18M5 11v8.500M19 11v8.500M8.500 11V6h7v5M10.500 8.500h3"/>',
+  /*GI*/
+  const GI = {   // one small drawing per guest, drawn for its own medallion colour: a pale silhouette with dark eyes, so it reads at 14 pixels
+    duck: '<g stroke="none"><ellipse cx="10.4" cy="15.8" rx="7.4" ry="4.9" fill="currentColor"/><path d="M3.700 14.600L1.500 10.200l4.900 1.900z" fill="currentColor"/><path d="M12.300 8.500h6v6.500h-6z" fill="currentColor"/><circle cx="15.300" cy="7.300" r="4" fill="currentColor"/><path d="M18.700 6.400h3.200a1.350 1.350 0 0 1 0 2.700h-3.200z" fill="#ffb74a"/><circle cx="16.300" cy="6.500" r=".95" fill="#1c2230"/></g>',
+    dog: '<g stroke="none"><ellipse cx="12" cy="11.900" rx="6.200" ry="7" fill="currentColor"/><ellipse cx="5.500" cy="11" rx="2.500" ry="5.300" transform="rotate(10 5.500 11)" fill="#f7dfa6"/><ellipse cx="18.500" cy="11" rx="2.500" ry="5.300" transform="rotate(-10 18.500 11)" fill="#f7dfa6"/><circle cx="9.700" cy="10.600" r="1" fill="#1c2230"/><circle cx="14.300" cy="10.600" r="1" fill="#1c2230"/><ellipse cx="12" cy="14.400" rx="1.700" ry="1.200" fill="#1c2230"/></g><path d="M12 15.600v1.300" stroke="#1c2230" stroke-width="1.100"/>',
+    fish: '<g stroke="none" fill="currentColor"><ellipse cx="13.300" cy="12.500" rx="6.700" ry="4.500"/><path d="M7.800 12.500L2.300 7.500v10z"/><path d="M10.800 8.600l3.400-3 1.900 3.200z"/><circle cx="16.800" cy="11.400" r="1" fill="#1c2230"/></g><circle cx="20.600" cy="5.300" r="1" stroke-width="1.200"/><circle cx="18.300" cy="3" r=".5" stroke-width="1.200"/>',
+    rooster: '<g stroke="none"><circle cx="9.200" cy="5" r="1.900" fill="#ffd0c9"/><circle cx="11.900" cy="4" r="2.100" fill="#ffd0c9"/><circle cx="14.600" cy="5.200" r="1.800" fill="#ffd0c9"/><circle cx="12" cy="9.800" r="4.700" fill="currentColor"/><path d="M7.700 11.400c-1.800 3.500-2.500 6.700-1 9.600h10.600c1.400-2.900.6-6.400-1.300-9.600z" fill="currentColor"/><ellipse cx="15.700" cy="14.600" rx="1.250" ry="2.100" fill="#ffd0c9"/><path d="M16.100 8.300l4.500 1.600-4.500 1.700z" fill="#ffc94a"/><circle cx="13.300" cy="8.900" r=".95" fill="#1c2230"/></g>',
+    lizard: '<path d="M16.700 6.400c-1.400 2.800-3.500 4.300-4.700 6.900" stroke-width="3.800"/><path d="M11.800 13.800c-.9 3-3.500 3.900-5 4.900-1.300.9-1.400 2-.5 2.600" stroke-width="1.900"/><path d="M15.300 9l3.400 1.300M14.100 8L10.800 6.300M12.500 12.900l3.300 1.700M11.300 12.200L8 11.200" stroke-width="1.700"/><ellipse cx="17.700" cy="4.600" rx="2.500" ry="2.100" transform="rotate(-30 17.700 4.600)" fill="currentColor" stroke="none"/>',
+    owl: '<g stroke="none"><path d="M12 3c-4.900 0-7.400 3.400-7.400 8.500 0 5.400 3.100 9.500 7.400 9.500s7.400-4.100 7.400-9.500C19.400 6.400 16.900 3 12 3z" fill="currentColor"/><circle cx="8.900" cy="9.800" r="2.700" fill="#1c2230"/><circle cx="15.100" cy="9.800" r="2.700" fill="#1c2230"/><circle cx="9.500" cy="9.200" r=".85" fill="#fff"/><circle cx="15.700" cy="9.200" r=".85" fill="#fff"/><path d="M12 11.800l-1.200 1.600 1.200 1.800 1.200-1.800z" fill="#f2b632"/></g>',
+    hamster: '<g stroke="none"><circle cx="6.500" cy="6.800" r="2.900" fill="currentColor"/><circle cx="17.500" cy="6.800" r="2.900" fill="currentColor"/><circle cx="6.500" cy="6.800" r="1.300" fill="#f0a9a0"/><circle cx="17.500" cy="6.800" r="1.300" fill="#f0a9a0"/><ellipse cx="12" cy="13.500" rx="8.300" ry="6.900" fill="currentColor"/><circle cx="8.800" cy="12" r="1.100" fill="#1c2230"/><circle cx="15.200" cy="12" r="1.100" fill="#1c2230"/><ellipse cx="12" cy="14.500" rx="1.050" ry=".8" fill="#e2767a"/></g><path d="M10.300 16.900c.6.600 1.200.5 1.700-.3.500.8 1.100.9 1.700.3" stroke="#1c2230" stroke-width="1"/>',
+    rabbit: '<g stroke="none"><ellipse cx="9" cy="6.800" rx="2.200" ry="5.300" transform="rotate(-8 9 6.800)" fill="currentColor"/><ellipse cx="15" cy="6.800" rx="2.200" ry="5.300" transform="rotate(8 15 6.800)" fill="currentColor"/><ellipse cx="9" cy="7.200" rx=".9" ry="3.500" transform="rotate(-8 9 7.200)" fill="#f0a9a0"/><ellipse cx="15" cy="7.200" rx=".9" ry="3.500" transform="rotate(8 15 7.200)" fill="#f0a9a0"/><ellipse cx="12" cy="15.600" rx="6.400" ry="5.600" fill="currentColor"/><circle cx="9.500" cy="14.500" r="1" fill="#1c2230"/><circle cx="14.500" cy="14.500" r="1" fill="#1c2230"/><ellipse cx="12" cy="16.700" rx=".95" ry=".7" fill="#e2767a"/></g>',
+    parrot: '<g stroke="none"><path d="M11.700 2.800c-3.700 0-6.200 2.700-6.200 6.400 0 1.700.4 3 1 4.400.8 2 .9 3.900.3 6l5-1.200c3.300-1.500 4.900-4.500 4.900-8.200V7.300c-.4-2.800-2.200-4.500-5-4.500z" fill="currentColor"/><path d="M7 19.200l-1.800 3.600 5.600-1.600 1.100-2.800z" fill="#ff7b6b"/><path d="M15.400 5.900c3.200-.6 5 1 4.600 3.600-.3 1.900-1.400 3.200-2.800 3.900.3-1.500-.3-2.600-1.800-3z" fill="#1c2230"/><circle cx="12.600" cy="7.100" r="1.800" fill="#fff"/><circle cx="12.800" cy="7.100" r=".95" fill="#1c2230"/></g>',
+    guinea: '<g stroke="none"><path d="M2.600 13.900c0-3.700 3.900-6.300 9.500-6.300 5.400 0 9.300 2.600 9.300 5.900 0 2.600-1.900 4.300-4.700 4.300H6.700c-2.400 0-4.100-1.600-4.100-3.900z" fill="currentColor"/><path d="M2.600 13.900c0-3.100 2.700-5.400 6.900-6.100 1 2.600.6 6.900-1.200 10H6.700c-2.400 0-4.100-1.600-4.100-3.900z" fill="#d79a55"/><ellipse cx="15.400" cy="7.700" rx="1.800" ry="1.300" fill="#f0b9a0"/><circle cx="17.800" cy="11.700" r="1.050" fill="#1c2230"/></g><path d="M7 18.200v1.600M10.200 18.200v1.600M14.800 18.200v1.600M18 18.200v1.600" stroke-width="1.500"/>',
+    tortoise: '<g stroke="none" fill="currentColor"><path d="M2.900 15.600a8 7.600 0 0 1 16 0z"/><path d="M17.200 13.200h3.400v2.400h-3.400z"/><circle cx="20.600" cy="13" r="2.300"/><rect x="4.800" y="15" width="3.200" height="4.300" rx="1.300"/><rect x="13.800" y="15" width="3.200" height="4.300" rx="1.300"/><path d="M3.300 15.300l-2.200 1.200 2.500.5z"/><circle cx="21.200" cy="12.500" r=".75" fill="#1c2230"/></g><path d="M7.300 15.400c.4-3.400 1.800-5.500 3.600-6.600M14.500 15.400c-.4-3.400-1.800-5.500-3.600-6.600M5.300 12.300h11.200" stroke="rgba(28,34,48,.5)" stroke-width="1"/>',
+    wheel: '<circle cx="12" cy="10.200" r="7"/><path d="M12 3.200v14M5.900 6.700l12.200 7M18.100 6.700l-12.200 7" stroke-width="1.100"/><path d="M12 10.200L7.200 21M12 10.200L16.800 21M5 21h14"/>',
+    lettuce: '<path d="M12 21c-5.200 0-8.500-3-8.500-7.300 0-2.200.9-3.800 2.300-4.800.1-2.600 1.700-4.400 3.800-4.400.9 0 1.700.3 2.400.9.700-.6 1.500-.9 2.400-.9 2.100 0 3.700 1.800 3.800 4.400 1.400 1 2.300 2.600 2.300 4.800C20.500 18 17.200 21 12 21z" fill="#dff5ae" stroke="none"/><path d="M12 20V9.500M12 13.800L8.300 10.300M12 16l3.900-3.800" stroke="#2c7a3a" stroke-width="1.400"/>',
     scope: '<path d="M4 9.500l11.500-4.200 1.500 4-11.500 4.200zM11.500 12.500L8 20.500M11.500 12.500l4 8M11.500 12.500v8"/>',
-    car: '<path d="M4 14l1.600-4.600A2 2 0 0 1 7.500 8h9a2 2 0 0 1 1.900 1.400L20 14v4.500H4zM4 14h16"/><circle cx="7.600" cy="16.200" r="1.100"/><circle cx="16.400" cy="16.200" r="1.100"/>'};
+    van: '<path d="M2.500 16.500V7.300a1 1 0 0 1 1-1h10.300l4.700 4.400 2.400.9a1 1 0 0 1 .6.900v4h-2.100M9 16.500h5.800M2.500 16.500h1.600"/><path d="M13.400 6.700v4.300h4.800" stroke-width="1.300"/><circle cx="6.500" cy="16.800" r="2.200"/><circle cx="17.200" cy="16.800" r="2.200"/>'};
+  /*GI-END*/
   const NI = {   // one per kind of note
     am: '<path d="M3 18.500h18M7 18.500a5 5 0 0 1 10 0M12 10V4M9.500 6.500L12 4l2.500 2.500M4.500 12.500l1.800 1.300M19.500 12.500l-1.800 1.300"/>',
     pm: '<path d="M3 18.500h18M7 18.500a5 5 0 0 1 10 0M12 4v6M9.500 7.500L12 10l2.500-2.500M4.500 12.500l1.800 1.300M19.500 12.500l-1.800 1.300"/>',
@@ -447,7 +543,7 @@
   #rfeGoal p{margin:3px 0 0;font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:19.500px;line-height:1.18}
   #rfeGoal.new{animation:rfeNew .9s ease}
   @keyframes rfeNew{0%{box-shadow:0 0 0 0 rgba(232,184,74,.9),0 8px 30px rgba(15,20,35,.2)}40%{box-shadow:0 0 0 10px rgba(232,184,74,0),0 8px 30px rgba(15,20,35,.2)}}
-  #rfeR{display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex:none}
+  #rfeR{display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex:none;margin-left:auto}
   #rfeBtns{display:flex;gap:8px;align-items:flex-start}
   #rfeHint{display:flex;align-items:center;gap:10px;border:0;padding:6px 14px 6px 6px;text-align:left;min-height:52px}
   #rfeHint .av{width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34416b,#1a2340);overflow:hidden;display:grid;place-items:end center;flex:none}
@@ -522,7 +618,7 @@
   #rfeTip{font-size:14.500px;color:#fff;background:rgba(22,28,48,.78);border-radius:999px;padding:9px 16px;pointer-events:none;opacity:0;transition:opacity .4s;align-self:center;max-width:100%;box-sizing:border-box;text-align:center}
   #rfeTip.on{opacity:1}
   /* inside a room */
-  #rfeRoom{position:absolute;left:368px;top:max(14px,env(safe-area-inset-top));width:330px;padding:10px 12px 12px 14px;display:none;box-sizing:border-box}
+  #rfeRoom{position:absolute;left:max(14px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));width:340px;padding:10px 12px 12px 14px;display:none;box-sizing:border-box;border-left:4px solid var(--gold)}
   #rfeRoom .hd{display:flex;align-items:center;gap:4px}#rfeRoom .hd b{flex:1;min-width:0;font:600 24px/1.1 "Cormorant Garamond",Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #rfeRoom .hd button{width:40px;height:40px;border:1px solid #d6d2c8;background:#fff;border-radius:50%;display:grid;place-items:center;padding:0;flex:none}#rfeRoom .hd button svg{width:18px;height:18px}
   #rfeRoom .lv{font-size:13px;color:var(--mut);margin:1px 0 6px}
@@ -533,7 +629,11 @@
   #rfeRoom li.new{animation:rfeFlash 1.2s ease;border-radius:8px}
   #rfeRoom .cap{margin:8px 0 0;padding:8px 10px;background:#f4ecd8;border-radius:10px;font:500 16.500px/1.3 "Cormorant Garamond",Georgia,serif;color:#33290f;display:none}
   #rfeRoom .cap.on{display:block}
-  #rfeSun{flex:1 1 300px;max-width:520px;padding:9px 16px 11px;display:none}
+  #rfeFace{display:flex;align-items:center;gap:8px;width:100%;margin:8px 0 0;padding:5px 10px 5px 6px;border:1px solid #d6d2c8;background:#fff;border-radius:999px;min-height:36px;font-size:13.500px;line-height:1.2;text-align:left;color:var(--ink);pointer-events:auto;box-sizing:border-box}
+  #rfeFace .cmp{width:24px;height:24px;flex:none}#rfeFace .cmp svg{width:24px;height:24px;display:block}#rfeFaceT{flex:1;min-width:0}
+  #rfeFace i{font-style:normal;color:#7a5300;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;display:none}
+  #rfeFace.off{border-color:#e8b84a;background:#fdf7e4}#rfeFace.off i{display:inline}#rfeFace:not(.off){cursor:default}
+  #rfeSun{flex:1 1 250px;max-width:520px;padding:9px 16px 11px;display:none}
   #rfeSun .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);gap:8px;white-space:nowrap}#rfeSunNow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
   #rfeSunNow::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;border:1.500px solid #a9a595;margin-right:6px;vertical-align:-1px;box-sizing:border-box}#rfeSunNow.on{color:#7a5300}#rfeSunNow.on::before{background:#f2b632;border-color:#d98f0c;box-shadow:0 0 6px #f2b632}
   #rfeSun .top b{font-size:18.500px;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
@@ -560,7 +660,8 @@
   .rfeMk span{position:absolute;left:50%;top:56px;transform:translateX(-50%);white-space:nowrap;font:500 13px Jost,sans-serif;color:#fff;background:rgba(20,26,44,.82);padding:4px 10px;border-radius:999px}
   .rfeMk.edge span{top:50%;transform:translateY(-50%)}.rfeMk.edge.L span{left:58px}.rfeMk.edge.R span{left:auto;right:58px}
   .rfeMk:hover span{background:#1f2948}.rfeMk:focus-visible i{outline:3px solid #fff;outline-offset:3px}
-  #rfeToast{position:absolute;left:50%;top:15%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.500px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 40px);text-align:center;z-index:7}
+  #rfeToast{position:absolute;left:calc(50% + 177px);top:15%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.500px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;width:max-content;max-width:calc(100% - 420px);text-align:center;z-index:7;box-sizing:border-box}
+  html.rfe-cine #rfeToast{left:50%;max-width:calc(100% - 40px)}
   #rfeToast.on{opacity:1;transform:translate(-50%,0)}
   #rfeGhost{--tape:#66ade6;--tapeink:#0f3556;--mut:#5c6575;position:fixed;left:0;top:0;z-index:70;pointer-events:none;display:none;will-change:transform}
   #rfeShot{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:58;pointer-events:none;opacity:1;transition:opacity .5s ease}
@@ -579,6 +680,7 @@
   #rfeCard .who li{display:flex;gap:9px;align-items:center;flex:1 1 220px;min-width:0;font-size:14px;line-height:1.3;color:#3b4350}
   #rfeCard .who .em{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}#rfeCard .who .em svg{width:21px;height:21px}
   #rfeCard .who b{display:block;font-weight:500;color:#1f2a3a;font-size:15px}
+  #rfeCard .rule{margin:0 0 16px;padding:9px 12px;background:#f1eee6;border-radius:12px;font-size:14px;line-height:1.4;color:#2b3442}
   #rfeCard .lv{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;padding:0;list-style:none}
   #rfeCard .lv button{border:1px solid #d6d2c8;background:#fff;border-radius:14px;padding:8px 12px 9px;text-align:left;min-width:132px;min-height:52px;font-size:14.500px;line-height:1.2;color:#1f2a3a;font-family:inherit;cursor:pointer}
   #rfeCard .lv button small{display:block;color:#5c6575;font-size:12.500px;margin-top:2px}#rfeCard .lv button.done{border-color:#9cc7b3;background:#edf6f1}#rfeCard .lv button:hover{border-color:#1f2948}
@@ -591,6 +693,8 @@
   #rfeCard .more{display:flex;flex-wrap:wrap;gap:8px}
   html.rfe-pre #rfeRoot{display:none}
   html.rfe-in #rfeRoom{display:block}html.rfe-in #rfeSun{display:block}html.rfe-in #rfeLabels .rfeLb{display:none}html.rfe-in #rfeLift,html.rfe-in #rfeTip{display:none}
+  html.rfe-in #rfeGoal,html.rfe-in #rfeStory,html.rfe-in #rfeWhoH,html.rfe-in #rfeTray,html.rfe-in #rfeSelBar{display:none}
+  html.rfe-in #rfePanel{top:calc(var(--room-b,230px) + 10px);bottom:auto;max-height:calc(100% - var(--room-b,230px) - 24px)}
   html:not(.rfe-in) #rfeBack,html:not(.rfe-in) #rfeWhoBtn,html:not(.rfe-in) #rfeMarks{display:none}
   html.rfe-cine #rfeRoot > *:not(#rfeLabels):not(#rfeToast){opacity:0!important;pointer-events:none!important;transition:opacity .4s}
   html.rfe-cine .rfeLb{pointer-events:none}
@@ -600,7 +704,8 @@
     #rfeBtns{order:0;align-self:flex-end}#rfeGoal{order:1;width:auto;padding:8px 12px 9px}#rfeGoal p{font-size:17.500px}#rfeSay{order:2;align-self:flex-end;font-size:18.500px}
     #rfeHint{padding:4px 12px 4px 4px;min-height:46px}#rfeHint small{display:none}#rfeHint .av{width:38px;height:38px}.rfeIco{width:46px;height:46px}
     #rfeMenu{top:calc(max(8px,env(safe-area-inset-top)) + 52px);right:8px}
-    #rfePanel{left:8px;right:8px;top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:auto;max-height:38vh}
+    #rfePanel,html.rfe-in #rfePanel{left:8px;right:8px;top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:auto;max-height:38vh}
+    #rfeToast{left:50%;max-width:calc(100% - 40px)}
     #rfeStory{display:none}
     #rfePanel h3{padding:8px 14px 2px}
     #rfeTray{flex-wrap:nowrap;padding:4px 8px 6px;gap:2px;pointer-events:auto}
@@ -610,12 +715,13 @@
     #rfeClues li{font-size:14.500px;padding:7px 8px 7px 36px}
     #rfeDock{left:0;padding:0 8px;bottom:calc(var(--panel-h,0px) + max(8px,env(safe-area-inset-bottom)) + 8px);gap:8px}
     #rfeTip{font-size:13.500px;padding:7px 12px}
-    html.rfe-in #rfePanel{display:none}html.rfe-in.rfe-clues #rfePanel{display:flex;bottom:max(8px,env(safe-area-inset-bottom));max-height:60vh;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}html.rfe-in.rfe-clues #rfePanelX{display:block}html.rfe-in.rfe-clues #rfePanel h3:first-of-type{padding-right:48px}
-    html.rfe-in #rfeDock{bottom:max(8px,env(safe-area-inset-bottom));flex-wrap:wrap;gap:6px}html.rfe-in #rfeGoal{display:none}
+    html.rfe-in #rfePanel{display:none}html.rfe-in.rfe-clues #rfePanel{display:flex;bottom:max(8px,env(safe-area-inset-bottom));max-height:60vh;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}html.rfe-in.rfe-clues #rfePanelX{display:block}html.rfe-in.rfe-clues #rfePanel h3{padding-right:48px}
+    html.rfe-in #rfeDock{bottom:max(8px,env(safe-area-inset-bottom));flex-wrap:wrap;gap:6px}
+    html.rfe-in #rfeSay{position:absolute;right:8px;top:calc(var(--room-b,170px) + 6px);z-index:5}
     html.rfe-in .rfeBtn{flex:1 1 auto;padding:0 10px;font-size:14.500px;gap:6px}#rfeBack span::after{content:""}#rfeSun .ticks{display:none}#rfeSun .top b{font-size:17px}#rfeSunNow{font-size:12.500px}#rfePlay span{display:none}#rfeSun .top button{padding:0 9px}
     html.rfe-in #rfeCluesBtn{display:inline-flex}
     #rfeSun{flex:1 1 100%;max-width:none;order:-1;padding:7px 14px 9px}
-    #rfeRoom{left:8px;right:8px;top:var(--top-h,66px);width:auto;padding:6px 8px 8px 8px}#rfeRoom .hd b{font-size:21px}#rfeRoom li{font-size:13.500px}#rfeRoom .lv{text-align:center;margin:0 0 3px}#rfeRoom .wh{text-align:center;font-size:12.500px;margin-bottom:5px}
+    #rfeRoom{left:8px;right:8px;top:var(--top-h,66px);width:auto;padding:6px 8px 8px 8px;border-left:0}#rfeFace{margin-top:6px;min-height:34px;font-size:13px}#rfeRoom .hd b{font-size:21px}#rfeRoom li{font-size:13.500px}#rfeRoom .lv{text-align:center;margin:0 0 3px}#rfeRoom .wh{text-align:center;font-size:12.500px;margin-bottom:5px}
     #rfeRoom ul{gap:2px;padding:0 4px}#rfeRoom .cap{font-size:15.500px;margin-top:6px}#rfeRoom .hd button{width:44px;height:44px}
     #rfeWho{right:8px;left:8px;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 58px)}
     .rfeBtn{padding:0 14px;font-size:15px}
@@ -642,7 +748,7 @@
       </div>
       <div class="rfeChip" id="rfeMenu" role="menu"><button type="button" role="menuitem" id="rfeRestart">Start this puzzle again</button><button type="button" role="menuitem" id="rfePick">Choose another puzzle</button><button type="button" role="menuitem" id="rfeAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
       <div class="rfeChip" id="rfeRoom" aria-live="polite"></div>
-      <div class="rfeChip" id="rfePanel"><button type="button" id="rfePanelX" aria-label="Close the clues">×</button><p id="rfeStory"></p><h3><span>Who is staying</span><span id="rfeCount"></span></h3><div id="rfeTray"></div>
+      <div class="rfeChip" id="rfePanel"><button type="button" id="rfePanelX" aria-label="Close the clues">×</button><p id="rfeStory"></p><h3 id="rfeWhoH"><span>Who is staying</span><span id="rfeCount"></span></h3><div id="rfeTray"></div>
         <div id="rfeSelBar"></div><h3><span>What they asked for</span><span id="rfeDone"></span></h3><ol id="rfeClues"></ol></div>
       <div id="rfeDock">
         <button class="rfeBtn dark shadow" id="rfeBack" type="button">${ICO.back}<span>Whole house</span></button>
@@ -652,7 +758,7 @@
           <input id="rfeSlider" type="range" min="${H0}" max="${H1}" step=".25" value="13" aria-label="Time of day">
           <div class="ticks" aria-hidden="true"><span>7 AM</span><span>10</span><span>1 PM</span><span>4</span><span>7:30</span></div></div>
         <button class="rfeBtn shadow" id="rfeCluesBtn" type="button" aria-pressed="false">${ICO.list}<span>Clues</span></button>
-        <button class="rfeBtn primary shadow" id="rfeWhoBtn" type="button" aria-expanded="false">${ICO.bed}<span>Who sleeps here</span></button>
+        <button class="rfeBtn primary shadow" id="rfeWhoBtn" type="button" aria-expanded="false">${ICO.bed}<span>Put a guest here</span></button>
       </div>
       <div class="rfeChip" id="rfeWho" role="menu"></div>
       <div id="rfeToast" role="status"></div>`);
@@ -675,19 +781,20 @@
     $('#rfePlay').onclick = () => { SND.unlock(); watchDay(); };
     addEventListener('pointerdown', e => { if(anyMenu() && !e.target.closest('#rfeMenu,#rfeMenuBtn,#rfeWho,#rfeWhoBtn')) closeMenus(); }, true);
     addEventListener('resize', () => { layoutVars(); orbitFit(); if(S.view === 'room') reframe(); });
-    try{ new ResizeObserver(() => { layoutVars(); if(S.view === 'over' && !rig.move) orbitFit(); }).observe($('#rfePanel')); }catch(e){} }
+    try{ new ResizeObserver(() => { layoutVars(); if(S.view === 'over' && !rig.move) orbitFit(); }).observe($('#rfePanel')); new ResizeObserver(() => { layoutVars(); if(S.view === 'room') reframe(); }).observe($('#rfeRoom')); }catch(e){} }
   const UI = {};
   const anyMenu = () => !!($('#rfeMenu') && ($('#rfeMenu').classList.contains('on') || $('#rfeWho').classList.contains('on')));
   function closeMenus(){ const m = $('#rfeMenu'); if(!m) return; m.classList.remove('on'); $('#rfeMenuBtn').setAttribute('aria-expanded', 'false'); $('#rfeWho').classList.remove('on'); $('#rfeWhoBtn').setAttribute('aria-expanded', 'false'); }
   function layoutVars(){ const pn = $('#rfePanel'), top = $('#rfeTop'); if(!pn) return; const st = document.documentElement.style;
-    st.setProperty('--panel-h', (phone() && S.view !== 'room' ? Math.round(pn.getBoundingClientRect().height) : 0) + 'px'); st.setProperty('--top-h', Math.round(($('#rfeBtns').getBoundingClientRect().bottom || 60) + 6) + 'px'); }
+    st.setProperty('--panel-h', (phone() && S.view !== 'room' ? Math.round(pn.getBoundingClientRect().height) : 0) + 'px'); st.setProperty('--top-h', Math.round(($('#rfeBtns').getBoundingClientRect().bottom || 60) + 6) + 'px');
+    const rb = $('#rfeRoom').getBoundingClientRect(); if(rb.height > 10) st.setProperty('--room-b', Math.round(rb.bottom) + 'px'); }
   let toastT = 0; function toast(m, ms){ toastE.textContent = m; toastE.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastE.classList.remove('on'), ms || 2400); }
   let sayT = 0; function say(m, ms, quiet){ sayE.innerHTML = '<small>Snowball</small>' + esc(m); sayE.classList.add('on'); clearTimeout(sayT); sayT = setTimeout(() => sayE.classList.remove('on'), ms || 6000); if(!quiet) SND.hint(); }
   function setGoal(t, quiet){ const g = $('#rfeGoalT'); if(g.textContent === t) return; g.textContent = t; if(quiet) return; const c = $('#rfeGoal'); c.classList.remove('new'); void c.offsetWidth; c.classList.add('new'); }
   function tip(t){ const e = $('#rfeTip'); if(!t){ e.classList.remove('on'); return; } e.textContent = t; e.classList.add('on'); }
 
   /* ================================================================== the puzzle on the table */
-  const nmOf = g => LG.GUESTS[g].name, shortOf = g => LG.GUESTS[g].short || LG.GUESTS[g].name;
+  const nmOf = g => LG.GUESTS[g].name, NmOf = g => LG.Nm(g), shortOf = g => LG.GUESTS[g].short || LG.GUESTS[g].name;   // NmOf: at the start of a sentence or on its own
   const occupant = slot => { for(const g in S.at) if(S.at[g] === slot) return g; return null; };
   const fits = (g, slot) => LG.isP(g) ? !!LG.SLOTS[slot].bed : !LG.SLOTS[slot].bed;
   const lvTxt = slot => { const sl = LG.SLOTS[slot]; return sl.lv === 'garage' ? 'A level of its own, between lower and main' : (sl.lv[0].toUpperCase() + sl.lv.slice(1) + ' level') + (sl.bed ? ', bedroom' : ', not a bedroom'); };
@@ -698,14 +805,17 @@
   function renderTray(){ const tray = $('#rfeTray'); tray.innerHTML = ''; let left = 0;
     for(const g of S.L.guests){ const G = LG.GUESTS[g], slot = S.at[g]; if(!slot) left++;
       const b = el('button', {type: 'button', class: 'rfeG' + (G.kind === 't' ? ' t' : '') + (S.sel === g ? ' sel' : '') + (slot ? ' in' : ''), 'data-g': g, 'aria-pressed': String(S.sel === g),
-        'aria-label': G.name + (slot ? ', in the ' + LG.SLOTS[slot].name : ', no room yet')}, `<span class="em" style="background:${G.col}">${gIco(g)}</span><span><span class="tp">${esc(shortOf(g))}</span><small>${slot ? esc(LG.SLOTS[slot].name) : 'No room yet'}</small></span>`);
+        'aria-label': NmOf(g) + (slot ? ', in the ' + LG.SLOTS[slot].name : ', no room yet')}, `<span class="em" style="background:${G.col}">${gIco(g)}</span><span><span class="tp">${esc(shortOf(g))}</span><small>${slot ? esc(LG.SLOTS[slot].name) : 'No room yet'}</small></span>`);
       tray.appendChild(b); bindChip(b, g); }
     $('#rfeCount').textContent = left ? left + ' to place' : 'All placed';
     const bar = $('#rfeSelBar'); if(S.sel){ const G = LG.GUESTS[S.sel], slot = S.at[S.sel];
-        bar.innerHTML = `<span><b>${esc(G.name)}</b><i>${esc(G.bio)}</i></span>` + (slot ? `<button type="button" id="rfeOut">Take out</button>` : ''); bar.classList.add('on');
+        bar.innerHTML = `<span><b>${esc(NmOf(S.sel))}</b><i>${esc(G.bio)}</i></span>` + (slot ? `<button type="button" id="rfeOut">Take out</button>` : ''); bar.classList.add('on');
         const o = $('#rfeOut'); if(o) o.onclick = () => { unplace(S.sel); }; } else bar.classList.remove('on');
     layoutVars(); }
   function renderClues(flash){ const ol = $('#rfeClues'), prev = S.status.map(x => x.s); ol.innerHTML = ''; S.status = S.L.clues.map(statusOf); let ok = 0;
+    // "Never broke a clue" is lost the moment any clue shows as broken: on a placement, on a swap, or when a look inside a room proves an earlier placement wrong.
+    // Only a placement Snowball makes himself (the third hint) is not held against the player.
+    if(!S.hinting && !S.done && S.status.some((x, i) => x.s === 'bad' && prev[i] !== 'bad')) S.clean = false;
     S.L.clues.forEach((c, i) => { const st = S.status[i], who = LG.whoOf(c); if(st.s === 'ok') ok++;
       const li = el('li', {class: st.s + (S.sel && who.indexOf(S.sel) >= 0 ? ' hl' : '') + (flash && prev[i] && prev[i] !== st.s && st.s !== 'open' ? ' flash' : '')},
         `<span class="st" aria-hidden="true">${st.s === 'ok' ? ICO.check : st.s === 'bad' ? ICO.cross : st.s === 'unseen' ? '?' : ''}</span><span class="tx">${esc(c.t)}</span>` +
@@ -718,23 +828,23 @@
   function refresh(flash){ renderTray(); const prev = renderClues(flash); drawLabels(); PAWN.sync(); objective(); layoutVars(); return prev; }
   function objective(){ if(!S.L || S.done) return; const left = S.L.guests.filter(g => !S.at[g]), bad = S.status.filter(x => x.s === 'bad').length, uns = S.status.filter(x => x.s === 'unseen').length;
     if(S.view === 'room'){ const r = RINGS[S.room] || [], todo = r.filter(q => !hasNote(S.room, q.note)).length;
-      setGoal(todo ? 'Look around. Tap a gold ring to note what is here.' : !SAVE.light[S.room] ? 'Drag the sun across the day and watch the floor.' : 'You have seen this room. Choose who sleeps here, or go back out.', true); return; }
+      setGoal(todo ? 'Look around. Tap a gold ring to note what is here.' : !SAVE.light[S.room] ? 'Drag the sun across the day and watch the floor.' : 'You have seen this room. Put a guest here, or go back out.', true); return; }
     if(S.sel) setGoal('Choose a room for ' + nmOf(S.sel) + '.', true);
-    else if(bad) setGoal(bad === 1 ? 'One clue is broken. Move somebody.' : bad + ' clues are broken. Move somebody.', true);
+    else if(bad) setGoal(bad === 1 ? 'One clue is broken. Move a guest.' : bad + ' clues are broken. Move a guest.', true);
     else if(!left.length && uns) setGoal('Everyone has a room, but Snowball cannot check ' + (uns === 1 ? 'one clue' : uns + ' clues') + ' yet.', true);
     else if(left.length === S.L.guests.length) setGoal('Give every guest a room. Tap a room to go inside and look.', true);
-    else if(left.length) setGoal(left.length === 1 ? nmOf(left[0]) + ' still ' + LG.vb(left[0], 'needs', 'need') + ' a room.' : left.length + ' guests still need a room.', true);
+    else if(left.length) setGoal(left.length === 1 ? NmOf(left[0]) + ' still ' + LG.vb(left[0], 'needs', 'need') + ' a room.' : left.length + ' guests still need a room.', true);
     else setGoal('Everyone has a room.', true); }
   function select(g){ if(S.done) return; S.sel = g; if(g) SND.pick(); renderTray(); renderClues(); drawLabels(); objective();
     if(g && S.view === 'over'){ tip(LG.isP(g) ? 'Tap one of the six bedrooms' : 'Tap a room that is not a bedroom'); } else tip('');
     $('#rfeLift').classList.toggle('pulse', !!g && S.view === 'over' && S.upperOn && ORDER.some(id => covered(id) && fits(g, id))); }
   function place(g, slot, opts){ opts = opts || {}; if(S.done || !S.L || S.L.guests.indexOf(g) < 0) return false;
-    if(!fits(g, slot)){ toast(LG.isP(g) ? `The ${LG.SLOTS[slot].name.toLowerCase()} is not a bedroom. People sleep in the six bedrooms.` : `${nmOf(g)} ${LG.vb(g, 'goes', 'go')} in a room that is not a bedroom: the loft, the office, the lounge or the garage.`, 3800); SND.bad(); return false; }
+    if(!fits(g, slot)){ toast(LG.isP(g) ? `The ${LG.SLOTS[slot].name.toLowerCase()} is not a bedroom. ${NmOf(g)} ${LG.vb(g, 'needs', 'need')} one of the six bedrooms.` : `${NmOf(g)} ${LG.vb(g, 'goes', 'go')} in a room that is not a bedroom: the loft, the office, the lounge or the garage.`, 4200); SND.bad(); return false; }
     if(!S.t0) S.t0 = performance.now(); const was = S.status.map(x => x.s), prevSlot = S.at[g], occ = occupant(slot);
     if(occ && occ !== g){ if(prevSlot && fits(occ, prevSlot)) S.at[occ] = prevSlot; else delete S.at[occ]; }
-    S.at[g] = slot; S.sel = null; S.lastAct = performance.now(); tip(''); $('#rfeLift').classList.remove('pulse'); if(!PAWN.g[g]) PAWN.build(g); refresh(true); PAWN.drop(g); if(occ && occ !== g && S.at[occ]) PAWN.drop(occ);
+    S.at[g] = slot; S.sel = null; S.lastAct = performance.now(); tip(''); $('#rfeLift').classList.remove('pulse'); if(!PAWN.g[g]) PAWN.build(g); S.hinting = !!opts.hint; try{ refresh(true); }finally{ S.hinting = false; } PAWN.drop(g); if(occ && occ !== g && S.at[occ]) PAWN.drop(occ);
     const now = S.status.map(x => x.s), newBad = now.some((s, i) => s === 'bad' && was[i] !== 'bad'), newOk = now.some((s, i) => s === 'ok' && was[i] !== 'ok');
-    SND.place(); if(newBad){ if(!opts.hint) S.clean = false; setTimeout(() => SND.bad(), 260); } else if(newOk) setTimeout(() => SND.ok(), 240);
+    SND.place(); if(newBad) setTimeout(() => SND.bad(), 260); else if(newOk) setTimeout(() => SND.ok(), 240);
     ga('rfe3d_place', {level: S.L.id}); if(solved()) setTimeout(win, 700); else coachAfterPlace(); return true; }
   function unplace(g){ if(S.done || !S.at[g]) return; delete S.at[g]; S.sel = null; SND.tap(); refresh(true); }
   function coachAfterPlace(){ if(SAVE.tips.unseen) return; const i = S.status.findIndex(x => x.s === 'unseen'); if(i < 0) return; SAVE.tips.unseen = 1; save();
@@ -772,10 +882,11 @@
   const _v = new V3();
   function labelsStep(){ const show = S.view === 'over' && !rig.move && !S.busy, r = canvas.getBoundingClientRect(), F = freeRect(), placed = [], items = [];
     for(const id of ORDER){ const L = LB[id]; if((!show && S.view !== 'win') || (covered(id) && !occupant(id))){ if(L.on){ L.on = false; L.b.classList.remove('on'); } continue; }
-      const G = GEO[id]; _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 14 : 4.5), G.c[1]).project(camera);
-      const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z}); }
+      const G = GEO[id], occ = occupant(id), pc = occ && PAWN.g[occ], lift = !!(pc && pc.visible);   // with a piece in the room, the name goes just above its head
+      if(lift){ const q = PAWN.spot(id); _v.set(q[0], G.fy + (pc.userData.h || 3.5) * (pc.userData.k || 1) + .4, q[1]).project(camera); } else _v.set(G.c[0], G.fy + (covered(id) && S.upperOn ? 14 : 4.5), G.c[1]).project(camera);
+      const x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height; items.push({id, x, y, z: _v.z, lift}); }
     // each name goes as near its room as it can without covering another: tried in a fixed order and in small steps, so a name moves little when another changes
-    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, cx = x => clamp(x, F.l + w / 2 + 2, F.r - w / 2 - 2), cy = y => clamp(y, F.t + h / 2, F.b - h / 2);
+    for(const it of items){ const L = LB[it.id]; if(!L.w){ L.w = L.b.offsetWidth || 110; L.h = L.b.offsetHeight || 28; } const w = L.w, h = L.h, cx = x => clamp(x, F.l + w / 2 + 2, F.r - w / 2 - 2), cy = y => clamp(y, F.t + h / 2, F.b - h / 2); if(it.lift) it.y -= h / 2 + 2;
       let x = cx(it.x), y = cy(it.y); const hit = (xx, yy) => placed.some(q => !(xx + w / 2 + 4 < q[0] || xx - w / 2 - 4 > q[2] || yy + h / 2 + 2 < q[1] || yy - h / 2 - 2 > q[3]));
       for(const o of LB_TRY){ const xx = cx(it.x + o[0]), yy = cy(it.y + o[1]); if(!hit(xx, yy)){ x = xx; y = yy; break; } }
       placed.push([x - w / 2, y - h / 2, x + w / 2, y + h / 2]); L.x = x; L.y = y;
@@ -795,7 +906,7 @@
   /* ================================================================== going into a room and coming back out */
   function standView(slot){ const st = standOf(slot), a = yp(st.pos, st.face); return {pos: st.pos, yaw: a[0], pitch: a[1]}; }
   function reframe(){ const s = rig.st, F = freeRect(); s.offX = ((F.l + F.r) / 2) / F.W - .5; s.offY = phone() ? ((F.t + F.b) / 2) / F.Hh - .5 : 0; rig.sig = ''; }
-  function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(64); s.zoom = 1; }
+  function setStand(slot){ const v = standView(slot), s = rig.st; s.pos.set(...v.pos); s.yaw = s.tyaw = v.yaw; s.pitch = s.tpitch = v.pitch; s.fov = placeFov(68); s.zoom = 1; s.slow = false; S.lookBack = 0; }
   function peekPose(slot){ const G = GEO[slot], o = rig.orb, dx = Math.sin(o.th), dz = Math.cos(o.th); return {pos: [G.c[0] + dx * 13, G.fy + 30, G.c[1] + dz * 13], at: [G.c[0], G.fy + 1, G.c[1]], fov: 42, off: rig.off.slice()}; }
   function enter(slot){ if(!GEO[slot] || S.busy || rig.move || S.done || S.view !== 'over') return; S.busy = true; S.sel = null; tip(''); closeMenus(); SND.dive(); ga('rfe3d_enter', {room: slot});
     if(!S.t0) S.t0 = performance.now(); if(covered(slot)) setUpper(!S.upperOn, true);
@@ -805,25 +916,43 @@
   // the hour you arrive at counts as seen: come in at evening, drag to morning, and you have watched the light
   function arrive(slot){ if(!SAVE.seen[slot]){ SAVE.seen[slot] = 1; save(); } S.lightSeen = {lo: S.hour <= 8.5, hi: S.hour >= 18.5}; S.sweeping = false; SUN.show(slot); setClock(S.hour); noteLight(); setMarks(); drawRoom(); layoutVars(); reframe();
     renderClues(true); objective(); $('#rfeSun').classList.toggle('key', !SAVE.light[slot]); S.lastAct = performance.now(); document.documentElement.classList.remove('rfe-clues'); $('#rfeCluesBtn').setAttribute('aria-pressed', 'false');
-    $('#rfeWhoBtn span').textContent = LG.SLOTS[slot].bed ? 'Who sleeps here' : 'What goes here'; }
+    PAWN.sync(); }
   function leave(then){ if(S.view !== 'room' || S.busy || rig.move) return; const slot = S.room; S.busy = true; closeMenus(); SND.back(); S.sweeping = false;
     dissolve(() => { S.view = 'over'; S.room = null; SUN.show(null); for(const m of marks) m.b.remove(); marks.length = 0; document.documentElement.classList.remove('rfe-in', 'rfe-clues');
       if(covered(slot)) setUpper(!S.upperOn, true); HOUSE.over(); orbitFit(); layoutVars(); orbitFit(); rigCut(peekPose(slot)); refresh(); },
       () => { rigFly(orbitPose(), {dur: .9, done: () => { S.busy = false; if(then) then(); }}); }); }
 
   /* ---- the card for the room you are standing in */
+  // +x in the model is north-east, -z north-west (toward the hills), +z south-east (toward the street): measured from the model's own sun
+  function facing(){ const s = rig.st; let b = (46.14 + Math.atan2(-Math.cos(s.yaw), -Math.sin(s.yaw)) * 180 / Math.PI) % 360; if(b < 0) b += 360;
+    const word = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'][Math.round(b / 45) % 8];
+    const off = (x, z) => Math.abs(angDiff(s.yaw, Math.atan2(-(x - s.pos.x), -(z - s.pos.z)))); let to = '';
+    if(off(7.7, -30.3) < .5) to = 'the old oak'; else if(S.room && LG.SLOTS[S.room].lv === 'lower' && off(-3.5, -44) < .45) to = 'the outdoor kitchen';
+    else if(Math.abs(angDiff(s.yaw, 0)) < .7) to = 'the hills'; else if(Math.abs(angDiff(s.yaw, Math.PI)) < .7) to = 'the street';
+    return {b, text: 'Facing ' + word + (to ? ', toward ' + to : '')}; }
+  const turned = () => { if(S.view !== 'room' || !S.room) return false; const s = rig.st, v = standView(S.room); return Math.abs(angDiff(s.tyaw, v.yaw)) > .6 || Math.abs(s.tpitch - v.pitch) > .3 || s.zoom < .95; };
+  function faceRoom(){ if(S.view !== 'room' || !S.room || S.busy || rig.move) return; const s = rig.st, v = standView(S.room); s.tyaw = s.yaw + angDiff(s.yaw, v.yaw); s.tpitch = v.pitch; s.zoom = 1; s.slow = true; S.lookBack = 0; S.lastAct = performance.now(); SND.tap(); }
+  function faceStep(now){ if(S.view !== 'room') return; const e = $('#rfeFace'); if(!e) return;
+    // a look up at a skylight settles back to the way you came in by itself, unless you have taken hold of the view since
+    if(S.lookBack && now > S.lookBack){ S.lookBack = 0; const s = rig.st, v = standView(S.room); s.tyaw = s.yaw + angDiff(s.yaw, v.yaw); s.tpitch = v.pitch; s.zoom = 1; s.slow = true; }
+    const f = facing(), off = turned(), key = f.text + '|' + Math.round(f.b / 2) + '|' + off; if(key === UI.faceKey) return; UI.faceKey = key;
+    $('#rfeFaceT').textContent = f.text; const n = e.querySelector('g'); if(n) n.setAttribute('transform', 'rotate(' + (-f.b).toFixed(0) + ' 12 12)');
+    e.classList.toggle('off', off); e.setAttribute('aria-label', f.text + (off ? '. Turn back to the way you came in.' : '')); }
+  const COMPASS = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="#fff" stroke="#c9c4b6" stroke-width="1.5"/><g><path d="M12 3.600l2.600 8.400H9.400z" fill="#9b2c3c"/><path d="M12 20.400l2.600-8.400H9.400z" fill="#c9c4b6"/></g><circle cx="12" cy="12" r="1.300" fill="#1f2a3a"/></svg>';
   function drawRoom(fresh){ const slot = S.room; if(!slot) return; const sl = LG.SLOTS[slot], r = RINGS[slot] || [], occ = occupant(slot); let li = '';
     li += SAVE.light[slot] ? `<li${fresh === 'light' ? ' class="new"' : ''}>${nIco(sl.none ? 'none' : sl.am ? 'am' : sl.pm ? 'pm' : 'mid')}<span>${esc(SUN.text(slot))}</span></li>` : `<li class="todo">${nIco('mid')}<span>Light: drag the sun across a midsummer day</span></li>`;
     for(const q of r) if(hasNote(slot, q.note)) li += `<li${fresh === q.note ? ' class="new"' : ''}>${nIco(NOTE_ICO[q.note])}<span>${esc(NOTE_TXT[q.note])}</span></li>`;
     const todo = r.filter(q => !hasNote(slot, q.note)).length; if(todo) li += `<li class="todo">${ICO.ring}<span>${todo === 1 ? 'One more thing' : todo + ' things'} to notice: tap the gold ${todo === 1 ? 'ring' : 'rings'}</span></li>`;
     const i = ORDER.indexOf(slot), prev = ORDER[(i + ORDER.length - 1) % ORDER.length], next = ORDER[(i + 1) % ORDER.length], cap = UI.cap && UI.capSlot === slot;
     $('#rfeRoom').innerHTML = `<div class="hd"><button type="button" id="rfePrev" aria-label="Previous room: ${esc(LG.SLOTS[prev].name)}">${ICO.back}</button><b>${esc(sl.name)}</b><button type="button" id="rfeNext" aria-label="Next room: ${esc(LG.SLOTS[next].name)}">${ICO.fwd}</button></div>
-      <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(nmOf(occ)) : ''}</div><p class="wh">${esc(LG.WHERE[slot])}</p><ul>${li}</ul><p class="cap${cap ? ' on' : ''}">${cap ? esc(UI.cap) : ''}</p>`;
+      <div class="lv">${esc(lvTxt(slot))}${occ ? ' · ' + esc(NmOf(occ)) : ''}</div><p class="wh">${esc(LG.WHERE[slot])}</p><ul>${li}</ul><p class="cap${cap ? ' on' : ''}">${cap ? esc(UI.cap) : ''}</p>
+      <button type="button" id="rfeFace"><span class="cmp">${COMPASS}</span><span id="rfeFaceT"></span><i>Turn back</i></button>`;
+    UI.faceKey = ''; $('#rfeFace').onclick = () => { if(turned()) faceRoom(); }; faceStep(performance.now()); layoutVars();
     $('#rfePrev').onclick = () => { SND.unlock(); hop(prev); }; $('#rfeNext').onclick = () => { SND.unlock(); hop(next); }; if(S.view === 'room') requestAnimationFrame(reframe); }
   function openWho(){ const slot = S.room, w = $('#rfeWho'), occ = occupant(slot); let h = `<h4>${esc(LG.SLOTS[slot].name)}</h4>`;
-    const list = S.L.guests.filter(g => fits(g, slot) && g !== occ); if(!list.length) h += `<h4>${LG.SLOTS[slot].bed ? 'Nobody on this guest list needs another bed.' : 'Nothing on this guest list goes in a room like this.'}</h4>`;
-    for(const g of list.sort((a, b) => (S.at[a] ? 1 : 0) - (S.at[b] ? 1 : 0))) h += `<button type="button" data-g="${g}"><span class="em" style="background:${LG.GUESTS[g].col}">${gIco(g)}</span><span>${esc(nmOf(g))}<small>${S.at[g] ? 'Move from the ' + esc(LG.SLOTS[S.at[g]].name) : 'No room yet'}</small></span></button>`;
-    if(occ) h += `<button type="button" data-g="-"><span class="em" style="background:#8a8f99">${ICO.cross}</span><span>Nobody<small>Take ${esc(nmOf(occ))} out</small></span></button>`;
+    const list = S.L.guests.filter(g => fits(g, slot) && g !== occ); if(!list.length) h += `<h4>${LG.SLOTS[slot].bed ? 'Nobody on this guest list needs another bedroom.' : 'Nothing on this guest list goes in a room like this.'}</h4>`;
+    for(const g of list.sort((a, b) => (S.at[a] ? 1 : 0) - (S.at[b] ? 1 : 0))) h += `<button type="button" data-g="${g}"><span class="em" style="background:${LG.GUESTS[g].col}">${gIco(g)}</span><span>${esc(NmOf(g))}<small>${S.at[g] ? 'Move from the ' + esc(LG.SLOTS[S.at[g]].name) : 'No room yet'}</small></span></button>`;
+    if(occ) h += `<button type="button" data-g="-"><span class="em" style="background:#8a8f99">${ICO.cross}</span><span>Leave it empty<small>Take ${esc(nmOf(occ))} out</small></span></button>`;
     w.innerHTML = h; w.classList.add('on'); $('#rfeWhoBtn').setAttribute('aria-expanded', 'true');
     $$('button', w).forEach(b => b.onclick = () => { closeMenus(); if(b.dataset.g === '-') unplace(occ); else place(b.dataset.g, slot); drawRoom(); }); }
 
@@ -832,18 +961,18 @@
   function setMarks(){ for(const m of marks) m.b.remove(); marks.length = 0; if(S.view !== 'room' || !S.room) return;
     for(const q of (RINGS[S.room] || [])){ const b = el('button', {class: 'rfeMk', type: 'button', 'aria-label': 'Look at the ' + q.label.toLowerCase()}, `<i>${hasNote(S.room, q.note) ? ICO.check : ''}</i><span>${esc(q.label)}</span>`);
       const m = {b, q, at: ringAt(S.room, q), on: false}; b.onclick = e => { e.stopPropagation(); SND.unlock(); look(m); }; $('#rfeMarks').appendChild(b); marks.push(m); } }
-  function look(m){ if(S.busy || rig.move) return; const s = rig.st, a = yp([s.pos.x, s.pos.y, s.pos.z], m.at); s.tyaw = s.yaw + angDiff(s.yaw, a[0]); s.tpitch = clamp(a[1], -1.15, 1.25); s.zoom = Math.min(s.zoom, .82);
+  function look(m){ if(S.busy || rig.move) return; const s = rig.st, a = yp([s.pos.x, s.pos.y, s.pos.z], m.at); s.tyaw = s.yaw + angDiff(s.yaw, a[0]); s.tpitch = clamp(a[1], -1.15, 1.25); s.zoom = Math.min(s.zoom, .82); s.slow = false;
+    S.lookBack = a[1] > .6 ? performance.now() + (reduce ? 3000 : 5200) : 0;
     const slot = S.room, fresh = !hasNote(slot, m.q.note); SAVE.notes[slot] = SAVE.notes[slot] || {}; for(const n of [m.q.note].concat(m.q.also || [])) SAVE.notes[slot][n] = 1; save();
     UI.cap = m.q.t; UI.capSlot = slot; if(fresh){ SND.note(); ga('rfe3d_note', {room: slot, note: m.q.note}); } else SND.tap();
     setMarks(); drawRoom(fresh ? m.q.note : null); renderClues(true); objective(); S.lastAct = performance.now(); }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || S.view !== 'room';
-    const rc = $('#rfeRoom').getBoundingClientRect(), F = freeRect(), top = phone() ? F.t + 30 : 96, bot = phone() ? F.b - 52 : r.height - 150, padX = 40, placed = [];
+    const F = freeRect(), top = phone() ? F.t + 30 : 96, bot = phone() ? F.b - 52 : r.height - 150, padX = 40, placed = [], xl = (phone() ? r.left : Math.max(r.left, F.l - 14)) + padX, xr = r.left + r.width - padX;
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '';
-      if(behind || x < r.left - 10 || x > r.left + r.width + 10 || y < r.top - 60 || y > r.top + r.height + 60){ edge = (behind ? side < 0 : x < r.left + r.width / 2) ? 'L' : 'R'; x = edge === 'L' ? r.left + padX : r.left + r.width - padX; y = r.top + Math.max(top + 24, r.height * .45); }
-      else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); if(x < r.left + 88) edge = 'L'; else if(x > r.left + r.width - 88) edge = 'R'; }
-      if(!phone() && x < rc.right + 50 && y < rc.bottom + 40 && x > rc.left - 50) y = rc.bottom + 44;
+      if(behind || x < xl - 50 || x > xr + 50 || y < r.top - 60 || y > r.top + r.height + 60){ edge = (behind ? side < 0 : x < (xl + xr) / 2) ? 'L' : 'R'; x = edge === 'L' ? xl : xr; y = r.top + Math.max(top + 24, r.height * .45); }
+      else { x = clamp(x, xl, xr); y = clamp(y, r.top + top, r.top + bot); if(x < xl + 48) edge = 'L'; else if(x > xr - 48) edge = 'R'; }
       let n = 0; const hit = q => Math.abs(q[0] - x) < 150 && Math.abs(q[1] - y) < 44; while(placed.some(hit) && n++ < 10){ y += 46; if(y > r.top + bot) y = r.top + top + 24; }
       placed.push([x, y]); m.b.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; const cls = 'rfeMk on' + (hasNote(S.room, m.q.note) ? ' got' : '') + (edge ? ' edge ' + edge : ''); if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
 
@@ -865,8 +994,8 @@
     const tier = S.hintTier, slot = S.L.answer[g]; S.hintTier = Math.min(2, tier + 1); S.hints++; S.lastAct = performance.now(); $('#rfeHint').classList.remove('nudge'); ga('rfe3d_hint', {level: S.L.id, tier: tier + 1});
     const H2 = (S.L.hints || {})[g], own = S.L.clues.filter(c => LG.whoOf(c).indexOf(g) >= 0);
     if(tier === 0) say(H2 ? H2[0] : 'Start with ' + nmOf(g) + '. ' + (own[0] ? own[0].t : ''), 9000);
-    else if(tier === 1) say(H2 ? H2[1] : nmOf(g) + ' ' + LG.vb(g, 'belongs', 'belong') + (LG.SLOTS[slot].lv === 'garage' ? ' in a room with a car door.' : ' on the ' + LG.LEVEL_NAME[LG.SLOTS[slot].lv] + '.'), 9000);
-    else { const put = () => { say(`I will do it. ${nmOf(g)} ${LG.vb(g, 'goes', 'go')} in the ${LG.SLOTS[slot].name}.`, 7000);
+    else if(tier === 1) say(H2 ? H2[1] : NmOf(g) + ' ' + LG.vb(g, 'belongs', 'belong') + (LG.SLOTS[slot].lv === 'garage' ? ' in a room with a car door.' : ' on the ' + LG.LEVEL_NAME[LG.SLOTS[slot].lv] + '.'), 9000);
+    else { const put = () => { say(`I will do it. ${NmOf(g)} ${LG.vb(g, 'goes', 'go')} in the ${LG.SLOTS[slot].name}.`, 7000);
           // what I show you counts as seen
           for(const c of own) for(const n of LG.needs(c, Object.assign({}, S.at, {[g]: slot}))){ if(n[1] === 'light') SAVE.light[n[0]] = 1; else if(n[2]){ SAVE.notes[n[0]] = SAVE.notes[n[0]] || {}; SAVE.notes[n[0]][n[1]] = 1; } else SAVE.seen[n[0]] = 1; } save();
           if(covered(slot) && S.view === 'over') setUpper(!S.upperOn); place(g, slot, {hint: true}); S.hintFor = null; S.hintTier = 0; };
@@ -883,17 +1012,22 @@
   function nextLevel(){ const i = LG.LEVELS.findIndex(L => !SAVE.solved[L.id]); return i < 0 ? 'daily' : i; }
   function titleCard(){ closeCard(); try{ orbitFit(); }catch(e){} const first = !Object.keys(SAVE.solved).length, nx = nextLevel();
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">A logic puzzle inside a real house</p><h2 id="rfeH">Room for Everyone</h2>
-      <p class="lede">Guests are on their way to 118 Hillside Drive, and every one of them has asked for something. Work out who sleeps where. Some of what you need is written in the clues. The rest you find by going into the rooms and looking.</p>
+      <p class="lede">Snowball the cat lives at 118 Hillside Drive, and his friends are coming to stay. Every one of them has asked for something. Work out who gets which room. Some of what you need is written in the clues. The rest you find by going into the rooms and looking.</p>
       <ul class="how"><li>${ICO.bed}Tap a guest, then a room</li><li>${ICO.house}Tap a room on its own to go inside</li><li>${ICO.ring}Tap gold rings and drag the sun to see what a room has</li></ul>
       ${first ? '' : levelList()}
       <div class="acts"><button class="rfeBtn primary" type="button" id="rfeGo" style="min-width:150px;min-height:52px;font-size:17px">${first ? 'Meet the guests' : nx === 'daily' ? 'Play today’s guest list' : 'Play puzzle ' + (nx + 1)}</button>${sndBtn()}</div>
-      <p class="foot">Five puzzles and a new one every day, each with exactly one answer. The house is real: 118 Hillside Drive in Woodside, California, and it is for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day.</p></div>`);
+      <p class="foot">Five puzzles and a new one every day, each with exactly one answer. The house is real: 118 Hillside Drive in Woodside, California, and it is for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day. The animals are made up.</p></div>`);
     document.body.appendChild(c); bindSnd0(); const go = v => { SND.unlock(); SND.tap(); introCard(v === 'daily' ? LG.daily(LG.dayNumber(new Date())) : LG.LEVELS[v]); };
     $('#rfeGo').onclick = () => go(nx); $$('#rfeCard .lv button').forEach(b => b.onclick = () => go(b.dataset.lv === 'daily' ? 'daily' : +b.dataset.lv)); try{ $('#rfeGo').focus({preventScroll: true}); }catch(e){} }
+  // who takes a bedroom and what does not: said once, on the card for each puzzle
+  function ruleTxt(L){ const join = a => a.length > 2 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join(' and ');
+    const ps = L.guests.filter(LG.isP), ts = L.guests.filter(g => !LG.isP(g)), tn = ts.map((g, i) => i ? nmOf(g) : NmOf(g));
+    return `${join(ps.map(nmOf))} each get a bedroom of their own.` + (ts.length ? ` ${join(tn)} ${ts.length > 1 ? 'go in rooms that are not bedrooms' : 'goes in a room that is not a bedroom'}: the loft, the office, the lounge or the garage.` : ''); }
   function introCard(L){ closeCard(); if(!L){ titleCard(); return; } try{ orbitFit(); }catch(e){} const i = LG.LEVELS.indexOf(L);
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">${i >= 0 ? 'Puzzle ' + (i + 1) + ' of ' + LG.LEVELS.length : new Date().toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})}</p><h2 id="rfeH">${esc(L.title)}</h2>
       <p class="lede">${esc(L.story)}</p>
-      <ul class="who">${L.guests.map(g => `<li><span class="em" style="background:${LG.GUESTS[g].col}">${gIco(g)}</span><span><b>${esc(nmOf(g))}</b>${esc(LG.GUESTS[g].bio)}</span></li>`).join('')}</ul>
+      <ul class="who">${L.guests.map(g => `<li><span class="em" style="background:${LG.GUESTS[g].col}">${gIco(g)}</span><span><b>${esc(NmOf(g))}</b>${esc(LG.GUESTS[g].bio)}</span></li>`).join('')}</ul>
+      <p class="rule">${esc(ruleTxt(L))}</p>
       <div class="acts"><button class="rfeBtn primary" type="button" id="rfeGo" style="min-width:150px;min-height:52px;font-size:17px">Show me the house</button><button class="rfeBtn" type="button" id="rfeOther">Other puzzles</button></div></div>`);
     document.body.appendChild(c); $('#rfeGo').onclick = () => { SND.unlock(); SND.goal(); closeCard(); startLevel(L); }; $('#rfeOther').onclick = () => titleCard(); try{ $('#rfeGo').focus({preventScroll: true}); }catch(e){} }
   function startLevel(L, again){ if(!L.answer) L.answer = LG.prove(L).answer; const begin = () => { S.L = L; S.li = LG.LEVELS.indexOf(L); S.at = {}; S.sel = null; S.done = false; S.t0 = 0; S.tEnd = 0; S.hints = 0; S.clean = true; S.status = []; S.hintFor = null; S.hintTier = 0; S.started = true; S.lastAct = performance.now();
@@ -903,7 +1037,7 @@
       S.view = 'over'; HOUSE.over(); layoutVars(); refresh(); orbitFit(); layoutVars(); orbitFit(); ga('rfe3d_start', {level: L.id});
       const u = new URL(location.href); u.searchParams.set('puzzle', L.daily ? 'daily' : String(S.li + 1)); try{ history.replaceState(null, '', u); }catch(e){}
       const bc = $('#rfeBackCard'); if(bc) bc.remove();
-      if(!SAVE.tips.first){ SAVE.tips.first = 1; save(); setTimeout(() => { if(!S.done && !Object.keys(S.at).length) say('Pick somebody up, then tap a room. Or tap a room and go and have a look first.', 8000); }, 1800); } };
+      if(!SAVE.tips.first){ SAVE.tips.first = 1; save(); setTimeout(() => { if(!S.done && !Object.keys(S.at).length) say('Pick a guest, then tap a room. Or tap a room and go and have a look first.', 8000); }, 1800); } };
     if(S.view === 'room'){ S.busy = false; rig.move = null; dissolve(() => { S.view = 'over'; S.room = null; SUN.show(null); for(const m of marks) m.b.remove(); marks.length = 0; document.documentElement.classList.remove('rfe-in', 'rfe-clues'); begin(); rigCut(orbitPose()); }); }
     else { begin(); rigCut(orbitPose()); } }
 
@@ -933,21 +1067,21 @@
     const nextTxt = last ? 'Play one again' : nx === 'daily' ? 'Play today’s guest list' : 'Next puzzle: ' + LG.LEVELS[nx].title;
     const learned = {warm: 'You have just learned what the listing takes a page to say: a primary suite upstairs with its own bath, three bedrooms beside the kitchen, and two more downstairs.',
       sun: 'Now you know where the light goes in this model of the house: morning sun at the front, evening sun at the back, and a bedroom the old oak keeps in shade.',
-      drums: 'Three levels, with a flight of stairs between each. That is how a drum kit and a light sleeper can share this house.',
-      stars: 'A loft, a skylit office and a lounge that opens onto the terrace, on top of six bedrooms. There is a room here for whatever people bring with them.',
+      wheel: 'Three levels, with a flight of stairs between each. That is how a squeaky wheel and a light sleeper can share this house.',
+      stars: 'A loft, a skylit office and a lounge that opens onto the terrace, on top of six bedrooms. There is a room here for whatever a visitor brings along.',
       full: 'Six bedrooms on three levels, three full baths, and still a loft, an office, a lounge and a garage left over. Room for everyone.'}[L.id] || 'Six bedrooms on three levels, with a loft, a skylit office and a lounge besides. Every day the guest list changes and they all still fit.';
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">${i >= 0 ? 'Puzzle ' + (i + 1) + ' of ' + LG.LEVELS.length + ' · ' + esc(L.title) : 'Today’s guest list'}</p><h2 id="rfeH">Everyone has a room.</h2>
-      <p class="lede">${esc(L.epi || 'The lights are on, the beds are made, and nobody is on the sofa.')}</p>
+      <p class="lede">${esc(L.epi || 'The lights are on, every bed and basket is taken, and nobody is on the sofa.')}</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint from Snowball' : 'hints from Snowball'}</span></div></div>
       ${S.hints === 0 || S.clean ? `<div class="badges">${S.hints === 0 ? '<span>No hints</span>' : ''}${S.clean ? '<span>Never broke a clue</span>' : ''}</div>` : ''}
       <div class="acts" style="margin-bottom:14px"><button class="rfeBtn dark" type="button" id="rfeNextB" style="min-height:52px;font-size:16.500px">${esc(nextTxt)}</button></div>
-      <div class="cta"><b>The house is real, and it is for sale.</b><span>${esc(learned)} It is 118 Hillside Drive in Woodside, California, and you could live here.</span>
+      <div class="cta"><b>The house is real, and it is for sale.</b><span>${esc(learned)} It is 118 Hillside Drive in Woodside, California, and you can walk through it in person.</span>
         <div class="acts"><a class="rfeBtn primary" href="/#contact" id="rfeSee" style="min-height:52px;font-size:17px">See it in person</a><a class="rfeBtn light" href="/tour/" id="rfeFree">Explore the house</a></div></div>
       <div class="more"><button class="rfeBtn" type="button" id="rfeShare">Share</button><a class="rfeBtn" href="/games/">More games</a><button class="rfeBtn" type="button" id="rfeStay">Look at the house</button></div></div>`);
     document.body.appendChild(c); $('#rfeSee').onclick = () => ga('rfe3d_cta', {cta: 'see_in_person'}); $('#rfeFree').onclick = () => ga('rfe3d_cta', {cta: 'explore'});
     $('#rfeNextB').onclick = () => { SND.unlock(); if(last) titleCard(); else introCard(nx === 'daily' ? LG.daily(LG.dayNumber(new Date())) : LG.LEVELS[nx]); };
     $('#rfeStay').onclick = () => { closeCard(); const b = el('button', {class: 'rfeBtn dark shadow', type: 'button', id: 'rfeBackCard', style: 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:75'}, 'Back to the results'); document.body.appendChild(b); b.onclick = () => { b.remove(); endCard(); }; };
-    $('#rfeShare').onclick = async () => { const url = 'https://118hillside.com/games/room/' + (L.daily ? '?puzzle=daily' : '?puzzle=' + (i + 1)), text = L.daily ? `I found a room for everyone on today’s guest list at 118 Hillside Drive in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.` : `I found a room for everyone at 118 Hillside Drive: “${L.title}” in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.`; ga('rfe3d_share');
+    $('#rfeShare').onclick = async () => { const url = 'https://118hillside.com/games/room/' + (L.daily ? '?puzzle=daily' : '?puzzle=' + (i + 1)), text = L.daily ? `I found a room for every animal on today’s guest list at 118 Hillside Drive in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.` : `I found a room for every animal at 118 Hillside Drive: “${L.title}” in ${fmtT(t)}${S.hints ? '' : ', with no hints'}. Your turn.`; ga('rfe3d_share');
       try{ if(navigator.share){ await navigator.share({title: 'Room for Everyone', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
       try{ await navigator.clipboard.writeText(text + ' ' + url); $('#rfeShare').textContent = 'Link copied'; }catch(e){ $('#rfeShare').textContent = url; } };
     try{ $('#rfeNextB').focus({preventScroll: true}); }catch(e){} }
@@ -958,7 +1092,7 @@
     try{ if(UI.live){ rigStep(now, dt); PAWN.step(now); TINT.step(now); }
       // nothing may stay locked: a step that never reports back is released
       if(S.busy && !rig.move){ if(!frame.busyAt) frame.busyAt = now; else if(now - frame.busyAt > 3200){ S.busy = false; frame.busyAt = 0; const s = $('#rfeShot'); if(s) s.remove(); } } else frame.busyAt = 0;
-      if(S.started){ labelsStep(); marksStep(); bubStep();
+      if(S.started){ labelsStep(); marksStep(); bubStep(); faceStep(now);
         if(!S.done){ const ts = fmtT(elapsed()); if(ts !== lastTime){ lastTime = ts; $('#rfeTime').textContent = ts; }
           if(now - S.lastAct > 90000) $('#rfeHint').classList.add('nudge'); } }
     }catch(e){ if(!frame.err){ frame.err = true; console.error('[room] frame', e); } } }
@@ -971,7 +1105,9 @@
     // the clearest place to stand in a room, and a clear spot for a game piece
     stand(slot, solids, step){ solids = solids || dev.solids(); const G = GEO[slot], rc = new THREE.Raycaster(), cand = [], D = []; for(let i = 0; i < 8; i++) D.push(new V3(Math.cos(i * Math.PI / 4), 0, Math.sin(i * Math.PI / 4)));
       const clr = (x, z, hs, cap) => { let m = cap; for(const h of hs){ const o = new V3(x, G.fy + h, z); for(const d of D){ rc.set(o, d); rc.far = m; const hit = rc.intersectObjects(solids, false)[0]; if(hit) m = Math.min(m, hit.distance); if(m < 1) return m; } } return m; };
-      step = step || 1.4; for(let x = G.bb[0] + 1.4; x < G.bb[2] - 1.3; x += step) for(let z = G.bb[1] + 1.4; z < G.bb[3] - 1.3; z += step){ if(!inPoly(x, z, G.P)) continue; const c = clr(x, z, [1.2, 4.6], 5); if(c >= 1) cand.push({x: +x.toFixed(2), z: +z.toFixed(2), c: +c.toFixed(2)}); }
+      // you must be standing on the floor: a ray dropped from eye height, here and a step to each side, has to reach it (a spot on a bed reads as clear to the side rays, which start inside the mattress)
+      const DN = new V3(0, -1, 0), floor = (x, z) => { for(const [dx, dz] of [[0, 0], [.7, 0], [-.7, 0], [0, .7], [0, -.7]]){ rc.set(new V3(x + dx, G.fy + 5.2, z + dz), DN); rc.far = 8; const hit = rc.intersectObjects(solids, false)[0]; if(!hit || hit.point.y - G.fy > .35) return false; } return true; };
+      step = step || 1.4; for(let x = G.bb[0] + 1.4; x < G.bb[2] - 1.3; x += step) for(let z = G.bb[1] + 1.4; z < G.bb[3] - 1.3; z += step){ if(!inPoly(x, z, G.P) || !floor(x, z)) continue; const c = clr(x, z, [1.2, 4.6], 5); if(c >= 1) cand.push({x: +x.toFixed(2), z: +z.toFixed(2), c: +c.toFixed(2)}); }
       cand.sort((a, b) => b.c - a.c); return cand; },
     // is there a clear line from where you stand to each thing worth a look
     los(solids){ solids = solids || dev.solids(); const rc = new THREE.Raycaster(), out = {}; for(const slot of ORDER){ const st = standOf(slot), o = new V3(...st.pos); out[slot] = (RINGS[slot] || []).map(q => { const at = new V3(...ringAt(slot, q)), d = at.clone().sub(o), L = d.length(); rc.set(o, d.normalize()); rc.far = L - .4; const hit = rc.intersectObjects(solids, false)[0];
@@ -983,7 +1119,7 @@
           s += String(Math.round(lit / pts.length * 9)); } return s; };
       for(const o of M.openings){ if(!((o.glazed || 0) >= .5)) continue; const A = o.spaces.A, B = o.spaces.B; if(!((A === sp && B === 'EXTERIOR') || (B === sp && A === 'EXTERIOR'))) continue;
         const op = opening(o.id), pts = []; for(const a of [-.32, 0, .32]) for(const v of [.25, .5, .75]) pts.push(op.P(a * o.width, o.sill + (o.head - o.sill) * v, -.6)); out.push({id: o.id, lit: scan(pts, new V3(op.out[0], 0, op.out[1]), false)}); }
-      const skies = [].concat(...(RINGS[slot] || []).filter(q => q.sky).map(q => q.sky));
+      const skies = [].concat(...(RINGS[slot] || []).filter(q => q.sky && !q.beside).map(q => q.sky));
       for(const id of skies){ const it = skyItem(id), r = it && it.rects && it.rects[0]; if(!r) continue; const pts = []; for(const a of [-.6, 0, .6]) for(const b of [-.6, 0, .6]) pts.push(new V3(r.c.x + r.u.x * r.hu * a + r.v.x * r.hv * b, r.c.y + r.u.y * r.hu * a + r.v.y * r.hv * b + .5, r.c.z + r.u.z * r.hu * a + r.v.z * r.hv * b)); out.push({sk: id, lit: scan(pts, new V3(0, 1, 0), true)}); }
       return out; },
     // the model against room-logic.js: levels, hallways, walls, what is over what, and the sun
@@ -1009,7 +1145,7 @@
     // beds in the bedrooms and the oak outside the windows: the game needs the furniture and the trees on, and puts the visitor's own saved choice back straight away
     for(const [id, k] of [['furnBtn', 'hillside.furniture'], ['treesBtn', 'hillside.trees']]) try{ const b = document.getElementById(id); if(b && b.getAttribute('aria-pressed') === 'false'){ const was = localStorage.getItem(k); b.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){}
     const base = (document.currentScript && document.currentScript.src) || '';
-    loadScript('../assets/room3d/room-logic.js?v=1', () => loadScript('../assets/room3d/room-data.js?v=1', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
+    loadScript('../assets/room3d/room-logic.js?v=2', () => loadScript('../assets/room3d/room-data.js?v=2', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
         try{ measure(); buildUI(); buildLabels(); TINT.build(); S.view = 'title'; HOUSE.over(); orbitFit(); rigCut(orbitPose()); UI.live = true; applyHour(13, true); setTimeout(() => { try{ dev.verify(); }catch(e){ console.warn('[room] verify', e); } }, 4000); }catch(e){ console.error('[room] build', e); }
         requestAnimationFrame(frame);
         const first = () => { document.documentElement.classList.add('rfe-up'); const v = Q.get('puzzle'), n = parseInt(v, 10);
@@ -1018,13 +1154,13 @@
         const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
             if(o < .03 || n++ > 40) first(); else setTimeout(w, 120); })(); };
         const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); clear(); } }); mo.observe(document.body, {childList: true}); } else clear(); };
-      if(window.SNOWBALL) go(); else loadScript('../assets/snowball.js?v=35', go); })); }
+      if(window.SNOWBALL) go(); else loadScript('../assets/snowball.js?v=37', go); })); }
   // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
   window.ROOM3D = {S, SAVE, rig, GEO, RINGS, SUN, PAWN, HOUSE, sound: SND, dev, get logic(){ return LG; }, get data(){ return DATA; },
     place, unplace, select, enter, leave, hop, hint, setUpper, setHour, watchDay, look: i => look(marks[i]), marks, startLevel, titleCard, introCard, endCard,
-    solve(){ if(S.L) for(const g of (S.L.order || S.L.guests)) if(S.at[g] !== S.L.answer[g]) place(g, S.L.answer[g], {hint: true}); }, standOf, orbitFit, freeRect};
+    solve(){ if(S.L) for(const g of (S.L.order || S.L.guests)) if(S.at[g] !== S.L.answer[g]) place(g, S.L.answer[g], {hint: true}); }, standOf, orbitFit, freeRect, facing, faceRoom};
 })();
 
 /* preview hosts: when the site is served from a sub-path (a test mirror), point root links like /games/ at that copy; no effect on 118hillside.com */
