@@ -12648,9 +12648,11 @@ function v27Flagstones(){
 window.HWGAMES = (function(){ var noop = function(){}, G = {games: [], active: null, retired: true};
   var current = function(){ try{ window.GAMESMENU && GAMESMENU.open(document.querySelector('.v31games')); }catch(e){} };
   G.register = function(g){ if(g && !G.games.some(function(x){ return x.id === g.id; })) G.games.push(g); };
-  G.start = current; G.stop = function(){ G.active = null; }; G.loadSfx = function(cb){ cb && cb(); }; G.sfx = noop; G.track = noop;
-  Object.defineProperty(G, '_renderMenu', {get: function(){ return noop; }, set: noop});   // the old menu, its pill and its row are never built
-  Object.defineProperty(G, 'openMenu', {get: function(){ return current; }, set: noop});
+  G.loadSfx = function(cb){ cb && cb(); }; G.sfx = noop; G.track = noop;
+  var stop = function(){ G.active = null; }, fixed = function(k, v){ Object.defineProperty(G, k, {get: function(){ return v; }, set: noop}); };   // fixed: later code that wraps or replaces these is ignored
+  fixed('start', current); fixed('stop', stop);   // (the notice's old wrapper marked "a mini-game is running" on start, which hid the 'Illustrative model' notice for good)
+  fixed('_renderMenu', noop);                     // the old menu, its pill and its row are never built
+  fixed('openMenu', current);
   return G; })();
 window.HWGAMES = window.HWGAMES || (function(){
   var G = {games: [], active: null};
