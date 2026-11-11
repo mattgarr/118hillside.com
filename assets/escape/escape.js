@@ -84,7 +84,10 @@
 
   /* ------------------------------------------------------------------ chalk drawing (canvas) for the pocket door face */
   function chalkTexture(draw, w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.clearRect(0, 0, w, h);
-    x.strokeStyle = 'rgba(245,242,236,.92)'; x.fillStyle = 'rgba(245,242,236,.92)'; x.lineCap = 'round'; x.lineJoin = 'round'; draw(x, w, h);
+    const kg = x.createLinearGradient(0, 0, w, h); kg.addColorStop(0, '#d9bd8f'); kg.addColorStop(1, '#ccab76'); x.fillStyle = kg; x.fillRect(14, 30, w - 28, h - 44);   // kraft sheet
+    for(let i = 0; i < 900; i++){ x.fillStyle = `rgba(90,60,25,${Math.random() * .06})`; x.fillRect(14 + Math.random() * (w - 28), 30 + Math.random() * (h - 44), 2, 1); }
+    x.fillStyle = 'rgba(240,226,190,.88)'; x.save(); x.translate(60, 36); x.rotate(-.18); x.fillRect(-50, -14, 100, 28); x.restore(); x.save(); x.translate(w - 60, 36); x.rotate(.16); x.fillRect(-50, -14, 100, 28); x.restore();   // tape
+    x.strokeStyle = '#1d1f26'; x.fillStyle = '#1d1f26'; x.lineCap = 'round'; x.lineJoin = 'round'; draw(x, w, h);
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
   function chalkLine(x, pts, w){ x.lineWidth = w; x.beginPath(); pts.forEach((p, i) => { const j = (Math.random() - .5) * w * .25; i ? x.lineTo(p[0] + j, p[1] + j) : x.moveTo(p[0], p[1]); }); x.stroke(); }
 
@@ -125,7 +128,7 @@
     const shadeTop = win.head - .28 - (win.head - .28 - win.sill) * .26;
     const [cx] = W2(win.center[0], win.center[1]), nrm = W2(win.normal[0], win.normal[1]), xw = cx - nrm[0] * (win.thickness || .4) / 2;
     // read from the kitchen side, facing the windows: up = toward the glass (-x), right = toward the front of the house (-z)
-    const frame = {o: [13.1, 23.9], right: [0, -1], up: [-1, 0], size: 1.05, gap: 1.55, stroke: .3, floorY: .02};
+    const frame = {o: [9.95, 23.7], right: [0, -1], up: [-1, 0], size: 1.0, gap: 1.5, stroke: .28, floorY: .02};
     const polys = cutoutsFor(CODE, frame, T, {xw});
     PATCH.list.push(makePatch({win: 'WN-L1-03', room: 'SP-L1-GREAT', ppf: 40, shadeTop, mullions: [0], cutouts: polys}));
     paperMesh(polys, .03);
@@ -143,10 +146,10 @@
       x.font = 'italic 34px Georgia, serif'; x.fillText('— E.', 280, 600);
       chalkLine(x, [[60, 640], [96, 600], [132, 640]], 3); chalkLine(x, [[78, 620], [114, 620]], 3);
     }, 380, 680);
-    const chalk = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.86), new THREE.MeshBasicMaterial({map: tex, transparent: true, depthWrite: false, toneMapped: false, opacity: .9}));
+    const chalk = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 3.13), new THREE.MeshStandardMaterial({map: tex, transparent: true, roughness: .95}));
     chalk.name = 'esc-chalk'; chalk.renderOrder = 3; chalk.rotation.y = -Math.PI / 2;
     const leaf = pd && pd.parts && pd.parts.find(q => q.k === 0);
-    if(leaf && leaf.piv && leaf.base){ leaf.piv.add(chalk); chalk.position.set(22.1 - leaf.base.x, 3.55 - leaf.base.y, 9.52 - leaf.base.z); }
+    if(leaf && leaf.piv && leaf.base){ leaf.piv.add(chalk); chalk.position.set(22.08 - leaf.base.x, 4.1 - leaf.base.y, 9.52 - leaf.base.z); }
     else { H.grp('main').add(chalk); chalk.position.set(22.1, 3.55, 9.52); chalk.visible = false; }
     S.pocket = pd;
     // interactables
@@ -154,21 +157,21 @@
       {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [18.8, 4.4, 6.6], look: [19.6, 1.6, 11.6]}, open: openFridge},
       {id: 'pocket', label: 'Pocket door', p: [22.0, 3.6, 9.5], view: {pos: [17.2, 4.6, 9.6], look: [22.0, 3.7, 9.5]}, open: openPocket},
       {id: 'paper', label: 'Paper on the glass', p: [5.0, 3.8, 22.0], view: {pos: [9.6, 4.4, 21.0], look: [4.8, 3.8, 21.6]}, open: openPaper},
-      {id: 'floor', label: 'Dining floor', p: [11.8, .3, 22.0], hidden: true, view: {pos: [17.6, 6.4, 21.4], look: [11.2, 0, 21.8]}, open: () => {}}];
+      {id: 'floor', label: 'Dining floor', p: [9.0, .3, 21.6], hidden: true, view: {pos: [15.6, 6.2, 21.6], look: [9.0, 0, 21.6]}, open: () => {}}];
     S.code = CODE; S.T = T;
     // hints, by stage
     S.hint = () => {
       if(!S.doorClosed) return [
         ['Elena wrote on something that only shows when the kitchen is shut up for the night.'],
         ['Snowball wanders over to the pocket door between the fridge and the coffee bar, and sits.', () => { goView('coffee'); catAt([20.6, 0, 10.6]); }],
-        ['Tap the pocket door and slide it closed. The drawing is on its face.', () => { goView('coffee'); catAt([20.6, 0, 10.6]); }]];
+        ['Tap the pocket door and slide it closed. Elena taped a drawing to its face.', () => { goView('coffee'); catAt([20.6, 0, 10.6]); }]];
       if(!S.sawDigits) return [
-        ['The chalk shows a low sun, the two big dining windows and a clock. Something happens in that room at a certain time.'],
-        ['Snowball pads into the dining room and lies down right where the sun will land.', () => { goView('dining'); catAt([12.6, 0, 26.4]); }],
+        ['The drawing shows a low sun, the two big dining windows and a clock. Something happens in that room at a certain time.'],
+        ['Snowball pads into the dining room and lies down right where the sun will land.', () => { goView('dining'); catAt([9.6, 0, 26.6]); }],
         ['Drag the sun to 4:00 PM, then look at the dining floor in front of the windows.', () => { goView('dining'); setSlider(16); }]];
       return [
         ['The shadows only make sense from one side of the room. Stand where you would to cook.'],
-        ['Snowball walks around to the kitchen side and looks toward the windows.', () => { flyView({pos: [17.6, 6.4, 21.4], look: [11.2, 0, 21.8]}); catAt([15.4, 0, 21.6]); }],
+        ['Snowball walks around to the kitchen side and looks toward the windows.', () => { flyView({pos: [15.6, 6.2, 21.6], look: [9.0, 0, 21.6]}); catAt([13.2, 0, 19.2]); }],
         ['The code is ' + CODE.split('').join(' ') + '.']]; };
   }
   /* ------------------------------------------------------------------ camera */
@@ -177,7 +180,7 @@
 
   /* ------------------------------------------------------------------ UI */
   const css = `
-  html.esc header.bar nav.tabs, html.esc #card, html.esc #labels, html.esc #wplabels, html.esc #ovtag, html.esc #tod, html.esc #viewBtn, html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp{display:none!important}
+  html.esc header.bar nav.tabs, html.esc #card, html.esc header.bar .plate, html.esc #aboutBtn, html.esc #labels, html.esc #wplabels, html.esc #ovtag, html.esc #tod, html.esc #viewBtn, html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp{display:none!important}
   #escHud{position:fixed;left:0;right:0;top:0;z-index:60;pointer-events:none;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;color:#1f2a3a}
   #escHud .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:64px 14px 0}
   .escChip{pointer-events:auto;background:rgba(251,250,247,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:16px;box-shadow:0 8px 30px rgba(15,20,35,.18);padding:10px 14px}
@@ -267,7 +270,7 @@
   function frame(){ if(!S.started){ requestAnimationFrame(frame); return; }
     for(const it of ITEMS){ if(it.hidden) continue; let m = marks.get(it.id); if(!m){ m = el('button', {class: 'escMark', type: 'button', 'aria-label': it.label}, `<span>${esc(it.label)}</span>`); m.onclick = e => { e.stopPropagation(); interact(it); }; document.body.appendChild(m); marks.set(it.id, m); }
       const s = (performance.now() % 3 < 1 || !m._s) ? visible(it.p) : m._s; m._s = s;
-      if(s && !S.done){ m.style.left = s[0] + 'px'; m.style.top = s[1] + 'px'; m.classList.add('on'); m.classList.toggle('seen', !!S.seen[it.id]); } else m.classList.remove('on'); }
+      if(s && !S.done && !panel.classList.contains('on')){ m.style.left = s[0] + 'px'; m.style.top = s[1] + 'px'; m.classList.add('on'); m.classList.toggle('seen', !!S.seen[it.id]); } else m.classList.remove('on'); }
     const e = elapsed(); const te = $('#escTime'); if(te && !S.done) te.textContent = fmtT(e);
     requestAnimationFrame(frame); }
   function interact(it){ S.seen[it.id] = true; ga('esc_look', {item: it.id}); if(it.view) flyView(it.view, .9); it.open(it); }
@@ -276,11 +279,11 @@
     if(best && visible(best.it.p)){ interact(best.it); return true; } return false; };
 
   /* ------------------------------------------------------------------ Easy: the three things */
-  function openPocket(){ const pd = S.pocket, closed = pd ? pd.t < .5 : S.doorClosed;
-    openPanel(`<h3>The pocket door</h3><p>${closed ? 'Slid shut. There is a chalk drawing on it: a low sun, the two big dining windows, an arrow, and a clock.' : 'It disappears into the wall between the fridge and the coffee bar. The attic cabinet sits above it.'}</p>` +
+  function openPocket(){ const pd = S.pocket, closed = S.doorShut != null ? S.doorShut : (pd ? pd.t < .5 : false);
+    openPanel(`<h3>The pocket door</h3><p>${closed ? 'Slid shut. Taped to its face: a sheet of kraft paper with a drawing in marker. A low sun, the two big dining windows, an arrow, and a clock.' : 'It disappears into the wall between the fridge and the coffee bar. The attic cabinet sits above it.'}</p>` +
       `<button class="escBtn dark" type="button" id="escSlide">${closed ? 'Slide it open' : 'Slide it closed'}</button>`);
-    $('#escSlide').onclick = () => { if(pd && H.door28Toggle) H.door28Toggle(pd); const nowClosed = !closed; S.doorClosed = S.doorClosed || nowClosed;
-      if(nowClosed){ setTimeout(() => { flyView({pos: [18.2, 4.4, 9.5], look: [22.0, 3.6, 9.5]}, .8); say('Chalk. Elena draws everything.'); }, 650); ga('esc_step', {step: 'pocket'}); }
+    $('#escSlide').onclick = () => { if(pd && H.door28Toggle) H.door28Toggle(pd); const nowClosed = !closed; S.doorShut = nowClosed; S.doorClosed = S.doorClosed || nowClosed;
+      if(nowClosed){ setTimeout(() => { flyView({pos: [18.4, 4.6, 9.5], look: [22.0, 4.0, 9.5]}, .8); say('Elena draws everything.'); }, 650); ga('esc_step', {step: 'pocket'}); }
       setTimeout(openPocket, 700); }; }
   function openPaper(){ openPanel(`<h3>Paper on the glass</h3><p>Small scraps of white paper taped to the inside of the dining window. Squashed, lopsided shapes. They don't look like anything from here.</p>` +
       `<p>${S.doorClosed ? 'Maybe they are not meant to be looked at.' : ''}</p>`); }
@@ -290,7 +293,7 @@
       `<div class="escPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-n="${n}">${n}</button>`).join('')}<button type="button" data-n="c" aria-label="Clear">⌫</button><button type="button" data-n="0">0</button><span></span></div>`);
     draw(); panel.querySelectorAll('.escPad button').forEach(b => b.onclick = () => { const n = b.dataset.n; if(n === 'c'){ cur = cur.slice(0, -1); draw(); return; } if(cur.length >= 3) return; cur += n; draw(); beep(520 + cur.length * 80, .06);
       if(cur.length === 3){ if(cur === S.code){ draw('ok'); beep(880, .18); setTimeout(win, 650); } else { draw('bad'); beep(160, .3, 'square'); S.pen += 10; setTimeout(() => { cur = ''; draw(); }, 600); } } }); }
-  function checkDigits(){ if(S.sawDigits || !S.T) return; if(Math.abs(HOUR - S.T) <= .26){ S.sawDigits = true; ga('esc_step', {step: 'digits'}); setTimeout(() => say('Hm. Those shadows on the floor look like numbers. From the right side.'), 900); } }
+  function checkDigits(){ if(S.sawDigits || !S.T) return; if(Math.abs(HOUR - S.T) <= .26){ S.sawDigits = true; ga('esc_step', {step: 'digits'}); setTimeout(() => say('Snowball\'s tail twitches. Something just happened in the dining room.'), 900); } }
 
   /* ------------------------------------------------------------------ hints (Snowball) */
   let hintIx = {};
