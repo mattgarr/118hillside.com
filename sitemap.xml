@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://118hillside.com/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image><image:loc>https://118hillside.com/images/front-exterior-2559.jpg</image:loc></image:image>
@@ -22,28 +22,28 @@
   </url>
   <url>
     <loc>https://118hillside.com/tour/</loc>
-    <lastmod>2026-11-07</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image><image:loc>https://118hillside.com/images/tour-preview.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://118hillside.com/woodside/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <image:image><image:loc>https://118hillside.com/images/hills-view-1284.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://118hillside.com/games/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <image:image><image:loc>https://118hillside.com/images/games-preview.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://118hillside.com/games/room/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <image:image><image:loc>https://118hillside.com/images/room-preview.jpg</image:loc></image:image>
@@ -57,14 +57,14 @@
   </url>
   <url>
     <loc>https://118hillside.com/games/deck/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <image:image><image:loc>https://118hillside.com/images/deck-preview.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://118hillside.com/games/snowball/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <image:image><image:loc>https://118hillside.com/images/snowball-preview.jpg</image:loc></image:image>
