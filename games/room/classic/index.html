@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Room for Everyone | A floor-plan puzzle at 118 Hillside Drive, Woodside</title>
+<meta name="description" content="A puzzle on the real floor plan of 118 Hillside Drive in Woodside: find every household the rooms that fit how they live.">
+<link rel="canonical" href="https://118hillside.com/games/room/">
+<meta name="robots" content="noindex,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="118 Hillside Drive, Woodside">
+<meta property="og:title" content="Room for Everyone | 118 Hillside Drive">
+<meta property="og:description" content="Find every household the rooms that fit how they live, on the real floor plan of a house in Woodside.">
+<meta property="og:url" content="https://118hillside.com/games/room/">
+<meta property="og:image" content="https://118hillside.com/images/room-preview.jpg">
+<meta property="og:image:alt" content="Names on painter's tape placed on the floor plan of 118 Hillside Drive">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Room for Everyone | 118 Hillside Drive">
+<meta name="twitter:description" content="Find every household the rooms that fit how they live, on the real floor plan of a house in Woodside.">
+<meta name="twitter:image" content="https://118hillside.com/images/room-preview.jpg">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef1ef">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TML59CSLTY"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-TML59CSLTY");</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#eef1ef; --sheet:#ffffff; --grid:#e2eaee; --grid5:#cfdde5;
+  --ink:#22313a; --soft:#5d6b72; --line:#d9dfdf; --wall:#23303a; --glass:#93b9d0;
+  --tape:#66ade6; --tape-edge:#4f97d2; --tape-ink:#0f3556;
+  --kraft:#d6b98f; --kraft-edge:#c3a273; --kraft-ink:#45321c;
+  --ok:#2e7b59; --ok-bg:#e3f1ea; --miss:#a33d3d; --miss-bg:#f7e6e4;
+  --lower:#eaf2ed; --main:#fbfbf8; --upper:#eaeff7; --garage:#f0f0ec;
+  --serif:"Cormorant Garamond",Georgia,serif; --sans:"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif; --hand:"Caveat Brush","Marker Felt",cursive;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font:300 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--tape-edge);outline-offset:3px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,3vw,32px);border-bottom:1px solid var(--line);background:rgba(238,241,239,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);position:sticky;top:0;z-index:20}
+.brand{font-family:var(--serif);font-size:18px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+.top nav{display:flex;gap:18px;font-size:14.5px;color:var(--soft)}
+.top nav a{text-decoration:none}
+.top nav a:hover{color:var(--ink)}
+.iconbtn{border:0;background:none;padding:6px;border-radius:50%;cursor:pointer;color:var(--soft);display:inline-grid;place-items:center}
+.iconbtn:hover{color:var(--ink);background:#e2e7e5}
+
+.game{display:grid;grid-template-columns:minmax(320px,410px) 1fr;gap:clamp(18px,2.4vw,36px);padding:clamp(16px,2.4vw,32px);max-width:1500px;margin:0 auto;align-items:start}
+.brief{position:sticky;top:78px;max-height:calc(100vh - 96px);overflow:auto;padding-right:4px;scrollbar-width:thin}
+.title{font-family:var(--serif);font-weight:600;font-size:clamp(34px,3.4vw,46px);line-height:1;margin:0 0 4px;letter-spacing:.005em}
+.sub{margin:0 0 18px;color:var(--soft);font-size:15px}
+
+.levels{display:flex;gap:8px;margin:0 0 22px;padding:0;list-style:none}
+.levels button{font-variant-numeric:lining-nums;width:44px;height:50px;border:1px solid var(--line);background:var(--sheet);border-radius:10px;cursor:pointer;display:grid;place-items:center;align-content:center;gap:1px;font-family:var(--serif);font-weight:600;font-size:20px;line-height:1}
+.levels button[aria-current="step"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.levels .keys{display:flex;gap:1px;height:8px}
+.levels .keys i{width:7px;height:7px;border-radius:50%;border:1px solid #b9c3c6}
+.levels .keys i.on{background:var(--ok);border-color:var(--ok)}
+
+.household{font-family:var(--serif);font-weight:600;font-size:28px;line-height:1.1;margin:0 0 8px}
+.story{font-family:var(--serif);font-size:18.5px;line-height:1.42;margin:0 0 18px;color:#2e3c44;max-width:38ch}
+.howto{font-size:14px;color:var(--soft);margin:-6px 0 16px}
+
+.tray{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.item{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:10px 12px 11px;position:relative;transition:border-color .2s}
+.item.sel{border-color:var(--tape-edge);box-shadow:0 0 0 3px rgba(102,173,230,.25)}
+.item.placed .tape{opacity:.38;filter:saturate(.5)}
+.row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.where{font-size:13px;color:var(--soft);font-style:italic;font-family:var(--serif);font-size:16px;white-space:nowrap}
+.line{margin:5px 0 7px;font-size:14px;line-height:1.4;color:#3b4950}
+.needs{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.need{display:inline-flex;align-items:center;gap:6px;font-size:13px;line-height:1;padding:6px 9px 6px 7px;border-radius:999px;background:#f1f4f3;color:#3e4b52;border:1px solid transparent;transition:background .25s,color .25s}
+.need svg{width:15px;height:15px;flex:none}
+.need.ok{background:var(--ok-bg);color:var(--ok)}
+.need.miss{background:var(--miss-bg);color:var(--miss)}
+.need .mark{display:none}
+.need.ok .mark,.need.miss .mark{display:inline}
+
+/* painter's tape */
+.tape{--c:var(--tape);--e:var(--tape-edge);--t:var(--tape-ink);position:relative;display:inline-block;border:0;background:var(--c);color:var(--t);font-family:var(--hand);font-size:23px;line-height:1;padding:8px 18px 6px;white-space:nowrap;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  clip-path:polygon(0 8%,4% 0,7% 9%,10% 2%,90% 0,93% 9%,96% 1%,100% 7%,98% 50%,100% 93%,96% 100%,93% 91%,90% 100%,10% 98%,7% 91%,4% 100%,0 92%,2% 50%);
+  background-image:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 40%,rgba(0,0,0,.05)),repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 2px,rgba(0,0,0,.025) 2px 4px);transform:rotate(var(--r,-1.5deg));transition:transform .15s}
+.tape.thing{--c:var(--kraft);--e:var(--kraft-edge);--t:var(--kraft-ink)}
+.tape:hover{transform:rotate(var(--r,-1.5deg)) translateY(-1px)}
+.tape:active{cursor:grabbing}
+.ghost{position:fixed;left:0;top:0;z-index:100;pointer-events:none;transform-origin:50% 50%;filter:drop-shadow(0 10px 14px rgba(20,40,60,.25));transition:none}
+.preview{position:fixed;z-index:101;pointer-events:none;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:8px 10px;box-shadow:0 10px 30px rgba(20,40,60,.14);font-size:13px;max-width:260px}
+.preview b{font-family:var(--serif);font-size:17px;font-weight:600;display:block;margin-bottom:6px}
+.preview .needs{gap:4px}
+.preview[hidden]{display:none}
+
+.go{margin:18px 0 8px;width:100%;border:0;border-radius:12px;background:var(--ink);color:#fff;font-weight:400;font-size:16px;padding:15px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;letter-spacing:.01em}
+.go:disabled{background:#c7cfcf;cursor:not-allowed}
+.go .count{font-size:13.5px;opacity:.8;text-align:right;margin-left:12px}
+.fine{font-size:12.5px;color:var(--soft);margin:10px 0 0}
+.swipe,.phonefine{display:none}
+.swipe{font-size:13.5px;color:var(--soft);margin:-8px 0 12px}
+.phonefine{order:3;font-size:12px;color:var(--soft);margin:4px 2px 0}
+
+/* the sheet */
+.sheet{background:var(--sheet);border-radius:6px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 14px 40px rgba(34,49,58,.08);position:relative;overflow:hidden}
+.sheet svg{display:block;width:100%;height:auto;max-height:calc(100vh - 120px)}
+.room{stroke:none}
+.room.lower{fill:var(--lower)} .room.main{fill:var(--main)} .room.upper{fill:var(--upper)} .room.garage{fill:var(--garage)} .room.out{fill:url(#deck)}
+.slot{cursor:pointer;transition:fill .2s}
+.slot:focus{outline:none}
+.slot:focus-visible,.slot.hot{fill:#d8ebfa}
+.slot.no{fill:#f4eeee}
+.dragging .slot.ok-for{fill:#e7f2fb}
+.wall{fill:var(--wall)}
+.win{fill:#fff;stroke:var(--glass);stroke-width:.14}
+.lab{font-family:var(--serif);font-style:italic;font-weight:500;fill:#6c7a80;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.lab.big{fill:#4d5c63;font-weight:600}
+.note{font-family:var(--serif);font-style:italic;fill:#7c898f;pointer-events:none}
+.street{font-family:var(--serif);font-style:italic;font-weight:600;fill:#5d6b72;letter-spacing:.06em}
+.inset{fill:#fff;stroke:#c9d3d6;stroke-width:.12}
+.ptape{cursor:grab}
+.ptape text{font-family:var(--hand);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.photo{opacity:0;transition:opacity .9s ease}
+.revealed .photo{opacity:1}
+.revealed .room:not(.has){fill:#f2f4f3}
+.revealed .lab.big{opacity:0}
+
+/* finale */
+.finale{border:1px solid var(--line);background:var(--sheet);border-radius:14px;padding:18px 18px 16px;margin:0 0 18px}
+.finale[hidden]{display:none}
+.finale h2{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.05;margin:0 0 6px}
+.finale .score{display:flex;align-items:center;gap:10px;margin:0 0 10px;color:var(--soft);font-size:14.5px}
+.finale .epi{font-family:var(--serif);font-size:19px;line-height:1.45;margin:0 0 14px}
+.finale ul{margin:0 0 14px;padding-left:18px;font-size:14.5px;color:var(--miss)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--ink);background:var(--sheet);border-radius:10px;padding:10px 14px;font-size:14.5px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--ink);color:#fff}
+.cta{background:#22313a;color:#fff;border-radius:12px;padding:14px 16px;margin:0 0 12px;display:grid;gap:4px}
+.cta b{font-family:var(--serif);font-weight:600;font-size:22px;line-height:1.1}
+.cta span{font-size:14.5px;opacity:.85;margin-bottom:8px}
+.cta .btn.big{background:#fff;color:var(--ink);border-color:#fff;justify-self:start;font-size:16px;padding:12px 20px}
+/* first visit: the first name nudges, so the move is obvious */
+@keyframes coach{0%,100%{transform:rotate(var(--r,-1.5deg)) translate(0,0)}20%{transform:rotate(-4deg) translate(6px,-3px)}40%{transform:rotate(1deg) translate(12px,-1px)}60%{transform:rotate(-3deg) translate(6px,-2px)}}
+.coach .tape[data-token]:first-of-type{animation:coach 1.6s ease-in-out 3}
+.coachtip{display:inline-block;margin-left:8px;font-size:13px;color:var(--tape-edge);font-family:var(--hand);font-size:20px;line-height:1;vertical-align:middle}
+.keysbig{display:inline-flex;gap:4px}
+.keysbig svg{width:22px;height:22px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14.5px;opacity:0;transition:opacity .25s,transform .25s;z-index:200;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@keyframes nudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.nudge{animation:nudge .28s ease 2}
+
+@media (max-width:980px){
+  .game{grid-template-columns:minmax(0,1fr);padding:14px 14px 250px}
+  .sheet{min-width:0}
+  .brief{position:static;max-height:none;overflow:visible;display:contents}
+  .head{order:1}.sheet{order:2}
+  .sheet{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .sheet svg{width:920px;max-width:none;max-height:none}
+  .story{font-size:16.5px;line-height:1.4;max-width:none;margin-bottom:10px}
+  .title{font-size:31px}
+  .sub{display:none}
+  .levels{margin:4px 0 14px;gap:6px}
+  .levels button{width:40px;height:44px;font-size:18px}
+  .household{font-size:23px;margin-bottom:6px}
+  body.done .tray,body.done .go{display:none}
+  .after .finale{margin:0 14px 2px;padding:14px 14px 12px;max-height:46vh;overflow:auto}
+  .finale h2{font-size:25px}
+  .finale .epi{font-size:17px;margin-bottom:10px}
+  .btn{padding:9px 12px;font-size:14px}
+  .after{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(238,241,239,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 0 calc(10px + env(safe-area-inset-bottom))}
+  .after .howto{display:none}
+  .tray{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 14px 6px;scrollbar-width:none}
+  .tray::-webkit-scrollbar{display:none}
+  .item{flex:0 0 min(84vw,340px);scroll-snap-align:start;padding:8px 11px 9px}
+  .item .line{font-size:13.5px;margin:3px 0 6px}
+  .need{font-size:12.5px;padding:5px 8px 5px 6px}
+  .tape{font-size:21px;padding:7px 16px 5px}
+  .swipe{display:block}
+  .go{margin:6px 14px 0;width:calc(100% - 28px);padding:12px 16px}
+  .after .fine{display:none}
+  .phonefine{display:block}
+  .finale{margin-top:4px}
+  .top nav{gap:12px;font-size:14px}
+}
+@media (max-width:520px){.brand{font-size:15px;letter-spacing:.1em}.top nav .hide-s{display:none}.tape{font-size:22px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">118 Hillside Drive</a>
+  <nav><a href="/tour/">3D tour</a><a href="/games/">Games</a><a class="hide-s" href="/#contact">See it in person</a>
+    <button class="iconbtn" id="snd" type="button" aria-pressed="true" aria-label="Sound on"></button></nav>
+</header>
+
+<main class="game" id="game">
+  <div class="brief">
+    <div class="head">
+      <h1 class="title">Room for Everyone</h1>
+      <p class="sub">Find every household the rooms that fit how they live, on the real floor plan of a house in Woodside.</p>
+      <ol class="levels" id="levels" aria-label="Households"></ol>
+      <section class="finale" id="finale" hidden aria-live="polite"></section>
+      <h2 class="household" id="hh"></h2>
+      <p class="story" id="story"></p>
+      <p class="swipe">Swipe the plan sideways to see the whole house, upstairs included.</p>
+    </div>
+    <div class="after">
+      <p class="howto" id="howto">Drag each name onto a room on the plan, or tap a name and then tap a room.</p>
+      <ul class="tray" id="tray"></ul>
+      <button class="go" id="go" type="button" disabled><span>Move them in</span><span class="count" id="count"></span></button>
+      <p class="fine">The plan is drawn from the 3D model of the house. Illustrative, not to scale; verify all details with the seller's disclosures.</p>
+    </div>
+  </div>
+  <section class="sheet" id="sheet" aria-label="Floor plan of 118 Hillside Drive"></section>
+  <p class="phonefine">The plan is drawn from the 3D model of the house. Illustrative, not to scale; verify all details with the seller's disclosures.</p>
+</main>
+<div class="preview" id="preview" hidden></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="plan.js"></script>
+<script>
+(function(){
+'use strict';
+const P = window.PLAN, NS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ga = (n, p) => { try{ window.gtag && gtag('event', n, p || {}); }catch(e){} };
+
+/* ------------------------------------------------------------------ the house: what each space really has (from the listing) */
+const FLOOR = {primary:'upper', loft:'upper', closet:'upper', pbath:'upper', balcony:'upper', uhall:'upper',
+  rec:'lower', lbed1:'lower', lbed2:'lower', office:'lower', lbath:'lower', laundry:'lower',
+  garage:'garage', stairs:'main'};
+const floorOf = id => FLOOR[id] || 'main';
+const FLOOR_NAME = {upper:'upstairs', main:'the kitchen floor', lower:'downstairs', garage:'the garage level'};
+const SLOTS = {
+  primary:  {name:'Primary suite', bed:1, door:1, ownBath:1, sunset:1, skylight:1, tall:1, big:1, photo:'p06', fact:'Cathedral ceiling, four skylights, a walk-in closet, its own bath and a balcony facing the western hills.'},
+  loft:     {name:'Loft', skylight:1, photo:'x06', fact:'A sitting loft under the skylights, on the way into the primary suite. No door of its own.'},
+  mainbed1: {name:'Bedroom', bed:1, door:1, photo:'p62', fact:'One of three bedrooms on the main floor, down the hall from the bath with the Carrara marble vanity.'},
+  mainbed2: {name:'Bedroom', bed:1, door:1, photo:'p74', fact:'One of three bedrooms on the main floor, next to the hall bath.'},
+  mainbed3: {name:'Bedroom', bed:1, door:1, photo:'p73', fact:'The largest of the three main-floor bedrooms.'},
+  lbed1:    {name:'Bedroom', bed:1, door:1, entrance:1, photo:'p63', fact:'Downstairs, next to a full bath with heated floors and a dual-sink vanity.'},
+  lbed2:    {name:'Bedroom', bed:1, door:1, entrance:1, big:1, photo:'p64', fact:'The larger downstairs bedroom, 11′3″ × 14′9″.'},
+  office:   {name:'Skylit office', door:1, skylight:1, entrance:1, photo:'p20', fact:'A dedicated office downstairs, lit by a skylight and clerestory windows.'},
+  rec:      {name:'Bonus lounge', tv:1, entrance:1, yard:1, photo:'p65', fact:'A 65-inch TV, in-wall surround sound, a beverage cooler and stacking glass doors to the terrace.'},
+  garage:   {name:'Garage', door:1, tall:1, photo:'p29', fact:'Oversized, with high ceilings, built-in storage and a 50-amp outlet.'}
+};
+const ADJ = new Set(P.adjacent.map(([a, b]) => a + '|' + b));
+const adjacent = (a, b) => ADJ.has(a + '|' + b) || ADJ.has(b + '|' + a);
+
+/* ------------------------------------------------------------------ needs */
+const ICON = {
+  bath:'<path d="M3 11h18v2a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6v-2Z"/><path d="M6 11V6a2 2 0 0 1 4 0"/><path d="M7 19l-1 2M17 19l1 2"/>',
+  sunset:'<path d="M3 17h18M7 17a5 5 0 0 1 10 0"/><path d="M12 6v3M5.6 9.6l2 2M18.4 9.6l-2 2M8 21h8"/>',
+  sky:'<path d="M4 9 12 4l8 5v11H4Z"/><path d="M9 9h6v5H9z"/><path d="M12 14v3M9.5 17l-1 2M14.5 17l1 2"/>',
+  door:'<path d="M6 21V4h10v17M4 21h16"/><circle cx="13.5" cy="12.5" r=".9" fill="currentColor"/>',
+  kitchen:'<path d="M5 10h14v7a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-7Z"/><path d="M3 10h18M9 4c0 1.5 1 1.5 1 3M13 4c0 1.5 1 1.5 1 3"/>',
+  away:'<path d="M4 20h4v-4h4v-4h4V8h4"/><path d="M14 4h6v6"/>',
+  entrance:'<path d="M13 4h6v16h-6"/><path d="M3 12h11M10 8l4 4-4 4"/>',
+  tv:'<rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M8 21h8M12 17v4"/>',
+  tall:'<path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>',
+  big:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  floor:'<path d="M4 20h5v-5h5v-5h6"/><path d="M4 5h16" stroke-dasharray="2 2.5"/>',
+  next:'<rect x="3" y="6" width="8" height="12" rx="1"/><rect x="13" y="6" width="8" height="12" rx="1"/>',
+  alone:'<rect x="8" y="6" width="8" height="12" rx="1"/><path d="M3 8v8M21 8v8" stroke-dasharray="1.5 2.5"/>',
+  yard:'<path d="M12 21v-6"/><path d="M12 15c-5 0-7-3-6-6 1-3 4-3 6-6 2 3 5 3 6 6 1 3-1 6-6 6Z"/>',
+  mess:'<path d="M4 20h16M7 20l2-9h6l2 9M10 11V7a2 2 0 0 1 4 0v4"/>'
+};
+const ico = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+// each need: label(token, level) and test(slot, ctx) -> true | false | null (can't tell yet)
+const NEED = {
+  ownBath:   {i:'bath',     t:() => 'Their own bathroom',          f:s => !!SLOTS[s].ownBath},
+  sunset:    {i:'sunset',   t:() => 'A sunset view',               f:s => !!SLOTS[s].sunset},
+  skylight:  {i:'sky',      t:() => 'Daylight from above',         f:s => !!SLOTS[s].skylight},
+  door:      {i:'door',     t:() => 'A door that closes',          f:s => !!SLOTS[s].door},
+  kitchen:   {i:'kitchen',  t:() => 'On the kitchen floor',        f:s => floorOf(s) === 'main'},
+  awayKitchen:{i:'away',    t:() => 'Off the kitchen floor',       f:s => floorOf(s) !== 'main'},
+  entrance:  {i:'entrance', t:() => 'Their own way in and out',    f:s => !!SLOTS[s].entrance},
+  tv:        {i:'tv',       t:() => 'The big screen',              f:s => !!SLOTS[s].tv},
+  tall:      {i:'tall',     t:() => 'High ceilings',               f:s => !!SLOTS[s].tall},
+  big:       {i:'big',      t:() => 'One of the two biggest bedrooms', f:s => !!SLOTS[s].big && !!SLOTS[s].bed},
+  yard:      {i:'yard',     t:() => 'A door to the yard',          f:s => !!SLOTS[s].yard},
+  notBedroom:{i:'mess',     t:() => "Not in anyone's bedroom",     f:s => !SLOTS[s].bed},
+  diffFloor: {i:'floor',    t:(n, L) => 'Not on the same floor as ' + tokName(L, n.who), f:(s, c, n) => { const o = c.at[n.who]; return o ? floorOf(o) !== floorOf(s) : null; }},
+  nextTo:    {i:'next',     t:(n, L) => 'Next door to ' + tokName(L, n.who), f:(s, c, n) => { const o = c.at[n.who]; return o ? adjacent(s, o) : null; }},
+  alone:     {i:'alone',    t:() => 'No one sleeping next door', f:(s, c, n, L) => !L.tokens.some(t => t.sleep && c.at[t.id] && c.at[t.id] !== s && adjacent(s, c.at[t.id]))}
+};
+const tokName = (L, id) => { const t = L.tokens.find(x => x.id === id); return t ? t.name.replace(/^The /, 'the ') : id; };
+
+/* ------------------------------------------------------------------ the five households */
+const LEVELS = [
+ {id:'desks', title:'Two desks, one house',
+  story:'Maya designs restaurant interiors and lives on video calls. Theo writes mysteries and needs a room where nobody can find him. They want one house that works for both.',
+  epi:'Maya gets the skylight. Theo gets the silence. The balcony gets both of them at seven, with coffee.',
+  tokens:[
+   {id:'mt', name:'Maya & Theo', sleep:1, line:'Morning coffee outside is non-negotiable.', needs:[{k:'ownBath'}, {k:'sunset'}]},
+   {id:'studio', name:"Maya's studio", line:'Fabric swatches need real daylight. Clients need a door.', needs:[{k:'skylight'}, {k:'door'}]},
+   {id:'desk', name:"Theo's desk", line:'Out of earshot of every single video call.', needs:[{k:'door'}, {k:'diffFloor', who:'studio'}]}]},
+ {id:'winter', title:'Grandparents for the winter',
+  story:'Sam’s parents, June and Ray, are staying through February. Ray is up at five and wants the coffee close. Sam and Priya’s son Nico is sixteen and has just discovered the drums.',
+  epi:'Ray finds the coffee at 5:02. Nico’s drums are a whole floor away from anyone who minds.',
+  tokens:[
+   {id:'ps', name:'Priya & Sam', sleep:1, line:'Twenty years married. Still want a bathroom no one else uses.', needs:[{k:'ownBath'}]},
+   {id:'jr', name:'June & Ray', sleep:1, line:'Up at five. The coffee had better be close.', needs:[{k:'kitchen'}, {k:'door'}]},
+   {id:'nico', name:'Nico', sleep:1, line:'Sixteen. Would like to come and go without a briefing.', needs:[{k:'entrance'}]},
+   {id:'drums', name:"Nico's drums", line:'Loud, and getting louder.', needs:[{k:'diffFloor', who:'jr'}, {k:'diffFloor', who:'ps'}, {k:'notBedroom'}]},
+   {id:'pdesk', name:"Priya's desk", line:'She edits photos for a living. Daylight, and a door to shut.', needs:[{k:'skylight'}, {k:'door'}]}]},
+ {id:'mates', title:'Four housemates',
+  story:'Ana, Dev, Lena and Kai met in grad school and decided that renting together beats renting alone. Everyone gets their own room. Sunday movie night is mandatory.',
+  epi:'Movie night has a quorum, and nobody has to step over Dev’s bikes to get to it.',
+  tokens:[
+   {id:'ana', name:'Ana', sleep:1, line:'Paid the biggest share of the deposit. Fair is fair.', needs:[{k:'big'}]},
+   {id:'dev', name:'Dev', sleep:1, line:'Gets home from the lab at 2 a.m. and would rather not wake anyone.', needs:[{k:'entrance'}]},
+   {id:'lena', name:'Lena', sleep:1, line:'Works nights at the hospital. Sleeps until four.', needs:[{k:'awayKitchen'}, {k:'door'}]},
+   {id:'kai', name:'Kai', sleep:1, line:'Cooks for the whole house, usually at midnight.', needs:[{k:'kitchen'}]},
+   {id:'movie', name:'Movie night', line:'Sundays. Everyone. The biggest screen in the house.', needs:[{k:'tv'}]},
+   {id:'bikes', name:"Dev's bikes", line:'Three bikes, one repair stand, a lot of grease.', needs:[{k:'tall'}, {k:'notBedroom'}]}]},
+ {id:'studio', title:'The podcast and the pottery',
+  story:'Jules and Omar record a weekly podcast and throw pottery on weekends. Omar’s mother, Farah, visits two weeks at a time and likes to be in the middle of everything.',
+  epi:'Farah has the kitchen. Jules has the light. The clay stays in the garage, mostly.',
+  tokens:[
+   {id:'jo', name:'Jules & Omar', sleep:1, line:'Sunsets, and a bathroom of their own.', needs:[{k:'sunset'}, {k:'ownBath'}]},
+   {id:'farah', name:'Farah', sleep:1, line:'Here for two weeks. Wants to be where the conversation is.', needs:[{k:'kitchen'}]},
+   {id:'pod', name:'Podcast studio', line:'One microphone picks up everything, including the dishwasher.', needs:[{k:'door'}, {k:'awayKitchen'}]},
+   {id:'wheel', name:'Pottery wheel', line:'Clay gets everywhere. Not in anyone’s room.', needs:[{k:'tall'}, {k:'notBedroom'}]},
+   {id:'chair', name:"Jules's reading chair", line:'Afternoons with a novel, under the sky.', needs:[{k:'skylight'}]}]},
+ {id:'holiday', title:'Everyone’s home for the long weekend',
+  story:'Elena and Marcus are hosting her parents, Rosa and Luis; his dad, Walt; their daughter Iris, home from college; the ten-year-old twins; and Biscuit, who is a dog. Everyone wants a real bed, and nobody wants the couch.',
+  epi:'Walt’s snoring is the main floor’s problem now, and the main floor can take it. Biscuit has already found the terrace.',
+  share:'I found everyone a room, dog included,',
+  tokens:[
+   {id:'em', name:'Elena & Marcus', sleep:1, line:'Hosting. They’d like one bathroom nobody else uses.', needs:[{k:'ownBath'}]},
+   {id:'rl', name:'Rosa & Luis', sleep:1, line:'Want to be near the kitchen and next door to the twins.', needs:[{k:'kitchen'}, {k:'nextTo', who:'tw'}]},
+   {id:'tw', name:'The twins', sleep:1, line:'Leo and Max, ten. Inseparable, and loud about it.', needs:[{k:'nextTo', who:'rl'}]},
+   {id:'walt', name:'Walt', sleep:1, line:'Snores like a leaf blower. Wants his coffee close.', needs:[{k:'kitchen'}, {k:'alone'}]},
+   {id:'iris', name:'Iris', sleep:1, line:'Home from college, keeping college hours.', needs:[{k:'entrance'}]},
+   {id:'biscuit', name:'Biscuit', line:'Golden retriever. Needs the yard, often, urgently.', needs:[{k:'yard'}]}]}
+];
+
+/* ------------------------------------------------------------------ state */
+const KEY = 'rfe.v1';
+const store = (() => { try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch(e){ return {}; } })();
+store.best = store.best || {};
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+let L = null, at = {}, sel = null, t0 = 0, done = false, li = 0;
+const q = /[?&]level=(\d)/.exec(location.search);
+
+/* ------------------------------------------------------------------ sound: paper and tape, made in the browser */
+const S = {ctx: null, on: store.sound !== false,
+  init(){ if(this.ctx || !this.on) return; const C = window.AudioContext || window.webkitAudioContext; if(!C) return; try{ this.ctx = new C(); this.out = this.ctx.createGain(); this.out.gain.value = .5; this.out.connect(this.ctx.destination); }catch(e){} },
+  noise(dur, f, q, vol, type = 'bandpass', delay = 0){ const c = this.ctx; if(!c || !this.on) return; const n = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+    for(let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.4);
+    const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain(), T = c.currentTime + delay; s.buffer = b; fl.type = type; fl.frequency.value = f; fl.Q.value = q; g.gain.value = vol; s.connect(fl); fl.connect(g); g.connect(this.out); s.start(T); },
+  tone(f, dur, vol, delay = 0, type = 'sine'){ const c = this.ctx; if(!c || !this.on) return; const o = c.createOscillator(), g = c.createGain(), T = c.currentTime + delay; o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0, T); g.gain.linearRampToValueAtTime(vol, T + .012); g.gain.exponentialRampToValueAtTime(.0008, T + dur); o.connect(g); g.connect(this.out); o.start(T); o.stop(T + dur + .05); },
+  peel(){ this.noise(.22, 2600, .7, .5, 'highpass'); this.noise(.12, 900, 2, .25, 'bandpass', .05); },
+  stick(){ this.noise(.06, 500, 1.2, .7, 'lowpass'); this.tone(150, .09, .25); },
+  nope(){ this.tone(220, .12, .12, 0, 'triangle'); this.tone(185, .16, .12, .09, 'triangle'); },
+  done(){ [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, .9, .12, i * .11, 'triangle')); this.noise(.5, 6000, .5, .06, 'highpass', .4); }
+};
+const sndBtn = $('#snd');
+const drawSnd = () => { sndBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/>${S.on ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="m17 9 5 6M22 9l-5 6"/>'}</svg>`; sndBtn.setAttribute('aria-pressed', S.on); sndBtn.setAttribute('aria-label', S.on ? 'Sound on' : 'Sound off'); };
+sndBtn.onclick = () => { S.on = !S.on; store.sound = S.on; save(); if(S.on) S.init(); drawSnd(); };
+drawSnd();
+
+/* ------------------------------------------------------------------ the plan */
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); if(parent) parent.appendChild(e); return e; };
+const LABEL = {entry:'Entry', living:'Living room', kitchen:'Kitchen', great:'Dining', mainbath:'Bath', lbath:'Bath', laundry:'Laundry', stairs:'Stairs', frontdeck:'Porch',
+  garage:'Garage', rec:'Bonus lounge', office:'Office', lbed1:'Bedroom', lbed2:'Bedroom', mainbed1:'Bedroom', mainbed2:'Bedroom', mainbed3:'Bedroom',
+  primary:'Primary suite', loft:'Loft', closet:'Closet', pbath:'Bath', balcony:'Balcony'};
+const G = P.levels.ground, U = P.levels.upper;
+// upstairs sits over the downstairs wing; it is drawn beside the plan at the same scale
+const UW = U.bounds[2] - U.bounds[0], UH = U.bounds[3] - U.bounds[1];
+const INSET = {x: G.bounds[2] + 2.5, y: G.bounds[1] + .5, w: UW + 3, h: UH + 6};
+const us = 1, ux = INSET.x + 1.5 - U.bounds[0], uy = INSET.y + 5 - U.bounds[1];
+const VB = {x: G.bounds[0], y: G.bounds[1] - 1, w: INSET.x + INSET.w + 1.5 - G.bounds[0], h: G.bounds[3] - G.bounds[1] + 7};
+const svg = el('svg', {viewBox: `${VB.x} ${VB.y} ${VB.w} ${VB.h}`, role: 'img', 'aria-label': 'Floor plan with the downstairs, the main floor and, inset, the upstairs suite'});
+$('#sheet').appendChild(svg);
+const defs = el('defs', {}, svg);
+const grid = el('pattern', {id: 'grid', width: 5, height: 5, patternUnits: 'userSpaceOnUse', x: 0, y: 0}, defs);
+for(let i = 1; i < 5; i++){ el('path', {d: `M${i} 0V5M0 ${i}H5`, stroke: 'var(--grid)', 'stroke-width': .06}, grid); }
+el('path', {d: 'M0 0V5M0 0H5', stroke: 'var(--grid5)', 'stroke-width': .09}, grid);
+const deck = el('pattern', {id: 'deck', width: 1, height: 1, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(0)'}, defs);
+el('rect', {width: 1, height: 1, fill: '#f6f3ee'}, deck); el('path', {d: 'M0 .5H1', stroke: '#e3ddd3', 'stroke-width': .07}, deck);
+el('rect', {x: VB.x, y: VB.y, width: VB.w, height: VB.h, fill: 'url(#grid)'}, svg);
+
+const L_fill = el('g', {}, svg), L_photo = el('g', {}, svg), L_wall = el('g', {}, svg), L_lab = el('g', {}, svg), L_tape = el('g', {}, svg);
+const slotEl = {}, roomEl = {};
+function drawLevel(lv, gTransform, isUpper){
+  const gf = el('g', gTransform ? {transform: gTransform} : {}, L_fill), gp = el('g', gTransform ? {transform: gTransform} : {}, L_photo),
+        gw = el('g', gTransform ? {transform: gTransform} : {}, L_wall), gl = el('g', gTransform ? {transform: gTransform} : {}, L_lab);
+  for(const [id, r] of Object.entries(lv.rooms)){
+    const fl = isUpper ? 'upper' : floorOf(id), out = id === 'frontdeck' || id === 'balcony';
+    const p = el('path', {d: r.d, class: 'room ' + (out ? 'out' : fl)}, gf); roomEl[id] = p;
+    if(SLOTS[id]){
+      p.classList.add('slot'); p.dataset.slot = id; p.setAttribute('tabindex', 0); p.setAttribute('role', 'button');
+      p.setAttribute('aria-label', `${SLOTS[id].name}, ${FLOOR_NAME[floorOf(id)]}`);
+      const cp = el('clipPath', {id: 'clip-' + id}, defs); el('path', {d: r.d}, cp);
+      SLOTS[id].g = gp; SLOTS[id].t = gTransform || '';
+    }
+    const lab = LABEL[id]; if(lab){ const [cx, cy] = r.at || r.c; const big = !!SLOTS[id];
+      const t = el('text', {x: cx, y: cy, class: 'lab' + (big ? ' big' : ''), 'font-size': big ? 2.05 : 1.6}, gl); t.textContent = lab; if(big) SLOTS[id].lab = t; }
+  }
+  for(const [x, y, w, h] of lv.walls) el('rect', {x, y, width: Math.max(w, .2), height: Math.max(h, .2), class: 'wall'}, gw);
+  for(const [x, y, w, h] of lv.glass){ const r = el('rect', {x, y, width: Math.max(w, .3), height: Math.max(h, .3), class: 'win'}, gw); }
+}
+drawLevel(G);
+// upstairs card
+el('rect', {x: INSET.x, y: INSET.y, width: INSET.w, height: INSET.h, rx: .8, class: 'inset'}, L_fill);
+const ut = el('text', {x: INSET.x + 1.6, y: INSET.y + 2.4, class: 'note', 'font-size': 2.1, 'font-weight': 600}, L_lab); ut.textContent = 'Upstairs';
+const un = el('text', {x: INSET.x + 1.6, y: INSET.y + 4.3, class: 'note', 'font-size': 1.25}, L_lab); un.textContent = 'above the downstairs wing';
+drawLevel(U, `translate(${ux.toFixed(3)} ${uy.toFixed(3)}) scale(${us.toFixed(4)})`, true);
+// floor notes and the street
+const note = (x, y, s, size = 1.5, anchor = 'start') => { const t = el('text', {x, y, class: 'note', 'font-size': size, 'text-anchor': anchor}, L_lab); t.textContent = s; };
+note(-35, -50.6, 'Downstairs, half a flight below the entry', 1.6);
+note(33.5, -6.8, 'Main floor', 1.6, 'end');
+el('path', {d: `M${VB.x + 1} ${G.bounds[3] + 1.6}H${VB.x + VB.w - 1}`, stroke: '#9aa7ad', 'stroke-width': .12}, L_lab);
+const st = el('text', {x: -3, y: G.bounds[3] + 4, class: 'street', 'font-size': 1.9, 'text-anchor': 'middle'}, L_lab); st.textContent = 'Hillside Drive';
+// north-ish: the street is to the south-east of the yard; keep it honest and leave the compass off
+
+/* ------------------------------------------------------------------ rendering a household */
+function buildLevels(){
+  const ol = $('#levels'); ol.innerHTML = '';
+  LEVELS.forEach((lv, i) => { const b = store.best[lv.id];
+    const li_ = document.createElement('li'); const btn = document.createElement('button'); btn.type = 'button';
+    btn.innerHTML = `<span>${i + 1}</span><span class="keys" aria-hidden="true">${[1, 2, 3].map(k => `<i class="${b && b.stars >= k ? 'on' : ''}"></i>`).join('')}</span>`;
+    btn.setAttribute('aria-label', `${lv.title}${b ? (b.stars === 3 ? ', solved' : ', tried') : ''}`);
+    if(i === li) btn.setAttribute('aria-current', 'step');
+    btn.onclick = () => load(i); li_.appendChild(btn); ol.appendChild(li_); });
+}
+function load(i){
+  li = i; L = LEVELS[i]; at = {}; sel = null; t0 = 0; done = false; document.body.classList.remove('done');
+  svg.classList.remove('revealed'); $('#finale').hidden = true; $('#finale').innerHTML = '';
+  for(const s in SLOTS){ SLOTS[s].g && [...SLOTS[s].g.querySelectorAll('.photo')].forEach(n => n.remove()); roomEl[s].classList.remove('has'); }
+  $('#hh').textContent = L.title; $('#story').textContent = L.story;
+  $('#howto').hidden = !!store.best[LEVELS[0].id];
+  document.body.classList.toggle('coach', !Object.keys(store.best).length && i === 0);
+  buildLevels(); render();
+  history.replaceState(null, '', i ? `?level=${i + 1}` : location.pathname);
+  ga('rfe_start', {level: i + 1});
+}
+function evalAll(){
+  const ctx = {at}, res = {};
+  for(const t of L.tokens) res[t.id] = t.needs.map(n => { const s = at[t.id]; if(!s) return null; return NEED[n.k].f(s, ctx, n, L); });
+  return res;
+}
+function needHTML(t, n, v){ const N = NEED[n.k]; const cls = v === true ? 'ok' : v === false ? 'miss' : '';
+  return `<li class="need ${cls}">${ico(N.i)}<span>${N.t(n, L)}</span><span class="mark" aria-hidden="true">${v === true ? '✓' : v === false ? '✕' : ''}</span><span class="sr" style="position:absolute;left:-9999px">${v === true ? '(met)' : v === false ? '(not met)' : ''}</span></li>`; }
+function render(){
+  const res = evalAll(), tray = $('#tray'); tray.innerHTML = '';
+  L.tokens.forEach((t, k) => {
+    const li_ = document.createElement('li'); li_.className = 'item' + (sel === t.id ? ' sel' : '') + (at[t.id] ? ' placed' : '');
+    const s = at[t.id];
+    li_.innerHTML = `<div class="row"><button type="button" class="tape${t.sleep ? '' : ' thing'}" data-token="${t.id}" style="--r:${(k % 2 ? 1.2 : -1.6) + (k % 3) * .4}deg" aria-pressed="${sel === t.id}" aria-label="${t.name}${s ? ', in the ' + SLOTS[s].name.toLowerCase() : ', not placed'}">${t.name}</button>${k === 0 && !s && document.body.classList.contains('coach') ? '<span class="coachtip" aria-hidden="true">drag me to a room</span>' : ''}
+      <span class="where">${s ? SLOTS[s].name : ''}</span></div><p class="line">${t.line}</p><ul class="needs">${t.needs.map((n, j) => needHTML(t, n, res[t.id][j])).join('')}</ul>`;
+    tray.appendChild(li_); });
+  // tapes on the plan
+  L_tape.innerHTML = '';
+  for(const s in SLOTS) roomEl[s].classList.toggle('has', !!Object.values(at).includes(s));
+  for(const t of L.tokens){ const s = at[t.id]; if(!s) continue; drawTape(t, s); }
+  for(const s in SLOTS) if(SLOTS[s].lab) SLOTS[s].lab.style.opacity = Object.values(at).includes(s) ? 0 : 1;
+  const wait = L.tokens.filter(t => !at[t.id]).map(t => t.name), go = $('#go');
+  go.disabled = wait.length > 0 || done;
+  const list = wait.length > 2 ? wait.slice(0, 2).join(', ') + ' and others' : wait.join(' and ');
+  $('#count').textContent = done ? '' : wait.length === L.tokens.length ? 'Nobody has a room yet' : wait.length ? `${list} still need${wait.length === 1 && !/ & |twins/i.test(wait[0]) ? 's' : ''} a spot` : 'Everyone has a spot';
+}
+function slotBox(s){ const p = roomEl[s], b = p.getBBox(); const r = P.levels[FLOOR[s] === 'upper' ? 'upper' : 'ground'].rooms[s]; const [cx, cy] = r.c;
+  if(floorOf(s) === 'upper') return {cx: ux + cx * us, cy: uy + cy * us, w: b.width * us, h: b.height * us};
+  return {cx, cy, w: b.width, h: b.height}; }
+function drawTape(t, s){
+  const b = slotBox(s), g = el('g', {class: 'ptape', 'data-token': t.id, tabindex: -1}, L_tape);
+  const tx = el('text', {x: 0, y: .1, 'font-size': 2.55, fill: t.sleep ? 'var(--tape-ink)' : 'var(--kraft-ink)'}, g); tx.textContent = t.name;
+  let w = tx.getComputedTextLength() + 2.6; const h = 3.5; const maxW = Math.max(6, b.w * .92);
+  const k = Math.min(1, maxW / w);
+  const z = (x0, x1, y, up) => { let d = ''; const n = 5; for(let i = 0; i <= n; i++) d += `L${(x0 + (x1 - x0) * i / n).toFixed(2)},${(y + (i % 2 ? (up ? -.22 : .22) : 0)).toFixed(2)}`; return d; };
+  const d = `M${-w / 2},${-h / 2}` + z(-w / 2, w / 2, -h / 2, false).slice(0) + `L${w / 2 + .15},0L${w / 2},${h / 2}` + z(w / 2, -w / 2, h / 2, true) + `L${-w / 2 - .15},0Z`;
+  const tape = el('path', {d, fill: t.sleep ? 'var(--tape)' : 'var(--kraft)', opacity: .95}, g); g.insertBefore(tape, tx);
+  el('path', {d: `M${-w / 2 + .4},${-h / 2 + .45}H${w / 2 - .4}`, stroke: 'rgba(255,255,255,.35)', 'stroke-width': .18}, g);
+  const rot = ((t.id.charCodeAt(0) * 7 + t.id.length * 13) % 9) - 4;
+  g.setAttribute('transform', `translate(${b.cx} ${b.cy}) rotate(${rot}) scale(${k})`);
+  g.setAttribute('aria-hidden', 'true');
+}
+
+/* ------------------------------------------------------------------ placing */
+function place(tid, s){
+  const t = L.tokens.find(x => x.id === tid); if(!t || done) return false;
+  if(t.sleep && !SLOTS[s].bed){ toast(`${t.name} need${/ & |twins/i.test(t.name) ? '' : 's'} a bedroom.`); S.nope(); return false; }
+  if(!t0) t0 = performance.now();
+  const prev = at[tid], occ = Object.keys(at).find(k => at[k] === s && k !== tid);
+  if(occ){ const o = L.tokens.find(x => x.id === occ);
+    if(prev && (!o.sleep || SLOTS[prev].bed)) at[occ] = prev; else delete at[occ]; }
+  at[tid] = s; sel = null; document.body.classList.remove('coach'); S.stick(); render(); ga('rfe_place', {level: li + 1}); return true;
+}
+function unplace(tid){ delete at[tid]; render(); }
+
+/* ------------------------------------------------------------------ pointer: drag a tape, or tap a tape then a room */
+const preview = $('#preview');
+let drag = null;
+function slotAt(x, y){ const e = document.elementFromPoint(x, y); return e && e.closest ? (e.closest('[data-slot]') || null) : null; }
+function showPreview(tid, s, x, y){
+  if(!s){ preview.hidden = true; return; }
+  const t = L.tokens.find(k => k.id === tid), ctx = {at: Object.assign({}, at, {[tid]: s})};
+  if(t.sleep && !SLOTS[s].bed){ preview.innerHTML = `<b>${SLOTS[s].name}</b>Not a bedroom.`; }
+  else preview.innerHTML = `<b>${SLOTS[s].name}</b><ul class="needs">${t.needs.map(n => needHTML(t, n, NEED[n.k].f(s, ctx, n, L))).join('')}</ul>`;
+  preview.hidden = false; const r = preview.getBoundingClientRect();
+  let px = x + 22, py = y + 24; if(px + r.width > innerWidth - 8) px = x - r.width - 18; if(py + r.height > innerHeight - 8) py = y - r.height - 18;
+  preview.style.left = px + 'px'; preview.style.top = py + 'px';
+}
+function hot(s){ document.querySelectorAll('.slot.hot,.slot.no').forEach(n => n.classList.remove('hot', 'no'));
+  if(s && drag){ const t = L.tokens.find(k => k.id === drag.tid); roomEl[s].classList.add(t.sleep && !SLOTS[s].bed ? 'no' : 'hot'); } }
+document.addEventListener('pointerdown', e => {
+  const src = e.target.closest('.tape[data-token], .ptape'); if(!src || done) return;
+  S.init(); e.preventDefault();
+  drag = {tid: src.dataset.token, sx: e.clientX, sy: e.clientY, on: false, src, fromPlan: src.classList.contains('ptape'), id: e.pointerId};
+});
+document.addEventListener('pointermove', e => {
+  if(!drag || e.pointerId !== drag.id) return;
+  if(!drag.on){ if(Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) return;
+    drag.on = true; S.peel(); document.body.classList.add('dragging'); svg.classList.add('dragging');
+    const t = L.tokens.find(k => k.id === drag.tid), g = document.createElement('div'); g.className = 'ghost';
+    g.innerHTML = `<span class="tape${t.sleep ? '' : ' thing'}" style="--r:-3deg">${t.name}</span>`; document.body.appendChild(g); drag.g = g;
+    const r = g.getBoundingClientRect(); drag.gw = r.width; drag.gh = r.height;
+    if(drag.fromPlan){ const pt = L_tape.querySelector(`[data-token="${drag.tid}"]`); if(pt) pt.style.opacity = .25; } }
+  drag.g.style.transform = `translate(${e.clientX - drag.gw / 2}px, ${e.clientY - drag.gh / 2}px) rotate(-3deg) scale(1.04)`;
+  const sl = slotAt(e.clientX, e.clientY), s = sl && sl.dataset.slot; hot(s); showPreview(drag.tid, s, e.clientX, e.clientY);
+});
+const endDrag = e => {
+  if(!drag || (e && e.pointerId !== drag.id)) return; const d = drag; drag = null;
+  document.body.classList.remove('dragging'); svg.classList.remove('dragging'); hot(null); preview.hidden = true;
+  if(d.g) d.g.remove();
+  if(!d.on){ // a tap
+    if(d.fromPlan){ sel = d.tid; render(); return; }
+    sel = sel === d.tid ? null : d.tid; if(sel) S.peel(); render(); return; }
+  const sl = e && slotAt(e.clientX, e.clientY);
+  if(sl){ if(!place(d.tid, sl.dataset.slot)) render(); }
+  else if(d.fromPlan && e && !e.target.closest('#sheet')){ unplace(d.tid); }
+  else render();
+};
+document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', () => endDrag(null));
+svg.addEventListener('click', e => { const sl = e.target.closest('[data-slot]'); if(!sl || !sel || done) return; place(sel, sl.dataset.slot); });
+svg.addEventListener('keydown', e => { if(e.key !== 'Enter' && e.key !== ' ') return; const sl = e.target.closest('[data-slot]'); if(!sl) return; e.preventDefault();
+  if(sel) place(sel, sl.dataset.slot); else toast('Choose a name first, then a room.'); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && sel){ sel = null; render(); } });
+// keyboard on the tray: Enter on a tape selects it (it's a button)
+$('#tray').addEventListener('click', e => { const b = e.target.closest('.tape'); if(!b || e.detail !== 0) return; sel = sel === b.dataset.token ? null : b.dataset.token; render(); const n = document.querySelector(`.tape[data-token="${b.dataset.token}"]`); n && n.focus(); });
+
+/* ------------------------------------------------------------------ moving in */
+const key = on => `<svg viewBox="0 0 24 24" fill="${on ? 'var(--ok)' : 'none'}" stroke="${on ? 'var(--ok)' : '#b9c3c6'}" stroke-width="1.5" aria-hidden="true"><path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5" stroke="${on ? '#fff' : '#b9c3c6'}"/></svg>`;
+$('#go').onclick = () => {
+  if(done) return; done = true; const res = evalAll();
+  const all = Object.values(res).flat(), met = all.filter(v => v === true).length, n = all.length;
+  const stars = met === n ? 3 : met / n >= .7 ? 2 : 1, secs = t0 ? Math.round((performance.now() - t0) / 1000) : 0;
+  const prev = store.best[L.id]; if(!prev || stars > prev.stars || (stars === prev.stars && secs < prev.secs)){ store.best[L.id] = {stars, secs}; save(); }
+  ga('rfe_done', {level: li + 1, stars, met, needs: n, seconds_bucket: secs < 60 ? '<1m' : secs < 180 ? '1-3m' : '3m+'});
+  // the reveal: each occupied room opens onto its real photo
+  svg.classList.add('revealed'); const occupied = Object.values(at);
+  occupied.forEach((s, i) => { const r = roomEl[s].getBBox(), gp = SLOTS[s].g;
+    const img = el('image', {href: `/tour/photos/${SLOTS[s].photo}.jpg`, x: r.x, y: r.y, width: r.width, height: r.height, preserveAspectRatio: 'xMidYMid slice', 'clip-path': `url(#clip-${s})`, class: 'photo'}, gp);
+    el('title', {}, img).textContent = SLOTS[s].fact;
+    setTimeout(() => img.style.opacity = 1, reduce ? 0 : 200 + i * 220); });
+  S.done(); render();
+  const misses = []; L.tokens.forEach(t => t.needs.forEach((nd, j) => { if(res[t.id][j] !== true) misses.push(`${t.name}: ${NEED[nd.k].t(nd, L).toLowerCase()}`); }));
+  const mm = Math.floor(secs / 60), ss = String(secs % 60).padStart(2, '0'), last = li === LEVELS.length - 1;
+  const f = $('#finale');
+  f.innerHTML = `<h2>${stars === 3 ? 'Everyone’s in.' : 'Moved in, mostly.'}</h2>
+    <p class="score"><span class="keysbig">${[1, 2, 3].map(k => key(stars >= k)).join('')}</span><span>${met === n ? 'Every wish granted' : met / n >= .7 ? 'Nearly every wish granted' : 'Some wishes still waiting'}${secs ? `, in ${mm}:${ss}` : ''}</span></p>
+    ${stars === 3 ? `<p class="epi">${L.epi}</p>` : `<p class="epi" style="margin-bottom:6px">Still wishing:</p><ul>${misses.map(m => `<li>${m}</li>`).join('')}</ul>`}
+    ${stars === 3 && last ? `<div class="cta"><b>Every household found its rooms.</b><span>Yours could be next. Come see the house in Woodside.</span><a class="btn primary big" href="/#contact" id="see">See it in person</a></div>` : ''}
+    <div class="btns">${stars === 3 && !last ? `<button class="btn primary" id="nx" type="button">Next household</button>` : stars === 3 ? '' : `<button class="btn primary" id="again" type="button">Try again</button>`}
+      <button class="btn" id="share" type="button">Share</button>
+      ${stars === 3 && last ? `<a class="btn" href="/games/feast/" id="feast">Play Thanksgiving at Hillside</a>` : `<a class="btn" href="/#contact" id="see">See it in person</a>`}
+      <a class="btn" href="/tour/" id="walk">Walk these rooms in 3D</a>${stars === 3 && last ? `<button class="btn" id="again" type="button">Play again</button>` : ''}</div>`;
+  f.hidden = false; document.body.classList.add('done');
+  if(phone.matches) $('#sheet').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'start'}); else f.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'nearest'});
+  const nx = $('#nx'); nx && (nx.onclick = () => load(li + 1));
+  const ag = $('#again'); ag && (ag.onclick = () => load(li));
+  const fe = $('#feast'); fe && (fe.onclick = () => ga('rfe_cta', {cta: 'feast'}));
+  $('#share').onclick = () => share(stars, secs);
+  $('#see').onclick = () => ga('rfe_cta', {cta: 'see_in_person', level: li + 1}); $('#walk').onclick = () => ga('rfe_cta', {cta: 'tour', level: li + 1});
+  buildLevels();
+};
+async function share(stars, secs){
+  const url = `https://118hillside.com/games/room/?level=${li + 1}`;
+  const text = L.share ? `${L.share} at 118 Hillside Drive. Can you?` : `I solved “${L.title}” in Room for Everyone, a floor-plan puzzle set in a real house in Woodside. ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} Can you?`;
+  ga('rfe_share', {level: li + 1, stars});
+  try{ if(navigator.share){ await navigator.share({title: 'Room for Everyone', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(text + ' ' + url); toast('Link copied. Paste it anywhere.'); }catch(e){ toast(url); }
+}
+let tt = 0; function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); }
+
+const phone = matchMedia('(max-width: 980px)');
+const placeFinale = () => { const f = $('#finale'); if(phone.matches) $('.after').insertBefore(f, $('.after').firstChild); else $('#story').parentNode.insertBefore(f, $('#hh')); };
+phone.addEventListener ? phone.addEventListener('change', placeFinale) : phone.addListener(placeFinale); placeFinale();
+load(q ? Math.min(LEVELS.length - 1, Math.max(0, +q[1] - 1)) : 0);
+window.RFE = {LEVELS, SLOTS, NEED, ADJ: P.adjacent, place, state: () => ({level: li, at: Object.assign({}, at), done})};   // QA hooks
+})();
+</script>
+<script>
+/* preview hosts: when the site is served from a sub-path (a test mirror), point root links like /games/ at that copy; no effect on 118hillside.com */
+(function(){ if(window.__siteLinks) return; window.__siteLinks = 1; var m = /githack/.test(location.host) ? location.pathname.match(/^(\/[^\/]+\/[^\/]+\/[^\/]+)\//) : location.pathname.match(/^(.*)\/(tour|thanksgiving|halloween|games|woodside)\//), base = m ? m[1] : ''; if(!base) return;
+  document.addEventListener('click', function(e){ var a = e.target && e.target.closest && e.target.closest('a[href]'); if(!a) return; var h = a.getAttribute('href'); if(!h || h.charAt(0) !== '/' || h.charAt(1) === '/' || h.indexOf(base + '/') === 0) return;
+    a.setAttribute('href', base + h.replace(/^([^?#]*\/)(?=[?#]|$)/, '$1index.html')); }, true);
+})();
+</script>
+</body>
+</html>
