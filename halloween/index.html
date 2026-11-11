@@ -21242,7 +21242,7 @@ if(typeof settleStaging === 'function'){ const _b3ss = settleStaging; settleStag
    F3 border    - one soldier course inside the outline wherever the paving meets planting, gravel or the street; none at the
                   house, the garage or the steps (owner rule pavers22). Same material as the rear band.
    F4 drain     - the trench drain across the garage door (p03).
-   F5 planting  - the shrubs in the photos, one by one (LAND.make): rosemary at the deck corner, white shrub roses, lavender and the
+   F5 planting  - (kept clear of the Deck the House luminaria line x = .5 / the street rows) the shrubs in the photos, one by one (LAND.make): rosemary at the deck corner, white shrub roses, lavender and the
                   young olive under the picture windows; lavender and a white rose on the oak island. Replaces the scattered P10 shrubs.
    F6 flagstone - typed flagstones that would lie on the new walk are dropped (whole stones).
    F7 oak       - the front oak leans hard toward the garage (p70, p66 and both phone photos: about 22 deg), splits at ~11 ft and
@@ -21268,13 +21268,13 @@ const F35 = window.__F35 = {on: true, built: false, streetZ: 56.11, bandW: .68, 
     ['azalea', 2.4, 20.3, {w: 2.2, h: 2, color: 'white', seed: 2}],
     ['lavender', 2.4, 22.7, {w: 2.2, h: 2.5, seed: 5}],
     ['azalea', 2.6, 25.1, {w: 2.4, h: 2.2, color: 'white', seed: 7}],
-    ['olive', 2.5, 27.9, {w: 3.4, h: 6.2, trunks: 1, seed: 4}],
+    ['olive', 2.95, 27.9, {w: 2.6, h: 5.8, trunks: 1, seed: 4}],
     ['azalea', 3.2, 31.6, {w: 2.2, h: 2, color: 'white', seed: 9}],
     ['lavender', 3.5, 35.2, {w: 1.9, h: 2.1, seed: 11}],
     ['lavender', -7.4, 33.7, {w: 2.2, h: 2.3, seed: 21}],
     ['azalea', -5.5, 34.6, {w: 1.8, h: 1.6, color: 'white', seed: 22}],
     ['lavender', -7.9, 38, {w: 2.6, h: 2.6, seed: 23}],
-    ['lavender', -10.7, 45, {w: 2, h: 2.1, seed: 24}],
+    ['lavender', -9.6, 44.2, {w: 2, h: 2.1, seed: 24}],
     ['lavender', -9.7, 40.4, {w: 2.1, h: 2.2, seed: 25}]],
   tone: new THREE.Vector3(.45, .55, 1), pav: new THREE.Vector2(1.3, .45),   // front pavers: desaturate / contrast / gain; unit scale (6 and 9 in. cobbles) / tumbled mottle
   oak: {lean: {dir: [-.85, -.5], amount: .4}, trunkBias: {dir: [-.6, -.8], amount: .3}, trunkHeight: 11, bark: 1.7}, report: {}};
@@ -21378,7 +21378,7 @@ function f35Drain(){   // F4: cast-iron trench grate in a slim frame, 5 in wide,
     if(i < k){ const b = i * 2; idx.push(b, b + 1, b + 2, b + 2, b + 1, b + 3); } }
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
   const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({map: t, roughness: .62, metalness: .35, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -14, side: THREE.DoubleSide}));
-  m.material.name = 'front35Drain'; m.name = 'paver-drain-front'; m.receiveShadow = true; return m; }
+  m.material.name = 'front35Drain'; m.name = 'paver-band-front-drain';   /* a paver-band name: the games' snow cover takes it with the border */ m.receiveShadow = true; return m; }
 function f35Plants(){   // F5
   const g = new THREE.Group(); g.name = 'pavBedPlants'; g.userData.probeSkip = true; g.userData.f35 = true; let n = 0;
   if(!(window.LAND && LAND.make)) return g;
