@@ -27,11 +27,11 @@
     halloween: {label: 'Halloween', sub: 'Jack-o’-lanterns, cobwebs and a purple dusk', busy: 'Carving the pumpkins…',
       views: [{t: 'From the street', pos: [6, 3, 66], look: [-2, 7, 14], posP: [6, 3, 74], lookP: [0, 9.5, 14]},
         {t: 'The front steps', pos: [-5.2, 3.2, 31], look: [-5.6, 4.2, 6], posP: [-5.2, 3.4, 36], lookP: [-5.6, 5, 6]},
-        {t: 'The living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9]}]},
+        {t: 'From the foyer', inside: true, pos: [-10.4, 4.8, -4.0], look: [12, 4.2, -4.0]}]},
     thanksgiving: {label: 'Thanksgiving', sub: 'The table set and fall leaves in the yard', busy: 'Setting the table…',
       views: [{t: 'From the street', pos: [6, 3, 66], look: [-2, 7, 14], posP: [6, 3, 74], lookP: [0, 9.5, 14]},
         {t: 'The front steps', pos: [-5.2, 3.2, 31], look: [-5.6, 4.2, 6], posP: [-5.2, 3.4, 36], lookP: [-5.6, 5, 6]},
-        {t: 'Dinner in the great room', inside: true, pos: [17.2, 5, 31.6], look: [9.6, 3.2, 20.4]},
+        {t: 'The table, set for dinner', inside: true, pos: [13.6, 5, 29.5], look: [10.3, 3.3, 21.4]},
         {t: 'The living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9]}]},
     winter: {label: 'Winter holidays', sub: 'Lights, wreaths, a tree and a menorah', busy: 'Hanging the lights…',
       views: [{t: 'From the street', pos: [6, 3, 66], look: [-2, 7, 14], posP: [6, 3, 74], lookP: [0, 9.5, 14]},
@@ -41,9 +41,9 @@
   const KINDS = ['none', 'halloween', 'thanksgiving', 'winter'];
 
   /* ---------- Winter holidays: one scheme, in the Deck the House props' own state shape ---------- */
-  const WINTER = {name: '', trad: [], lights: 'warm', motion: 'steady', door: 'evergreen', win: ['candles', 'menorah'], hang: 'none', path: ['luminarias', 'garland'], tree: 'classic', topper: 'star',
+  const WINTER = {name: '', trad: [], lights: 'warm', motion: 'steady', door: 'evergreen', win: ['candles', 'menorah'], menorahLit: 9, hang: 'none', path: ['luminarias', 'garland'], tree: 'classic', topper: 'star',
     room: ['poinsettia'], room2: ['beams'], oak: 'both', oakFront: true, ter: ['lanterns'], ter2: ['bistro'], weather: 'clear', yard: 'none', wear: 'none'};
-  const BLANK = {name: '', trad: [], lights: 'none', motion: 'steady', door: 'none', win: [], hang: 'none', path: [], tree: 'none', topper: 'star', room: [], room2: [], oak: 'none', oakFront: false, ter: [], ter2: [], weather: 'clear', yard: 'none', wear: 'none'};
+  const BLANK = {name: '', trad: [], lights: 'none', motion: 'steady', door: 'none', win: [], menorahLit: 9, hang: 'none', path: [], tree: 'none', topper: 'star', room: [], room2: [], oak: 'none', oakFront: false, ter: [], ter2: [], weather: 'clear', yard: 'none', wear: 'none'};
   const W = {on: false, built: false, S: null, P: null, inside: false, tod0: null, todMine: false, raf: 0, lastIn: 0, ms: 0, late: 0};
   let mine = false;   // true while this file changes the time of day (a change by the visitor is theirs to keep)
   function loadProps(){ if(window.DECKPROPS) return Promise.resolve(); if(loadProps.p) return loadProps.p;
@@ -111,7 +111,7 @@
   H.on.tod = () => { if(!mine && W.on) W.todMine = false; render(); };
 
   /* ---------- the control ---------- */
-  const ICON = '<svg class="hi" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 2.2l1.5 4.1 4.3.3-3.4 2.7 1.2 4.2L10 11.2l-3.6 2.3 1.2-4.2L4.2 6.6l4.3-.3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4 16.6h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  const ICON = '<svg class="hi" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M8.6 2.6c.6 3.8 2 5.2 5.8 5.8-3.8.6-5.2 2-5.8 5.8-.6-3.8-2-5.2-5.8-5.8 3.8-.6 5.2-2 5.8-5.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M15.4 12.4c.3 1.7.9 2.3 2.6 2.6-1.7.3-2.3.9-2.6 2.6-.3-1.7-.9-2.3-2.6-2.6 1.7-.3 2.3-.9 2.6-2.6z" fill="currentColor"/></svg>';
   const css = `
   #holBtn .hi,#holRow .hi{color:#a8782a}
   html.halloween #holBtn .hi,html.halloween #holRow .hi{color:#ffb04a}
@@ -120,7 +120,7 @@
   #phMenu #holRow{display:flex;align-items:center;gap:8px;width:100%}
   #phMenu #holRow .v31val{margin-left:auto;opacity:.7;font-style:normal}
   html:not(.ph) #phMenu #holRow .v31val{font-weight:400;color:var(--muted);opacity:1}
-  @media (max-width:1019px){html:not(.ph) #holBtn .lb{display:none}}
+  @media (max-width:1019px){html:not(.ph) #holBtn .hl36{display:none}}
   #holPanel{position:fixed;z-index:62;top:var(--holTop,78px);right:var(--holRight,16px);width:316px;max-width:calc(100vw - 24px);max-height:calc(100vh - var(--holTop,78px) - 14px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:14px 10px 10px;
     border-radius:16px;border:1px solid var(--rim27,rgba(255,255,255,.6));background:var(--glass-hi,rgba(255,252,247,.94));-webkit-backdrop-filter:var(--bf27,none);backdrop-filter:var(--bf27,none);color:var(--ink,#1e1b17);
     box-shadow:0 2px 4px rgba(40,30,20,.06),0 16px 40px rgba(40,30,20,.22);font:400 14px/1.35 Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
@@ -154,6 +154,9 @@
   #holPanel .act:active{transform:scale(.97)}
   #holPanel .act.dark{background:#1f1f1d;border-color:#1f1f1d;color:#fbfaf7}
   #holPanel .act.dark:hover{background:#3a3a36}
+  html.halloween #holPanel .act.dark,html.halloween #holShow .done{background:#ff7a1a;border-color:#ff7a1a;color:#1b1020}
+  html.halloween #holPanel .act.dark:hover,html.halloween #holShow .done:hover{background:#ff9a4a}
+  html.thanksgiving #holPanel .act.dark,html.thanksgiving #holShow .done{background:#9E2B25;border-color:#9E2B25;color:#FFF4E2}
   #holPanel .act svg{width:15px;height:15px;flex:none}
   #holPanel .note{margin:8px 8px 4px;font-size:13px;line-height:1.4;color:var(--muted,#55534c)}
   #holPanel .note[hidden]{display:none}
@@ -198,7 +201,7 @@
     const view = document.getElementById('viewBtn'), menu = document.getElementById('phMenu');
     /* desktop: a pill in the header, beside View */
     btn = document.createElement('button'); btn.type = 'button'; btn.id = 'holBtn'; btn.className = 'tod vbtn27'; btn.setAttribute('aria-haspopup', 'dialog'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'holPanel');
-    btn.title = 'See the house decorated for the holidays'; btn.innerHTML = ICON + '<span class="lb">Holiday decor</span>';
+    btn.title = 'See the house decorated for the holidays'; btn.innerHTML = ICON + '<span class="hl36">Holiday decor</span>';
     if(view && view.parentNode) view.parentNode.insertBefore(btn, view); else { const b = $('header.bar'); if(b) b.appendChild(btn); }
     btn.addEventListener('click', e => { e.stopPropagation(); toggle(btn); });
     /* phones (and the desktop View menu): a row near the top of the menu */
@@ -250,7 +253,7 @@
     $('#holNote').hidden = !design;
     const acts = panel.querySelector('.acts'); acts.hidden = !on || !!busy || design;
     const dk = acts.querySelector('[data-a=dusk]'), night = H.tod === 'dusk'; dk.hidden = cur !== 'winter'; dk.innerHTML = (night ? SUN : MOON) + '<span>' + (night ? 'See it by day' : 'See it at dusk') + '</span>';
-    btn.classList.toggle('on', on); btn.querySelector('.lb').textContent = on ? DRESS[cur].label : 'Holiday decor'; btn.setAttribute('aria-label', on ? 'Holiday decor: ' + DRESS[cur].label : 'Holiday decor');
+    btn.classList.toggle('on', on); btn.querySelector('.hl36').textContent = on ? DRESS[cur].label : 'Holiday decor'; btn.setAttribute('aria-label', on ? 'Holiday decor: ' + DRESS[cur].label : 'Holiday decor');
     if(row) row.querySelector('.v31val').textContent = on ? DRESS[cur].label : 'Off';
     if(bar){ const d = bar.querySelector('.dk'); d.hidden = cur !== 'winter'; d.setAttribute('aria-pressed', String(night)); d.setAttribute('aria-label', night ? 'See it by day' : 'See it at dusk'); d.innerHTML = (night ? SUN : MOON) + '<span>' + (night ? 'Day' : 'Dusk') + '</span>'; bar.querySelector('.sep').hidden = d.hidden; } }
   function open(from){ if(!panel) return; opener = from || btn; panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); render(); place();
@@ -272,7 +275,7 @@
       if(reduce){ H.look(pos, look); return; }
       if(v.inside || wasIn || far){ veil.classList.add('on'); clearTimeout(this.vt); this.vt = setTimeout(() => { try{ H.look(pos, look); }catch(e){} setTimeout(() => veil.classList.remove('on'), 140); }, 260); }
       else H.flyTo(pos, look, first ? 1.8 : 1.6); },
-    auto(on){ clearInterval(this.t); this.t = 0; if(!on) return; let n = 0; this.t = setInterval(() => { if(!this.on) return this.auto(false); if(document.hidden) return; if(++n >= this.list.length){ this.auto(false); return; } this.go(this.i + 1); }, 6500); },
+    auto(on){ clearInterval(this.t); this.t = 0; if(!on) return; let n = 0; this.t = setInterval(() => { if(!this.on) return this.auto(false); if(document.hidden) return; if(++n >= this.list.length){ this.auto(false); return; } this.go(this.i + 1); }, 8000); },
     stop(){ if(!this.on) return; this.on = false; this.auto(false); clearTimeout(this.vt); if(veil) veil.classList.remove('on'); if(bar) bar.hidden = true; this.list = null; this.i = -1; try{ window.__v33discPlace && __v33discPlace(); }catch(e){} }};
   /* moving on your own ends the slideshow's own pace (the bar stays, so the next view is one tap away) */
   { const cv = document.getElementById('c'); if(cv) for(const ev of ['pointerdown', 'wheel']) cv.addEventListener(ev, () => { if(show.on) show.auto(false); }, {passive: true}); }

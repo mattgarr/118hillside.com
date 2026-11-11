@@ -2,7 +2,7 @@
    Everything here is built from three.js primitives inside the walkable model of 118 Hillside Drive (feet, y up).
    window.DECKPROPS(H) returns {apply(state, ctx), setOn, lightUp, tick, ...}; assets/deck3d/deck.js drives it.
    The tour's "Holiday decor" control (assets/holiday/holiday.js) builds its Winter holidays dress from the same props:
-   window.DECKPROPS(host, {porchLight: false}) plus the state keys the game never sets (tree 'classic', room2, ter2, oakFront).
+   window.DECKPROPS(host, {porchLight: false}) plus the state keys the game never sets (tree 'classic', room2, ter2, oakFront, menorahLit).
    Lights are GPU points (one draw call per string) plus instanced bulbs, so a few thousand of them stay cheap on phones. */
 (function(){
   'use strict';
@@ -282,7 +282,7 @@
     function buildWin(S, ctx){ const Wn = S.win || []; if(!Wn.length) return null; const g = grp('win'), ins = !!ctx.inside, cand = [], hasM = Wn.includes('menorah'), hasK = Wn.includes('kinara');
       if(Wn.includes('candles')) WINS.forEach(([id, fs]) => { const o = opening(id); if(!o) return; if(id === 'WN-L1-01' && hasM) return; fs.forEach(f => { if(id === 'WN-L1-03' && hasK && f === (o.az > 0 ? -.25 : .25)) return; const p = sill(o, f, ins); candle(g, p.x, p.y, p.z, cand); }); });
       if(cand.length) flames(g, cand, {seq: 1, glow: 1.5, seed: 3});
-      if(hasM){ const o = opening('WN-L1-01'); if(o){ const p = sill(o, 0, ins); menorah(g, p.x, p.y, p.z, Math.atan2(o.nx, o.nz), 5, .92, 1); } }
+      if(hasM){ const o = opening('WN-L1-01'); if(o){ const p = sill(o, 0, ins); menorah(g, p.x, p.y, p.z, Math.atan2(o.nx, o.nz), S.menorahLit || 5, .92, 1); } }   // the game lights five (it is the fifth night in its story); the tour's holiday dress lights all nine
       if(hasK){ const o = opening('WN-L1-03'); if(o){ const f = o.az > 0 ? -.25 : .25, p = sill(o, f, ins); kinara(g, p.x, p.y, p.z, Math.atan2(o.nx, o.nz), {s: .95, seq: 1}); } }
       if(Wn.includes('tree')) conifer(g, {x: -8.9, y: 0, z: 4.7, kind: 'fir', h: 4.4, r: 1.25, small: true, pot: '#2b2f38', topper: 'star', seq: 1, seed: 31});
       return g; }
@@ -406,7 +406,7 @@
     /* ---------- wiring it together ---------- */
     const FEAT = {
       roof: {sig: S => S.lights, build: buildRoof}, door: {sig: S => S.door, build: buildDoor}, hang: {sig: S => S.hang, build: buildHang}, path: {sig: S => (S.path || []).slice().sort().join(), build: buildPath},
-      win: {sig: (S, c) => (S.win || []).slice().sort().join() + (c.inside ? '|in' : '|out'), build: buildWin}, tree: {sig: S => S.tree + '|' + S.topper, build: buildTree}, room: {sig: S => (S.room || []).slice().sort().join(), build: buildRoom},
+      win: {sig: (S, c) => (S.win || []).slice().sort().join() + (c.inside ? '|in' : '|out') + (S.menorahLit || ''), build: buildWin}, tree: {sig: S => S.tree + '|' + S.topper, build: buildTree}, room: {sig: S => (S.room || []).slice().sort().join(), build: buildRoom},
       oak: {sig: S => S.oak, build: buildOak}, ter: {sig: S => (S.ter || []).slice().sort().join(), build: buildTer}, yard: {sig: S => S.weather + '|' + S.yard, build: buildWeather},
       /* second layers, set only by the tour's holiday dress, so it can show and hide parts on their own (the beam garland with the roof, the strings in the oak with the trees) */
       room2: {sig: S => (S.room2 || []).slice().sort().join(), build: (S, c) => S.room2 && S.room2.length ? buildRoom({room: S.room2}, c) : null}, ter2: {sig: S => (S.ter2 || []).slice().sort().join(), build: S => S.ter2 && S.ter2.length ? buildTer({ter: S.ter2}) : null},
