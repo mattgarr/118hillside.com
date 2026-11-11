@@ -651,10 +651,12 @@ function rows(h) {
     ['pbath', 'orchid', { h: 1.6, stems: 2, seed: 11, potDia: 0.45, mountY: 0.03 }, 0, 's', { on: 'pbT', dx: -0.35, dz: -0.1 }],
     ['pbath', 'soapPump', {}, [2113, 944], 's', { drop: true }],
     ['pbath', 'towelStack', { n: 1, w: 0.7, d: 0.5, t: 0.15 }, [2168, 952], 's', { drop: true }],
-    ['pbath', 'towelRing', { mountY: 4.0 }, [2236, 990], 'w', { back: true, fixture: true, key: 'pbR1' }],
-    ['pbath', 'towelHang', { style: 'ring', w: 0.8, drop: 1.05, mountY: 3.5, z: 0.15 }, 0, 'w', { on: 'pbR1', z: 0 }],
-    ['pbath', 'towelRing', { mountY: 4.0 }, [2236, 1020], 'w', { back: true, fixture: true, key: 'pbR2' }],
-    ['pbath', 'towelHang', { style: 'ring', w: 0.8, drop: 1.05, mountY: 3.5, z: 0.15 }, 0, 'w', { on: 'pbR2', z: 0 }]);
+    // r35 owner 11/10: the two rings hang below the window sill, one toward each end of the window (primary-bath photo). At 4.0 ft they
+    // crossed the sill (3.79 ft), so the wall-fit rule slid both off the window to the same spot and they read as one doubled-up bar.
+    ['pbath', 'towelRing', { mountY: 3.3 }, 0, 'w', { bim: [-22.27, -8.9], back: true, fixture: true, key: 'pbR1' }],
+    ['pbath', 'towelHang', { style: 'ring', w: 0.8, drop: 1.05, mountY: 2.8, z: 0.15 }, 0, 'w', { on: 'pbR1', z: 0 }],
+    ['pbath', 'towelRing', { mountY: 3.3 }, 0, 'w', { bim: [-20.62, -8.9], back: true, fixture: true, key: 'pbR2' }],
+    ['pbath', 'towelHang', { style: 'ring', w: 0.8, drop: 1.05, mountY: 2.8, z: 0.15 }, 0, 'w', { on: 'pbR2', z: 0 }]);
   // UPPER LOFT + HALL (p574, p575, p578): woven-leather bench with two cream pillows under the corner windows (no window seat in the 10/31
   // photos), a fiddle-leaf fig in a cream pot, the black / cream abstract on the landing wall
   add(['loft', 'bench', { style: 'woven', w: 5.0 }, 0, 'e', { bim: [-5.8, -24.58], back: true, key: 'lb' }],
