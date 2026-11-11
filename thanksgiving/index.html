@@ -5533,6 +5533,21 @@ const coarse = window.matchMedia && matchMedia('(pointer:coarse)').matches;
 function lookYawPitch(from, to){ const d=new THREE.Vector3(to[0]-from[0], to[1]-from[1], to[2]-from[2]); const h=Math.hypot(d.x,d.z); return [Math.atan2(-d.x,-d.z), Math.atan2(d.y,h)]; }
 function angDiff(a,b){ let d=b-a; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; return d; }
 function applyLook(){ camera.rotation.order='YXZ'; camera.rotation.set(pitch, yaw, 0); }
+/* NAV r27 (owner 11/10): eye level. In the look / walk views the tilt is held to PITCH_DN..PITCH_UP; once the viewer lets go,
+   a view tilted past the level band eases back to it (0.6 s pause, then ~1/3 s); walk-to and tour-stop landings at walking
+   height arrive level (within +/-15 deg). Looking straight down is left to the orbit, aerial and dollhouse views. */
+const PITCH_DN = -.45, PITCH_UP = .6, LEVEL_LO = -.12, LEVEL_HI = .1, LAND_TILT = .26;
+const NAVL = window.NAVL = {dirty: false, at: 0};
+function clampPitch(p, cur){ const c = cur ?? 0; return clamp(p, Math.min(PITCH_DN, c), Math.max(PITCH_UP, c)); }   // never pushes further past the limits
+function navTouched(){ NAVL.dirty = true; NAVL.at = performance.now(); }
+function navLevelStep(dt){
+  if(!NAVL.dirty || ptrs.size || joy || padAct === 'up' || padAct === 'down' || performance.now() - NAVL.at < 600) return;
+  const t = clamp(pitch, LEVEL_LO, LEVEL_HI); if(Math.abs(t - pitch) < .002){ pitch = t; NAVL.dirty = false; return; }
+  pitch += (t - pitch) * Math.min(1, dt * 3); }
+function navLevelLanding(to, toT){   // a look landing at walking height (eye 3.5-7.5 ft over its floor) keeps its heading, tilt limited
+  try{ const fl = walkSurfaceAt(to.x, to.z, to.y - 5.3 + .6), hh = to.y - fl; if(!(hh >= 3.5 && hh <= 7.5)) return;
+    const hz = Math.hypot(toT.x - to.x, toT.z - to.z); if(hz < .01) return;
+    const el = Math.atan2(toT.y - to.y, hz), el2 = clamp(el, -LAND_TILT, LAND_TILT); if(el2 !== el) toT.y = to.y + Math.tan(el2) * hz; }catch(e){} }
 function lookFromCamera(){ const d=new THREE.Vector3(); camera.getWorldDirection(d); yaw=Math.atan2(-d.x,-d.z); pitch=clamp(Math.asin(clamp(d.y,-1,1)),-1.3,1.3); }
 function orbitFromCamera(){ const d=camera.position.clone().sub(target); sph.r=Math.max(.5,d.length()); sph.theta=Math.atan2(d.x,d.z); sph.phi=Math.acos(clamp(d.y/sph.r,-1,1)); }
 function applyOrbit(){
@@ -5556,6 +5571,7 @@ function flyTo(pos, look, kind='look', dur, lens){
   if(kind === 'orbit' && window.__flash22 && __flash22.on){ const L = orbitLand(pos, look); if(Math.hypot(L[0][0] - pos[0], L[0][1] - pos[1], L[0][2] - pos[2]) > 1e-6) __flash22.landed++; pos = L[0]; look = L[1]; }
   if(!lens){ LENS = {fov: FOV0, sy: 0, cam: null}; lens = LENS; } lensTw = null;
   const to=new THREE.Vector3(...pos), toT=new THREE.Vector3(...look);
+  if(kind==='look') navLevelLanding(to, toT); NAVL.dirty = false;   // NAV r27
   const from=camera.position.clone(); const d=new THREE.Vector3(); camera.getWorldDirection(d);
   const fromT = nav==='orbit' && !anim ? target.clone() : from.clone().addScaledVector(d, Math.max(10, from.distanceTo(toT)));
   const dist=from.distanceTo(to);
@@ -5591,6 +5607,17 @@ function v26Pivot(cx, cy){   // v26 O1: the point under the cursor at drag start
   if(!hit) hit = B.getCenter(new THREE.Vector3());
   hit.x = clamp(hit.x, B.min.x - m, B.max.x + m); hit.z = clamp(hit.z, B.min.z - m, B.max.z + m); hit.y = clamp(hit.y, LV.lower - 1, 30);
   V26O.n++; V26O.ms = +(performance.now() - t0).toFixed(1); V26O.last = hit.toArray().map(v => +v.toFixed(1)); return hit; }
+function navGrabOrbit(G, dx, dy, h){   // NAV r27 (owner 11/10): grab-the-world orbit
+  // Spin about the vertical axis through the view centre (target), the way Matterport, Sketchfab and Maps turn a model: drag right and
+  // the near side of the house moves right with the pointer, drag down and it tilts down toward you. The old v26 pivot spun the camera
+  // about the point under the pointer, so the house (behind that point) slid the opposite way - the "flying a plane" feel.
+  // Gain: when the grabbed point G is on the near side, it keeps up with the pointer; capped at the old fixed gain, floored at half of it.
+  const k0 = 2 * Math.PI / h * .75; let ka = k0;
+  try{ camera.updateMatrixWorld(); const R = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), F = new THREE.Vector3(); camera.getWorldDirection(F);
+    const r = G.clone().sub(target), v = new THREE.Vector3(r.z, 0, -r.x), z = Math.max(.5, G.clone().sub(camera.position).dot(F));
+    const ppa = v.dot(R) * h / (2 * z * Math.tan(camera.fov * Math.PI / 360));   // pixels G moves per radian of world spin (theta -= a)
+    if(ppa > 0) ka = clamp(1 / ppa, k0 * .5, k0); }catch(e){}
+  sph.theta -= dx * ka; sph.phi -= dy * k0 * .8; }
 function v26PivotOrbit(P, yaw, pitch){   // v26 O1: rotate camera + target about the pivot P
   const C = camera.position.clone().sub(P), T = target.clone().sub(P), up = new THREE.Vector3(0, 1, 0);
   const qy = new THREE.Quaternion().setFromAxisAngle(up, yaw); C.applyQuaternion(qy); T.applyQuaternion(qy);
@@ -6469,7 +6496,7 @@ function moveTo(x,z,f,face){
   const p={x,z}; collide(p,f); feet=f;
   const pos=[p.x,f+EYE,p.z]; const dist=Math.hypot(p.x-camera.position.x,p.z-camera.position.z);
   // arrive looking the way you walked, so the room opens up in front of you
-  let ly=yaw, lp=pitch;
+  let ly=yaw, lp=clamp(pitch, LEVEL_LO, LEVEL_HI);   // NAV r27: arrive at eye level
   if(face){ ly=Math.atan2(-(face[0]-p.x), -(face[1]-p.z)); lp=-.06; }
   else if(dist>3){ const ty=Math.atan2(-(p.x-camera.position.x), -(p.z-camera.position.z)); lp=-.06;
     // look along the longest view that stays inside the room you walked into (closer to your walking direction wins ties)
@@ -6607,9 +6634,9 @@ canvas.addEventListener('pointermove',e=>{
     else if(p.tilt){ const k=(camera.fov*Math.PI/180)/h*1.1, d=target.clone().sub(camera.position), r=Math.max(.5,d.length());   // v24 N1: Ctrl/Cmd-drag = look around in place (grab-the-world)
       let ya=Math.atan2(-d.x,-d.z)+dx*k, pi=clamp(Math.asin(clamp(d.y/r,-1,1))+dy*k,-1.45,1.2);
       target.set(camera.position.x-Math.sin(ya)*Math.cos(pi)*r, camera.position.y+Math.sin(pi)*r, camera.position.z-Math.cos(ya)*Math.cos(pi)*r); orbitFromCamera(); }
-    else if(p.piv && ptrs.size===1) v26PivotOrbit(p.piv, -dx*2*Math.PI/h*.75, -dy*2*Math.PI/h*.75);   // v26 O1
+    else if(p.piv && ptrs.size===1) navGrabOrbit(p.piv, dx, dy, h);   // NAV r27 (was v26 O1 pivot orbit)
     else { sph.theta -= dx*2*Math.PI/h*.75; sph.phi -= dy*2*Math.PI/h*.75; }
-  } else { if(typeof navGrabLook === 'function' && navGrabLook(e.clientX, e.clientY, dx, dy)) return; const k=(camera.fov*Math.PI/180)/h*1.1; yaw += dx*k; pitch=clamp(pitch+dy*k,-1.3,1.3); }
+  } else { if(typeof navGrabLook === 'function' && navGrabLook(e.clientX, e.clientY, dx, dy)) return; const k=(camera.fov*Math.PI/180)/h*1.1; yaw += dx*k; pitch=clampPitch(pitch+dy*k,pitch); navTouched(); }
 });
 const endPtr=e=>{
   if(joy && e.pointerId===joy.id){ const tap=!joy.moved && performance.now()-joy.t<350; joy=null; $('#joy').hidden=true; if(tap && e.type==='pointerup') clickAt(e.clientX,e.clientY,false); return; }
@@ -6646,7 +6673,7 @@ function padStep(act,dt){
     if(act==='zin') zoomAt(Math.exp(-1.3*dt)); if(act==='zout') zoomAt(Math.exp(1.3*dt));
   } else {
     if(act==='left') yaw+=w; if(act==='right') yaw-=w;
-    if(act==='up') pitch=clamp(pitch+w*.6,-1.3,1.3); if(act==='down') pitch=clamp(pitch-w*.6,-1.3,1.3);
+    if(act==='up'){ pitch=clampPitch(pitch+w*.6,pitch); navTouched(); } if(act==='down'){ pitch=clampPitch(pitch-w*.6,pitch); navTouched(); }
     if(act==='zin') setFov(camera.fov*Math.exp(-1.1*dt)); if(act==='zout') setFov(camera.fov*Math.exp(1.1*dt));
   }
 }
@@ -6720,7 +6747,7 @@ function navWalk(dt){
   NAV.w = ease(NAV.w, turn * NAV.TURN, 7, 10); NAV.wp = ease(NAV.wp, tilt * NAV.PITCH, 10, 12);
   if(Math.abs(NAV.v) < .02 && !fwd) NAV.v = 0; if(Math.abs(NAV.vs) < .02 && !side) NAV.vs = 0;
   if(Math.abs(NAV.w) < .002 && !turn) NAV.w = 0; if(Math.abs(NAV.wp) < .002 && !tilt) NAV.wp = 0;
-  yaw += NAV.w * dt; pitch = clamp(pitch + NAV.wp * dt, -1.3, 1.3);
+  yaw += NAV.w * dt; pitch = clampPitch(pitch + NAV.wp * dt, pitch); if(tilt) navTouched();
   if(K['home']){ NAV.eyeT = 0; pitch += (0 - pitch) * Math.min(1, dt * 6); }
   // move, collide (walls slide), keep footing (rules 2-3)
   navPassTag();
@@ -6830,7 +6857,7 @@ function tick(){
       applyOrbit();
     } else {
       if(keys['+']||keys['=']) setFov(camera.fov*Math.exp(-1.1*dt)); if(keys['-']||keys['_']) setFov(camera.fov*Math.exp(1.1*dt));
-      applyLook();
+      navLevelStep(dt); applyLook();
     }
   }
   // floor target ring under the mouse when looking around inside
@@ -20343,15 +20370,15 @@ BIM3.report.r17 = R17.report;
      undershot ~15 % on phones). Sign (owner 11/4, via lead): MOUSELOOK - drag right -> the view turns right, drag up -> look up; the
      scene moves opposite to the pointer by the same angle. ?drag=grab keeps grab-the-world (the old sign). Orbit modes untouched.
    ?nav18-off restores both. */
-const NAV18 = window.NAV18 = {on: !/[?&]nav18-off\b/.test(location.search), eye: 5.0, band: [3.5, 7.5], pinv: new THREE.Matrix4(), grab: /[?&]drag=grab\b/.test(location.search), report: {snapped: [], left: []}};
+const NAV18 = window.NAV18 = {on: !/[?&]nav18-off\b/.test(location.search), eye: 5.0, band: [3.5, 7.5], pinv: new THREE.Matrix4(), grab: !/[?&]drag=mouse\b/.test(location.search), report: {snapped: [], left: []}};
 function navRay(x, y){ const r = canvas.getBoundingClientRect(), v = new THREE.Vector3((x - r.left) / r.width * 2 - 1, -(y - r.top) / r.height * 2 + 1, .5);
   v.applyMatrix4(NAV18.pinv.copy(camera.projectionMatrix).invert()).normalize().applyQuaternion(camera.quaternion); return v; }   // the inverse of the live matrix: the lens code shifts projectionMatrix directly
 function navGrabLook(x, y, dx, dy){ if(!NAV18.on) return false;
   try{ camera.updateMatrixWorld(); const a = navRay(x - dx, y - dy), b = navRay(x, y);
     let dyaw = Math.atan2(-a.x, -a.z) - Math.atan2(-b.x, -b.z); dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
     const dp = Math.asin(clamp(a.y, -1, 1)) - Math.asin(clamp(b.y, -1, 1));
-    const sg = NAV18.grab ? 1 : -1;   // owner 11/4: mouselook - the view turns toward the drag (scene moves opposite, 1:1); ?drag=grab = grab-the-world
-    yaw += sg * dyaw; pitch = clamp(pitch + sg * dp, -1.3, 1.3); NAV18.report.grab = (NAV18.report.grab || 0) + 1; return true; }catch(e){ return false; } }
+    const sg = NAV18.grab ? 1 : -1;   // NAV r27 (owner 11/10): grab-the-world is the default again, ?drag=mouse = mouselook. Was (owner 11/4): mouselook - the view turns toward the drag (scene moves opposite, 1:1); ?drag=grab = grab-the-world
+    yaw += sg * dyaw; pitch = clampPitch(pitch + sg * dp, pitch); navTouched(); NAV18.report.grab = (NAV18.report.grab || 0) + 1; return true; }catch(e){ return false; } }
 if(NAV18.on && typeof FRAME_FOR === 'function'){ const _ff18 = FRAME_FOR; FRAME_FOR = function(st){ const f = _ff18.apply(this, arguments);
     try{ if(!f || !f.pos || typeof st !== 'object' || !st || st.aerial || st.nav === 'orbit') return f;
       const p = f.pos, fl = walkSurfaceAt(p[0], p[2], p[1] - 5.3 + .6), h = p[1] - fl, id = st.id || f.key;
