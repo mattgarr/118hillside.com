@@ -56,6 +56,20 @@
     <image:image><image:loc>https://118hillside.com/images/deck-preview.jpg</image:loc></image:image>
   </url>
   <url>
+    <loc>https://118hillside.com/games/snowball/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <image:image><image:loc>https://118hillside.com/images/snowball-preview.jpg</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://118hillside.com/games/escape/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <image:image><image:loc>https://118hillside.com/images/escape-preview.jpg</image:loc></image:image>
+  </url>
+  <url>
     <loc>https://118hillside.com/thanksgiving/</loc>
     <lastmod>2026-11-07</lastmod>
     <changefreq>monthly</changefreq>

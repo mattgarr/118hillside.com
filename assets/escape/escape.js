@@ -98,7 +98,7 @@
     const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
     img.onload = () => { const x = cv.getContext('2d'); x.drawImage(img, 0, 0, cv.width, cv.height); tex.needsUpdate = true; };
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SNOWBALL.svg({id: 'sb3d', seed: 7, glow: true}).replace('<svg ', '<svg width="384" height="590" '));
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false})); sp.center.set(.5, 0); sp.scale.set(1.25, 1.92, 1); sp.visible = false; sp.name = 'esc-snowball'; sp.renderOrder = 5;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false})); sp.center.set(.5, 0); sp.scale.set(1.25, 1.92, 1); sp.visible = false; sp.name = 'esc-snowball'; sp.renderOrder = 5; sp.raycast = function(){};
     H.scene.add(sp); CAT = sp; return sp; }
   function catAt(p){ const c = makeCat(); if(!c) return; c.position.set(p[0], p[1], p[2]); c.visible = true; c.material.opacity = 0; const t0 = performance.now();
     (function f(){ const k = Math.min(1, (performance.now() - t0) / 500); c.material.opacity = k; if(k < 1) requestAnimationFrame(f); })(); }
@@ -338,7 +338,8 @@
   function boot(){ loadSnowball(() => { try{ buildUI(); buildEasy(); applyHour(L.start, true); setSlider(L.start); makeCat(); }catch(e){ console.error('[escape] build', e); }
     requestAnimationFrame(frame); const go = () => startCard();
     const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); go(); } }); mo.observe(document.body, {childList: true}); } else go(); }); }
-  const ld = document.getElementById('loading');
-  if(ld && !ld.classList.contains('done')) new MutationObserver((m, o) => { if(ld.classList.contains('done')){ o.disconnect(); setTimeout(boot, 300); } }).observe(ld, {attributes: true, attributeFilter: ['class']}); else setTimeout(boot, 300);
+  // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
+  (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
+    if((fr > 8 && !up) || n > 240) setTimeout(boot, 900); else setTimeout(() => wait(n + 1), 250); })(0);
   window.ESCAPE = {S, ITEMS: () => ITEMS, applyHour, setSlider, PATCH, win, hint, sunDir, interact: id => interact(ITEMS.find(i => i.id === id)), catAt};
 })();

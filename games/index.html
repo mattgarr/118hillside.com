@@ -81,6 +81,17 @@ h1 { font-family:var(--serif); font-weight:500; font-size:clamp(30px,5vw,48px); 
 .soon { opacity:.6; }
 .soon .play { background:transparent; border:1px dashed var(--line); }
 .note { color:var(--muted); font-size:14px; margin:-24px 0 48px; }
+
+.lineup { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin:18px 0 40px; }
+.gcard { display:flex; flex-direction:column; background:var(--paper); border:1px solid var(--line); border-radius:10px; overflow:hidden; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; }
+.gcard:hover { transform:translateY(-2px); box-shadow:0 14px 34px rgba(31,31,29,.1); }
+.gcard img { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; background:#18213a; }
+.gcard .tx { padding:18px 20px 20px; display:flex; flex-direction:column; gap:6px; flex:1; }
+.gcard .age { font-size:13px; color:var(--gold); font-weight:500; }
+.gcard .t { font-family:var(--serif); font-size:clamp(26px,3vw,34px); font-weight:600; line-height:1.05; }
+.gcard .s { color:#3b4950; }
+.gcard .go { margin-top:auto; padding-top:10px; font-weight:500; text-decoration:underline; text-underline-offset:4px; }
+@media (max-width:760px){ .lineup { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -88,87 +99,42 @@ h1 { font-family:var(--serif); font-weight:500; font-size:clamp(30px,5vw,48px); 
 <script src="/assets/site-header.js" defer></script>
 <main class="wrap">
   <h1>Play in the house</h1>
-  <p class="lede">Puzzles and seasonal games set in the real house. They work on phones too.</p>
-  <a class="ever" href="/games/room/" onclick="try{gtag('event','games_pick',{season:'always',game:'room'})}catch(e){}">
-    <span class="tx"><span class="t">Room for Everyone</span><span class="s">A puzzle on the real floor plan of this house. Find every household the rooms that fit how they live: the night-shift nurse, the grandparents who want the coffee close, the dog who needs the yard.</span><span class="tape">Play the floor plan</span></span>
-    <img src="/images/room-hero.jpg" alt="Names on painter's tape placed on the floor plan of 118 Hillside Drive" loading="lazy">
-  </a>
+  <p class="lede">Games set inside the real 118 Hillside Drive, for five-year-olds, grandparents and everyone between. They work on phones too.</p>
   <a class="feature" id="feature" href="#"></a>
-  <div class="tabs" role="tablist" id="tabs"></div>
-  <div class="grid" id="grid"></div>
-  <p class="note" id="note"></p>
+  <div class="lineup">
+    <a class="gcard" href="/games/snowball/" data-g="snowball"><img src="/images/snowball-hero.jpg" alt="Snowball the black cat peeking out from behind a side table in the living room" loading="lazy">
+      <span class="tx"><span class="age">Ages 5 and up</span><span class="t">Where&rsquo;s Snowball?</span><span class="s">A black cat is hiding somewhere in the house, and he picks a new spot every day. Follow the meows from room to room and tap him when you spot him.</span><span class="go">Ready or not</span></span></a>
+    <a class="gcard" href="/games/escape/" data-g="escape"><img src="/images/escape-hero.jpg" alt="A drawing taped to the kitchen pocket door: a low sun, two windows and a clock" loading="lazy">
+      <span class="tx"><span class="age">Teens and adults</span><span class="t">Locked In at Hillside</span><span class="s">An escape room inside the 3D house. Slide the doors, move the sun across the sky, and read what the light is telling you.</span><span class="go">Start the clock</span></span></a>
+    <a class="gcard" href="/games/room/" data-g="room"><img src="/images/room-hero.jpg" alt="Names on painter's tape placed on the floor plan of 118 Hillside Drive" loading="lazy">
+      <span class="tx"><span class="age">Ages 10 and up</span><span class="t">Room for Everyone</span><span class="s">A puzzle on the real floor plan. Give each household the rooms that fit how they live: the night-shift nurse, the grandparents who want the coffee close, the dog who needs the yard.</span><span class="go">Play the floor plan</span></span></a>
+    <a class="gcard" href="#" id="second" data-g="season2"></a>
+  </div>
 </main>
 <script>
 /* Game library. Add a season by adding an entry; a season goes live when live:true and its page exists. */
 var SEASONS = [
-  { id:'halloween', name:'Halloween', icon:'🎃', from:'10-01', to:'10-31', live:true, path:'../halloween/',
-    bg:'linear-gradient(135deg,#1b1027,#3b1f4f 60%,#c2571a)', btn:'#f08a24', btnInk:'#1a0f05',
-    title:'Halloween night', sub:'Six spooky-silly games with Snowball the cat.',
-    games:[
-      {id:'maze',     icon:'🎃', title:'Pumpkin Patch Maze',      blurb:'Find Snowball in the pumpkins', ages:'4+', c:'#f6dcc2'},
-      {id:'hideseek', icon:'🐾', title:'Hide-and-Seek',           blurb:'Find Snowball by sound',        ages:'4+', c:'#dfe9e2'},
-      {id:'treat',    icon:'🍬', title:'Trick-or-Treat Doors',    blurb:'Knock, knock! Fill your bag',   ages:'4+', c:'#f7dde6'},
-      {id:'midnight', icon:'🌙', title:'Midnight Maze',           blurb:'A foggy map, one moonlit cat',  ages:'6+', c:'#dde3f2'},
-      {id:'stairdoor',icon:'🗝️', title:'Secret of the Stair Door', blurb:'Help Hilda open the secret door', ages:'6+', c:'#efe6cf'},
-      {id:'potion',   icon:'🧪', title:'Potion Hunt',             blurb:'Find 10 glowing potions',       ages:'6+', c:'#e2f0d9'}
-    ]},
-  { id:'thanksgiving', name:'Thanksgiving', icon:'🦃', from:'11-01', to:'11-30', live:true, path:'../thanksgiving/',
-    bg:'linear-gradient(135deg,#3a2414,#8a4b1c 55%,#d99a3c)', btn:'#ffd27a', btnInk:'#2a1806',
-    title:'Thanksgiving at Hillside', sub:'The twins put the groceries away, so dinner is hidden all over the house. Follow their clues, then get it all to the terrace table.', feature:'/games/feast/',
-    games:[
-      {id:'feast',   icon:'🥧', title:'Thanksgiving at Hillside', blurb:'The twins hid the groceries. Find them, then set the table', ages:'6+', c:'#efe2cc', href:'/games/feast/'},
-      {id:'turkey',  icon:'🦃', title:'Turkey Trot',  blurb:'Tom is too excited for dinner', ages:'4+', c:'#f3dfc8'},
-      {id:'corn',    icon:'🌽', title:'Corn Maze',    blurb:'Lead Tom out of the corn',    ages:'4+', c:'#f6eac0'},
-      {id:'leaves',  icon:'🍂', title:'Leaf Pile',    blurb:'Rake it up, jump right in',   ages:'3+', c:'#f4d9c4'},
-      {id:'dinner',  icon:'🍗', title:'Dinner Rush',  blurb:'Get dinner on the table',     ages:'5+', c:'#eedfd2'},
-      {id:'thankful',icon:'🍁', title:'Thankful Tree',blurb:'Fill the oak with thanks',    ages:'all', c:'#f2e2cf'}
-    ]},
-  { id:'holidays', name:'Holidays', icon:'❄️', from:'11-27', to:'12-31', live:true, path:'/games/deck/',
-    bg:'linear-gradient(135deg,#141c33,#26326a 55%,#5a3b6e)', btn:'#e8b84a', btnInk:'#2a1d07',
-    title:'Deck the House with Snowball', sub:'Decorate the real house for whatever you celebrate, with a black cat who has opinions. Then wait for dark and light it up.', feature:'/games/deck/',
-    games:[
-      {id:'deck', icon:'🐈‍⬛', title:'Deck the House', blurb:'Lights, menorah, kinara, diyas, a tree or not. Then light it up', ages:'all', c:'#dde3f2', href:'/games/deck/'}
-    ]}
+  { id:'thanksgiving', from:'11-01', to:'11-27', href:'/games/feast/', img:'/images/feast-hero.jpg', alt:'Grocery tags set out on the dining table at 118 Hillside Drive', age:'Ages 6 and up',
+    bg:'linear-gradient(135deg,#3a2414,#8a4b1c 55%,#d99a3c)', btn:'#ffd27a', btnInk:'#2a1806', icon:'🦃',
+    title:'Thanksgiving at Hillside', sub:'The twins put the groceries away, so dinner is hidden all over the house. Follow their clues, then get it all to the terrace table.', go:'Start the hunt' },
+  { id:'holidays', from:'11-28', to:'01-06', href:'/games/deck/', img:'/images/deck-hero.jpg', alt:'118 Hillside Drive decorated for the holidays at dusk, with Snowball the cat on the porch', age:'All ages',
+    bg:'linear-gradient(135deg,#141c33,#26326a 55%,#5a3b6e)', btn:'#e8b84a', btnInk:'#2a1d07', icon:'❄️',
+    title:'Deck the House with Snowball', sub:'Decorate the real house for whatever you celebrate: Hanukkah, Christmas, Kwanzaa, Diwali, the solstice, or just the lights. Then wait for dark and light it up.', go:'Light it up' }
 ];
 function md(d){ return ('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
-function inSeason(s, t){ return t >= s.from && t <= s.to; }
-var today = md(new Date()), q = /[?&]season=(\w+)/.exec(location.search);
-var live = SEASONS.filter(function(s){ return s.live; });
-// featured = ?season=, else the live season that is on now, else the most recent live one
-var featured = (q && SEASONS.filter(function(s){ return s.id===q[1]; })[0])
-  || live.filter(function(s){ return inSeason(s, today); })[0]
-  || live[live.length-1];
-var current = featured;
-function href(s, g){ if(g && g.href) return g.href; if(!g && s.feature) return s.feature; return s.path + (g ? '?game=' + g.id : '?game=menu'); }
+function inSeason(s, t){ return s.from <= s.to ? (t >= s.from && t <= s.to) : (t >= s.from || t <= s.to); }
 function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-function renderFeature(){
-  var s = featured, f = document.getElementById('feature');
-  f.style.background = s.bg; f.href = s.live ? href(s) : '#';
+var today = md(new Date()), q = /[?&]season=(\w+)/.exec(location.search);
+var featured = (q && SEASONS.filter(function(s){ return s.id===q[1]; })[0]) || SEASONS.filter(function(s){ return inSeason(s, today); })[0] || SEASONS[1];
+var other = SEASONS.filter(function(s){ return s !== featured; })[0];
+(function(){ var s = featured, f = document.getElementById('feature'); f.style.background = s.bg; f.href = s.href;
   f.innerHTML = '<span class="art" aria-hidden="true">'+s.icon+'</span><span class="eyebrow" style="color:rgba(255,255,255,.75)">'+(inSeason(s,today)?'This season':'Featured')+'</span>'
-    + '<span class="t">'+esc(s.title)+'</span><span class="s">'+esc(s.live ? s.sub : s.sub+' Coming soon.')+'</span>'
-    + (s.live ? '<span class="go" style="background:'+s.btn+';color:'+s.btnInk+'">Play now &rarr;</span>' : '');
-  if(!s.live){ f.removeAttribute('href'); f.style.cursor='default'; }
-}
-function renderTabs(){
-  var t = document.getElementById('tabs'); t.innerHTML = '';
-  SEASONS.forEach(function(s){
-    var b = document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.setAttribute('aria-selected', s===current ? 'true':'false');
-    b.innerHTML = s.icon+' '+esc(s.name)+(s.live ? '' : ' <small>soon</small>');
-    b.onclick = function(){ current = s; renderTabs(); renderGrid(); try{ gtag('event','games_season',{season:s.id}); }catch(e){} };
-    t.appendChild(b);
-  });
-}
-function renderGrid(){
-  var g = document.getElementById('grid'), n = document.getElementById('note'), s = current; g.innerHTML = '';
-  s.games.forEach(function(x){
-    var ok = s.live && !x.soon, a = document.createElement(ok ? 'a' : 'div'); a.className = 'game' + (ok ? '' : ' soon');
-    if(ok){ a.href = href(s, x); a.onclick = function(){ try{ gtag('event','games_pick',{season:s.id, game:x.id}); }catch(e){} }; }
-    a.innerHTML = '<span class="icon" style="background:'+x.c+'">'+x.icon+'</span><span><div class="gt">'+esc(x.title)+'</div><div class="gb">'+esc(x.blurb)+'</div><div class="ga">Ages '+esc(x.ages)+'</div></span><span class="play">'+(ok?'Play':'Soon')+'</span>';
-    g.appendChild(a);
-  });
-  n.textContent = s.games.length ? (s.live ? '' : s.name+' games are on the way.') : s.name+' games are coming in December.';
-}
-renderFeature(); renderTabs(); renderGrid();
+    + '<span class="t">'+esc(s.title)+'</span><span class="s">'+esc(s.sub)+'</span><span class="go" style="background:'+s.btn+';color:'+s.btnInk+'">Play now &rarr;</span>';
+  f.onclick = function(){ try{ gtag('event','games_pick',{season:s.id, game:'feature'}); }catch(e){} };
+  var o = other, c = document.getElementById('second'); c.href = o.href; c.dataset.g = o.id;
+  c.innerHTML = '<img src="'+o.img+'" alt="'+esc(o.alt)+'" loading="lazy"><span class="tx"><span class="age">'+esc(o.age)+'</span><span class="t">'+esc(o.title)+'</span><span class="s">'+esc(o.sub)+'</span><span class="go">'+esc(o.go)+'</span></span>';
+  [].forEach.call(document.querySelectorAll('.gcard'), function(a){ a.addEventListener('click', function(){ try{ gtag('event','games_pick',{season:'always', game:a.dataset.g}); }catch(e){} }); });
+})();
 </script>
 </body>
 </html>
