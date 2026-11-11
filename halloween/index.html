@@ -8142,7 +8142,7 @@ if(window.FIX && FIX.make && !FIX.__fridge4){ FIX.__fridge4 = true; const _mk = 
     for(const sg of [-1, 1]){ const x0 = sg < 0 ? -w / 2 + .005 : g / 2, x1 = sg < 0 ? -g / 2 : w / 2 - .005;   // French doors
       sb(x0, x1, ys + g / 2, h - g); bar(sg * .16, ys + .45 + 1.65, 3.1, true);
       b.rbox('fGloss', .2, .045, .06, .015, sg * (w / 2 - .22), h - .02, zf + dt - .03, {seg: 2}); }      // hinge covers
-    b.bb('fGloss', -w / 4 - .17, h - .34, zf + dt + .002, -w / 4 + .17, h - .3, zf + dt + .006);           // badge
+    b.bb('fSide', -w / 4 - .1, h - .3, zf + dt + .001, -w / 4 + .1, h - .285, zf + dt + .003);            // badge (a small dark-steel nameplate)
     if(O.dispenser){ const dw = .78, dh = 1.32, dx = -w / 4 - .05, dy = ys + (h - ys) * .52, zz = zf + dt;
       b.rbox('fGloss', dw + .1, dh + .1, .02, .05, dx, dy, zz + .006, {seg: 3});                          // gloss-black bezel
       b.bb('fPanel', dx - dw / 2 + .04, dy + dh / 2 - .26, zz + .017, dx + dw / 2 - .04, dy + dh / 2 - .06, zz + .019);   // icon strip
