@@ -153,10 +153,10 @@
     S.pocket = pd;
     // interactables
     ITEMS = [
-      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [18.8, 4.4, 6.6], look: [19.6, 1.6, 11.6]}, open: openFridge},
+      {id: 'fridge', label: 'Coffee-bar fridge', p: [19.6, 1.7, 11.3], view: {pos: [20.9, 4.5, 8.4], look: [19.6, 1.5, 11.6]}, open: openFridge},
       {id: 'pocket', label: 'Pocket door', p: [22.0, 3.6, 9.5], view: {pos: [17.2, 4.6, 9.6], look: [22.0, 3.7, 9.5]}, open: openPocket},
       {id: 'paper', label: 'Paper on the glass', p: [5.0, 3.8, 22.0], view: {pos: [9.6, 4.4, 21.0], look: [4.8, 3.8, 21.6]}, open: openPaper},
-      {id: 'floor', label: 'Dining floor', p: [10.4, .3, 24.4], hidden: true, view: {pos: [10.4, 6.2, 31.4], look: [10.4, 0, 24.3]}, open: () => {}}];
+      {id: 'floor', label: 'Dining floor', p: [10.4, .3, 24.4], hidden: true, view: {pos: [10.4, 7.2, 31.0], look: [10.4, 0, 24.4], kind: 'orbit'}, open: () => {}}];
     S.code = CODE; S.T = T;
     // hints, by stage
     S.hint = () => {
@@ -170,11 +170,11 @@
         ['Drag the sun to 4:00 PM, then look at the dining floor in front of the windows.', () => { goView('dining'); setSlider(16); }]];
       return [
         ['The shadows only read the right way up from one side. Try looking from the sofa.'],
-        ['Snowball hops up by the sofa and stares at the floor.', () => { flyView({pos: [10.4, 6.2, 31.4], look: [10.4, 0, 24.3]}); catAt([12.6, 0, 27.6]); }],
+        ['Snowball hops up by the sofa and stares at the floor.', () => { flyView({pos: [10.4, 7.2, 31.0], look: [10.4, 0, 24.4], kind: 'orbit'}); catAt([12.6, 0, 27.6]); }],
         ['The code is ' + CODE.split('').join(' ') + '.']]; };
   }
   /* ------------------------------------------------------------------ camera */
-  function flyView(v, dur){ H.anim = null; H.flyTo(v.pos, v.look, 'look', dur || 1.1); }
+  function flyView(v, dur){ H.anim = null; H.flyTo(v.pos, v.look, v.kind || 'look', dur || 1.1); }
   function goView(k){ const v = L.views[k]; if(v){ flyView(v); document.querySelectorAll('#escNav button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === k)); } }
 
   /* ------------------------------------------------------------------ UI */
@@ -320,7 +320,7 @@
     if(!reduce) step(); else { H.setTOD('dusk'); }
     setTimeout(() => { const i = H.STOPS.findIndex(s => s.id === 'entry'); if(i >= 0){ const s = H.STOPS[i]; H.anim = null; H.flyTo(s.pos, s.look, 'look', 1.6); }
       const fd = (H.door28 && H.door28.items || []).find(it => /D-L0-11|D-LG-02/.test(it.id) && it.t < .5); if(fd && H.door28Toggle) setTimeout(() => H.door28Toggle(fd), 1400); }, 1200);
-    setTimeout(finishCard, 4200); }
+    setTimeout(finishCard, 6500); }
   function finishCard(){ const t = elapsed(), stars = t <= L.par && S.hints <= 1 ? 3 : t <= L.par * 1.8 ? 2 : 1;
     const c = el('div', {id: 'escCard'}, `<div class="c"><p class="k">Locked In at Hillside</p><h2>Cork popped.</h2>
       <p class="lede">The guests are at the door, and the house is lit for the evening. Elena owes you a slice of cake.</p>
