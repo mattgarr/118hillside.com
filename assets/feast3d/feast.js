@@ -65,15 +65,20 @@
       note: 'A cathedral ceiling, a walk-in closet, and stacking glass doors to a private balcony.'},
     balcony: {name: 'Balcony', floor: 'upper', pos: [-17.7, L2 + EYE, -41.7], face: [-23.2, 10.2, -47.4], map: [-17.7, -44],
       note: 'A private balcony off the primary bedroom that looks west over the hills.'}};
+  const CATSAYS = {lounge: 'Movie night is down here. I get the good pouf.', office: 'The door shuts. I have opinions about that.', porch: 'I am an indoor cat. This is as far as I go.',
+    entry: 'Everyone who comes in looks up, then straight through at the oak.', living: 'The beams are a hundred years old. I have climbed none of them. Yet.', kitchen: 'Four doors on that fridge and I cannot open one of them.',
+    coffee: 'They call this the coffee bar. I call it the cupboard with the treats.', great: 'The sofa is mine from nine until five.', loft: 'Top of the stairs. Best place to watch everybody.', primary: 'I am not allowed on this bed. I am on it most days.', balcony: 'I watch birds from here. They know.'};
   const ORDER = ['table', 'lounge', 'office', 'porch', 'entry', 'living', 'kitchen', 'coffee', 'great', 'loft', 'primary', 'balcony'];
   const FLOORS = [['upper', 'Upstairs', /^SP-L2-/], ['main', 'Main floor', /^SP-L1-/], ['lower', 'Downstairs', /^SP-L0-/]];
   // walkable graph: the main-floor edges are the ones escape.js ray-checked; the rest were ray-checked the same way (FEAST3D.audit()).
   // Anything not joined here is reached by a short fade, with footsteps for the stairs.
-  const NODES = {a1: [4.4, -4.9], a2: [11.4, -4.9], a3: [12.6, -1.0], a4: [12.75, 5.1], j1: [15.7, 12.4], j2: [15.8, 17.2], s1: [15.2, 26.4], s2: [14.3, 31.6]};
+  const NODES = {a1: [4.4, -4.9], a2: [11.4, -4.9], a3: [12.6, -1.0], a4: [12.75, 5.1], j1: [15.7, 12.4], j2: [15.8, 17.2], s1: [15.2, 26.4], s2: [14.3, 31.6],
+    t1: [-11.4, -18.9, .7], t2: [-8.4, -18.9, .55], t3: [-2.5, -21.5, .5], t4: [3.2, -27, .5], t5: [4.6, -36, .5], b1: [-13.2, -36.6, 10.8], b2: [-15.2, -39.6, 10.85]};
   const EDGES = [['entry', 'living'], ['living', 'a1'], ['a1', 'a2'], ['a2', 'a3'], ['a3', 'a4'], ['a4', 'kitchen'], ['kitchen', 'coffee'], ['kitchen', 'j1'], ['coffee', 'j1'],
-    ['j1', 'j2'], ['j2', 's1'], ['s1', 's2'], ['s2', 'great']];
+    ['j1', 'j2'], ['j2', 's1'], ['s1', 's2'], ['s2', 'great'],
+    ['lounge', 't1'], ['t1', 't2'], ['t2', 't3'], ['t3', 't4'], ['t4', 't5'], ['t5', 'table'], ['primary', 'b1'], ['b1', 'b2'], ['b2', 'balcony']];
   for(const k of ORDER) NODES[k] = [PLACES[k].pos[0], PLACES[k].pos[2]];
-  const NODE_Y = k => PLACES[k] ? PLACES[k].pos[1] : EYE;
+  const NODE_Y = k => PLACES[k] ? PLACES[k].pos[1] : NODES[k][2] != null ? NODES[k][2] : EYE;
   // where the "walk here" circles sit, seen from each place (out-of-view ones dock to the screen edge)
   const WALKS = {
     table:   [{to: 'lounge', at: [-9.6, -2.6, -18.9]}, {to: 'entry', at: [-5.4, -1.0, -13.6], label: 'Up the steps to the entry'}],
@@ -401,8 +406,7 @@
           for(const o of grp.children.slice()){ if(!o.isMesh || o === cer || !o.visible || /^k28(ceramic|ao)|^feast|-rest$/.test(o.name)) continue; try{ const b = splitMesh(o, (c, y0) => near(c) && y0 > SMK.seam + .04 && c.y > SMK.seam + .1); if(b) parts.push(b.part); }catch(e){} }
           const pv = SMK.pivot = new THREE.Group(); pv.name = 'feast-smoker-hinge'; pv.position.set(SMK.c[0], SMK.seam, SMK.c[1] - 1.03); H.scene.add(pv); H.scene.updateWorldMatrix(true, true); for(const m of parts) pv.attach(m);
           // inside: a grate over a bed of coals
-          const grate = P.mesh(new THREE.CircleGeometry(.99, 36), P.std('#1b1b1d', {roughness: .7, metalness: .5, lift: 0}), SMK.c[0], SMK.seam - .1, SMK.c[1]); grate.rotation.x = -Math.PI / 2; P.root.add(grate);
-          const coals = P.mesh(new THREE.RingGeometry(.2, .97, 36), new THREE.MeshBasicMaterial({color: new THREE.Color(1.0, .32, .08), transparent: true, opacity: .55}), SMK.c[0], SMK.seam - .095, SMK.c[1]); coals.rotation.x = -Math.PI / 2; P.root.add(coals); } } }catch(e){ console.warn('[feast] smoker', e); SMK.pivot = null; }
+          const gr = P.grate(.99); gr.position.set(SMK.c[0], SMK.seam - .1, SMK.c[1]); } } }catch(e){ console.warn('[feast] smoker', e); SMK.pivot = null; }
     SMK.emit = P.emitter({at: new V3(SMK.c[0], -.12, SMK.c[1]), rate: 0, size: .5, rise: .8, drift: [.34, .1], life: 3.4, color: '#dfe3e8', alpha: .34, grow: 2.6}); }
 
   // the game is played in the house as it is staged: furniture on, nothing moved or removed. What the visitor chose in the tour's
@@ -417,7 +421,9 @@
   /* ================================================================== props in the house */
   let P = null;
   const PROP = {}, DISHOBJ = {}, TAGS = [], SETTINGS = [];
-  let BUNT = null, noteProp = null, candleLight = null, flames = [];
+  let BUNT = null, noteProp = null, candleLight = null, flames = [], SUNSP = null;
+  const _sd = new V3();
+  function sunStep(){ if(!SUNSP) return; const day = S.tod !== 'dusk'; SUNSP.visible = day; if(!day) return; const d = sunDir(S.hour), low = 1 - Math.min(1, d.y / .5); SUNSP.position.copy(camera.position).addScaledVector(d, 52000); SUNSP.scale.setScalar(13000 + 5000 * low); SUNSP.material.color.setRGB(1, 1 - .22 * low, 1 - .5 * low); }
   function decorOff(name, cx, cz){ const b = new THREE.Box3(), c = new V3(); for(const k of Object.keys(H.GROUPS)) for(const o of H.GROUPS[k].children){ if(o.name !== name) continue; b.setFromObject(o).getCenter(c); if(Math.hypot(c.x - cx, c.z - cz) < 1.6) o.children.forEach(q => { if(q.name === 'decor') q.visible = false; }); } }
   function buildWorld(){
     P = window.FEASTPROPS(H);
@@ -453,6 +459,7 @@
       K.ys.forEach((y, r) => { for(let i = 0; i < 5; i++){ if(r === 1 && i > 0 && i < 4) continue; const t = i / 4, it = K.kind === 'soda' ? P.can(cols[(n++) % 5]) : P.bottle((n++) % 3 ? 'milk' : 'water'); it.position.set(lerp(K.a[0], K.b[0], t), y + .012, lerp(K.a[1], K.b[1], t)); it.rotation.y = n; P.root.add(it); } }); }
     // where each dish starts
     stash(); makeCat();
+    SUNSP = P.sun();
     candleLight = new THREE.PointLight(lin('#ffc27a'), 0, 13, 1.6); candleLight.position.set(TABLE[0], TABLE[1] + 1.7, TABLE[2]); P.root.add(candleLight);
     // the glass doors Elena left open: the lounge onto the terrace, the bedroom onto the balcony
     for(const id of ['D-L0-10', 'D-L2-01']) door(id, true);
@@ -464,7 +471,7 @@
       if(sp.kind === 'wall'){ const top = PROP.crate.position.clone(); top.y += PROP.crate.userData.top; g.position.copy(top); g.visible = true; }
       else if(sp.kind === 'cooler'){ const K = STOCK[st.answer]; g.position.set((K.a[0] + K.b[0]) / 2, K.ys[1] + .012, (K.a[1] + K.b[1]) / 2); g.scale.setScalar(.58); g.rotation.y = st.answer === 'coolerLounge' ? 0 : -Math.PI / 2; g.visible = true; }
       else { const b = PROP[st.answer]; g.position.copy(b.position).add(b.userData.inside); } }
-    const t = DISHOBJ.turkey; t.position.set(SMK.c[0], SMK.seam - .1, SMK.c[1]); t.scale.setScalar(.8); t.rotation.y = -.5; t.visible = true; dress(t, false); }
+    const t = DISHOBJ.turkey; t.position.set(SMK.c[0], SMK.seam - .09, SMK.c[1]); t.scale.setScalar(.95); t.rotation.y = -.5; t.visible = true; dress(t, false); }
   function dress(t, on){ (t.userData.dress || []).forEach(o => o.visible = on); }
   const showAt = id => { const sp = SPOTS[id]; if(sp.show) return v3(sp.show); if(sp.kind === 'cooler' && COOL[id]) return COOL[id].front.clone(); const b = PROP[id]; return b.position.clone().add(new V3(0, (b.userData.top || .4) + (sp.kind === 'box' ? .45 : .32), 0)); };
 
@@ -619,12 +626,12 @@
   .feMk.edge span{top:50%;transform:translateY(-50%)}.feMk.edge.L span{left:58px}.feMk.edge.R span{left:auto;right:58px}
   .feMk:hover span{background:#1f2948}.feMk:focus-visible i{outline:3px solid #fff;outline-offset:3px}
   @keyframes fePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.13)}}
-  #feSheet{position:absolute;right:max(16px,env(safe-area-inset-right));top:50%;width:min(384px,calc(100% - 28px));max-height:calc(100% - 150px);overflow:auto;background:var(--paper);border-radius:20px;box-shadow:0 20px 60px rgba(10,14,28,.38);padding:20px 20px 18px;transform:translate(24px,-50%);opacity:0;visibility:hidden;transition:opacity .3s,transform .3s,visibility 0s linear .3s;pointer-events:none}
+  #feSheet{position:absolute;right:max(16px,env(safe-area-inset-right));top:calc(50% + 34px);width:min(384px,calc(100% - 28px));max-height:calc(100% - 196px);overflow:auto;background:var(--paper);border-radius:20px;box-shadow:0 20px 60px rgba(10,14,28,.38);padding:20px 20px 18px;transform:translate(24px,-50%);opacity:0;visibility:hidden;transition:opacity .3s,transform .3s,visibility 0s linear .3s;pointer-events:none}
   #feSheet.on{transform:translate(0,-50%);opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s,transform .3s}
   #feSheet h3{font-family:"Cormorant Garamond",Georgia,serif;font-size:28px;font-weight:600;margin:0 0 6px;line-height:1.05}
   #feSheet p{margin:0 0 10px;font-size:16px;line-height:1.45;color:#2b3442}
   #feSheet p.res{font-weight:500;color:var(--ink)}
-  #feSheet .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  #feSheet .row{display:flex;flex-wrap:wrap;gap:8px;margin:12px -20px -18px;padding:10px 20px 18px;position:sticky;bottom:-18px;background:linear-gradient(rgba(251,250,247,0),var(--paper) 12px)}
   .feTagCard{position:relative;background:linear-gradient(160deg,#e2c595,#cfab74);color:var(--kink);border-radius:6px 14px 14px 6px;padding:14px 16px 13px 30px;margin:2px 0 12px;font:400 22px/1.2 "Caveat Brush","Marker Felt",cursive;box-shadow:0 6px 16px rgba(60,40,10,.2);transform:rotate(-.6deg)}
   .feTagCard::before{content:"";position:absolute;left:10px;top:50%;width:9px;height:9px;margin-top:-4.500px;border-radius:50%;background:var(--paper);box-shadow:inset 0 0 0 1.5px #b9945f}
   .feTagCard small{display:block;font:500 12px Jost,sans-serif;letter-spacing:.04em;color:#6b5230;margin-bottom:3px}
@@ -670,6 +677,7 @@
   #feCard .cta{background:#1f2948;color:#f4f1e8;border-radius:18px;padding:18px 18px 16px;margin:14px 0 14px}
   #feCard .cta b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-size:25px;font-weight:600;line-height:1.1;margin-bottom:6px}#feCard .cta span{display:block;font-size:15px;line-height:1.45;color:#d5dae8;margin-bottom:14px}
   #feCard .more{display:flex;flex-wrap:wrap;gap:8px}
+  #feCard.clue .c{max-width:500px;max-height:calc(100% - 8px);overflow:auto}#feCard.clue .feTagCard img{max-height:62vh;width:auto;max-width:100%;margin:8px auto 2px}
   #feCard img.pc{width:100%;height:auto;border-radius:10px;display:block;box-shadow:0 8px 24px rgba(0,0,0,.25);margin:0 0 12px}
   .feLeaf{position:fixed;top:-30px;width:16px;height:22px;z-index:79;pointer-events:none;border-radius:60% 60% 60% 60%/70% 70% 40% 40%;animation:feFall linear forwards}
   @keyframes feFall{to{transform:translate(var(--dx),108vh) rotate(var(--rot))}}
@@ -691,7 +699,7 @@
     #feTags{justify-content:flex-end;gap:4px;padding-bottom:0}#feTags i{width:30px;height:40px;font-size:25px;line-height:44px}
     #feCoach{top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 70px);font-size:14.5px}
     #feSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:560px;margin:0 auto;max-height:58vh;transform:translateY(20px);padding:16px 16px 14px}
-    #feSheet.on{transform:none}#feSheet h3{font-size:24px}#feSheet p{font-size:15.5px}.feTagCard{font-size:20px}
+    #feSheet.on{transform:none}#feSheet h3{font-size:24px}#feSheet p{font-size:15.5px}.feTagCard{font-size:20px}#feSheet .row{margin:10px -16px -14px;padding:8px 16px 14px;bottom:-14px}
     html.fe-ex #feDock{visibility:hidden}html.fe-ex #feBack{display:none}
     html.fe-ex #feGoal{display:none}
     #feCard .c{padding:20px 18px 18px}#feCard .note{font-size:20.5px}#feCard .lede{font-size:19px}
@@ -775,30 +783,29 @@
 
   /* ---- the twins' map for the candles clue: the main floor, turned a quarter from the map in the corner, with dots from the front doors */
   let mapURL = null;
-  function twinsMap(target){ if(mapURL) return mapURL; const sp = H.BIM2S.meta.spaces.filter(s => /^SP-L1-/.test(s.id)), c = document.createElement('canvas'), w = 720, h = 760; c.width = w; c.height = h; const x = c.getContext('2d');
+  function twinsMap(target){ if(mapURL) return mapURL; const sp = H.BIM2S.meta.spaces.filter(s => /^SP-L1-/.test(s.id)), c = document.createElement('canvas'), w = 640, h = 880; c.width = w; c.height = h; const x = c.getContext('2d');
     const R = (() => { let s = 17; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
     const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#e6cc9c'); g.addColorStop(1, '#d6b47c'); x.fillStyle = g; x.fillRect(0, 0, w, h);
     for(let i = 0; i < 2400; i++){ x.fillStyle = `rgba(88,58,22,${R() * .05})`; x.fillRect(R() * w, R() * h, 1 + R() * 5, 1); }
     // world (x, z) -> page: x to the right, the street (+z) at the bottom
-    const k = 13.2, ox = 132, oy = 196, pt = (wx, wz) => [ox + (wx + 11) * k, oy + (wz + 10) * k];
-    const ink = '#2a2233'; x.strokeStyle = ink; x.fillStyle = ink; x.lineCap = 'round'; x.lineJoin = 'round';
+    const k = 11.4, pt = (wx, wz) => [78 + (wx + 11) * k, 232 + (wz + 10) * k];
+    const ink = '#2a2233', HANDF = '"Caveat Brush","Marker Felt",cursive'; x.strokeStyle = ink; x.fillStyle = ink; x.lineCap = 'round'; x.lineJoin = 'round';
     const wob = (pts, lw, close) => { x.lineWidth = lw; x.beginPath(); pts.forEach((p, i) => { const q = [p[0] + (R() - .5) * 3, p[1] + (R() - .5) * 3]; i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1]); }); if(close) x.closePath(); x.stroke(); };
-    for(const s of sp){ const poly = (s.poly || s.polygon).map(p => pt(...W2(p[0], p[1]))); x.fillStyle = 'rgba(255,250,236,.4)'; x.beginPath(); poly.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); x.closePath(); x.fill(); wob(poly, 4.5, true); }
-    wob([pt(-10.1, 3), pt(-10.1, 15.7), pt(4, 15.7), pt(4, 5)], 3.5);   // the front deck
-    x.fillStyle = ink; x.font = '40px "Caveat Brush","Marker Felt",cursive'; x.textAlign = 'center';
-    // street and a car
-    wob([[40, h - 70], [w - 40, h - 66]], 4); x.fillText('the street', w * .64, h - 26);
-    { const cx = 150, cy = h - 96; x.lineWidth = 4; x.strokeRect(cx - 40, cy - 14, 80, 22); x.beginPath(); x.moveTo(cx - 22, cy - 14); x.lineTo(cx - 12, cy - 32); x.lineTo(cx + 16, cy - 32); x.lineTo(cx + 26, cy - 14); x.stroke(); for(const d of [-24, 24]){ x.beginPath(); x.arc(cx + d, cy + 10, 8, 0, 6.3); x.fill(); } }
-    // front doors with an arrow in
-    { const d = pt(-5.7, 3); x.fillText('front doors', d[0] - 6, d[1] + 110); wob([[d[0], d[1] + 76], [d[0], d[1] + 22]], 5); wob([[d[0] - 12, d[1] + 36], [d[0], d[1] + 20], [d[0] + 12, d[1] + 36]], 5); }
+    for(const s of sp){ const poly = (s.poly || s.polygon).map(p => pt(...W2(p[0], p[1]))); x.fillStyle = 'rgba(255,250,236,.45)'; x.beginPath(); poly.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); x.closePath(); x.fill(); wob(poly, 4, true); }
+    wob([pt(-10.1, 3), pt(-10.1, 15.7), pt(4, 15.7), pt(4, 5)], 3);   // the front deck
+    x.fillStyle = ink; x.textAlign = 'left'; x.font = '54px ' + HANDF; x.fillText('TOP SECRET', 30, 62); x.font = '32px ' + HANDF; x.fillText('by L + M', 34, 98);
     // the oak, out the back
-    { const o = pt(-3.2, -19.2); x.lineWidth = 5; for(const [dx, dy, r] of [[0, 0, 34], [-30, 14, 24], [30, 12, 26], [4, -24, 22]]){ x.beginPath(); x.arc(o[0] + dx, o[1] + dy, r, 0, 6.3); x.stroke(); } wob([[o[0] - 6, o[1] + 34], [o[0] - 8, o[1] + 74]], 6); wob([[o[0] + 8, o[1] + 34], [o[0] + 10, o[1] + 74]], 6); x.fillText('the oak', o[0] + 96, o[1] + 10); }
+    { const o = [330, 118]; x.lineWidth = 4.5; for(const [dx, dy, r] of [[0, 0, 30], [-27, 12, 21], [27, 10, 23], [3, -21, 19]]){ x.beginPath(); x.arc(o[0] + dx, o[1] + dy, r, 0, 6.3); x.stroke(); } wob([[o[0] - 6, o[1] + 30], [o[0] - 8, o[1] + 66]], 5); wob([[o[0] + 8, o[1] + 30], [o[0] + 10, o[1] + 66]], 5); x.font = '34px ' + HANDF; x.fillText('the oak', o[0] + 62, o[1] + 14); }
+    // front doors with an arrow in, from the porch
+    { const d = pt(-5.7, 3); wob([[d[0], d[1] + 84], [d[0], d[1] + 14]], 5); wob([[d[0] - 12, d[1] + 30], [d[0], d[1] + 12], [d[0] + 12, d[1] + 30]], 5); x.font = '32px ' + HANDF; x.textAlign = 'center'; x.fillText('front', d[0] - 2, d[1] + 116); x.fillText('doors', d[0] - 2, d[1] + 144); }
+    // street and a car
+    wob([[30, h - 62], [w - 30, h - 58]], 4); x.font = '34px ' + HANDF; x.textAlign = 'center'; x.fillText('the street', w * .62, h - 22);
+    { const cx = 120, cy = h - 86; x.lineWidth = 4; x.strokeRect(cx - 38, cy - 13, 76, 20); x.beginPath(); x.moveTo(cx - 21, cy - 13); x.lineTo(cx - 11, cy - 30); x.lineTo(cx + 15, cy - 30); x.lineTo(cx + 25, cy - 13); x.stroke(); for(const d of [-23, 23]){ x.beginPath(); x.arc(cx + d, cy + 9, 8, 0, 6.3); x.fill(); } }
     // dots from the front doors to the X
-    const path = [[-5.7, 1.6], [-5.6, -.6], [1.8, -3.6], [11.4, -4.9], [12.75, 5.1], [12.8, 8.4]].concat(target === 'great' ? [[15.7, 12.4], [15.8, 17.2], [15.2, 26.4], [15.5, 31.2]] : [[10.6, 10.6]]);
-    const X = target === 'great' ? [15.6, 33.2] : [8.6, 13.2];
-    x.fillStyle = '#8c2b3d'; for(let i = 0; i < path.length - 1; i++){ const a = pt(...path[i]), b = pt(...path[i + 1]), n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 22)); for(let j = 0; j < n; j++){ const t = j / n; x.beginPath(); x.arc(a[0] + (b[0] - a[0]) * t + (R() - .5) * 3, a[1] + (b[1] - a[1]) * t + (R() - .5) * 3, 4.6, 0, 6.3); x.fill(); } }
-    { const p = pt(...X); x.strokeStyle = '#8c2b3d'; wob([[p[0] - 20, p[1] - 20], [p[0] + 20, p[1] + 20]], 9); wob([[p[0] + 20, p[1] - 20], [p[0] - 20, p[1] + 20]], 9); }
-    x.fillStyle = ink; x.textAlign = 'left'; x.font = '52px "Caveat Brush","Marker Felt",cursive'; x.fillText('TOP SECRET', 34, 62); x.font = '34px "Caveat Brush","Marker Felt",cursive'; x.fillText('by L + M', 40, 100);
+    const path = [[-5.7, 1.6], [-5.6, -.6], [1.8, -3.6], [11.4, -4.9], [12.75, 5.1], [12.8, 8.4]].concat(target === 'great' ? [[15.7, 12.4], [15.8, 17.2], [15.2, 26.4], [15.5, 31.0]] : [[10.9, 10.4]]);
+    const X = target === 'great' ? [15.6, 33.2] : [8.8, 13.2];
+    x.fillStyle = '#8c2b3d'; for(let i = 0; i < path.length - 1; i++){ const a = pt(...path[i]), b = pt(...path[i + 1]), n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 20)); for(let j = 0; j < n; j++){ const t = j / n; x.beginPath(); x.arc(a[0] + (b[0] - a[0]) * t + (R() - .5) * 3, a[1] + (b[1] - a[1]) * t + (R() - .5) * 3, 4.4, 0, 6.3); x.fill(); } }
+    { const q = pt(...X); x.strokeStyle = '#8c2b3d'; wob([[q[0] - 19, q[1] - 19], [q[0] + 19, q[1] + 19]], 9); wob([[q[0] + 19, q[1] - 19], [q[0] - 19, q[1] + 19]], 9); }
     try{ mapURL = c.toDataURL('image/jpeg', .86); }catch(e){ mapURL = ''; } return mapURL; }
   // the clue, full size (and the map, when there is one)
   const clueOpen = () => !!$('#feCard.clue');
@@ -848,14 +855,14 @@
     for(const w of (WALKS[S.place] || [])) mark('walk', w.label || PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     for(const id of liveSpots()){ const sp = SPOTS[id]; const m = mark('look', sp.label, sp.at, () => examine(id), 's:' + id); if(S.hot === id) m.hot = true; } }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || !S.started || S.done || !!S.ex;
-    const top = Math.max(phone() ? 150 : 96, (phone() ? goalE.getBoundingClientRect().bottom : 0) + 34), bot = r.height - (phone() ? (placeE.classList.contains('on') ? 196 : 104) : 224), padX = 40, items = [], placed = [];
+    const top = 46, bot = r.height - 46, padX = 40, items = [], placed = [];
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '', docked = false;
       if(behind || x < r.left - 10 || x > r.left + r.width + 10 || y < r.top - 60 || y > r.top + r.height + 60){ docked = true; edge = (behind ? side < 0 : x < r.left + r.width / 2) ? 'L' : 'R'; }
       else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); if(x < r.left + 88) edge = 'L'; else if(x > r.left + r.width - 88) edge = 'R'; }
       items.push({m, x, y, edge, docked}); }
-    items.sort((p, q) => p.docked - q.docked);
+    items.sort((p, q) => (p.docked - q.docked) || ((p.m.kind === 'walk') - (q.m.kind === 'walk')));
     const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
     add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#feMapBtn') : mapE); add($('#feBtns')); if(sayE.classList.contains('on')) add(sayE); add($('#feTags'));
     const box = it => it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 226, it.y + 32] : it.edge === 'R' ? [it.x - 226, it.y - 32, it.x + 32, it.y + 32] : [it.x - 78, it.y - 32, it.x + 78, it.y + 88];
@@ -882,14 +889,14 @@
   function arrive(k, first){ S.place = k; S.busy = false; mapPlace(k); setMarks(); const fresh = !S.visited[k]; S.visited[k] = true; if((fresh || first) && !S.carry) placeCard(k);
     if(SMK.emit) SMK.emit.rate = k === 'table' ? (S.phase === 'turkey' || S.phase === 'candles' || S.phase === 'end' ? 3.2 : 2) : 0;
     S.lastProgress = performance.now(); ga('feast3d_place', {place: k});
-    if(k === 'table' && S.carry) later(250, setDown); }
+    if(k === 'table' && S.carry) later(250, setDown);
+    else if(fresh && CATSAYS[k] && S.phase === 'hunt' && !S.carry) later(1400, () => { if(S.place === k && !S.ex && !rig.move && !sayE.classList.contains('on')) say(CATSAYS[k], 5200, true); }); }
   function goTo(k, opts){ opts = opts || {}; if(!PLACES[k] || S.busy || rig.move || S.done || S.ex) return false;
     if(k === S.place){ const p = standPose(k); rig.lim = null; rig.tyaw = rig.yaw + angDiff(rig.yaw, p.yaw); rig.tpitch = p.pitch; rig.zoom = 1; if(opts.done) opts.done(); return true; }
-    const r = route(S.place, k), pose = standPose(k); S.busy = true; S.coach.walk = true; placeE.classList.remove('on'); sayE.classList.remove('on'); for(const m of marks){ m.on = false; m.b.classList.remove('on'); }
+    const r = route(S.place, k), pose = standPose(k); S.busy = true; if(k === 'balcony' || S.place === 'balcony') door('D-L2-01', true); if(k === 'table' || k === 'lounge') door('D-L0-10', true); S.coach.walk = true; placeE.classList.remove('on'); sayE.classList.remove('on'); for(const m of marks){ m.on = false; m.b.classList.remove('on'); }
     const land = () => { arrive(k); if(opts.done) opts.done(); };
-    if(r){ const path = r.map(n => [NODES[n][0], NODE_Y(n), NODES[n][1]]); const dur = rigTravel(path, pose, {face: true, done: land}); SND.steps(clamp(Math.round(dur / .44), 1, 7)); }
+    if(r){ const path = r.map(n => [NODES[n][0], NODE_Y(n), NODES[n][1]]); let len = 0; for(let i = 1; i < path.length; i++) len += Math.hypot(path[i][0] - path[i - 1][0], path[i][2] - path[i - 1][2]); const dur = rigTravel(path, pose, {face: true, done: land, dur: clamp(.55 + len / 13, .8, 3.6)}); SND.steps(clamp(Math.round(dur / .44), 1, 7)); }
     else { const stairs = PLACES[S.place].floor !== PLACES[k].floor || (S.place === 'table' && k === 'entry') || (S.place === 'entry' && k === 'table'); SND.steps(stairs ? 5 : 3);
-      if(k === 'balcony') door('D-L2-01', true); if(k === 'table' || k === 'lounge') door('D-L0-10', true);
       fadeThrough(() => { rigCut(PLACES[k].pos, pose.yaw, pose.pitch, pose.fov); land(); }, stairs ? 420 : 260); }
     return true; }
   function freeArea(){ const W = innerWidth, Hh = innerHeight, r = sheetE.getBoundingClientRect(); const topPad = phone() ? 70 : 30;
@@ -941,9 +948,8 @@
     if(S.ex) S.ex.state = 'wrong'; sheetFor(S.ex);
     if(S.peeks === 1) later(700, () => say('Not there. The clue is true, so read it again.', 4600)); else if(S.peeks === 4) later(700, () => say('Guessing works eventually. So does asking me.', 5000)); }
   function foundDish(id){ const sp = SPOTS[id], st = cur(), g = DISHOBJ[st.dish]; SND.find(); ga('feast3d_found', {step: S.step, dish: st.dish, peeks: S.peeks, hints: S.hints}); S.hot = null;
-    const to = sp.kind === 'wall' ? g.position.clone() : showAt(id);
-    if(sp.kind === 'wall'){ g.visible = true; P.sparkle(to.clone().add(new V3(0, .4, 0)), 8); }
-    else emerge(g, g.position.clone(), to, showScale(st.dish), () => { g.userData.spin = true; });
+    const to = sp.kind === 'wall' ? g.position.clone().add(new V3(0, .42, 0)) : showAt(id);
+    emerge(g, g.position.clone(), to, sp.kind === 'wall' ? 1 : showScale(st.dish), () => { g.userData.spin = true; });
     P.sparkle(to.clone().add(new V3(0, .3, 0)), 9); if(g.userData.steam){ const e = P.emitter({at: to.clone().add(new V3(0, (g.userData.h || .3) * showScale(st.dish), 0)), rate: 5, size: .22, rise: .5, life: 1.6, alpha: .3, grow: 1.4}); later(4200, () => { e.on = false; }); }
     S.tried[id] = true; if(S.ex) S.ex.state = 'found'; sheetFor(S.ex); }
 
@@ -970,15 +976,15 @@
     const last = i === STEPS.length - 1, nx = STEPS[i + 1];
     if(last) return sheet(`<h3>${esc(DISHCAP[st.dish])}, and the last tag</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('P.S. from Leo and Max', 'We did not lose dinner. We wanted you to see the whole house before everybody sits down. Happy Thanksgiving. P.P.S. Dad says the turkey is ready. Lift the lid.')}`,
       {noBack: true, acts: [{label: 'Go to the smoker', cls: 'primary', go: () => { S.phase = 'turkey'; S.step = STEPS.length; S.hintIx = 0; setGoal(); SND.spell(); setTod('golden'); P.setLift(.9); back(() => later(300, () => { say('It spells THANKS. I knew that.', 4600, true); examine('smoker'); })); }}]});
-    return sheet(`<h3>${esc(DISHCAP[st.dish])} ${PLURAL[st.dish] ? 'are' : 'is'} on the table.</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('Clue ' + (i + 2) + ' of 6, from ' + nx.who, nx.clue)}${nx.map ? `<div class="feTagCard" style="padding:10px 12px 8px 12px"><img alt="A hand-drawn map of one floor of the house, with dots leading from the front doors to an X" src="${twinsMap(nx.map)}" style="margin:0"></div>` : ''}`,
-      {noBack: true, acts: [{label: 'Start looking', cls: 'primary', go: () => nextStep()}]}); }
+    return sheet(`<h3>${esc(DISHCAP[st.dish])} ${PLURAL[st.dish] ? 'are' : 'is'} on the table.</h3>${tagCard('On the back of the tag', st.thanks, LETTERS[i])}${tagCard('Clue ' + (i + 2) + ' of 6, from ' + nx.who, nx.clue)}`,
+      {noBack: true, acts: [nx.map ? {label: 'Look at the map', cls: 'primary', go: () => { nextStep(); later(900, openClue); }} : {label: 'Start looking', cls: 'primary', go: () => nextStep()}]}); }
   function nextStep(){ S.step++; S.phase = 'hunt'; S.tried = {}; S.knocked = {}; S.hot = null; S.hintIx = 0; S.lastProgress = performance.now(); $('#feHint').classList.remove('nudge'); setHour(HOURS[S.step] || 17.2); setGoal(); ga('feast3d_step', {step: S.step});
     back(() => { const n = S.step; if(n === 1) later(600, () => say('The sun moved while you were carrying that.', 4600, true)); else if(n === 3) later(600, () => say('Half of dinner is found. The other half is still clever.', 4800, true)); else if(n === 5) later(600, () => say('One more, and the sun is getting low.', 4600, true)); }); }
 
   /* ---- the smoker and the turkey */
   function sheetSmoker(ex){ const sp = SPOTS.smoker;
     if(S.phase !== 'turkey') return sheet(`<h3>${esc(sp.title)}</h3><p>${esc(sp.text)}</p>`);
-    if(ex.state === 'open') return sheet(`<h3>The turkey</h3><p>Twelve hours over oak and apple wood, the colour of a good violin. It has been here the whole time, and you could smell it from the balcony.</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => { const t = DISHOBJ.turkey; dress(t, true); t.scale.setScalar(.8); S.carry = 'turkey'; HELD.g = t; HELD.s = .34; setGoal(); back(() => setDown()); }}]});
+    if(ex.state === 'open') return sheet(`<h3>The turkey</h3><p>Twelve hours over oak and apple wood, the colour of a good violin. It has been here the whole time, and you could smell it from the balcony.</p>`, {noBack: true, acts: [{label: 'Carry it to the table', cls: 'primary', go: () => { const t = DISHOBJ.turkey; dress(t, true); S.carry = 'turkey'; HELD.g = t; HELD.s = .34; setGoal(); if(SMK.emit) SMK.emit.rate = 1.2; back(() => { tween(1100, u => SMK.set(1 - ease(u))); setDown(); }); }}]});
     return sheet(`<h3>${esc(sp.title)}</h3><p>The dial has reached the mark Marcus drew on it. The tags are up, the table is set, and the twins say it is time.</p>`, {acts: [{label: 'Lift the lid', cls: 'primary', go: () => liftLid()}]}); }
   function liftLid(){ if(S.busy || S.lidUp) return; S.busy = true; S.lidUp = true; SND.lid(); ga('feast3d_lid');
     if(SMK.emit){ P.burst(SMK.emit, 16); SMK.emit.rate = 5; later(5000, () => { SMK.emit.rate = 1.6; SMK.emit.at.y = SMK.seam + .3; }); }
@@ -991,10 +997,10 @@
     c.userData.sticks.forEach((st, i) => { const at = new V3(); st.getWorldPosition(at); at.y += st.userData.top; const f = P.flame(at, 1); flames.push(f); later(500 + i * 420, () => { SND.flame(i); tween(500, u => f.on(u)); }); });
     later(500, () => tween(2600, u => { candleLight.intensity = 1.5 * u; }));
     // the sun goes: the model's own dusk, with the house lights on
-    later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt([3.6, TER + .02, -41.4]); }, 520));
-    later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: [0, 0]}, {dur: 9}); });
+    later(2500, () => fadeThrough(() => { setTod('dusk'); P.setLift(.75); const sh = SHOT(), a = yp(sh.pos, sh.look); rigCut(sh.pos, a[0], a[1], sh.fov); S.ex = null; document.documentElement.classList.remove('fe-ex'); catAt([2.9, TER + .02, -41.9]); for(const t of TAGS) if(t) t.userData.mat.emissiveIntensity = .5; }, 520));
+    later(3900, () => { SND.chord(); const sh = SHOT(), a = yp(sh.pos2, sh.look); rigTravel([sh.pos, sh.pos2], {yaw: a[0], pitch: a[1], fov: sh.fov, off: phone() ? [0, -.17] : [-.17, 0]}, {dur: 9}); });
     later(4600, () => { SND.bell(); guests(() => finish()); }); }
-  const SHOT = () => aspect() < 1 ? {pos: [8.4, .7, -46.6], pos2: [7.2, .6, -46.2], look: [-2.4, -1.5, -43.3], fov: 80} : {pos: [7.9, .5, -47.0], pos2: [6.4, .4, -46.4], look: [-2.6, -1.4, -43.0], fov: 56};
+  const SHOT = () => aspect() < 1 ? {pos: [8.4, .7, -46.6], pos2: [7.2, .6, -46.2], look: [-2.4, -1.5, -43.3], fov: 80} : {pos: [8.3, .55, -47.1], pos2: [7.3, .5, -46.7], look: [-2.6, -1.3, -43.0], fov: 56};
   const GUESTS = [
     {n: 'Rosa', w: 'Marcus’s mom', c: '#b5232c', a: 'My pie had a nice afternoon in the sun. Who do I thank?', b: 'You kept my pie out of the sun. Good. Who do I thank?'},
     {n: 'Walt', w: 'Elena’s dad', c: '#7a5c38', a: 'Rolls on the balcony. I would have looked there last.', b: 'Rolls on the front porch. I walked right past them.'},
@@ -1027,7 +1033,7 @@
     try{ await navigator.clipboard.writeText(text + ' ' + url); btn.textContent = 'Link copied'; }catch(e){ btn.textContent = url; } }
   /* the picture: exactly what the canvas shows, with a caption underneath */
   let shot = null;
-  function snap(){ let url = null; const card = $('#feCard'); try{ url = H.snapshot('image/jpeg', .93); }catch(e){ console.warn('[feast] snapshot', e); } if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.', 3200); return; }
+  function snap(){ let url = null; const off = rig.off; try{ rig.off = [0, 0]; rig.sig = ''; rigStep(performance.now(), 0); url = H.snapshot('image/jpeg', .93); }catch(e){ console.warn('[feast] snapshot', e); } rig.off = off; rig.sig = ''; wake(6); if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.', 3200); return; }
     SND.shutter(); const fl = $('#feFlash'); fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); shot = url; ga('feast3d_photo'); setTimeout(pictureCard, reduce ? 0 : 260); }
   async function compose(){ const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = shot; });
     let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0; const ar = sw / sh; if(ar > 1.9){ const w2 = sh * 1.9; sx = (sw - w2) / 2; sw = w2; } else if(ar < .72){ const h2 = sw / .72; sy = (sh - h2) * .5; sh = h2; }
@@ -1078,7 +1084,7 @@
   /* ================================================================== frame loop */
   let lastT = performance.now();
   function frame(){ requestAnimationFrame(frame); const now = performance.now(), dt = Math.min(.1, (now - lastT) / 1000); lastT = now;
-    try{ if(UI.live){ tweens(now); rigStep(now, dt); heldStep(now); if(P){ P.tick(now / 1000, dt); if(P.active()) wake(2); }
+    try{ if(UI.live){ tweens(now); rigStep(now, dt); heldStep(now); sunStep(); if(P){ P.tick(now / 1000, dt); if(P.active()) wake(2); }
         for(const id in DISHOBJ){ const g = DISHOBJ[id]; if(g.userData.spin && g.visible){ g.rotation.y += dt * .7; wake(2); } } }
       if(S.busy && !rig.move && !TW.length){ if(!frame.busyAt) frame.busyAt = now; else if(now - frame.busyAt > 4200){ S.busy = false; frame.busyAt = 0; } } else frame.busyAt = 0;
       if(S.started){ marksStep(); mapStep(); coach();

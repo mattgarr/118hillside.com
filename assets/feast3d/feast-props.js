@@ -28,7 +28,7 @@
     function shaded(geo, lo, hi, seed, pow){ const n = geo.attributes.normal, c = new Float32Array(n.count * 3), a = lin(lo), b = lin(hi), R = rng(seed || 3);
       for(let i = 0; i < n.count; i++){ let t = Math.pow(Math.max(0, n.getY(i) * .5 + .5), pow || 1.6); t = Math.max(0, Math.min(1, t + (R() - .5) * .16)); c[i * 3] = a.r + (b.r - a.r) * t; c[i * 3 + 1] = a.g + (b.g - a.g) * t; c[i * 3 + 2] = a.b + (b.b - a.b) * t; }
       geo.setAttribute('color', new THREE.BufferAttribute(c, 3)); return geo; }
-    const vmat = (rough, lift) => { const k = 'v' + rough + '|' + lift; let m = MATS.get(k); if(!m){ m = new THREE.MeshStandardMaterial({vertexColors: true, roughness: rough, metalness: 0, emissive: lin('#7a4a1c'), emissiveIntensity: lift == null ? .16 : lift}); m.userData.lift = m.emissiveIntensity; MATS.set(k, m); } return m; };
+    const vmat = (rough, lift) => { const k = 'v' + rough + '|' + lift; let m = MATS.get(k); if(!m){ m = new THREE.MeshStandardMaterial({vertexColors: true, roughness: rough, metalness: 0, emissive: lin('#6a3a14'), emissiveIntensity: lift == null ? .16 : lift}); m.userData.lift = m.emissiveIntensity; MATS.set(k, m); } return m; };
 
     /* ---------- paper: kraft, twine, tags ---------- */
     function kraftTex(doodle){ return canvasTex(256, 320, (x, w, h) => { const R = rng(11); const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#d6b684'); g.addColorStop(1, '#c6a26c'); x.fillStyle = g; x.fillRect(0, 0, w, h);
@@ -50,7 +50,7 @@
       for(const z of [d / 2 + .004, -d / 2 - .004]){ const hd = mesh(new THREE.TorusGeometry(.15, .013, 6, 18, Math.PI), twine(), 0, h - .02, z); g.add(hd); }
       g.userData.inside = new V3(0, .45, 0); g.userData.top = h; return g; }
     /* a white bakery box tied with twine; userData.lid swings open about its back edge */
-    function box(){ const g = grp('box'), card = std('#f6f2e8', {roughness: .9, lift: .16}), s = .98, h = .3;
+    function box(){ const g = grp('box'), card = std('#f6f2e8', {roughness: .9, lift: .07}), s = .98, h = .3;
       g.add(mesh(new THREE.BoxGeometry(s, h, s), card, 0, h / 2, 0));
       const lid = new THREE.Group(); lid.position.set(0, h, -s / 2); const top = mesh(new THREE.BoxGeometry(s + .02, .035, s + .02), card, 0, .018, s / 2); lid.add(top);
       lid.add(mesh(new THREE.BoxGeometry(s + .03, .012, .03), twine(), 0, .04, s / 2)); const t2 = mesh(new THREE.BoxGeometry(.03, .012, s + .03), twine(), 0, .04, s / 2); lid.add(t2);
@@ -109,8 +109,8 @@
       g.add(lat); g.userData.h = .2; g.userData.r = .5; g.userData.steam = [0, .2, 0]; return g; }
     function sauce(){ const g = grp('sauce');
       g.add(mesh(lathe([[0, 0], [.13, 0], [.16, .02], [.26, .19], [.275, .225], [.255, .225], [.235, .185], [.13, .04], [0, .035]], 28), std('#f4f1ea', {roughness: .3, lift: .14})));
-      const top = mesh(new THREE.SphereGeometry(.245, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2), std('#8c1126', {roughness: .16, lift: .26}), 0, .17, 0); top.scale.y = .22; g.add(top);
-      const R = rng(9), berry = std('#a3182d', {roughness: .2, lift: .28}), bg = geo('berry', () => new THREE.SphereGeometry(.03, 8, 6)); for(let i = 0; i < 11; i++){ const a = R() * 6.28, r = R() * .17; g.add(mesh(bg, berry, Math.cos(a) * r, .215 - r * r * .5, Math.sin(a) * r)); }
+      const top = mesh(new THREE.SphereGeometry(.245, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2), std('#7a0f22', {roughness: .16, lift: .15}), 0, .17, 0); top.scale.y = .22; g.add(top);
+      const R = rng(9), berry = std('#8f1528', {roughness: .2, lift: .16}), bg = geo('berry', () => new THREE.SphereGeometry(.03, 8, 6)); for(let i = 0; i < 11; i++){ const a = R() * 6.28, r = R() * .17; g.add(mesh(bg, berry, Math.cos(a) * r, .215 - r * r * .5, Math.sin(a) * r)); }
       const sp = new THREE.Group(), st = metal('#c9ccd0', .25); sp.add(mesh(new THREE.BoxGeometry(.03, .012, .34), st, 0, 0, .17)); const bw = mesh(new THREE.SphereGeometry(.05, 10, 6), st, 0, 0, -.02); bw.scale.set(1, .35, 1.3); sp.add(bw); sp.position.set(.1, .235, .08); sp.rotation.set(-.45, .6, 0); g.add(sp);
       g.userData.h = .3; g.userData.r = .3; return g; }
     function potatoes(){ const g = grp('potatoes'), dish = std('#efe6d4', {roughness: .3, lift: .14}), body = mesh(lathe([[0, 0], [.27, 0], [.31, .03], [.345, .2], [.37, .225], [.335, .225], [.315, .2], [.285, .05], [0, .045]], 32), dish); body.scale.set(1.32, 1, .92); g.add(body);
@@ -136,13 +136,13 @@
       g.userData.h = 1.15; g.userData.r = .32; return g; }
     function turkey(){ const g = grp('turkey'), white = std('#f4f1ea', {roughness: .3, lift: .12});
       const plat = mesh(lathe([[0, 0], [.4, 0], [.62, .02], [.72, .05], [.735, .065], [.62, .045], [.4, .025], [0, .025]], 40), white); plat.scale.set(1.08, 1, .74); g.add(plat); const dr = g.userData.dress = [plat];
-      const skin = vmat(.34, .2);
-      const body = mesh(shaded(new THREE.SphereGeometry(.5, 32, 22), '#b8682a', '#7c3c14', 5, 2.2), skin, .03, .34, 0); body.scale.set(.98, .62, .74); g.add(body);
-      const breast = mesh(shaded(new THREE.SphereGeometry(.34, 24, 16), '#bd6e2e', '#8a4518', 8, 2), skin, .2, .43, 0); breast.scale.set(.95, .7, .86); g.add(breast);
-      const legG = shaded(lathe([[0, 0], [.05, 0], [.115, .07], [.15, .2], [.125, .34], [.06, .46], [.036, .55], [.032, .6], [0, .6]], 16), '#b0622a', '#7a3a12', 12, 1.4);
+      const skin = vmat(.3, .11);
+      const body = mesh(shaded(new THREE.SphereGeometry(.5, 32, 22), '#a9591f', '#5c2a0d', 5, 2.2), skin, .03, .34, 0); body.scale.set(.98, .62, .74); g.add(body);
+      const breast = mesh(shaded(new THREE.SphereGeometry(.34, 24, 16), '#b06224', '#6c3411', 8, 2), skin, .2, .43, 0); breast.scale.set(.95, .7, .86); g.add(breast);
+      const legG = shaded(lathe([[0, 0], [.05, 0], [.115, .07], [.15, .2], [.125, .34], [.06, .46], [.036, .55], [.032, .6], [0, .6]], 16), '#a5571f', '#5e2b0d', 12, 1.4);
       for(const s of [-1, 1]){ const leg = mesh(legG, skin, -.3, .3, s * .3); leg.rotation.set(s * .5, 0, 1.25); leg.scale.setScalar(.95); g.add(leg);
         const fr = mesh(new THREE.CylinderGeometry(.05, .042, .09, 10), white, 0, .63, 0); leg.add(fr); const kn = mesh(new THREE.SphereGeometry(.052, 8, 6), white, 0, .68, 0); leg.add(kn);
-        const wing = mesh(shaded(new THREE.SphereGeometry(.17, 14, 10), '#b56628', '#804016', 15 + s, 1.6), skin, .16, .3, s * .37); wing.scale.set(1.25, .55, .5); wing.rotation.y = s * .25; g.add(wing); }
+        const wing = mesh(shaded(new THREE.SphereGeometry(.17, 14, 10), '#a65a20', '#62300f', 15 + s, 1.6), skin, .16, .3, s * .37); wing.scale.set(1.25, .55, .5); wing.rotation.y = s * .25; g.add(wing); }
       const R = rng(31), og = geo('oslice', () => new THREE.CylinderGeometry(.11, .11, .02, 20)), orange = std('#e8872a', {roughness: .5, lift: .26}), pith = std('#f7d79a', {roughness: .6, lift: .22}), herb = std('#3d5a2e', {roughness: .9, lift: .14}), berry = std('#a3182d', {roughness: .2, lift: .28});
       for(const [x, z, r] of [[.62, .2, .3], [.52, -.3, -.4], [-.6, .26, 1], [-.52, -.3, .6], [.1, .44, .2], [.0, -.45, 2]]){ const o = mesh(og, orange, x, .06, z); o.rotation.set(.25, r, .12); g.add(o); dr.push(o); const c = mesh(new THREE.CylinderGeometry(.085, .085, .022, 16), pith, 0, 0, 0); o.add(c); const c2 = mesh(new THREE.CylinderGeometry(.07, .07, .024, 16), orange, 0, 0, 0); o.add(c2); }
       for(let i = 0; i < 12; i++){ const a = R() * 6.28, rx = .64 + R() * .08, sp = mesh(geo('sprig', () => new THREE.BoxGeometry(.2, .012, .03)), herb, Math.cos(a) * rx * 1.05, .07, Math.sin(a) * rx * .7); sp.rotation.y = R() * 3; g.add(sp); dr.push(sp); }
@@ -170,6 +170,11 @@
 
     /* ---------- smoke, steam and candle flames ---------- */
     const puffTex = canvasTex(64, 64, (x, w) => { const g = x.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); g.addColorStop(0, 'rgba(255,255,255,.9)'); g.addColorStop(.45, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, w, w); });
+    function sun(){ const t = canvasTex(128, 128, (x, w) => { const g = x.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.08, 'rgba(255,250,225,1)'); g.addColorStop(.16, 'rgba(255,225,160,.55)'); g.addColorStop(.45, 'rgba(255,190,110,.16)'); g.addColorStop(1, 'rgba(255,170,90,0)'); x.fillStyle = g; x.fillRect(0, 0, w, w); });
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: t, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false})); sp.raycast = noop; sp.renderOrder = 1; sp.name = 'feast-sun'; sp.frustumCulled = false; root.add(sp); return sp; }
+    function grate(r){ const t = canvasTex(256, 256, (x, w) => { const g = x.createRadialGradient(w / 2, w / 2, 8, w / 2, w / 2, w / 2); g.addColorStop(0, '#ff8a1e'); g.addColorStop(.55, '#c8400c'); g.addColorStop(1, '#3a0c04'); x.fillStyle = g; x.fillRect(0, 0, w, w); const R = rng(41); for(let i = 0; i < 260; i++){ x.fillStyle = `rgba(20,6,2,${.25 + R() * .5})`; x.beginPath(); x.arc(R() * w, R() * w, 3 + R() * 9, 0, 6.3); x.fill(); }
+        x.fillStyle = '#121214'; for(let i = 6; i < w; i += 15) x.fillRect(i, 0, 8, w); x.fillRect(0, w / 2 - 5, w, 10); x.fillRect(0, w * .22, w, 7); x.fillRect(0, w * .78, w, 7); });
+      const m = new THREE.Mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshBasicMaterial({map: t})); m.rotation.x = -Math.PI / 2; m.raycast = noop; root.add(m); return m; }
     const POOL = [], EMIT = [];
     function puff(){ let p = POOL.find(q => !q.live); if(!p){ if(POOL.length >= 72) return null; const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: puffTex, transparent: true, depthWrite: false, opacity: 0})); sp.raycast = noop; sp.renderOrder = 7; sp.visible = false; root.add(sp); p = {sp, live: false}; POOL.push(p); } return p; }
     /* an emitter: {at: Vector3, rate (per second), size, rise, drift: [x, z], life, color, alpha, on} */
@@ -195,6 +200,6 @@
       for(let i = SPARK.length - 1; i >= 0; i--){ const s = SPARK[i]; s.age += dt; const u = s.age / .9; if(u >= 1){ root.remove(s.sp); s.sp.material.dispose(); SPARK.splice(i, 1); continue; } s.sp.position.addScaledVector(s.v, dt); s.v.y -= dt * 1.2; s.sp.material.opacity = .9 * (1 - u); s.sp.scale.setScalar(.1 + .16 * u); } }
     function active(){ return SPARK.length > 0 || POOL.some(p => p.live) || FL.some(f => f.k > .01); }
 
-    return {root, std, metal, mesh, lathe, grp, lin, canvasTex, setLift, bag, box, crate, tag, tagTex, bunting, runner, setting, pumpkin, leaf, can, bottle, DISH, DECOY, emitter, burst, flame, sparkle, tick, active, HAND};
+    return {root, std, metal, mesh, lathe, grp, lin, canvasTex, setLift, bag, box, crate, tag, tagTex, bunting, runner, setting, pumpkin, leaf, can, bottle, sun, grate, DISH, DECOY, emitter, burst, flame, sparkle, tick, active, HAND};
   };
 })();
