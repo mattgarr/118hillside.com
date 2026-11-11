@@ -27,7 +27,7 @@
      pos/look: where you stand on a wide screen; posP/lookP on a tall one. fit: the corners of the thing being decorated; the view is
      turned (and widened if it has to be) until all of them sit in the part of the screen the panels leave free. cat: where Snowball sits. */
   const PLACES = [
-    {id: 'street', label: 'Roofline', pos: [13, 2.6, 80], look: [0, 8, 20], posP: [10, 2.6, 84], lookP: [0, 8, 20], posPh: [10, 2.4, 63], cat: [-1, 40], say: 'Start at the top. The roof is long, so choose carefully.', sections: ['lights'],
+    {id: 'street', label: 'Roofline', pos: [13, 2.6, 80], look: [0, 8, 20], posP: [10, 2.6, 84], lookP: [0, 8, 20], cat: [-1, 40], say: 'Start at the top. The roof is long, so choose carefully.', sections: ['lights'],
      fit: [[33.7, 7.9, 38.2], [18.4, 14.6, 38.2], [3.2, 7.9, 38.2], [-26.7, 5.5, 23.7], [-18, 10.9, 23.7], [-17.9, 18.6, -1.1], [-26.3, 13.4, -1.1]]},
     {id: 'door', label: 'Front door', pos: [-5.0, 4.6, 38], look: [-5.4, 2.0, 10], posP: [-5.2, 5.2, 44], lookP: [-5.4, 2.4, 10], cat: [-1.5, 13.4], say: 'The doors next. Everyone who arrives ends up standing right here.', sections: ['door', 'hang', 'path'],
      fit: [[-10.6, 8.4, 6.3], [3.9, 8.4, 6.3], [-10.6, -3.4, 24], [3.9, 3.3, 15.6], [-5, -3.4, 26]]},
@@ -219,8 +219,7 @@
       const dx = (ax0 + ax1) / 2 - (fx0 + fx1) / 2 * th / z, dy = (ay0 + ay1) / 2 - (fy0 + fy1) / 2 * tv / z;
       f.addScaledVector(r, dx).addScaledVector(u, dy).normalize(); if(Math.abs(dx) + Math.abs(dy) < 1e-4) break; }
     return {pos, look: P0.clone().addScaledVector(f, 30).toArray(), zoom: z}; }
-  // posPh: where the postcard is taken from on a wide screen. The decorating view stands out in the road so the whole roofline clears the panel; a postcard from there is one fifth dark road.
-  const stand = p => PHASE === 'photo' && p.posPh && !portrait() ? [p.posPh, p.look] : portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look];
+  const stand = p => portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look];
   function catAt(p){ if(!P || !p.cat) return null; if(p.id === 'living' && S.room.includes('box')) return [P.BOX_AT[0], P.BOX_AT[1] + .12, P.BOX_AT[2]];
     const c = portrait() && p.catP ? p.catP : p.cat, k = c === p.cat ? 'catY' : 'catYP'; if(p[k] == null) p[k] = P.floorY(c[0], c[1], stand(p)[0][1] + 1.5, p.inside ? 0 : -3.5); return [c[0], p[k] + .02, c[1]]; }
   function view(p){ const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = portrait() && p.fitP ? p.fitP : p.fit; return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
@@ -453,7 +452,7 @@
   const DAY = 'afternoon';
   function ctaHTML(){ return `<div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive, a mile from Woodside's Town Center. The oak, the terrace and the front porch are all there in person.</span><a class="dkBtn primary big" href="/#contact" id="dkSee">See it in person</a></div>`; }
   function result(){ PHASE = 'result'; $$('#dkArrive').forEach(e => e.remove()); dimUI(true); const story = MODE === 'story' && !shared, hp = story ? happy() : [], all = story && hp.length === GUESTS.length; if(story){ lastScore = hp.map(g => g.id); ga('deck_score', {happy: hp.length}); }
-    if(PLACE.id !== 'street'){ PLACE = PLACES[0]; moveTo(PLACE); } else reframe(.6);   // back from the postcard's closer stand
+    if(PLACE.id !== 'street'){ PLACE = PLACES[0]; moveTo(PLACE); }
     say(!story ? 'Look at it. The whole street is going to slow down. Worth every minute.' : all ? 'Everyone is happy, and I am in a box. Best night this house has ever had.' : 'Some of them were being polite. I can tell. We could fix that.');
     if(all && !result.rang){ result.rang = true; setTimeout(() => sfx('chord'), 400); } ambience();
     const c = card(`<h2>${!story ? 'Snowball approves.' : all ? 'Every guest is happy.' : hp.length + ' of ' + GUESTS.length + (hp.length === 1 ? ' guests is happy.' : ' guests are happy.')}</h2>` +
