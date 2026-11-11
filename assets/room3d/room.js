@@ -633,7 +633,7 @@
   #rfeFace .cmp{width:24px;height:24px;flex:none}#rfeFace .cmp svg{width:24px;height:24px;display:block}#rfeFaceT{flex:1;min-width:0}
   #rfeFace i{font-style:normal;color:#7a5300;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;display:none}
   #rfeFace.off{border-color:#e8b84a;background:#fdf7e4}#rfeFace.off i{display:inline}#rfeFace:not(.off){cursor:default}
-  #rfeSun{flex:1 1 300px;max-width:520px;padding:9px 16px 11px;display:none}
+  #rfeSun{flex:1 1 250px;max-width:520px;padding:9px 16px 11px;display:none}
   #rfeSun .top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);gap:8px;white-space:nowrap}#rfeSunNow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
   #rfeSunNow::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;border:1.500px solid #a9a595;margin-right:6px;vertical-align:-1px;box-sizing:border-box}#rfeSunNow.on{color:#7a5300}#rfeSunNow.on::before{background:#f2b632;border-color:#d98f0c;box-shadow:0 0 6px #f2b632}
   #rfeSun .top b{font-size:18.500px;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
