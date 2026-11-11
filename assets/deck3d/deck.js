@@ -253,7 +253,7 @@
      (between 4:5 and 16:9; a near-square window gets a landscape card, so a street view is not half road). The postcard is cut from exactly this. */
   function finder(){ const c = H.canvas.getBoundingClientRect(), bar = $('#dkPhoto'), br = bar && !bar.hidden ? bar.getBoundingClientRect() : null, g = innerWidth > 700 ? 18 : 10;
     const top = Math.max(0, 12 - c.top) + (innerWidth > 700 ? 12 : 4), bot = (br && br.height ? br.top - c.top : c.height) - g, x0 = g, x1 = c.width - g, fw = Math.max(80, x1 - x0), fh = Math.max(80, bot - top), a = fw / fh;
-    const t = a >= 1 ? Math.min(16 / 9, Math.max(1.3, a)) : Math.max(PHASE === 'photo' && PLACE && PLACE.pasp || .8, a);   // a place can ask for a wider card on a tall screen (the street: the house is wide) let w = fw, h = fw / t; if(h > fh){ h = fh; w = fh * t; }
+    const t = a >= 1 ? Math.min(16 / 9, Math.max(1.3, a)) : Math.max(PHASE === 'photo' && PLACE && PLACE.pasp || .8, a); let w = fw, h = fw / t; if(h > fh){ h = fh; w = fh * t; }   // a place can ask for a wider card on a tall screen (the street: the house is wide)
     return [Math.round(x0 + (fw - w) / 2), Math.round(top + (fh - h) / 2), Math.round(w), Math.round(h)]; }
   function placeFinder(){ const f = $('#dkVF'); if(!f) return; const c = H.canvas.getBoundingClientRect(), v = finder(); Object.assign(f.style, {left: c.left + v[0] + 'px', top: c.top + v[1] + 'px', width: v[2] + 'px', height: v[3] + 'px'}); }
   function fit(pos, look, pts){ const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), zb = baseZoom(), zmin = Math.min(zb, Math.max(.5, tv / 1.48, th / 1.54)), zmax = zb * 1.5;   // widen up to a 112 degree view; close in a little when the thing is small on the screen
