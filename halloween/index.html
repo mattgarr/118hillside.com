@@ -19486,7 +19486,8 @@ function r28Box(mat, F, a0, a1, y0, y1, d0, d1, g){
   const m = new THREE.Mesh(new THREE.BoxGeometry(a1 - a0, y1 - y0, d1 - d0), mat), am = (a0 + a1) / 2, dm = (d0 + d1) / 2;
   m.position.set(F.cx + F.u[0] * am + F.inn[0] * dm, (y0 + y1) / 2, F.cz + F.u[1] * am + F.inn[1] * dm); m.rotation.y = Math.atan2(F.inn[0], F.inn[1]); m.castShadow = m.receiveShadow = true; g.add(m); return m; }
 function r28Shades(){
-  const SPEC = [['D-L2-01', 'blackout', 3, .24], ['WN-L1-03', 'filter', 2, .26], ['WN-L1-04', 'filter', 1, .26], ['WN-L1-02', 'filter', 1, .22]];
+  const SPEC = [['D-L2-01', 'blackout', 1, .24],   // owner 11/10: one roll across the slider
+     ['WN-L1-03', 'filter', 2, .26], ['WN-L1-04', 'filter', 1, .26], ['WN-L1-02', 'filter', 1, .22]];
   for(const [id, kind, n, drop] of SPEC){ const F = r28Frame(id); if(!F){ R28W.err.push('no opening ' + id); continue; }
     const g = new THREE.Group(); g.name = 'r28shade:' + id; grp(F.storey === 'L2' ? 'upper' : 'main').add(g);
     const d = F.T / 2 - .12, top = F.head - .02, cas = .28, fab = r28Mat(kind), pw = (F.W - .08) / n;
@@ -19510,13 +19511,29 @@ function r28Film(){
       const q = r28Quad(r28Mat('film'), F, a0, a0 + uw, y0, y1, dd, g); q.renderOrder = 3; q.userData.noAO = true; }
     R28W.film.push(id + (gh ? '' : ' (no glass hit)')); }
 }
+function r28Honeycomb(){   // owner 11/10: the primary suite's two trapezoid gable windows have double-cell honeycomb shades (blackout: a bedroom), not
+  // vertical blinds. Shaped to each window (low at the eave, high at the ridge post), inside mount, bottom on the sill line - never below it.
+  let vb = null; scene.traverse(o => { if(o.isMesh && o.userData && o.userData.bim2 && (o.userData.bim2.ranges || []).some(r => /^FX-VBLIND-L2-0[89]$/.test(r[0]))) vb = o; });
+  if(vb) vb.visible = false;
+  const c = document.createElement('canvas'); c.width = 16; c.height = 64; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 0, 0, 64);
+  gr.addColorStop(0, '#f7f5f0'); gr.addColorStop(.55, '#ece8e0'); gr.addColorStop(.85, '#d9d4ca'); gr.addColorStop(1, '#c9c3b8'); x.fillStyle = gr; x.fillRect(0, 0, 16, 64);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 16);   // 3/4" cells
+  const mat = new THREE.MeshStandardMaterial({map: t, roughness: .95, side: THREE.DoubleSide}); mat.name = 'r28honeycomb';
+  const yb = 14.25, D = [-39.86, -39.74];
+  for(const [xo, xi, yo, yi] of [[-21.95, -17.9, 14.92, 17.22], [-13.41, -17.46, 14.92, 17.22]]){
+    const sh = new THREE.Shape([new THREE.Vector2(xo, yb), new THREE.Vector2(xi, yb), new THREE.Vector2(xi, yi), new THREE.Vector2(xo, yo)]);
+    const geo = new THREE.ExtrudeGeometry(sh, {depth: D[1] - D[0], bevelEnabled: false}); geo.translate(0, 0, D[0]);
+    const m = new THREE.Mesh(geo, mat); m.castShadow = m.receiveShadow = true; m.name = 'r28honeycomb'; grp('upper').add(m);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(xi - xo) + .02, .06, D[1] - D[0] + .02), r28Mat('cassette')); rail.position.set((xo + xi) / 2, yb + .03, (D[0] + D[1]) / 2); grp('upper').add(rail); }   // bottom rail on the sill line
+  R28W.honeycomb = !!vb;
+}
 function r28Pantry(){
   if(!(window.FIX && FIX.make)) return;
   const cab = FIX.make('tallCabinet', {w: 2.06, h: 8, d: 2, split: 5.75, style: 'raised', pull: 'knob', hw: 'satinNickel'});
   cab.position.set(20.95, 0, 5.32); cab.userData.el = 'r28-pantry'; cab.traverse(o => { if(o.isMesh){ o.castShadow = o.receiveShadow = true; } }); grp('main').add(cab); R28W.pantry = true;
 }
 { const _r28w = bim2BuildHouse; bim2BuildHouse = function(){ const r = _r28w.apply(this, arguments);
-    for(const f of [r28Shades, r28Film, r28Pantry]) try{ f(); }catch(e){ console.warn('[r28] windows', e); R28W.err.push(String(e)); }
+    for(const f of [r28Shades, r28Film, r28Pantry, r28Honeycomb]) try{ f(); }catch(e){ console.warn('[r28] windows', e); R28W.err.push(String(e)); }
     return r; }; }
 /* G35-6 shingle courses run parallel to the eave (v33 roofs; QA ext_W_mid): the package UVs are a BIM-frame box projection (u = BIM x,
    v = BIM y on near-horizontal faces), which lays courses along x. On a roof face that slopes along BIM x (eave along y, e.g. RF-L02) that put the
