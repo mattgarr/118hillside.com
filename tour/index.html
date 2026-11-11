@@ -19931,7 +19931,7 @@ function bl35Hit(cx, cy){
   if(h && h.point && h.distance <= 25) for(const it of BL35.items){ if(it.kind !== 'sky' || !bl35Live(it)) continue; const R = it.rects[0];
     if(BL35P.subVectors(O, R.c).dot(R.n) <= 0) continue; BL35Q.copy(h.point).sub(R.c); const z = BL35Q.dot(R.n);
     if(z > -.4 && z < 2.1 && Math.abs(BL35Q.dot(R.u)) < R.hu + .2 && Math.abs(BL35Q.dot(R.v)) < R.hv + .2) return it;
-    const K = it.col; if(K && K.dv > .5 && O.y < h.point.y && Math.abs(h.point.x - K.x) < K.hx + .15 && Math.abs(h.point.z - K.z) < K.hz + .15 && h.point.y < K.y + .3 && h.point.y > K.y - K.dv - .3) return it; }   // a deep shaft straight under the pane
+    const K = it.col; if(K && K.dv > .5 && O.y < h.point.y && Math.abs(h.point.x - K.x) < K.hx + .15 && Math.abs(h.point.z - K.z) < K.hz + .15 && h.point.y < K.y + .3 && h.point.y > K.y - K.dv - .6) return it; }   // a deep shaft straight under the pane
   return null;
 }
 function bl35Pose(it){ try{ it.pose(bl35Ease(it.t)); }catch(e){} }
@@ -20029,9 +20029,12 @@ function r35Skylights(){
       // how far the shaft drops straight below the pane (the primary bath's second skylight sits at the top of a 4 ft shaft): the lowest shaft wall met inside the pane's footprint
       const col = {x: c0.x, y: c0.y, z: c0.z, hx: Math.abs(u.x) * hu + Math.abs(w.x) * hw + .12, hz: Math.abs(u.z) * hu + Math.abs(w.z) * hw + .12, dv: 0};
       try{ const rc = new THREE.Raycaster(), o = c0.clone().addScaledVector(n, .06), objs = withVar(['main', 'upper', 'roof', 'vault', 'vaultUp', 'ceil', 'lowerRoof']);
-        for(const ang of [6, 10, 15, 25]) for(let q = 0; q < 8; q++){ const a = ang * Math.PI / 180, az = q * Math.PI / 4; rc.set(o, new V3(Math.sin(a) * Math.cos(az), -Math.cos(a), Math.sin(a) * Math.sin(az))); rc.far = 9;
-          for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if((m && m.transparent) || !h.object.isMesh) continue; const p = h.point;
-            if(Math.abs(p.x - col.x) <= col.hx && Math.abs(p.z - col.z) <= col.hz && !(h.face && h.face.normal.y > .7)) col.dv = Math.max(col.dv, col.y - p.y); break; } } }catch(e){}
+        const side = [u.clone().setY(0).normalize(), u.clone().setY(0).normalize().negate(), w.clone().setY(0).normalize(), w.clone().setY(0).normalize().negate()];
+        for(const ang of [8, 12, 16, 22, 30, 40]){ const a = ang * Math.PI / 180; let nh = 0, deep = 0;   // a ring of four rays, one toward each side of the pane
+          for(const sd of side){ rc.set(o, sd.clone().multiplyScalar(Math.sin(a)).setY(-Math.cos(a))); rc.far = 7;
+            for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if((m && m.transparent) || !h.object.isMesh) continue; const p = h.point;
+              if(Math.abs(p.x - col.x) <= col.hx && Math.abs(p.z - col.z) <= col.hz && !(h.face && h.face.normal.y > .7)){ nh++; deep = Math.max(deep, col.y - p.y); } break; } }
+          if(nh >= 3) col.dv = Math.max(col.dv, deep); } }catch(e){}   // walls on three sides or more: a shaft
       const CAS = .15, full = 2 * hw - CAS - .05;
       box(r28Mat('cassette'), 0, hw - CAS / 2, .01, 2 * hu, CAS, .13);                                                    // cassette at the up-slope end
       for(const s of [-1, 1]) box(r28Mat('cassette'), s * (hu - .02), -CAS / 2, .01, .04, 2 * hw - CAS, .06);            // side tracks
