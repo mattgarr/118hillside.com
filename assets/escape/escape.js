@@ -4,17 +4,20 @@
    The sun is the puzzle: a time slider moves the real sun, and light through the house's real windows carries the code.
 
    r35 rebuilds how the game is played:
-   - The game owns the camera. You stand at named places, look around freely, and walk between them along checked paths.
-     The engine never sees a pointer, wheel or key event while the game runs, so nothing can leave you inside a cabinet.
-   - Every clue has an "examine" view: the camera frames it squarely, the rest of the screen gets out of the way, and Back returns.
+   - The game owns the camera. You stand at named places, look around freely, and walk between them along paths that were
+     ray-checked against the walls and furniture. The engine never sees a pointer, wheel or key event while the game runs,
+     so nothing can leave you inside a cabinet, and the view stays exactly where you leave it (no re-levelling, no spring back).
+   - Every clue has an "examine" view: the camera frames it squarely in the free part of the screen and holds until you go Back.
    - One objective line always says what to do next. Snowball gives three levels of hint for the step you are on.
-   - The paper on the dining window is card and tracing paper in the same boxy figures, so only the sun can tell you the digits. */
+   - The paper on the great room window is card and tracing paper in the same boxy figures, so only the sun can tell you the digits.
+   - Sound is one small synthesized set (see SND); SND.measure() renders every cue offline and reports its level.
+   Debug hook: window.ESCAPE (state, rig, goTo, examine, back, hint, setSlider, sound). */
 (function(){
   'use strict';
   const H = window.HILLSIDE; if(!H || window.ESCAPE) return;
   const THREE = H.THREE, canvas = H.canvas, camera = H.camera;
   const $ = (s, r) => (r || document).querySelector(s), $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
-  const Q = new URLSearchParams(location.search), LEVEL = 'easy';
+  const LEVEL = 'easy';
   const ga = (n, p) => { try{ window.gtag && gtag('event', n, Object.assign({level: LEVEL}, p || {})); }catch(e){} };
   const store = {
     get(k){ try{ return JSON.parse(localStorage.getItem(k) || 'null'); }catch(e){ return null; } },
@@ -43,10 +46,11 @@
       note: 'Quartz counters, a long peninsula and a Bosch gas range. The great room opens up past the peninsula.'},
     coffee:  {name: 'Coffee bar', pos: [15.0, EYE, 9.3], face: [21.0, 3.1, 10.9], map: [20.6, 9.4],
       note: 'A coffee bar with its own drinks fridge, tucked in beside the kitchen.'},
-    great:   {name: 'Great room', pos: [11.2, EYE, 31.5], face: [10.7, 3.3, 22.0], faceLight: [10.95, 1.0, 24.6], fov: 56, map: [10.4, 28.2],
+    great:   {name: 'Great room', pos: [11.2, EYE, 31.95], face: [10.7, 3.3, 22.0], faceLight: [10.95, .9, 24.7], fov: 56, map: [10.4, 28.2],
       note: 'The kitchen, the dining table and this sitting area share one long room, with butcher-block shelves over the built-in cabinets and a wall of glass.'}};
   const ORDER = ['entry', 'living', 'kitchen', 'coffee', 'great'];
-  // walkable graph (x, z at eye height). Plain nodes are corners of the route; every edge was checked against the furniture.
+  // walkable graph (x, z at eye height). Plain nodes are corners of the route. Every edge was ray-cast in the model at ankle, knee,
+  // counter and eye height across a one-foot-wide path, and all of them are clear of walls and furniture.
   const NODES = {a1: [4.4, -4.9], a2: [11.4, -4.9], a3: [12.6, -1.0], a4: [12.75, 5.1], j1: [15.7, 12.4], j2: [15.8, 17.2], s1: [15.2, 26.4], s2: [14.3, 31.6]};
   for(const k of ORDER) NODES[k] = [PLACES[k].pos[0], PLACES[k].pos[2]];
   const EDGES = [['entry', 'living'], ['living', 'a1'], ['a1', 'a2'], ['a2', 'a3'], ['a3', 'a4'], ['a4', 'kitchen'], ['kitchen', 'coffee'], ['kitchen', 'j1'], ['coffee', 'j1'],
@@ -334,7 +338,7 @@
     const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
     img.onload = () => { cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); tex.needsUpdate = true; wake(4); };
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SNOWBALL.svg({id: 'sb3d', seed: 7, glow: true}).replace('<svg ', '<svg width="384" height="590" '));
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false, opacity: 0})); sp.center.set(.5, .03); sp.scale.set(.98, 1.5, 1); sp.visible = false; sp.name = 'esc-snowball'; sp.renderOrder = 5; sp.raycast = () => {};
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false, opacity: 0})); sp.center.set(.5, .03); sp.scale.set(.86, 1.32, 1); sp.visible = false; sp.name = 'esc-snowball'; sp.renderOrder = 5; sp.raycast = () => {};
     H.scene.add(sp); CAT = sp; return sp; }
   function catAt(p){ const c = makeCat(); if(!c) return; const go = () => { c.position.set(p[0], p[1], p[2]); c.visible = true; fadeCat(1); };
     if(c.visible && c.material.opacity > .05 && c.position.distanceTo(new THREE.Vector3(p[0], p[1], p[2])) > .5){ fadeCat(0, go); } else go(); }
@@ -391,7 +395,7 @@
     const play = (name, arg) => { const c = live(); if(!c || document.hidden) return; try{ CUES[name](c, c.a.currentTime + .03, arg); }catch(e){} };
     const api = {get muted(){ return muted; }, cues: Object.keys(CUES),
       setMuted(v){ muted = !!v; store.set('esc.mute', muted); try{ if(ac){ C.master.gain.setTargetAtTime(muted ? 0 : MASTER, ac.currentTime, .03); if(!muted && !document.hidden) ac.resume(); } }catch(e){} },
-      unlock(){ live(); },
+      unlock(){ live(); }, state(){ return ac ? ac.state : 'not started'; },
       // render every cue offline through the same chain and report level, length, DC offset and clipping (checked by number, not by ear)
       async measure(){ const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext, out = {}; if(!OAC) return out;
         for(const name of Object.keys(CUES)){ const sr = 44100, o = new OAC(1, sr * 7, sr), c = chain(o); CUES[name](c, .05, name === 'key' ? 3 : name === 'steps' ? 4 : undefined);
@@ -652,7 +656,7 @@
     for(const w of (WALKS[S.place] || [])) mark('walk', PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     for(const id in SPOTS){ const sp = SPOTS[id]; if(sp.from.includes(S.place) && (!sp.when || sp.when())) mark('look', sp.label(), sp.at(), () => examine(id), 's:' + id); } }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || !S.started || S.done || !!S.ex;
-    const top = phone() ? 210 : 96, bot = r.height - (phone() ? (placeE.classList.contains('on') ? 276 : 196) : 150), padX = 40, items = [], placed = [];
+    const top = phone() ? 210 : 96, bot = r.height - (phone() ? (placeE.classList.contains('on') ? 276 : 196) : 204), padX = 40, items = [], placed = [];
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '', docked = false;
