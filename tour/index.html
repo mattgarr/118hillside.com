@@ -2582,12 +2582,21 @@ function buildCounterTop(f, gname){
     if(!o.noSplash) for(let i = 0; i < out.length; i++){ const a = out[i], b2 = out[(i + 1) % out.length], mx = (a[0] + b2[0]) / 2, my = (a[1] + b2[1]) / 2, L = Math.hypot(b2[0] - a[0], b2[1] - a[1]);
       if(L < .4 || o.noSplash || (run4 && L < longest - .01)) continue; const nx = (b2[1] - a[1]) / L, ny = -(b2[0] - a[0]) / L;
       for(const sg of [1, -1]){ const [wx, wz] = W2(mx + nx * sg * .2, my + ny * sg * .2); if(!inWallBody(wx, wz, 3.5)) continue;
-        const A = W2(a[0], a[1]), Bp = W2(b2[0], b2[1]), up = o.mountY + o.t, hgt = 1.55;
+        const A0 = W2(a[0], a[1]), B0 = W2(b2[0], b2[1]), up = o.mountY + o.t, hgt0 = 1.55;
+        /* r36 owner 11/11 ("the bottom of the kitchen window somehow got covered up by a marble backsplash"): the splash was one slab 1.55 ft
+           high along the whole wall edge, straight across any window on that wall. Under a window (and its casing) it now stops below the sill. */
+        const cuts = []; try{ for(const w of (BIM.openings || [])){ if(w.ifc === 'IfcDoor' || !w.center || w.sill == null || !(w.width > 0) || w.sill < up - .2 || w.sill > up + hgt0 - .05) continue;
+            const s = ((w.center[0] - a[0]) * (b2[0] - a[0]) + (w.center[1] - a[1]) * (b2[1] - a[1])) / L, d = Math.abs((w.center[0] - a[0]) * nx + (w.center[1] - a[1]) * ny);
+            if(d < 1 && s + w.width / 2 > 0 && s - w.width / 2 < L) cuts.push([Math.max(0, s - w.width / 2 - .3), Math.min(L, s + w.width / 2 + .3), Math.max(0, w.sill - up - .09)]); } }catch(e){}
+        cuts.sort((p, q) => p[0] - q[0]); const parts = []; let s0 = 0; for(const c of cuts){ if(c[0] > s0 + .01) parts.push([s0, c[0], hgt0]); if(c[2] > .02) parts.push([Math.max(s0, c[0]), c[1], c[2]]); s0 = Math.max(s0, c[1]); } if(s0 < L - .01) parts.push([s0, L, hgt0]);
+        const want = W2(-nx * sg, -ny * sg);
+        for(const [t0, t1, hgt] of parts){ const A = [A0[0] + (B0[0] - A0[0]) * t0 / L, A0[1] + (B0[1] - A0[1]) * t0 / L], Bp = [A0[0] + (B0[0] - A0[0]) * t1 / L, A0[1] + (B0[1] - A0[1]) * t1 / L];
         const geo2 = new THREE.BufferGeometry(); const P = [A[0], up, A[1], Bp[0], up, Bp[1], Bp[0], up + hgt, Bp[1], A[0], up + hgt, A[1]];
         geo2.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo2.setIndex([0, 1, 2, 0, 2, 3]); geo2.computeVertexNormals();
-        const nm = geo2.attributes.normal; const want = W2(-nx * sg, -ny * sg); if(nm.getX(0) * want[0] + nm.getZ(0) * want[1] < 0) geo2.setIndex([0, 2, 1, 0, 3, 2]); geo2.computeVertexNormals();
-        const uv = []; const len = Math.hypot(Bp[0] - A[0], Bp[1] - A[1]); const us = o.mat === 'brittanicca' ? 1 : 4; uv.push(0, 0, len / us, 0, len / us, hgt / us, 0, hgt / us); geo2.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-        const bs = new THREE.Mesh(geo2, mat); bs.position.set(want[0] * .012, 0, want[1] * .012); bs.receiveShadow = true; g.add(bs); break; } } }
+        const nm = geo2.attributes.normal; if(nm.getX(0) * want[0] + nm.getZ(0) * want[1] < 0) geo2.setIndex([0, 2, 1, 0, 3, 2]); geo2.computeVertexNormals();
+        const uv = []; const len = Math.hypot(Bp[0] - A[0], Bp[1] - A[1]); const us = o.mat === 'brittanicca' ? 1 : 4, u0 = t0 / us; uv.push(u0, 0, u0 + len / us, 0, u0 + len / us, hgt / us, u0, hgt / us); geo2.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+        const bs = new THREE.Mesh(geo2, mat); bs.position.set(want[0] * .012, 0, want[1] * .012); bs.receiveShadow = true; g.add(bs); }
+        break; } } }
   g.userData.el = f.id; grp(gname).add(g); FIXOBJ.push({obj: g, id: f.id, v: VAR});
 }
 function buildOpenShelves(f, gname){
@@ -20069,6 +20078,48 @@ function r35WallPaint(){
   return rep;
 }
 { const _bh35 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh35.apply(this, arguments); try{ R35.paint = r35WallPaint(); }catch(e){ console.warn('[r35] wall paint', e); R35.err.push(String(e)); } return r; }; }
+/* r36 owner 11/11 (screenshot from the rear deck through the entry doors: "3d geometry problem - we see raw roof inside... this should be full
+   height wall, not exposing exterior structure inside"). Picked in the browser: the roof was the garage's east slope (RF-GARAGE), its fascia and
+   the soffit of the entry roof's cross-gable over it. The entry's west wall (world x = -10.169) is built from W-L0-058 only up to the garage plate
+   (y 5.65) between the stair-hall opening and the front doors, and from W-L0-020 only up to y 8 beside it; the upper-storey wall over the opening
+   (W-L2-015) stops at z = -2.25. Above those the compiled model has no wall at all, so the cathedral entry looked straight onto the garage roof.
+   E1 closes it: a painted face from those tops to the entry ceiling, in the main level's Silver Chain wall mesh (same material and mesh, so it
+      lights, repaints and sections like every other wall), 1/8 in proud of the wall plane so it also covers the garage fascia that lies in it.
+   E2 the skylit office (same fault, found by sweeping every room for roof / siding / sky seen from inside): its vault's high side was the upper
+      storey's Hardie siding, and its north wall stopped short of the vault, open to the eave. Both get the office's own paint. */
+const R36G = window.R36G = {added: [], err: []};
+function r36AddFaces(rx, el, quads){   // quads: [[x,y,z] x 4, then the way the face looks [nx,ny,nz]], appended to the wall mesh whose name matches rx
+  const S = BIM2S, dst = S && S.meshes && S.meshes.find(m => rx.test(m.name)), r = {el, tris: 0}; R36G.added.push(r);
+  if(!dst || !dst.geometry.index){ r.skip = 'no mesh'; return r; }
+  dst.updateWorldMatrix(true, false); if(!dst.matrixWorld.equals(new THREE.Matrix4())){ r.skip = 'moved mesh'; return r; }
+  const G = dst.geometry, names = Object.keys(G.attributes); if(names.some(k => !['position', 'normal', 'uv'].includes(k) || G.attributes[k].isInterleavedBufferAttribute)){ r.skip = 'attributes'; return r; }
+  const nv = G.attributes.position.count, add = quads.length * 4, P = [], N = [], U = [], A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
+  quads = quads.map(q => { A.set(...q[0]); B.set(...q[1]); C.set(...q[2]); const n = B.clone().sub(A).cross(C.clone().sub(A)), h = q[4]; return n.x * h[0] + n.y * h[1] + n.z * h[2] < 0 ? [q[3], q[2], q[1], q[0]] : q.slice(0, 4); });
+  for(const q of quads){ A.set(...q[0]); B.set(...q[1]); C.set(...q[2]); const n = B.clone().sub(A).cross(C.clone().sub(A)).normalize();
+    for(const v of q){ P.push(v[0], v[1], v[2]); N.push(n.x, n.y, n.z); U.push(Math.abs(n.x) > .5 ? v[2] : v[0], Math.abs(n.y) > .5 ? v[2] : v[1]); } }
+  const put = (k, src, s) => { const a = G.attributes[k]; if(!a) return; const arr = new a.array.constructor((nv + add) * s); arr.set(a.array.subarray(0, nv * s)); arr.set(src, nv * s); G.setAttribute(k, new THREE.BufferAttribute(arr, s, a.normalized)); };
+  put('position', P, 3); put('normal', N, 3); put('uv', U, 2);
+  const I0 = G.index, n0 = I0.count, ia = new (nv + add > 65535 ? Uint32Array : I0.array.constructor)(n0 + quads.length * 6); ia.set(I0.array.subarray(0, n0));
+  quads.forEach((q, j) => { const b = nv + 4 * j; ia.set([b, b + 1, b + 2, b, b + 2, b + 3], n0 + 6 * j); });
+  G.setIndex(new THREE.BufferAttribute(ia, 1)); G.boundingBox = null; G.boundingSphere = null;
+  const ud = dst.userData.bim2; if(ud && ud.ranges) ud.ranges.push([el, null, n0 / 3, quads.length * 2]);
+  if(dst.userData.idx0) dst.userData.idx0 = G.index; if(dst.userData.alt) dst.userData.alt = {};
+  r.tris = quads.length * 2; return r; }
+function r36EntryWall(){
+  const X = -10.157, X0 = -10.169, top = z => 9.189 - .25 * z + .03, zA = -2.25, zB = -.79, zC = 2.72, yA = 8, yB = 5.64;   // entry ceiling: y = 9.189 - z / 4 on this side of the ridge
+  r36AddFaces(/^walls\|L1\|paint-int-flat#PAINT-BM-1472-SILVER-CHAIN$/, 'R36-ENTRY-W', [
+    [[X, yA, zA], [X, yA, zB], [X, top(zB), zB], [X, top(zA), zA], [1, 0, 0]],            // over W-L0-020, beside W-L2-015
+    [[X, yB, zB], [X, yB, zC], [X, top(zC), zC], [X, top(zB), zB], [1, 0, 0]],            // over W-L0-058, to the front wall
+    [[X0, yA, zA], [X, yA, zA], [X, top(zA), zA], [X0, top(zA), zA], [0, 0, -1]],          // returns: the 1/8 in edge is closed
+    [[X0, yA, zA], [X0, yA, zB], [X, yA, zB], [X, yA, zA], [0, -1, 0]],
+    [[X0, yB, zB], [X, yB, zB], [X, yA, zB], [X0, yA, zB], [0, 0, -1]],
+    [[X0, yB, zB], [X0, yB, zC], [X, yB, zC], [X, yB, zB], [0, -1, 0]]]);
+  const xE = -25.277, zN = -12.158, zS = -2.72, vault = x => 6.897 + .25 * (x + 25.28) + .03, xW = -30.906, rx = /^walls\|L0\|paint-int-flat#PAINT-SW-9632-SERENELY$/;
+  r36AddFaces(rx, 'R36-OFFICE', [
+    [[xE, 4.44, zN - .02], [xE, vault(xE), zN - .02], [xE, vault(xE), zS], [xE, 4.44, zS], [-1, 0, 0]],          // the vault's high side (was the upper storey's siding)
+    [[xW, 4.3, zN], [xE, 4.3, zN], [xE, vault(xE), zN], [xW, vault(xW), zN], [0, 0, 1]]]);                      // north wall up to the vault
+}
+{ const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); } return r; }; }
 /* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
    the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
    both sides, flush cup pulls) that slides into the wall on the fridge side (owner 11/10) and can be closed; the wall closed above it; and the attic
