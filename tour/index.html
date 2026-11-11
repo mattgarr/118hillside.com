@@ -19466,10 +19466,10 @@ function r28Mat(kind){
   else if(kind === 'cassette') m = new THREE.MeshStandardMaterial({color: lin(0xf3f3f0), roughness: .45, metalness: .15});
   else if(kind === 'hem') m = new THREE.MeshStandardMaterial({color: lin(0xd9d9d6), roughness: .35, metalness: .6});
   else if(kind === 'film'){ const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
-    for(let i = -512; i < 1024; i += 2){ const h = ((i + 512) / 6) % 360; x.strokeStyle = `hsla(${h},90%,62%,.55)`; x.lineWidth = 2.2; x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 300, 512); x.stroke(); }
-    const g = x.createRadialGradient(170, 140, 10, 256, 256, 420); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 512, 512);
+    for(let i = -512; i < 1024; i += 2){ const h = ((i + 512) * .7) % 360; x.strokeStyle = `hsla(${h},95%,56%,.85)`; x.lineWidth = 2.4; x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 300, 512); x.stroke(); }   // dichroic bands
+    for(let k = 0; k < 5; k++){ const y = 60 + k * 95; const g = x.createLinearGradient(0, y - 30, 0, y + 30); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.22)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, y - 30, 512, 60); }
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    m = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .35, transparent: true, opacity: .42, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false}); }
+    m = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .55, transparent: true, opacity: .62, roughness: .05, metalness: .1, side: THREE.DoubleSide, depthWrite: false}); }
   m.name = 'r28' + kind; return (R28W[kind] = m);
 }
 function r28Frame(id){   // an opening's world frame: centre, along-wall unit, unit pointing into the room, sill / head, width, wall thickness
