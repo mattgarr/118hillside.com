@@ -19633,11 +19633,18 @@ const B2L = {
       if(l.render.kind === 'ceilingFan') ff.push({id: l.id, kind: 'ceilingFan', item: room(l.space) + ' fan', x: l.at[0], y: l.at[1], level: l.storey, size: Math.round((o.dia || 4.5) * IN) + 'in',
         fixture: [l.type, String(o.finish || '').replace(/([a-z])([A-Z])/g, '$1 $2'), o.light === false ? '' : 'LED light', o.downrod ? Math.round(o.downrod * IN) + 'in downrod' : ''].join(', ')});
       else if(l.render.kind === 'sputnikChandelier') ff.push({id: l.id, kind: 'sputnikChandelier', item: room(l.space) + ' chandelier', x: l.at[0], y: l.at[1], level: l.storey}); }
-    return (this._c.L = {recessed_and_ceiling: rc, feature_fixtures: ff, exterior: (M.exteriorLights || []).filter(e => e.installed !== false).map(bim2XlRecord), units: 'feet, BIM frame (scene meta)'}); }
+    return (this._c.L = {recessed_and_ceiling: rc, feature_fixtures: ff, exterior: r36BalconyLights(M.exteriorLights || []).filter(e => e.installed !== false).map(bim2XlRecord), units: 'feet, BIM frame (scene meta)'}); }
 };
 /* exterior light record -> the page builder's shape: the compiler's `resolved` type data (rule:exterior-light-type in
    compile/misc.py: render kind, size [w, d, h] ft, beams, cct + its RGB, mounting-block paint hex) becomes `model` + `spec`,
    which buildExteriorLights merges over its default proportions. A record with no resolved type is passed through unchanged. */
+/* r36 owner 11/11 ("there are outdoor lights on either side of the slider door in real life"): the model lists the two balcony sconces (B1?, B2?, from
+   the reflected ceiling plan) but marks them 'probably not installed', so they were never drawn. They are installed. They take the same fixture as
+   the house's other door lights (WAC Edgey, black: the type is an assumption until a photo of them is matched) on the balcony wall W-L2-022. */
+function r36BalconyLights(list){ const tpl = list.find(e => e.model === 'edgey' && e.host && e.resolved); if(!tpl) return list;
+  return list.map(e => { if(!/^B[12]\?$/.test(e.id || '') || e.x == null) return e; const q = JSON.parse(JSON.stringify(tpl));
+    return Object.assign(q, {id: e.id.replace('?', ''), x: -40.36, y: e.y, z: e.z, zTop: e.z + (tpl.zTop - tpl.z), facing: '-x', where: e.where, conf: 'owner 11/11', src: 'owner 11/11 + RCP', installed: true,
+      host: {at: [-40.358, e.y], n: [-1, 0], side: 'A', wall: 'W-L2-022', faceTop: 13.4, roofUnder: 13.4, rule: 'rule:exterior-light-host'}}); }); }
 function bim2XlRecord(e){
   const r = e && e.resolved; if(!r || !r.model) return e; const s = r.size || [], spec = {};
   if(r.model === 'edgey'){ if(s[0]) spec.w = s[0]; if(s[1]) spec.d = s[1]; if(s[2]) spec.h = s[2]; }
