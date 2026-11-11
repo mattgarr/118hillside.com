@@ -22226,8 +22226,8 @@ function r36Grids(){
 function r36At(x, z, f){ if(!R36N.on) return 2; let G; try{ G = r36Grids(); }catch(e){ console.warn('[r36 nav] grid', e); R36N.on = false; return 2; }
   const k = G.idx(x, z); if(k < 0) return 2; for(const g of G.LVS) if(Math.abs(f - g.L) < .45 && g.base[k]) return g.ok[k] ? 1 : 0; return 2; }
 function r36Level(f){ const G = r36Grids(); for(const g of G.LVS) if(Math.abs(f - g.L) < .45) return g; return null; }
-function r36Nearest(x, z, f, rad, force){ if(!force && r36At(x, z, f) !== 0) return {x, z, d: 0}; if(!R36N.on) return null; r36Grids(); const G = R36N.lv, g = r36Level(f); if(!g) return null; const c = G.c, i0 = Math.floor((x - G.X0) / c), j0 = Math.floor((z - G.Z0) / c), R = Math.ceil((rad || 8) / c); let bd = 1e9, b = null;
-  for(let dj = -R; dj <= R; dj++) for(let di = -R; di <= R; di++){ const a = i0 + di, q = j0 + dj; if(a < 0 || q < 0 || a >= G.NX || q >= G.NZ || !g.ok[q * G.NX + a]) continue; const px = G.X0 + (a + .5) * c, pz = G.Z0 + (q + .5) * c, d = Math.hypot(px - x, pz - z); if(d < bd){ bd = d; b = {x: px, z: pz, d}; } }
+function r36Nearest(x, z, f, rad, force, pred){ if(!force && r36At(x, z, f) !== 0) return {x, z, d: 0}; if(!R36N.on) return null; r36Grids(); const G = R36N.lv, g = r36Level(f); if(!g) return null; const c = G.c, i0 = Math.floor((x - G.X0) / c), j0 = Math.floor((z - G.Z0) / c), R = Math.ceil((rad || 8) / c); let bd = 1e9, b = null;
+  for(let dj = -R; dj <= R; dj++) for(let di = -R; di <= R; di++){ const a = i0 + di, q = j0 + dj; if(a < 0 || q < 0 || a >= G.NX || q >= G.NZ || !g.ok[q * G.NX + a]) continue; const px = G.X0 + (a + .5) * c, pz = G.Z0 + (q + .5) * c, d = Math.hypot(px - x, pz - z); if(d < bd && (!pred || pred(px, pz))){ bd = d; b = {x: px, z: pz, d}; } }
   return b && b.d <= (rad || 8) ? b : null; }
 function r36WalkOK(x0, z0, x1, z1, s){   // a walking step keeps footing (the older rule) and stays in the walkable area; a walker who is outside it may always move toward it
   if(!navStepOK(x0, z0, x1, z1, s)) return false; if(r36At(x1, z1, feet) !== 0) return true; if(r36At(x0, z0, feet) !== 0) return false;
@@ -22345,10 +22345,10 @@ function r36GoRoom(r){
   interrupt(); if(mode !== 'walk') setMode('walk', {keep: true}); if(nav !== 'look'){ nav = 'look'; lookFromCamera(); }
   const s = STOPS.find(q => q.rooms[0] === r.id && !q.aerial && (q.nav || 'look') === 'look'); let pos, look, f;
   if(s){ const fr = FRAME_FOR(s); f = LV[s.level] != null && s.level !== 'outside' ? LV[s.level] : walkSurfaceAt(fr.pos[0], fr.pos[2], fr.pos[1] - EYE + .6); let x = fr.pos[0], z = fr.pos[2];
-    const f2 = walkSurfaceAt(x, z, f + .6), hover = Math.abs(f2 - f) >= 1.2; if(!hover) f = f2; const q = r36Nearest(x, z, f, 9, hover); if(q){ x = q.x; z = q.z; }
+    const f2 = walkSurfaceAt(x, z, f + .6), hover = Math.abs(f2 - f) >= 1.2; if(!hover) f = f2; const inRoom = (px, pz) => { const w = r36WhereAt(px, pz, f); return !!w && w === r; }, q = (hover && r36Nearest(x, z, f, 12, true, inRoom)) || r36Nearest(x, z, f, 9, hover); if(q){ x = q.x; z = q.z; }
     // the tour's camera may stand just outside the room it shows (the foyer from the stair hall, the kitchen from the dining side, the porch from its steps): step in along the view until the place underfoot is that room
     { const dx = fr.look[0] - fr.pos[0], dz = fr.look[2] - fr.pos[2], L = Math.hypot(dx, dz) || 1, is = (px, pz, pf) => { const w = r36WhereAt(px, pz, pf); return !!w && (w === r || (s.rooms.includes(w.id) && w.id === r.id)); };
-      if(!is(x, z, f)) for(let t = .5; t <= 9; t += .5){ const px = x + dx / L * t, pz = z + dz / L * t, pf = walkSurfaceAt(px, pz, f + 1.7); if(Math.abs(pf - f) > 2.2) break; if(r36At(px, pz, pf) !== 0 && is(px, pz, pf)){ const q2 = r36Nearest(px + dx / L * .8, pz + dz / L * .8, pf, 2) || {x: px, z: pz}; x = q2.x; z = q2.z; f = walkSurfaceAt(x, z, pf + .6); break; } } }
+      if(!is(x, z, f)) for(let t = .5; t <= 13; t += .5){ const px = x + dx / L * t, pz = z + dz / L * t, pf = walkSurfaceAt(px, pz, f + 1.7); if(Math.abs(pf - f) > 2.2) break; if(r36At(px, pz, pf) !== 0 && is(px, pz, pf)){ const q2 = r36Nearest(px + dx / L * .8, pz + dz / L * .8, pf, 2) || {x: px, z: pz}; x = q2.x; z = q2.z; f = walkSurfaceAt(x, z, pf + .6); break; } } }
     pos = [x, f + EYE, z]; look = [x + fr.look[0] - fr.pos[0], f + EYE, z + fr.look[2] - fr.pos[2]]; }
   else { const [ax, az] = r.id === 'street' ? wp(1165, 2700) : r.at, base = r.level === 'outside' ? ground(ax, az) : LV[r.level]; f = walkSurfaceAt(ax, az, base + .3); let x = ax, z = az; const q = r36Nearest(x, z, f, 9); if(q){ x = q.x; z = q.z; }
     let v = null; try{ v = roomView(x, z, f); }catch(e){} if(v){ const q2 = r36Nearest(v[0], v[1], f, 6); if(q2){ x = q2.x; z = q2.z; } }
@@ -22382,6 +22382,11 @@ function r36WhereAt(x, z, f){
     let r = null; try{ r = navOnStair() && ROOM.stairs ? ROOM.stairs : r36WhereAt(camera.position.x, camera.position.z, feet); }catch(e){ return _uw36.apply(this, arguments); }
     if(r && (force || r !== curRoom) && !(curRoom && r.key && curRoom.key === r.key && !force)){ curRoom = r; $('#title').textContent = r.name; $('#lvl').textContent = LEVEL_TXT[r.level] || ''; $('#dims').textContent = r.dims || ''; $('#eyebrow').textContent = 'Walk · you are in';
       $('#blurb').textContent = ''; $('#blurb').hidden = true; strip(r.ph || [], r.name); } }; }
+/* r36 (reviewer: main-level windows "show a hard black lower half"): what fills the lower half of the front windows is the street, and the aerial
+   photo the ground is draped with is close to black there (asphalt under the oaks' shade). By day the ground gets a small even lift so the street
+   reads as grey paving, as it does in life; at dusk nothing changes (the Dusk look is left exactly as it was). */
+function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golden' ? .045 : .08, g = GROUPS.terrain; if(!g) return; g.traverse(o => { if(o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(k, k, k * .96); }); }
+{ const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 setTimeout(() => { try{ if(R36N.on && MODEL) r36Grids(); }catch(e){} }, 2500);
 boot();
