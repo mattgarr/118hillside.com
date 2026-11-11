@@ -19498,6 +19498,9 @@ function r28Mat(kind){
   else if(kind === 'filter') m = new THREE.MeshStandardMaterial({color: lin(0xf1ece2), roughness: .9, transparent: true, opacity: .84, side: THREE.DoubleSide, emissive: lin(0xfff4e2), emissiveIntensity: .14, depthWrite: false});
   else if(kind === 'cassette') m = new THREE.MeshStandardMaterial({color: lin(0xf3f3f0), roughness: .45, metalness: .15});
   else if(kind === 'hem') m = new THREE.MeshStandardMaterial({color: lin(0xd9d9d6), roughness: .35, metalness: .6});
+  else if(kind === 'rail') m = new THREE.MeshStandardMaterial({color: lin(0xf1f0eb), roughness: .34, metalness: .3});       // r35: painted extruded aluminium (honeycomb headrail / bottom rail): off-white, a slight sheen
+  else if(kind === 'railcap') m = new THREE.MeshStandardMaterial({color: lin(0xe6e5df), roughness: .55, metalness: 0});     // its moulded end caps
+  else if(kind === 'reveal') m = new THREE.MeshStandardMaterial({color: lin(0x8f8d86), roughness: .95, metalness: 0});      // the shadow line under the headrail's lip
   else if(kind === 'film'){   // owner 11/10: rabbitgoo rainbow stained-glass cling - a faceted mosaic of prism-tinted, frosted shards with bright embossed
     // seams. Tileable: a periodic jittered lattice, each cell split into two shards, hue swept on the diagonal so the colour drifts like a prism.
     const S = 1024, N = 8, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), cs = S / N;
@@ -19541,14 +19544,15 @@ function r28Shades(){
   R28W.rolls = 0;
   for(const [id, kind, n] of SPEC){ const F = r28Frame(id); if(!F){ R28W.err.push('no opening ' + id); continue; }
     const g = new THREE.Group(); g.name = 'r28shade:' + id; grp(F.storey === 'L2' ? 'upper' : 'main').add(g);
-    const d = F.T / 2 - .12, top = F.head - .02, cas = .28, fab = r28Mat(kind), pw = (F.W - .08) / n, full = top - cas - F.sill - .07, parts = [];
-    for(let k = 0; k < n; k++){ const a0 = -F.W / 2 + .04 + k * pw + .02, a1 = a0 + pw - .04;
+    const d = F.T / 2 - .12, top = F.head - .02, cas = .28, fab = r28Mat(kind), pw = (F.W - .08) / n, S = {full: top - cas - F.sill - .07}, parts = [], cols = [];
+    for(let k = 0; k < n; k++){ const a0 = -F.W / 2 + .04 + k * pw + .02, a1 = a0 + pw - .04; cols.push(a0 + (a1 - a0) * .25, (a0 + a1) / 2, a0 + (a1 - a0) * .75);
       r28Box(r28Mat('cassette'), F, a0, a1, top - cas, top, d - .14, d + .14, g);                     // cassette
       const f = r28Quad(fab, F, a0 + .03, a1 - .03, -1, 0, d, g); f.geometry.translate(0, -.5, 0); f.position.y = top - cas; f.receiveShadow = true; f.castShadow = kind === 'blackout';   // a unit-tall cloth hung from the cassette: scale.y is the drop
       const h = r28Box(r28Mat('hem'), F, a0 + .02, a1 - .02, -.07, 0, d - .02, d + .02, g);            // hem bar
       parts.push({f, h}); R28W.rolls++; }
-    bl35Add({id, kind: 'roller', fab: kind, g, F, d, y1: top, y0: F.sill, door: /^D-/.test(id), dur: .6, drop: e => cas + full * e + .07,
-      pose(e){ const len = full * e; for(const p of parts){ p.f.visible = len > .012; p.f.scale.y = Math.max(.012, len); p.h.position.y = top - cas - len - .035; } }});
+    bl35Add({id, kind: 'roller', fab: kind, g, F, d, y1: top, y0: F.sill, door: /^D-/.test(id), dur: .6, drop: e => cas + S.full * e + .07, cols,
+      fit: /^D-/.test(id) ? null : lo => { S.full = Math.max(.3, top - cas - lo - .07); },
+      pose(e){ const len = S.full * e; for(const p of parts){ p.f.visible = len > .012; p.f.scale.y = Math.max(.012, len); p.h.position.y = top - cas - len - .035; } }});
     R28W.shades.push(id); }
 }
 function r28Film(){
@@ -19585,7 +19589,7 @@ function r28Honeycomb(){   // owner 11/10 (corrected): the primary suite's two t
     const dx = xi - xo, dy = yi - yo, L = Math.hypot(dx, dy), hr = new THREE.Mesh(new THREE.BoxGeometry(L, .14, .34), r28Mat('cassette'));   // r35: deep enough to cover the vane tops at any angle
     hr.position.set((xo + xi) / 2, (yo + yi) / 2 - .09, zc); hr.rotation.z = Math.atan2(dy, dx); hr.castShadow = true; g.add(hr);   // raked headrail
     const x0 = Math.min(xo, xi), x1 = Math.max(xo, xi), yt = Math.max(yo, yi), V3 = THREE.Vector3;
-    bl35Add({id: 'VB-L2-0' + (8 + wi++), kind: 'vblind', g, dur: .5, pose(e){ const a = OPEN * (1 - e); for(const v of vanes) v.rotation.y = a; },
+    bl35Add({id: 'VB-L2-0' + (8 + wi++), kind: 'vblind', g, dur: .5, pose(e){ const a = .16 + (OPEN - .16) * (1 - e); for(const v of vanes) v.rotation.y = a; },   // closed vanes lap at a slight angle
       rects: [{c: new V3((x0 + x1) / 2, (yb + yt) / 2, zc), u: new V3(1, 0, 0), v: new V3(0, 1, 0), n: new V3(0, 0, 1), hu: (x1 - x0) / 2, hv: (yt - yb) / 2,
         ok: (a, b) => (yb + yt) / 2 + b <= top((x0 + x1) / 2 + a) + .2}]}); }
   R28W.vblind = !!vb;
@@ -19608,16 +19612,23 @@ function r29Cells(){   // owner 11/10: every other window blind in the house is 
     const units = +((/-(\d)$/.exec(o.type || '') || [])[1] || 0) || Math.max(1, Math.round(F.W / 3.4)), n = Math.min(units, 4);
     const g = new THREE.Group(); g.name = 'r29cell:' + o.id; grp(F.storey === 'L2' ? 'upper' : 'main').add(g);
     // r35: fully up at rest - the headrail, the cells packed into a slim band, the bottom rail under it. A tap lowers the shade to the sill.
-    const d = F.T / 2 - .1, top = F.head - .03, rail = .1, pw = (F.W - .08) / n, full = Math.max(.4, top - rail - F.sill - .07), up = Math.min(.2, Math.max(.1, full * .04)), parts = [];
-    for(let k = 0; k < n; k++){ const a0 = -F.W / 2 + .04 + k * pw + .015, a1 = a0 + pw - .03;
-      r28Box(r28Mat('cassette'), F, a0, a1, top - rail, top, d - .09, d + .09, g);                                     // headrail
-      const f = r28Box(MAT[kind], F, a0 + .01, a1 - .01, -1, 0, d - .075, d + .075, g); f.geometry.translate(0, -.5, 0); f.position.y = top - rail;   // the cell stack: a unit-tall box hung from the headrail, scale.y is the drop
-      const uv = f.geometry.attributes.uv; for(let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * full * 16); uv.needsUpdate = true;   // a fixed count of 3/4" pleats: they pack tighter as the shade rises
+    // The hardware, measured off the listing photos (living room and bedroom, shades raised: the whole raised assembly is about 4" tall):
+    // a slim extruded-aluminium headrail 1-1/2" tall x 2" deep with a squared face and end caps, inside the top of the opening; a dark hairline
+    // under its lip; the packed cells about 1-1/2" (a little more on a tall window); a 3/4" x 1-3/4" bottom rail in the same painted metal.
+    const d = F.T / 2 - .1, top = F.head - .03, HR = .125, RV = .008, BR = .0625, pw = (F.W - .08) / n, parts = [], cols = [], S = {full: 0, up: 0};
+    const fit = lo => { S.full = Math.max(.4, top - HR - RV - lo - BR); S.up = Math.min(.16, Math.max(.11, S.full * .03)); }; fit(F.sill); const full0 = S.full;
+    for(let k = 0; k < n; k++){ const a0 = -F.W / 2 + .04 + k * pw + .015, a1 = a0 + pw - .03; cols.push(a0 + (a1 - a0) * .25, (a0 + a1) / 2, a0 + (a1 - a0) * .75);
+      r28Box(r28Mat('rail'), F, a0 + .01, a1 - .01, top - HR, top, d - .083, d + .083, g);                            // headrail
+      for(const e of [a0, a1 - .012]) r28Box(r28Mat('railcap'), F, e, e + .012, top - HR - .003, top, d - .087, d + .087, g);   // end caps, a hair proud of the extrusion
+      r28Box(r28Mat('reveal'), F, a0 + .014, a1 - .014, top - HR - RV, top - HR, d - .06, d + .06, g);                // the shadow line under the headrail
+      const f = r28Box(MAT[kind], F, a0 + .014, a1 - .014, -1, 0, d - .07, d + .07, g); f.geometry.translate(0, -.5, 0); f.position.y = top - HR - RV;   // the cell stack: a unit-tall box hung from the headrail, scale.y is the drop
+      const uv = f.geometry.attributes.uv; for(let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * full0 * 16); uv.needsUpdate = true;   // a fixed count of 3/4" pleats: they pack tighter as the shade rises
       f.castShadow = kind === 'blackout';
-      const b = r28Box(r28Mat('cassette'), F, a0, a1, -.07, 0, d - .085, d + .085, g);                                 // bottom rail
+      const b = r28Box(r28Mat('rail'), F, a0 + .006, a1 - .006, -BR, 0, d - .075, d + .075, g);                        // bottom rail
       parts.push({f, b}); }
-    bl35Add({id: o.id, kind: 'cell', fab: kind, g, F, d, y1: top, y0: F.sill, dur: .55,
-      pose(e){ const len = up + (full - up) * e; for(const p of parts){ p.f.scale.y = len; p.b.position.y = top - rail - len - .035; } }});
+    bl35Add({id: o.id, kind: 'cell', fab: kind, g, F, d, y1: top, y0: F.sill, dur: .55, cols, fit,
+      pose(e){ const len = S.up + (S.full - S.up) * e; for(const p of parts){ p.f.scale.y = len; p.b.position.y = top - HR - RV - len - BR / 2; } }});
+    R28W.cellDims = {headrail_in: [HR * 12, .166 * 12], reveal_in: RV * 12, stackRaised_in: [.11 * 12, .16 * 12], bottomRail_in: [BR * 12, .15 * 12]};
     R28W.cells.push(o.id + ':' + kind + 'x' + n); }
 }
 function r28Pantry(){
@@ -19665,7 +19676,18 @@ function bl35Hit(cx, cy){
   return null;
 }
 function bl35Pose(it){ try{ it.pose(bl35Ease(it.t)); }catch(e){} }
+// where a shade lands: the model's opening can run lower than the sill you see (a stool, the stone ledge behind the kitchen counter). The first
+// time a shade moves, look straight down its own plane for the first solid thing in the bottom third of the opening and stop there.
+const BL35RD = new THREE.Raycaster();
+function bl35Fit(it){
+  if(it.fitted || !it.fit || !it.F || !it.cols) return; it.fitted = true;
+  try{ const F = it.F, y = it.y0 + (it.y1 - it.y0) * .36, objs = withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible), dn = new THREE.Vector3(0, -1, 0), P = new THREE.Vector3();
+    const own = o => { for(; o; o = o.parent) if(o === it.g) return true; return false; }; let lo = it.y0;
+    for(const a of it.cols){ P.set(F.cx + F.u[0] * a + F.inn[0] * it.d, y, F.cz + F.u[1] * a + F.inn[1] * it.d); BL35RD.set(P, dn); BL35RD.far = y - it.y0 + .02;
+      for(const h of BL35RD.intersectObjects(objs, true)){ const m = h.object.material; if((m && m.transparent) || !h.object.isMesh || own(h.object)) continue; lo = Math.max(lo, h.point.y); break; } }
+    it.lo = +lo.toFixed(3); it.fit(lo); }catch(e){ console.warn('[blinds35] fit', it.id, e); } }
 function bl35Toggle(it){
+  bl35Fit(it);
   if(BL35.moving.has(it)) it.dir = -it.dir; else it.dir = it.t < .5 ? 1 : -1;
   it.lt = performance.now(); BL35.moving.add(it); BL35.clicks++;
   try{ GOV.lastMove = performance.now(); }catch(e){} PERF.shadowDirty = true;
@@ -19755,7 +19777,8 @@ function r35Skylights(){
 // QA / tests
 window.__bl35 = {items: () => BL35.items.map(d => ({id: d.id, kind: d.kind, fab: d.fab, t: +d.t.toFixed(3), live: bl35Live(d)})),
   toggle: id => { const it = BL35.items.find(d => d.id === id && bl35Live(d)); if(it) bl35Toggle(it); return !!it; },
-  set: (id, t) => { for(const it of BL35.items) if(id === '*' || it.id === id){ it.t = t; it.dir = 0; BL35.moving.delete(it); bl35Pose(it); } PERF.shadowDirty = true; try{ GOV.lastMove = performance.now(); }catch(e){} },
+  set: (id, t) => { for(const it of BL35.items) if(id === '*' || it.id === id){ if(t > 0) bl35Fit(it); it.t = t; it.dir = 0; BL35.moving.delete(it); bl35Pose(it); } PERF.shadowDirty = true; try{ GOV.lastMove = performance.now(); }catch(e){} },
+  lo: id => { const it = BL35.items.find(d => d.id === id); return it ? {sill: it.y0, lands: it.lo} : null; },
   hit: (x, y) => { const it = bl35At(x, y); return it ? it.id : null; },
   at: id => { const it = BL35.items.find(d => d.id === id && bl35Live(d)); if(!it) return null; const R = bl35Rects(it)[0], r = canvas.getBoundingClientRect(), s = R.c.clone().project(camera);
     return {c: R.c.toArray(), n: R.n.toArray(), hu: R.hu, hv: R.hv, x: Math.round(r.left + (s.x + 1) / 2 * r.width), y: Math.round(r.top + (1 - s.y) / 2 * r.height), front: s.z < 1}; }};
