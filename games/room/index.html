@@ -137,6 +137,14 @@ button{font:inherit;color:inherit}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .btn{border:1px solid var(--ink);background:var(--sheet);border-radius:10px;padding:10px 14px;font-size:14.5px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
 .btn.primary{background:var(--ink);color:#fff}
+.cta{background:#22313a;color:#fff;border-radius:12px;padding:14px 16px;margin:0 0 12px;display:grid;gap:4px}
+.cta b{font-family:var(--serif);font-weight:600;font-size:22px;line-height:1.1}
+.cta span{font-size:14.5px;opacity:.85;margin-bottom:8px}
+.cta .btn.big{background:#fff;color:var(--ink);border-color:#fff;justify-self:start;font-size:16px;padding:12px 20px}
+/* first visit: the first name nudges, so the move is obvious */
+@keyframes coach{0%,100%{transform:rotate(var(--r,-1.5deg)) translate(0,0)}20%{transform:rotate(-4deg) translate(6px,-3px)}40%{transform:rotate(1deg) translate(12px,-1px)}60%{transform:rotate(-3deg) translate(6px,-2px)}}
+.coach .tape[data-token]:first-of-type{animation:coach 1.6s ease-in-out 3}
+.coachtip{display:inline-block;margin-left:8px;font-size:13px;color:var(--tape-edge);font-family:var(--hand);font-size:20px;line-height:1;vertical-align:middle}
 .keysbig{display:inline-flex;gap:4px}
 .keysbig svg{width:22px;height:22px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14.5px;opacity:0;transition:opacity .25s,transform .25s;z-index:200;pointer-events:none}
@@ -428,6 +436,7 @@ function load(i){
   for(const s in SLOTS){ SLOTS[s].g && [...SLOTS[s].g.querySelectorAll('.photo')].forEach(n => n.remove()); roomEl[s].classList.remove('has'); }
   $('#hh').textContent = L.title; $('#story').textContent = L.story;
   $('#howto').hidden = !!store.best[LEVELS[0].id];
+  document.body.classList.toggle('coach', !Object.keys(store.best).length && i === 0);
   buildLevels(); render();
   history.replaceState(null, '', i ? `?level=${i + 1}` : location.pathname);
   ga('rfe_start', {level: i + 1});
@@ -444,7 +453,7 @@ function render(){
   L.tokens.forEach((t, k) => {
     const li_ = document.createElement('li'); li_.className = 'item' + (sel === t.id ? ' sel' : '') + (at[t.id] ? ' placed' : '');
     const s = at[t.id];
-    li_.innerHTML = `<div class="row"><button type="button" class="tape${t.sleep ? '' : ' thing'}" data-token="${t.id}" style="--r:${(k % 2 ? 1.2 : -1.6) + (k % 3) * .4}deg" aria-pressed="${sel === t.id}" aria-label="${t.name}${s ? ', in the ' + SLOTS[s].name.toLowerCase() : ', not placed'}">${t.name}</button>
+    li_.innerHTML = `<div class="row"><button type="button" class="tape${t.sleep ? '' : ' thing'}" data-token="${t.id}" style="--r:${(k % 2 ? 1.2 : -1.6) + (k % 3) * .4}deg" aria-pressed="${sel === t.id}" aria-label="${t.name}${s ? ', in the ' + SLOTS[s].name.toLowerCase() : ', not placed'}">${t.name}</button>${k === 0 && !s && document.body.classList.contains('coach') ? '<span class="coachtip" aria-hidden="true">drag me to a room</span>' : ''}
       <span class="where">${s ? SLOTS[s].name : ''}</span></div><p class="line">${t.line}</p><ul class="needs">${t.needs.map((n, j) => needHTML(t, n, res[t.id][j])).join('')}</ul>`;
     tray.appendChild(li_); });
   // tapes on the plan
@@ -482,7 +491,7 @@ function place(tid, s){
   const prev = at[tid], occ = Object.keys(at).find(k => at[k] === s && k !== tid);
   if(occ){ const o = L.tokens.find(x => x.id === occ);
     if(prev && (!o.sleep || SLOTS[prev].bed)) at[occ] = prev; else delete at[occ]; }
-  at[tid] = s; sel = null; S.stick(); render(); ga('rfe_place', {level: li + 1}); return true;
+  at[tid] = s; sel = null; document.body.classList.remove('coach'); S.stick(); render(); ga('rfe_place', {level: li + 1}); return true;
 }
 function unplace(tid){ delete at[tid]; render(); }
 
@@ -558,14 +567,16 @@ $('#go').onclick = () => {
   f.innerHTML = `<h2>${stars === 3 ? 'Everyone’s in.' : 'Moved in, mostly.'}</h2>
     <p class="score"><span class="keysbig">${[1, 2, 3].map(k => key(stars >= k)).join('')}</span><span>${met === n ? 'Every wish granted' : met / n >= .7 ? 'Nearly every wish granted' : 'Some wishes still waiting'}${secs ? `, in ${mm}:${ss}` : ''}</span></p>
     ${stars === 3 ? `<p class="epi">${L.epi}</p>` : `<p class="epi" style="margin-bottom:6px">Still wishing:</p><ul>${misses.map(m => `<li>${m}</li>`).join('')}</ul>`}
-    <div class="btns">${stars === 3 && !last ? `<button class="btn primary" id="nx" type="button">Next household</button>` : `<button class="btn primary" id="again" type="button">${stars === 3 ? 'Play again' : 'Try again'}</button>`}
+    ${stars === 3 && last ? `<div class="cta"><b>Every household found its rooms.</b><span>Yours could be next. Come see the house in Woodside.</span><a class="btn primary big" href="/#contact" id="see">See it in person</a></div>` : ''}
+    <div class="btns">${stars === 3 && !last ? `<button class="btn primary" id="nx" type="button">Next household</button>` : stars === 3 ? '' : `<button class="btn primary" id="again" type="button">Try again</button>`}
       <button class="btn" id="share" type="button">Share</button>
-      <a class="btn" href="/#contact" id="see">See it in person</a>
-      <a class="btn" href="/tour/" id="walk">Walk these rooms in 3D</a></div>`;
+      ${stars === 3 && last ? `<a class="btn" href="/games/feast/" id="feast">Play Thanksgiving at Hillside</a>` : `<a class="btn" href="/#contact" id="see">See it in person</a>`}
+      <a class="btn" href="/tour/" id="walk">Walk these rooms in 3D</a>${stars === 3 && last ? `<button class="btn" id="again" type="button">Play again</button>` : ''}</div>`;
   f.hidden = false; document.body.classList.add('done');
   if(phone.matches) $('#sheet').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'start'}); else f.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'nearest'});
   const nx = $('#nx'); nx && (nx.onclick = () => load(li + 1));
   const ag = $('#again'); ag && (ag.onclick = () => load(li));
+  const fe = $('#feast'); fe && (fe.onclick = () => ga('rfe_cta', {cta: 'feast'}));
   $('#share').onclick = () => share(stars, secs);
   $('#see').onclick = () => ga('rfe_cta', {cta: 'see_in_person', level: li + 1}); $('#walk').onclick = () => ga('rfe_cta', {cta: 'tour', level: li + 1});
   buildLevels();

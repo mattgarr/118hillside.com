@@ -141,6 +141,10 @@ a{color:inherit} button{font:inherit;color:inherit}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .btn{border:1px solid var(--ink);background:var(--sheet);border-radius:10px;padding:10px 14px;font-size:14.5px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
 .btn.primary{background:var(--ink);color:#fff}
+.hook{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:4;background:var(--ink);color:#fff;border-radius:999px;padding:9px 16px;font-size:14.5px;box-shadow:0 8px 24px rgba(34,49,58,.25);pointer-events:none;transition:opacity .4s}
+.hook[hidden]{display:block;opacity:0}
+@keyframes breathe{0%,100%{fill-opacity:1}50%{fill-opacity:.55}}
+.hooked .room[data-room]{animation:breathe 2.4s ease-in-out 2}
 .btn.light{border-color:rgba(255,255,255,.6);background:transparent;color:#fff}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14.5px;opacity:0;transition:opacity .25s,transform .25s;z-index:200;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -190,6 +194,7 @@ a{color:inherit} button{font:inherit;color:inherit}
     </div>
   </div>
   <div class="stage" id="stage">
+    <div class="hook" id="hook">Start with Leo’s clue. Tap a room on the plan to look inside.</div>
     <section class="sheet" id="sheet" aria-label="Floor plan of 118 Hillside Drive. Choose a room to search."></section>
     <section class="scene" id="scene" aria-modal="false" role="dialog" aria-labelledby="sceneTitle">
       <header><h2 id="sceneTitle"></h2><button class="back" id="back" type="button">Back to the plan</button></header>
@@ -367,7 +372,7 @@ const scene = $('#scene'), photo = $('#photo'), img = $('#photoImg'), say = $('#
 function speak(who, text){ say.innerHTML = (who ? `<b>${who}</b>` : '') + text; }
 function openScene(id){
   S.init(); const R = ROOMS[id]; if(!R) return; if(!t0) t0 = performance.now();
-  openRoom = id; misses = 0; seen.add(id); S.door();
+  openRoom = id; misses = 0; seen.add(id); S.door(); { const hk = document.getElementById('hook'); if(hk) hk.hidden = true; document.body.classList.remove('hooked'); }
   $('#sceneTitle').textContent = R.name; photo.style.setProperty('--ar', R.ar); img.src = `/tour/photos/${R.photo}.jpg`; img.alt = R.name;
   photo.querySelectorAll('.glow,.pop').forEach(n => n.remove());
   const it = byRoom[id];
@@ -447,7 +452,8 @@ function outside(){
   $('#outro').innerHTML = `<h2>Dinner’s on the terrace.</h2>
     <p class="meta">${hints === 0 ? 'Found everything without a single hint' : hints === 1 ? 'The twins only had to help once' : 'With a little help from the twins'}${secs ? `, in ${mm}:${ss}` : ''}</p>
     <p>The turkey made it off the smoker, the rolls caught the sunset, and Rosa’s pie survived the twins. Everyone eats under the heritage oak tonight.</p>
-    <div class="btns"><button class="btn primary" id="share" type="button">Share</button><a class="btn" href="/#contact" id="see">See it in person</a><a class="btn" href="/games/room/">Play Room for Everyone</a><button class="btn" id="again" type="button">Play again</button></div>`;
+    <div class="btns"><a class="btn primary" href="/#contact" id="see">See it in person</a><button class="btn" id="share" type="button">Share</button><a class="btn" href="/games/room/">Play Room for Everyone</a><button class="btn" id="again" type="button">Play again</button></div>
+    <p class="meta" style="margin:10px 0 0">Thanksgiving fits here. The house is for sale in Woodside.</p>`;
   $('#share').onclick = share; $('#again').onclick = restart; $('#see').onclick = () => ga('feast_cta', {cta: 'see_in_person'});
 }
 function restart(){ got = new Set(); seen = new Set(); cur = ITEMS[0].id; t0 = 0; hints = 0; table.classList.remove('open'); $('#tableTitle').textContent = 'Set the table'; renderList(); }
@@ -459,7 +465,7 @@ async function share(){
 }
 let tt = 0; function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); }
 
-renderList();
+renderList(); document.body.classList.add('hooked');
 window.FEAST = {ITEMS, open: openScene, find: id => { const it = ITEMS.find(i => i.id === id); openScene(it.room); found(it, it.spot); }, put: putOnTable, outside, state: () => ({got: [...got], set: [...set]})};   // QA hooks
 })();
 </script>
