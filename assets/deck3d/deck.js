@@ -208,11 +208,11 @@
     ['#dkPhoto', '#dkArrive', '#dkDusk'].forEach(s => { const r = box(s); if(r) y1 = Math.min(y1, r.top - c.top - 10); });
     if(y1 - y0 < 150){ const m = (y0 + y1) / 2; y0 = Math.max(14, m - 75); y1 = y0 + 150; } if(x1 - x0 < 200) x1 = x0 + 200;
     return [x0, y0, x1, y1, c.width, c.height]; }
-  function fit(pos, look, pts){ const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), zb = baseZoom(), zmin = Math.min(zb, .5);
+  function fit(pos, look, pts){ const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), zb = baseZoom(), zmin = Math.min(zb, .5), zmax = zb * 1.5;   // widen as far as it takes; close in a little when the thing is small on the screen
     const fx0 = R[0] / R[4] * 2 - 1, fx1 = R[2] / R[4] * 2 - 1, fy1 = 1 - R[1] / R[5] * 2, fy0 = 1 - R[3] / R[5] * 2, P0 = new V3(...pos), f = new V3(...look).sub(P0).normalize(), r = new V3(), u = new V3(), d = new V3(); let z = zb;
     for(let it = 0; it < 16; it++){ r.crossVectors(f, UP).normalize(); u.crossVectors(r, f); let ax0 = 1e9, ax1 = -1e9, ay0 = 1e9, ay1 = -1e9;
       for(const q of pts){ d.set(q[0], q[1], q[2]).sub(P0); const dz = Math.max(.5, d.dot(f)), tx = d.dot(r) / dz, ty = d.dot(u) / dz; ax0 = Math.min(ax0, tx); ax1 = Math.max(ax1, tx); ay0 = Math.min(ay0, ty); ay1 = Math.max(ay1, ty); }
-      z = Math.max(zmin, Math.min(zb, (fx1 - fx0) * th / Math.max(1e-3, ax1 - ax0), (fy1 - fy0) * tv / Math.max(1e-3, ay1 - ay0)));
+      z = Math.max(zmin, Math.min(zmax, .95 * (fx1 - fx0) * th / Math.max(1e-3, ax1 - ax0), .95 * (fy1 - fy0) * tv / Math.max(1e-3, ay1 - ay0)));
       const dx = (ax0 + ax1) / 2 - (fx0 + fx1) / 2 * th / z, dy = (ay0 + ay1) / 2 - (fy0 + fy1) / 2 * tv / z;
       f.addScaledVector(r, dx).addScaledVector(u, dy).normalize(); if(Math.abs(dx) + Math.abs(dy) < 1e-4) break; }
     return {pos, look: P0.clone().addScaledVector(f, 30).toArray(), zoom: z}; }
