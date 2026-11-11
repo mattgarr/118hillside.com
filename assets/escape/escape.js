@@ -98,7 +98,7 @@
     const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
     img.onload = () => { const x = cv.getContext('2d'); x.drawImage(img, 0, 0, cv.width, cv.height); tex.needsUpdate = true; };
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SNOWBALL.svg({id: 'sb3d', seed: 7, glow: true}).replace('<svg ', '<svg width="384" height="590" '));
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false})); sp.center.set(.5, 0); sp.scale.set(1.25, 1.92, 1); sp.visible = false; sp.name = 'esc-snowball'; sp.renderOrder = 5;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false})); sp.center.set(.5, 0); sp.scale.set(1.25, 1.92, 1); sp.visible = false; sp.name = 'esc-snowball'; sp.renderOrder = 5; sp.raycast = function(){};
     H.scene.add(sp); CAT = sp; return sp; }
   function catAt(p){ const c = makeCat(); if(!c) return; c.position.set(p[0], p[1], p[2]); c.visible = true; c.material.opacity = 0; const t0 = performance.now();
     (function f(){ const k = Math.min(1, (performance.now() - t0) / 500); c.material.opacity = k; if(k < 1) requestAnimationFrame(f); })(); }

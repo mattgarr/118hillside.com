@@ -37,7 +37,8 @@
       if(up.length) continue;
       return {p: h.point.clone(), on: h.point.y > (from.y - 4.2)}; }
     return null; }
-  function chooseSpot(R){ for(let t = 0; t < 12; t++){ const room = ROOMS[Math.floor(R() * ROOMS.length)], sp = castSpot(room.s, R); if(sp) return Object.assign(sp, {room}); }
+  const nearRoom = (p, fallback) => { let best = null; for(const r of ROOMS){ if(Math.abs((r.s.pos[1] - 5) - p.y) > 3.2) continue; const d = Math.hypot(r.s.pos[0] - p.x, r.s.pos[2] - p.z); if(!best || d < best.d) best = {r, d}; } return best ? best.r : fallback; };
+  function chooseSpot(R){ for(let t = 0; t < 12; t++){ const room = ROOMS[Math.floor(R() * ROOMS.length)], sp = castSpot(room.s, R); if(sp) return Object.assign(sp, {room: nearRoom(sp.p, room)}); }
     const room = ROOMS.find(q => q.s.id === 'living') || ROOMS[0]; return {p: new THREE.Vector3(room.s.look[0], room.s.pos[1] - 5, room.s.look[2]), room, on: false}; }
 
   /* ---------- Snowball ---------- */
@@ -45,7 +46,7 @@
   function makeCat(cb){ const done = () => { const cv = document.createElement('canvas'); cv.width = 384; cv.height = 590; const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
       const img = new Image(); img.onload = () => { cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); tex.needsUpdate = true; };
       img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SNOWBALL.svg({id: 'sbf', seed: 7, glow: true, wear: WEAR}).replace('<svg ', '<svg width="384" height="590" '));
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false, alphaTest: .05})); sp.center.set(.5, 0); sp.scale.set(1.05, 1.61, 1); sp.name = 'find-snowball'; sp.renderOrder = 5; sp.visible = false;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false, alphaTest: .05})); sp.center.set(.5, 0); sp.scale.set(1.05, 1.61, 1); sp.name = 'find-snowball'; sp.renderOrder = 5; sp.visible = false; sp.raycast = function(){};
       H.scene.add(sp); CAT = sp; cb(); };
     if(window.SNOWBALL) return done(); const s = document.createElement('script'); s.src = '../assets/snowball.js?v=31'; s.onload = done; document.head.appendChild(s); }
   function hide(R){ SPOT = chooseSpot(R); CAT.position.copy(SPOT.p); CAT.visible = true; CAT.scale.set(1.05, 1.61, 1); S.t0 = performance.now(); S.found = false; S.calls = 0; S.hotAt = 0; ga('find_hide', {room: SPOT.room.s.id, daily: S.daily}); }
