@@ -49,7 +49,7 @@
         gl_Position = projectionMatrix * mv; gl_PointSize = min(180., aSize * uScale * (.6 + .4 * b) / max(.2, -mv.z)); }`;
     const FS = `uniform float uHalo; varying vec3 vC; varying float vB;
       void main(){ float d = length(gl_PointCoord - .5) * 2.; if(d > 1.) discard; float core = smoothstep(.34, .0, d), halo = pow(1. - d, 2.4);
-        vec3 c = vC * (halo * .5 * uHalo + core * 1.25) + vec3(core * core * .55); gl_FragColor = vec4(c * vB, 1.); }`;
+        vec3 c = vC * (halo * .5 * uHalo + core * 1.25) + vec3(core * core * .55); gl_FragColor = vec4(c * vB, 0.); }`;
     const SETS = new Set();
     const scaleHook = function(r, s, cam){ const rt = r.getRenderTarget(), h = rt ? rt.height : r.domElement.height; U.scale.value = h * .5 * cam.projectionMatrix.elements[5]; };
     let ON = 1;
@@ -57,7 +57,7 @@
     function lightSet(g, pts, o){ o = o || {}; const n = pts.length, pos = new Float32Array(n * 3), cl = new Float32Array(n * 3), sz = new Float32Array(n), ph = new Float32Array(n), sq = new Float32Array(n), R = rng(o.seed || 3), C = {};
       pts.forEach((p, i) => { pos[i * 3] = p.p.x; pos[i * 3 + 1] = p.p.y; pos[i * 3 + 2] = p.p.z; const c = C[p.c] || (C[p.c] = col(p.c)); cl[i * 3] = c.r; cl[i * 3 + 1] = c.g; cl[i * 3 + 2] = c.b; sz[i] = p.dark ? 0 : (p.s || 1); ph[i] = R(); sq[i] = p.q == null ? i : p.q; });
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('aColor', new THREE.BufferAttribute(cl, 3)); geo.setAttribute('aSize', new THREE.BufferAttribute(sz, 1)); geo.setAttribute('aPhase', new THREE.BufferAttribute(ph, 1)); geo.setAttribute('aSeq', new THREE.BufferAttribute(sq, 1));
-      const mat = new THREE.ShaderMaterial({uniforms: {uTime: U.time, uScale: U.scale, uHalo: U.halo, uOn: {value: ON}, uMode: {value: reduce ? 0 : (o.mode || 0)}}, vertexShader: VS, fragmentShader: FS, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true});
+      const mat = new THREE.ShaderMaterial({uniforms: {uTime: U.time, uScale: U.scale, uHalo: U.halo, uOn: {value: ON}, uMode: {value: reduce ? 0 : (o.mode || 0)}}, vertexShader: VS, fragmentShader: FS, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor, depthWrite: false, transparent: true});
       const P = new THREE.Points(geo, mat); P.frustumCulled = false; P.renderOrder = 8; P.onBeforeRender = scaleHook; P.userData.own = true; mat.userData.own = true; g.add(P);
       const set = {points: P, mat, seq: o.seq == null ? 3 : o.seq, glows: [], flames: null, body: null, center: pts.length ? pts[Math.floor(n / 2)].p.clone() : new V3()};
       if(o.body){ const bm = own(new THREE.MeshBasicMaterial({color: 0xffffff})); set.body = inst(o.bodyGeo || G.bulb, bm, pts.map(p => ({p: p.p, s: o.bodyScale ? [p.r * o.bodyScale[0], p.r * o.bodyScale[1], p.r * o.bodyScale[2]] : (p.r || .05), c: p.c}))); set.body.userData.own = true; g.add(set.body); }
@@ -163,7 +163,7 @@
     function buildHang(S){ if(S.hang === 'none') return null; const g = grp('hang'), kind = S.hang, y0 = 7.72, z = 6.0, xs = [-9.0, -7.3, -4.1, -2.4, -.7], drop = [1.3, .85, .85, 1.3, .95], pts = [];
       const cord = std('#2a2a2a'), set0 = {glows: []};
       xs.forEach((x, i) => { const y = y0 - drop[i]; g.add(mesh(G.cylLo, cord, x, (y0 + y) / 2 + .2, z, .008, y0 - y - .2, .008)); let m, c;
-        if(kind === 'star'){ m = glowMat(i % 2 ? '#ff8f1f' : '#ffb028', i % 2 ? '#ff7a12' : '#ffa21c'); const s = new THREE.Mesh(tex('starG', () => starGeo(.48, .2, .16)), m); s.position.set(x, y, z); s.rotation.y = (i - 2) * .22; g.add(s); c = '#ffab3c';
+        if(kind === 'star'){ m = glowMat(i % 2 ? '#ff8f1f' : '#ffb028', i % 2 ? '#ff7a12' : '#ffa21c'); const s = new THREE.Mesh(tex('starG', () => starGeo(.56, .23, .2)), m); s.position.set(x, y, z); s.rotation.y = (i - 2) * .22; g.add(s); c = '#ffab3c';
           [-1, 0, 1].forEach(t => { const tl = mesh(G.box, std(i % 2 ? '#e8452c' : '#ffcf4a'), x + t * .1, y - .62, z, .035, .42, .008); tl.rotation.z = t * .12; g.add(tl); }); set0.glows.push({m, k: 1.5}); }
         else if(kind === 'red'){ m = glowMat('#d8231c', '#ff3a1c'); const b = mesh(G.sph, m, x, y, z, .36, .31, .36); g.add(b); c = '#ff5a34'; const gold = metal('#d9aa3f');
           g.add(mesh(G.cyl, gold, x, y + .31, z, .15, .06, .15)); g.add(mesh(G.cyl, gold, x, y - .31, z, .15, .06, .15)); g.add(mesh(G.cylLo, std('#c9242a'), x, y - .56, z, .03, .44, .03)); g.add(mesh(G.sph, gold, x, y - .35, z, .04));
@@ -218,7 +218,9 @@
       const push = (base, dir, len, wd) => { const X = new V3().crossVectors(Y, dir).normalize(), Z = new V3().crossVectors(X, dir).normalize(); boughs.push({p: base, q: basisQ(X, dir, Z), s: [len * wd, len, len * .17], c: greens[Math.floor(R() * 4)]}); return X; };
       for(let i = 0; i < tiers; i++){ const t = i / (tiers - 1), y = y0 + .12 + (h - y0 - .5) * t, rr = prof(t), n = Math.max(5, Math.round(6 + rr * 7.5)), off = R() * 6.283;
         for(let k = 0; k < n; k++){ const a = off + k / n * 6.283 + (R() - .5) * .3, len = rr * (.86 + R() * .28), droop = .36 + R() * .16 - t * .3, dir = new V3(Math.sin(a) * Math.cos(droop), -Math.sin(droop), Math.cos(a) * Math.cos(droop)), base = new V3(0, y, 0);
-          const X = push(base, dir, len, .46); [-1, 1].forEach(sd => { const d2 = dir.clone().multiplyScalar(Math.cos(.62)).addScaledVector(X, sd * Math.sin(.62)).normalize(); push(base.clone().addScaledVector(dir, len * .42), d2, len * .52, .5); });
+          const X = push(base, dir, len, .34), up = new V3().crossVectors(dir, X).normalize(); [-1, 1].forEach(sd => { const d2 = dir.clone().multiplyScalar(Math.cos(.62)).addScaledVector(X, sd * Math.sin(.62)).normalize(); push(base.clone().addScaledVector(dir, len * .36), d2, len * .56, .4); });
+          const nt = o.small ? 3 : 5; for(let j = 0; j < nt; j++){ const u = .28 + j / nt * .7, at = base.clone().addScaledVector(dir, len * u), tl = len * (.34 - u * .14) * (.8 + R() * .4);   // feather each bough with short side shoots so it reads as fir, not folded paper
+            [-1, 1].forEach(sd => push(at, dir.clone().multiplyScalar(.62).addScaledVector(X, sd * .78).addScaledVector(up, .12 + R() * .2).normalize(), tl, .42)); push(at, dir.clone().multiplyScalar(.7).addScaledVector(up, .7).addScaledVector(X, (R() - .5) * .5).normalize(), tl * .7, .45); }
           if((i * 7 + k) % 3 === 0 && t < .93) orn.push({p: base.clone().addScaledVector(dir, len * .93).add(new V3(0, -.13, 0)), s: (o.small ? .07 : .095) + R() * .04, c: (ORN[o.small ? 'small' : kind] || ORN.fir)[Math.floor(R() * 99) % (ORN[o.small ? 'small' : kind] || ORN.fir).length]}); } }
       t3.add(inst(G.spike, std('#ffffff', {map: needleTex(), roughness: .9}), boughs));
       t3.add(inst(G.sph, std('#ffffff', {metalness: .65, roughness: .2}), orn));
@@ -291,9 +293,9 @@
       f.traverse(o => { if(o.name === 'decor' && o.visible){ bb.setFromObject(o); if(!bb.isEmpty() && b.containsBox(bb)){ o.visible = false; o.userData.deckHid = true; } } }); }
     function tableTop(x, z, dflt){ let best = null; [[0, 0], [.5, .3], [-.5, -.3], [1.2, 0], [-1.2, 0]].forEach(d => { const h = down(x + d[0], z + d[1], 4, 5); if(h && h.point.y > .6 && (best == null || h.point.y < best)) best = h.point.y; }); return best == null ? dflt : best; }
     const BEAMS = [3.05, 6.8, 10.55];
-    function buildRoom(S, ctx){ const Rm = S.room || []; hideDecor(Rm.includes('kinara')); if(!Rm.length) return null; const g = grp('room');
+    function buildRoom(S, ctx){ const Rm = S.room || []; hideDecor(Rm.includes('kinara') || Rm.includes('menorah')); if(!Rm.length) return null; const g = grp('room');
       if(Rm.includes('kinara')){ const y = tableTop(6.55, -2.95, 1.45); kinara(g, 6.55, y, -2.95, 0, {mat: true, seq: 2}); }
-      if(Rm.includes('menorah')){ const y = tableTop(6.6, 3.4, 2.0); menorah(g, 6.6, y, 3.4, Math.PI, 9, .85, 2); }
+      if(Rm.includes('menorah')){ const mx = Rm.includes('kinara') ? 8.3 : 6.55, y = tableTop(mx, -2.95, 1.45); menorah(g, mx, y, -2.95, 0, 9, Rm.includes('kinara') ? .72 : .9, 2); }
       if(Rm.includes('beams')) BEAMS.forEach((x, i) => { const pts = []; for(let s = 0; s < 3; s++){ const a = new V3(x, 8.36, -7.0 + s * 3.13), b = new V3(x, 8.36, -7.0 + (s + 1) * 3.13); swag(a, b, .42, 10).forEach((p, j) => { if(s === 0 || j) pts.push(p); }); } garland(g, pts, {seq: 3, seed: 40 + i, r: .19}); [-7, -3.87, -.74, 2.39].forEach(z => bow(g, '#b3141f', x, 8.2, z, .9)); });
       if(Rm.includes('poinsettia')){ poinsettia(g, .75, 0, -5.9, 1.15); poinsettia(g, 11.2, 0, -5.75, 1.15); poinsettia(g, 12.9, 0, -6.6, .95); }
       if(Rm.includes('rangoli')) rangoli(g, -5.7, floorY(-5.7, -2.4, 3, 0), -2.4, 1.9, 2);
@@ -311,7 +313,7 @@
       const low = V.filter(q => q.y < -1.5 && q.y > -5); let cx = 8.3, cz = -27.2; if(low.length){ cx = low.reduce((s, q) => s + q.x, 0) / low.length; cz = low.reduce((s, q) => s + q.z, 0) / low.length; }
       const g0 = floorY(cx + 2.6, cz, 6, -4.8), trunk = []; let px = cx, pz = cz;
       for(let y = g0 + .3; y < g0 + 9.5; y += .3){ const sl = V.filter(q => Math.abs(q.y - y) < .7 && Math.hypot(q.x - px, q.z - pz) < 2.4); if(sl.length < 4) continue; const mx = sl.reduce((s, q) => s + q.x, 0) / sl.length, mz = sl.reduce((s, q) => s + q.z, 0) / sl.length, r = sl.reduce((s, q) => s + Math.hypot(q.x - mx, q.z - mz), 0) / sl.length;
-        if(r > 1.75) break; px = mx; pz = mz; trunk.push({y, x: mx, z: mz, r: clamp(r, .7, 1.6)}); }
+        if(r > 1.9 && y > g0 + 3) break; px = mx; pz = mz; trunk.push({y, x: mx, z: mz, r: clamp(r, .7, y < g0 + 2 ? 1.75 : 1.45)}); }
       const top = trunk.length ? trunk[trunk.length - 1].y : g0 + 7;
       OAK = {trunk, canopy: V.filter(q => q.y > top + 1.5 && q.y < top + 24 && Math.hypot(q.x - cx, q.z - cz) < 24), cx, cz, g0, top}; return OAK; }
     function buildOak(S){ if(S.oak === 'none') return null; const o = oakInfo(), g = grp('oak'), R = rng(9);
@@ -324,7 +326,7 @@
       return g; }
     const TER_EDGE = [[.7, -25.6], [.8, -28.6], [1.3, -31.6], [2.6, -34.4], [4.4, -37], [6.4, -39.8], [8.2, -42.8], [8.6, -45.8], [6.6, -48.6], [3.8, -51.2]];
     function buildTer(S){ const Tr = S.ter || []; if(!Tr.length) return null; const g = grp('ter'), o = oakInfo();
-      if(Tr.includes('bistro')){ const oy = Math.min(o.top || 4, 4.6), oakA = new V3((o.cx || 8.3) - .9, oy, (o.cz || -27.2) - .5), runs = [[oakA, new V3(2.85, 5.15, -37.25), 1.0], [oakA, new V3(-9.9, 5.6, -28.5), 1.3], [new V3(2.85, 5.15, -37.25), new V3(-9.9, 5.15, -37.25), .5], [new V3(-9.6, 4.6, -41.2), new V3(2.6, 4.6, -41.2), .55], [new V3(-9.6, 4.6, -45.9), new V3(2.6, 4.6, -45.9), .55]], pts = []; let q0 = 0;
+      if(Tr.includes('bistro')){ const oy = Math.min(o.top || 4, 4.6), oakA = new V3((o.cx || 8.3) - .9, oy, (o.cz || -27.2) - .5), runs = [[oakA, new V3(2.85, 5.0, -37.3), 1.0], [oakA, new V3(-9.9, 5.6, -28.5), 1.3], [new V3(2.7, 4.5, -37.5), new V3(-3.6, 4.5, -50.0), .45], [new V3(-3.6, 4.5, -50.0), new V3(-9.7, 4.5, -37.5), .45], [new V3(2.7, 4.5, -37.5), new V3(-9.7, 4.5, -37.5), .4]], pts = []; let q0 = 0;
         runs.forEach(r => { const line = swag(r[0], r[1], r[2], 26); wire(g, line, '#151515'); along(line, 1.05, .5).forEach(s => pts.push({p: new V3(s.p.x, s.p.y - .16, s.p.z), c: '#ffcf8a', s: 1.25, q: q0 + s.q, r: .09})); q0 += 30; });
         lightSet(g, pts, {mode: 0, seq: 2, body: true, seed: 14}); }
       if(Tr.includes('luminarias')) luminarias(g, TER_EDGE.map(p => new V3(p[0], floorY(p[0], p[1], 2, -4.8) + .01, p[1])), 2);
@@ -335,7 +337,7 @@
         flames(g, at, {seq: 2, glow: 2.2}); }
       if(Tr.includes('smoker')){ let c = null; H.scene.traverse(q => { if(q.isMesh && /^k2\dceramic$/.test(q.name) && shown(q)) c = q; }); const b = new THREE.Box3(); if(c) b.setFromObject(c); const p = c ? b.getCenter(new V3()) : new V3(-8.5, -1, -48.5), top = c ? b.max.y : 0;
         lightSet(g, [{p: new V3(p.x, p.y - (c ? (b.max.y - b.min.y) * .12 : 0), p.z + (c ? (b.max.z - b.min.z) * .52 : 0)), c: '#ff6a1e', s: 1.5}, {p: new V3(p.x, top + .1, p.z), c: '#ff8a3a', s: .9}], {mode: 4, seq: 2});
-        const sm = own(new THREE.SpriteMaterial({map: tex('smoke', () => canvasTex(64, 64, (x, w) => { const gr = x.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(235,235,240,.5)'); gr.addColorStop(1, 'rgba(235,235,240,0)'); x.fillStyle = gr; x.fillRect(0, 0, w, w); })), transparent: true, depthWrite: false, opacity: .5})); const puffs = [];
+        const sm = own(new THREE.SpriteMaterial({map: tex('smoke', () => canvasTex(64, 64, (x, w) => { const gr = x.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(235,235,240,.5)'); gr.addColorStop(1, 'rgba(235,235,240,0)'); x.fillStyle = gr; x.fillRect(0, 0, w, w); })), transparent: true, depthWrite: false, opacity: .3})); const puffs = [];
         for(let i = 0; i < 6; i++){ const s = new THREE.Sprite(sm); s.raycast = noop; s.userData.k = i / 6; g.add(s); puffs.push(s); } g.userData.tick = t => puffs.forEach(s => { const k = ((reduce ? 0 : t * .12) + s.userData.k) % 1; s.position.set(p.x + Math.sin(k * 5 + s.userData.k * 9) * .3 * k, top + .2 + k * 4.2, p.z + k * .6); s.scale.setScalar(.5 + k * 1.9); s.visible = k < .96; }); }
       return g; }
 
@@ -365,7 +367,7 @@
             vec4 mv = viewMatrix * vec4(w, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = clamp((.11 + aPhase * .1) * uScale / max(.3, -mv.z), 1.5, 14.); if(vA < .5) gl_Position = vec4(2., 2., 2., 1.); }`,
         fragmentShader: `uniform vec3 uTint; varying float vA; void main(){ float d = length(gl_PointCoord - .5) * 2.; if(d > 1.) discard; gl_FragColor = vec4(min(vec3(1.), uTint * 1.25 + .12), (1. - d * d) * .85 * vA); }`});
       const P = new THREE.Points(geo, mat); P.frustumCulled = false; P.renderOrder = 7; P.raycast = noop; P.onBeforeRender = scaleHook; P.name = 'deck-snowfall'; return P; }
-    const SNOWMAN_AT = [1.2, 27.2];
+    const SNOWMAN_AT = [-1.3, 25.9];
     function buildWeather(S){ const w = S.weather, full = w === 'snowday'; if(w === 'clear' || !w){ SNOW.over.forEach(m => m.visible = false); if(SNOW.fall) SNOW.fall.visible = false; return null; }
       snowFind(); SNOW.u.uCover.value = full ? 1 : .42; SNOW.over.forEach(m => m.visible = true); if(!SNOW.fall){ SNOW.fall = snowFall(2600); root.add(SNOW.fall); } SNOW.fall.visible = true; SNOW.fall.material.uniforms.uAmt.value = full ? 1 : .35;
       if(!full || S.yard === 'none') return null; const g = grp('yard'), [x, z] = SNOWMAN_AT, y = floorY(x, z, 2, -3.5), snow = std('#f4f7fb', {roughness: .95}), coal = std('#15161a'), s = new THREE.Group(); s.position.set(x, y, z); s.rotation.y = .25; g.add(s);
