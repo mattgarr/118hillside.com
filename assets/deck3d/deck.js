@@ -29,7 +29,8 @@
      turned (and widened if it has to be) until all of them sit in the part of the screen the panels leave free. cat: where Snowball sits. */
   const PLACES = [
     {id: 'street', label: 'Roofline', pos: [13, 2.6, 80], look: [0, 8, 20], posP: [10, 2.6, 84], lookP: [0, 8, 20], cat: [-1, 40], say: 'Start at the top. The roof is long, so choose carefully.', sections: ['lights'],
-     fit: [[33.7, 7.9, 38.2], [18.4, 14.6, 38.2], [3.2, 7.9, 38.2], [-26.7, 5.5, 23.7], [-18, 10.9, 23.7], [-17.9, 18.6, -1.1], [-26.3, 13.4, -1.1]]},
+     fit: [[33.7, 7.9, 38.2], [18.4, 14.6, 38.2], [3.2, 7.9, 38.2], [-26.7, 5.5, 23.7], [-18, 10.9, 23.7], [-17.9, 18.6, -1.1], [-26.3, 13.4, -1.1]],
+     pfit: [[1.3, -3.4, 57], [9.4, -3.2, 57]]},   // a picture from the street keeps the front of the walk in, and little road below it
     {id: 'door', label: 'Front door', pos: [-5.0, 4.6, 38], look: [-5.4, 2.0, 10], posP: [-5.2, 5.2, 44], lookP: [-5.4, 2.4, 10], cat: [-1.5, 13.4], say: 'The doors next. Everyone who arrives ends up standing right here.', sections: ['door', 'hang', 'path'],
      fit: [[-10.6, 8.4, 6.3], [3.9, 8.4, 6.3], [-10.6, -3.4, 24], [3.9, 3.3, 15.6], [-5, -3.4, 26]]},
     {id: 'windows', label: 'Windows', pos: [-8.5, 2.4, 40.5], look: [0, 3, 12], cat: [-4, 24], say: 'Now the windows. This is what the whole street sees.', sections: ['win'],
@@ -250,7 +251,7 @@
     for(let it = 0; it < 16; it++){ r.crossVectors(f, UP).normalize(); u.crossVectors(r, f); let ax0 = 1e9, ax1 = -1e9, ay0 = 1e9, ay1 = -1e9;
       for(const q of pts){ d.set(q[0], q[1], q[2]).sub(P0); const dz = Math.max(.5, d.dot(f)), tx = d.dot(r) / dz, ty = d.dot(u) / dz; ax0 = Math.min(ax0, tx); ax1 = Math.max(ax1, tx); ay0 = Math.min(ay0, ty); ay1 = Math.max(ay1, ty); }
       z = Math.max(zmin, Math.min(zmax, .95 * (fx1 - fx0) * th / Math.max(1e-3, ax1 - ax0), .95 * (fy1 - fy0) * tv / Math.max(1e-3, ay1 - ay0)));
-      const slack = (fy1 - fy0) * tv / z - (ay1 - ay0), low = PHASE === 'photo' && slack > 0 ? .28 : .5;   // a picture puts most of any spare height above the house (sky, the oak, the lights) and little below (the road)
+      const slack = (fy1 - fy0) * tv / z - (ay1 - ay0), low = PHASE === 'photo' && slack > 0 ? .08 : .5;   // a picture puts most of any spare height above the house (sky, the oak, the lights) and little below (the road)
       const dx = (ax0 + ax1) / 2 - (fx0 + fx1) / 2 * th / z, dy = slack > 0 ? ay0 - (fy0 * tv / z + slack * low) : (ay0 + ay1) / 2 - (fy0 + fy1) / 2 * tv / z;
       f.addScaledVector(r, dx).addScaledVector(u, dy).normalize(); if(Math.abs(dx) + Math.abs(dy) < 1e-4) break; }
     return {pos, look: P0.clone().addScaledVector(f, 30).toArray(), zoom: z}; }
@@ -392,7 +393,7 @@
   #dkPhoto .act{display:flex;gap:8px;align-items:center}#dkPhoto .act span{font-size:13.5px;color:#5c6575;flex:1;line-height:1.25}
   #dkVF{position:fixed;z-index:61;pointer-events:none;border:1.5px solid rgba(255,255,255,.85);border-radius:3px;box-shadow:0 0 0 200vmax rgba(8,12,24,.55)}
   #dkCard .sb{display:flex;gap:10px;align-items:flex-start;text-align:left;margin:2px 0 10px}#dkCard .sb .av{flex:none;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34416b,#1a2340);overflow:hidden;display:grid;place-items:end center}#dkCard .sb .av svg{width:44px;height:auto;margin-bottom:-4px}
-  #dkCard .sb p{margin:0;font:21px/1.2 "Caveat Brush","Marker Felt",cursive;color:#2b2336}
+  #dkCard .sb p{margin:0;font:clamp(18px,4.8vw,21px)/1.2 "Caveat Brush","Marker Felt",cursive;color:#2b2336}
   #dkCard ul.w{list-style:none;margin:4px 0 6px;padding:0;text-align:left;display:grid;gap:6px}#dkCard ul.w li{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.3;color:#2b3442}
   #dkCard ul.w .av{flex:none;width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;display:grid;place-items:center}#dkCard ul.w b{font-weight:500}
   #dkCard .ideas{text-align:left;font-size:14px;line-height:1.4;color:#5c6575;margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#f1eee6}#dkCard .ideas b{display:block;font-weight:500;color:#2b3442;margin-bottom:2px}
