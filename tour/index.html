@@ -20930,7 +20930,10 @@ if(typeof settleStaging === 'function'){ const _b3ss = settleStaging; settleStag
    F4 drain     - the trench drain across the garage door (p03).
    F5 planting  - the shrubs in the photos, one by one (LAND.make): rosemary at the deck corner, white shrub roses, lavender and the
                   young olive under the picture windows; lavender and a white rose on the oak island. Replaces the scattered P10 shrubs.
-   F6 flagstone - typed flagstones that would lie on the new walk are dropped (whole stones). Report: window.__F35. */
+   F6 flagstone - typed flagstones that would lie on the new walk are dropped (whole stones).
+   F7 oak       - the front oak leans hard toward the garage (p70, p66 and both phone photos: about 22 deg), splits at ~11 ft and
+                  carries its long limb over the drive; its bark is lifted to the grey-brown of the photos (this tree's own vertex
+                  colours only). Report: window.__F35. */
 const F35 = window.__F35 = {on: true, built: false, streetZ: 56.11, bandW: .68, lift: .055,
   rect: [-45.1171875, -4.6875, 34.86328125, 58.0078125],   // x0, z0, x1, z1: on site-cover texel boundaries (2048 px over 600 ft)
   runs: [
@@ -20940,7 +20943,7 @@ const F35 = window.__F35 = {on: true, built: false, streetZ: 56.11, bandW: .68, 
     {k: 'wall', p: [[-10.17, 19.8], [0, 19.8]]},                                               // foot of the porch steps
     {k: 'band', curve: true, p: [[0, 19.8], [.05, 22], [.25, 25.5], [.8, 29.2], [1.55, 32.8], [2.35, 35.6], [3.3, 37.3], [4.2, 38.5], [4.6, 40.2], [4.95, 42.6], [5.8, 47], [7.1, 52], [8.2, 56.11]]},   // bed under the picture windows, then the walk's north edge
     {k: 'band', p: [[8.2, 56.11], [.3, 56.11]]},                                               // walk at the street
-    {k: 'band', curve: true, p: [[.3, 56.11], [-.6, 51.5], [-1.7, 46.5], [-2.4, 41.5], [-3, 37.2], [-3.9, 33.6], [-5.1, 31.3], [-6.3, 30.3], [-7.6, 30.65], [-8.5, 32], [-9.4, 34.5], [-10.9, 38.5], [-12.4, 43], [-13.1, 47.5], [-12.7, 52], [-12, 56.11]]},   // round the oak island
+    {k: 'band', curve: true, p: [[.3, 56.11], [-.8, 51.5], [-2.1, 46.5], [-2.8, 41.5], [-3.2, 37.2], [-3.9, 33.7], [-4.9, 31.6], [-5.9, 30.5], [-7.2, 30.2], [-8.3, 30.9], [-8.95, 32.4], [-9.6, 34.6], [-10.9, 38.5], [-12.4, 43], [-13.1, 47.5], [-12.7, 52], [-12, 56.11]]},   // round the oak island
     {k: 'band', p: [[-12, 56.11], [-34.6, 56.11]]},                                            // apron at the street
     {k: 'band', p: [[-34.6, 56.11], [-35.5, 44], [-36.3, 24], [-36.3, -1.6]]},                 // south edge, beside the fence strip
     {k: 'plain', p: [[-36.3, -1.6], [-25.77, -1.6]]}],
@@ -20957,9 +20960,10 @@ const F35 = window.__F35 = {on: true, built: false, streetZ: 56.11, bandW: .68, 
     ['lavender', -7.4, 33.7, {w: 2.2, h: 2.3, seed: 21}],
     ['azalea', -5.5, 34.6, {w: 1.8, h: 1.6, color: 'white', seed: 22}],
     ['lavender', -7.9, 38, {w: 2.6, h: 2.6, seed: 23}],
-    ['lavender', -4.9, 40.2, {w: 2, h: 2.1, seed: 24}],
+    ['lavender', -6.3, 42.4, {w: 2, h: 2.1, seed: 24}],
     ['lavender', -10.3, 42.2, {w: 2.1, h: 2.2, seed: 25}]],
-  tone: new THREE.Vector3(0, 1, 1), report: {}};
+  tone: new THREE.Vector3(.35, .55, 1), pav: new THREE.Vector2(1.3, .45),   // front pavers: desaturate / contrast / gain; unit scale (6 and 9 in. cobbles) / tumbled mottle
+  oak: {lean: {dir: [-.85, -.5], amount: .4}, trunkBias: {dir: [-.6, -.8], amount: .3}, trunkHeight: 11, bark: 1.7}, report: {}};
 function f35Spline(P, step){   // uniform Catmull-Rom through P
   const out = [], n = P.length, g = i => P[Math.max(0, Math.min(n - 1, i))];
   for(let i = 0; i < n - 1; i++){ const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2), k = Math.max(2, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
@@ -21022,15 +21026,15 @@ function f35CoverTexture(){   // F2: the frontage cover, RGB = asphalt / gravel 
     const ob = mat.onBeforeCompile, [x0, z0, x1, z1] = F35.rect;
     mat.onBeforeCompile = sh => { ob(sh);
       const kA = 'vec3 s2l(vec3 c){ return pow(c, vec3(2.2)); }', kB = 'vec4 cw = texture2D(sCover, vec2((vSW.z + 300.0) / 600.0, (300.0 - vSW.x) / 600.0));', kC = 's2l(texture2D(sPav, wq * rPav).rgb)', fs = sh.fragmentShader;
-      if(!(fs.includes(kA) && fs.includes(kB) && fs.includes(kC))){ console.warn('[front35] cover shader anchors not found'); F35.report.shader = false; return; }
-      Object.assign(sh.uniforms, {sCoverF: {value: tex}, f35R: {value: new THREE.Vector4(x0, z0, x1 - x0, z1 - z0)}, f35T: {value: F35.tone}});
+      if(!(fs.includes(kA) && fs.includes(kB) && fs.includes(kC) && fs.includes('vec3 dt = ') && fs.includes(' dl = '))){ console.warn('[front35] cover shader anchors not found'); F35.report.shader = false; return; }
+      Object.assign(sh.uniforms, {sCoverF: {value: tex}, f35R: {value: new THREE.Vector4(x0, z0, x1 - x0, z1 - z0)}, f35T: {value: F35.tone}, f35P: {value: F35.pav}});
       sh.fragmentShader = fs.replace(kA, kA + `
-uniform sampler2D sCoverF; uniform vec4 f35R; uniform vec3 f35T;
+uniform sampler2D sCoverF; uniform vec4 f35R; uniform vec3 f35T; uniform vec2 f35P;
 vec3 f35Tone(vec3 c){ float l = dot(c, vec3(.3, .55, .15)); return clamp((mix(c, vec3(l), f35T.x) - .5) * f35T.y + .5, 0.0, 1.0) * f35T.z; }`).replace(kB, kB + `
   vec2 f35q = (vSW.xz - f35R.xy) / f35R.zw, f35e = smoothstep(vec2(0.0), vec2(.012), f35q) * smoothstep(vec2(0.0), vec2(.012), 1.0 - f35q);
   float f35k = f35e.x * f35e.y;
   { vec3 fc = texture2D(sCoverF, clamp(f35q, 0.0, 1.0)).rgb; float fn = min(fc.r, min(fc.g, fc.b));
-    cw = mix(cw, vec4(fc - fn, max(0.0, 1.0 - fc.r - fc.g - fc.b + 2.0 * fn)), f35k); }`).replace(kC, 's2l(mix(texture2D(sPav, wq * rPav).rgb, f35Tone(texture2D(sPav, vSW.xz * rPav).rgb), f35k))');
+    cw = mix(cw, vec4(fc - fn, max(0.0, 1.0 - fc.r - fc.g - fc.b + 2.0 * fn)), f35k); }`).replace(kC, 's2l(mix(texture2D(sPav, wq * rPav).rgb, f35Tone(texture2D(sPav, vSW.xz * rPav * f35P.x).rgb) * (1.0 + clamp(dot(dt - dl, vec3(.33)) * f35P.y, -.22, .22)), f35k))');
       F35.report.shader = true; };
     mat.customProgramCacheKey = () => 'siteCover1f35'; mat.needsUpdate = true; return r; }; }
 function f35Band(){   // F3: one soldier course just inside the outline, draped on the grade
@@ -21089,6 +21093,12 @@ F35.rebuild = function(){ F35.O = f35Outline(); const pa = TERR.paved.find(f35Is
   f35CoverTexture(); f35Build(); if(PAV_PLANTS && PAV_PLANTS.userData.f35){ const par = PAV_PLANTS.parent; if(par) par.remove(PAV_PLANTS); PAV_PLANTS = f35Plants(); if(par) par.add(PAV_PLANTS); } return F35.report; };
 { const _bs = buildSite; buildSite = function(){ let ok = false; try{ ok = f35Install(); }catch(e){ console.warn('[front35] install', e); F35.on = false; }
     const r = _bs.apply(this, arguments); if(ok){ try{ f35Build(); console.info('[front35] ' + JSON.stringify(F35.report)); }catch(e){ console.warn('[front35] build', e); } } return r; }; }
+{ const _lo = lotOakOpts; lotOakOpts = function(t){ const o = _lo.apply(this, arguments);   // F7
+    if(F35.on && t && t.id === 'OAK-FRONT'){ o.lean = F35.oak.lean; o.trunkBias = F35.oak.trunkBias; o.trunkHeight = F35.oak.trunkHeight; o.cacheKey = 'lot:OAK-FRONT:r35'; } return o; }; }
+{ const _bt = buildTrees; buildTrees = function(){ const r = _bt.apply(this, arguments);
+    try{ const tr = F35.on && GROUPS.trees && GROUPS.trees.children.find(o => o.name === 'tree:OAK-FRONT'), b = tr && tr.children.find(o => o.name === 'bark'), c = b && b.geometry.attributes.color;
+      if(c && c.array instanceof Float32Array && !b.geometry.userData.f35){ b.geometry.userData.f35 = true; for(let i = 0; i < c.array.length; i++) c.array[i] *= F35.oak.bark; c.needsUpdate = true; F35.report.oak = 'lean ' + F35.oak.lean.amount; } }catch(e){ console.warn('[front35] oak', e); }
+    return r; }; }
 /* ================= end front35 ================= */
 /* ================= site integration (bim2/web/patches/site_integration.js, SITE 11/3 night): typed site elements of site.json ==========
    The kernel builds every typed site element (site.mjs: walkways, flagstones, fences; group 'site' -> page group 'yard'), so they are in
