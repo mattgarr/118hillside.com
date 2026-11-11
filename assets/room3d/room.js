@@ -35,7 +35,8 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
   const el = (tag, attrs, html) => { const e = document.createElement(tag); for(const k in (attrs || {})) e.setAttribute(k, attrs[k]); if(html != null) e.innerHTML = html; return e; };
   const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
-  const phone = () => innerWidth < 900;
+  const LAYOUT = new URLSearchParams(location.search).get('layout');
+  const phone = () => LAYOUT === 'wide' ? false : LAYOUT === 'phone' ? true : innerWidth < 900;
   const inPoly = (x, z, P) => { let c = false; for(let i = 0, j = P.length - 1; i < P.length; j = i++){ const a = P[i], b = P[j]; if((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
   let LG = null, DATA = null;   // room-logic.js and room-data.js, loaded before anything is built
   const KEY = 'rfe3d.v1', DOY = 172, H0 = 7, H1 = 19.5;   // the sun is shown for 21 June, 7 AM to 7:30 PM
@@ -503,7 +504,7 @@
   .rfeBtn.dark{background:#1f2948;border-color:#1f2948;color:#fff}.rfeBtn.dark:hover{background:#151c33}
   .rfeBtn.light{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);color:#fff}.rfeBtn.light:hover{background:rgba(255,255,255,.2);border-color:#fff}
   .rfeBtn.shadow{box-shadow:0 8px 30px rgba(15,20,35,.25)}
-  .rfeBtn[aria-pressed=true]{background:#1f2948;border-color:#1f2948;color:#fff}
+  #rfeLift[aria-pressed=true],#rfeCluesBtn[aria-pressed=true]{background:#1f2948;border-color:#1f2948;color:#fff}
   #rfeTip{font-size:14.500px;color:#fff;background:rgba(22,28,48,.78);border-radius:999px;padding:9px 16px;pointer-events:none;opacity:0;transition:opacity .4s;align-self:center;max-width:100%;box-sizing:border-box;text-align:center}
   #rfeTip.on{opacity:1}
   /* inside a room */
@@ -578,7 +579,7 @@
   html.rfe-cine #rfeRoot > *:not(#rfeLabels):not(#rfeToast){opacity:0!important;pointer-events:none!important;transition:opacity .4s}
   html.rfe-cine .rfeLb{pointer-events:none}
   #rfeCluesBtn{display:none}
-  @media (max-width:899px){
+  /*PH*/
     #rfeTop{flex-direction:column;align-items:stretch;gap:6px;padding-left:8px;padding-right:8px;padding-top:max(8px,env(safe-area-inset-top))}#rfeR{display:contents}
     #rfeBtns{order:0;align-self:flex-end}#rfeGoal{order:1;width:auto;padding:8px 12px 9px}#rfeGoal p{font-size:17.500px}#rfeSay{order:2;align-self:flex-end;font-size:18.500px}
     #rfeHint{padding:4px 12px 4px 4px;min-height:46px}#rfeHint small{display:none}#rfeHint .av{width:38px;height:38px}.rfeIco{width:46px;height:46px}
@@ -601,12 +602,14 @@
     .rfeBtn{padding:0 14px;font-size:15px}
     .rfeLb .nm{font-size:12px;padding:4px 9px}.rfeLb .oc{font-size:15px}
     #rfeCard .c{padding:20px 18px 18px}#rfeCard .lede{font-size:19px}#rfeCard .how li{font-size:12.500px}
-  }
+  /*END*/
   @media (prefers-reduced-motion:reduce){.rfeMk.on i,#rfeHint.nudge,.rfeG.pulse .em{animation:none!important}}
   `;
   document.head.appendChild(el('link', {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500&display=swap'}));
   let root, toastE, sayE;
-  function buildUI(){ document.head.appendChild(el('style', {}, css)); document.documentElement.classList.add('rfe-pre');
+  function buildUI(){ const a = css.indexOf('/*PH*/'), b = css.indexOf('/*END*/'); document.head.appendChild(el('style', {}, css.slice(0, a) + css.slice(b)));
+    // the compact layout is its own sheet, so ?layout=wide or ?layout=phone can force either one in any window (used for testing)
+    document.head.appendChild(el('style', {media: LAYOUT === 'wide' ? 'not all' : LAYOUT === 'phone' ? 'all' : '(max-width:899px)'}, css.slice(a, b))); document.documentElement.classList.add('rfe-pre');
     const cat = window.SNOWBALL ? SNOWBALL.svg({id: 'sbrfe', seed: 7}).replace(/viewBox="[^"]+"/, 'viewBox="110 10 280 300"') : '';
     root = el('div', {id: 'rfeRoot'}, `
       <div id="rfeLabels"></div><div id="rfeMarks"></div>
@@ -975,6 +978,8 @@
   /* ================================================================== boot: after the house is ready */
   function loadScript(src, cb){ const s = document.createElement('script'); s.src = src; s.onload = () => cb(true); s.onerror = () => cb(false); document.head.appendChild(s); }
   function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){}
+    // beds in the bedrooms: the game needs the furniture on, and puts the visitor's own saved choice back straight away
+    try{ const fb = document.getElementById('furnBtn'); if(fb && fb.getAttribute('aria-pressed') === 'false'){ const k = 'hillside.furniture', was = localStorage.getItem(k); fb.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){}
     const base = (document.currentScript && document.currentScript.src) || '';
     loadScript('../assets/room3d/room-logic.js?v=1', () => loadScript('../assets/room3d/room-data.js?v=1', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
         try{ measure(); buildUI(); buildLabels(); TINT.build(); S.view = 'title'; HOUSE.over(); orbitFit(); rigCut(orbitPose()); UI.live = true; applyHour(13, true); setTimeout(() => { try{ dev.verify(); }catch(e){ console.warn('[room] verify', e); } }, 4000); }catch(e){ console.error('[room] build', e); }
