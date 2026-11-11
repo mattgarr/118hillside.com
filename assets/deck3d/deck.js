@@ -34,7 +34,8 @@
     {id: 'windows', label: 'Windows', pos: [-8.5, 2.4, 40.5], look: [0, 3, 12], cat: [-4, 24], say: 'Now the windows. This is what the whole street sees.', sections: ['win'],
      fit: [[-10.5, 5.2, 4.7], [-10.5, 0, 4.7], [4.2, 5.8, 29.6], [4.2, .8, 29.6], [2.4, 5.2, 5.5]]},
     {id: 'living', label: 'Living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9], cat: [10.7, -3.2], say: 'Inside now. This is where I spend most of my evenings.', sections: ['tree', 'room'],
-     fit: [[-3.2, 7.6, -5.2], [-6.2, .1, -5.6], [9, 8.5, -6], [9.4, .1, 1.2], [2.5, .1, -3.3]]},
+     fit: [[-3.2, 7.6, -5.2], [-6.2, .1, -5.6], [9, 8.5, -6], [9.4, .1, 1.2], [2.5, .1, -3.3]],
+     catP: [.6, -1.6], fitP: [[-3.2, 7.5, -5.2], [-5.8, .2, -5.4], [2.5, .2, -3.3], [7.2, 2.6, -.6], [3.05, 8.4, -8]]},   // a tall screen leaves a short band: the tree, the table, the box and the far beam
     {id: 'terrace', label: 'Terrace', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5], cat: [9.5, -39.5], say: 'Out back. Dinner is on the terrace tonight.', sections: ['ter'],
      fit: [[-9.6, 5.4, -37.3], [8.3, 5, -27], [.7, -4.4, -25.6], [3.8, -4.4, -51.2], [-6, -1, -44]]},
     {id: 'oak', label: 'The oak', pos: [35, 2, -47], look: [8.3, 9, -27], cat: [14, -33], say: 'Last, the oak. It is the biggest thing here and it has never been decorated.', sections: ['oak', 'wear'],
@@ -202,14 +203,15 @@
   /* the free part of the canvas, in canvas pixels: below Snowball's line (and the message that drops over it), beside or above the panel, above any bar at the bottom */
   function freeRect(){ const c = H.canvas.getBoundingClientRect(), wide = innerWidth > 700, box = s => { const e = $(s); if(!e || e.hidden) return null; const r = e.getBoundingClientRect(); return r.width && r.height ? r : null; };
     let x0 = 14, x1 = c.width - 14, y0 = 14, y1 = c.height - 14; const top = box('#dkTop'), pn = box('#dkPanel'), cd = box('#dkCard.side .c');
-    if(top) y0 = top.top - c.top + (wide ? 78 : 70) + (MODE === 'story' && PHASE === 'decor' ? (wide ? 84 : 56) : 0);
+    if(top) y0 = top.top - c.top + (MODE === 'story' && PHASE === 'decor' ? (wide ? 180 : 164) : (wide ? 84 : 104));   // Snowball's line, or the tallest message that drops over it
     if(pn){ if(wide) x1 = pn.left - c.left - 14; else y1 = pn.top - c.top - 10; }
     if(cd){ if(wide) x1 = Math.min(x1, cd.left - c.left - 14); else y1 = Math.min(y1, cd.top - c.top - 10); }
     ['#dkPhoto', '#dkArrive', '#dkDusk'].forEach(s => { const r = box(s); if(r) y1 = Math.min(y1, r.top - c.top - 10); });
     if(y1 - y0 < 150){ const m = (y0 + y1) / 2; y0 = Math.max(14, m - 75); y1 = y0 + 150; } if(x1 - x0 < 200) x1 = x0 + 200;
     return [x0, y0, x1, y1, c.width, c.height]; }
   function fit(pos, look, pts){ const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), zb = baseZoom(), zmin = Math.min(zb, .5), zmax = zb * 1.5;   // widen as far as it takes; close in a little when the thing is small on the screen
-    const fx0 = R[0] / R[4] * 2 - 1, fx1 = R[2] / R[4] * 2 - 1, fy1 = 1 - R[1] / R[5] * 2, fy0 = 1 - R[3] / R[5] * 2, P0 = new V3(...pos), f = new V3(...look).sub(P0).normalize(), r = new V3(), u = new V3(), d = new V3(); let z = zb;
+    const pm = cam.projectionMatrix.elements, ox = pm[8] || 0, oy = pm[9] || 0;   // the engine shifts the lens on a tall screen (the horizon sits below the middle)
+    const fx0 = R[0] / R[4] * 2 - 1 + ox, fx1 = R[2] / R[4] * 2 - 1 + ox, fy1 = 1 - R[1] / R[5] * 2 + oy, fy0 = 1 - R[3] / R[5] * 2 + oy, P0 = new V3(...pos), f = new V3(...look).sub(P0).normalize(), r = new V3(), u = new V3(), d = new V3(); let z = zb;
     for(let it = 0; it < 16; it++){ r.crossVectors(f, UP).normalize(); u.crossVectors(r, f); let ax0 = 1e9, ax1 = -1e9, ay0 = 1e9, ay1 = -1e9;
       for(const q of pts){ d.set(q[0], q[1], q[2]).sub(P0); const dz = Math.max(.5, d.dot(f)), tx = d.dot(r) / dz, ty = d.dot(u) / dz; ax0 = Math.min(ax0, tx); ax1 = Math.max(ax1, tx); ay0 = Math.min(ay0, ty); ay1 = Math.max(ay1, ty); }
       z = Math.max(zmin, Math.min(zmax, .95 * (fx1 - fx0) * th / Math.max(1e-3, ax1 - ax0), .95 * (fy1 - fy0) * tv / Math.max(1e-3, ay1 - ay0)));
@@ -218,8 +220,8 @@
     return {pos, look: P0.clone().addScaledVector(f, 30).toArray(), zoom: z}; }
   const stand = p => portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look];
   function catAt(p){ if(!P || !p.cat) return null; if(p.id === 'living' && S.room.includes('box')) return [P.BOX_AT[0], P.BOX_AT[1] + .12, P.BOX_AT[2]];
-    if(p.catY == null) p.catY = P.floorY(p.cat[0], p.cat[1], stand(p)[0][1] + 1.5, p.inside ? 0 : -3.5); return [p.cat[0], p.catY + .02, p.cat[1]]; }
-  function view(p){ const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p); return fit(pos, look, c ? p.fit.concat([c, [c[0], c[1] + 1.9, c[2]]]) : p.fit); }
+    const c = portrait() && p.catP ? p.catP : p.cat, k = c === p.cat ? 'catY' : 'catYP'; if(p[k] == null) p[k] = P.floorY(c[0], c[1], stand(p)[0][1] + 1.5, p.inside ? 0 : -3.5); return [c[0], p[k] + .02, c[1]]; }
+  function view(p){ const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = portrait() && p.fitP ? p.fitP : p.fit; return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
   function setCam(v){ H.look(v.pos, v.look); anchor = new V3(...v.pos); FLY = null; ZOOM = v.zoom; }
   function cut(p, then){ if(reduce){ setCam(view(p)); then && then(); return; } CUT++; veil.classList.add('on'); setTimeout(() => { CUT--; setCam(view(p)); then && then(); setTimeout(() => veil.classList.remove('on'), 120); }, 260); }
   function fly(v, dur, then){ const c = H.camera, d = new V3(); c.getWorldDirection(d); H.anim = null; FLY = {t0: performance.now(), dur: (reduce ? .01 : (dur || 1.5)) * 1000, p0: c.position.clone(), p1: new V3(...v.pos), l0: c.position.clone().addScaledVector(d, 30), l1: new V3(...v.look), z0: c.zoom, z1: v.zoom, then}; }
@@ -349,7 +351,7 @@
     #dkPanel.fold #dkBody{display:none}
     #dkFold{display:inline-flex;border:1px solid #cfcabe;background:#fff;border-radius:999px;min-height:46px;padding:0 14px;font-size:14.5px;align-items:center}
     #dkBody h3{font-size:22px;margin-top:4px}#dkBody .opt{min-height:50px;padding:8px 9px}
-    #dkNew{top:40px;left:8px;width:calc(100% - 16px)}#dkToast{top:150px}html.dk header.bar{visibility:hidden}#dkFoot .dkBtn{padding:11px 15px}
+    #dkNew{top:40px;left:8px;width:calc(100% - 16px);padding:10px 12px}#dkNew .k{display:none}#dkNew .dkMsg p{font-size:14.5px;line-height:1.3;padding:7px 10px}#dkToast{top:150px}html.dk header.bar{visibility:hidden}#dkFoot .dkBtn{padding:11px 15px}
     #dkCard .c{padding:18px 16px 14px;border-radius:20px}#dkCard ul.g{gap:4px 8px}#dkCard ul.g li{font-size:14.5px}
     #dkArrive{bottom:14px}#dkDusk{bottom:18px}
     #dkPhoto .act span{display:none}
@@ -518,7 +520,7 @@
   /* QA hook */
   window.DECK3D = {get S(){ return S; }, get mode(){ return MODE; }, get phase(){ return PHASE; }, get place(){ return PLACE.id; }, get props(){ return P; }, get arrived(){ return arrived.slice(); },
     state: () => ({phase: PHASE, mode: MODE, place: PLACE.id, S: clone(S), happy: happy().map(g => g.id), arrived: arrived.slice(), on: P ? P.on : null, tod: H.tod, count: P ? P.count() : null}),
-    go: id => goPlace(id, true), set(o){ Object.assign(S, clone(o)); if(P) applyAll(); if(PHASE === 'decor' || PHASE === 'fix') refresh(true); }, story: {GUESTS, SECT, PLACES, EXTRA, WAVES, ARRIVE, LINK, FREE_START}, freeRect, reframe, view, tune(id, o){ const p = placeOf(id); Object.assign(p, o); if(o.cat) p.catY = null; if(p === PLACE){ setCam(view(p)); placeCat(p); } return view(p); }, start: m => { closeCard(); begin(m || 'story'); }, sunset, lightUp, dusk(){ try{ H.setTOD('dusk'); }catch(e){} }, day(){ try{ H.setTOD(DAY); }catch(e){} },
+    go: id => goPlace(id, true), set(o){ Object.assign(S, clone(o)); if(P) applyAll(); if(PHASE === 'decor' || PHASE === 'fix') refresh(true); }, story: {GUESTS, SECT, PLACES, EXTRA, WAVES, ARRIVE, LINK, FREE_START}, freeRect, reframe, view, tune(id, o){ const p = placeOf(id); Object.assign(p, o); p.catY = p.catYP = null; if(p === PLACE){ setCam(view(p)); placeCat(p); } return view(p); }, start: m => { closeCard(); begin(m || 'story'); }, sunset, lightUp, dusk(){ try{ H.setTOD('dusk'); }catch(e){} }, day(){ try{ H.setTOD(DAY); }catch(e){} },
     on: v => P && P.setOn(v), get sfx(){ return window.DECKSFX; }, happy: () => happy().map(g => g.id), photo: photoMode, snap, result, encode, decode, shareLink, places: PLACES.concat(EXTRA).map(p => p.id), look: (pos, at) => { H.look(pos, at); anchor = new V3(...pos); FLY = null; }, DEFAULT, STORY_START};
 })();
 
