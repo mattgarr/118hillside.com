@@ -6624,7 +6624,8 @@ canvas.addEventListener('pointerdown',e=>{
 });
 canvas.addEventListener('pointermove',e=>{
   if(joy && e.pointerId===joy.id){ joy.dx=clamp((e.clientX-joy.x)/45,-1,1); joy.dy=clamp((e.clientY-joy.y)/45,-1,1); if(Math.hypot(e.clientX-joy.x,e.clientY-joy.y)>6) joy.moved=true; $('#joyb').style.transform=`translate(${joy.dx*32}px,${joy.dy*32}px)`; return; }
-  const p=ptrs.get(e.pointerId);
+  let p=ptrs.get(e.pointerId);
+  if(p && e.pointerType==='mouse' && e.buttons===0){ ptrs.delete(e.pointerId); pinch=null; canvas.className='grab'; p=null; }   // r32: the button is already up, so this is not a drag
   if(!p){ if(e.pointerType==='mouse'){ hoverAt=[e.clientX,e.clientY]; hoverXY=[e.clientX,e.clientY]; if(mode==='design') DESIGN.hover(e.clientX,e.clientY); } return; }
   const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
   if(ptrs.size>=2){ const [a,b]=[...ptrs.values()]; const cx=(a.x+b.x)/2, cy=(a.y+b.y)/2, d=Math.max(1,Math.hypot(a.x-b.x,a.y-b.y));
@@ -6648,6 +6649,11 @@ const endPtr=e=>{
     const now=performance.now(); const dbl=now-lastTap<330; lastTap=now; clickAt(e.clientX,e.clientY,dbl); }
 };
 canvas.addEventListener('pointerup',endPtr); canvas.addEventListener('pointercancel',endPtr);
+/* r32: a drag always lets go. If the button comes up where the canvas never hears it (capture lost, released over a panel or outside the window), end it anyway. */
+canvas.addEventListener('lostpointercapture',e=>{ if(ptrs.has(e.pointerId) || (joy && e.pointerId===joy.id)) endPtr(e); });
+addEventListener('pointerup',e=>{ if(e.target!==canvas && (ptrs.has(e.pointerId) || (joy && e.pointerId===joy.id))) endPtr({pointerId:e.pointerId,type:'pointercancel',clientX:e.clientX,clientY:e.clientY}); },true);
+addEventListener('blur',()=>{ ptrs.clear(); pinch=null; if(joy){ joy=null; try{ $('#joy').hidden=true; }catch(e){} } canvas.className='grab'; });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ ptrs.clear(); pinch=null; canvas.className='grab'; } });
 canvas.addEventListener('pointerleave',()=>{ hoverAt=null; ring.visible=false; $('#wptip').hidden=true; });
 canvas.addEventListener('wheel',e=>{
   e.preventDefault(); interrupt();

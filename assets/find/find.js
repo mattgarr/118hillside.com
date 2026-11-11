@@ -94,7 +94,7 @@
 
   /* ---------- UI ---------- */
   const css = `
-  html.fnd header.bar nav.tabs, html.fnd header.bar .plate, html.fnd #aboutBtn, html.fnd #card, html.fnd #labels, html.fnd #wplabels, html.fnd #ovtag, html.fnd #tod, html.fnd #viewBtn, html.fnd #hwBtn, html.fnd #tgBtn, html.fnd #phMore, html.fnd .g28pill, html.fnd #navHelp{display:none!important}
+  html.fnd #mini, html.fnd #cv27, html.fnd header.bar nav.tabs, html.fnd header.bar .plate, html.fnd #aboutBtn, html.fnd #card, html.fnd #labels, html.fnd #wplabels, html.fnd #ovtag, html.fnd #tod, html.fnd #viewBtn, html.fnd #hwBtn, html.fnd #tgBtn, html.fnd #phMore, html.fnd .g28pill, html.fnd #navHelp{display:none!important}
   .fnd-chip{background:rgba(251,250,247,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:18px;box-shadow:0 8px 30px rgba(15,20,35,.2);color:#1f2a3a;font-family:Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif}
   #fndTop{position:fixed;left:12px;right:12px;top:62px;z-index:60;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}
   #fndTray{pointer-events:auto;padding:10px 12px}
@@ -168,11 +168,13 @@
   const _v = new THREE.Vector3();
   function scr(dy){ const p = S.spots[S.step]; if(!p) return null; _v.copy(p); _v.y += dy; const d = H.camera.position.distanceTo(_v); _v.project(H.camera); if(_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05) return null; const r = H.canvas.getBoundingClientRect();
     return {x: r.left + (_v.x + 1) / 2 * r.width, y: r.top + (1 - _v.y) / 2 * r.height, d, px: r.height / (2 * Math.tan(H.camera.fov * Math.PI / 360) * d)}; }
-  H.hooks.click = (cx, cy) => { if(!S.started || S.done || S.picking || !target().visible) return false; const s = scr(S.step < 4 ? .5 : .8); if(!s) return false;
-    if(Math.hypot(s.x - cx, s.y - cy) > Math.max(52, s.px * 1.1)) return false;
-    let h = null; try{ h = H.pick(cx, cy); }catch(e){} if(h && h.distance < s.d - 2.4) return false;
+  H.hooks.click = (cx, cy) => { if(!S.started || S.done || S.picking || !target().visible) return true; const s = scr(S.step < 4 ? .5 : .8); if(!s) return true;   // every tap is ours: no walking off mid-game
+    if(Math.hypot(s.x - cx, s.y - cy) > Math.max(52, s.px * 1.1)) return true;
+    let h = null; try{ h = H.pick(cx, cy); }catch(e){} if(h && h.distance < s.d - 2.4) return true;
     if(S.step < 4) gotItem(); else found(); return true; };
-  function frame(){ requestAnimationFrame(frame); if(!S.started || S.done) return; const t = performance.now(), tg = target();
+  let anchor = null, flying = true;   // stay where the game put you: look around freely, but no drifting into furniture
+  function hold(){ if(H.anim){ flying = true; return; } if(flying){ flying = false; anchor = H.camera.position.clone(); return; } if(anchor && H.camera.position.distanceTo(anchor) > .35) H.camera.position.copy(anchor); }
+  function frame(){ requestAnimationFrame(frame); try{ if(S.started) hold(); }catch(e){} if(!S.started || S.done) return; const t = performance.now(), tg = target();
     if(tg.visible && !reduce && S.step < 4) tg.position.y = S.spots[S.step].y + .08 + Math.abs(Math.sin(t / 420)) * .22;   // the thing bobs so it catches the eye
     if(!S.picking && tg.visible && S.stuckAt && t - S.stuckAt > 26000){ S.stuckAt = t - 10000; ringUntil = t + 3500; if(S.step === 4){ meow(1); hop(); } }   // gentle nudge for small players
     const s = t < ringUntil && !S.picking && scr(S.step < 4 ? .5 : .8); if(s){ ring.style.left = s.x + 'px'; ring.style.top = s.y + 'px'; ring.classList.add('on'); } else ring.classList.remove('on'); }

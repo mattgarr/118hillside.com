@@ -40,6 +40,13 @@
     '#intro28 .go button{font:inherit;font-size:16px;letter-spacing:.02em;border:0;border-radius:999px;background:#fff;color:#16191b;padding:14px 26px;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.35)}' +
     '#intro28 .go button:hover{background:#f1ece2}#intro28 .go small{font-size:13px;opacity:.85;text-shadow:0 1px 8px rgba(0,0,0,.5)}' +
     '#intro28 .skip{font:inherit;font-size:13px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:6px 12px;cursor:pointer;display:none}#intro28.ready .skip{display:none}' +
+    '#intro28 .ld{position:absolute;right:clamp(18px,4vw,48px);bottom:clamp(64px,9vh,104px);display:flex;align-items:center;gap:12px;background:rgba(14,17,19,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:12px 16px;max-width:min(360px,calc(100% - 36px))}' +
+    '#intro28 .ld i{flex:none;width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#e8d3b0;animation:i28spin .9s linear infinite}' +
+    '#intro28 .ld b{display:block;font-weight:500;font-size:15.5px;font-variant-numeric:tabular-nums}#intro28 .ld span{display:block;font-size:13.5px;opacity:.85;line-height:1.3}' +
+    '#intro28.ready .ld{display:none}@keyframes i28spin{to{transform:rotate(360deg)}}' +
+    '#intro28 .bar{height:5px}' +
+    '@media (max-width:640px){#intro28 .ld{left:18px;right:18px;bottom:24px;max-width:none}#intro28 .cap{bottom:112px}}' +
+    '@media (prefers-reduced-motion:reduce){#intro28 .ld i{animation-duration:2.4s}}' +
     '#intro28 .dots{display:flex;gap:5px}#intro28 .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}#intro28 .dots i.on{background:#fff}' +
     '@media (max-width:640px){#intro28 .go{left:18px;right:18px;align-items:stretch;bottom:24px}#intro28 .go button{width:100%}#intro28.ready .cap{bottom:120px}#intro28 .dots{display:none}}' +
     '@media (prefers-reduced-motion:reduce){#intro28 .sl img,#intro28 .sl.on img{transform:none;transition:none}}';
@@ -50,6 +57,7 @@
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
     '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
     '<div class="go"><button type="button">' + (game ? 'Start playing' : 'Step inside') + '</button><small>' + (game ? 'The house is ready.' : 'Drag to look around. Tap a white circle to walk there.') + '</small></div>' +
+    '<div class="ld" role="status" aria-live="polite"><i aria-hidden="true"></i><div><b id="i28pct">Loading ' + (game ? 'the game' : 'the 3D house') + '…</b><span>Enjoy a few pictures of the house while it gets ready.</span></div></div>' +
     '<div class="bar" aria-hidden="true"><i></i></div>';
   document.body.appendChild(el);
   var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');
@@ -63,7 +71,7 @@
   timer = setInterval(function(){ show(k + 1); }, 3600);
   // progress: the page writes "Rendering the first view... 95%" (or a phase name) into #loadtxt
   var lt = document.getElementById('loadtxt'), pct = 4;
-  function prog(){ var m = lt && /(\d{1,3})\s*%/.exec(lt.textContent || ''); if(m) pct = Math.max(pct, +m[1]); else pct = Math.min(90, pct + 1.5); bar.style.width = (done ? 100 : pct) + '%'; }
+  function prog(){ var m = lt && /(\d{1,3})\s*%/.exec(lt.textContent || ''); if(m) pct = Math.max(pct, +m[1]); else pct = Math.min(90, pct + 1.5); bar.style.width = (done ? 100 : pct) + '%'; var pe = document.getElementById('i28pct'); if(pe) pe.textContent = 'Loading ' + (game ? 'the game' : 'the 3D house') + '… ' + Math.round(done ? 100 : pct) + '%'; }
   var pi = setInterval(prog, 400); prog();
   function leave(){ if(el.classList.contains('out')) return; store.set('intro28.seen', '1'); clearInterval(timer); clearInterval(pi); el.classList.add('out');
     try{ window.gtag && gtag('event', 'intro28_enter', {seen_before: seen, wait_ms: Math.round(performance.now() - t0)}); }catch(e){}
