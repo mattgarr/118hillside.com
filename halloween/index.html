@@ -8680,7 +8680,9 @@ async function boot(){
     const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq.addEventListener('change',()=>{ /* v27details T1: the theme no longer picks the time of day */ });
     new MutationObserver(()=>{ /* v27details T1: the theme no longer picks the time of day */ }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     const s=STOPS[0]; target.set(...s.look); camera.position.set(...s.pos); nav='orbit'; orbitFromCamera(); applyOrbit(); canvas.className='grab';
-    showStop(0,false); applyVisibility(); updateLegend();
+    { const sm = /[?&]stop=([a-z0-9]+)\b/.exec(location.search), si = sm ? STOPS.findIndex(q => q.id === sm[1]) : -1;   // ?stop=<id>: open on that tour stop (games link straight to a room)
+      if(si > 0){ stopIdx = si; const q = STOPS[si]; camera.position.set(...q.pos); target.set(...q.look); showStop(si, false); } else showStop(0,false); }
+    applyVisibility(); updateLegend();
     const h=(location.hash||'').slice(1); if(h && ['walk','doll','design','photos'].includes(h)) setMode(h);
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
