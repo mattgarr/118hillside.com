@@ -80,6 +80,7 @@
   const css0 = `html.esc header.bar, html.esc #card, html.esc #mini, html.esc #cv27, html.esc #labels, html.esc #wplabels, html.esc #ovtag, html.esc #tod, html.esc #viewBtn,
     html.esc #hwBtn, html.esc #tgBtn, html.esc #phMore, html.esc .g28pill, html.esc #navHelp, html.esc #pad, html.esc #peek27, html.esc #v33disc, html.esc #hint, html.esc #joy,
     html.esc .navguide, html.esc .phtoast, html.esc .perfpill, html.esc #wptip, html.esc #door28tip, html.esc #door28hint, html.esc .qhint, html.esc .phlvbar, html.esc #ov{display:none!important}
+    html.esc.esc-up #loading{display:none!important}
     html.esc #c{cursor:grab;touch-action:none} html.esc.esc-drag #c{cursor:grabbing}`;
   document.head.appendChild(el('style', {}, css0)); document.documentElement.classList.add('esc');
   H.hooks.click = () => true;
@@ -135,7 +136,7 @@
   function rigTravel(pts, to, opts){ opts = opts || {}; const v = pts.map(p => new THREE.Vector3(p[0], p[1], p[2]));
     let len = 0; for(let i = 1; i < v.length; i++) len += v[i].distanceTo(v[i - 1]);
     const curve = v.length > 2 ? new THREE.CatmullRomCurve3(v, false, 'centripetal', .5) : null;
-    const dur = reduce ? .01 : (opts.dur || clamp(.55 + len / 11, .8, 3.4));
+    const dur = reduce ? .01 : (opts.dur || clamp(.55 + len / 12, .8, 4.2));
     rig.move = {t0: performance.now(), dur: dur * 1000, v, curve, len, face: !!opts.face && len > 9, yaw0: rig.yaw, pitch0: rig.pitch, fov0: rig.fov * rig.zoom, off0: rig.off.slice(),
       yaw1: to.yaw, pitch1: to.pitch, fov1: to.fov, off1: to.off || [0, 0], done: opts.done || null};
     rig.zoom = 1; rig.fov = rig.move.fov0; rig.lim = null; return dur; }
@@ -162,7 +163,9 @@
     const cp = Math.cos(rig.pitch), x = rig.pos.x, y = rig.pos.y + rig.jit, z = rig.pos.z;
     H.look([x, y, z], [x - Math.sin(rig.yaw) * cp * 10, y + Math.sin(rig.pitch) * 10, z - Math.cos(rig.yaw) * cp * 10]);
     const ox = rig.off[0], oy = rig.off[1];
-    if(Math.abs(ox) > 1e-4 || Math.abs(oy) > 1e-4) camera.setViewOffset(1000, 1000, -ox * 1000, -oy * 1000, 1000, 1000); else if(camera.view) camera.clearViewOffset();
+    const cw = Math.max(1, canvas.clientWidth || innerWidth), ch = Math.max(1, canvas.clientHeight || innerHeight);
+    if(Math.abs(ox) > 1e-4 || Math.abs(oy) > 1e-4) camera.setViewOffset(cw, ch, -ox * cw, -oy * ch, cw, ch); else if(camera.view) camera.clearViewOffset();
+    camera.aspect = cw / ch;
     camera.fov = fov; camera.zoom = 1; camera.userData.sy = 0; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true); }
 
   /* ================================================================== routes */
@@ -367,13 +370,13 @@
       s.connect(f); f.connect(g); g.connect(c.bus); s.start(t, (t * 7.3) % 2); s.stop(t + att + dur * K * 1.8 + .05); }
     const thud = (c, t, f0, f1, vol) => { const o = part(c, f0, t, .008, .2, vol); o.frequency.exponentialRampToValueAtTime(f1, t + .14); noise(c, t, .004, .05, vol * .25, 'lowpass', 260); };
     const CUES = {
-      tap:    (c, t) => mallet(c, N.A5, t, .16, .1),
+      tap:    (c, t) => mallet(c, N.A5, t, .16, .13),
       look:   (c, t) => { mallet(c, N.A4, t, .3, .16); mallet(c, N.D5, t + .09, .45, .16); },
       back:   (c, t) => { mallet(c, N.D5, t, .25, .12); mallet(c, N.A4, t + .09, .4, .13); },
       goal:   (c, t) => { mallet(c, N.Fs5, t, .6, .14); mallet(c, N.A5, t + .13, .9, .13); },
-      steps:  (c, t, n) => { for(let i = 0; i < (n || 3); i++){ noise(c, t + .1 + i * .44, .012, .1, .2, 'lowpass', 170, 110); } },
+      steps:  (c, t, n) => { for(let i = 0; i < (n || 3); i++){ noise(c, t + .1 + i * .44, .012, .1, .5, 'lowpass', 170, 110); } },
       slide:  (c, t) => { noise(c, t, .09, .62, .2, 'bandpass', 320, 880, 1.1); noise(c, t, .12, .55, .07, 'highpass', 2400); thud(c, t + .7, 96, 58, .3); },
-      paper:  (c, t) => { noise(c, t, .01, .1, .09, 'highpass', 2600); noise(c, t + .12, .012, .14, .08, 'bandpass', 3600, 2200, .8); },
+      paper:  (c, t) => { noise(c, t, .01, .1, .13, 'highpass', 2600); noise(c, t + .12, .012, .14, .11, 'bandpass', 3600, 2200, .8); },
       key:    (c, t, i) => mallet(c, [N.D5, N.Fs5, N.A5][clamp((i || 1) - 1, 0, 2)], t, .32, .17),
       wrong:  (c, t) => { thud(c, t, 132, 84, .42); thud(c, t + .19, 110, 70, .36); },
       right:  (c, t) => { [N.D4, N.A4, N.D5, N.Fs5, N.B5].forEach((f, i) => mallet(c, f, t + i * .055, 1.9 - i * .15, .15 - i * .012)); part(c, N.D3, t, .03, 1.6, .1, 'triangle'); },
@@ -382,7 +385,7 @@
       cork:   (c, t) => { const o = part(c, 520, t, .003, .11, .5); o.frequency.exponentialRampToValueAtTime(110, t + .07); noise(c, t, .002, .06, .4, 'bandpass', 1500, 600, 1.3);
                 noise(c, t + .06, .08, 1.5, .1, 'highpass', 5200); noise(c, t + .1, .2, 1.1, .05, 'bandpass', 7200, 4200, 2); mallet(c, N.D5, t + .5, 1.2, .08); mallet(c, N.A5, t + .62, 1.4, .08); mallet(c, N.Fs6, t + .74, 1.6, .06); },
       bell:   (c, t) => { bell(c, N.Fs5, t, 2.6, .2); bell(c, N.D5, t + .68, 3.2, .2); },
-      jingle: (c, t) => { ting(c, N.B6, t, .05); ting(c, N.A6 * 1.01, t + .075, .04); ting(c, N.B6 * .995, t + .17, .045); }};
+      jingle: (c, t) => { ting(c, N.B6, t, .075); ting(c, N.A6 * 1.01, t + .075, .06); ting(c, N.B6 * .995, t + .17, .07); }};
     const live = () => { if(muted) return null; try{ if(!ac){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null; ac = new AC(); C = chain(ac); }
         if(ac.state === 'suspended' && !document.hidden) ac.resume(); return C; }catch(e){ return null; } };
     document.addEventListener('visibilitychange', () => { try{ if(!ac) return; if(document.hidden) ac.suspend(); else if(!muted) ac.resume(); }catch(e){} });
@@ -521,13 +524,13 @@
     #escTop{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}#escL,#escR{display:contents}
     #escBtns{order:0;align-self:flex-end}#escGoal{order:1;max-width:none;padding:9px 14px 10px}#escGoal p{font-size:18.5px}#escSay{order:2;align-self:flex-end}
     #escHint{padding:5px 12px 5px 5px;min-height:48px}#escHint small{display:none}.escIco{width:48px;height:48px}
-    #escPlace{position:fixed;left:10px;right:10px;max-width:520px;margin:0 auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 172px);padding:8px 14px 10px;text-align:center}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
+    #escPlace{order:3;max-width:none;padding:8px 14px 10px}#escPlace b{font-size:22px}#escPlace span{font-size:13.5px}
     #escDock{flex-direction:column;align-items:stretch;gap:8px;padding-left:10px;padding-right:10px}
     #escMapWrap{flex:none;order:0;flex-direction:row}#escMapBtn{display:inline-flex}
     #escMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 24px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
     #escMap.on{display:block}#escMap .plan{width:100%;height:0;padding-bottom:71%}#escMap .pl{font-size:13.5px;padding:7px 11px}#escMapX{display:grid;position:absolute;right:6px;top:4px;width:44px;height:44px;border:0;background:none;place-items:center;font-size:24px;color:var(--mut)}
     #escSun{order:1;max-width:none;margin:0;padding:8px 14px 10px}
-    #escCoach{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 236px);font-size:14.5px}
+    #escCoach{top:292px;bottom:auto;font-size:14.5px}
     #escSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:560px;margin:0 auto;max-height:62vh;transform:translateY(20px);padding:16px 16px 14px}
     #escSheet.on{transform:none}#escSheet h3{font-size:24px}#escSheet p{font-size:15.5px}
     html.esc-ex #escDock{visibility:hidden}html.esc-ex.esc-exsun #escSun{visibility:visible;position:fixed;left:10px;right:10px;bottom:calc(var(--sheet-h,180px) + 18px)}
@@ -545,7 +548,7 @@
     walk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14l6-6 6 6"/><path d="M6 19l6-6 6 6" opacity=".45"/></svg>',
     drag: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 17.5V8.2a1.9 1.9 0 0 1 3.8 0v6.3m0-1.6a1.9 1.9 0 0 1 3.8 0v2m0-.9a1.9 1.9 0 0 1 3.7 0v5.2c0 4.3-2.8 7.3-6.9 7.3-3.2 0-4.900-1.400-6.600-4.200l-3-5a1.9 1.9 0 0 1 3.200-2l2 2.500"/><path d="M4 7.500h5M4 7.500l2-2M4 7.500l2 2M28 7.500h-5M28 7.500l-2-2M28 7.500l-2 2"/></svg>',
     ring: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="16" r="10" stroke="#c98a12" stroke-width="3"/><circle cx="16" cy="16" r="2.6" fill="currentColor" stroke="none"/></svg>',
-    disc: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#fff" stroke="#1f2948" stroke-width="1.6"/><path d="M10.500 17.500l5.500-5.500 5.500 5.500"/></svg>',
+    disc: '<svg viewBox="0 0 32 32" fill="none" stroke="#1f2948" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" fill="#fff" stroke-width="1.6"/><path d="M10.500 17.500l5.500-5.500 5.500 5.500"/></svg>',
     pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6.500-5.600 6.500-10.500a6.500 6.500 0 0 0-13 0C5.500 15.400 12 21 12 21z"/><circle cx="12" cy="10.500" r="2.300"/></svg>'};
   let root, goalE, sayE, placeE, sheetE, toastE, coachE, fadeE, mapE, sunE;
   const fontLink = el('link', {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500&display=swap'}); document.head.appendChild(fontLink);
@@ -614,7 +617,7 @@
 
   /* ---- time slider */
   function setClock(h){ $('#escClock').textContent = fmtH(h); $('#escSlider').setAttribute('aria-valuetext', fmtH(h)); }
-  const lightUp = h => Math.abs(h - T_SUN) <= .5;                      // the digits read true
+  const lightUp = h => h >= T_SUN - .25 && h <= T_SUN + .5;                      // the digits read true
   const lightOn = h => h >= 14.75 && h <= 17.25;                        // there is paper-shadow on the floor at all
   function onSlide(h, user){ const was = S.hour; setClock(h); applyHour(h); if(user) S.lastProgress = performance.now(); if(lightOn(h) !== lightOn(was) && !S.ex) setMarks();
     if(lightUp(h) && !lightUp(was)){ SND.reveal(); if(!S.sawLight){ S.sawLight = true;
@@ -650,11 +653,11 @@
     for(const w of (WALKS[S.place] || [])) mark('walk', PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     for(const id in SPOTS){ const sp = SPOTS[id]; if(sp.from.includes(S.place) && (!sp.when || sp.when())) mark('look', sp.label(), sp.at(), () => examine(id), 's:' + id); } }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || !S.started || S.done || !!S.ex;
-    const top = phone() ? 150 : 96, bot = r.height - (phone() ? 190 : 150), padX = 40; let nL = 0, nR = 0;
+    const top = phone() ? 210 : 96, bot = r.height - (phone() ? 196 : 150), padX = 40; let nL = 0, nR = 0;
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
       _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3; const side = _v.x;
       _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '';
-      if(behind || x < padX - 20 || x > r.width - padX + 20){ edge = (behind ? side < 0 : x < r.width / 2) ? 'L' : 'R'; x = edge === 'L' ? r.left + padX : r.left + r.width - padX; y = r.top + r.height * .42 + (edge === 'L' ? nL++ : nR++) * 68; }
+      if(behind || x < padX - 20 || x > r.width - padX + 20){ edge = (behind ? side < 0 : x < r.width / 2) ? 'L' : 'R'; x = edge === 'L' ? r.left + padX : r.left + r.width - padX; y = r.top + r.height * (phone() ? .5 : .42) + (edge === 'L' ? nL++ : nR++) * 68; }
       else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); }
       m.b.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; const cls = 'escMk ' + m.kind + ' on' + (edge ? ' edge ' + edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
@@ -664,7 +667,7 @@
   function coach(){ if(!S.started || S.done){ coachE.classList.remove('on'); return; } const c = S.coach; let k = '';
     if(!c.look){ if(S.dragPx > 140){ c.look = true; } else k = 'look'; }
     if(!k && !c.walk) k = 'walk'; if(!k && !c.tap && S.place === 'coffee' && !S.ex) k = 'tap';
-    if(S.ex || rig.move || mapOpen()) k = '';
+    if(S.ex || rig.move || mapOpen() || (phone() && placeE.classList.contains('on'))) k = '';
     if(k === UI.coachK) return; UI.coachK = k; coachE.className = k ? 'on ' + k : '';
     if(k) coachE.innerHTML = k === 'look' ? ICO.drag + '<span>Drag to look around</span>' : k === 'walk' ? ICO.disc + '<span>Tap a white circle to walk there</span>' : ICO.ring + '<span>Tap a gold ring to look closer</span>'; }
 
@@ -678,7 +681,7 @@
     const path = route(S.place, k).map(n => [NODES[n][0], EYE, NODES[n][1]]); S.busy = true; S.coach.walk = true; placeE.classList.remove('on'); sayE.classList.remove('on');
     const pose = opts.pose || standPose(k); const dur = rigTravel(path, pose, {face: true, done: () => { arrive(k); if(opts.done) opts.done(); }}); SND.steps(clamp(Math.round(dur / .44), 1, 7)); return true; }
   // the free part of the screen while a sheet is open, as fractions: where the thing you are examining should sit
-  function freeArea(){ const W = innerWidth, Hh = innerHeight, r = sheetE.getBoundingClientRect(); const topPad = phone() ? 118 : 30;
+  function freeArea(){ const W = innerWidth, Hh = innerHeight, r = sheetE.getBoundingClientRect(); const topPad = phone() ? Math.max(118, goalE.getBoundingClientRect().bottom + 10) : 30;
     if(phone()){ const sunH = document.documentElement.classList.contains('esc-exsun') ? 96 : 0, b = Math.max(topPad + 80, Hh - r.height - 16 - sunH); return {fx: .5, fy: (topPad + b) / 2 / Hh, fw: .94, fh: (b - topPad) / Hh}; }
     const l = Math.min(W - 392, W * .62); return {fx: l / 2 / W, fy: .5, fw: l / W * .92, fh: .74}; }
   const SPOTS = {
@@ -826,7 +829,10 @@
     loadSnowball(() => { try{ buildUI(); buildWorld(); $('#escSlider').value = S.hour; setClock(S.hour); applyHour(S.hour, true);
         const a = yp([-7.6, 5.1, 15.8], [-5.6, 4.6, 6]); rigCut([-7.6, 5.1, 15.8], a[0], a[1], aspect() < 1 ? 80 : 60); UI.live = true; }catch(e){ console.error('[escape] build', e); }
       requestAnimationFrame(frame);
-      const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); startCard(); } }); mo.observe(document.body, {childList: true}); } else startCard(); }); }
+      // the card waits for the photo introduction to leave, or for the loading poster to finish fading: never two things on screen at once
+      const clear = () => { const ld = document.getElementById('loading'); let n = 0; (function w(){ let o = 0; try{ o = ld ? +getComputedStyle(ld).opacity : 0; if(ld && getComputedStyle(ld).display === 'none') o = 0; }catch(e){}
+          if(o < .03 || n++ > 40){ document.documentElement.classList.add('esc-up'); startCard(); } else setTimeout(w, 120); })(); };
+      const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); clear(); } }); mo.observe(document.body, {childList: true}); } else clear(); }); }
   // start only once the engine is really drawing frames (the loading card can read "done" a moment before the first render)
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
