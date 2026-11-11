@@ -8387,7 +8387,8 @@ html.v33game .ideas35{display:none}
   function list(){ const L = [], s = mode === 'design' || DESIGN.walking() ? DESIGN.sel() : 'asbuilt'; if(s !== 'asbuilt') L.push(DESIGN.nameOf(s).toLowerCase() + ' layout'); const p = paintName(); if(p) L.push(p); if(land()) L.push('landscape ideas'); return L; }
   let last = null;
   function sync(){ landChips(); const L = list(), walk = DESIGN.walking(); let lk = ''; try{ lk = LS.front + '/' + LS.back; }catch(e){}
-    const k = mode + '|' + walk + '|' + L.join(',') + '|' + lk; if(k === last) return; last = k; landSync();
+    const k = mode + '|' + walk + '|' + L.join(',') + '|' + lk + '|' + ACTIVE_VAR; if(k === last) return; last = k; landSync();
+    try{ if(window.__v31rmPaint) window.__v31rmPaint(); }catch(e){}   // the View menu's 'Remodel ideas' row follows
     $('#dNowTxt').textContent = L.length ? 'Showing ideas: ' + L.join(', ') + '. These are ideas, not the house as sold.' : 'You are looking at the house as it is today.';
     now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length;
     const out = mode !== 'design' && L.length > 0; chip.hidden = !out; document.documentElement.classList.toggle('ideas35on', out);
@@ -17541,7 +17542,7 @@ window.CORN31 = CORNMAZE;
           sub.appendChild(x); }
         row.addEventListener('click', e => { e.stopPropagation(); const o = !sub.classList.contains('open'); sub.classList.toggle('open', o); row.setAttribute('aria-expanded', o ? 'true' : 'false'); paint(); });
         const doll = document.getElementById('phDoll'), at = doll ? doll.nextSibling : menu.firstChild;
-        menu.insertBefore(sub, at); menu.insertBefore(row, sub); paint(); v31rmDone = true;
+        menu.insertBefore(sub, at); menu.insertBefore(row, sub); paint(); v31rmDone = true; window.__v31rmPaint = paint;   // r35: repainted whenever the layout on screen changes
       }
     } catch(e) { console.warn('remodel menu', e); } };
     const ld = document.querySelector('#loading');
