@@ -4,7 +4,8 @@
    The requests arrive as you decorate. Each is a small riddle about light, color, warmth, movement, smell or a box, and can be read
    off the finished house. Traditions (the tree, the menorah, the kinara, the diyas and rangoli, the lanterns, the wreaths) are the
    player's own choice: no guest asks for one and none of them can be wrong. At sunset you light it up, the animals arrive one at a
-   time, and you can go back and fix what you missed. Then take a postcard from anywhere.
+   time (the ones whose wish came true), and the last card is about what you put up: never a score. Wishes still open are offered as ideas.
+   Then take a postcard from anywhere: it is exactly what is inside the viewfinder.
    No people appear, and it does not snow (Woodside does not get snow). */
 (function(){
   'use strict';
@@ -147,6 +148,25 @@
      needs: [{place: 'oak', ok: s => s.oak === 'wrap' || s.oak === 'none', hint: 'Juniper sleeps up in the branches and wants them dark. The trunk is not the branches.'}],
      yes: 'Not one bulb in my branches. I slept beautifully.', no: 'There are lights in my bedroom. I will be up all night, and I will be telling everyone.'}];
   GUESTS.forEach(g => { g.ok = s => g.needs.every(n => n.ok(s)); });
+  /* the ending never keeps score: a wish that did not come true is offered as an idea, one line per need, and only if the player feels like it */
+  const IDEA = {pepper: ['Pepper would love some color on the roof.'], clover: ['Clover would come closer if the roof lights held still.', 'Clover would love a light in a window.'],
+    admiral: ['Admiral would love a little light down low on the walk.'], snowball: ['I would not say no to a box.'], biscuit: ['Biscuit would love something cooking on the terrace.'],
+    mabel: ['Mabel would love a glow along the paving.'], nugget: ['Nugget would love some light on the oak.'], juniper: ['Juniper would sleep better with the oak branches dark.']};
+  GUESTS.forEach(g => g.needs.forEach((n, i) => { n.idea = (IDEA[g.id] || [])[i] || ''; }));
+  /* what is up, in words: for Snowball's last line and for the postcard caption. Each key gives the phrases for what the player chose there. */
+  const WORDS = {
+    roof: s => ({warm: 'the warm white bulbs along the roof', multi: 'the colored lights along the roof', icicle: 'the icicle lights along the roof', hanukkah: 'the blue and white lights along the roof', kwanzaa: 'the red, black and green lights along the roof', marigold: 'the marigold lights along the roof', fairy: 'the fairy lights all along the roof'})[s.lights],
+    door: s => ({evergreen: 'the evergreen and red bow on the doors', magnolia: 'the magnolia leaves on the doors', eucalyptus: 'the eucalyptus and silver on the doors', citrus: 'the dried oranges on the doors', bluesilver: 'the blue and silver on the doors', harvest: 'the harvest wreath on the doors', toran: 'the marigold toran over the doorway'})[s.door],
+    hang: s => ({star: 'the paper star lanterns over the porch', red: 'the red lanterns over the porch', moravian: 'the Moravian stars over the porch'})[s.hang],
+    path: s => s.path.map(v => ({diyas: 'the diyas on the steps', luminarias: 'the luminarias up the walk', garland: 'the garland on the railing', rangoli: 'the rangoli at the steps'})[v]),
+    win: s => s.win.map(v => ({candles: 'a candle in every window', menorah: 'the menorah in the front window', kinara: 'the kinara in the window', tree: 'the little tree by the door'})[v]),
+    tree: s => ({fir: 'the noble fir by the glass doors', flocked: 'the white tree by the glass doors', pencil: 'the slim tree by the glass doors', olive: 'the olive tree in lights'})[s.tree],
+    room: s => s.room.map(v => ({menorah: 'the menorah on the coffee table', kinara: 'the kinara on its mat', beams: 'the garland on the beams', poinsettia: 'the poinsettias by the sofa', rangoli: 'the rangoli and diyas by the doors', box: 'a box for Snowball'})[v]),
+    ter: s => s.ter.map(v => ({bistro: 'the bistro lights over the table', luminarias: 'the luminarias along the pavers', lanterns: 'the lanterns on the table', smoker: 'the smoker going'})[v]),
+    oak: s => ({wrap: 'the lights around the oak trunk', branches: 'the lights up in the oak', both: 'the oak, lit from the trunk to the branches'})[s.oak]};
+  const words = (keys, s, max) => { const out = []; keys.forEach(k => { const w = WORDS[k] && WORDS[k](s || S); [].concat(w || []).forEach(x => { if(x && out.length < (max || 3) && !out.includes(x)) out.push(x); }); }); return out; };
+  const andList = a => a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const cap = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
   const guest = id => GUESTS.find(g => g.id === id);
   const WAVES = [['pepper', 'clover'], ['admiral'], ['snowball'], ['biscuit', 'mabel'], ['nugget'], ['juniper']];   // who writes as you reach each new place
   const ARRIVE = ['pepper', 'admiral', 'clover', 'snowball', 'biscuit', 'mabel', 'nugget', 'juniper'];
@@ -185,8 +205,15 @@
       if(Array.isArray(n[k])) n[k] = opts.filter((o, i) => r & (1 << i)); else if(r < opts.length) n[k] = opts[r]; }
     if(d.some(x => x)) return null; n.name = m[2] ? nameFromLink(m[2]) : ''; return n; }
   function decodeOld(h){ try{ const o = JSON.parse(decodeURIComponent(escape(atob(h.replace(/-/g, '+').replace(/_/g, '/'))))); const n = clone(DEFAULT); KEYS.forEach(k => { if(o[k] != null && typeof o[k] === typeof n[k]) n[k] = Array.isArray(n[k]) ? o[k].filter(v => typeof v === 'string').slice(0, 12) : typeof n[k] === 'string' ? String(o[k]).slice(0, 32) : o[k]; }); return n; }catch(e){ return null; } }
-  function decode(h){ try{ h = String(h == null ? '' : h).replace(/^#/, ''); try{ h = decodeURIComponent(h); }catch(e){} const old = /^h=([A-Za-z0-9_-]+)/.exec(h); return old ? decodeOld(old[1]) : decodeShort(h); }catch(e){ return null; } }
-  function shareLink(s){ const c = encode(s), i = c.indexOf('~'); return 'https://118hillside.com/games/deck/#' + (i < 0 ? c : c.slice(0, i) + '~' + encodeURIComponent(c.slice(i + 1))); }
+  function decode(h){ try{ h = String(h == null ? '' : h).replace(/^#/, ''); try{ h = decodeURIComponent(h); }catch(e){} h = stripView(h); const old =/^h=([A-Za-z0-9_-]+)/.exec(h); return old ? decodeOld(old[1]) : decodeShort(h); }catch(e){ return null; } }
+  /* A link sent from a postcard also carries where the picture was taken, after a "!": the place, whether the tall-screen spot was used,
+     and the direction and zoom of the view (#d...~Name!terrace.w.123.-5.85). Names never contain "!", and links without it open as before. */
+  function viewCode(v){ if(!v || !placeOf(v.place)) return ''; const d = new V3(...v.look).sub(new V3(...v.pos)).normalize(), yaw = Math.round((Math.atan2(d.x, -d.z) * 180 / Math.PI + 360) % 360), pitch = Math.round(Math.asin(Math.max(-1, Math.min(1, d.y))) * 180 / Math.PI);
+    return '!' + v.place + '.' + (v.tall ? 'p' : 'w') + '.' + yaw + '.' + pitch + '.' + Math.round(Math.max(.3, Math.min(3, v.zoom || 1)) * 100); }
+  function decodeView(h){ try{ h = String(h == null ? '' : h); try{ h = decodeURIComponent(h); }catch(e){} const m = /!([a-z]+)\.([pw])\.(\d{1,3})\.(-?\d{1,2})\.(\d{2,3})(?![\w.])/.exec(h); if(!m || !placeOf(m[1])) return null;
+      const yaw = +m[3] * Math.PI / 180, pitch = Math.max(-80, Math.min(80, +m[4])) * Math.PI / 180; return {place: m[1], tall: m[2] === 'p', dir: [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)], zoom: Math.max(.3, Math.min(3, +m[5] / 100))}; }catch(e){ return null; } }
+  const stripView = h => String(h == null ? '' : h).replace(/(!|%21)[^&?#\/]*$/, '');
+  function shareLink(s, v){ const c = encode(s), i = c.indexOf('~'); return 'https://118hillside.com/games/deck/#' + (i < 0 ? c : c.slice(0, i) + '~' + encodeURIComponent(c.slice(i + 1))) + viewCode(v); }
 
   /* ---------- sound: assets/deck3d/deck-sfx.js (soft bells and mallets in one key; off with the speaker button) ---------- */
   let sound = store.get('deck.snd') !== '0';
@@ -202,7 +229,7 @@
   function baseZoom(){ const cam = H.camera, t0 = Math.tan(cam.fov * Math.PI / 360); return cam.aspect < .8 ? Math.min(1, Math.max(t0 / Math.tan(40 * Math.PI / 180), t0 * cam.aspect / Math.tan(22 * Math.PI / 180))) : 1; }
   /* the free part of the canvas, in canvas pixels: below Snowball's line (and the message that drops over it), beside or above the panel, above any bar at the bottom */
   function freeRect(){ const c = H.canvas.getBoundingClientRect(), wide = innerWidth > 700, box = s => { const e = $(s); if(!e || e.hidden) return null; const r = e.getBoundingClientRect(); return r.width && r.height ? r : null; };
-    if(PHASE === 'photo') return [c.width * .04, c.height * .07, c.width * .96, c.height * .9, c.width, c.height];   // the postcard is the whole picture, so compose for all of it
+    if(PHASE === 'photo'){ const v = finder(); return [v[0] + v[2] * .03, v[1] + v[3] * .04, v[0] + v[2] * .97, v[1] + v[3] * .96, c.width, c.height]; }   // compose for the viewfinder: it is exactly the postcard
     let x0 = 14, x1 = c.width - 14, y0 = 14, y1 = c.height - 14; const top = box('#dkTop'), pn = box('#dkPanel'), cd = box('#dkCard.side .c');
     if(top) y0 = top.top - c.top + (MODE === 'story' && PHASE === 'decor' ? (wide ? 180 : 164) : (wide ? 84 : 104));   // Snowball's line, or the tallest message that drops over it
     if(pn){ if(wide) x1 = pn.left - c.left - 14; else y1 = pn.top - c.top - 10; }
@@ -210,19 +237,29 @@
     ['#dkPhoto', '#dkArrive', '#dkDusk'].forEach(s => { const r = box(s); if(r) y1 = Math.min(y1, r.top - c.top - 10); });
     if(y1 - y0 < 150){ const m = (y0 + y1) / 2; y0 = Math.max(14, m - 75); y1 = y0 + 150; } if(x1 - x0 < 200) x1 = x0 + 200;
     return [x0, y0, x1, y1, c.width, c.height]; }
+  /* photo mode's viewfinder, in canvas pixels [x, y, w, h]: the clear part of the screen above the photo bar, trimmed to a postcard shape
+     (between 4:5 and 16:9; a near-square window gets a landscape card, so a street view is not half road). The postcard is cut from exactly this. */
+  function finder(){ const c = H.canvas.getBoundingClientRect(), bar = $('#dkPhoto'), br = bar && !bar.hidden ? bar.getBoundingClientRect() : null, g = innerWidth > 700 ? 18 : 10;
+    const top = Math.max(0, 12 - c.top) + (innerWidth > 700 ? 12 : 4), bot = (br && br.height ? br.top - c.top : c.height) - g, x0 = g, x1 = c.width - g, fw = Math.max(80, x1 - x0), fh = Math.max(80, bot - top), a = fw / fh;
+    const t = a >= 1 ? Math.min(16 / 9, Math.max(1.3, a)) : Math.max(.8, a); let w = fw, h = fw / t; if(h > fh){ h = fh; w = fh * t; }
+    return [Math.round(x0 + (fw - w) / 2), Math.round(top + (fh - h) / 2), Math.round(w), Math.round(h)]; }
+  function placeFinder(){ const f = $('#dkVF'); if(!f) return; const c = H.canvas.getBoundingClientRect(), v = finder(); Object.assign(f.style, {left: c.left + v[0] + 'px', top: c.top + v[1] + 'px', width: v[2] + 'px', height: v[3] + 'px'}); }
   function fit(pos, look, pts){ const cam = H.camera, tv = Math.tan(cam.fov * Math.PI / 360), th = tv * cam.aspect, R = freeRect(), zb = baseZoom(), zmin = Math.min(zb, Math.max(.5, tv / 1.48, th / 1.54)), zmax = zb * 1.5;   // widen up to a 112 degree view; close in a little when the thing is small on the screen
     const pm = cam.projectionMatrix.elements, ox = pm[8] || 0, oy = pm[9] || 0;   // the engine shifts the lens on a tall screen (the horizon sits below the middle)
     const fx0 = R[0] / R[4] * 2 - 1 + ox, fx1 = R[2] / R[4] * 2 - 1 + ox, fy1 = 1 - R[1] / R[5] * 2 + oy, fy0 = 1 - R[3] / R[5] * 2 + oy, P0 = new V3(...pos), f = new V3(...look).sub(P0).normalize(), r = new V3(), u = new V3(), d = new V3(); let z = zb;
     for(let it = 0; it < 16; it++){ r.crossVectors(f, UP).normalize(); u.crossVectors(r, f); let ax0 = 1e9, ax1 = -1e9, ay0 = 1e9, ay1 = -1e9;
       for(const q of pts){ d.set(q[0], q[1], q[2]).sub(P0); const dz = Math.max(.5, d.dot(f)), tx = d.dot(r) / dz, ty = d.dot(u) / dz; ax0 = Math.min(ax0, tx); ax1 = Math.max(ax1, tx); ay0 = Math.min(ay0, ty); ay1 = Math.max(ay1, ty); }
       z = Math.max(zmin, Math.min(zmax, .95 * (fx1 - fx0) * th / Math.max(1e-3, ax1 - ax0), .95 * (fy1 - fy0) * tv / Math.max(1e-3, ay1 - ay0)));
-      const dx = (ax0 + ax1) / 2 - (fx0 + fx1) / 2 * th / z, dy = (ay0 + ay1) / 2 - (fy0 + fy1) / 2 * tv / z;
+      const slack = (fy1 - fy0) * tv / z - (ay1 - ay0), low = PHASE === 'photo' && slack > 0 ? .28 : .5;   // a picture puts most of any spare height above the house (sky, the oak, the lights) and little below (the road)
+      const dx = (ax0 + ax1) / 2 - (fx0 + fx1) / 2 * th / z, dy = slack > 0 ? ay0 - (fy0 * tv / z + slack * low) : (ay0 + ay1) / 2 - (fy0 + fy1) / 2 * tv / z;
       f.addScaledVector(r, dx).addScaledVector(u, dy).normalize(); if(Math.abs(dx) + Math.abs(dy) < 1e-4) break; }
     return {pos, look: P0.clone().addScaledVector(f, 30).toArray(), zoom: z}; }
   const stand = p => portrait() && p.posP ? [p.posP, p.lookP || p.look] : [p.pos, p.look];
   function catAt(p){ if(!P || !p.cat) return null; if(p.id === 'living' && S.room.includes('box')) return [P.BOX_AT[0], P.BOX_AT[1] + .12, P.BOX_AT[2]];
     const c = portrait() && p.catP ? p.catP : p.cat, k = c === p.cat ? 'catY' : 'catYP'; if(p[k] == null) p[k] = P.floorY(c[0], c[1], stand(p)[0][1] + 1.5, p.inside ? 0 : -3.5); return [c[0], p[k] + .02, c[1]]; }
-  function view(p){ const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = portrait() && p.fitP ? p.fitP : p.fit; return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
+  let SV = null;   // the view a shared postcard was taken from: the recipient opens on it
+  function view(p){ if(SV && shared && SV.place === p.id){ const pos = SV.tall && p.posP ? p.posP : p.pos; return {pos, look: new V3(...pos).addScaledVector(new V3(...SV.dir), 30).toArray(), zoom: SV.zoom}; }
+    const [pos, look] = stand(p); if(!p.fit) return {pos, look, zoom: baseZoom()}; const c = catAt(p), pts = (portrait() && p.fitP ? p.fitP : p.fit).concat(PHASE === 'photo' && p.pfit ? p.pfit : []); return fit(pos, look, c ? pts.concat([c, [c[0], c[1] + 1.9, c[2]]]) : pts); }
   function setCam(v){ H.look(v.pos, v.look); anchor = new V3(...v.pos); FLY = null; ZOOM = v.zoom; }
   function cut(p, then){ if(reduce){ setCam(view(p)); then && then(); return; } CUT++; veil.classList.add('on'); setTimeout(() => { CUT--; setCam(view(p)); then && then(); setTimeout(() => veil.classList.remove('on'), 120); }, 260); }
   function fly(v, dur, then){ const c = H.camera, d = new V3(); c.getWorldDirection(d); H.anim = null; FLY = {t0: performance.now(), dur: (reduce ? .01 : (dur || 1.5)) * 1000, p0: c.position.clone(), p1: new V3(...v.pos), l0: c.position.clone().addScaledVector(d, 30), l1: new V3(...v.look), z0: c.zoom, z1: v.zoom, then}; }
@@ -246,7 +283,7 @@
         if(Math.abs(cam.zoom - z) > .002){ cam.zoom = z; cam.updateProjectionMatrix(); } }
       if(P) P.tick(now / 1000, H.tod); }catch(e){ if(!frame.warned){ frame.warned = true; console.warn('[deck3d] frame', e); } } }
   H.hooks.click = () => true;   // every tap on the house is ours: nobody walks into the furniture mid-game
-  let rsT = 0; addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => reframe(.4), 180); });
+  let rsT = 0; addEventListener('resize', () => { placeFinder(); clearTimeout(rsT); rsT = setTimeout(() => reframe(.4), 180); });
 
   /* ---------- the engine's light, tuned for this game ---------- */
   function tuneLight(){
@@ -350,6 +387,14 @@
   #dkPhoto .pl button{flex:none;border:1px solid #d9d4c7;background:#fff;border-radius:999px;padding:8px 13px;font-size:14.5px;white-space:nowrap}
   #dkPhoto .pl button[aria-pressed=true]{background:#1f2948;border-color:#1f2948;color:#fff}
   #dkPhoto .act{display:flex;gap:8px;align-items:center}#dkPhoto .act span{font-size:13.5px;color:#5c6575;flex:1;line-height:1.25}
+  #dkVF{position:fixed;z-index:61;pointer-events:none;border:1.5px solid rgba(255,255,255,.85);border-radius:3px;box-shadow:0 0 0 200vmax rgba(8,12,24,.55)}
+  #dkCard .sb{display:flex;gap:10px;align-items:flex-start;text-align:left;margin:2px 0 10px}#dkCard .sb .av{flex:none;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34416b,#1a2340);overflow:hidden;display:grid;place-items:end center}#dkCard .sb .av svg{width:44px;height:auto;margin-bottom:-4px}
+  #dkCard .sb p{margin:0;font:21px/1.2 "Caveat Brush","Marker Felt",cursive;color:#2b2336}
+  #dkCard ul.w{list-style:none;margin:4px 0 6px;padding:0;text-align:left;display:grid;gap:6px}#dkCard ul.w li{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.3;color:#2b3442}
+  #dkCard ul.w .av{flex:none;width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;display:grid;place-items:center}#dkCard ul.w b{font-weight:500}
+  #dkCard .ideas{text-align:left;font-size:14px;line-height:1.4;color:#5c6575;margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#f1eee6}#dkCard .ideas b{display:block;font-weight:500;color:#2b3442;margin-bottom:2px}
+  #dkCard .quiet{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin:10px 0 0}#dkCard .quiet button{border:0;background:none;padding:8px 6px;font-size:14.5px;color:#5c6575;text-decoration:underline;text-underline-offset:3px;min-height:40px}
+  #dkCard img.pc.sm{max-width:300px;margin:0 auto 10px}
   #dkFlash{position:fixed;inset:0;z-index:95;background:#fff;opacity:0;pointer-events:none}#dkFlash.on{animation:dkFl .5s}@keyframes dkFl{10%{opacity:.85}100%{opacity:0}}
   @media (max-width:700px){
     #dkTop{top:40px;left:8px;right:8px}#dkPlaces{flex-wrap:nowrap}#dkCard.side{place-items:end center;padding:8px}#dkCard.side .c{max-width:none;max-height:64vh}#dkSay{max-width:calc(100% - 112px);padding:6px 10px 6px 6px}#dkSay .av{width:40px;height:40px}#dkSay .av svg{width:38px}#dkSay p{font-size:18px}
@@ -398,18 +443,18 @@
     body.querySelectorAll('.opt').forEach(b => b.onclick = () => pick(b.dataset.s, b.dataset.v)); body.querySelectorAll('.seg button').forEach(b => b.onclick = () => pickSeg(b.dataset.s, b.dataset.g)); }
   function renderFoot(){ const i = PLACES.indexOf(PLACE), last = i === PLACES.length - 1, f = $('#dkFoot'), fix = PHASE === 'fix';
     f.innerHTML = `<button type="button" id="dkFold" aria-expanded="true" aria-label="Hide the choices">Hide</button><span class="grow"></span>` + (i > 0 ? `<button type="button" class="dkBtn" id="dkBack">Back</button>` : '') +
-      (fix ? `<button type="button" class="dkBtn primary" id="dkNext">${MODE === 'story' ? 'See who is happy now' : 'Done decorating'}</button>` : last ? `<button type="button" class="dkBtn primary" id="dkNext">Wait for sunset</button>` : `<button type="button" class="dkBtn dark" id="dkNext">Next: ${esc(PLACES[i + 1].label.toLowerCase())}</button>`);
+      (fix ? `<button type="button" class="dkBtn primary" id="dkNext">Done decorating</button>` : last ? `<button type="button" class="dkBtn primary" id="dkNext">Wait for sunset</button>` : `<button type="button" class="dkBtn dark" id="dkNext">Next: ${esc(PLACES[i + 1].label.toLowerCase())}</button>`);
     if($('#dkBack')) $('#dkBack').onclick = () => goPlace(PLACES[i - 1].id);
     $('#dkNext').onclick = () => { if(fix) return refix(); if(last) return sunset(); goPlace(PLACES[i + 1].id); };
     const fold = $('#dkFold'), pn = $('#dkPanel'); fold.onclick = () => { const on = pn.classList.toggle('fold'); fold.textContent = on ? 'Show' : 'Hide'; fold.setAttribute('aria-label', on ? 'Show the choices' : 'Hide the choices'); fold.setAttribute('aria-expanded', !on); reframe(.5); }; if(pn.classList.contains('fold')){ fold.textContent = 'Show'; fold.setAttribute('aria-label', 'Show the choices'); fold.setAttribute('aria-expanded', 'false'); } }
   function refresh(keep){ renderPlaces(); renderBody(keep); renderFoot(); }
   function applyAll(){ P.apply(dressed(), {inside: !!PLACE.inside}); placeCat(PLACE); }
-  function pick(sid, v){ const st = SECT[sid], o = st.options.find(q => q.v === v); touched.add(st.key);
+  function pick(sid, v){ const st = SECT[sid], o = st.options.find(q => q.v === v); touched.add(st.key); shot = null;   // a postcard shows the house as it was; once anything changes it is not this house any more
     let added = true; if(st.type === 'multi'){ const a = S[st.key], i = a.indexOf(v); if(i >= 0){ a.splice(i, 1); added = false; } else { a.push(v); say(o.say); } } else { S[st.key] = v; say(o.say); if(v === 'none') added = false; }
     if(st.key === 'wear') $('#dkAv').innerHTML = catHead('dkav');
     if(v === 'bell') sfx('jingle'); else if(v === 'box' && added) sfx('purr', 1.5); else if(added) sfx('place', (SOUND_OF[st.key] || 0) + st.options.indexOf(o) % 2); else sfx('remove');
     applyAll(); refresh(true); if(v === 'box') reframe(.5); ga('deck_pick', {key: st.key, v}); }
-  function pickSeg(sid, v){ const sg = SECT[sid].seg; S[sg.key] = v; touched.add(sg.key); if(sg.say && sg.say[v]) say(sg.say[v]); sfx('tick'); applyAll(); refresh(true); ga('deck_pick', {key: sg.key, v}); }
+  function pickSeg(sid, v){ const sg = SECT[sid].seg; S[sg.key] = v; shot = null; touched.add(sg.key); if(sg.say && sg.say[v]) say(sg.say[v]); sfx('tick'); applyAll(); refresh(true); ga('deck_pick', {key: sg.key, v}); }
   function goPlace(id, quiet){ const p = placeOf(id); if(!p) return; const first = !visited.has(p.id); PLACE = p; visited.add(p.id); sfx('whoosh'); if(S.wear === 'bell') setTimeout(() => sfx('jingle'), 700); if((PHASE === 'decor' || PHASE === 'fix') && p.sections){ refresh(); if(!quiet && p.say && PHASE === 'decor') say(p.say); if(MODE === 'story' && first && PHASE === 'decor') setTimeout(wave, 1700); } moveTo(p); ga('deck_place', {place: p.id}); }
 
   /* ---------- messages from tonight's guests (Snowball passes them along) ---------- */
@@ -439,7 +484,8 @@
   function lightUp(){ const d = $('#dkDusk'); if(d) d.remove(); if(PHASE === 'lighting') return; PHASE = 'lighting'; reframe(1.2); ga('deck_lightup', {mode: MODE, shared}); say('Oh.'); ambience(); let lastK = null, gi = 0;
     P.lightUp((i, k) => { if(k !== lastK){ lastK = k; sfx('sparkle', gi++); } }, () => { sfx('chord'); say(MODE === 'story' && !shared ? 'Positions, everyone. I will be on the porch looking casual.' : 'Look at it. The whole street is going to slow down.'); setTimeout(() => { if(shared) return sharedDone(); if(MODE === 'story') arrivals(ARRIVE.map(guest), true); else result(); }, reduce ? 300 : 1500); }); }
   let arrT = 0;
-  function arrivals(list, first){ PHASE = 'arrive'; const box = el('div', {id: 'dkArrive', class: 'dk dkChip'}); document.body.appendChild(box); let i = 0, over = false;
+  function arrivals(list, first){ list = list.filter(g => g.ok(S)); if(!list.length) return result();   // only the animals whose wish came true walk up; the rest are ideas on the last card
+    PHASE = 'arrive'; const box = el('div', {id: 'dkArrive', class: 'dk dkChip'}); document.body.appendChild(box); let i = 0, over = false;
     const end = () => { if(over) return; over = true; clearTimeout(arrT); box.remove(); result(); };
     const showG = g => { const ok = g.ok(S); box.classList.remove('in'); void box.offsetWidth; box.classList.add('in');
       box.innerHTML = `<button class="skip" type="button">Skip to the end</button><span class="av" style="background:${g.c}" aria-hidden="true">${g.icon}</span><div style="flex:1"><b>${esc(g.name)}</b><small>${esc(g.who)}</small><p>${esc(ok ? g.yes : g.no)}</p></div><span class="h ${ok ? 'y' : 'n'}" role="img" aria-label="${ok ? 'is happy' : 'is not happy yet'}">${ok ? '♥' : '♡'}</span>`;
@@ -451,62 +497,98 @@
   /* ---------- how the evening went ---------- */
   const DAY = 'afternoon';
   function ctaHTML(){ return `<div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive, a mile from Woodside's Town Center. The oak, the terrace and the front porch are all there in person.</span><a class="dkBtn primary big" href="/#contact" id="dkSee">See it in person</a></div>`; }
-  function result(){ PHASE = 'result'; $$('#dkArrive').forEach(e => e.remove()); dimUI(true); const story = MODE === 'story' && !shared, hp = story ? happy() : [], all = story && hp.length === GUESTS.length; if(story){ lastScore = hp.map(g => g.id); ga('deck_score', {happy: hp.length}); }
+  /* Snowball's last word: warm, and about what the player actually put up. No tally, nothing to fix. */
+  function snowLine(story){ const w = words(['roof', 'door', 'tree', 'oak', 'ter', 'path', 'win', 'hang', 'room'], S, 6).filter(x => !/box for Snowball/.test(x)).slice(0, 3), box = S.room.includes('box');
+    if(!w.length) return box ? 'You kept it simple and gave me a box. The house glows from the inside, and so do I.' : 'You kept it simple, and the house glows from the inside. I like it like this.';
+    return 'I keep looking at ' + andList(w) + '.' + (box ? ' And thank you for the box.' : story ? ' Company is going to love it.' : ' The whole street is going to slow down.'); }
+  const openIdeas = () => { const o = []; ARRIVE.map(guest).forEach(g => g.needs.forEach(n => { if(!n.ok(S) && n.idea && !o.includes(n.idea)) o.push(n.idea); })); return o; };
+  function result(){ PHASE = 'result'; $$('#dkArrive,#dkPhoto,#dkVF').forEach(e => e.remove()); dimUI(true); show('#dkTop', true); const story = MODE === 'story' && !shared, hp = story ? happy() : [], all = story && hp.length === GUESTS.length; if(story){ lastScore = hp.map(g => g.id); ga('deck_score', {happy: hp.length}); }
     if(PLACE.id !== 'street'){ PLACE = PLACES[0]; moveTo(PLACE); }
-    say(!story ? 'Look at it. The whole street is going to slow down. Worth every minute.' : all ? 'Everyone is happy, and I am in a box. Best night this house has ever had.' : 'Some of them were being polite. I can tell. We could fix that.');
+    say(!story ? 'Look at it. The whole street is going to slow down.' : all ? 'Everyone got their wish, and I am in a box. Best night this house has had.' : 'Company is here. I am on the porch, looking casual.');
     if(all && !result.rang){ result.rang = true; setTimeout(() => sfx('chord'), 400); } ambience();
-    const c = card(`<h2>${!story ? 'Snowball approves.' : all ? 'Every guest is happy.' : hp.length + ' of ' + GUESTS.length + (hp.length === 1 ? ' guests is happy.' : ' guests are happy.')}</h2>` +
-      (story ? `<ul class="g">${GUESTS.map(g => `<li><span class="h ${g.ok(S) ? 'y' : 'n'}" aria-hidden="true">${g.ok(S) ? '♥' : '♡'}</span>${esc(g.name)}<span style="position:absolute;left:-9999px">${g.ok(S) ? 'is happy' : 'is not happy yet'}</span></li>`).join('')}</ul>` : `<p>The house is lit. Walk around it, and take a postcard from wherever it looks best.</p>`) +
-      `<div class="row">${story && !all ? `<button class="dkBtn primary" id="dkFix" type="button" data-focus>Go back and fix it</button>` : ''}<button class="dkBtn ${story && !all ? '' : 'primary'}" id="dkPc" type="button" ${story && !all ? '' : 'data-focus'}>${ICON.cam}Take a postcard</button><button class="dkBtn" id="dkShare" type="button">Send your house</button></div>` + ctaHTML() +
-      `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a><button class="dkBtn" id="dkAgain" type="button">Decorate again</button></div>`, {side: true});
-    if($('#dkFix')) $('#dkFix').onclick = fixIt; $('#dkPc').onclick = () => photoMode(); $('#dkShare').onclick = shareHouse; $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#dkGames').onclick = () => ga('deck_cta', {cta: 'games'}); $('#dkAgain').onclick = again; reframe(.8); }
-  function fixIt(){ const g = ARRIVE.map(guest).find(q => !q.ok(S)); if(!g) return; const n = g.needs.find(q => !q.ok(S)); ga('deck_fix', {guest: g.id}); closeCard(); PHASE = 'fix'; ambience(); dimUI(false); $('#dkPanel').classList.remove('fold'); goPlace(n.place, true); say(g.name + ' was hoping for something here. Read the message again.', 'Tap me for a hint'); }
-  function again(){ ga('deck_again'); closeCard(); $$('#dkPhoto').forEach(e => e.remove()); shared = false; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} begin(MODE === 'free' ? 'free' : 'story'); }
-  async function shareHouse(){ const url = shareLink(), text = 'I decorated 118 Hillside Drive for the holidays with Snowball the cat. Light up my version, then do yours.'; ga('deck_share');
-    try{ if(navigator.share){ await navigator.share({title: 'Deck the House with Snowball', text, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
-    try{ await navigator.clipboard.writeText(text + ' ' + url); toast('Link copied. Paste it anywhere.'); }catch(e){ toast(url, 6000); } }
+    const ideas = story ? openIdeas().slice(0, 3) : [];
+    card((shot && shot.card ? `<img class="pc sm" alt="${esc(shot.alt)}" src="${shot.card}">` : '') + `<h2>${story ? 'Ready for company.' : 'All lit up.'}</h2>` +
+      `<div class="sb"><span class="av" aria-hidden="true">${catHead('dkres')}</span><p>${esc(snowLine(story))}</p></div>` +
+      (hp.length ? `<ul class="w">${hp.map(g => `<li><span class="av" style="background:${g.c}" aria-hidden="true">${g.icon}</span><span><b>${esc(g.name)}.</b> ${esc(g.yes)}</span></li>`).join('')}</ul>` : '') +
+      (all ? `<p class="fine">Every animal got their wish tonight.</p>` : '') +
+      (ideas.length ? `<div class="ideas"><b>Ideas, if you feel like it</b>${ideas.map(esc).join(' ')}</div>` : '') +
+      `<div class="row"><button class="dkBtn primary" id="dkPc" type="button" data-focus>${ICON.cam}${shot ? 'Take another picture' : 'Take a picture'}</button>${shot ? '<button class="dkBtn" id="dkSave" type="button">Save the postcard</button>' : ''}<button class="dkBtn" id="dkShare" type="button">${shot ? 'Share the postcard' : 'Share your house'}</button></div>` + ctaHTML() +
+      `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a></div><div class="quiet"><button type="button" id="dkKeep">Keep decorating</button><button type="button" id="dkAgain">Start over</button></div>`, {side: true});
+    $('#dkPc').onclick = () => photoMode(); if($('#dkSave')) $('#dkSave').onclick = savePostcard; $('#dkShare').onclick = share; $('#dkKeep').onclick = keepDecorating;
+    $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#dkGames').onclick = () => ga('deck_cta', {cta: 'games'}); $('#dkAgain').onclick = again; reframe(.8); }
+  function keepDecorating(){ const o = MODE === 'story' && !shared ? openNeeds()[0] : null; ga('deck_keep', {guest: o ? o.g.id : ''}); closeCard(); PHASE = 'fix'; ambience(); dimUI(false); $('#dkPanel').classList.remove('fold');
+    goPlace(o ? o.n.place : 'street', true); say(!o ? 'Add whatever you like. I will be right here.' : o.g.id === 'snowball' ? 'I had an idea about this room. It is cardboard.' : 'This is where ' + o.g.name + ' had an idea.', o ? 'Tap me for a hint' : null); }
+  function again(){ ga('deck_again'); closeCard(); $$('#dkPhoto,#dkVF').forEach(e => e.remove()); shared = false; SV = null; shot = null; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} begin(MODE === 'free' ? 'free' : 'story'); }
+  const SHARE_TEXT = 'I decorated 118 Hillside Drive for the holidays with Snowball the cat. Light up my version, then do yours.';
+  /* with a postcard, share the picture itself (where the device can share files) and a link that opens on the same view; otherwise the link */
+  async function share(){ const v = shot && shot.view, url = shareLink(S, v), f = shot && shot.file; ga('deck_share', {postcard: !!shot});
+    try{ if(f && navigator.share && navigator.canShare && navigator.canShare({files: [f]})){ await navigator.share({files: [f], title: 'Happy holidays from 118 Hillside', text: SHARE_TEXT + ' ' + url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ if(navigator.share){ await navigator.share({title: 'Deck the House with Snowball', text: SHARE_TEXT, url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(SHARE_TEXT + ' ' + url); toast(v ? 'Link copied. It opens on the view in your postcard.' : 'Link copied. Paste it anywhere.'); }catch(e){ toast(url, 6000); } }
 
-  /* ---------- photo mode and the postcard ---------- */
-  function photoMode(){ closeCard(); PHASE = 'photo'; dimUI(true); ga('deck_photo_mode'); $$('#dkPhoto').forEach(e => e.remove()); const all = PLACES.concat(EXTRA);
+  /* ---------- photo mode and the postcard ----------
+     The postcard is the viewfinder: the camera frames the place for it, the shutter waits until the camera has landed and everything is drawn,
+     then one frame is drawn and cut to exactly that rectangle. The caption names the place and only the decorations that are inside the frame. */
+  const SEES = {street: ['roof', 'door', 'hang', 'path', 'win'], door: ['door', 'hang', 'path', 'win', 'roof'], windows: ['win', 'roof', 'door', 'path'], living: ['tree', 'room'], terrace: ['ter', 'oak'], oak: ['oak', 'ter'],
+    walk: ['door', 'hang', 'path', 'roof', 'win'], dining: ['win'], tree: ['tree', 'room'], table: ['ter', 'oak'], corner: ['roof', 'door', 'hang', 'path', 'win']};
+  const PLACE_WORDS = {street: 'From the street', door: 'At the front doors', windows: 'The front windows', living: 'The living room', terrace: 'The terrace', oak: 'The oak out back', walk: 'Up the front walk', dining: 'The dining room', tree: 'By the tree', table: 'Under the oak', corner: 'From the corner'};
+  function seen(v){ const cam = H.camera, cr = H.canvas.getBoundingClientRect(), x0 = v[0] / cr.width * 2 - 1, x1 = (v[0] + v[2]) / cr.width * 2 - 1, y1 = 1 - v[1] / cr.height * 2, y0 = 1 - (v[1] + v[3]) / cr.height * 2, b = new THREE.Box3(), q = new V3();
+    cam.updateMatrixWorld(); return (SEES[PLACE.id] || []).filter(k => { const g = P && P.group(k); if(!g || !g.visible) return false; try{ b.setFromObject(g); }catch(e){ return false; } if(b.isEmpty()) return false;
+      for(let i = 0; i < 27; i++){ q.set(b.min.x + (b.max.x - b.min.x) * (i % 3) / 2, b.min.y + (b.max.y - b.min.y) * (Math.floor(i / 3) % 3) / 2, b.min.z + (b.max.z - b.min.z) * Math.floor(i / 9) / 2).project(cam); if(q.z > -1 && q.z < 1 && q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) return true; } return false; }); }
+  function photoMode(){ closeCard(); PHASE = 'photo'; dimUI(true); show('#dkTop', false); ga('deck_photo_mode'); $$('#dkPhoto,#dkVF').forEach(e => e.remove()); const all = PLACES.concat(EXTRA);
     const bar = el('div', {id: 'dkPhoto', class: 'dk dkChip'}, `<div class="pl" role="tablist" aria-label="Places to stand">${all.map(p => `<button type="button" data-p="${p.id}" aria-pressed="${p === PLACE}">${esc(p.label === 'Roofline' ? 'From the street' : p.label)}</button>`).join('')}</div>
-      <div class="act"><span>Drag to look around. The postcard is exactly what you see.</span><button type="button" class="dkBtn" id="dkPhDone">Done</button><button type="button" class="dkBtn gold" id="dkSnap">${ICON.cam}Take the postcard</button></div>`);
-    document.body.appendChild(bar); bar.querySelectorAll('.pl button').forEach(b => b.onclick = () => { PLACE = placeOf(b.dataset.p); moveTo(PLACE); bar.querySelectorAll('.pl button').forEach(x => x.setAttribute('aria-pressed', x === b)); ga('deck_view', {place: PLACE.id}); });
-    $('#dkPhDone').onclick = () => { bar.remove(); if(shared) sharedDone(); else result(); }; $('#dkSnap').onclick = snap; say('Stand wherever you like. I will try to stay in frame.'); reframe(.6); }
-  let shot = null;
-  function snap(){ let url = null; try{ url = H.snapshot('image/jpeg', .93); }catch(e){ console.warn('[deck3d] snapshot', e); } if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.'); return; }
-    sfx('shutter'); const fl = $('#dkFlash'); fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); shot = {url, place: PLACE.id}; ga('deck_photo', {place: PLACE.id}); setTimeout(postcardCard, reduce ? 0 : 260); }
+      <div class="act"><span>Drag to look around. The postcard is what is inside the frame.</span><button type="button" class="dkBtn" id="dkPhDone">Done</button><button type="button" class="dkBtn gold" id="dkSnap">${ICON.cam}Take the picture</button></div>`);
+    document.body.appendChild(el('div', {id: 'dkVF', 'aria-hidden': 'true'})); document.body.appendChild(bar); placeFinder();
+    bar.querySelectorAll('.pl button').forEach(b => b.onclick = () => { PLACE = placeOf(b.dataset.p); moveTo(PLACE); bar.querySelectorAll('.pl button').forEach(x => x.setAttribute('aria-pressed', x === b)); ga('deck_view', {place: PLACE.id}); });
+    $('#dkPhDone').onclick = endPhoto; $('#dkSnap').onclick = snap; reframe(.6); }
+  function endPhoto(){ closeCard(); $$('#dkPhoto,#dkVF').forEach(e => e.remove()); show('#dkTop', true); if(shared) sharedDone(); else result(); }
+  let shot = null, snapping = false, pcCanvas = null;
+  function snap(){ if(snapping || PHASE !== 'photo') return; snapping = true; const btn = $('#dkSnap'), t0 = performance.now(); if(btn) btn.disabled = true;
+    (function wait(){ const still = !FLY && !CUT && !veil.classList.contains('on') && (INSIDE || oakIn()); if(!still && performance.now() - t0 < 5000) return setTimeout(wait, 80); requestAnimationFrame(() => requestAnimationFrame(take)); })(); }
+  function take(){ snapping = false; const btn = $('#dkSnap'); if(btn) btn.disabled = false; if(PHASE !== 'photo') return;
+    let url = null, crop = null, v = null; try{ const c = H.canvas, r = c.getBoundingClientRect(), k = c.width / r.width; v = finder(); crop = [v[0] * k, v[1] * k, v[2] * k, v[3] * k].map(Math.round); url = H.snapshot('image/jpeg', .93); }catch(e){ console.warn('[deck3d] snapshot', e); }
+    if(!url || url.length < 2000){ toast('That did not work here. Try a screenshot instead.'); return; }
+    sfx('shutter'); const fl = $('#dkFlash'); fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on');
+    const cam = H.camera, d = new V3(); cam.getWorldDirection(d); const ws = words(seen(v), S, 3), pw = PLACE_WORDS[PLACE.id] || cap(theName(PLACE));
+    shot = {url, crop, place: PLACE.id, caption: ws.length ? pw + ': ' + andList(ws) + '.' : pw + ', lit for the evening.', view: {place: PLACE.id, tall: !!(portrait() && PLACE.posP), pos: cam.position.toArray(), look: cam.position.clone().addScaledVector(d, 30).toArray(), zoom: cam.zoom}};
+    ga('deck_photo', {place: PLACE.id}); setTimeout(postcardCard, reduce ? 0 : 260); }
+  function wrap(x, text, maxW){ const out = []; let line = ''; text.split(' ').forEach(w => { const t = line ? line + ' ' + w : w; if(line && x.measureText(t).width > maxW){ out.push(line); line = w; } else line = t; }); if(line) out.push(line); return out; }
   async function compose(){ const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = shot.url; });
-    let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0; const ar = sw / sh; if(ar > 1.9){ const w2 = sh * 1.9; sx = (sw - w2) / 2; sw = w2; } else if(ar < .72){ const h2 = sw / .72; sy = (sh - h2) * .45; sh = h2; }   // keep the card a sensible shape
+    const iw = img.naturalWidth, ih = img.naturalHeight, cr = shot.crop || [0, 0, iw, ih], sx = Math.max(0, Math.min(iw - 2, cr[0])), sy = Math.max(0, Math.min(ih - 2, cr[1])), sw = Math.max(2, Math.min(iw - sx, cr[2])), sh = Math.max(2, Math.min(ih - sy, cr[3]));
     try{ await Promise.all([document.fonts.load('600 60px "Cormorant Garamond"'), document.fonts.load('300 26px Jost')]); }catch(e){}
-    const story = MODE === 'story' && !shared, hp = story ? happy().length : 0, perfect = story && hp === GUESTS.length;
-    const W = sw >= sh ? 1600 : 1200, Hh = Math.round(W * sh / sw), k = sw >= sh ? 1 : 1.12, maxW = W - Math.round(112 * k) - (perfect ? Math.round(150 * k) : 0), m = document.createElement('canvas').getContext('2d'); m.font = `300 ${Math.round(26 * k)}px Jost, "Helvetica Neue", Arial, sans-serif`;
-    const two = story && m.measureText(hp + ' of ' + GUESTS.length + ' guests are happy. Decorated with Snowball at 118hillside.com/games/deck').width > maxW, band = Math.round((two ? 184 : 150) * k), c = document.createElement('canvas'); c.width = W; c.height = Hh + band; const x = c.getContext('2d');
-    x.fillStyle = '#18213a'; x.fillRect(0, 0, W, Hh + band); x.drawImage(img, sx, sy, sw, sh, 0, 0, W, Hh);
-    x.textBaseline = 'alphabetic'; x.fillStyle = '#f6f5f1'; let fs = Math.round(60 * k); const title = 'Happy holidays from ' + (S.name || '118 Hillside'); do{ x.font = `600 ${fs}px "Cormorant Garamond", Georgia, serif`; fs -= 2; }while(x.measureText(title).width > maxW && fs > 22);
-    x.fillText(title, Math.round(56 * k), Hh + Math.round(76 * k)); x.fillStyle = '#c4cad8'; fs = Math.round(26 * k); const l1 = story ? (perfect ? 'Every guest is happy.' : hp + ' of ' + GUESTS.length + (hp === 1 ? ' guests is happy.' : ' guests are happy.')) : '', l2 = 'Decorated with Snowball at 118hillside.com/games/deck'; x.font = `300 ${fs}px Jost, "Helvetica Neue", Arial, sans-serif`;
-    if(!two){ x.fillText((l1 ? l1 + ' ' : '') + l2, Math.round(58 * k), Hh + Math.round(118 * k)); } else { x.fillText(l1, Math.round(58 * k), Hh + Math.round(116 * k)); x.fillText(l2, Math.round(58 * k), Hh + Math.round(150 * k)); }
-    if(perfect){ x.save(); x.translate(W - Math.round(100 * k), Hh + Math.round(band / 2 - 4)); x.rotate(-.18); x.scale(k, k); x.beginPath(); for(let q = 0; q < 32; q++){ const a = q / 32 * Math.PI * 2, r = q % 2 ? 50 : 57; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); } x.closePath(); x.fillStyle = '#e8b84a'; x.fill(); x.fillStyle = '#2a1d07'; x.textAlign = 'center'; x.font = '600 22px "Cormorant Garamond", Georgia, serif'; x.fillText('A perfect', 0, -4); x.fillText('evening', 0, 20); x.restore(); }
+    const W = sw >= sh ? 1600 : 1200, Hh = Math.round(W * sh / sw), k = sw >= sh ? 1 : 1.12, L = Math.round(56 * k), maxW = W - 2 * L, m = document.createElement('canvas').getContext('2d');
+    const title = 'Happy holidays from ' + (S.name.trim() || '118 Hillside'), foot = '118 Hillside Drive, Woodside. Decorated with Snowball at 118hillside.com/games/deck';
+    let tf = Math.round(60 * k); do{ m.font = `600 ${tf}px "Cormorant Garamond", Georgia, serif`; if(m.measureText(title).width <= maxW) break; tf -= 2; }while(tf > 22);
+    let cf = Math.round(27 * k), lines; do{ m.font = `400 ${cf}px Jost, "Helvetica Neue", Arial, sans-serif`; lines = wrap(m, shot.caption, maxW); if(lines.length <= 2) break; cf -= 1; }while(cf > 14);
+    let ff = Math.round(21 * k); do{ m.font = `300 ${ff}px Jost, "Helvetica Neue", Arial, sans-serif`; if(m.measureText(foot).width <= maxW) break; ff -= 1; }while(ff > 12);
+    const yT = Math.round(78 * k), yC = yT + Math.round(cf * 1.55), lh = Math.round(cf * 1.32), yF = yC + (lines.length - 1) * lh + Math.round(ff * 1.9), band = yF + Math.round(34 * k);
+    const c = document.createElement('canvas'); c.width = W; c.height = Hh + band; const x = c.getContext('2d');
+    x.fillStyle = '#18213a'; x.fillRect(0, 0, W, Hh + band); x.drawImage(img, sx, sy, sw, sh, 0, 0, W, Hh); x.textBaseline = 'alphabetic';
+    x.fillStyle = '#f6f5f1'; x.font = `600 ${tf}px "Cormorant Garamond", Georgia, serif`; x.fillText(title, L, Hh + yT);
+    x.fillStyle = '#dfe3ec'; x.font = `400 ${cf}px Jost, "Helvetica Neue", Arial, sans-serif`; lines.forEach((t, i) => x.fillText(t, L + 2, Hh + yC + i * lh));
+    x.fillStyle = '#9aa3b8'; x.font = `300 ${ff}px Jost, "Helvetica Neue", Arial, sans-serif`; x.fillText(foot, L + 2, Hh + yF);
     return c; }
-  async function postcardCard(){ let cv = null; try{ cv = await compose(); }catch(e){ console.warn('[deck3d] postcard', e); toast('That did not work here. Try a screenshot instead.'); return; }
-    const draw = () => { const c = card(`<img class="pc" alt="Your postcard: the decorated house with a greeting underneath" src="${cv.toDataURL('image/jpeg', .9)}"><label for="dkName">Who is it from? This goes on the card.</label><input id="dkName" maxlength="32" autocomplete="off" placeholder="118 Hillside" value="${esc(S.name)}">
-        <div class="row"><button class="dkBtn primary" id="dkSave" type="button" data-focus>Save the postcard</button><button class="dkBtn" id="dkShare2" type="button">Send your house</button><button class="dkBtn" id="dkRetake" type="button">Take another postcard</button></div>` + ctaHTML() + `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a><button class="dkBtn" id="dkAgain" type="button">Decorate again</button></div>`);
-      let nt = 0; $('#dkName').oninput = e => { S.name = e.target.value.replace(/\s+/g, ' ').slice(0, 32); clearTimeout(nt); nt = setTimeout(async () => { try{ cv = await compose(); const im = $('#dkCard img.pc'); if(im) im.src = cv.toDataURL('image/jpeg', .9); }catch(err){} }, 350); };
-      $('#dkSave').onclick = () => { const fail = () => toast('That did not work here. Try a screenshot instead.'), give = href => { const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = href; document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {place: shot.place}); };
-        try{ S.name = S.name.trim(); if(cv.toBlob) cv.toBlob(b => { try{ if(!b) return give(cv.toDataURL('image/png')); const u = URL.createObjectURL(b); give(u); setTimeout(() => URL.revokeObjectURL(u), 20000); }catch(e){ fail(); } }, 'image/png'); else give(cv.toDataURL('image/png')); }catch(e){ fail(); } };
-      $('#dkShare2').onclick = shareHouse; $('#dkRetake').onclick = () => { closeCard(); ga('deck_retake'); }; $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); $('#dkGames').onclick = () => ga('deck_cta', {cta: 'games'}); $('#dkAgain').onclick = again; };
-    draw(); }
-
+  function finishShot(){ shot.card = pcCanvas.toDataURL('image/jpeg', .9); shot.alt = 'Your postcard of 118 Hillside Drive at dusk. ' + shot.caption + ' Underneath it says happy holidays from ' + (S.name.trim() || '118 Hillside') + '.'; shot.file = null;
+    const s = shot; try{ pcCanvas.toBlob(b => { if(b && s === shot) try{ s.file = new File([b], 'holidays-at-118-hillside.png', {type: 'image/png'}); }catch(e){} }, 'image/png'); }catch(e){} }
+  function savePostcard(){ if(!pcCanvas || !shot) return; const fail = () => toast('That did not work here. Try a screenshot instead.'), give = href => { const a = document.createElement('a'); a.download = 'holidays-at-118-hillside.png'; a.href = href; document.body.appendChild(a); a.click(); a.remove(); toast('Postcard saved.'); ga('deck_save', {place: shot.place}); };
+    try{ if(pcCanvas.toBlob) pcCanvas.toBlob(b => { try{ if(!b) return give(pcCanvas.toDataURL('image/png')); const u = URL.createObjectURL(b); give(u); setTimeout(() => URL.revokeObjectURL(u), 20000); }catch(e){ fail(); } }, 'image/png'); else give(pcCanvas.toDataURL('image/png')); }catch(e){ fail(); } }
+  async function postcardCard(){ try{ pcCanvas = await compose(); finishShot(); }catch(e){ console.warn('[deck3d] postcard', e); toast('That did not work here. Try a screenshot instead.'); return; } if(PHASE !== 'photo') return;
+    card(`<img class="pc" alt="${esc(shot.alt)}" src="${shot.card}"><label for="dkName">Who is it from? This goes on the card.</label><input id="dkName" maxlength="32" autocomplete="off" placeholder="118 Hillside" value="${esc(S.name)}">
+      <div class="row"><button class="dkBtn primary" id="dkSave" type="button" data-focus>Save the postcard</button><button class="dkBtn" id="dkShare2" type="button">Share the postcard</button></div>
+      <div class="row"><button class="dkBtn" id="dkRetake" type="button">${ICON.cam}Take another</button><button class="dkBtn" id="dkPcDone" type="button">Done</button></div>`);
+    let nt = 0; $('#dkName').oninput = e => { S.name = e.target.value.replace(/\s+/g, ' ').slice(0, 32); clearTimeout(nt); nt = setTimeout(async () => { nt = 0; try{ const s = shot, cv = await compose(); if(s !== shot) return; pcCanvas = cv; finishShot(); const im = $('#dkCard img.pc'); if(im){ im.src = shot.card; im.alt = shot.alt; } }catch(err){} }, 350); };
+    $('#dkSave').onclick = () => { S.name = S.name.trim(); if(!nt) return savePostcard(); clearTimeout(nt); nt = 0; compose().then(cv => { pcCanvas = cv; finishShot(); const im = $('#dkCard img.pc'); if(im){ im.src = shot.card; im.alt = shot.alt; } savePostcard(); }, () => savePostcard()); }; $('#dkShare2').onclick = share; $('#dkRetake').onclick = () => { closeCard(); ga('deck_retake'); }; $('#dkPcDone').onclick = endPhoto; }
   /* ---------- a house someone sent you ---------- */
-  function sharedStart(){ PHASE = 'shared'; MODE = 'free'; ambience(); show('#dkTop', true); badge(); P.setOn(0); try{ H.setTOD('dusk'); }catch(e){} PLACE = PLACES[0]; setCam(view(PLACE)); afterMove(PLACE); $('#dkAv').innerHTML = catHead('dkav');
+  function sharedStart(){ PHASE = 'shared'; MODE = 'free'; ambience(); show('#dkTop', true); badge(); P.setOn(0); try{ H.setTOD('dusk'); }catch(e){} PLACE = (SV && placeOf(SV.place)) || PLACES[0]; setCam(view(PLACE)); afterMove(PLACE); $('#dkAv').innerHTML = catHead('dkav');
     say('Someone decorated this one for you. Go on, switch it on.'); const who = S.name ? esc(S.name.charAt(0).toUpperCase() + S.name.slice(1)) : 'A friend';
     card(`<div class="cat">${window.SNOWBALL.svg({id: 'dksh', seed: 7, wear: S.wear !== 'none' ? S.wear : null})}</div><h2>${who} decorated a house for you.</h2><p>It is 118 Hillside Drive in Woodside, dressed for the holidays with help from Snowball the cat. The sun is down. One switch left.</p><div class="row"><button class="dkBtn gold big" id="dkGo" type="button" data-focus>Light it up</button></div>`, {clear: true});
     $('#dkGo').onclick = () => { closeCard(); lightUp(); }; }
   function sharedDone(){ PHASE = 'result'; card(`<h2>${S.name ? 'Happy holidays from ' + esc(S.name) + '.' : 'Happy holidays.'}</h2><p>Walk around the house they decorated, then do your own. Company is coming, and their animals have requests.</p>
-      <div class="row"><button class="dkBtn primary" id="dkMine" type="button" data-focus>Decorate your own</button><button class="dkBtn" id="dkPc" type="button">${ICON.cam}Look around</button></div>` + ctaHTML() + `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a></div>`, {side: true});
-    $('#dkMine').onclick = () => { ga('deck_shared_own'); shared = false; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} closeCard(); startCard(); }; $('#dkPc').onclick = () => photoMode(); $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); reframe(.8); }
+      <div class="row"><button class="dkBtn primary" id="dkMine" type="button" data-focus>Decorate your own</button><button class="dkBtn" id="dkPc" type="button">${ICON.cam}Take a picture</button></div>` + ctaHTML() + `<div class="row"><a class="dkBtn" href="/games/" id="dkGames">More games</a></div>`, {side: true});
+    $('#dkMine').onclick = () => { ga('deck_shared_own'); shared = false; SV = null; shot = null; try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} closeCard(); startCard(); }; $('#dkPc').onclick = () => photoMode(); $('#dkSee').onclick = () => ga('deck_cta', {cta: 'see_in_person'}); reframe(.8); }
 
   /* ---------- start ---------- */
-  function begin(mode){ MODE = mode; S = clone(mode === 'story' ? STORY_START : FREE_START); PHASE = 'decor'; touched = new Set(); arrived = []; unread = 0; queue = []; visited = new Set(); lastScore = null; result.rang = false; ambience(); $$('#dkDusk,#dkArrive,#dkPhoto').forEach(e => e.remove());
+  function begin(mode){ MODE = mode; S = clone(mode === 'story' ? STORY_START : FREE_START); PHASE = 'decor'; touched = new Set(); arrived = []; unread = 0; queue = []; visited = new Set(); lastScore = null; shot = null; result.rang = false; ambience(); $$('#dkDusk,#dkArrive,#dkPhoto,#dkVF').forEach(e => e.remove());
     try{ H.setTOD(DAY); }catch(e){} P.setOn(1); PLACE = PLACES[0]; visited.add(PLACE.id); show('#dkTop', true); dimUI(false); $('#dkPanel').classList.remove('fold'); $('#dkAv').innerHTML = catHead('dkav'); badge(); refresh(); cut(PLACE, () => afterMove(PLACE));
     say(mode === 'story' ? 'It is December in Woodside and nothing is up yet. I have notes.' : 'No guests, no rules. Make it look like a holiday.', 'Tap me any time for a hint'); ga('deck_start', {mode}); if(mode === 'story') setTimeout(wave, 2600); }
   function startCard(){ PHASE = 'start'; show('#dkTop', false); dimUI(true); try{ H.setTOD(DAY); }catch(e){} PLACE = PLACES[0]; INSIDE = false; setCam(view(PLACE)); P.apply(dressed(), {}); P.setCat(null);
@@ -516,7 +598,7 @@
       <p class="fine">Just decorate skips the guests. Good for small hands.</p>`);
     $('#dkStory').onclick = () => { closeCard(); begin('story'); }; $('#dkFree').onclick = () => { closeCard(); begin('free'); }; }
   function boot(){ try{ H.asBuilt && H.asBuilt(); }catch(e){} const go = () => { P = window.DECKPROPS(H); tuneLight(); buildUI(); requestAnimationFrame(frame); oakWatch(); try{ H.anim = null; }catch(e){}
-      const n = location.hash.length > 1 ? decode(location.hash) : null; if(n){ S = n; shared = true; }
+      const n = location.hash.length > 1 ? decode(location.hash) : null; if(n){ S = n; shared = true; SV = decodeView(location.hash); }
       const open = () => { if(shared) sharedStart(); else startCard(); };
       const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); open(); } }); mo.observe(document.body, {childList: true}); } else open(); };
     let need = 0; const done = () => { if(--need <= 0) go(); }; const load = (src, has) => { if(has) return; need++; const s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = () => { console.warn('[deck3d] could not load ' + src); done(); }; document.head.appendChild(s); };
