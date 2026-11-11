@@ -5697,7 +5697,7 @@ function flyTo(pos, look, kind='look', dur, lens){
   anim={t0:performance.now(), dur, from, to, fromT, toT, kind, fov0:camera.fov, fov1:lens.fov, sy0:camera.userData.sy||0, sy1:lens.sy||0, lift: dist>40? Math.min(30,dist*.25):0};
 }
 function interrupt(){ if(ovOn){ photoMode=false; const o = $('#ov'); o.style.transition = 'opacity .28s ease-out'; hidePhoto(); setTimeout(() => { o.style.transition = ''; }, 400); } if(!anim) return;
-  if(anim.path && anim.tour){ camera.position.copy(anim.to); camera.lookAt(anim.toT); lookFromCamera(); nav = 'look'; anim = null; updateLegend(); return; }   /* r36: a tap or drag during a walked tour move skips to the stop */
+  if(anim.path && anim.tour){ camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; updateLegend(); return; }   /* r36: a tap or drag during a walked tour move skips to the stop */
   nav=anim.kind; if(nav==='orbit'){ target.copy(curT); orbitFromCamera(); } else { lookFromCamera(); navGlide(); } anim=null; updateLegend(); }
 function updateLegend(){
   const h=$('#hint'); h.hidden=false;
@@ -20207,13 +20207,14 @@ function r36CutTris(rx, rect, sel, tag){
     const ud = m.userData.bim2; if(ud && ud.ranges && add) ud.ranges.push(['R36-CUT-' + tag, null, n0 / 3, add / 3]); if(m.userData.idx0) m.userData.idx0 = G.index; if(m.userData.alt) m.userData.alt = {}; }
   return out; }
 function r36PrimaryCeiling(){
-  const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, xc = -10.6, zc = -31;
+  const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, R2 = {x0: xB, x1: -8.6, z0: -36.52, z1: -25.55}, xc = -10.6, zc = -31;
   // the plane through a triangle, read at the middle of the dormer bay
   const at = (a, b, c) => { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; if(Math.abs(ny) < 1e-6) return null; return a[1] - (nx * (xc - a[0]) + nz * (zc - a[2])) / ny; };
   r36CutTris(/^ceilings\|L2\|/, R, (a, b, c) => [a, b, c].every(v => Math.abs(v[1] - gable(v[0])) < .06), 'primary gable ceiling past the break');
-  r36CutTris(/^(roofs\||trim\|-\|)/, R, (a, b, c) => { const y = at(a, b, c); if(y == null){ const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3]; return m[1] < dorm(m[0]) - .02 && m[1] > 12.2; } return y < dorm(xc) - .02 && y > 12.2; }, 'main roof inside the primary dormer bay');
+  r36CutTris(/^(roofs\||trim\|-\|)/, R2, (a, b, c) => { const y = at(a, b, c); if(y == null){ const m = [(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3]; return m[1] < dorm(m[0]) - .02 && m[1] > 12.2; } return y < dorm(xc) - .02 && y > 12.2; }, 'main roof inside the primary dormer bay');
   // the dormer bay had no ceiling of its own (the roof's tan underside showed): one painted plane just under it, in the upper level's ceiling mesh
-  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xB, dorm(xB) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -26.1], [xB, dorm(xB) - .03, -26.1], [0, -1, 0]]]); }
+  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xB, dorm(xB) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -36.52], [-8.7, dorm(-8.7) - .03, -26.1], [xB, dorm(xB) - .03, -26.1], [0, -1, 0]],
+    [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]]]); }   // and the bay's end, where the gable carries on below it
 { const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); }
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
@@ -22232,9 +22233,9 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
     const out = [raw[0]]; let a = 0; while(a < raw.length - 1){ let b = Math.min(raw.length - 1, a + 60); while(b > a + 1 && !los(raw[a], raw[b])) b--; out.push(raw[b]); a = b; }
     return out;
   } finally { doors.forEach((it, q) => { it.coll.pass = was[q]; }); } }
-function r36Route(from, to, ff, tf, rooms){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
+function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
   const key = [from.x, from.y, from.z, to.x, to.y, to.z].map(v => v.toFixed(1)).join(',') + R36N.key; if(R36N.cache.has(key)) return R36N.cache.get(key);
-  let res = null; try{ const way = r36Plan({x: from.x, z: from.z, f: ff}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
+  let res = null; try{ const way = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
     if(way){ // round the corners (two passes of corner cutting keep the line inside the pulled corridor), then sample every 0.5 ft and set the eye over the floor
       let P = way.map(n => [n.x, n.z, n.f]); for(let pass = 0; pass < 2; pass++){ const Q = [P[0]]; for(let i = 1; i < P.length - 1; i++){ const a = P[i - 1], b = P[i], d = P[i + 1], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lb = Math.hypot(d[0] - b[0], d[1] - b[1]), ka = Math.min(.25, 1.2 / Math.max(la, .01)), kb = Math.min(.25, 1.2 / Math.max(lb, .01));
           Q.push([b[0] + (a[0] - b[0]) * ka, b[1] + (a[1] - b[1]) * ka, b[2] + (a[2] - b[2]) * ka], [b[0] + (d[0] - b[0]) * kb, b[1] + (d[1] - b[1]) * kb, b[2] + (d[2] - b[2]) * kb]); } Q.push(P[P.length - 1]); P = Q; }
@@ -22275,12 +22276,12 @@ function r36Say(text){ try{ let el = document.getElementById('r36say'); if(!el){
     el.textContent = text; el.hidden = false; el.style.opacity = '1'; clearTimeout(r36Say.t); r36Say.t = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => { el.hidden = true; }, 320); }, 1500); }catch(e){} }
 /* turn the straight flight flyTo just set up into a walked route. 1 = walking, 0 = no walk within the 6 s rule (the caller cuts), -1 = leave it be */
 function r36Pathify(a, o){ o = o || {};
-  if(!R36N.on || !a || a.kind !== 'look') return -1;
+  if(!R36N.on || !a || (a.kind !== 'look' && !o.orbit)) return -1;
   const P = a.from, Q = a.to, d = Math.hypot(Q.x - P.x, Q.z - P.z); if(d < .05 && Math.abs(Q.y - P.y) < .3) return -1;   // a turn in place
-  const fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6), ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return 0;
+  let fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); if(o.level0 != null && Math.abs(fa - o.level0) > .6 && P.y - fa > 7 && Math.abs(P.y - o.level0 - EYE) < 1.2) fa = o.level0; const ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return 0;
   let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return 0;
   if(reduceMotion) return 0;
-  const R = r36Route(P, Q, fa, fb, o.rooms); if(!R || R.L > R36N.CAP) return 0;
+  const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > R36N.CAP) return 0;
   a.path = R; a.lift = 0; a.dur = clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS); a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
   { const dir = new THREE.Vector3(); camera.getWorldDirection(dir); a.yaw0 = Math.atan2(-dir.x, -dir.z); a.pitch0 = Math.asin(clamp(dir.y, -1, 1)); }
   if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)], dx = e.x - b.x, dz = e.z - b.z, L = Math.hypot(dx, dz); if(L > .5){ const cp = Math.cos(o.pitch || 0); a.toT.set(Q.x + dx / L * 20 * cp, Q.y + Math.sin(o.pitch || 0) * 20, Q.z + dz / L * 20 * cp); } }
@@ -22290,11 +22291,13 @@ function r36LineClear(A, B){ try{ const d = B.clone().sub(A), L = d.length(); if
 function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)); }catch(e){ return false; } }
 /* tour: Next / Back / pills / keys */
 { const _ss36 = showStop; showStop = function(i, fly){
-    if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); lookFromCamera(); nav = 'look'; anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
+    if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
-        if(a.kind === 'look'){ const k = r36Pathify(a, {level: LV[s.level], rooms: s.rooms}); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
-        else if(reduceMotion || (!s.aerial && !(STOPS[was] && STOPS[was].aerial) && P0.y < 40 && !r36LineClear(P0, a.to))) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
+        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true};
+        if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
+        else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
+        else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
     return r; }; }
 /* walk: taps, white circles, the plan */
 { const _mt36 = moveTo; moveTo = function(x, z, f, face){
