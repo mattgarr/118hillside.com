@@ -290,7 +290,7 @@
     const host = H.grp('main');
     // a champagne bottle lying on the middle shelf
     const prof = [[0, 0], [.13, 0], [.145, .02], [.145, .52], [.12, .62], [.06, .78], [.05, .97], [.058, .975], [.058, 1.0], [0, 1.0]].map(p => new THREE.Vector2(p[0], p[1]));
-    const glassM = new THREE.MeshStandardMaterial({color: lin(0x10402a), roughness: .22, metalness: .1, emissive: lin(0x0c3a22), emissiveIntensity: .55});
+    const glassM = new THREE.MeshStandardMaterial({color: lin(0x10402a), roughness: .22, metalness: .1, emissive: lin(0x0c3a22), emissiveIntensity: .3});
     const foilM = new THREE.MeshStandardMaterial({color: lin(0xd2a646), roughness: .35, metalness: .7, emissive: lin(0x8a6418), emissiveIntensity: .7});
     const labelM = new THREE.MeshStandardMaterial({color: lin(0xf1ead8), roughness: .8, emissive: lin(0xf1ead8), emissiveIntensity: .35});
     const bottle = new THREE.Group(); bottle.name = 'esc-bottle';
@@ -326,7 +326,7 @@
     x.beginPath(); x.arc(220, 64, 15, 0, Math.PI * 2); x.fillStyle = state === 'open' ? '#55e08a' : '#e2503f'; x.fill(); FR.lockTex.needsUpdate = true; wake(4); }
   function openFridgeDoor(){ FR.anim = {t0: performance.now(), dur: reduce ? 10 : 1100}; SND.fridge(); }
   function fridgeStep(now){ if(!FR.anim) return; const u = clamp((now - FR.anim.t0) / FR.anim.dur, 0, 1), e = 1 - Math.pow(1 - u, 3); FR.open = e;
-    if(FR.pivot) FR.pivot.rotation.y = e * 1.78; if(FR.glow) FR.glow.material.opacity = .6 * e; wake(3); if(u >= 1) FR.anim = null; }
+    if(FR.pivot) FR.pivot.rotation.y = e * 1.78; if(FR.glow) FR.glow.material.opacity = .42 * e; wake(3); if(u >= 1) FR.anim = null; }
 
   /* ================================================================== Snowball in the house (a billboard of the shared drawing) */
   let CAT = null;
@@ -492,7 +492,7 @@
   .escPad{display:grid;grid-template-columns:repeat(3,72px);gap:8px;justify-content:center;margin:10px 0 2px}
   .escPad button{height:54px;border-radius:14px;border:1px solid #d6d2c8;background:#fff;font:500 22px Jost,sans-serif;color:var(--ink)}
   .escPad button:active{background:#eceae4;transform:scale(.97)}.escPad .z{grid-column:2}.escPad .c{grid-column:3;grid-row:4;font-size:18px}
-  #escToast{position:absolute;left:50%;top:38%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.5px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 40px);text-align:center}
+  #escToast{position:absolute;left:50%;top:15%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.5px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 40px);text-align:center}
   #escToast.on{opacity:1;transform:translate(-50%,0)}
   #escFade{position:fixed;inset:0;z-index:58;background:#0d111f;opacity:0;pointer-events:none;transition:opacity .32s ease}
   #escFade.on{opacity:1;pointer-events:auto}
@@ -530,7 +530,7 @@
     #escMap{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 24px));padding:14px;z-index:6;box-shadow:0 20px 70px rgba(10,14,28,.5)}
     #escMap.on{display:block}#escMap .plan{width:100%;height:0;padding-bottom:71%}#escMap .pl{font-size:13.5px;padding:7px 11px}#escMapX{display:grid;position:absolute;right:6px;top:4px;width:44px;height:44px;border:0;background:none;place-items:center;font-size:24px;color:var(--mut)}
     #escSun{order:1;max-width:none;margin:0;padding:8px 14px 10px}
-    #escCoach{top:292px;bottom:auto;font-size:14.5px}
+    #escCoach{top:236px;bottom:auto;font-size:14.5px}
     #escSheet{left:10px;right:10px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:560px;margin:0 auto;max-height:62vh;transform:translateY(20px);padding:16px 16px 14px}
     #escSheet.on{transform:none}#escSheet h3{font-size:24px}#escSheet p{font-size:15.5px}
     html.esc-ex #escDock{visibility:hidden}html.esc-ex.esc-exsun #escSun{visibility:visible;position:fixed;left:10px;right:10px;bottom:calc(var(--sheet-h,180px) + 18px)}
@@ -653,13 +653,21 @@
     for(const w of (WALKS[S.place] || [])) mark('walk', PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     for(const id in SPOTS){ const sp = SPOTS[id]; if(sp.from.includes(S.place) && (!sp.when || sp.when())) mark('look', sp.label(), sp.at(), () => examine(id), 's:' + id); } }
   function marksStep(){ if(!marks.length) return; const r = canvas.getBoundingClientRect(), hide = !!rig.move || S.busy || !S.started || S.done || !!S.ex;
-    const top = phone() ? 210 : 96, bot = r.height - (phone() ? 196 : 150), padX = 40; let nL = 0, nR = 0;
+    const top = phone() ? 210 : 96, bot = r.height - (phone() ? 196 : 150), padX = 40, items = [], placed = [];
     for(const m of marks){ if(hide){ if(m.on){ m.on = false; m.b.classList.remove('on'); } continue; }
-      _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3; const side = _v.x;
-      _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '';
-      if(behind || x < padX - 20 || x > r.width - padX + 20){ edge = (behind ? side < 0 : x < r.width / 2) ? 'L' : 'R'; x = edge === 'L' ? r.left + padX : r.left + r.width - padX; y = r.top + r.height * (phone() ? .5 : .42) + (edge === 'L' ? nL++ : nR++) * 68; }
-      else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); }
-      m.b.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; const cls = 'escMk ' + m.kind + ' on' + (edge ? ' edge ' + edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
+      _v.set(m.at[0], m.at[1], m.at[2]).applyMatrix4(camera.matrixWorldInverse); const behind = _v.z > -.3, side = _v.x;
+      _v.set(m.at[0], m.at[1], m.at[2]).project(camera); let x = r.left + (_v.x + 1) / 2 * r.width, y = r.top + (1 - _v.y) / 2 * r.height, edge = '', docked = false;
+      // out of view: dock it to the side it lies on, so nothing you can do from here is ever off screen
+      if(behind || x < r.left - 10 || x > r.left + r.width + 10 || y < r.top - 60 || y > r.top + r.height + 60){ docked = true; edge = (behind ? side < 0 : x < r.left + r.width / 2) ? 'L' : 'R'; }
+      else { x = clamp(x, r.left + padX, r.left + r.width - padX); y = clamp(y, r.top + top, r.top + bot); if(x < r.left + 88) edge = 'L'; else if(x > r.left + r.width - 88) edge = 'R'; }
+      items.push({m, x, y, edge, docked}); }
+    items.sort((p, q) => p.docked - q.docked);
+    const box = it => it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 206, it.y + 32] : it.edge === 'R' ? [it.x - 206, it.y - 32, it.x + 32, it.y + 32] : [it.x - 78, it.y - 32, it.x + 78, it.y + 88];
+    const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
+    for(const it of items){ if(it.docked){ it.x = it.edge === 'L' ? r.left + padX : r.left + r.width - padX; it.y = r.top + Math.max(top + 24, r.height * .42); }
+      let bx = box(it), n = 0; while(placed.some(q => hit(bx, q)) && n++ < 12){ it.y += 34; if(it.y > r.top + bot) it.y = r.top + top + 24; bx = box(it); }
+      placed.push(bx); const m = it.m;
+      m.b.style.transform = `translate(${it.x.toFixed(1)}px,${it.y.toFixed(1)}px)`; const cls = 'escMk ' + m.kind + ' on' + (it.edge ? ' edge ' + it.edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
   function tapAt(cx, cy){ if(rig.move || S.busy || S.ex) return; let best = null; for(const m of marks){ if(!m.on) continue; const q = m.b.getBoundingClientRect(), d = Math.hypot(q.left + q.width / 2 - cx, q.top + q.height / 2 - cy); if(d < 56 && (!best || d < best.d)) best = {m, d}; } if(best) best.m.act(); }
 
@@ -667,7 +675,7 @@
   function coach(){ if(!S.started || S.done){ coachE.classList.remove('on'); return; } const c = S.coach; let k = '';
     if(!c.look){ if(S.dragPx > 140){ c.look = true; } else k = 'look'; }
     if(!k && !c.walk) k = 'walk'; if(!k && !c.tap && S.place === 'coffee' && !S.ex) k = 'tap';
-    if(S.ex || rig.move || mapOpen() || (phone() && placeE.classList.contains('on'))) k = '';
+    if(S.ex || rig.move || mapOpen() || S.stage !== 'arrive' || (phone() && placeE.classList.contains('on'))) k = '';
     if(k === UI.coachK) return; UI.coachK = k; coachE.className = k ? 'on ' + k : '';
     if(k) coachE.innerHTML = k === 'look' ? ICO.drag + '<span>Drag to look around</span>' : k === 'walk' ? ICO.disc + '<span>Tap a white circle to walk there</span>' : ICO.ring + '<span>Tap a gold ring to look closer</span>'; }
 
@@ -690,7 +698,7 @@
       pose: () => S.doorShut ? {pos: [18.5, 4.2, 9.525], look: [22.15, 4.1, 9.525], fit: {w: 2.05, h: 3.45}} : {pos: [17.2, 4.7, 9.55], look: [22.1, 3.7, 9.55], fit: {w: 3.6, h: 6.4}}},
     paper: {from: ['great'], label: () => 'Paper on the window', at: () => PAPER.box ? [PAPER.box.max.x + .05, (PAPER.box.min.y + PAPER.box.max.y) / 2, (PAPER.box.min.z + PAPER.box.max.z) / 2] : [4.7, 3.2, 23.4],
       pose: () => { const b = PAPER.box, cy = (b.min.y + b.max.y) / 2, cz = (b.min.z + b.max.z) / 2; return {pos: [8.9, cy + .25, cz], look: [b.max.x, cy, cz], fit: {w: b.max.z - b.min.z + .9, h: b.max.y - b.min.y + .9}}; }},
-    floor: {from: ['great'], when: () => lightOn(S.hour), label: () => 'Light on the floor', at: () => [14.5, .15, 24.9], pos: [10.95, 7.7, 29.0], look: [10.95, 0, 24.5], fit: {w: 6.4, h: 3.3}, sun: true}};
+    floor: {from: ['great'], when: () => lightOn(S.hour), label: () => 'Light on the floor', at: () => [11.0, .15, 26.35], pos: [10.95, 7.7, 29.0], look: [10.95, 0, 24.5], fit: {w: 6.4, h: 3.3}, sun: true}};
   function examine(id){ const sp = SPOTS[id]; if(!sp || S.busy || rig.move || S.done || S.ex) return; S.seen[id] = true; S.coach.tap = true; ga('esc_look', {item: id}); SND.look();
     S.ex = {id, back: {yaw: rig.yaw, pitch: rig.pitch}}; S.busy = true; setMarks(); placeE.classList.remove('on'); sayE.classList.remove('on');
     document.documentElement.classList.add('esc-ex'); document.documentElement.classList.toggle('esc-exsun', !!sp.sun);
