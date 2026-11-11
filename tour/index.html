@@ -7242,7 +7242,7 @@ function feetOrCam(){ if(mode==='walk') return feet; if(mode==='tour'){ const l=
 /* r36: in Dollhouse / Design a click on the plan no longer drops you into Walk; it enlarges the plan (as does the corner button in any mode) */
 { const mini = $('#mini'), big = () => { mini.classList.toggle('big36'); }, b = document.createElement('button'); b.type = 'button'; b.id = 'mmBig36'; b.textContent = '\u2922'; b.title = 'Enlarge or shrink the floor plan'; b.setAttribute('aria-label', 'Enlarge or shrink the floor plan');
   b.style.cssText = 'position:absolute;right:6px;bottom:6px;width:28px;height:28px;border-radius:8px;border:1px solid rgba(0,0,0,.18);background:rgba(255,255,255,.92);font-size:15px;line-height:1;cursor:pointer;padding:0'; b.onclick = e => { e.stopPropagation(); big(); };
-  const st = document.createElement('style'); st.textContent = '.mini.big36 canvas{width:min(460px,78vw)}.mini{position:absolute}.mini:not(.open27) #mmBig36{display:none}html.ph .mini #mmBig36{display:block}'; document.head.appendChild(st); mm.parentElement.appendChild(b);
+  const st = document.createElement('style'); st.textContent = '.mini.big36 canvas{width:min(460px,78vw)}.mini.big36{z-index:5}.mini{position:absolute}.mini:not(.open27) #mmBig36{display:none}html.ph .mini #mmBig36{display:block}'; document.head.appendChild(st); mm.parentElement.appendChild(b);
   mm.parentElement.addEventListener('click', e => { if(e.target === mm && isDoll()){ e.stopPropagation(); big(); } }, true); }
 mm.addEventListener('click',e=>{
   const r=mm.getBoundingClientRect(); const u=(e.clientX-r.left)/r.width*mm.width, v=(e.clientY-r.top)/r.height*mm.height;
@@ -22441,9 +22441,10 @@ function r36WhereAt(x, z, f){
   let s = null; try{ s = BIM2S.spaceUnderFeet(z, x, f); }catch(e){}
   if(s && Math.abs(s.floorZ - f) < 2.6){ const id = GRID2ROOM[s.tourRoom] || s.tourRoom, lvl = {L0: 'lower', LG: 'garage', L1: 'main', L2: 'upper'}[s.storey] || 'main';
     if(/CLOSET|STORAGE/.test(s.id) && !/DRESSING/.test(s.id)) return {name: (s.raw && s.raw.name) || s.name || 'Closet', level: lvl, ph: [], key: s.id};
-    if(/STAIR/.test(s.id) && ROOM.stairs) return ROOM.stairs; if(id && ROOM[id]) return ROOM[id];
+    if(/STAIR/.test(s.id) && ROOM.stairs) return Math.abs(f - LV.main) < .45 && ROOM.entry ? ROOM.entry : ROOM.stairs;   /* r37: the tiled main-level floor of the stair hall is the entry foyer (the Entry stop stands on it and the label read 'Stairs'); the flights and the other landings stay 'Stairs' */
+    if(id && ROOM[id]) return ROOM[id];
     return {name: R36HALL[s.tourRoom] || (s.raw && s.raw.name) || s.name || 'Hall', level: lvl, ph: [], key: s.id}; }
-  try{ for(const sl of (BIM2S.meta.slabs || [])){ if(Math.abs(sl.z - f) > .8 || !inPoly(sl.outline, z, x)) continue; if(sl.interior){ if(sl.id === 'SL-DK-LAND' && ROOM.stairs) return ROOM.stairs; continue; } const id = R36OUT[sl.id]; if(id && ROOM[id]) return ROOM[id]; if(sl.id === 'SL-DK-REAR') return {name: 'Rear deck', level: 'main', ph: (ROOM.entry || {ph: []}).ph, key: sl.id}; } }catch(e){}
+  try{ for(const sl of (BIM2S.meta.slabs || [])){ if(Math.abs(sl.z - f) > .8 || !inPoly(sl.outline, z, x)) continue; if(sl.interior){ if(sl.id === 'SL-DK-LAND' && ROOM.stairs) return Math.abs(f - LV.main) < .45 && ROOM.entry ? ROOM.entry : ROOM.stairs; continue; } const id = R36OUT[sl.id]; if(id && ROOM[id]) return ROOM[id]; if(sl.id === 'SL-DK-REAR') return {name: 'Rear deck', level: 'main', ph: (ROOM.entry || {ph: []}).ph, key: sl.id}; } }catch(e){}
   try{ if(bim2InFootprint(x, z, .3)) return ROOM.stairs && Math.hypot(x - ROOM.stairs.at[0], z - ROOM.stairs.at[1]) < 12 ? ROOM.stairs : null; }catch(e){}   // indoors but between spaces (a stair flight, a threshold): the stair, or no change
   let best = null, bd = 1e9; for(const r of ROOMS){ if(r.level !== 'outside') continue; const d = Math.hypot(x - r.at[0], z - r.at[1]); if(d < bd){ bd = d; best = r; } }
   if(z > 3 && best && best.id !== 'street' && ROOM.street) best = ROOM.street;   // the front of the house (drive, walk, steps) is the street side
