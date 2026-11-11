@@ -54,7 +54,7 @@
     '@media (min-width:641px) and (max-width:1100px){#intro28 .ld,#intro28 .go{bottom:24px}#intro28 .cap{bottom:128px}}';   // r35: between phone and wide desktop the status card sat on top of the caption
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   var el = document.createElement('div'); el.id = 'intro28'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Introducing 118 Hillside Drive while the 3D house loads');
-  var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 3 ? 'src' : 'data-src') + '="../images/' + s[0] + '"></div>'; }).join('');
+  var slides = S.map(function(s, i){ return '<div class="sl' + (i ? '' : ' on') + '"><img alt="" decoding="async" ' + (i < 1 ? 'src' : 'data-src') + '="../images/' + s[0] + '"></div>'; }).join('');
   el.innerHTML = slides + '<div class="sh"></div>' +
     '<div class="top"><span class="brand">118 Hillside Drive</span><span class="dots" aria-hidden="true">' + S.map(function(_, i){ return '<i' + (i ? '' : ' class="on"') + '></i>'; }).join('') + '</span></div>' +
     '<div class="cap" aria-live="polite"><h2 class="t"></h2><p class="t"></p></div>' +
@@ -62,13 +62,13 @@
     '<div class="ld" role="status" aria-live="polite"><i aria-hidden="true"></i><div><b id="i28pct">Loading ' + (game ? 'the game' : 'the 3D house') + '…</b><span>' + (gname ? gname + ' is loading. ' : '') + 'Enjoy a few pictures of the house while it gets ready.</span></div></div>' +
     '<div class="bar" aria-hidden="true"><i></i></div>';
   document.body.appendChild(el);
-  /* r38 (phone audit): a photo fades in only once it has arrived (the smaller front photo waits underneath, so the screen is never an empty dark box),
-     and the caption sits above the loading card however many lines that card takes */
-  Array.prototype.forEach.call(el.querySelectorAll('.sl img'), function(im){ function on(){ im.classList.add('in'); } if(im.complete && im.naturalWidth) on(); else im.addEventListener('load', on); });
-  function fitCap(){ var d = el.querySelector('.ld'); if(d && d.offsetHeight) el.style.setProperty('--ldh', d.offsetHeight + 'px'); }
-  fitCap(); addEventListener('resize', fitCap); if(window.ResizeObserver){ try{ new ResizeObserver(fitCap).observe(el.querySelector('.ld')); }catch(e){} }
   var sl = el.querySelectorAll('.sl'), dots = el.querySelectorAll('.dots i'), cap = el.querySelector('.cap'), h2 = cap.querySelector('h2'), p = cap.querySelector('p'), bar = el.querySelector('.bar i');
   var k = 0, timer = null, done = false, readyAt = 0;
+  /* r38 (phone audit): a photo fades in only once it has arrived (the smaller front photo waits underneath, so the screen is never an empty dark box),
+     and the caption sits above the loading card however many lines that card takes */
+  Array.prototype.forEach.call(el.querySelectorAll('.sl img'), function(im, i){ function on(){ im.classList.add('in'); if(!i){ warm(1); warm(2); } } if(im.complete && im.naturalWidth) on(); else im.addEventListener('load', on); });
+  function fitCap(){ var d = el.querySelector('.ld'); if(d && d.offsetHeight) el.style.setProperty('--ldh', d.offsetHeight + 'px'); }
+  fitCap(); addEventListener('resize', fitCap); if(window.ResizeObserver){ try{ new ResizeObserver(fitCap).observe(el.querySelector('.ld')); }catch(e){} }
   function warm(i){ var im = sl[i % S.length].querySelector('img'); if(im && !im.getAttribute('src') && im.dataset.src) im.src = im.dataset.src; }
   function show(i){ var nimg = sl[i % S.length].querySelector('img'); warm(i); if(!(nimg.complete && nimg.naturalWidth)) return;   // hold the current slide until the next photo is in
     sl[k].classList.remove('on'); if(dots[k]) dots[k].classList.remove('on'); k = i % S.length; sl[k].classList.add('on'); if(dots[k]) dots[k].classList.add('on');
