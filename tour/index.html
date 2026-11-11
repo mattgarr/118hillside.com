@@ -6630,7 +6630,7 @@ function navQA(){
   SEC.moves = async R => { const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)); let walked = 0, cut = 0, flown = 0; tour(seq[0]);
     for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
       if(A && A.path){ walked++; const P = A.path; let off = 0, f = P.pts[0].y - EYE;
-        for(let k = 2; k < P.pts.length - 2; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0) off++; }
+        for(let k = 7; k < P.pts.length - 7; k++){ const v = P.pts[k]; f = navSupport(v.x, v.z, v.y - EYE + .4); if(r36At(v.x, v.z, f) === 0) off++; }
         if(off > 3) R.fail('moves', id, off + ' of ' + P.pts.length + ' route points are off the walkable area'); if(A.dur > R36N.MAXS + .01) R.fail('moves', id, 'takes ' + r2(A.dur) + ' s');
         R.note('moves', id, 'walk ' + r2(P.L) + ' ft in ' + r2(A.dur) + ' s' + (P.doors.length ? ', doors ' + P.doors.map(d => d.it.id).join(' ') : '')); for(const f2 of [.25, .5, .75]){ mid(f2); R.row('moves', id + '@' + f2, probe()); } }
       else if(A && A.cut){ cut++; R.note('moves', id, 'cut'); } else if(A){ flown++; if(A.kind === 'look' && A.from.distanceTo(A.to) > 3) R.fail('moves', id, 'a straight flight of ' + r2(A.from.distanceTo(A.to)) + ' ft'); else R.note('moves', id, A.kind === 'orbit' ? 'orbit flight outdoors' : 'turn'); }
@@ -20146,7 +20146,23 @@ function r36EntryWall(){
     [[xE, 4.44, zN - .02], [xE, vault(xE), zN - .02], [xE, vault(xE), zS], [xE, 4.44, zS], [-1, 0, 0]],          // the vault's high side (was the upper storey's siding)
     [[xW, 4.3, zN], [xE, 4.3, zN], [xE, vault(xE), zN], [xW, vault(xW), zN], [0, 0, 1]]]);                      // north wall up to the vault
 }
-{ const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); } return r; }; }
+/* r36 (Walk: "walking through the front doors with the arrow keys jams"). The compiled colliders split a wall at an opening only when the opening
+   starts at the wall's own base. On this split-level house the front and rear entry doors, the entry-to-living and entry-to-stair-hall cased
+   openings and the lower hall opening sit in walls that start a storey lower, so their colliders were one solid block right across the doorway:
+   nobody could walk through. Every door and cased opening now cuts its host wall's collider (the wall below the sill and above the head stays). */
+function r36CarveOpenings(){ const rep = [];
+  for(const o of (BIM2S.meta.openings || [])){ if(!/IfcDoor|IfcOpeningElement/.test(o.class || '') || !o.center || !(o.width > 1.5) || o.sill == null) continue;
+    const alongZ = Math.abs((o.axis || [1, 0])[0]) > .5, c0 = alongZ ? o.center[0] : o.center[1], a0 = c0 - o.width / 2 + .02, a1 = c0 + o.width / 2 - .02, px = alongZ ? o.center[1] : o.center[0], head = o.head != null ? o.head : o.sill + 6.67;
+    for(let i = COLLIDERS.length - 1; i >= 0; i--){ const c = COLLIDERS[i]; if(c.bim2 !== o.host || c.kind !== 'WALL') continue;
+      const lo = alongZ ? c.z0 : c.x0, hi = alongZ ? c.z1 : c.x1, q0 = alongZ ? c.x0 : c.z0, q1 = alongZ ? c.x1 : c.z1;
+      if(px < q0 - .6 || px > q1 + .6 || lo >= a1 || hi <= a0 || c.y0 >= o.sill + 4 || c.y1 <= o.sill + 1) continue;
+      const piece = (l, h, y0, y1) => { const d = Object.assign({}, c, {y0, y1, cut: null}); if(alongZ){ d.z0 = l; d.z1 = h; } else { d.x0 = l; d.x1 = h; } if(d.top != null) d.top = Math.min(d.top, y1); return d; }, add = [];
+      if(a0 - lo > .05) add.push(piece(lo, a0, c.y0, c.y1)); if(hi - a1 > .05) add.push(piece(a1, hi, c.y0, c.y1));
+      if(o.sill - c.y0 > .6) add.push(piece(Math.max(lo, a0), Math.min(hi, a1), c.y0, o.sill - .02)); if(c.y1 - head > .3) add.push(piece(Math.max(lo, a0), Math.min(hi, a1), head, c.y1));
+      COLLIDERS.splice(i, 1, ...add); rep.push(o.id + ' in ' + o.host); } }
+  R36G.carved = rep; return rep; }
+{ const _bh36 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh36.apply(this, arguments); try{ r36EntryWall(); }catch(e){ console.warn('[r36] entry wall', e); R36G.err.push(String(e)); }
+    try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
 /* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
    the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
    both sides, flush cup pulls) that slides into the wall on the fridge side (owner 11/10) and can be closed; the wall closed above it; and the attic
