@@ -202,6 +202,7 @@ svg.scene .lit.off{opacity:0}
 </main>
 <p class="foot">Real photos of 118 Hillside Drive, Woodside. Decorations are illustrations, and the snow is wishful thinking. Snowball is real.</p>
 <div id="toast" role="status"></div>
+<script src="../../assets/snowball.js"></script>
 <script>
 (function(){
 'use strict';
@@ -350,27 +351,8 @@ function bulbs(pts, o){ const R = rng(o.seed || 1); let s = '';
     s += `<g class="b" style="--d:${f(R() * 3)};--c:${f((i % 4) * .3)}">` + (dark ? '' : `<circle cx="${f(x)}" cy="${f(y)}" r="${f(o.h)}" fill="url(#${halo(c)})"/>`) +
       `<circle cx="${f(x)}" cy="${f(y)}" r="${f(o.r)}" fill="${c}"${dark ? ' stroke="#4a4a4a" stroke-width=".6"' : ''}/>` + (o.r > 2.5 && !dark ? `<circle cx="${f(x - o.r * .3)}" cy="${f(y - o.r * .3)}" r="${f(o.r * .32)}" fill="#fff" opacity=".85"/>` : '') + '</g>'; });
   return s; }
-function cat(x, y, s, o){ o = o || {}; const id = 'c' + Math.round(x) + '_' + Math.round(y); let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${s}) translate(-106 -218)">`;
-  const rim = o.rim || '#4a5878';
-  g += `<g class="tail"><path d="M148 204 C188 200 198 150 174 126 C167 119 158 124 163 132 C180 152 174 186 146 190Z" fill="#0c0d12" stroke="${rim}" stroke-width="1.4" stroke-opacity=".55"/></g>`;
-  g += `<path d="M58 216 C40 204 38 160 56 128 C66 110 84 100 104 100 C132 100 154 126 156 166 C158 198 146 216 126 218Z" fill="#0c0d12" stroke="${rim}" stroke-width="1.6" stroke-opacity=".55"/>`;
-  g += `<ellipse cx="98" cy="160" rx="22" ry="34" fill="#1a1f2c" opacity=".55"/>`;
-  g += `<path d="M82 216 C80 190 84 162 92 148 L106 148 C108 170 106 198 104 216Z" fill="#101219"/><path d="M108 216 C108 194 112 168 118 152 L130 154 C132 178 130 200 128 216Z" fill="#101219"/>`;
-  g += `<ellipse cx="93" cy="216" rx="13" ry="5.5" fill="#15171f"/><ellipse cx="119" cy="216" rx="13" ry="5.5" fill="#15171f"/>`;
-  g += `<path d="M60 74 C58 56 60 36 66 20 C76 28 86 38 92 44 C100 42 110 42 118 44 C124 38 134 28 146 20 C152 36 154 56 152 74 C150 100 130 116 106 116 C82 116 62 100 60 74Z" fill="#0c0d12" stroke="${rim}" stroke-width="1.6" stroke-opacity=".6"/>`;
-  g += `<path d="M69 30 L84 45 L70 55Z" fill="#3b2b37"/><path d="M143 30 L128 45 L142 55Z" fill="#3b2b37"/>`;
-  if(o.glow) g += `<circle cx="88" cy="74" r="22" fill="url(#eyeHalo)"/><circle cx="124" cy="74" r="22" fill="url(#eyeHalo)"/>`;
-  g += `<g class="eyes"><path d="M76 74 C80 65 96 65 100 74 C96 83 80 83 76 74Z" fill="url(#eyeG)"/><path d="M112 74 C116 65 132 65 136 74 C132 83 116 83 112 74Z" fill="url(#eyeG)"/>` +
-    `<ellipse cx="88" cy="74" rx="2.6" ry="7.6" fill="#0a0a0a"/><ellipse cx="124" cy="74" rx="2.6" ry="7.6" fill="#0a0a0a"/><circle cx="91.5" cy="70.5" r="1.8" fill="#fff"/><circle cx="127.5" cy="70.5" r="1.8" fill="#fff"/></g>`;
-  g += `<path d="M102 90 L110 90 L106 95Z" fill="#3a2f3c"/><path d="M106 95 C104 99 100 100 97 99 M106 95 C108 99 112 100 115 99" stroke="#3a2f3c" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
-  g += `<path d="M95 93 L58 88 M95 96 L58 99 M117 93 L154 88 M117 96 L154 99" stroke="#9aa3b8" stroke-width=".9" opacity=".75" stroke-linecap="round"/>`;
-  const w = o.wear;
-  if(w && w.startsWith('scarf')){ const c = {scarfRed: ['#c3262f', '#f4efe6'], scarfBlue: ['#2f5fb8', '#f4f6ff'], scarfGreen: ['#2d6b3c', '#e8b84a']}[w];
-    g += `<path d="M62 104 C82 124 130 124 150 104 L153 119 C132 139 80 139 60 119Z" fill="${c[0]}"/><path d="M68 112 C88 128 124 128 144 112" stroke="${c[1]}" stroke-width="3" fill="none" stroke-dasharray="7 6"/>` +
-      `<path d="M124 122 L140 166 L127 170 L114 126Z" fill="${c[0]}"/><path d="M128 164 L141 160 M127 156 L139 152" stroke="${c[1]}" stroke-width="2.4"/>` +
-      `<path d="M129 168 L127 176 M133 167 L132 175 M137 166 L137 174" stroke="${c[0]}" stroke-width="1.6"/>`; }
-  if(w === 'bell') g += `<path d="M66 108 C86 124 126 124 146 108" stroke="#b5232c" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="106" cy="125" r="8" fill="url(#brass)"/><path d="M100 127 L112 127" stroke="#6b5016" stroke-width="1.4"/><circle cx="106" cy="129" r="1.6" fill="#4a3a10"/>`;
-  return g + '</g>'; }
+function cat(x, y, s, o){ o = o || {}; const id = 'sb' + Math.round(x * 3) + '_' + Math.round(y * 3) + '_' + Math.round(s * 100);   // the shared Snowball drawing (assets/snowball.js)
+  return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s * 52) / 100}) translate(-240 -462)">${window.SNOWBALL ? SNOWBALL.g({id, glow: o.glow, wear: o.wear, seed: 7}) : ''}</g>`; }
 function snowman(x, y, s, scarf){ return `<g transform="translate(${f(x)} ${f(y)}) scale(${s})"${ns()}><ellipse cy="2" rx="46" ry="9" fill="#cfdbe7"/><circle cy="-34" r="38" fill="url(#snowBall)"/><circle cy="-92" r="28" fill="url(#snowBall)"/><circle cy="-136" r="20" fill="url(#snowBall)"/>` +
   `<path d="M-24 -96 L-62 -122 M-52 -115 L-60 -130 M24 -96 L60 -116 M50 -110 L62 -124" stroke="#5b4430" stroke-width="3" stroke-linecap="round"/>` +
   `<circle cx="-7" cy="-140" r="2.6" fill="#1b1b1b"/><circle cx="7" cy="-140" r="2.6" fill="#1b1b1b"/><path d="M0 -134 L18 -130 L0 -129Z" fill="#ee7b22"/>` +
@@ -639,7 +621,7 @@ function sw(stepId, v){ // option swatches, drawn with the same pieces as the sc
   if(stepId === 'ter'){ const m = {bistro: (() => { const p = swag([2, 14], [62, 14], 16); return `<path d="${P(p)}" stroke="#151c16" stroke-width="1.2" fill="none"/>` + bulbs(along(p, 12, 4), {colors: ['#ffd590'], r: 3.6, h: 10}); })(), luminarias: luminaria(20, 54, 1.3) + luminaria(44, 54, 1.3), lanterns: `<g transform="translate(32 54) scale(1.6)"><path d="M-9 0 L9 0 L9 -24 L-9 -24Z M-6 -3 L6 -3 L6 -21 L-6 -21Z" fill="#c8ccd6" fill-rule="evenodd"/><path d="M-10 -24 L10 -24 L0 -32Z" fill="#c8ccd6"/>${flame(0, -6, .9, 0)}</g>`, smoker: `<ellipse cx="32" cy="38" rx="20" ry="18" fill="#2e7b59"/><path d="M14 30 C22 26 42 26 50 30" stroke="#1d4f39" stroke-width="2" fill="none"/><circle cx="32" cy="42" r="22" fill="url(#h${'ff7a2a'})"/><path d="M24 58 L28 52 M40 58 L36 52" stroke="#555" stroke-width="3"/>`}; halo('#ff7a2a'); return wrap(m[v]); }
   if(stepId === 'weather'){ const R = rng(v.length); let fl = ''; const n = {clear: 0, dusting: 10, snowday: 34}[v]; for(let i = 0; i < n; i++) fl += `<circle cx="${f(R() * 64)}" cy="${f(R() * 64)}" r="${f(1 + R() * 1.8)}" fill="#fff"/>`;
     return wrap(v === 'clear' ? `<circle cx="38" cy="24" r="12" fill="#fbf3d8"/><circle cx="44" cy="20" r="11" fill="#1c2642"/>` + [[12, 14], [20, 40], [52, 46], [10, 52], [30, 52]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.2" fill="#fff"/>`).join('') : `<path d="M0 50 C16 44 40 46 64 50 L64 64 L0 64Z" fill="${v === 'snowday' ? '#eef3f8' : '#a8b4c8'}"/>` + fl); }
-  if(stepId === 'wear') return wrap(cat(32, 96, .44, {wear: v}), '0 0 64 64');
+  if(stepId === 'wear') return `<svg viewBox="120 30 250 250" aria-hidden="true">${SNOWBALL.g({id: 'sw' + v, wear: v, seed: 7})}</svg>`;
   return ''; }
 function tagHTML(step, o, on){ const s = suggested(o) ? `<span class="sug">${esc(sugLabel(o))}</span>` : '';
   return `<button type="button" class="tag" data-v="${o.v}" aria-pressed="${on}"><span class="sw">${sw(step, o.v)}</span><span><b>${esc(o.b)}</b><small>${esc(o.n)}</small>${s}</span></button>`; }
@@ -751,7 +733,7 @@ function chime(k, v){ if(!sound) return; try{ AC = AC || new (window.AudioContex
 function bell(){ if(!sound) return; try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const t = AC.currentTime; [523.25, 659.25, 783.99, 1046.5].forEach((fr, i) => { tone(fr, t + i * .12, 1.6, .07); tone(fr * 2.01, t + i * .12, .8, .02); }); }catch(e){} }
 
 /* ---------- go ---------- */
-$('#avatar').innerHTML = `<svg viewBox="0 0 212 230">${cat(106, 226, 1, {})}</svg>`;
+$('#avatar').innerHTML = SNOWBALL.svg({id: 'sbav', seed: 7}).replace('viewBox="96 18 304 462"', 'viewBox="110 10 280 300"');
 $('#back').onclick = () => { if(cur > 1){ cur--; renderStep(); } };
 $('#next').onclick = () => { if(cur < STEPS.length - 1){ ga('deck_step', {step: STEPS[cur].id}); cur++; renderStep(); window.scrollTo({top: 0, behavior: 'smooth'}); } };
 const hm = /#h=([A-Za-z0-9_-]+)/.exec(location.hash);
