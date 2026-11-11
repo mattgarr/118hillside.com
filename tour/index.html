@@ -22351,6 +22351,8 @@ function r36Game(){ try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES
             if(q){ const dx = q.x - a.to.x, dz = q.z - a.to.z; a.to.x = q.x; a.to.z = q.z; a.to.y = f + EYE; a.toT.x += dx; a.toT.z += dz; feet = f; } } }
         const k = r36Pathify(a, {faceTravel: auto, pitch: pitch}); if(k === 0 && (Math.hypot(a.to.x - P0.x, a.to.z - P0.z) > 3 || Math.abs(a.to.y - P0.y) > 1.5 || !r36LineClear(P0, a.to))) r36Cut(a, (r36WhereAt(a.to.x, a.to.z, feet) || {}).name); } }catch(e){ console.warn('[r36 nav] move', e); }
     return r; }; }
+/* a white circle behind something solid is not under the pointer: a tap on a vase or a wall no longer picks the circle that happens to lie beyond it */
+{ const _pw36 = pickWaypoint; pickWaypoint = function(cx, cy){ const w = _pw36.apply(this, arguments); if(!w || !R36N.on) return w; try{ const h = pick(cx, cy), u = w.userData; if(h && !h.terrain && h.distance < Math.hypot(u.x - camera.position.x, u.y - camera.position.y, u.z - camera.position.z) - 1.5) return null; }catch(e){} return w; }; }
 /* walk: 'Walk to' a room = its guided-tour view, level, standing in the walkable area */
 function r36GoRoom(r){
   interrupt(); if(mode !== 'walk') setMode('walk', {keep: true}); if(nav !== 'look'){ nav = 'look'; lookFromCamera(); }
