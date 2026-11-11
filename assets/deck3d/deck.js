@@ -483,7 +483,8 @@
   const wishAt = g => PLACES.findIndex(p => g.needs.some(n => n.place === p.id));
   function wave(){ if(PHASE !== 'decor' || MODE !== 'story') return; const i = PLACES.indexOf(PLACE); if(i < 0) return;
     const due = WAVES.flat().map(guest).filter(g => wishAt(g) <= i && !arrived.includes(g.id)); if(!due.length) return;
-    due.forEach(g => { arrived.push(g.id); unread++; }); badge(); queue.push(due.map(g => g.id)); pump(); }
+    due.forEach(g => { arrived.push(g.id); unread++; }); badge(); queue = [due.map(g => g.id)];   // anything still waiting to drop down is already in the messages; the wishes for this place come first
+    const n = $('#dkNew'); if(n.classList.contains('on')){ clearTimeout(newT); n.classList.remove('on'); setTimeout(pump, 380); } else pump(); }
   function pump(){ if(!queue.length || $('#dkNew').classList.contains('on')) return; const ids = queue.shift(), gs = ids.map(guest); sfx('message'); const b = $('#dkMsgBtn'); b.classList.remove('new'); void b.offsetWidth; b.classList.add('new');
     const n = $('#dkNew'); n.innerHTML = `<span class="k">${gs.length > 1 ? 'New messages' : 'New message'}. Tap to see them all.</span>` + gs.map(msgHTML).join('<div style="height:8px"></div>'); n.classList.add('on'); clearTimeout(newT);
     newT = setTimeout(() => { n.classList.remove('on'); setTimeout(pump, 500); }, (reduce ? 6500 : 5200) + (gs.length - 1) * 3500); }
