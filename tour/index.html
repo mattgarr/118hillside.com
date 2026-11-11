@@ -22211,6 +22211,11 @@ function r36Grids(){
     for(const F of FIXOBJ){ if(!F.obj || (F.v && F.v !== ACTIVE_VAR)) continue; let vis = true; for(let o = F.obj; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) F.obj.traverseVisible(doMesh); }
     for(const it of DOOR28.items) if(it.t > .3 && door28Live(it)) for(const pt of it.parts) if(pt.sign != null && pt.piv) pt.piv.traverse(doMesh);   // a door leaf that stands open is in the way like furniture
     for(const m of (BIM2S.meshes || [])) if(/^builtins\|/.test(m.name || '')){ let vis = true; for(let o = m; o; o = o.parent) if(!o.visible){ vis = false; break; } if(vis) doMesh(m); } }catch(e){ console.warn('[r36 nav] furniture', e); }
+  // owner 11/11: "the big shower upstairs should be enterable". Its sliding glass door stands open (see r36 fixtures); the gap it leaves is a doorway
+  try{ for(const f of (BIM2S.meta.furnishings || [])){ if(f.id !== 'FX-showerGlass-22' || !f.footprint) continue; const g = LVS.find(q => Math.abs(q.L - f.at[2]) < .5); if(!g) continue;
+      const ys = f.footprint.map(q => q[1]), zs = f.footprint.map(q => q[0]), zm = (Math.min(...zs) + Math.max(...zs)) / 2, i0 = ci(Math.min(...ys)), i1 = ci(Math.max(...ys)); let best = null, run = null;
+      for(let i = i0; i <= i1 + 1; i++){ const hit = i > i1 || [-.3, 0, .3].some(d => g.fb[cj(zm + d) * NX + i]); if(!hit){ run = run || [i, i]; run[1] = i; } else if(run){ if(!best || run[1] - run[0] > best[1] - best[0]) best = run; run = null; } }
+      if(best && best[1] - best[0] >= 2) for(let i = best[0]; i <= best[1]; i++) for(let j = cj(zm - 1.9); j <= cj(zm + 1.9); j++) if(g.base[j * NX + i]) g.door[j * NX + i] = 1; R36N.shower = best ? [cx(best[0]), cx(best[1])] : null; } }catch(e){}
   const rr = Math.ceil(R36N.RF / c), disc = []; for(let dj = -rr; dj <= rr; dj++) for(let di = -rr; di <= rr; di++) if((di * di + dj * dj) * c * c <= R36N.RF * R36N.RF + .01) disc.push([di, dj]);
   for(const g of LVS){ for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++) if(g.fb[j * NX + i]) for(const [di, dj] of disc){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ){ g.blk[b * NX + a] = 1; if(Math.abs(di) + Math.abs(dj) <= 1) g.f1[b * NX + a] = 1; } }
     const free = new Uint8Array(n); for(let k = 0; k < n; k++) free[k] = g.base[k] && (g.door[k] || (g.st[k] ? !g.fb[k] && !g.sp[k] : !g.blk[k] && !g.wb[k])) ? 1 : 0;   // by a stair, a basket or newel only blocks its own footprint
@@ -22232,6 +22237,7 @@ function r36Nearest(x, z, f, rad, force, pred){ if(!force && r36At(x, z, f) !== 
 function r36WalkOK(x0, z0, x1, z1, s){   // a walking step keeps footing (the older rule) and stays in the walkable area; a walker who is outside it may always move toward it
   if(!navStepOK(x0, z0, x1, z1, s)) return false; if(r36At(x1, z1, feet) !== 0) return true; if(r36At(x0, z0, feet) !== 0) return false;
   const q = r36Nearest(x0, z0, feet, 10); return !q || (q.x - x0) * (x1 - x0) + (q.z - z0) * (z1 - z0) > 0; }
+{ const _fx36 = buildFixturesBIM; buildFixturesBIM = function(list){ let L = list; try{ L = (list || BIM.fixtures).map(f => f && f.id === 'FX-showerGlass-22' ? Object.assign({}, f, {opts: Object.assign({}, f.opts || {}, {open: 1})}) : f); }catch(e){ L = list; } return _fx36.call(this, L); }; }   // the primary shower's sliding door stands fully open (walk-in)
 /* ---- routes */
 function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by A to a node by B, or null
   const G = r36Grids(), c = G.c, NX = G.NX, NZ = G.NZ, doors = r36Doors(), was = doors.map(it => it.coll.pass); for(const it of doors) it.coll.pass = true;
@@ -22313,7 +22319,12 @@ function r36Pathify(a, o){ o = o || {};
   const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > R36N.CAP) return 0;
   a.path = R; a.lift = 0; a.dur = clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS); a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
   { const dir = new THREE.Vector3(); camera.getWorldDirection(dir); a.yaw0 = Math.atan2(-dir.x, -dir.z); a.pitch0 = Math.asin(clamp(dir.y, -1, 1)); }
-  if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)], dx = e.x - b.x, dz = e.z - b.z, L = Math.hypot(dx, dz); if(L > .5){ const cp = Math.cos(o.pitch || 0); a.toT.set(Q.x + dx / L * 20 * cp, Q.y + Math.sin(o.pitch || 0) * 20, Q.z + dz / L * 20 * cp); } }
+  if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)]; let dx = e.x - b.x, dz = e.z - b.z; const L = Math.hypot(dx, dz);
+    if(L > .5){ dx /= L; dz /= L;
+      // arrive facing the way you walked; if that is a wall within 4 ft, the most open view within 75 degrees of it (never a swing away from where you were going)
+      try{ const objs = withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible), rc = new THREE.Raycaster(), O = new THREE.Vector3(Q.x, Q.y - .4, Q.z), view = (vx, vz) => { rc.set(O, new THREE.Vector3(vx, 0, vz)); rc.far = 30; for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if(h.object.isSprite || (m && m.transparent && m.opacity < .5)) continue; return h.distance; } return 30; };
+        if(view(dx, dz) < 4){ let best = null, bs = 0; for(let k = -5; k <= 5; k++){ if(!k) continue; const an = k * Math.PI / 12, vx = dx * Math.cos(an) - dz * Math.sin(an), vz = dx * Math.sin(an) + dz * Math.cos(an), d = view(vx, vz) - Math.abs(k) * .6; if(d > bs){ bs = d; best = [vx, vz]; } } if(best && bs > 5){ dx = best[0]; dz = best[1]; } } }catch(e){}
+      const cp = Math.cos(o.pitch || 0); a.toT.set(Q.x + dx * 20 * cp, Q.y + Math.sin(o.pitch || 0) * 20, Q.z + dz * 20 * cp); } }
   { const [y1, p1] = lookYawPitch([Q.x, Q.y, Q.z], [a.toT.x, a.toT.y, a.toT.z]); a.yaw1 = y1; a.pitch1 = p1; }
   R36N.last = {kind: 'walk', L: +R.L.toFixed(1), dur: +a.dur.toFixed(2), doors: R.doors.map(q => q.it.id)}; return 1; }
 function r36LineClear(A, B){ try{ const d = B.clone().sub(A), L = d.length(); if(L < 1) return true; const rc = new THREE.Raycaster(A, d.normalize(), 0, L); for(const h of rc.intersectObjects(withVar(['main', 'upper', 'roof', 'ceil']).filter(g => g.visible), true)){ const m = h.object.material; if(h.object.isSprite || (m && m.transparent && m.opacity < .5)) continue; return false; } }catch(e){} return true; }
