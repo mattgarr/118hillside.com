@@ -20831,8 +20831,14 @@ function r42MergeDoorPanels(){
     const ia = A.index, ib = Bg.index, I = new (na + nb > 65535 ? Uint32Array : Uint16Array)(ia.count + ib.count);
     for(let i = 0; i < ia.count; i++) I[i] = ia.getX(i); for(let i = 0; i < ib.count; i++) I[ia.count + i] = na + ib.getX(i);
     try{ const nv = r42DoorSticking(G, na, nb, I, ia.count); R42D.bevel += nv; (R42D.per || (R42D.per = {}))[it.id + ':' + p.k] = nv; }catch(e){ R42D.skipped.push(it.id + ':' + p.k + ' bevel ' + e); }
-    G.setIndex(new THREE.BufferAttribute(I, 1)); G.computeBoundingBox(); G.computeBoundingSphere(); G.userData = Object.assign({}, A.userData);
-    T.geometry = G; F.parent.remove(F); F.visible = false; F.userData.r42merged = T.uuid; R42D.merged++; R42D.tris += I.length / 3; }
+    // in place on the frame's own geometry object: the design-concept switch (BIM2.setVariant) hides an element by collapsing its triangles
+    // in the as-loaded geometry's index (ranges in userData.bim2), so the object, its ranges and its cached index must carry the panels too
+    for(const k of attrs) A.setAttribute(k, G.attributes[k]); for(const k of Object.keys(A.attributes)) if(!attrs.includes(k)) A.deleteAttribute(k);
+    A.setIndex(new THREE.BufferAttribute(I, 1)); A.computeBoundingBox(); A.computeBoundingSphere();
+    const uT = T.userData, uF = F.userData.bim2, n0 = ia.count / 3;
+    if(uT.bim2 && uT.bim2.ranges){ const add = uF && uF.ranges && uF.ranges.length ? uF.ranges.map(r => [r[0], r[1], r[2] + n0, r[3]]) : [[((uT.bim2.ranges[0] || [])[0]) || it.id, null, n0, ib.count / 3]]; uT.bim2.ranges.push(...add); uT.bim2.ranges.sort((a, b) => a[2] - b[2]); }
+    if(uT.idx0) uT.idx0 = A.index; if(uT.alt) uT.alt = {};
+    F.parent.remove(F); F.visible = false; F.userData.r42merged = T.uuid; R42D.merged++; R42D.tris += I.length / 3; }
   BIM3.report.r42doors = {merged: R42D.merged, tris: R42D.tris, skipped: R42D.skipped.length}; return R42D; }
 { const _b42d = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b42d.apply(this, arguments); try{ r42MergeDoorPanels(); }catch(e){ console.warn('[r42] door panels', e); } return r; }; }
 /* ---- runtime checks (the page no longer judges the model's geometry; compile/validate/kernel reports do): what the page itself must get
