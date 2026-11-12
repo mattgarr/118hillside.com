@@ -19807,6 +19807,7 @@ async function bim2Load(){
   BIM2T.load0 = performance.now();
   try{ railMats(); }catch(e){ console.warn('[bim2] rail materials', e); }   // stair/rail photo materials are created lazily by the page
   BIM2S = await BIM2.load({THREE, glb: BIM2_CFG.glb, meta: BIM2_CFG.meta, mapMaterial: bim2MapMaterial, groupOf: bim2GroupOf, attach: (g, m) => grp(g).add(m)});
+  try{ ghostFlattenJogs(BIM2S); }catch(e){ console.warn('[ghost41] jogs', e); }   // r41 G4: collinear wall segments a stud's width apart -> one flat face
   KGEO = null; window.__KSRC = 'bim2'; window.__BIM2 = BIM2; SCENE_META = BIM2S.meta; HOUSE = BIM2S;
   // design options (meta.options): nothing is fetched at boot; an option's package is fetched the first time it is shown (bim2EnsureOption)
   if(MODEL){ MODEL.rooms = null; MODEL.collide = null; }   // the legacy room grid is retired: rooms come from the meta spaces
@@ -21858,7 +21859,8 @@ function r13Band(P, C, rows, shade){ for(let r = 0; r + 1 < rows.length; r++) fo
    break (an opening, an open-plan edge), so a band never ends in a hard square end */
 const R13U = [0, .12, .3, .55, 1], R13PROF = R13U.map(u => (1 - u) * (1 - u));
 function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0), on = i => !!rows[0][i];
-  for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = [.15, .55, .85, 1][d]; }
+  const TP = /[?&]ghost41=0\b/.test(location.search) ? [.15, .55, .85, 1] : [0, .45, .8, 1];   // r41 G3: a band's last column fades to nothing (was .15: a square end)
+  for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = TP[d]; }
   return (r, i) => 1 - (1 - s0) * R13PROF[r] * tp[i]; }
 
 /* R13-1 rule:room-edge-occlusion - every interior read as evenly lit white boxes: no darkening where wall meets ceiling, wall meets
@@ -21869,6 +21871,7 @@ function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0)
    the wall base, and up both walls of each inside corner. Merged into one mesh per house group; fades with EXPO_IN (indoors only) and
    only in Tour / Walk. */
 const R13E = {step: .75, ceilW: 1.6, wallW: 1.4, floorW: .8, vertW: 1.3, sCeil: .6, sWall: .64, sFloor: .58, sVert: .66, lift: .012};
+if(!/[?&]ghost41=0\b/.test(location.search)) Object.assign(R13E, {ceilW: 1.1, wallW: .9, floorW: .6, vertW: .9, sCeil: .86, sWall: .88, sFloor: .84, sVert: .9});   // r41 G3: a soft few-percent falloff (was 34-42 % over 1.3-1.6 ft)
 function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
   const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
   const bucket = k => out[k] = out[k] || {P: [], C: []};
@@ -21900,10 +21903,12 @@ function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null
       const e2 = inN((i + 1) % n); if(!e2 || e2.L < .8) continue;
       const cr = e.dx * e2.dy - e.dy * e2.dx; if(cr * sg < .5) continue;   // a convex polygon vertex = an inside room corner (~90 deg)
       const vx = P[(i + 1) % n][0], vy = P[(i + 1) % n][1], cv = ceil(vx - e.dx * .1 + e.nx * .1, vy - e.dy * .1 + e.ny * .1); if(cv == null) continue; rep.corners++;
-      for(const [dx, dy, nx, ny] of [[-e.dx, -e.dy, e.nx, e.ny], [e2.dx, e2.dy, e2.nx, e2.ny]]){   // along each wall, away from the corner
+      const SIDES = [[-e.dx, -e.dy, e.nx, e.ny], [e2.dx, e2.dy, e2.nx, e2.ny]], G41 = !/[?&]ghost41=0\b/.test(location.search);
+      const both = z => SIDES.every(([sx, sy, snx, sny]) => wall(vx + sx * .4, vy + sy * .4, snx, sny, z) && wall(vx + sx * 1.1, vy + sy * 1.1, snx, sny, z));   // r41 G3: a corner is two walls
+      for(const [dx, dy, nx, ny] of SIDES){   // along each wall, away from the corner
         const W = E.vertW, L = E.lift, rows = R13U.map(() => []), zs = []; for(let z = f + .05; z < cv - .05; z += 1) zs.push(z); zs.push(cv - .02);
         for(let k = 0; k < zs.length; k++){ const z = zs[k], z1 = zs[Math.min(zs.length - 1, k + 1)], z0 = zs[Math.max(0, k - 1)];
-          const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
+          const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && (!G41 || both(z)) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
           R13U.forEach((u, r) => rows[r].push(ok ? V(vx + dx * u * W + nx * L, vy + dy * u * W + ny * L, z) : null)); }
         // rows[r] = a constant distance from the corner, running up the wall
         r13Band(bucket(top).P, bucket(top).C, rows, r13Shade(rows, E.sVert)); } } }
@@ -22215,6 +22220,82 @@ if(R17.on){
       if(R17.meshes) for(const m of R17.meshes) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick17); };
   requestAnimationFrame(tick17); }
 BIM3.report.r17 = R17.report;
+/* ===== GHOST r41 (owner 11/12: "shadows at random places", "whole shadows popping in and out when I pivot", "the corner darkening looks
+   overdone", "no jogs that aren't in the house") =====================================================================================
+   G1 rule:shadow-map-integrity - the sun's shadow map is cached and redrawn only when something asks (PERF shadow cache). The redraw
+      happened inside whichever scene render came first after the request, and two of those draw the scene in a different state:
+      (a) the speed governor's small-object cull (GOV.cull, motion levels 3-7) hides every mesh under k.cull pixels for the frame, so a
+          redraw during motion baked the map WITHOUT them (measured at the kitchen stop: 170 casters missing - cabinet hardware, door
+          leaves and window-shade cells of other rooms) and it stayed that way until the next redraw;
+      (b) the mirror probes (glass20Step) draw cube faces with every mirror hidden; a redraw that landed there baked the map without
+          the mirrors and nightstand / medicine-cabinet glass (15 casters).
+      Every tiny pivot is a "move", so whole shadows dropped out and came back. Now the cull hides objects from the camera only (the
+      shadow pass shows them), and the map is never redrawn while drawing into a cube target (it waits for the next camera frame).
+   G2 rule:no-screen-space-ao - SSAO is drawn from the depth buffer of the current view: what is off screen does not occlude, so corner
+      shading popped in and out at the screen edges as the view turned, its 1.6-ft kernel drew halos and doubled edges, and the governor
+      switched it between full, half resolution and off as the camera stopped and started. Removed at every level (the composer keeps
+      its MSAA beauty pass and the grade). Occlusion is now view-independent only: the r13 room-edge bands (computed once, in world
+      space), the r13 contact shadows under furniture and the sun's shadow map. Shadow filter taps are the same (16) at every level,
+      so a still frame and a moving frame draw the same shadow edge.
+   G3 rule:subtle-room-edges - the r13 bands took 34-42 % of the light at a corner over 1.3-1.6 ft (a grey stripe down every corner and
+      along every ceiling line; real white rooms in the listing photos show a soft few-percent falloff). Now 10-16 % over .6-1.1 ft,
+      band ends fade to nothing (no square ends), and a vertical corner band is laid only where BOTH walls of the corner are there at
+      that height (an open stair edge is not a corner: the loft wall beside the handrail and the stair-hall wall had full-height
+      bands at corners that do not exist).
+   G4 rule:flat-walls - collinear wall segments of the BIM model that miss each other by 1/4"-3" (two walls drawn a stud's
+      width apart) showed a seam, two shades and a stepped baseboard (living room left of the window, primary bedroom between the
+      closet door and the corner, ...). Right after the model loads, each such room face is moved onto the plane of the longer segment
+      it meets: wall paint, baseboard and casing vertices within 1" in front of the short face, the ceiling / floor edge on that line,
+      and the room polygon's edge (so the corner bands and the interior mask follow). Real jogs (more than 3") are untouched.
+   ?ghost41=0 turns G1-G4 off. */
+const GHOST41 = window.GHOST41 = {on: !/[?&]ghost41=0\b/.test(location.search), jogs: [], shadowSkips: 0, cullShown: 0, ssao: 'off'};
+function ghostFlattenJogs(S){
+  if(!GHOST41.on || !S || !S.colliders || !S.meshes) return 0;
+  const MAX = .26, MIN = .015, faces = [];
+  for(const c of S.colliders){ if(c.kind !== 'WALL' || !c.poly || c.poly.length < 4) continue; const P = c.poly, n = P.length; let A = 0;
+    for(let i = 0, j = n - 1; i < n; j = i++) A += P[j][0] * P[i][1] - P[i][0] * P[j][1];
+    for(let i = 0; i < n; i++){ const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); if(L < 1) continue;
+      const ux = dx / L, uy = dy / L, s = A > 0 ? 1 : -1; faces.push({c, a, b, L, u: [ux, uy], n: [uy * s, -ux * s]}); } }   // n: out of the wall body
+  const room = (x, y, st) => S.spaces.find(s => s.storey === st && s.interior && !s.openAir && S.contains(s, x, y));
+  for(let i = 0; i < faces.length; i++) for(let j = i + 1; j < faces.length; j++){ const f = faces[i], g = faces[j];
+    if(f.c === g.c || f.c.storey !== g.c.storey || f.n[0] * g.n[0] + f.n[1] * g.n[1] < .9995) continue;
+    const n = f.n, d = (g.a[0] - f.a[0]) * n[0] + (g.a[1] - f.a[1]) * n[1]; if(Math.abs(d) < MIN || Math.abs(d) > MAX) continue;
+    const u = f.u, pg = [(g.a[0] - f.a[0]) * u[0] + (g.a[1] - f.a[1]) * u[1], (g.b[0] - f.a[0]) * u[0] + (g.b[1] - f.a[1]) * u[1]].sort((p, q) => p - q);
+    if(Math.max(pg[0] - f.L, -pg[1]) > .7 || Math.min(pg[1], f.L) - Math.max(pg[0], 0) > .05) continue;   // end to end (gap under 8"), not side by side
+    const K = f.L >= g.L ? f : g, Mv = K === f ? g : f, dk = K.a[0] * n[0] + K.a[1] * n[1], dm = Mv.a[0] * n[0] + Mv.a[1] * n[1];
+    const sm = [Mv.a, Mv.b].map(p => (p[0] - K.a[0]) * u[0] + (p[1] - K.a[1]) * u[1]).sort((p, q) => p - q);
+    const mid = [(Mv.a[0] + Mv.b[0]) / 2 + n[0] * .6, (Mv.a[1] + Mv.b[1]) / 2 + n[1] * .6], sp = room(mid[0], mid[1], Mv.c.storey);
+    if(!sp) continue;   // a room face only (siding steps outside are left as built)
+    GHOST41.jogs.push({keep: K.c.element, move: Mv.c.element, storey: Mv.c.storey, room: sp.id, inches: +((dk - dm) * 12).toFixed(2), n, u, o: K.a, dm, dk, s0: sm[0], s1: sm[1], y0: Math.min(K.c.z0, Mv.c.z0) - .3, y1: Math.max(K.c.z1, Mv.c.z1) + .3, verts: 0}); }
+  // de-duplicate (the same face pair is found from both walls' polygons only once, but two keeps can claim one face: take the first)
+  const seen = new Set(); GHOST41.jogs = GHOST41.jogs.filter(J => { const k = J.move + '|' + J.n.map(v => v.toFixed(3)) + '|' + J.dm.toFixed(3); if(seen.has(k)) return false; seen.add(k); return true; });
+  const e = new THREE.Matrix4();
+  for(const J of GHOST41.jogs){ const del = J.dk - J.dm, small = Math.abs(del) < .055, tmax = small ? .003 : (del > 0 ? Math.min(.09, del - .008) : .09);
+    const hit = (px, py, y) => { if(y < J.y0 || y > J.y1) return false; const s = (px - J.o[0]) * J.u[0] + (py - J.o[1]) * J.u[1]; if(s < J.s0 - .012 || s > J.s1 + .012) return false;
+      const t = px * J.n[0] + py * J.n[1] - J.dm; return t > -.004 && t < tmax; };
+    for(const m of S.meshes){ const b = m.userData && m.userData.bim2; if(!b || !m.geometry || (b.storey && b.storey !== J.storey) || /^(roofs|site|glass)$/.test(b.group) || /^leaf\|/.test(m.name)) continue;
+      m.updateMatrixWorld(true); if(!m.matrixWorld.equals(e)) continue; const pa = m.geometry.attributes.position, A = pa.array; let k = 0;
+      for(let q = 0; q < pa.count; q++){ const x = A[q * 3], y = A[q * 3 + 1], z = A[q * 3 + 2]; if(!hit(z, x, y)) continue;   // world x = plan y, world z = plan x
+        A[q * 3 + 2] = z + J.n[0] * del; A[q * 3] = x + J.n[1] * del; k++; }
+      if(k){ pa.needsUpdate = true; m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox(); J.verts += k; } }
+    for(const s of S.spaces){ if(s.storey !== J.storey || !s.poly) continue; let k = 0;
+      for(const p of s.poly){ const sv = (p[0] - J.o[0]) * J.u[0] + (p[1] - J.o[1]) * J.u[1], t = p[0] * J.n[0] + p[1] * J.n[1] - J.dm;
+        if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; k++; } }
+      if(k){ J.poly = (J.poly || []).concat(s.id); if(s.bb) s.bb = [Math.min(...s.poly.map(p => p[0])), Math.min(...s.poly.map(p => p[1])), Math.max(...s.poly.map(p => p[0])), Math.max(...s.poly.map(p => p[1]))]; } } }
+  return GHOST41.jogs.length; }
+if(GHOST41.on){
+  // G1: the shadow map is drawn with what the scene really holds
+  { const SM = renderer.shadowMap, orig = SM.render.bind(SM);
+    SM.render = function(lights, sc, cam){
+      if(!(SM.autoUpdate || SM.needsUpdate)) return orig(lights, sc, cam);
+      const rt = renderer.getRenderTarget(); if(rt && rt.isWebGLCubeRenderTarget && sun.shadow.map){ GHOST41.shadowSkips++; return; }   // a probe capture: the next camera frame draws the map
+      const hid = []; for(const o of (GOV.cullList || [])) if(!o.visible){ o.visible = true; hid.push(o); }
+      GHOST41.cullShown += hid.length;
+      try{ return orig(lights, sc, cam); } finally { for(const o of hid) o.visible = false; } }; }
+  // G2: no screen-space AO at any governor level; the same shadow filter at every level
+  if(typeof GOV !== 'undefined' && GOV.L){ for(const l of GOV.L){ l.ao = 0; l.taps = 16; l.cost = l.s * l.s * .66 * (l.aa >= 8 ? 1.15 : l.aa >= 4 ? 1 : l.aa >= 2 ? .93 : .88); }
+    if(GOV.k){ GOV.k.ao = 0; GOV.k.taps = 16; } }
+  LOOK.aoStrength = 0; }
 /* NAV r18 (owner 11/4) =====================================================================================================
    1 rule:eye-five-feet - walking eye = the floor under the eye (tread, deck, terrain: walkSurfaceAt) + 5.0 ft. The page's EYE is 5.0
      (patch_bim3_v33 NAV r18 callsite), so walk mode, click-to-move, waypoints and entering walk all stand at 5 ft. Tour stops: a stop
