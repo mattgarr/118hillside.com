@@ -69,7 +69,7 @@
     function keep(id, w, h, kind, draw, seed){ const make = () => paperCanvas(w, h, kind, draw, seed); const k = KEEP[id] = {make, cv: make()};
       onFont(() => { k.cv = k.make(); if(k.mesh) k.mesh.material.map.image = k.cv, k.mesh.material.map.needsUpdate = true; if(NOTES[id]) NOTES[id].url = ''; });
       return k; }
-    const redrawAll = () => { for(const id in KEEP){ const k = KEEP[id]; k.cv = k.make(); if(k.mesh){ k.mesh.material.map.image = k.cv; k.mesh.material.map.needsUpdate = true; } if(NOTES[id]) NOTES[id].url = ''; } wake(4); };
+    const redrawAll = () => { for(const id in KEEP){ const k = KEEP[id]; if(!k || typeof k.make !== 'function') continue; k.cv = k.make(); if(k.mesh){ k.mesh.material.map.image = k.cv; k.mesh.material.map.needsUpdate = true; } if(NOTES[id]) NOTES[id].url = ''; } wake(4); };
     ['biscuit', 'clover', 'pepper', 'nugget'].forEach(w => iconImg(w, () => redrawAll()));
     const face = (x, who, cx, cy, s) => { const I = ICONIMG[who]; if(I && I.ok) x.drawImage(I.img, cx - s / 2, cy - s / 2, s, s); else { x.fillStyle = ESC_PETS.COL[who]; x.beginPath(); x.arc(cx, cy, s * .35, 0, 7); x.fill(); } };
     // Clover's plan of the bedroom wing, drawn from the real rooms (so it matches the house), with a carrot on one closet

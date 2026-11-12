@@ -63,7 +63,7 @@
       if(!im.img.src){ im.img.onload = () => { im.ok = true; for(const f of im.cbs) f(im.img); im.cbs = []; }; im.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ICON(who, 96).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); } }
     const KEEP = {};
     function keep(id, make){ const k = KEEP[id] = {make, cv: make()}; return k; }
-    function redrawAll(){ for(const id in KEEP){ const k = KEEP[id]; k.cv = k.make(); if(k.mesh){ k.mesh.material.map.image = k.cv; k.mesh.material.map.needsUpdate = true; } if(NOTES[id]) NOTES[id].url = ''; } wake(4); }
+    function redrawAll(){ for(const id in KEEP){ const k = KEEP[id]; if(!k || typeof k.make !== 'function') continue; k.cv = k.make(); if(k.mesh){ k.mesh.material.map.image = k.cv; k.mesh.material.map.needsUpdate = true; } if(NOTES[id]) NOTES[id].url = ''; } wake(4); }
     onFont(redrawAll); ['biscuit', 'admiral', 'pepper', 'clover', 'mabel'].forEach(w => iconImg(w, redrawAll));
     // Snowball's first note: the sun's arc over the hills, with four paw prints along it
     function arcDraw(x, w, h, ink, x0, y0, aw, ah, slots){ const pts = [.1, .37, .63, .9].map(t => { const a = Math.PI * (1 - t); return [x0 + aw / 2 + Math.cos(a) * aw * .42, y0 + ah * .9 - Math.sin(a) * ah * .74]; });
