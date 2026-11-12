@@ -16069,11 +16069,12 @@ const CTA42 = (() => {
   /* r43 owner 11/12: four cards, the real house plus three concepts, in this order: 6 bedrooms (as built), 6 bedrooms (alternate layout),
      5 bedrooms (open plan), 4 bedrooms (open great room). The Semi-open plan is shown as the alternate six-bedroom layout. */
   const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
-  const RANK = {apr24b: 0, jan24: 1, open4: 2};
+  const RANK = {apr24b: 0, jan24: 1, open4: 2, open4k: 3};
   const LINE = {asbuilt: 'The house as it is today.',
     apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
     jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
-    open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.'};
+    open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.',
+    open4k: 'One vaulted great room with the kitchen at the street end, a fireplace, skylights and a folding glass wall to a new deck.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
 
@@ -20799,9 +20800,78 @@ function opt42Doors(o){
     else { const ab = new Set([v]); Object.defineProperty(c, '__absent', {value: ab, enumerable: false}); Object.defineProperty(c, 'v', {get: () => ab.has(ACTIVE_VAR) ? '__none' : null, set: () => {}, configurable: true, enumerable: true}); }
     n++; }
   return n; }
-{ const _od = bim2OptionData; bim2OptionData = function(o){ const r = _od.apply(this, arguments); try{ opt42Stage(o); }catch(e){ console.warn('[r42] stage', e); } try{ opt42Cans(o); }catch(e){ console.warn('[r42] cans', e); }
+{ const _od = bim2OptionData; bim2OptionData = function(o){ const r = _od.apply(this, arguments); try{ opt42Stage(o); }catch(e){ console.warn('[r42] stage', e); } try{ opt42Cans(o); }catch(e){ console.warn('[r42] cans', e); } try{ fold42Build(o); }catch(e){ console.warn('[r42] fold', e); }
     try{ OPT42.doors = Object.assign(OPT42.doors || {}, {[o.legacyId || o.id]: opt42Doors(o)}); }catch(e){ console.warn('[r42] doors', e); } return r; }; }
 { const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); try{ opt42Vis(); }catch(e){ console.warn('[r42] visibility', e); } return r; }; }
+/* r42b: a folding glass wall (NanaWall-style) for an option opening whose leaf is {kind: 'FOLD', panels, stack: 'east'|'west', state,
+   plane (plan y of the track), frame}. The page builds its glass panels (black frames) in 'main@<option>' and folds them like an
+   accordion: the hinge points alternate between the track and the outside, so the stack ends up square to the wall at one jamb,
+   reaching out onto the deck one panel deep. Click / tap a panel (outside Design and Dollhouse) to fold or close it; it starts in the
+   state the option gives (open). A collider closes the opening while the panels are shut, and another stands where the stack is. */
+const FOLD42 = window.FOLD42 = {items: [], moving: new Set(), built: {}};
+const F42 = {T: .2, max: 85.5 * Math.PI / 180, dur: 1.8, stile: .2, top: .22, bot: .32, gap: .02};
+function fold42Build(o){
+  if(!opt42On(o)) return 0; const v = o.legacyId || o.id, D = o.data || {}; if(FOLD42.built[v] != null) return FOLD42.built[v]; FOLD42.built[v] = 0;
+  for(const op of (D.openings || [])){ const L = op.leaf; if(!L || L.kind !== 'FOLD' || !op.center || !op.width) continue;
+    const n = L.panels || 6, w = op.width, xa = op.center[0] - w / 2, xb = op.center[0] + w / 2, yP = L.plane != null ? L.plane : op.center[1];
+    const z0 = (LV.main || 0) + (op.sill || 0), h = (op.head || 6.67) - (op.sill || 0), p = w / n, east = L.stack !== 'west';
+    const it = {id: op.id, v, n, p, h, z0, yP, ax: east ? xb : xa, sx: east ? -1 : 1, out: op.normal && op.normal[1] > 0 ? 1 : -1, t: L.state === 'closed' ? 0 : 1, dir: 0, lt: 0, panels: [], coll: null, stackC: null};
+    const g = new THREE.Group(); g.name = 'fold42:' + op.id; g.userData.fold42 = op.id; grp('main@' + v).add(g); it.g = g;
+    const fm = M.steel, pw = p - F42.gap;
+    const box = (x0, x1, y0, y1, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, F42.T), m); b.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); b.castShadow = b.receiveShadow = true; return b; };
+    for(let i = 0; i < n; i++){ const P = new THREE.Group(), a = F42.gap / 2, b = a + pw;
+      P.add(box(a, a + F42.stile, 0, h, fm), box(b - F42.stile, b, 0, h, fm), box(a + F42.stile, b - F42.stile, h - F42.top, h, fm), box(a + F42.stile, b - F42.stile, 0, F42.bot, fm));
+      const gl = new THREE.Mesh(new THREE.PlaneGeometry(pw - 2 * F42.stile + .04, h - F42.top - F42.bot + .04), M.glassDoor.clone());
+      gl.material.side = THREE.DoubleSide; gl.position.set((a + b) / 2, F42.bot + (h - F42.top - F42.bot) / 2, 0); gl.renderOrder = 2; GLOW.push(gl.material); P.add(gl);
+      // a pull on the free stile of every other panel, both faces, as on the real units
+      if(i % 2 === 1){ const k = new THREE.Mesh(new THREE.BoxGeometry(.06, 1.0, F42.T + .14), fm); k.position.set(b - F42.stile - .05, 3.6, 0); P.add(k); }
+      P.userData.fold42 = op.id; g.add(P); it.panels.push(P); }
+    it.box = new THREE.Box3(new THREE.Vector3(F42.gap / 2, 0, -F42.T / 2 - .1), new THREE.Vector3(F42.gap / 2 + pw, h, F42.T / 2 + .1));
+    // colliders (world: x = plan y, z = plan x): the shut panels, and the folded stack
+    const zs = [Math.min(xa, xb), Math.max(xa, xb)], sw = n * F42.T + .3, sz = east ? [xb - sw, xb] : [xa, xa + sw], sy = [yP + it.out * (p + .1), yP].sort((a, b) => a - b);
+    it.coll = {x0: yP - .12, x1: yP + .12, z0: zs[0], z1: zs[1], y0: z0, y1: z0 + h, v, f42: op.id};
+    it.stackC = {x0: sy[0], x1: sy[1], z0: sz[0], z1: sz[1], y0: z0, y1: z0 + h, v, f42: op.id};
+    COLLIDERS.push(it.coll, it.stackC); fold42Pose(it); FOLD42.items.push(it); FOLD42.built[v]++; }
+  return FOLD42.built[v]; }
+function fold42Pose(it){
+  const e = (1 - Math.cos(Math.PI * it.t)) / 2, th = e * F42.max, c = Math.cos(th), s = Math.sin(th); let X = it.ax, Y = it.yP;
+  for(let i = 0; i < it.n; i++){ const P = it.panels[i], dx = it.sx * c, dy = it.out * s * (i % 2 ? -1 : 1);
+    P.position.set(Y, it.z0, X); P.rotation.y = Math.atan2(-dx, dy); X += it.p * dx; Y += it.p * dy; }
+  it.coll.pass = it.t > .9; it.stackC.pass = it.t < .6; }
+function fold42Toggle(it){
+  if(FOLD42.moving.has(it)) it.dir = -it.dir; else it.dir = it.t < .5 ? 1 : -1;
+  it.lt = performance.now(); FOLD42.moving.add(it); try{ GOV.lastMove = performance.now(); }catch(e){} PERF.shadowDirty = true;
+  try{ door28WithSfx(() => { const S = door28Sfx(); if(S) try{ S.play('doorOpen', {volume: .4}); }catch(e){} }); }catch(e){} }
+function fold42Live(it){ if(ACTIVE_VAR !== it.v) return false; for(let q = it.g; q; q = q.parent) if(!q.visible) return false; return true; }
+const F42RC = new THREE.Raycaster(), F42N = new THREE.Vector2(), F42M = new THREE.Matrix4(), F42R = new THREE.Ray(), F42V = new THREE.Vector3();
+function fold42Hit(cx, cy){
+  if(!FOLD42.items.length || isDoll()) return null;   // Design and Dollhouse: a tap never works the wall
+  try{ if((window.HWGAMES && HWGAMES.active) || /\b(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)\b/.test(document.documentElement.className)) return null; }catch(e){}
+  const r = canvas.getBoundingClientRect(); F42N.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); F42RC.setFromCamera(F42N, camera);
+  const O = F42RC.ray.origin; let best = null;
+  for(const it of FOLD42.items){ if(!fold42Live(it)) continue;
+    for(const P of it.panels){ F42M.copy(P.matrixWorld).invert(); F42R.copy(F42RC.ray).applyMatrix4(F42M); if(!F42R.intersectBox(it.box, F42V)) continue;
+      const d = F42V.applyMatrix4(P.matrixWorld).distanceTo(O); if(!best || d < best.d) best = {it, d}; } }
+  if(!best || best.d > 80) return null;
+  const h = pick(cx, cy); if(h && h.distance < best.d - .35) return null;
+  return best.it; }
+{ const _ca42 = clickAt; clickAt = function(cx, cy, dbl){ let it = null; try{ it = fold42Hit(cx, cy); }catch(e){} if(it){ fold42Toggle(it); return; } return _ca42.apply(this, arguments); }; }
+{ const _rf42 = renderFrame; renderFrame = function(){
+    if(FOLD42.moving.size) try{ const now = performance.now();
+      for(const it of FOLD42.moving){ const dt = Math.min(.25, (now - (it.lt || now)) / 1000); it.lt = now; it.t = Math.max(0, Math.min(1, it.t + it.dir * dt / F42.dur)); fold42Pose(it);
+        if((it.dir > 0 && it.t >= 1) || (it.dir < 0 && it.t <= 0)){ it.dir = 0; it.lt = 0; FOLD42.moving.delete(it); } }
+      try{ GOV.lastMove = now; }catch(e){} PERF.shadowDirty = true; }catch(e){ console.warn('[r42] fold', e); FOLD42.moving.clear(); }
+    return _rf42.apply(this, arguments); }; }
+{ const _np42 = navPassTag; navPassTag = function(){ const r = _np42.apply(this, arguments); for(const it of FOLD42.items){ it.coll.pass = it.t > .9; it.stackC.pass = it.t < .6; } return r; }; }
+/* QA (console): FOLD42.toggle() works the first wall as a click does; FOLD42.set(t) poses it (0 shut, 1 open); FOLD42.walk([x, y], [x, y])
+   walks a plan segment on the main floor and returns where a walker is stopped (plan x, y) or null */
+Object.assign(FOLD42, {toggle: (it) => fold42Toggle(it || FOLD42.items[0]), set(t, it){ it = it || FOLD42.items[0]; if(!it) return null; it.t = Math.max(0, Math.min(1, +t)); it.dir = 0; FOLD42.moving.delete(it); fold42Pose(it); PERF.shadowDirty = true; return it.t; },
+  walk(a, b){ const [ax, az] = W2(a[0], a[1]), [bx, bz] = W2(b[0], b[1]), k = Math.ceil(Math.hypot(bx - ax, bz - az) / .25);
+    for(let i = 0; i <= k; i++){ const p = {x: ax + (bx - ax) * i / k, z: az + (bz - az) * i / k}, q = {x: p.x, z: p.z}; collide(p, LV.main || 0); if(Math.hypot(p.x - q.x, p.z - q.z) > .05) return [+q.z.toFixed(2), +q.x.toFixed(2)]; }
+    return null; },
+  near(x, y, r){ r = r || 1; const [wx, wz] = W2(x, y); navPassTag();   // the colliders that act within r ft of a plan point (for the variant showing)
+    return COLLIDERS.filter(c => !(c.v && c.v !== ACTIVE_VAR) && !c.pass && wx > c.x0 - r && wx < c.x1 + r && wz > c.z0 - r && wz < c.z1 + r)
+      .map(c => ({x: [+c.z0.toFixed(2), +c.z1.toFixed(2)], y: [+c.x0.toFixed(2), +c.x1.toFixed(2)], z: [+c.y0.toFixed(1), +c.y1.toFixed(1)], v: c.v, id: c.id || c.element || c.bim2 || c.f42 || c.tree || null})); }});
 /* QA hook (?qa=1 and the page console): window.__IDEA42.plans() lists the floor plans with their facts; set(id) shows one in Design;
    view(name, id, as) stands at one of the option's viewpoints in its walk-through (outdoors too: 'street'), or for 'aerial' looks at
    it from above in Design (roof and upper level off), showing layout `as` (default the option itself; 'asbuilt' for the same view of the house today); navCheck(R, qa) walks the option (called by __TOUR.navCheck's 'ideas' section). */
@@ -20822,7 +20892,7 @@ window.__IDEA42 = {
       const ok = await bim2EnsureOption(v); if(!ok){ R.fail('ideas', v, 'option package did not load'); continue; }
       await this.set(v); setMode('walk', {keep: true}); if(ACTIVE_VAR !== v){ R.fail('ideas', v, 'walk-through shows ' + ACTIVE_VAR); continue; }
       for(const [name, w] of Object.entries(o.views)){ if(w.pos[1] > 8) continue;
-        qa.moveTo(w.pos[0], w.pos[2], 0); qa.finish(); qa.step(1); const m = qa.probe(); R.row('ideas', v + ':' + name, m);
+        qa.moveTo(w.pos[0], w.pos[2], walkSurfaceAt(w.pos[0], w.pos[2], w.pos[1] - EYE + .6));   /* outdoors the ground is not at 0 */ qa.finish(); qa.step(1); const m = qa.probe(); R.row('ideas', v + ':' + name, m);
         if(Math.abs(m.eye - EYE) > .15) R.fail('ideas', v + ':' + name, 'eye ' + m.eye + ' ft over the floor');
         const g = qa.geo(m); if(g) R.fail('ideas', v + ':' + name, g); }
       const reg = o.clearRegion || []; let n = 0, bad = 0;
@@ -21317,7 +21387,7 @@ function bim3StageSettle(){
 }
 { const _sc3 = stg33Check; stg33Check = function(){ try{ bim3StageSettle(); }catch(e){ console.warn('[bim3] stage settle', e); } return _sc3.apply(this, arguments); }; }
 /* Design tab order (owner/OPTIONS 11/3): jan24 "Open Plan" first, then apr24b "Semi-Open Plan" */
-{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1, open4: 2}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
+{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1, open4: 2, open4k: 3}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
 /* rack wire deck: library-less render material 'wire-deck' (kernel BI3) = white 2" x 4" wire grid, alpha-tested (UV = feet) */
 BIM2_MATKEY['wire-deck'] = 'bim3WireDeck';
 { const _bl3 = bim2Load; bim2Load = async function(){
