@@ -122,7 +122,7 @@
     FT.raf = requestAnimationFrame(f); }
   const ftBase = () => { const a = FT.d.slice(-12).sort((x, y) => x - y); return a.length >= 3 ? a[a.length >> 1] : 16.7; };
   async function settle(base){ const B = H.busy, lim = Math.max(50, 1.6 * (base || 16.7)), t0 = performance.now(); let ok = 0, last = 0;
-    await new Promise(res => { const f = t => { if(last){ ok = t - last < lim ? ok + 1 : 0; } last = t; if(ok >= 3 || performance.now() - t0 > 2500 || document.hidden) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); setTimeout(() => { if(document.hidden) res(); }, 3000); });
+    await new Promise(res => { const f = t => { if(last){ ok = t - last < lim ? ok + 1 : 0; } last = t; if(ok >= 3 || performance.now() - t0 > 2500 || document.hidden) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); setTimeout(res, 3000); });   // and never longer: a page that gets no frames (a covered window) must not keep the note up
     if(B && B.active) try{ B.end(); }catch(e){} }
   const sweep = () => { let r = []; try{ r = (H.sweep && H.sweep()) || []; }catch(e){ console.warn('[holiday] sweep', e); } if(W.P && !W.on && W.P.root.parent){ W.P.root.parent.remove(W.P.root); r.push('winter'); } if(r.length){ lastSweep = r; console.warn('[holiday] cleaned up after', r.join(', ')); } return r; };
   function downAll(keep){ if(keep !== 'winter') winterOff(); if(keep !== 'halloween' && HW() && HW().isOn) HW().off(); if(keep !== 'thanksgiving' && TG() && TG().isOn) TG().off(); }
