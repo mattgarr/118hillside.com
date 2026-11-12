@@ -308,3 +308,27 @@ Read as a demanding escape-room designer, then as a ten-year-old.
 - The meta in Hard uses something from the very first screen.
 - Parallel tracks: Medium splits by floor; Hard splits into digits and sheets, both spread over every floor.
 - Red herrings are only real things (other closets, other windows), never fake clues.
+
+## 9. As built (what changed in the build and the playtests)
+
+The sections above are the design as it was signed off. The build moved some things once the clues were in the real model and played by hand at desktop and phone size. Where this section and the sections above disagree, this section is right.
+
+**Easy.** As designed. The floor light only shows the 327 once the drawing has been seen and the shades are up, and the validator proves it.
+
+**Medium (July, day 200).**
+- Pepper is in the lower-level bedroom 2 (`lbed2`), and the rainbow film is on the bottom panes of its window (`WN-L0-07`). The 9 reads from about 5:15 to 5:45 PM, not 6:30 to 7:45.
+- Biscuit wakes when the real sun patch reaches his bed, which with both shades up is about 5:15 to 5:45 PM.
+- Nugget sleeps in a nest on the cube shelf in the skylit office, not in a bedroom. He wakes at dusk (8:45 PM or later).
+- Clover's plan is drawn from the real floor plan polygons and hangs on the coffee bar's fridge. The other closet with three doors (middle bedroom) is the honest red herring.
+- Code 4962 (Clover 4, Pepper 9, Biscuit 6, Nugget 2). Three wrong tries pause the keypad for 20 seconds.
+
+**Hard (midsummer, day 172).**
+- Read windows, as tuned in play: paw prints 8:30 to 10:15 AM (7); the skylight square on the desk 2:00 to about 2:45 PM (5); Admiral's shadow 4:15 to 5:45 PM (3); the sunset floor at a quarter to eight only (8). Outside those hours the figure is on the wrong spot or pulled out of shape, so the sheet says so instead of crediting a number.
+- Admiral's 3 is a cut-out hanging outside the kitchen window on a string, not paper on the glass, so the shade can be lowered over it. It reads straight from the lowered shade's own close look.
+- The prints are drawn as dust on the entry floor that fades in only while the morning sun is on it, as well as being cut out of the light. On a bright phone screen the cut-out alone was too faint.
+- Clover is in the middle bedroom closet and comes out when its blackout honeycomb shade (`WN-L1-08`) is lowered. Mabel sits on the pergola paving and moves to cooler paving after 4 PM, leaving the lower-level sheet.
+- The mirror step uses the real bathroom mirror's reflection; a matching overlay sits on it in the close look so phones without the reflection still read WINDOW SEAT. The notebook always has the words.
+- The stacked sheets are composed with the pencil first and the red marks on top, and cropped round the stairs, so the X inside the circle is big on a phone.
+- The start note says the numbers are written in light and shows the day as an arc with four paws (morning, early afternoon, late afternoon, sunset). The strongbox face is the same arc. Code 7538.
+
+**Interface changes from play.** Look rings stay next to what they mark (they used to be pushed far away to avoid labels). The notebook's clue cards had collided with the tour's own `.card` style and collapsed; they are now `.clue`. On phones the toast sits mid-screen, the sun slider follows a sheet that grows or shrinks, and the arc lock has its own Delete.

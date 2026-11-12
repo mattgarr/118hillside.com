@@ -336,7 +336,7 @@
         admiral: [null, () => { if(admiralInSun()) sweepTo(10, 1400); }, () => { const go = () => { if(admiralInSun()) setSlider(10); setTimeout(() => examine('admiral'), 400); }; if(S.place === 'kitchen') go(); else goTo('kitchen', {done: go}); }],
         shadow: [null, () => sunKey(true), () => { const go = () => { if(shadeT('WN-L1-02') < .5){ shade('WN-L1-02', true); give('kitchenDown'); } setTimeout(() => { setSlider(17); setTimeout(() => examine('kshade'), 900); }, 900); }; if(S.place === 'kitchen') go(); else goTo('kitchen', {done: go}); }],
         pepper: [null, null, () => goTo('office')],
-        desk: [null, () => sunKey(true), () => { const go = () => { setSlider(14.25); setTimeout(() => examine('desk'), 400); }; if(S.place === 'office') go(); else goTo('office', {done: go}); }],
+        desk: [null, () => sunKey(true), () => { const go = () => { setSlider(14.5); setTimeout(() => examine('desk'), 400); }; if(S.place === 'office') go(); else goTo('office', {done: go}); }],
         sunset: [null, null, () => goTo('primary')],
         sunsetFloor: [null, () => sunKey(true), () => { const go = () => { setSlider(19.75); setTimeout(() => examine('floorP'), 400); }; if(S.place === 'primary') go(); else goTo('primary', {done: go}); }],
         glass: [null, null, () => goTo('pbath')],
