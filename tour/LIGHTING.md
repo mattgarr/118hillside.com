@@ -38,7 +38,7 @@ Line numbers drift; search for the names given.
 | ACES filmic tone map + `CustomToneMapping` | renderer setup, r16 | Filmic curve, same on desktop and phone. | Physical camera model. Kept. |
 | Base exposure | `setTOD`: `.82 + .25 * low` day, 1.25 dusk; `LOOK.outExpo` | By sun height. | Physical (a camera's exposure for the scene). Kept. |
 | Indoor exposure `LOOK.inExpo` + `EXPO_IN` | tick | Interiors ~1.2 stops brighter; `EXPO_IN` eased toward the inside state at `dt * 4` per frame (a share of the gap each frame, the biggest step first). | Physical (eye / camera adaptation), but it followed the raw flickering state. r40: driven by the debounced state, eased over 1.6 s (smoothstep), blended in stops. |
-| Camera meter | `METER`, `lightMeterMul` | 16x16 readback, centre-weighted mean, highlight protection, target .63 in / .49 out / dusk-in .34; gain eased at `dt * 1.6`. | Physical (auto-exposure). But its target switched at `EXPO_IN = .5` and the ease was frame-rate dependent (dt clamped to .05, governor-skipped frames lost time). r40: indoor and outdoor answers both computed and blended in stops by `EXPO_IN`; gain eased in log space with `1 - exp(-t * rate)` on real elapsed time. Measured: the same view reached from two different stops settles to the same exposure (0.00 %). |
+| Camera meter | `METER`, `lightMeterMul` | 16x16 readback, centre-weighted mean, highlight protection, target .63 in / .49 out / dusk-in .34; gain eased at `dt * 1.6`. | Physical (auto-exposure). But its target switched at `EXPO_IN = .5`, the ease was a share of the gap per frame with dt clamped to .05 (governor-skipped frames lost time), and each new reading (every 6th frame) kinked it. r40: indoor and outdoor answers both computed and blended in stops by `EXPO_IN`; the gain follows in log space through a critically damped response (tau .35 s, ~1.6 s to 95 %, exact for any frame time, on the real elapsed time). Measured: the same view reached from two different stops settles to the same exposure (0.00-0.12 %). |
 | Grade pass | `GRADE_SHADER`, `LOOK.grade` | Contrast .32, saturation 1.06. | Photographic. Kept. |
 | Exterior shadow lift `olift` | `lightFrame` | Lifts deep exterior shade (HDR-merged exteriors). | A photographic compensation (real-estate HDR). Kept, blended by `EXPO_IN` (was switched). |
 | White balance | r6 `R6WB`, r10 `R10WB` (meter-colour AWB), r11 phone gains, r16 phone grade | Indoor camera white balance, all blended by `EXPO_IN`. | Physical (a camera's AWB). Kept. r10's AWB ease was a fixed step per scene render (several per frame); r40: once a frame on the frame time. |
@@ -97,10 +97,15 @@ r40 stage 1:
   eases over 1 s. A cut (camera jumps more than 6 ft in a frame), a mode change, a time-of-day change or the loading screen snaps
   everything: the picture changes at once there anyway.
 - `R40X`: the environment the page asks for becomes a target; materials see `R40X.out`, a PMREM-sized texture crossfaded from
-  the last one (1 s between rooms, 1.6 s in/out). One 768x768 quad per frame, only while a fade runs.
+  the last one. In / out: 1.6 s, with `EXPO_IN`. Room to room: .8 s, longer (up to 2 s) the more the two panoramas' measured mean
+  brightness differs (a windowless hall next to a bright room); the curve is half linear, half smoothstep. One 768x768 quad per
+  frame, only while a fade runs.
 - `lightMeterMul`: continuous target, log-space ease on real time.
-- navCheck `light`: every move forward and back, drawn at 30 fps; fails a lighting step over 1.5 / 255 or an exposure step over
-  .045 stops in one frame, and checks that four views settle to the same exposure from two different stops.
+- navCheck `light`: every move forward and back, drawn at 30 fps on a simulated clock (with short yields so the meter's GPU
+  readback lands as it does live). After each frame the move's START view is drawn again with that frame's lighting and read back:
+  nothing in it moves, so its change is the lighting change alone (the walking view's own change is reported beside it). Fails a
+  step over 1.5 / 255 or an exposure step over .045 stops in one frame; four views must settle to the same exposure from two
+  different stops. The quality governor is held at its level during the run (see 4).
 
 ## 3. The model now (stage 2)
 
@@ -117,6 +122,11 @@ Principle: light every surface by what actually lights it; let the glass be glas
 - **Glass**: Fresnel and absorption only, the same from both sides and at every distance; it reflects the environment of the side
   the camera is on. No emissive glow, no grade tint, no presence change by side or distance.
 - **Dusk**: the windows glow because the rooms behind them are lit (lamps + the lamp-lit indoor panorama) and the glass is clear.
+  Measured on main, the meter pulled every dusk interior down to x.28-.35 (about 1.6 stops): the rooms were lit far brighter than
+  the dusk exposure, which only the painted glass hid. Through clear glass they burned to white. The room lamps and the lamp-lit
+  panorama are now x`R40E.duskIn` (.3) of that, with more of the lamps' own colour in the panorama (`R40E.lampWb` .1, was .7
+  white-balanced); the dusk indoor meter may lift .8 stops, so inside the rooms land where they were, and from the street they
+  read warm through clear glass.
 - **Exposure**: one meter, continuous; the indoor/outdoor difference is eye adaptation over 1.6 s.
 - **Decals** (r13 / r17): always on.
 
@@ -128,3 +138,7 @@ Principle: light every surface by what actually lights it; let the glass be glas
 - The Dusk stop's time-of-day change is instant by design (a different photo, not a walk).
 - Halloween / Thanksgiving fixed exposures: art direction for the decor modes; only their switches were blended.
 - No new real-time lights were added for performance; the rooms' existing lamps carry the dusk look.
+- The quality governor (`GOV`): on a slow GPU it draws a still camera at a higher quality level ("sharp" frame) and drops back when
+  a move starts. That switch changes the picture in one frame at the start of a move (measured 2-3 / 255 in the hidden test pane,
+  where the governor sat at level 7 of 1). It is not lighting and was left; the light check holds the governor's level.
+- Golden-hour interiors are as bright as before (very white); that is the existing exposure choice, not changed here.
