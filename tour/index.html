@@ -23025,12 +23025,15 @@ if(GHOST41.on){
   // G5: the camera meter reads where the camera STANDS, not where it looks
   if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
     const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, every: 3000, M: METER,
-      // the calibration (ghost41MeterCal): per room by day, the screen meter's reading at the room's tour stop(s) over the all-round
-      // reading there, so each stop is exposed as before; out = the outdoor stops; dusk = one factor indoors. Measured with
-      // GHOST41.calibrate() (?qa=1); the room is crossed by the meter's own ease (no pop).
-      cal: 1, calDusk: .906, out: 1, hiK: 1,
-      room: {stairs: .939, living: .823, great: 1.045, mainbed3: 1.046, mainbed2: 1.017, mainbath: 1.017, mainbed1: .839, entry: 1.1, pbath: .957,
-        primary: 1.051, lbed1: .877, lbath: .922, lbed2: .867, laundry: .932, office: .974, rec: .966}};
+      // the calibration (ghost41MeterCal): per room (R40L.zone), the screen meter's reading at the room's tour stop(s) over the all-round
+      // reading there, so each stop is exposed as before. Measured 11/12 with GHOST41.calibrate() (?qa=1) at every stop: by day the
+      // geometric mean of morning, midday and golden (they agree within 3 %), dusk on its own (lamps: the view mattered more, 0.84-1.25).
+      // Out = the median over the outdoor stops. A room is crossed by the meter's own ease (no pop).
+      cal: .97, calDusk: .973, out: .941, outDusk: 1.03, hiK: 1,
+      room: {stairs: .845, living: .899, great: 1.041, mainbed3: 1.084, mainbed2: 1.033, mainbath: 1.026, mainbed1: .934, entry: 1.122, loft: .943, pbath: .977,
+        primary: 1.06, lbed1: .929, lbath: .947, lbed2: .946, laundry: .945, office: .981, rec: .954, garage: .975},
+      roomDusk: {stairs: .984, living: .845, great: 1.024, mainbed3: 1.16, mainbed2: 1.007, mainbath: 1.201, mainbed1: .964, entry: .958, loft: .924, pbath: .835,
+        primary: 1.143, lbed1: .973, lbath: .989, lbed2: .957, laundry: .929, office: 1.017, rec: .876, garage: .977}};
     METER_PASS.render = function(r, w, read){
       if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
       const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
@@ -23065,7 +23068,7 @@ if(GHOST41.on){
       the kitchen cabinets. A level surface now also reads the mask 3" to each side (max of five taps): 0 of 426602 ceiling samples
       and 0.01 % of floor samples read the sky; points just outside the outer walls read the room 1.4 % more often than before. */
 function ghost41MeterCal(){ const A = GHOST41.meter; if(!A || !METER.atlas || METER.m == null) return; METER.mRaw = METER.m;
-  const inside = typeof R40L !== 'undefined' ? R40L.state : ENV_INSIDE, f = !inside ? A.out : DUSK ? A.calDusk : A.cal * ((LIGHT_ENV_ID && A.room[LIGHT_ENV_ID]) || 1);
+  const z = R40L.zone, f = !R40L.state ? (DUSK ? A.outDusk : A.out) : DUSK ? (A.roomDusk[z] || A.calDusk) : (A.room[z] || A.cal);
   METER.m *= f; METER.calF = f; GHOST41.reads = (GHOST41.reads || 0) + 1; }
 if(GHOST41.on){
   // G6: one shadow-map size at every governor level; a still frame keeps the moving level's foliage shadows
@@ -23079,12 +23082,12 @@ if(GHOST41.on){
     const raf = () => new Promise(r => requestAnimationFrame(r)), frames = async n => { for(let i = 0; i < n; i++) await raf(); };
     const lp = window.lightMeterPoll; let reads = 0; window.lightMeterPoll = function(){ const had = METER.sync; const r = lp.apply(this, arguments); if(had && !METER.sync) reads++; return r; };
     const fresh = async () => { const n0 = reads; for(let i = 0; i < 240 && reads < n0 + 2; i++) await raf(); return reads >= n0 + 2; };
-    const rows = [], tod0 = TOD_KEY; try{ if(o.tod) T.dbg.setTOD(o.tod);
+    const rows = [], tod0 = TOD_KEY; try{
       for(let i = 0; i < T.STOPS.length; i++){ const s = T.STOPS[i]; if(o.only && !o.only.includes(s.id)) continue;
-        T.showStop(i); T.finish(); await frames(o.settle || 150);
+        T.showStop(i); T.finish(); if(o.tod) T.dbg.setTOD(o.tod); await frames(o.settle || 150);   // a stop sets its own time of day
         A.off = true; await fresh(); const ms = METER.m;
         A.off = false; A.k = 4; A.at = -1e9; await frames(6); await fresh(); const ma = METER.mRaw;
-        rows.push({id: s.id, room: LIGHT_ENV_ID, inside: typeof R40L !== 'undefined' ? R40L.state : ENV_INSIDE, ms: +ms.toFixed(4), ma: +ma.toFixed(4), r: +(ms / ma).toFixed(3), e: +renderer.toneMappingExposure.toFixed(3)}); } }
+        rows.push({id: s.id, room: R40L.zone, tod: TOD_KEY, inside: R40L.state, ms: +ms.toFixed(4), ma: +ma.toFixed(4), r: +(ms / ma).toFixed(3), e: +renderer.toneMappingExposure.toFixed(3)}); } }
     finally { window.lightMeterPoll = lp; A.off = false; if(o.tod) T.dbg.setTOD(tod0); }
     const gm = a => Math.exp(a.reduce((s, v) => s + Math.log(v), 0) / a.length), med = a => a.slice().sort((p, q) => p - q)[a.length >> 1], room = {};
     for(const r of rows) if(r.inside && r.room) (room[r.room] = room[r.room] || []).push(r.r);
