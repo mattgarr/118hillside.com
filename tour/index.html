@@ -20778,7 +20778,57 @@ function bim3DoorPose(it){
    'door-panel-field' above) they are the same material object as the frame, so their only shading is real light on the recess steps; and
    since they are one paint, each leaf's panel floors are merged into its frame mesh (same pivot, same material): one draw call a leaf
    instead of two (29 fewer for the house), same triangles. Hinges, handles, colliders and the swing are untouched (pivot children). */
-const R42D = window.R42D = {merged: 0, tris: 0, bevel: 0, skipped: []};
+const R42D = window.R42D = {merged: 0, tris: 0, bevel: 0, ao: 0, skipped: []};
+/* r42 (lead 11/12: "real recessed panels that read clearly ... a real contact-shadow cue: ambient occlusion baked per vertex into the panel's inner
+   perimeter, a few inches wide and subtle, on the geometry. No colour tint on the panel field"). The room light that reaches a panel's floor
+   next to the bevel is cut by the bevel and the rail above it (the light of a recessed panel is darkest in that corner, open in the middle).
+   Each panel floor is split into triangles no longer than R42C.cell (edges split at midpoints only, so neighbours agree and no T-joints)
+   and every vertex carries 'r42occ' = how much of the ambient (image) light it loses: R42C.max at the bevel's foot, easing to 0 R42C.width
+   in; the bevel itself loses R42C.max at its foot and R42C.bevelTop at its top edge. The trim paint's shader multiplies only the indirect
+   (ambient) light by 1 - r42occ: direct sun and lamps, colour and roughness are untouched, and every other trim mesh has no such attribute
+   (WebGL reads 0: no change). */
+const R42C = {max: .42, width: 2.75 / 12, cell: .2, bevelTop: .1};
+function r42DoorContact(G, na, I, nIa){
+  const P0 = G.attributes.position.array, N0 = G.attributes.normal.array, U0 = G.attributes.uv ? G.attributes.uv.array : null;
+  const floorT = []; for(let t = nIa; t < I.length; t += 3) floorT.push([I[t], I[t + 1], I[t + 2]]); if(!floorT.length) return null;
+  const n = new THREE.Vector3(N0[I[nIa] * 3], N0[I[nIa] * 3 + 1], N0[I[nIa] * 3 + 2]).normalize();
+  const side = v => Math.sign(N0[v * 3] * n.x + N0[v * 3 + 1] * n.y + N0[v * 3 + 2] * n.z) || 1;
+  const pk = (x, y, z) => Math.round(x * 2e3) + ',' + Math.round(y * 2e3) + ',' + Math.round(z * 2e3);
+  // panel outline per face: edges used by one floor triangle only
+  const ecount = new Map(), ekey = (a, b, sg) => { const A = pk(P0[a * 3], P0[a * 3 + 1], P0[a * 3 + 2]), B = pk(P0[b * 3], P0[b * 3 + 1], P0[b * 3 + 2]); return sg + (A < B ? A + '|' + B : B + '|' + A); };
+  for(const t of floorT){ const sg = side(t[0]); for(const [a, b] of [[t[0], t[1]], [t[1], t[2]], [t[2], t[0]]]){ const k = ekey(a, b, sg); const e = ecount.get(k); if(e) e.n++; else ecount.set(k, {n: 1, a, b, sg}); } }
+  const edges = {'1': [], '-1': []}; for(const e of ecount.values()) if(e.n === 1) edges[e.sg].push([P0[e.a * 3], P0[e.a * 3 + 1], P0[e.a * 3 + 2], P0[e.b * 3], P0[e.b * 3 + 1], P0[e.b * 3 + 2]]);
+  const segD = (x, y, z, s) => { const dx = s[3] - s[0], dy = s[4] - s[1], dz = s[5] - s[2], L2 = dx * dx + dy * dy + dz * dz || 1e-12; let t = ((x - s[0]) * dx + (y - s[1]) * dy + (z - s[2]) * dz) / L2; t = Math.max(0, Math.min(1, t));
+    return Math.hypot(x - s[0] - dx * t, y - s[1] - dy * t, z - s[2] - dz * t); };
+  const occAt = (x, y, z, sg) => { let d = 1e9; for(const s of edges[sg]) d = Math.min(d, segD(x, y, z, s)); const u = Math.min(1, d / R42C.width); return R42C.max * (1 - u) * (1 - u); };
+  // new vertex arrays: the frame's vertices first (unchanged order), then the subdivided floor
+  const P = Array.from(P0.subarray(0, na * 3)), N = Array.from(N0.subarray(0, na * 3)), U = U0 ? Array.from(U0.subarray(0, na * 2)) : null, O = new Array(na).fill(0);
+  { const c = new THREE.Vector3(), dep = i => (P0[i * 3] - c.x) * n.x + (P0[i * 3 + 1] - c.y) * n.y + (P0[i * 3 + 2] - c.z) * n.z;
+    c.fromArray(P0, I[nIa] * 3); let lo = 1e9, hi = -1e9; for(const t of floorT) for(const v of t){ const d = dep(v); lo = Math.min(lo, d); hi = Math.max(hi, d); } c.addScaledVector(n, (lo + hi) / 2);
+    const fd = (hi - lo) / 2; let half = 0; for(let i = 0; i < na; i++) half = Math.max(half, Math.abs(dep(i)));
+    for(let i = 0; i < na; i++){ const a = Math.abs(dep(i)); O[i] = Math.abs(a - fd) < .002 ? R42C.max : (a > fd + .002 && a < half - .002 ? R42C.bevelTop : 0); } }
+  const vmap = new Map(), out = [];
+  const vert = (x, y, z, sg, u, v) => { const k = sg + ':' + pk(x, y, z); let i = vmap.get(k); if(i != null) return i; i = P.length / 3; vmap.set(k, i);
+    P.push(x, y, z); N.push(n.x * sg, n.y * sg, n.z * sg); if(U) U.push(u, v); O.push(occAt(x, y, z, sg)); return i; };
+  const split = (a, b, c, sg, depth) => {   // a, b, c: [x, y, z, u, v]
+    const L = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]), lab = L(a, b), lbc = L(b, c), lca = L(c, a), m = Math.max(lab, lbc, lca);
+    if(m <= R42C.cell || depth > 14){ out.push(vert(a[0], a[1], a[2], sg, a[3], a[4]), vert(b[0], b[1], b[2], sg, b[3], b[4]), vert(c[0], c[1], c[2], sg, c[3], c[4])); return; }
+    const mid = (p, q) => p.map((x, k) => (x + q[k]) / 2);
+    if(m === lab){ const d = mid(a, b); split(a, d, c, sg, depth + 1); split(d, b, c, sg, depth + 1); }
+    else if(m === lbc){ const d = mid(b, c); split(a, b, d, sg, depth + 1); split(a, d, c, sg, depth + 1); }
+    else { const d = mid(c, a); split(a, b, d, sg, depth + 1); split(d, b, c, sg, depth + 1); } };
+  const V = i => [P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2], U0 ? U0[i * 2] : 0, U0 ? U0[i * 2 + 1] : 0];
+  for(const t of floorT) split(V(t[0]), V(t[1]), V(t[2]), side(t[0]), 0);
+  const nv = P.length / 3, I2 = new (nv > 65535 ? Uint32Array : Uint16Array)(nIa + out.length); I2.set(I.subarray(0, nIa)); I2.set(out, nIa);
+  G.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3)); G.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N), 3));
+  if(U) G.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(U), 2)); G.setAttribute('r42occ', new THREE.BufferAttribute(new Float32Array(O), 1));
+  r42TrimContactShader(); return I2; }
+function r42TrimContactShader(){ const m = M.trim; if(!m || m.userData.r42occ) return; m.userData.r42occ = true; const prev = m.onBeforeCompile, pk = m.customProgramCacheKey;
+  m.onBeforeCompile = function(sh, r){ if(prev) prev.call(this, sh, r);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float r42occ;\nvarying float vR42Occ;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvR42Occ = r42occ;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vR42Occ;')
+      .replace('#include <aomap_fragment>', '#include <aomap_fragment>\nreflectedLight.indirectDiffuse *= 1.0 - vR42Occ;\nreflectedLight.indirectSpecular *= 1.0 - .6 * vR42Occ;'); };
+  m.customProgramCacheKey = function(){ return (pk ? pk.call(this) : '') + '|r42occ'; }; m.needsUpdate = true; }
 /* the sticking: the model's square 1/8" step + flat 1/2" ledge + 5/16" step round each panel became a 1/8" square shoulder and a sloped
    bevel down to the panel (about 45 degrees, 5/16" wide), as the molded Winslow profile: the inner edge of each ledge drops to the panel
    floor and moves 40 % of the way back toward the shoulder (that step turns into a 3/16" flat at the panel's own level) and the ledge takes
@@ -20828,15 +20878,16 @@ function r42MergeDoorPanels(){
       for(let i = 0; i < na; i++) for(let c = 0; c < s; c++) arr[i * s + c] = gc(a, i, c);
       for(let i = 0; i < nb; i++) for(let c = 0; c < s; c++) arr[(na + i) * s + c] = gc(b, i, c);
       G.setAttribute(k, new THREE.BufferAttribute(arr, s)); }
-    const ia = A.index, ib = Bg.index, I = new (na + nb > 65535 ? Uint32Array : Uint16Array)(ia.count + ib.count);
+    const ia = A.index, ib = Bg.index; let I = new (na + nb > 65535 ? Uint32Array : Uint16Array)(ia.count + ib.count);
     for(let i = 0; i < ia.count; i++) I[i] = ia.getX(i); for(let i = 0; i < ib.count; i++) I[ia.count + i] = na + ib.getX(i);
     try{ const nv = r42DoorSticking(G, na, nb, I, ia.count); R42D.bevel += nv; (R42D.per || (R42D.per = {}))[it.id + ':' + p.k] = nv; }catch(e){ R42D.skipped.push(it.id + ':' + p.k + ' bevel ' + e); }
+    try{ const r = r42DoorContact(G, na, I, ia.count); if(r){ I = r; R42D.ao++; } }catch(e){ R42D.skipped.push(it.id + ':' + p.k + ' contact ' + e); }
     // in place on the frame's own geometry object: the design-concept switch (BIM2.setVariant) hides an element by collapsing its triangles
     // in the as-loaded geometry's index (ranges in userData.bim2), so the object, its ranges and its cached index must carry the panels too
-    for(const k of attrs) A.setAttribute(k, G.attributes[k]); for(const k of Object.keys(A.attributes)) if(!attrs.includes(k)) A.deleteAttribute(k);
+    const keep = Object.keys(G.attributes); for(const k of Object.keys(A.attributes)) if(!keep.includes(k)) A.deleteAttribute(k); for(const k of keep) A.setAttribute(k, G.attributes[k]);
     A.setIndex(new THREE.BufferAttribute(I, 1)); A.computeBoundingBox(); A.computeBoundingSphere();
-    const uT = T.userData, uF = F.userData.bim2, n0 = ia.count / 3;
-    if(uT.bim2 && uT.bim2.ranges){ const add = uF && uF.ranges && uF.ranges.length ? uF.ranges.map(r => [r[0], r[1], r[2] + n0, r[3]]) : [[((uT.bim2.ranges[0] || [])[0]) || it.id, null, n0, ib.count / 3]]; uT.bim2.ranges.push(...add); uT.bim2.ranges.sort((a, b) => a[2] - b[2]); }
+    const uT = T.userData, uF = F.userData.bim2, n0 = ia.count / 3, nP = I.length / 3 - n0;   // nP: the panel floors' triangles (subdivided for the contact shading)
+    if(uT.bim2 && uT.bim2.ranges){ const add = [[(uF && uF.ranges && uF.ranges[0] && uF.ranges[0][0]) || ((uT.bim2.ranges[0] || [])[0]) || it.id, null, n0, nP]]; uT.bim2.ranges.push(...add); uT.bim2.ranges.sort((a, b) => a[2] - b[2]); }
     if(uT.idx0) uT.idx0 = A.index; if(uT.alt) uT.alt = {};
     F.parent.remove(F); F.visible = false; F.userData.r42merged = T.uuid; R42D.merged++; R42D.tris += I.length / 3; }
   BIM3.report.r42doors = {merged: R42D.merged, tris: R42D.tris, skipped: R42D.skipped.length}; return R42D; }
