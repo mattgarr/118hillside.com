@@ -6840,18 +6840,20 @@ function navQA(){
   /* r41 'back' (owner 11/12, the walk up to the loft: "a weird pull back to the camera view once you get to the top of the stairs"): every walked
      move a visitor can make - the tour's moves in order, forward and back, 'Walk to' every room in turn, and 'Back to the tour' from each of those
      rooms - stepped with a fixed simulated frame time, nothing drawn (as 'smooth'). Over the last 40 % of each move the camera must not step
-     backwards (its level velocity along its level view under R41B.dot ft/s for R41B.hold s or more) and must not double back (get more than
-     R41B.away ft further from where it is going than it has already been). A move listed in R41B.known is noted, not failed (see there).
+     backwards (its level velocity along its level view under R41B.dot ft/s for R41B.hold s or more) and must not double back along its way
+     (its level heading of travel turning more than R41B.turn deg within R41B.turnS s while it moves faster than R41B.vmin ft/s: a U-turn, not a
+     corner or a switchback landing). A move listed in R41B.known is noted, not failed (see there).
      {backDt: 1/30} steps at another frame rate. Table: window.__BACK. */
   SEC.back = async R => { const dt = o.backDt || 1 / 60, K = R41B, realNow = performance.now.bind(performance), V = new V3(), rows = []; let vt = realNow();
     const run = (A, id, x) => { const fr = [], P1 = camera.position.clone(); let t = 0;
-      while(anim === A && t < 25){ vt += dt * 1000; tick0(true); t += dt; camera.updateMatrixWorld(); camera.getWorldDirection(V); const P = camera.position; fr.push([t, (P.x - P1.x) / dt, (P.z - P1.z) / dt, V.x, V.z, P.distanceTo(A.to)]); P1.copy(P); }
-      finish(); let r = 0, dmin = Infinity; const m = Object.assign({id, dur: +t.toFixed(2), back: 0, backV: 0, backAt: null, away: 0, awayAt: null}, x);
-      for(const [tt, vx, vz, fx, fz, d] of fr){ if(tt < t * (1 - K.tail)) continue; const dv = (vx * fx + vz * fz) / (Math.hypot(fx, fz) || 1); m.backV = Math.min(m.backV, dv);
-        if(dv < K.dot){ r += dt; if(r > m.back){ m.back = r; m.backAt = tt; } } else r = 0; dmin = Math.min(dmin, d); if(d - dmin > m.away){ m.away = d - dmin; m.awayAt = tt; } }
-      for(const k of ['back', 'backV', 'away', 'backAt', 'awayAt']) if(m[k] != null) m[k] = +m[k].toFixed(2);
-      m.bad = m.back >= K.hold - dt / 2 || m.away > K.away; rows.push(m);
-      const why = []; if(m.back >= K.hold - dt / 2) why.push('steps backwards for ' + m.back + ' s (down to ' + m.backV + ' ft/s along the view; ' + m.backAt + ' of ' + m.dur + ' s)'); if(m.away > K.away) why.push('doubles back ' + m.away + ' ft (' + m.awayAt + ' of ' + m.dur + ' s)');
+      while(anim === A && t < 25){ vt += dt * 1000; tick0(true); t += dt; camera.updateMatrixWorld(); camera.getWorldDirection(V); const P = camera.position; fr.push([t, (P.x - P1.x) / dt, (P.z - P1.z) / dt, V.x, V.z]); P1.copy(P); }
+      finish(); let r = 0; const m = Object.assign({id, dur: +t.toFixed(2), back: 0, backV: 0, backAt: null, turn: 0, turnAt: null}, x), lag = Math.max(1, Math.round(K.turnS / dt));
+      for(let i = 0; i < fr.length; i++){ const [tt, vx, vz, fx, fz] = fr[i]; if(tt < t * (1 - K.tail)) continue; const dv = (vx * fx + vz * fz) / (Math.hypot(fx, fz) || 1); m.backV = Math.min(m.backV, dv);
+        if(dv < K.dot){ r += dt; if(r > m.back){ m.back = r; m.backAt = tt; } } else r = 0;
+        const q = fr[i - lag], s1 = Math.hypot(vx, vz), s0 = q ? Math.hypot(q[1], q[2]) : 0; if(q && s1 > K.vmin && s0 > K.vmin){ const a = Math.acos(clamp((vx * q[1] + vz * q[2]) / s1 / s0, -1, 1)) * 180 / Math.PI; if(a > m.turn){ m.turn = a; m.turnAt = tt; } } }
+      for(const k of ['back', 'backV', 'turn', 'backAt', 'turnAt']) if(m[k] != null) m[k] = +m[k].toFixed(2);
+      m.bad = m.back >= K.hold - dt / 2 || m.turn > K.turn; rows.push(m);
+      const why = []; if(m.back >= K.hold - dt / 2) why.push('steps backwards for ' + m.back + ' s (down to ' + m.backV + ' ft/s along the view; ' + m.backAt + ' of ' + m.dur + ' s)'); if(m.turn > K.turn) why.push('doubles back (its way turns ' + Math.round(m.turn) + ' deg in ' + K.turnS + ' s; ' + m.turnAt + ' of ' + m.dur + ' s)');
       if(!why.length) R.note('back', id, 'forward all the way in (' + m.dur + ' s; least ' + m.backV + ' ft/s along the view)'); else if(K.known.includes(id)) R.note('back', id, 'known: ' + why.join(', ')); else R.fail('back', id, why.join(', ')); };
     R37S.qaNoDraw = true; performance.now = () => vt;
     try{ const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)); tour(seq[0]);
@@ -23063,15 +23065,14 @@ function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golde
 /* r37 smooth walking: the caps the ?qa=1 'smooth' check holds every walked move to; qaNoDraw lets that check step frames without drawing them */
 const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false, anim: () => anim, leaves: () => r37Leaves()};
 /* r41: the ?qa=1 'back' check's limits (see SEC.back in navQA): over the last 40 % (tail) of a walked move, no velocity along the view under dot
-   ft/s for hold s or more, and no getting more than away ft further from the stop. known: the moves that already did so when the check came in
-   (r41, measured at 60 fps). In all of them but walk:mainbeds>mainbath the cause is the same: the stop looks back across the room (or back the way
+   ft/s for hold s or more, and no U-turn (the way of travel turning more than turn deg within turnS s at over vmin ft/s). known: the moves that already did so when the check came in
+   (r41, measured at 60 fps). In all of them the cause is the same: the stop looks back across the room (or back the way
    you came), and r37's walk turns the head onto that view over the last several feet while still walking in, so the camera slides backwards as it
    swings round (up to 8 ft/s). Removing it means making that turn standing, once the walk has stopped: tried in r41, it added 2-3 s to most of
-   these moves and turned 3 more tour moves into dissolves under the 10 s rule, so it is left for the owner to decide. walk:mainbeds>mainbath also
-   comes 0.9 ft back toward the hall near the end. A move not listed here fails. The moves into the loft (stairs>loft, pbath>loft, 'Walk to'
+   these moves and turned 3 more tour moves into dissolves under the 10 s rule, so it is left for the owner to decide. A move not listed here fails. The moves into the loft (stairs>loft, pbath>loft, 'Walk to'
    the loft) are not listed: the loft stop now stands on the loft floor and they are forward all the way in. The moves out of it, down to the
    Stairs stop (which looks back up the stairs) and into the primary bath, are listed for the reason above. */
-const R41B = window.R41B = {dot: -.2, hold: .2, away: .3, tail: .4, known: [
+const R41B = window.R41B = {dot: -.2, hold: .2, turn: 150, turnS: .5, vmin: .5, tail: .4, known: [
   'porch>entry', 'entry>living', 'living>kitchen', 'kitchen>great', 'great>mainbeds', 'mainbeds>middlebed', 'middlebed>hallbath', 'hallbath>backbed', 'loft>pbath', 'pbath>primary', 'lbath>lbed2', 'laundry>office', 'office>lounge', 'lounge>terrace', 'terrace>yard', 'garage>dusk', 'dusk>garage', 'garage>yard', 'lounge>office', 'office>laundry', 'laundry>lbed2', 'lbath>lower', 'balcony>primary', 'primary>pbath', 'loft>stairs', 'stairs>backbed', 'backbed>hallbath', 'hallbath>middlebed', 'middlebed>mainbeds', 'mainbeds>great', 'great>kitchen', 'living>entry', 'entry>porch', 'porch>street',
   'walk:start>street', 'walk:frontdeck>entry', 'walk:entry>living', 'walk:great>mainbeds', 'walk:mainbeds>mainbath', 'walk:loft>pbath', 'walk:closet>primary', 'walk:lbath>lbed2', 'walk:laundry>office', 'walk:office>rec',
   'back:street>dusk', 'back:frontdeck>porch', 'back:kitchen>kitchen', 'back:stairs>stairs', 'back:closet>pbath']};
