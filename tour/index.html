@@ -16003,6 +16003,8 @@ html.ph #hm42 p{color:var(--pm,var(--muted));margin-right:auto}html.ph #hm42 but
 /* the closing card's links: two tidy columns, full-height targets */
 html.ph .fin36 .fl{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 html.ph .fin36 .fl :is(a,button){min-height:44px;padding:4px 0;font-size:15px;text-align:left;justify-content:flex-start}
+@media (orientation:landscape){html.ph .fin36 .fl{display:flex;flex-wrap:wrap;gap:0 20px}}   /* held sideways: one row, so the card stays short */
+html.fin36on #cb42.b42ab{display:none!important}   /* the closing card says what the house is */
 /* the picker on a phone held upright: the plans as a 2 x 2 grid of tiles (all four in view, the chosen one filled), the chosen plan's
    details and label underneath. Held sideways: a list in the side sheet. */
 html.ph #pk42h{padding:4px 0 0}
