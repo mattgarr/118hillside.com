@@ -206,7 +206,7 @@ B.probes = function(list){ const g = B.grid, pts = list || []; if(!list) for(let
 B.skyFrom = function(src){ const W = src.width, Hh = src.height, g = document.createElement('canvas'); g.width = W; g.height = Hh; const c = g.getContext('2d'); c.drawImage(src, 0, 0); const d = c.getImageData(0, 0, W, Hh).data, f = new Float32Array(W * Hh * 4);
   for(let j = 0; j < Hh; j++) for(let i = 0; i < W; i++){ const s = (j * W + i) * 4, o = ((Hh - 1 - j) * W + i) * 4; f[o] = s2l(d[s] / 255); f[o + 1] = s2l(d[s + 1] / 255); f[o + 2] = s2l(d[s + 2] / 255); f[o + 3] = 1; }
   const t = new THREE.DataTexture(f, W, Hh, THREE.RGBAFormat, THREE.FloatType); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; };
-B.skyNow = () => { const e = H.ENV_RT, s = e && e.userData.giSrc; if(!s) throw new Error('no sky source (PMREM patch missed it)'); return s; };
+B.skyNow = () => { const e = H.ENV_RT, s = e && e.giSrc; if(!s) throw new Error('no sky source (PMREM patch missed it)'); return s; };
 
 /* ---------------- lights for the lamp component (the room lamps and fixtures near the rooms, as they are now) ---------------- */
 B.lights = function(){ const g = B.grid, L = [], p = new THREE.Vector3(), q = new THREE.Vector3(), ext = 6;
@@ -226,7 +226,7 @@ B.run = async function(comp, o = {}){ const U = mat().uniforms, np = B.np, dirs 
   U.uTri.value = B.tTri; U.uNode.value = B.tNode; U.uMat.value = B.tMat; U.uPrb.value = B.tPrb; U.uDirs.value = dirs; U.uOutW.value = W; U.uMaxB.value = o.maxB || 5; U.uNoGeo.value = o.noGeo ? 1 : 0;
   U.uComp.value = {sky: 0, sun: 1, lamp: 2, ao: 3}[comp]; U.uAOR.value = o.R || 2.5;
   if(comp === 'sun') U.uSun.value.set(...o.sun).normalize();
-  if(comp === 'sky'){ if(B.tSky) B.tSky.dispose(); B.tSky = B.skyFrom(o.sky || B.skyNow()); } U.uSky.value = B.tSky || B.skyFrom(B.skyNow());
+  if(comp === 'sky'){ if(B.tSky) B.tSky.dispose(); B.tSky = B.skyFrom(o.sky || B.skyNow()); } if(!B.tSky){ B.tSky = new THREE.DataTexture(new Float32Array(4), 1, 1, THREE.RGBAFormat, THREE.FloatType); B.tSky.needsUpdate = true; } U.uSky.value = B.tSky;
   if(comp === 'lamp') setLights(o.lights || B.lights());
   const maxRows = Math.min(rows, o.rows || 4096), chunk = o.chunkRows || 64;
   if(!B.rt || B.rt.width !== W || B.rt.height < maxRows){ if(B.rt) B.rt.dispose(); B.rt = new THREE.WebGLRenderTarget(W, maxRows, {type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false}); }
@@ -264,4 +264,119 @@ B.prepare = function(){ const a = B.extract(), b = B.build(), c = B.upload(); B.
 // a time of day by hour and day of year (the escape game's way): the page's own setTOD with a custom preset
 B.tod = function(h, doy, dusk){ const T = H.TOD; let t = T.find(x => x.key === 'gibake'); if(!t){ t = {key: 'gibake', label: 'Bake', h, doy}; T.push(t); } t.h = h; t.doy = doy; H.setTOD(dusk ? 'dusk' : 'gibake');
   return {dir: H.SUN_DIR.toArray(), sun: [H.sun.color.r, H.sun.color.g, H.sun.color.b, H.sun.intensity], tod: H.TOD_KEY}; };
+
+/* ---------------- which probes to trace: in the three rooms' air (BIM spaces) and not inside furniture or walls ---------------- */
+B.classify = async function(o = {}){ const g = B.grid, BS = H.BIM2S, N = g.nx * g.ny * g.nz, cls = new Uint8Array(N), pos = i => { const x = i % g.nx, z = Math.floor(i / g.nx) % g.nz, y = Math.floor(i / (g.nx * g.nz)); return [g.x0 + x * g.d, g.y0 + y * g.d, g.z0 + z * g.d]; };
+  for(let i = 0; i < N; i++){ const [x, y, z] = pos(i), s = BS.spaceAt(z, x, y); cls[i] = s ? (GI.ROOMS.includes(s.id) ? 2 : s.interior ? 1 : 0) : 0; }
+  const cand = []; for(let i = 0; i < N; i++) if(cls[i] === 2) cand.push(i);
+  B.probes(cand.map(pos)); const r = await B.run('ao', {passes: o.passes || 1, dirs: 64, R: 1e5}); const valid = new Uint8Array(N), list = [];
+  cand.forEach((i, k) => { if(r.ao[k * 2 + 1] < (o.maxBack || .06)){ valid[i] = 1; list.push(i); } });
+  B.cls = cls; B.valid = valid; B.list = list; B.pos = pos; B.probes(list.map(pos)); B.st.classify = {N, rooms: cand.length, valid: list.length, ms: r.ms}; say('classify', JSON.stringify(B.st.classify)); return B.st.classify; };
+
+/* ---------------- the whole bake: per key the sky and the unit sun, then the lamps at dusk; every component checkpointed ---------------- */
+B.KEYS = [{h: 7.75, doy: 288}, {h: 9.5, doy: 288}, {h: 11.25, doy: 288}, {h: 13, doy: 288}, {h: 14.75, doy: 288}, {h: 16.25, doy: 288}, {h: 17.4, doy: 288}, {h: 18.15, doy: 288}, {h: 18.75, doy: 288, dusk: true},
+  {h: 9.5, doy: 165}, {h: 13, doy: 172}, {h: 17, doy: 172}];
+B.bakeAll = async function(o = {}){ const tag = o.tag || 'v1', keys = o.keys || B.KEYS, passes = o.passes || 16, t0 = performance.now(), tod0 = H.TOD_KEY, done = [], have = new Set(await B.keys());
+  if(!B.list) await B.classify();
+  const meta = (await B.get(tag + ':meta')) || {tag, list: B.list, grid: B.grid, keys: [], passes, made: new Date().toISOString()};
+  if(meta.list.length !== B.list.length) throw new Error('probe list changed: use another tag');
+  const quit = () => o.budgetMs && performance.now() - t0 > o.budgetMs;
+  try{
+    for(let k = 0; k < keys.length; k++){ if(quit()) break; const K = keys[k], nm = tag + ':' + k;
+      if(have.has(nm + ':sky') && have.has(nm + ':sun') && meta.keys[k]) continue;
+      const st = B.tod(K.h, K.doy, K.dusk), src = B.skyNow(), sh = GI.skySH(src);
+      meta.keys[k] = {h: K.h, doy: K.doy, dusk: !!K.dusk, dir: st.dir, sunCol: st.sun, sky: sh.slice(0, 3), skySH: sh, tod: st.tod}; await B.put(tag + ':meta', meta);
+      if(!have.has(nm + ':sky')){ const r = await B.run('sky', {sky: src, passes, maxB: o.maxB || 5, seed: 11 + k}); await B.put(nm + ':sky', {sh: r.sh, ms: r.ms}); done.push(nm + ':sky ' + r.ms); say(nm, 'sky', r.ms); }
+      if(quit()) break;
+      if(!have.has(nm + ':sun')){ const r = await B.run('sun', {sun: st.dir, passes, maxB: o.maxB || 5, seed: 51 + k}); await B.put(nm + ':sun', {sh: r.sh, ms: r.ms}); done.push(nm + ':sun ' + r.ms); say(nm, 'sun', r.ms); } }
+    if(!quit() && !have.has(tag + ':lamp')){ B.tod(18.75, 288, true); const L = B.lights(); let s = 0, n = 0; for(const l of H.DUSK_LIGHTS) if(GI.inRegion ? inReg(l) : true){ s += l.intensity; n++; }
+      meta.lampRef = n ? s / n : 0; meta.lights = L.map(l => ({name: l.name, I: +l.I.toFixed(3), pos: l.pos.map(v => +v.toFixed(2))})); await B.put(tag + ':meta', meta);
+      const r = await B.run('lamp', {lights: L, passes, maxB: o.maxB || 5, seed: 97}); await B.put(tag + ':lamp', {sh: r.sh, ms: r.ms}); done.push('lamp ' + r.ms + ' (' + L.length + ' lights)'); say('lamp', r.ms); } }
+  finally{ try{ H.setTOD(tod0); }catch(e){} }
+  const all = new Set(await B.keys()), need = keys.map((_, k) => [tag + ':' + k + ':sky', tag + ':' + k + ':sun']).flat().concat([tag + ':lamp']);
+  return {done, missing: need.filter(x => !all.has(x)), ms: Math.round(performance.now() - t0)}; };
+function inReg(l){ const p = l.getWorldPosition(new THREE.Vector3()), g = B.grid; return p.x >= g.x0 - 2 && p.x <= g.x0 + g.d * g.nx + 2 && p.z >= g.z0 - 2 && p.z <= g.z0 + g.d * g.nz + 2 && p.y >= g.y0 - 3 && p.y <= g.y0 + g.d * g.ny + 3; }
+
+/* ---------------- the AO volume (contact shadow): obscurance within R over the sphere, in the rooms only ---------------- */
+B.bakeAO = async function(o = {}){ const A = Object.assign({}, B.aoGrid, o.grid || {}), BS = H.BIM2S, N = A.nx * A.ny * A.nz, list = [], P = [];
+  for(let y = 0; y < A.ny; y++) for(let z = 0; z < A.nz; z++) for(let x = 0; x < A.nx; x++){ const X = A.x0 + x * A.d, Y = A.y0 + y * A.d, Z = A.z0 + z * A.d;
+    if(GI.roomAt(X, Y, Z) > 0 || GI.roomAt(X + .6, Y, Z) > 0 || GI.roomAt(X - .6, Y, Z) > 0 || GI.roomAt(X, Y, Z + .6) > 0 || GI.roomAt(X, Y, Z - .6) > 0){ list.push((y * A.nz + z) * A.nx + x); P.push([X, Y, Z]); } }
+  const out = new Float32Array(N * 2).fill(-1), step = o.batch || 60000, t0 = performance.now();
+  for(let s = 0; s < list.length; s += step){ B.probes(P.slice(s, s + step)); const r = await B.run('ao', {passes: o.passes || 1, dirs: o.dirs || 64, R: A.R});
+    for(let k = 0; k < r.ao.length / 2; k++){ out[list[s + k] * 2] = r.ao[k * 2]; out[list[s + k] * 2 + 1] = r.ao[k * 2 + 1]; } say('ao', s, '/', list.length); }
+  await B.put((o.tag || 'v1') + ':ao', {grid: A, ao: out}); B.probes(B.list ? B.list.map(B.pos) : undefined); return {voxels: list.length, ms: Math.round(performance.now() - t0)}; };
+
+/* ---------------- from the checkpoints to the files ---------------- */
+function jacobi(Ain, n){ const A = Ain.map(r => r.slice()), V = Array.from({length: n}, (_, i) => Array.from({length: n}, (_, j) => i === j ? 1 : 0));
+  for(let sw = 0; sw < 60; sw++){ let off = 0; for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++) off += A[i][j] * A[i][j]; if(off < 1e-22) break;
+    for(let p = 0; p < n; p++) for(let q = p + 1; q < n; q++){ if(Math.abs(A[p][q]) < 1e-30) continue; const th = (A[q][q] - A[p][p]) / (2 * A[p][q]), t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1)), c = 1 / Math.sqrt(t * t + 1), s = t * c;
+      for(let k = 0; k < n; k++){ const akp = A[k][p], akq = A[k][q]; A[k][p] = c * akp - s * akq; A[k][q] = s * akp + c * akq; }
+      for(let k = 0; k < n; k++){ const apk = A[p][k], aqk = A[q][k]; A[p][k] = c * apk - s * aqk; A[q][k] = s * apk + c * aqk; }
+      for(let k = 0; k < n; k++){ const vkp = V[k][p], vkq = V[k][q]; V[k][p] = c * vkp - s * vkq; V[k][q] = s * vkp + c * vkq; } } }
+  const ev = Array.from({length: n}, (_, i) => A[i][i]), ord = ev.map((v, i) => i).sort((a, b) => ev[b] - ev[a]); return {val: ord.map(i => ev[i]), vec: ord.map(i => V.map(r => r[i]))}; }
+// grid volume from a list-order SH array, then dilated into the cells around the rooms (walls, furniture, outside: never lit from there)
+function toGrid(sh, list, N){ const F = new Float32Array(N * 12); list.forEach((i, k) => { for(let c = 0; c < 12; c++) F[i * 12 + c] = sh[k * 12 + c]; }); return F; }
+function dilate(F, filled0, g, rings){ const N = g.nx * g.ny * g.nz, filled = Uint8Array.from(filled0);
+  for(let r = 0; r < rings; r++){ const add = []; for(let i = 0; i < N; i++){ if(filled[i]) continue; const x = i % g.nx, z = Math.floor(i / g.nx) % g.nz, y = Math.floor(i / (g.nx * g.nz)); let n = 0; const s = new Float64Array(12);
+      for(let dy = -1; dy <= 1; dy++) for(let dz = -1; dz <= 1; dz++) for(let dx = -1; dx <= 1; dx++){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= g.nx || Y >= g.ny || Z >= g.nz) continue; const j = (Y * g.nz + Z) * g.nx + X; if(!filled[j]) continue; const w = 1 / (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) || 1); n += w; for(let c = 0; c < 12; c++) s[c] += F[j * 12 + c] * w; }
+      if(n > 0) add.push([i, s.map(v => v / n)]); }
+    for(const [i, s] of add){ F.set(s, i * 12); filled[i] = 1; } }
+  return filled; }
+function denoise(F, valid, g, k){ if(!(k > 0)) return; const N = g.nx * g.ny * g.nz, G = Float32Array.from(F);
+  for(let i = 0; i < N; i++){ if(!valid[i]) continue; const x = i % g.nx, z = Math.floor(i / g.nx) % g.nz, y = Math.floor(i / (g.nx * g.nz)); let n = 1; const s = new Float64Array(12); for(let c = 0; c < 12; c++) s[c] = G[i * 12 + c];
+    for(const [dx, dy, dz] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= g.nx || Y >= g.ny || Z >= g.nz) continue; const j = (Y * g.nz + Z) * g.nx + X; if(!valid[j]) continue; n += k; for(let c = 0; c < 12; c++) s[c] += k * G[j * 12 + c]; }
+    for(let c = 0; c < 12; c++) F[i * 12 + c] = s[c] / n; } }
+// low rank (no centring, so a blend of keys stays a blend of coefficients): x_k = sum_b coef[k][b] * basis_b
+function pca(vols, used, energy, maxR){ const K = vols.length, G = Array.from({length: K}, () => new Array(K).fill(0));
+  for(let a = 0; a < K; a++) for(let b = a; b < K; b++){ let s = 0; const A = vols[a], Bv = vols[b]; for(const i of used) for(let c = 0; c < 12; c++) s += A[i * 12 + c] * Bv[i * 12 + c]; G[a][b] = G[b][a] = s; }
+  const {val, vec} = jacobi(G, K), tot = val.reduce((x, y) => x + Math.max(0, y), 0); let r = 0, acc = 0; while(r < Math.min(K, maxR || K) && (acc < energy * tot || r < 1)){ acc += Math.max(0, val[r]); r++; }
+  const N = vols[0].length / 12, bases = [], coef = Array.from({length: K}, () => new Array(r).fill(0));
+  for(let b = 0; b < r; b++){ const sl = Math.sqrt(Math.max(1e-30, val[b])), U = new Float32Array(N * 12); for(let k = 0; k < K; k++){ const w = vec[b][k] / sl; if(!w) continue; const X = vols[k]; for(let i = 0; i < U.length; i++) U[i] += w * X[i]; }
+    // sign: the first basis positive in L0
+    let sg = 0; for(const i of used) sg += U[i * 12] + U[i * 12 + 1] + U[i * 12 + 2]; const f = sg < 0 ? -1 : 1; if(f < 0) for(let i = 0; i < U.length; i++) U[i] = -U[i];
+    for(let k = 0; k < K; k++) coef[k][b] = f * vec[b][k] * sl; bases.push(U); }
+  return {bases, coef, energy: acc / tot, val}; }
+function quant(F, used, NP, bits){ const r = [], mx = bits === 16 ? 65535 : 255, out = bits === 16 ? new Uint16Array(12 * NP) : new Uint8Array(12 * NP);
+  for(let c = 0; c < 12; c++){ let lo = 1e30, hi = -1e30; for(const i of used){ const v = F[i * 12 + c]; if(v < lo) lo = v; if(v > hi) hi = v; } if(!(hi > lo)){ lo = Math.min(0, lo); hi = lo + 1e-6; }
+    // zero must be exact (outside the used cells)
+    if(lo > 0) lo = 0; if(hi < 0) hi = 0; const sc = mx / (hi - lo), z = Math.round(-lo * sc); hi = lo + mx / sc; r.push([+lo.toPrecision(7), +hi.toPrecision(7)]);
+    for(let p = 0; p < NP; p++){ const v = used.has ? (used.has(p) ? F[p * 12 + c] : 0) : F[p * 12 + c]; out[c * NP + p] = Math.max(0, Math.min(mx, Math.round((v - lo) * sc))); } }
+  return {q: out, r}; }
+async function deflate(u8){ const s = new Response(new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'))); return new Uint8Array(await s.arrayBuffer()); }
+B.finish = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get(tag + ':meta'), g = meta.grid, N = g.nx * g.ny * g.nz, list = meta.list, K = meta.keys.length, t0 = performance.now();
+  const valid = new Uint8Array(N); for(const i of list) valid[i] = 1;
+  const load = async nm => { const r = await B.get(nm); if(!r) throw new Error('missing ' + nm); const F = toGrid(r.sh, list, N); denoise(F, valid, g, o.blur != null ? o.blur : .35); return F; };
+  const sky = [], sun = []; for(let k = 0; k < K; k++){ sky.push(await load(tag + ':' + k + ':sky')); sun.push(await load(tag + ':' + k + ':sun')); } const lamp = await load(tag + ':lamp');
+  let filled = null; for(const F of [...sky, ...sun, lamp]) filled = dilate(F, valid, g, o.rings || 3);
+  const used = []; for(let i = 0; i < N; i++) if(filled[i]) used.push(i); const usedSet = new Set(used);
+  const ps = pca(sky, used, o.eSky || .9995, o.rSky || 5), pu = pca(sun, used, o.eSun || .999, o.rSun || 8);
+  // reconstruction error of the low rank, at the probes in the rooms (L0 luminance, relative)
+  const err = (vols, P) => { let worst = 0, tot = 0, n = 0; vols.forEach((X, k) => { for(const i of list){ let rec = 0; const L = c => .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+      const a = [0, 1, 2].map(c => P.bases.reduce((s, U, b) => s + P.coef[k][b] * U[i * 12 + c], 0)), x = [0, 1, 2].map(c => X[i * 12 + c]); rec = Math.abs(L(a) - L(x)) / Math.max(1e-4, L(x)); worst = Math.max(worst, rec); tot += rec; n++; } }); return {mean: +(tot / n).toFixed(4), worst: +worst.toFixed(3)}; };
+  const vols = [], parts = [];
+  const push = (F, kind, coef, bits) => { const qz = quant(F, usedSet, N, bits); vols.push({kind, coef: coef ? coef.map(v => +v.toPrecision(6)) : undefined, enc: bits === 16 ? 'q16' : 'q8', r: qz.r}); parts.push(new Uint8Array(qz.q.buffer)); };
+  ps.bases.forEach((U, b) => push(U, 'sky', ps.coef.map(c => c[b]), b === 0 ? 16 : (o.bits || 8)));
+  pu.bases.forEach((U, b) => push(U, 'sun', pu.coef.map(c => c[b]), b === 0 ? 16 : (o.bits || 8)));
+  push(lamp, 'lamp', null, 16);
+  let ao = null; const AOr = await B.get(tag + ':ao');
+  if(AOr && o.ao !== false){ const A = AOr.grid, n = A.nx * A.ny * A.nz, a = new Uint8Array(n);
+    const raw = AOr.ao, val = new Float32Array(n).fill(-1);
+    for(let i = 0; i < n; i++){ if(raw[i * 2] < 0) continue; if(raw[i * 2 + 1] > .25) continue; val[i] = raw[i * 2]; }   // inside a solid: filled from outside neighbours below
+    for(let r = 0; r < 3; r++){ const nv = Float32Array.from(val); for(let i = 0; i < n; i++){ if(val[i] >= 0 || raw[i * 2] < 0) continue; const x = i % A.nx, z = Math.floor(i / A.nx) % A.nz, y = Math.floor(i / (A.nx * A.nz)); let s = 0, m = 0;
+        for(const [dx, dy, dz] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= A.nx || Y >= A.ny || Z >= A.nz) continue; const j = (Y * A.nz + Z) * A.nx + X; if(val[j] >= 0){ s += val[j]; m++; } }
+        if(m) nv[i] = s / m; } val.set(nv); }
+    // the obscurance of open floor seen from the sampling offset above it (the median of that layer): no darkening there
+    const yl = Math.round(((o.aoOff || .2) - A.y0) / A.d), lay = []; for(let i = yl * A.nx * A.nz; i < (yl + 1) * A.nx * A.nz; i++) if(val[i] >= 0) lay.push(val[i]); lay.sort((x, y) => x - y); const flat = o.aoFlat || lay[lay.length >> 1] || .4; B.st.aoFlat = flat;
+    for(let i = 0; i < n; i++){ const v = val[i]; a[i] = v < 0 ? 255 : Math.round(255 * Math.max(0, Math.min(1, 1 - Math.max(0, v - flat) / (1 - flat) * (o.aoK || 1.6)))); }
+    ao = {x0: A.x0, y0: A.y0, z0: A.z0, d: A.d, nx: A.nx, ny: A.ny, nz: A.nz, tx: Math.ceil(Math.sqrt(A.ny * A.nz / A.nx)), off: o.aoOff || .2}; ao.ty = Math.ceil(A.ny / ao.tx); parts.push(a); }
+  let tot = 0; for(const p of parts) tot += p.length; const all = new Uint8Array(tot); let off = 0; for(const p of parts){ all.set(p, off); off += p.length; }
+  const z = await deflate(all), ver = o.version || ('gi-' + tag);
+  const index = {version: ver, made: meta.made, file: ver + '.bin', bytes: z.length, raw: tot, grid: g, nOff: o.nOff || .45, room: {y0: -1, y1: 15},
+    keys: meta.keys.map(k => ({h: k.h, doy: k.doy, dusk: k.dusk, dir: k.dir.map(v => +v.toFixed(5)), sky: k.sky.map(v => +v.toPrecision(6)), sunCol: k.sunCol.map(v => +v.toFixed(4))})),
+    lampRef: meta.lampRef, lights: meta.lights, passes: meta.passes, rays: meta.passes * 64, probes: list.length, vols, ao,
+    pca: {sky: {rank: ps.bases.length, energy: +ps.energy.toFixed(6), err: err(sky, ps)}, sun: {rank: pu.bases.length, energy: +pu.energy.toFixed(6), err: err(sun, pu)}}};
+  B.out = {index, z, raw: all}; say('finish', z.length, 'bytes', Math.round(performance.now() - t0), 'ms'); return {bytes: z.length, raw: tot, pca: index.pca, vols: vols.length, ms: Math.round(performance.now() - t0)}; };
+// hand the result to gi.js in this page (no reload) and switch it on
+B.apply = function(){ const {index, raw} = B.out; GI.useData(index, raw); GI.mode = '1'; GI.snap = true; return GI.status(); };
+B.b64 = (off = 0, len = 180000) => { const z = B.out.z, s = z.subarray(off, off + len); let b = ''; for(let i = 0; i < s.length; i += 8192) b += String.fromCharCode.apply(null, s.subarray(i, i + 8192)); return btoa(b); };
 })();

@@ -1,7 +1,7 @@
 /* gi-r42: baked indirect light for the 3D tour - a prototype for the kitchen, the dining & sitting area (great room) and the living room.
    Loaded only with ?gi=1 (or ?gi=bake for the bake tools in gi-bake.js); without the flag tour/index.html never requests this file.
 
-   What it does (tour/GI.md has the study):
+   What it does:
    - The sun stays a real-time light with real-time shadows. Only indirect light is precomputed: an irradiance volume, a grid of light
      probes (spherical harmonics L1 per colour, 1.25 ft apart) over the three rooms, path traced on the GPU over the tour's own scene.
    - Separate components keep the time of day continuous: the sky through the windows (baked per sun position with that time's painted
@@ -71,7 +71,7 @@ if( giOn > 0.5 && r40m > 0.001 ){
 
 /* ---------------- the sky panorama each environment was made from (to tint the baked sky by the sky drawn now) ---------------- */
 function patchPMREM(){ const P = THREE.PMREMGenerator.prototype; if(P.__gi) return; P.__gi = 1; const f = P.fromEquirectangular;
-  P.fromEquirectangular = function(tex){ const rt = f.apply(this, arguments); try{ if(tex && tex.image && tex.image.getContext) rt.userData.giSrc = tex.image; }catch(e){} return rt; }; }
+  P.fromEquirectangular = function(tex){ const rt = f.apply(this, arguments); try{ if(tex && tex.image && tex.image.getContext) rt.giSrc = tex.image; }catch(e){} return rt; }; }
 // SH L1 irradiance of an equirect canvas (sRGB, as rebuildEnvironment paints it): {a: [r,g,b], b: [[x],[y],[z]] per channel}
 const _cv = document.createElement('canvas'); _cv.width = 64; _cv.height = 32;
 GI.skySH = function(src, W = 64, H = 32){ const g = _cv.getContext('2d', {willReadFrequently: true}); _cv.width = W; _cv.height = H; g.drawImage(src, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data;
@@ -102,7 +102,7 @@ const toHalf = (() => { const f = new Float32Array(1), u = new Uint32Array(f.buf
   if(e <= 0) return s; if(e >= 31) return s | 0x7bff; return s | (e << 10) | ((m + 0x1000) >>> 13 > 0x3ff ? 0x3ff : (m + 0x1000) >>> 13); }; })();
 async function inflate(buf){ if(typeof DecompressionStream === 'undefined') throw new Error('no DecompressionStream');
   const s = new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('deflate'))); return new Uint8Array(await s.arrayBuffer()); }
-// file format (gi/index.json + gi/*.bin, deflate): see GI.md. Volumes decode to Float32Array(12 * NP): a.rgb, bx.rgb, by.rgb, bz.rgb per probe.
+// file format: gi/index.json (grid, sun keys, volumes with their kind, per-key coefficients and ranges) + gi/<version>.bin (deflate). Volumes decode to Float32Array(12 * NP): a.rgb, bx.rgb, by.rgb, bz.rgb per probe.
 async function load(){ try{
     const ix = await (await fetch(GI.base + 'index.json?v=' + GI.ver, {cache: 'no-cache'})).json(); GI.index = ix;
     const raw = await inflate(await (await fetch(GI.base + ix.file + '?v=' + ix.version)).arrayBuffer()); GI.bytes = ix.bytes;
@@ -139,7 +139,7 @@ GI.weights = function(dir){ const K = GI.index.keys, w = K.map(k => { const c = 
   return w.map(v => v / s); };
 GI.state = function(){ const H = GI.H, ix = GI.index, w = GI.weights(H.SUN_DIR), K = ix.keys;
   // sky: the baked sky of each key, tinted by the sky the page draws now (its SH L0) over the keys' blended reference
-  const env = H.ENV_RT, src = env && env.userData && env.userData.giSrc; let sky = GI._sky;
+  const env = H.ENV_RT, src = env && env.giSrc; let sky = GI._sky;
   if(src && (!sky || sky.src !== src)){ const sh = GI.skySH(src); sky = GI._sky = {src, a: sh.slice(0, 3)}; }
   const ref = [0, 1, 2].map(c => K.reduce((s, k, i) => s + w[i] * k.sky[c], 0)), tint = sky ? [0, 1, 2].map(c => sky.a[c] / Math.max(1e-6, ref[c])) : [1, 1, 1];
   const sc = H.sun.color, si = H.sun.intensity, sun = [sc.r * si, sc.g * si, sc.b * si];
@@ -174,7 +174,7 @@ GI.frame = function(){ const H = GI.H; if(!H) return; GI.n++;
   GI.k = GI.snap ? want : (GI.k < want ? Math.min(want, GI.k + dt / .8) : Math.max(want, GI.k - dt / .8)); GI.snap = false;
   const U = GI.U; U.giOn.value = GI.k > 0 ? 1 : 0; U.giK.value = GI.k * GI.k * (3 - 2 * GI.k); U.giGain.value = GI.gain; U.giSpec.value = GI.spec; U.giAOK.value = GI.aoK; U.giHemi.value = GI.hemiKill;
   GI.on = GI.k > 0;
-  const s = H.SUN_DIR, c = H.sun.color, env = H.ENV_RT, src = env && env.userData && env.userData.giSrc;
+  const s = H.SUN_DIR, c = H.sun.color, env = H.ENV_RT, src = env && env.giSrc;
   let ln = 0; for(const l of H.DUSK_LIGHTS) ln += l.intensity;
   const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0);
   if(key !== GI.last && GI.on){ GI.last = key; try{ GI.compose(); }catch(e){ console.warn('[gi] compose', e); GI.ready = false; } }
