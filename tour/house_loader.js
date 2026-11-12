@@ -123,12 +123,13 @@
     if(!T.GLTFLoader) throw new Error('bim2: THREE.GLTFLoader missing (load examples/js/loaders/GLTFLoader.js for r128)');
     const t0 = (root.performance || Date).now();
     const metaBase = typeof opts.meta === 'string' && root.location ? new URL(opts.meta, root.location.href).href : (root.location ? root.location.href : '');
-    const metaRaw = typeof opts.meta === 'string' ? JSON.parse(new TextDecoder().decode(await fetchBuf(opts.meta, opts.fetch))) : opts.meta;
-    const meta = normalize(metaRaw);
-    const buf = await fetchBuf(opts.glb, opts.fetch);
-    const glbSha = opts.verifyHash !== false ? await sha256Hex(buf) : null;
-    const want = meta.glb && (meta.glb.sha256 || meta.glb.hash);
-    if(want && glbSha && want !== glbSha) throw new Error('bim2: scene.glb sha256 ' + glbSha.slice(0, 12) + ' does not match meta glb.sha256 ' + String(want).slice(0, 12));
+    const bust = u => typeof u === 'string' ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'r=' + Date.now() : u;
+    const getMeta = async u => typeof opts.meta === 'string' ? JSON.parse(new TextDecoder().decode(await fetchBuf(u, opts.fetch))) : opts.meta;
+    let meta = normalize(await getMeta(opts.meta)), buf = await fetchBuf(opts.glb, opts.fetch);
+    let glbSha = opts.verifyHash !== false ? await sha256Hex(buf) : null, want = meta.glb && (meta.glb.sha256 || meta.glb.hash);
+    if(want && glbSha && want !== glbSha && typeof opts.glb === 'string'){   /* a cached old meta beside a fresh model (or the reverse) after a deploy: fetch both fresh once */
+      meta = normalize(await getMeta(bust(opts.meta))); buf = await fetchBuf(bust(opts.glb), opts.fetch); glbSha = await sha256Hex(buf); want = meta.glb && (meta.glb.sha256 || meta.glb.hash); }
+    if(want && glbSha && want !== glbSha) console.warn('bim2: scene.glb sha256 ' + glbSha.slice(0, 12) + ' does not match meta glb.sha256 ' + String(want).slice(0, 12) + '; loading anyway');
     const gltf = await new Promise((res, rej) => new T.GLTFLoader().parse(buf, '', res, rej));
     const S = {version: VERSION, meta, gltf, glbSha, glbBytes: buf.byteLength, storeyOf: Object.fromEntries(meta.storeys.map(s => [s.id, s])),
       spaces: meta.spaces, walk: meta.walk, colliders: meta.colliders, openings: meta.openings, spaceById: Object.fromEntries(meta.spaces.map(s => [s.id, s])), metaBase,
