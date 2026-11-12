@@ -155,7 +155,7 @@
       kwin.color = 'rgba(255,240,206,1)';
       W.screen = lightPlane({plane: shadeFrame, blend: 'paint', base: 'rgba(96,84,70,.82)', ppf: 40, blur: 2, lift: .02, order: 5, sources: [kwin]});
       // ---- Snowball's last job: paper strips on the balcony doors write an 8 across the bedroom floor at a quarter to eight
-      const sl0 = windowSource('D-L2-01', {room: 'SP-L2-PRIMARY'}), sop = sl0.op, sout = sl0.out(), T_SUN = 19.75;
+      const sl0 = windowSource('D-L2-01', {room: 'SP-L2-PRIMARY'}), sop = sl0.op, sout = sl0.out(), T_SUN = 19.625;   // between half past seven and a quarter to eight, so both read
       const slStrips = makeStrips('8', {o: [-13.4, UY + .05, -29.4], right: [1, 0, 0], up: [0, 0, -1], size: 1.15, pitch: 1.5}, {p: [sop.c[0], 0, sop.c[1]], n: [sout.x, 0, sout.z]}, T_SUN);
       W.slPaper = buildPaper(slStrips, [-sout.x * .03, 0, -sout.z * .03], 'upper');
       W.slider = windowSource('D-L2-01', {room: 'SP-L2-PRIMARY', shade: 'D-L2-01', bot: UY + .1, bars: [[-1.5, -1.38, 0, 20], [1.38, 1.5, 0, 20]], strips: slStrips, gate: () => has('sunsetNote')});
@@ -164,8 +164,10 @@
       W.sunsetNote = nc.mesh = prop(nc.cv, [-17.6, UY + 4.4, -39.95], [0, 0, 1], 1.4, 1.05, {group: 'upper'});
       // ---- the shower glass and the mirror
       W.glass = prop(glassCanvas(false), [-11.2, UY + 3.5, -19.40], [0, 0, -1], 3.6, 1.34, {group: 'upper', tone: 1, both: false});
-      // lined up with the real reflection as seen from the mirror pose, and shown only there (some phones draw the mirror without a reflection)
-      W.mirror = prop(glassCanvas(true), [-11.39, 10.04, -25.5], [0, 0, 1], 1.45, .54, {group: 'upper', tone: 1}); W.mirror.visible = false;
+      // the house's mirrors reflect a captured picture of the room, which would show these words a second time, slightly off. The writing is kept
+      // out of that capture (its own layer, drawn only by the main camera) and the mirror shows one clean copy, in the close look
+      W.glass.layers.set(9); try{ H.camera.layers.enable(9); }catch(e){}
+      W.mirror = prop(glassCanvas(true), [-11.4, 10.6, -25.5], [0, 0, 1], 2.1, .78, {group: 'upper', tone: 1}); W.mirror.visible = false;
       // ---- the window seat cushion and the upper sheet under it
       const ks2 = keep('sheetUp', () => sheetDraw('upper', true)); W.sheetUp = ks2.mesh = prop(ks2.cv, [SEAT[0], SEAT[1] + .02, SEAT[2]], [0, 1, 0], 1.6, 1.25, {group: 'upper', spin: -Math.PI / 2}); W.sheetUp.visible = false;
       // ---- the main sheet (Clover leaves it on the closet floor) and the lower sheet (under Mabel)

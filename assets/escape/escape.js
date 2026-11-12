@@ -749,7 +749,7 @@
   /* ---- markers: gold rings (look closer) and white circles (walk there), projected from the house */
   const marks = [], _v = new THREE.Vector3();
   function mark(kind, label, at, act, key){ const b = el('button', {class: 'escMk ' + kind, type: 'button', 'aria-label': (kind === 'walk' ? 'Walk to the ' + label.toLowerCase() : label + ', take a closer look')}, `<i>${kind === 'walk' ? ICO.walk : ''}</i><span>${esc(label)}</span>`);
-    b.onclick = e => { e.stopPropagation(); SND.unlock(); act(); }; $('#escMarks').appendChild(b); const m = {b, kind, label, at, act, key, on: false}; marks.push(m); return m; }
+    b.onclick = e => { e.stopPropagation(); if(performance.now() - (m.moved || 0) < 350) return; SND.unlock(); act(); }; $('#escMarks').appendChild(b); const m = {b, kind, label, at, act, key, on: false}; marks.push(m); return m; }
   function setMarks(){ for(const m of marks) m.b.remove(); marks.length = 0; UI.markSig = ''; if(!S.place || S.ex || S.done) return;
     for(const w of (WALKS[S.place] || [])) if(!w.when || w.when()) mark('walk', w.label || PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
     const ids = []; for(const id in SPOTS){ const sp = SPOTS[id]; if(sp.from.includes(S.place) && (!sp.when || sp.when())){ ids.push(id); mark('look', sp.label(), sp.at(), () => examine(id), 's:' + id); } }
@@ -765,7 +765,7 @@
     items.sort((p, q) => (p.docked - q.docked) || ((p.m.kind === 'walk') - (q.m.kind === 'walk')));
     const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
     add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#escMapBtn') : mapE); add($('#escBtns')); if(sayE.classList.contains('on')) add(sayE); add(sunE);
-    if(coachE.classList.contains('on')) add(coachE);
+    // the 'drag to look around' tip comes and goes and lets taps through, so it doesn't push rings about
     const wOf = m => m.w || (m.w = Math.max(40, (m.b.querySelector('span') || {}).offsetWidth || 90));
     const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
     const hit = (p, q) => !(p[2] < q[0] || p[0] > q[2] || p[3] < q[1] || p[1] > q[3]);
@@ -782,6 +782,8 @@
       if(!it.docked){ const y0 = it.y, all = obs.concat(placed), free = y => { it.y = y; const q = box(it); return !all.some(o => hit(q, o)); };
         if(!free(y0)){ let ok = false; for(let k = 1; k <= 3 && !ok; k++) for(const d of (y0 > r.top + r.height * .55 ? [-1, 1] : [1, -1])){ const y = y0 + d * 30 * k; if(y < r.top + top || y > r.top + bot) continue; if(free(y)){ ok = true; break; } } if(!ok) it.y = y0; }
         placed.push(box(it)); }
+      // a ring that has just jumped (not one gliding with the camera) ignores taps for a moment, so a tap meant for the old spot doesn't land on it
+      if(m.px != null && Math.hypot(it.x - m.px, it.y - m.py) > 24 && !rig.move && !ptrs.size) m.moved = performance.now(); m.px = it.x; m.py = it.y;
       m.b.style.transform = `translate(${it.x.toFixed(1)}px,${it.y.toFixed(1)}px)`; const cls = 'escMk ' + m.kind + ' on' + (it.edge ? ' edge ' + it.edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
   function tapAt(cx, cy){ if(rig.move || S.busy || S.ex) return; let best = null; for(const m of marks){ if(!m.on) continue; const q = m.b.getBoundingClientRect(), d = Math.hypot(q.left + q.width / 2 - cx, q.top + q.height / 2 - cy); if(d < 56 && (!best || d < best.d)) best = {m, d}; } if(best) best.m.act(); }
@@ -854,15 +856,17 @@
     if(sp.arc){ const pts = arcPts(330, 138); d.innerHTML = pts.map((p, i) => `<i style="left:${(p[0] / 330 * 100).toFixed(1)}%;top:${(p[1] / 138 * 100).toFixed(1)}%">${padCur[i] || ''}</i>`).join(''); }
     else d.innerHTML = Array.from({length: n}, (_, i) => `<i>${padCur[i] || ''}</i>`).join('') + `<button type="button" class="escBtn c2" style="display:none;min-height:48px;padding:0 14px" aria-label="Delete the last digit">⌫</button>`;
     const c2 = d.querySelector('.c2'); if(c2) c2.onclick = () => padPress('c'); if(sp.face) sp.face(padCur, cls); }
-  function pauseTick(){ const p = $('#escPause'), pad = $('#escPad'); if(!p || !pad) return; const left = Math.ceil((S.pauseUntil - performance.now()) / 1000);
+  function pauseTick(){ const p = $('#escPause'), pad = $('#escPad'); if(!p || !pad) return; const left = Math.ceil((S.pauseUntil - Date.now()) / 1000);
     if(left > 0){ p.textContent = `The lock needs a minute. ${left} s`; pad.setAttribute('aria-disabled', 'true'); clearTimeout(UI.pauseT); UI.pauseT = setTimeout(pauseTick, 500); } else { p.textContent = ''; pad.removeAttribute('aria-disabled'); } }
-  function padPress(n){ const sp = SPOTS[S.ex && S.ex.id]; if(!sp || !sp.lock || padLock || S.done || S.busy) return; SND.unlock(); if(performance.now() < S.pauseUntil){ SND.tap(); return; }
+  function padPress(n){ const sp = SPOTS[S.ex && S.ex.id]; if(!sp || !sp.lock || padLock || S.done || S.busy) return; SND.unlock(); if(Date.now() < S.pauseUntil){ SND.tap(); return; }
     const K = LG.locks[sp.lock], N = K.answer.length;
     if(n === 'c'){ padCur = padCur.slice(0, -1); padDraw(); SND.tap(); return; } if(padCur.length >= N) return; padCur += n; padDraw(); SND.key(Math.min(4, padCur.length));
     if(padCur.length < N) return; padLock = true;
-    if(padCur === K.answer){ padDraw('ok'); SND.right(); give(...LG.steps[Object.keys(LG.steps).find(k => LG.steps[k].lock === sp.lock)].gives); setTimeout(() => L.win(sp.lock), 650); }
+    if(padCur === K.answer){ padDraw('ok'); SND.right(); store.del('esc.' + LEVEL + '.pause'); S.wrongRun = 0; give(...LG.steps[Object.keys(LG.steps).find(k => LG.steps[k].lock === sp.lock)].gives); setTimeout(() => L.win(sp.lock), 650); }
     else { padDraw('bad'); SND.wrong(); S.wrong++; S.wrongRun++; ga('esc_wrong', {n: S.wrong}); const tries = S.wrongRun;
-      if(K.pause && tries % K.pause === 0) S.pauseUntil = performance.now() + 20000;
+      if(K.pause && tries % K.pause === 0) S.pauseUntil = Date.now() + 20000;
+      // kept apart from the saved game (and on the wall clock), so neither a reload nor starting over skips the pause or resets the count
+      store.set('esc.' + LEVEL + '.pause', {until: S.pauseUntil, run: S.wrongRun});
       setTimeout(() => { padCur = ''; padLock = false; padDraw(); pauseTick(); const ln = L.wrongLine ? L.wrongLine(S.wrong, sp.lock) : null; if(ln) say(ln, 4200); }, 650); save(); } }
 
   /* ---- the notebook (Medium and Hard): every clue at full size, and the numbers so far */
@@ -932,6 +936,7 @@
     EDGES = L.edges || []; WALKS = L.walks || {}; SPOTS = L.spots;
     DUSK = L.dusk || (() => { for(let h = LG.hours[0] + 6; h <= 24; h += .05) if(sunAlt(h) < .012) return h; return 20; })();
     $('#escTitle').textContent = LG.title; skyTrack(); buildMap(); try{ L.build(); }catch(e){ console.error('[escape] build', e); }
+    { const pz = store.get('esc.' + LEVEL + '.pause'); if(pz){ S.pauseUntil = +pz.until || 0; S.wrongRun = +pz.run || 0; } }
     if(sv){ S.f = sv.f || {}; S.read = sv.read || {}; S.notes = sv.notes || []; S.hints = sv.hints || 0; S.wrong = sv.wrong || 0; S.visited = sv.visited || {}; S.coach = sv.coach || S.coach; S.hintIx = sv.hintIx || {};
       for(const id in ((sv.world || {}).doors || {})) door(id, sv.world.doors[id] === 1, true); for(const id in ((sv.world || {}).shades || {})) shade(id, sv.world.shades[id] === 1, true); }
     const h0 = sv ? sv.hour : LG.start; $('#escSlider').value = h0; setClock(h0); applyHour(h0, true);

@@ -323,7 +323,7 @@ The sections above are the design as it was signed off. The build moved some thi
 - Code 4962 (Clover 4, Pepper 9, Biscuit 6, Nugget 2). Three wrong tries pause the keypad for 20 seconds.
 
 **Hard (midsummer, day 172).**
-- Read windows, as tuned in play: paw prints 8:30 to 10:15 AM (7); the skylight square on the desk 2:00 to about 2:45 PM (5); Admiral's shadow 4:15 to 5:45 PM (3); the sunset floor at a quarter to eight only (8). Outside those hours the figure is on the wrong spot or pulled out of shape, so the sheet says so instead of crediting a number.
+- Read windows, as tuned in play: paw prints 8:30 to 10:15 AM (7); the skylight square on the desk 2:00 to about 2:45 PM (5); Admiral's shadow 4:15 to 5:45 PM (3); the sunset floor at half past seven and a quarter to eight (8). Outside those hours the figure is on the wrong spot or pulled out of shape, so the sheet says so instead of crediting a number.
 - Admiral's 3 is a cut-out hanging outside the kitchen window on a string, not paper on the glass, so the shade can be lowered over it. It reads straight from the lowered shade's own close look.
 - The prints are drawn as dust on the entry floor that fades in only while the morning sun is on it, as well as being cut out of the light. On a bright phone screen the cut-out alone was too faint.
 - Clover is in the middle bedroom closet and comes out when its blackout honeycomb shade (`WN-L1-08`) is lowered. Mabel sits on the pergola paving and moves to cooler paving after 4 PM, leaving the lower-level sheet.

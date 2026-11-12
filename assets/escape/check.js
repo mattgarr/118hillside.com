@@ -43,6 +43,10 @@ function checkLevel(name, L){
   for(const g of L.goals){ ok(states.some(s => g.needs.every(f => s.has(f)) && !g.done.some(f => s.has(f))), `goal ${g.id} never shows`);
     ok(g.done.some(f => all.has(f)), `goal ${g.id} can never be done`); }
 
+  // 1b. every timed step can be hit on at least two stops of the sun slider (it moves in quarter hours), so no reading hangs on one exact notch
+  for(const [id, st] of Object.entries(L.steps)) if(st.sun){ let n = 0; for(let h = Math.ceil(st.sun[0] * 4 - 1e-6) / 4; h <= st.sun[1] + 1e-6; h += .25) n++;
+    ok(n >= 2, `step ${id}: its window ${st.sun.join('-')} holds only ${n} slider stop${n === 1 ? '' : 's'}`); }
+
   // 3. no sequence leaks: a part is never held without its clue; and the step that gives it needs the clue (directly or through its chain)
   for(const [p, P] of Object.entries(L.parts)){
     const bad = states.filter(s => s.has(p) && !s.has(P.clue));
