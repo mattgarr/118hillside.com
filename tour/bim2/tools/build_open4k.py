@@ -294,13 +294,16 @@ def option_data(meta, elements, bounds):
             w = json.loads(json.dumps(w)); w['poly'] = [[p[0], round(sy(p[1]), 4)] for p in w['poly']]; wk.append(w)
     D['walkable'] = wk
     # colliders: the south wall split around the opening (the page adds the panels' own); the porch rail moves; new rails
+    # (the page keys colliders by element: a changed collider must carry a new element id, or the as-built one keeps colliding)
     col = []
     for c in D['colliders']:
         if c.get('element') == 'RL-FRONT-DECK': continue
-        if c.get('element') == 'RL-FRONT-STAIR': c = json.loads(json.dumps(c)); c['poly'] = [[p[0], p[1] + DECK['y0']] for p in c['poly']]
+        if c.get('element') == 'RL-FRONT-STAIR':
+            c = json.loads(json.dumps(c)); c['poly'] = [[p[0], p[1] + DECK['y0']] for p in c['poly']]
+            c['element'] = 'RL-FRONT-STAIR-K4'; c['id'] = c['id'].replace('RL-FRONT-STAIR', 'RL-FRONT-STAIR-K4')
         if c.get('element') == 'W-L1-002':
             for i, (a, b_) in enumerate(((4.91, NANA['x0']), (NANA['x1'], 32.49))):
-                d = json.loads(json.dumps(c)); d['id'] = 'W-L1-002#K%d' % i; d['poly'] = [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]]; col.append(d)
+                d = json.loads(json.dumps(c)); d['id'] = 'W-L1-K4S#%d' % i; d['element'] = 'W-L1-K4S'; d['poly'] = [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]]; col.append(d)
             continue
         col.append(c)
     for i, (a, b_) in enumerate((((19.88, DECK['y0'] - .1), (DECK['x1'], DECK['y0'] + .1)), ((DECK['x1'] - .25, DECK['y0']), (DECK['x1'] + .05, Y_SO)))):
@@ -446,7 +449,7 @@ def register(hide, hide_ranges, sha):
                         'entry': {'pos': [13.0, 5.0, 11.0], 'look': [19.5, 4.8, 36.6]},
                         'kitchen': {'pos': [22.5, 5.0, 34.2], 'look': [8.0, 4.4, 16.0]},
                         'living': {'pos': [17.5, 5.0, 26.0], 'look': [30.0, 4.4, 19.3]},
-                        'deck': {'pos': [-1.0, 5.0, 31.2], 'look': [14.0, 4.6, 20.0]},
+                        'deck': {'pos': [-3.4, 5.0, 25.4], 'look': [16.0, 4.4, 24.2]},
                         'driveway': {'pos': [-14.0, 2.4, 40.0], 'look': [2.0, 2.0, 24.0]},
                         'street': {'pos': [18.4, 2.6, 52.0], 'look': [18.4, 6.4, 30.0]},
                         'aerial': {'pos': [-12.0, 62.0, 52.0], 'look': [18.4, 0.0, 22.0]}}})
