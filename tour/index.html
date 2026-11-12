@@ -8832,9 +8832,11 @@ function buildGarage22(){
   g = 'main';
   // ================= G5 garage door hardware
   const jx = doorIn;    // inside face of the front wall
-  // stained wood jamb boards on the wall face either side of the opening (p29), floor to just under the tube
+  // jamb boards on the wall face either side of the opening (p29), floor to just under the tube. r41 owner 11/12: "get rid of the bare
+  // wood on either side of the garage door track" - painted the garage's trim white (M.trim, the semi-gloss SW 7757 of the door casings),
+  // not raw stained fir; the tracks and their mounting angles stay galvanised steel
   for(const [ya, yb] of [[dY0 - .5, dY0], [dY1, dY1 + .5]]){ const f = Math.min(faceAt(jx, ya + .03, FZ + 4, [-1, 0], jx), faceAt(jx, yb - .03, FZ + 4, [-1, 0], jx), faceAt(jx, (ya + yb) / 2, FZ + 4, [-1, 0], jx)) - .004;
-    bbox('beamFir', f - .09, f, ya, yb, FZ, head + .9); G.wallParts.push(['jamb board', f, (ya + yb) / 2, FZ + 4, [-1, 0]]); }
+    bbox(M.trim ? 'trim' : 'paint', f - .09, f, ya, yb, FZ, head + .9); G.wallParts.push(['jamb board', f, (ya + yb) / 2, FZ + 4, [-1, 0]]); }
   // vertical tracks (2" C on a 2" angle), inside the reveal against each jamb
   const trX = jx - .07, R = .5, vTop = hTrackZ - R;   /* GARAGE r5 */
   for(const [yy, sg] of [[dY0 + .09, 1], [dY1 - .09, -1]]){
@@ -21424,6 +21426,12 @@ if(B3SH.on && typeof GOV !== 'undefined' && GOV.L){
     try{ let n = 0; if(BIM2S && M.beamCherry26) for(const m of BIM2S.meshes){ const u = m.userData && m.userData.bim2; if(!u || u.material !== 'fir-beam' || !u.ranges || !u.ranges.length) continue;
         if(u.ranges.every(x => /^BM-L1-/.test(x[0]))){ m.material = M.beamCherry26; n++; } }
       BIM3.report.cherryBeams = n; }catch(e){ console.warn('[bim3] cherry beams', e); }
+    /* r41 owner 11/12: "get rid of the bare wood on either side of the garage door track inside the garage". The model's two garage door
+       jamb boards (FX-JAMBBOARD-LG-1/2, material 'fir-beam') drew as raw stained fir beside the opening. In the finished garage they are
+       painted with the rest of the trim: they take the interior trim paint (M.trim, SW 7757 semi-gloss, as the door casings). */
+    try{ let n = 0; if(BIM2S && M.trim) for(const m of BIM2S.meshes){ const u = m.userData && m.userData.bim2; if(!u || u.material !== 'fir-beam' || !u.ranges || !u.ranges.length) continue;
+        if(u.ranges.every(x => /^FX-JAMBBOARD-/.test(x[0]))){ m.material = M.trim; n++; } }
+      BIM3.report.jambBoardsPainted = n; }catch(e){ console.warn('[r41] jamb boards', e); }
     return r; }; }
 /* GH-2 rule:golden-siding-neutral: GOLDEN35's sun (0xffa95e x1.1) tinted the sunlit grey-cream siding peach/yellow (sat .18 on
    the south wall). The sun is now a softer warm white (0xffc896, x1.03 net): the low-sun warmth stays in the sky, fog, hemi and
