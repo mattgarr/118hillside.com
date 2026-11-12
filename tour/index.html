@@ -15933,10 +15933,10 @@ html.cb42on .ideas35{display:none!important}
 html.ph.bks36on.cb42on .perfpill{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 html.ph.cb42on .qhint{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 /* next to the holiday control: more ways to redecorate */
-#hm42{position:fixed;z-index:62;top:var(--hm42t,0px);left:var(--hm42l,0px);width:var(--hm42w,316px);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;padding:7px 8px 7px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);
+#hm42{position:fixed;z-index:62;top:var(--hm42t,0px);left:var(--hm42l,0px);width:var(--hm42w,316px);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;padding:5px 6px 5px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);
   box-shadow:0 6px 20px rgba(20,24,26,.16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink);font-size:13px;line-height:1.3}
 #hm42 p{margin:0 2px 0 0;color:var(--muted)}
-#hm42 button{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}#hm42 button:hover{border-color:var(--ink)}
+#hm42 button{min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}#hm42 button:hover{border-color:var(--ink)}
 /* the floor plan picker (Design opened on the plans only) */
 #pk42h{display:none}
 html.pk42 #card .tb>:not(#pk42h){display:none!important}
@@ -16087,7 +16087,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(!open){ if(!hm.hidden && !hmT) hmT = setTimeout(() => { hmT = 0; const P2 = $('#holPanel'); if(!P2 || P2.hidden || mode === 'design') hm.hidden = true; }, 350); return; }   // a click on these buttons closes the panel first: they stay a moment
     clearTimeout(hmT); hmT = 0; hm.hidden = false; const r = P.getBoundingClientRect(), h = hm.offsetHeight || 52;
     if(isPh()) hm.style.setProperty('--hm42t', Math.max(8, Math.round(r.top - h - 8)) + 'px');
-    else { hm.style.setProperty('--hm42t', Math.round(r.bottom + 8) + 'px'); hm.style.setProperty('--hm42l', Math.round(r.left) + 'px'); hm.style.setProperty('--hm42w', Math.round(r.width) + 'px'); } }
+    else { hm.style.setProperty('--hm42t', Math.round(r.bottom + 6) + 'px'); hm.style.setProperty('--hm42l', Math.round(r.left) + 'px'); hm.style.setProperty('--hm42w', Math.round(r.width) + 'px'); } }
 
   /* ---- the chip and the nudge */
   function chipKind(){ if(inGame() || mode !== 'tour' || photoUp() || root.classList.contains('clean27') || root.classList.contains('phm')) return '';
