@@ -277,7 +277,7 @@
       const tiers = Math.max(8, Math.round((yTop - y0) / (small ? .24 : .27))), lights = [], tips = [];
       for(let i = 0; i < tiers; i++){ const t = i / (tiers - 1), y = y0 + (yTop - y0) * (1 - Math.pow(1 - t, 1.18)) + (i && i < tiers - 1 ? (R() - .5) * .08 : 0), rr = r * prof(t) + .12, nb = Math.max(4, Math.round((small ? 3.5 : 4.5) + rr * (kind === 'pencil' ? 4.2 : 3.6))), off = i * 2.39996 + R();
         for(let k = 0; k < nb; k++){ if(R() < .06 && t < .9) continue;   // a gap here and there, as a real tree has
-          const a = off + k / nb * 6.283 + (R() - .5) * .38, Hd = new V3(Math.sin(a), 0, Math.cos(a)), L = rr * (.84 + R() * .3), e = lerp(-.1, .62, Math.pow(t, 1.2)) + (R() - .5) * .14, drop = L * lerp(.3, .06, t) * (.8 + R() * .4);
+          const a = off + k / nb * 6.283 + (R() - .5) * .38, Hd = new V3(Math.sin(a), 0, Math.cos(a)), L = rr * (.84 + R() * .3), e = lerp(-.1, .62, Math.pow(t, 1.2)) + (R() - .5) * .14, drop = Math.min(L * lerp(.3, .06, t) * (.8 + R() * .4), Math.max(0, y + L * Math.sin(e) - (o.pot ? .74 : .34)));   // the lowest whorl droops, but its tips stay off the skirt and the floor
           const B = new V3(0, y, 0), bp = u => B.clone().addScaledVector(Hd, L * Math.cos(e) * u).addScaledVector(Y, L * Math.sin(e) * u - drop * u * u + (u > .82 ? L * .5 * (u - .82) * (u - .82) : 0)), bd = u => bp(Math.min(1, u + .04)).sub(bp(Math.max(0, u - .04))).normalize();
           tube([bp(0), bp(.45), bp(.85)], [tw * .32, tw * .2, .008], 4, '#4e3b2a');
           const fl = .44 * sc, fw = fl * .5, Sm = new V3().crossVectors(Hd, Y).normalize();
