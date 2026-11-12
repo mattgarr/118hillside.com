@@ -48,8 +48,8 @@ Line numbers drift; search for the names given.
 
 | Mechanism | Where | What it is | Verdict |
 |---|---|---|---|
-| SSAO | composer | Screen-space ambient occlusion. | Physically motivated. Kept. |
-| r13 corner bands | `R13` | Multiply decals in interior corners. Faded with `EXPO_IN` (off when the camera is outside). | Baked AO: fine. The camera-side fade was a hack. r40: always on in Tour / Walk. |
+| SSAO | composer | Screen-space ambient occlusion. | Physically motivated, but drawn from the current view's depth: it changed with the view and with the governor level (section 6). r41: removed at every level. |
+| r13 corner bands | `R13` | Multiply decals in interior corners. Faded with `EXPO_IN` (off when the camera is outside). | Baked AO: fine. The camera-side fade was a hack. r40: always on in Tour / Walk. | r41: 10-16 % over .6-1.1 ft (was 34-42 % over 1.3-1.6 ft), band ends fade out, a corner band only where both walls are there.
 | r17 exterior grime / eave bands | `R17` | Multiply decals at the foot and the eaves of exterior walls. Faded with `1 - EXPO_IN`. | Baked AO / weathering: fine. r40: always on. |
 | Terrain lift | `r36TerrainLift` | Small emissive lift on the aerial-photo ground by day. | Compensates a near-black photo. Left. |
 | Fog | `scene.fog` 2500-70000 ft | Aerial perspective out to Skyline only. | Physical, and too far to touch the house (it was NOT what darkened the front doors). |
@@ -178,3 +178,24 @@ Same view from two histories (4 views): exposure within 0.00-0.01 %.
 Phone viewport (375x812 emulated, phone path), median frame time / draw calls, main -> r40: street 25.7 -> 24.7 ms (1399 calls
 both), living 25.2 -> 23.8 (1153), great 9.2 -> 10.0 (176), kitchen 27.2 -> 29.7 (1373), primary 12.4 -> 14.5 (354), terrace
 19.4 -> 16.9 (586); programs 50 -> 51 (the crossfade quad). Within run-to-run noise; no added draw calls or passes.
+
+## 6. r41: nothing in the lighting may depend on where the camera looks
+
+Owner, 11/12: whole shadows and darkening popping in and out as you pivot, corner darkening "like random boxes", boxy ceiling
+cells above the kitchen cabinets, ghost doubled edges. A micro-pivot test (kitchen stop, 0 to 20 degrees in 0.25 degree steps, a
+pointer down / up per step and a 50-frame hold, the quality governor on, every frame logged and read back at 96 px) found the
+variables that flipped with the view:
+
+- the governor's still / moving switch: SSAO full -> half resolution -> off, MSAA samples and the shadow-map size per level
+  (2048 <-> 4096); every stop and start of a pivot redrew the shadow map at another size and turned SSAO on or off;
+- the governor's small-object cull hid 97 shadow casters at the kitchen (cabinet pulls, rail cables, blind parts) from the redraw
+  each pointer-up requests: the map was drawn with 1151 casters or 1248 depending on the view;
+- the camera meter read the picture on screen: the exposure drifted .17 stops over the 20 degrees.
+
+r41 (GHOST r41 in index.html): SSAO off at every level; the shadow pass draws what the scene holds (the cull hides from the eye
+only; no redraw inside a probe capture); one shadow-map size at every level; the meter reads four level views around the eye (an
+atlas, redrawn when the eye moves 2.4" or every 3 s), calibrated per room so each stop keeps its exposure (GHOST41.calibrate(),
+?qa=1); the still-frame accumulator compares this frame's camera pose; level surfaces read the room mask 3" to each side (the 6-in
+cells along every wall read the sky). Same test after: 1248 casters at every redraw, one map size, no SSAO, exposure range .01
+stops. `?ghost41=0` turns r41 off.
+
