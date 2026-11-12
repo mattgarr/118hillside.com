@@ -20799,6 +20799,174 @@ function bim3DoorPose(it){
 { const _lb3 = door28Label; door28Label = function(it){ if(it.kind !== 'bim3') return _lb3.apply(this, arguments);
     const shut = !((it.t > .5 && it.dir >= 0) || it.dir > 0), k = it.b3kind; return (shut ? 'Open ' : 'Close ') + (/SECTIONAL/.test(k) ? 'the garage door' : /MULTI/.test(k) ? 'the slider' : it.o.note === 'closet' ? 'the closet' : 'the door'); }; }
 { const _b3h = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3h.apply(this, arguments); try{ bim3Doors(); bim3GarageTracks(); }catch(e){ console.warn('[bim3] doors', e); } return r; }; }
+/* r42 owner 11/12 rule:door-panels-one-piece ("the craftsman doors don't seem to really look like they're actually 3D. They look like they
+   just have different coloured panels in them ... it's shading the middle part darker, which actually looks very fake"). The model's
+   Masonite Winslow 3 leaves are real geometry: 1-3/8" slab, stiles and rails, one top panel and two tall panels sunk 7/16" on each face with
+   a square 1/8" step and 1/2" ledge at the sticking (kernel leaf node: frame in paint-trim-semigloss, panel floors in door-panel-field).
+   The panel floors drew 7 % darker (a toned clone of the trim paint), which is what read as painted-on panels. Now (bim2MapMaterial
+   'door-panel-field' above) they are the same material object as the frame, so their only shading is real light on the recess steps; and
+   since they are one paint, each leaf's panel floors are merged into its frame mesh (same pivot, same material): one draw call a leaf
+   instead of two (29 fewer for the house), same triangles. Hinges, handles, colliders and the swing are untouched (pivot children). */
+const R42D = window.R42D = {merged: 0, tris: 0, bevel: 0, ao: 0, skipped: []};
+/* r42 (lead 11/12: "real recessed panels that read clearly ... a real contact-shadow cue: ambient occlusion baked per vertex into the panel's inner
+   perimeter, a few inches wide and subtle, on the geometry. No colour tint on the panel field"). The room light that reaches a panel's floor
+   next to the bevel is cut by the bevel and the rail above it (the light of a recessed panel is darkest in that corner, open in the middle).
+   Each rectangular panel floor becomes an inset ring (10 triangles a panel face; a non-rectangular one is split into triangles no longer
+   than R42C.cell instead) and every vertex carries 'r42occ' = how much of the ambient (image) light it loses: R42C.max at the bevel's foot,
+   fading to 0 R42C.width in; the bevel itself loses R42C.max at its foot and R42C.bevelTop at its top edge. The trim paint's shader multiplies only the indirect
+   (ambient) light by 1 - r42occ: direct sun and lamps, colour and roughness are untouched, and every other trim mesh has no such attribute
+   (WebGL reads 0: no change). */
+const R42C = {max: .26, width: 1.5 / 12, cell: .2, bevelTop: .06};   // tuned on the GPU against p59 / x04: a soft line, not a pillow
+function r42DoorContact(G, na, I, nIa){
+  const P0 = G.attributes.position.array, N0 = G.attributes.normal.array, U0 = G.attributes.uv ? G.attributes.uv.array : null;
+  const n = new THREE.Vector3(N0[I[nIa] * 3], N0[I[nIa] * 3 + 1], N0[I[nIa] * 3 + 2]).normalize();
+  // panel floors only (faces parallel to the slab); the model also gives some panels thin end faces hidden in the stiles: kept as they are
+  const floorT = [], keepT = []; for(let t = nIa; t < I.length; t += 3){ const a = I[t], b = I[t + 1], c = I[t + 2];
+    const ux = P0[b * 3] - P0[a * 3], uy = P0[b * 3 + 1] - P0[a * 3 + 1], uz = P0[b * 3 + 2] - P0[a * 3 + 2], vx = P0[c * 3] - P0[a * 3], vy = P0[c * 3 + 1] - P0[a * 3 + 1], vz = P0[c * 3 + 2] - P0[a * 3 + 2];
+    const fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx, fl = Math.hypot(fx, fy, fz) || 1;
+    (Math.abs((fx * n.x + fy * n.y + fz * n.z) / fl) > .9 ? floorT : keepT).push([a, b, c]); }
+  if(!floorT.length) return null;
+  const side = v => Math.sign(N0[v * 3] * n.x + N0[v * 3 + 1] * n.y + N0[v * 3 + 2] * n.z) || 1;
+  const pk = (x, y, z) => Math.round(x * 2e3) + ',' + Math.round(y * 2e3) + ',' + Math.round(z * 2e3);
+  // panel outline per face: edges used by one floor triangle only
+  const ecount = new Map(), ekey = (a, b, sg) => { const A = pk(P0[a * 3], P0[a * 3 + 1], P0[a * 3 + 2]), B = pk(P0[b * 3], P0[b * 3 + 1], P0[b * 3 + 2]); return sg + (A < B ? A + '|' + B : B + '|' + A); };
+  for(const t of floorT){ const sg = side(t[0]); for(const [a, b] of [[t[0], t[1]], [t[1], t[2]], [t[2], t[0]]]){ const k = ekey(a, b, sg); const e = ecount.get(k); if(e) e.n++; else ecount.set(k, {n: 1, a, b, sg}); } }
+  const edges = {'1': [], '-1': []}; for(const e of ecount.values()) if(e.n === 1) edges[e.sg].push([P0[e.a * 3], P0[e.a * 3 + 1], P0[e.a * 3 + 2], P0[e.b * 3], P0[e.b * 3 + 1], P0[e.b * 3 + 2]]);
+  const segD = (x, y, z, s) => { const dx = s[3] - s[0], dy = s[4] - s[1], dz = s[5] - s[2], L2 = dx * dx + dy * dy + dz * dz || 1e-12; let t = ((x - s[0]) * dx + (y - s[1]) * dy + (z - s[2]) * dz) / L2; t = Math.max(0, Math.min(1, t));
+    return Math.hypot(x - s[0] - dx * t, y - s[1] - dy * t, z - s[2] - dz * t); };
+  const occAt = (x, y, z, sg) => { let d = 1e9; for(const s of edges[sg]) d = Math.min(d, segD(x, y, z, s)); const u = Math.min(1, d / R42C.width); return R42C.max * (1 - u) * (1 - u); };
+  // new vertex arrays: the frame's vertices first (unchanged order), then the subdivided floor
+  const P = Array.from(P0.subarray(0, na * 3)), N = Array.from(N0.subarray(0, na * 3)), U = U0 ? Array.from(U0.subarray(0, na * 2)) : null, O = new Array(na).fill(0);
+  { const c = new THREE.Vector3(), dep = i => (P0[i * 3] - c.x) * n.x + (P0[i * 3 + 1] - c.y) * n.y + (P0[i * 3 + 2] - c.z) * n.z;
+    c.fromArray(P0, I[nIa] * 3); let lo = 1e9, hi = -1e9; for(const t of floorT) for(const v of t){ const d = dep(v); lo = Math.min(lo, d); hi = Math.max(hi, d); } c.addScaledVector(n, (lo + hi) / 2);
+    const fd = (hi - lo) / 2; let half = 0; for(let i = 0; i < na; i++) half = Math.max(half, Math.abs(dep(i)));
+    for(let i = 0; i < na; i++){ const a = Math.abs(dep(i)); O[i] = Math.abs(a - fd) < .002 ? R42C.max : (a > fd + .002 && a < half - .002 ? R42C.bevelTop : 0); } }
+  const vmap = new Map(), out = [];
+  const vert = (x, y, z, sg, u, v) => { const k = sg + ':' + pk(x, y, z); let i = vmap.get(k); if(i != null) return i; i = P.length / 3; vmap.set(k, i);
+    P.push(x, y, z); N.push(n.x * sg, n.y * sg, n.z * sg); if(U) U.push(u, v); O.push(occAt(x, y, z, sg)); return i; };
+  const split = (a, b, c, sg, depth) => {   // a, b, c: [x, y, z, u, v]
+    const L = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]), lab = L(a, b), lbc = L(b, c), lca = L(c, a), m = Math.max(lab, lbc, lca);
+    if(m <= R42C.cell || depth > 14){ out.push(vert(a[0], a[1], a[2], sg, a[3], a[4]), vert(b[0], b[1], b[2], sg, b[3], b[4]), vert(c[0], c[1], c[2], sg, c[3], c[4])); return; }
+    const mid = (p, q) => p.map((x, k) => (x + q[k]) / 2);
+    if(m === lab){ const d = mid(a, b); split(a, d, c, sg, depth + 1); split(d, b, c, sg, depth + 1); }
+    else if(m === lbc){ const d = mid(b, c); split(a, b, d, sg, depth + 1); split(a, d, c, sg, depth + 1); }
+    else { const d = mid(c, a); split(a, b, d, sg, depth + 1); split(d, b, c, sg, depth + 1); } };
+  const V = i => [P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2], U0 ? U0[i * 2] : 0, U0 ? U0[i * 2 + 1] : 0];
+  // a rectangular panel (the usual case: the leaf stands upright, the panel is a rectangle in its plane) gets an inset ring: 4 trapezoids
+  // from the outline (R42C.max) to a rectangle R42C.width in (0) and the open middle, 10 triangles a panel face, the falloff linear across
+  // the ring; anything else (or a panel too small for the ring) is split into small triangles and shaded per vertex as above
+  const up = new THREE.Vector3(0, 1, 0), hx = new THREE.Vector3().crossVectors(up, n); const rect = hx.lengthSq() > .5; hx.normalize();
+  const par = floorT.map((t, i) => i), find = i => { while(par[i] !== i) i = par[i] = par[par[i]]; return i; }, owner = new Map();
+  floorT.forEach((t, i) => { const sg = side(t[0]); for(const v of t){ const k = sg + ':' + pk(P0[v * 3], P0[v * 3 + 1], P0[v * 3 + 2]); const j = owner.get(k); if(j == null) owner.set(k, i); else par[find(i)] = find(j); } });
+  const comps = new Map(); floorT.forEach((t, i) => { const r = find(i); (comps.get(r) || comps.set(r, []).get(r)).push(t); });
+  const W = R42C.width;
+  for(const tris of comps.values()){ const sg = side(tris[0][0]);
+    let ok = rect, h0 = 1e9, h1 = -1e9, y0 = 1e9, y1 = -1e9, area = 0, d0 = 0;
+    for(const t of tris){ const q = t.map(v => [P0[v * 3] * hx.x + P0[v * 3 + 2] * hx.z, P0[v * 3 + 1]]);
+      for(const [a, b] of q){ h0 = Math.min(h0, a); h1 = Math.max(h1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
+      area += Math.abs((q[1][0] - q[0][0]) * (q[2][1] - q[0][1]) - (q[2][0] - q[0][0]) * (q[1][1] - q[0][1])) / 2; }
+    d0 = P0[tris[0][0] * 3] * n.x + P0[tris[0][0] * 3 + 1] * n.y + P0[tris[0][0] * 3 + 2] * n.z;
+    if(!ok || Math.abs(area - (h1 - h0) * (y1 - y0)) > .01 * (h1 - h0) * (y1 - y0) || h1 - h0 < 2.5 * W || y1 - y0 < 2.5 * W){ for(const t of tris) split(V(t[0]), V(t[1]), V(t[2]), sg, 0); R42D.split = (R42D.split || 0) + 1; continue; }
+    // world point of (h, y) on this panel floor: p = hx * h + up * y + n * d (n, hx horizontal and orthonormal)
+    const uvf = (() => { const t = tris[0], A = t.map(v => [P0[v * 3] * hx.x + P0[v * 3 + 2] * hx.z, P0[v * 3 + 1], U0 ? U0[v * 2] : 0, U0 ? U0[v * 2 + 1] : 0]);
+      const det = (A[1][0] - A[0][0]) * (A[2][1] - A[0][1]) - (A[2][0] - A[0][0]) * (A[1][1] - A[0][1]);
+      if(Math.abs(det) < 1e-9) return () => [0, 0];
+      return (h, y) => { const s1 = ((h - A[0][0]) * (A[2][1] - A[0][1]) - (A[2][0] - A[0][0]) * (y - A[0][1])) / det, s2 = ((A[1][0] - A[0][0]) * (y - A[0][1]) - (h - A[0][0]) * (A[1][1] - A[0][1])) / det;
+        return [A[0][2] + s1 * (A[1][2] - A[0][2]) + s2 * (A[2][2] - A[0][2]), A[0][3] + s1 * (A[1][3] - A[0][3]) + s2 * (A[2][3] - A[0][3])]; }; })();
+    const pt = (h, y, o) => { const x = hx.x * h + n.x * d0, z = hx.z * h + n.z * d0, k = sg + ':' + pk(x, y, z); let i = vmap.get(k); if(i != null) return i; i = P.length / 3; vmap.set(k, i);
+      const uv = uvf(h, y); P.push(x, y, z); N.push(n.x * sg, n.y * sg, n.z * sg); if(U) U.push(uv[0], uv[1]); O.push(o); return i; };
+    const o = [pt(h0, y0, R42C.max), pt(h1, y0, R42C.max), pt(h1, y1, R42C.max), pt(h0, y1, R42C.max)], q = [pt(h0 + W, y0 + W, 0), pt(h1 - W, y0 + W, 0), pt(h1 - W, y1 - W, 0), pt(h0 + W, y1 - W, 0)];
+    // winding: as the model's own floor triangles face (+sg n); test one and flip all if needed
+    const t0 = tris[0], fa = new THREE.Vector3().fromArray(P0, t0[0] * 3), fb = new THREE.Vector3().fromArray(P0, t0[1] * 3), fc = new THREE.Vector3().fromArray(P0, t0[2] * 3);
+    const wantCCW = new THREE.Vector3().subVectors(fb, fa).cross(new THREE.Vector3().subVectors(fc, fa)).dot(n) * sg > 0;
+    const tri = (a, b, c) => { const A = new THREE.Vector3(P[a * 3], P[a * 3 + 1], P[a * 3 + 2]), B = new THREE.Vector3(P[b * 3], P[b * 3 + 1], P[b * 3 + 2]), C = new THREE.Vector3(P[c * 3], P[c * 3 + 1], P[c * 3 + 2]);
+      const ccw = new THREE.Vector3().subVectors(B, A).cross(new THREE.Vector3().subVectors(C, A)).dot(n) * sg > 0; if(ccw === wantCCW) out.push(a, b, c); else out.push(a, c, b); };
+    for(let k = 0; k < 4; k++){ const k1 = (k + 1) % 4; tri(o[k], o[k1], q[k1]); tri(o[k], q[k1], q[k]); }
+    tri(q[0], q[1], q[2]); tri(q[0], q[2], q[3]); R42D.rings = (R42D.rings || 0) + 1; }
+  for(const t of keepT) for(const v of t){ const i = P.length / 3; P.push(P0[v * 3], P0[v * 3 + 1], P0[v * 3 + 2]); N.push(N0[v * 3], N0[v * 3 + 1], N0[v * 3 + 2]); if(U) U.push(U0[v * 2], U0[v * 2 + 1]); O.push(0); out.push(i); }
+  const nv = P.length / 3, I2 = new (nv > 65535 ? Uint32Array : Uint16Array)(nIa + out.length); I2.set(I.subarray(0, nIa)); I2.set(out, nIa);
+  G.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3)); G.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N), 3));
+  if(U) G.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(U), 2)); G.setAttribute('r42occ', new THREE.BufferAttribute(new Float32Array(O), 1));
+  r42TrimContactShader(); return I2; }
+function r42TrimContactShader(){ const m = M.trim; if(!m || m.userData.r42occ) return; m.userData.r42occ = true; const prev = m.onBeforeCompile, pk = m.customProgramCacheKey;
+  m.onBeforeCompile = function(sh, r){ if(prev) prev.call(this, sh, r);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float r42occ;\nvarying float vR42Occ;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvR42Occ = r42occ;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vR42Occ;')
+      .replace('#include <aomap_fragment>', '#include <aomap_fragment>\nreflectedLight.indirectDiffuse *= 1.0 - vR42Occ;\nreflectedLight.indirectSpecular *= 1.0 - .6 * vR42Occ;'); };
+  m.customProgramCacheKey = function(){ return (pk ? pk.call(this) : '') + '|r42occ'; }; m.needsUpdate = true; }
+/* the sticking: the model's square 1/8" step + flat 1/2" ledge + 5/16" step round each panel became a 1/8" square shoulder and a sloped
+   bevel down to the panel (about 45 degrees, 5/16" wide), as the molded Winslow profile: the inner edge of each ledge drops to the panel
+   floor and moves 40 % of the way back toward the shoulder (that step turns into a 3/16" flat at the panel's own level) and the ledge takes
+   the bevel's own normal. Light now falls differently on the four bevels (the top one faces down, the bottom one up, the sides toward the
+   window or away), which is the outline the photos show round each panel. Frame vertices only; na = frame vertex count, the panel floors
+   follow (nb); I = merged index, nIa = the frame's index count. Returns the number of ledge vertices moved. */
+const R42S = {back: .4};
+function r42DoorSticking(G, na, nb, I, nIa){
+  const P = G.attributes.position.array, N = G.attributes.normal.array, n = new THREE.Vector3(N[na * 3], N[na * 3 + 1], N[na * 3 + 2]).normalize(), c = new THREE.Vector3();
+  { c.fromArray(P, na * 3); let lo = 1e9, hi = -1e9; for(let i = na; i < na + nb; i++){ const d = (P[i * 3] - c.x) * n.x + (P[i * 3 + 1] - c.y) * n.y + (P[i * 3 + 2] - c.z) * n.z; lo = Math.min(lo, d); hi = Math.max(hi, d); } c.addScaledVector(n, (lo + hi) / 2); }   // mid-plane of the slab: halfway between the two panel floors (a vertex mean leans to the side with more vertices)
+  const dep = i => (P[i * 3] - c.x) * n.x + (P[i * 3 + 1] - c.y) * n.y + (P[i * 3 + 2] - c.z) * n.z;
+  let fd = 0, half = 0; for(let i = na; i < na + nb; i++) fd = Math.max(fd, Math.abs(dep(i))); for(let i = 0; i < na; i++) half = Math.max(half, Math.abs(dep(i)));
+  if(!(fd > .005 && half - fd > .01 && half < .2)) return 0;
+  const D = new Float32Array(na); for(let i = 0; i < na; i++) D[i] = dep(i);
+  const inPlane = (i, j) => { const dx = P[i * 3] - P[j * 3], dy = P[i * 3 + 1] - P[j * 3 + 1], dz = P[i * 3 + 2] - P[j * 3 + 2], dn = dx * n.x + dy * n.y + dz * n.z; return Math.hypot(dx - n.x * dn, dy - n.y * dn, dz - n.z * dn); };
+  const floorV = [], ledgeV = []; for(let i = 0; i < na; i++){ const a = Math.abs(D[i]); if(Math.abs(a - fd) < .002) floorV.push(i); else if(a > fd + .003 && a < half - .003) ledgeV.push(i); }
+  const inner = new Set(ledgeV.filter(i => floorV.some(j => Math.sign(D[j]) === Math.sign(D[i]) && inPlane(i, j) < .003)));
+  if(!inner.size) return 0;
+  // in-plane target of each inner-ring vertex: back toward its nearest outer-ring partner in a ledge triangle (the miter partner at corners)
+  const partner = new Map();
+  for(let t = 0; t < nIa; t += 3){ const v = [I[t], I[t + 1], I[t + 2]]; if(v.some(x => x >= na)) continue;
+    for(const x of v){ if(!inner.has(x)) continue; for(const y of v){ if(y === x || inner.has(y) || !ledgeV.includes(y)) continue; const d = inPlane(x, y), p0 = partner.get(x); if(!p0 || d < p0.d) partner.set(x, {y, d}); } } }
+  const tgt = new Map();   // vertex -> [x, y, z]
+  for(const x of inner){ const pr = partner.get(x); let px = P[x * 3], py = P[x * 3 + 1], pz = P[x * 3 + 2];
+    if(pr){ const y = pr.y; px += (P[y * 3] - px) * R42S.back; py += (P[y * 3 + 1] - py) * R42S.back; pz += (P[y * 3 + 2] - pz) * R42S.back; }
+    const t = Math.sign(D[x]) * fd - D[x]; tgt.set(x, [px + n.x * t, py + n.y * t, pz + n.z * t]); }
+  // copies of an inner vertex with no ledge triangle (the closing step's top edge) follow the copy at the same place that has one
+  for(const x of inner){ if(partner.has(x)) continue; let best = null; for(const y of inner){ if(!partner.has(y) || Math.sign(D[y]) !== Math.sign(D[x])) continue; const d = inPlane(x, y); if(d < .002 && (!best || d < best.d)) best = {y, d}; } if(best) tgt.set(x, tgt.get(best.y)); }
+  for(const [x, q] of tgt){ P[x * 3] = q[0]; P[x * 3 + 1] = q[1]; P[x * 3 + 2] = q[2]; }
+  const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+  for(let t = 0; t < nIa; t += 3){ const a = I[t], b = I[t + 1], q = I[t + 2], mv = inner.has(a) || inner.has(b) || inner.has(q);
+    A.fromArray(P, a * 3); B.fromArray(P, b * 3); C.fromArray(P, q * 3); const f = e1.subVectors(B, A).cross(e2.subVectors(C, A)); if(f.length() < 1e-8) continue; f.normalize();
+    if(mv){ const sg = Math.sign(D[a] || D[b] || D[q]); if((f.x * n.x + f.y * n.y + f.z * n.z) * sg < 0) f.negate(); }   // a moved face looks out of the slab on its own side
+    else { const o = N[a * 3] + N[b * 3] + N[q * 3], o1 = N[a * 3 + 1] + N[b * 3 + 1] + N[q * 3 + 1], o2 = N[a * 3 + 2] + N[b * 3 + 2] + N[q * 3 + 2]; if(f.x * o + f.y * o1 + f.z * o2 < 0) f.negate(); }   // every other face: its own flat normal, on the model's side
+    for(const v of [a, b, q]){ N[v * 3] = f.x; N[v * 3 + 1] = f.y; N[v * 3 + 2] = f.z; } }
+  return inner.size; }
+function r42MergeDoorPanels(){
+  const field = m => /\|door-panel-field$/.test(m.name || '') || /\|door-panel-field$/.test((m.userData.bim2 && m.userData.bim2.name) || '');
+  const frame = m => /\|paint-trim-semigloss$/.test(m.name || '') || /\|paint-trim-semigloss$/.test((m.userData.bim2 && m.userData.bim2.name) || '');
+  for(const it of (window.B3D ? B3D.items : [])) for(const p of it.parts){ const kids = p.piv.children.filter(o => o.isMesh);
+    const F = kids.find(field), T = kids.find(frame); if(!F || !T) continue;
+    if(F.material !== T.material || F.matrix.equals(T.matrix) === false){ R42D.skipped.push(it.id + ':' + p.k + (F.material !== T.material ? ' material' : ' matrix')); continue; }
+    const A = T.geometry, Bg = F.geometry, attrs = ['position', 'normal', 'uv'].filter(k => A.attributes[k] && Bg.attributes[k]);
+    if(!A.index || !Bg.index || attrs.length < 2){ R42D.skipped.push(it.id + ':' + p.k + ' attrs'); continue; }
+    let na = A.attributes.position.count; const nb = Bg.attributes.position.count, G = new THREE.BufferGeometry();
+    for(const k of attrs){ const a = A.attributes[k], b = Bg.attributes[k], s = a.itemSize, arr = new Float32Array((na + nb) * s);
+      const gc = (q, i, c) => c === 0 ? q.getX(i) : c === 1 ? q.getY(i) : c === 2 ? q.getZ(i) : q.getW(i);
+      for(let i = 0; i < na; i++) for(let c = 0; c < s; c++) arr[i * s + c] = gc(a, i, c);
+      for(let i = 0; i < nb; i++) for(let c = 0; c < s; c++) arr[(na + i) * s + c] = gc(b, i, c);
+      G.setAttribute(k, new THREE.BufferAttribute(arr, s)); }
+    const ia = A.index, ib = Bg.index; let I = new (na + nb > 65535 ? Uint32Array : Uint16Array)(ia.count + ib.count);
+    for(let i = 0; i < ia.count; i++) I[i] = ia.getX(i); for(let i = 0; i < ib.count; i++) I[ia.count + i] = na + ib.getX(i);
+    // hard edges: the model shares a few vertices between faces that meet at an angle; give every frame triangle its own three vertices so
+    // the bevel, the shoulder and the faces each keep their own flat normal (no smoothing across the edges)
+    { const nIa = ia.count, keys = Object.keys(G.attributes), nn = nIa + nb;
+      for(const k of keys){ const a = G.attributes[k], sz = a.itemSize, src = a.array, dst = new Float32Array(nn * sz);
+        for(let i = 0; i < nIa; i++) for(let c = 0; c < sz; c++) dst[i * sz + c] = src[I[i] * sz + c];
+        for(let j = 0; j < nb; j++) for(let c = 0; c < sz; c++) dst[(nIa + j) * sz + c] = src[(na + j) * sz + c];
+        G.setAttribute(k, new THREE.BufferAttribute(dst, sz)); }
+      const I2 = new (nn > 65535 ? Uint32Array : Uint16Array)(I.length); for(let i = 0; i < nIa; i++) I2[i] = i; for(let i = nIa; i < I.length; i++) I2[i] = I[i] - na + nIa;
+      I = I2; na = nIa; }
+    try{ const nv = r42DoorSticking(G, na, nb, I, ia.count); R42D.bevel += nv; (R42D.per || (R42D.per = {}))[it.id + ':' + p.k] = nv; }catch(e){ R42D.skipped.push(it.id + ':' + p.k + ' bevel ' + e); }
+    try{ const r = r42DoorContact(G, na, I, ia.count); if(r){ I = r; R42D.ao++; } }catch(e){ R42D.skipped.push(it.id + ':' + p.k + ' contact ' + e); }
+    // in place on the frame's own geometry object: the design-concept switch (BIM2.setVariant) hides an element by collapsing its triangles
+    // in the as-loaded geometry's index (ranges in userData.bim2), so the object, its ranges and its cached index must carry the panels too
+    const keep = Object.keys(G.attributes); for(const k of Object.keys(A.attributes)) if(!keep.includes(k)) A.deleteAttribute(k); for(const k of keep) A.setAttribute(k, G.attributes[k]);
+    A.setIndex(new THREE.BufferAttribute(I, 1)); A.computeBoundingBox(); A.computeBoundingSphere();
+    const uT = T.userData, uF = F.userData.bim2, n0 = ia.count / 3, nP = I.length / 3 - n0;   // nP: the panel floors' triangles (subdivided for the contact shading)
+    if(uT.bim2 && uT.bim2.ranges){ const add = [[(uF && uF.ranges && uF.ranges[0] && uF.ranges[0][0]) || ((uT.bim2.ranges[0] || [])[0]) || it.id, null, n0, nP]]; uT.bim2.ranges.push(...add); uT.bim2.ranges.sort((a, b) => a[2] - b[2]); }
+    if(uT.idx0) uT.idx0 = A.index; if(uT.alt) uT.alt = {};
+    F.parent.remove(F); F.visible = false; F.userData.r42merged = T.uuid; R42D.merged++; R42D.tris += I.length / 3; }
+  BIM3.report.r42doors = {merged: R42D.merged, tris: R42D.tris, skipped: R42D.skipped.length}; return R42D; }
+{ const _b42d = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b42d.apply(this, arguments); try{ r42MergeDoorPanels(); }catch(e){ console.warn('[r42] door panels', e); } return r; }; }
 /* ---- runtime checks (the page no longer judges the model's geometry; compile/validate/kernel reports do): what the page itself must get
    right when it consumes the package. Feeds window.__CHECKS (tools/checks.py gate = 0 items). */
 function bim3ModelChecks(){
@@ -21011,6 +21179,39 @@ function bim3Glass35(){
   for(const m of BIM2S.meshes){ const nm = (m.userData.bim2 && m.userData.bim2.name) || m.name || ''; if(/^glass\|/.test(nm) || /\|glass\|/.test(nm)){ m.castShadow = false; rep.noShadow = (rep.noShadow || 0) + 1; } }
   BIM3.report.glass35 = rep; return rep; }
 { const _b3g = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3g.apply(this, arguments); try{ bim3Glass35(); }catch(e){ console.warn('[bim3] glass35', e); } return r; }; }
+/* r42 owner 11/12 rule:shower-glass-low-iron ("the glass in the shower is not tinted, so that should be basically clear glass. If anything, it
+   has that really, really subtle green tinge that glass has"). Photos p45 / IMG_0595: 3/8" low-iron clear panels; through them the tile is
+   the same tone as beside them, the only colour is a faint aqua line on the polished edges. Every FIX shower / tub screen (showerGlass, the
+   sliding kind included) gets its own pane and edge materials instead of the shared fixture glass: the pane is the GLASS20 thick-slab model
+   (one Fresnel interface a face, n = 1.5) with low-iron absorption (.4 % a face, was 2.5 %: ~92 % through a panel at normal incidence, as real
+   10 mm low-iron) and reflections that pick up only a whisper of green as they go grazing; the edges are a pale, half-clear aqua-grey (the
+   shared edge was a .9-opaque green-grey frame round each panel). Frosted panes (model glass-obscure windows) are not touched. */
+const R42G = window.R42G = {a: .004, edge: 0xc6dbd0, edgeOp: .42, graze: [.95, 1, .97], n: 0, panes: 0};
+let R42G_M = null, R42G_E = null;
+function r42ShowerGlass(){
+  if(R42G_M) return R42G_M;
+  const m = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: .02, metalness: 0, transparent: true, opacity: .28, depthWrite: false, side: THREE.DoubleSide}); m.name = 'showerGlass42';   // opacity: unused by the glass shader; kept at the fixture glass's .28 so picks and the nav probes still see through it as before
+  glassify(m, {inside: true, thick: true});
+  const prev = m.onBeforeCompile, pk = m.customProgramCacheKey, G = R42G.graze;
+  m.onBeforeCompile = function(sh, r){ if(prev) prev.call(this, sh, r);
+    sh.fragmentShader = sh.fragmentShader.replace(/exp\(-[0-9.]+ \/ gCt\)/, 'exp(-' + R42G.a.toFixed(4) + ' / gCt)')
+      .replace('gl_FragColor = vec4(gRefl * gP,', 'gRefl *= mix(vec3(1.0), vec3(' + G.map(v => v.toFixed(3)).join(', ') + '), pow(1.0 - gNoV, 3.0));\n      gl_FragColor = vec4(gRefl * gP,'); };
+  m.customProgramCacheKey = () => (pk ? pk.call(m) : '') + '|r42sg'; m.needsUpdate = true;
+  return R42G_M = m; }
+function r42ShowerEdge(){
+  if(R42G_E) return R42G_E;
+  const m = new THREE.MeshStandardMaterial({color: new THREE.Color(R42G.edge).convertSRGBToLinear(), roughness: .1, metalness: 0, transparent: true, opacity: R42G.edgeOp, depthWrite: false}); m.name = 'showerGlassEdge42';
+  return R42G_E = m; }
+function r42ShowerScreen(g){
+  const pane = FIX.mat('glass'), edge = FIX.mat('glassEdge'); let n = 0;
+  g.traverse(o => { if(!o.isMesh || Array.isArray(o.material)) return;
+    if(o.material === pane || o.material.name === 'glass'){ o.material = r42ShowerGlass(); o.userData.glass20 = true; o.castShadow = false; o.renderOrder = 2;
+      try{ if(glass20Slab(o)) o.material = [r42ShowerGlass(), r42ShowerEdge()]; }catch(e){} n++; }
+    else if(o.material === edge || o.material.name === 'glassEdge'){ o.material = r42ShowerEdge(); o.userData.glass20 = true; o.castShadow = false; o.renderOrder = 2; } });
+  R42G.n++; R42G.panes += n; return n; }
+if(window.FIX && FIX.make){ const _mk42 = FIX.make; FIX.make = function(kind){ const g = _mk42.apply(this, arguments);
+    try{ if(kind === 'showerGlass' && g) r42ShowerScreen(g); }catch(e){ console.warn('[r42] shower glass', e); }
+    return g; }; }
 /* G35-3 skylights (v33 buildSkylightsK + int21 I8 look): the unit's cladding (library 'skylight-frame') is dark aluminium (v33 'steel'),
    not the white exterior trim; its glass (kernel R4b 'skylight-glass') is v33's clear skylight pane (light, 30 %), seen from the room
    below as sky, from above as a glint. */
@@ -21019,7 +21220,7 @@ const B3SKY = {pane: null};
     if(root === 'gutter-guard'){ if(!M.gutterGuard35){ M.gutterGuard35 = new THREE.MeshStandardMaterial({color: new THREE.Color(0x63676a).convertSRGBToLinear(), roughness: .75, metalness: .3}); M.gutterGuard35.name = 'gutterGuard'; } return M.gutterGuard35; }   /* FX S4 rule:gutter-covered */
     if(root === 'skylight-frame' && M.steel) return M.steel;
     if(root === 'stainless-satin' && M.cable) return M.cable;   /* v35: railing cable infill = v33's satin cable (category 'metal' had mapped it to black steel: cables vanished) */
-    if(root === 'door-panel-field'){ const base = M.trim || M.doorPaint; if(base && !M.panelField35){ M.panelField35 = base.clone(); M.panelField35.color.multiplyScalar(.93); } if(M.panelField35) return M.panelField35; }   /* O3c: toned recess floor */
+    if(root === 'door-panel-field'){ const base = M.trim || M.doorPaint; if(base) return base; }   /* r42 owner 11/12 ("it's shading the middle part darker, which looks very fake"): the recessed panels are the SAME paint as the stiles and rails (one material object), so the only shading is real light on the model's recess steps (O3c's 7 % darker panel clone is gone) */
     if(root === 'glass-obscure'){ if(!M.glassObscure35){ M.glassObscure35 = new THREE.MeshStandardMaterial({color: new THREE.Color(0xe9edee).convertSRGBToLinear(), transparent: true, opacity: .82, roughness: .85, metalness: 0, emissive: new THREE.Color(0x000000), depthWrite: false}); M.glassObscure35.name = 'glassObscure'; } return M.glassObscure35; }   /* O9 obscure (frosted) pane: lets light through, hides the room */
     if(root === 'deck-skirt'){ if(!M.deckBoard && typeof DECK_GRAIN !== 'undefined'){ M.deckBoard = std({map: DECK_GRAIN, color: 0x9d9892, roughness: .78}); M.deckBoard.map.wrapS = M.deckBoard.map.wrapT = THREE.RepeatWrapping; } if(!M.deckSkirt35 && M.deckBoard){ M.deckSkirt35 = M.deckBoard.clone(); M.deckSkirt35.color.set(0x55524e); } if(M.deckSkirt35) return M.deckSkirt35; }
     if(root === 'skylight-glass'){ if(!B3SKY.pane){ B3SKY.pane = new THREE.MeshStandardMaterial({color: new THREE.Color(0xeef5f8).convertSRGBToLinear(), transparent: true, opacity: .3, roughness: .04, metalness: 0, side: THREE.DoubleSide, depthWrite: false}); B3SKY.pane.name = 'skylightPane'; } return B3SKY.pane; }
@@ -21295,6 +21496,16 @@ function r36PrimaryCeiling(){
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36GableCasing(); }catch(e){ console.warn('[r36] gable casing', e); R36G.err.push(String(e)); }
     try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
+/* r42 owner 11/12 (office: "you do have a painted part in the office that's a little bit wrong. The accent wall should be a single colour").
+   Swept from the office with rays against the compiled model: the walls are SW 6227 Meditative on the west (accent) wall edge to edge,
+   floor to ceiling, and SW 9632 Serenely on the others, except one face the model never built: the south end of the 2 ft alcove under the
+   east soffit (x -25.27 .. -23.22, floor to the soffit at 4.44). It was open to the wall's framing core (stud material, drawn in the generic
+   grey paint), so a full-height grey band stood between the window wall and the alcove in the stop's view (photo p20: that end is the
+   same light Serenely as the window wall, with the baseboard the model does have). The face is added to the Serenely wall mesh (same
+   material and mesh: lights, repaints and sections like the rest of the room), 1/50 in proud of the wall line so it covers the core. */
+function r42OfficeAlcove(){ const z = -2.7850, x0 = -25.266, x1 = -23.2216, y0 = -4.56, y1 = 4.44;
+  return r36AddFaces(/^walls\|L0\|paint-int-flat#PAINT-SW-9632-SERENELY$/, 'R42-OFFICE-ALCOVE-S', [[[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z], [0, 0, -1]]]); }
+{ const _bh42 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh42.apply(this, arguments); try{ BIM3.report.r42office = r42OfficeAlcove(); }catch(e){ console.warn('[r42] office alcove', e); } return r; }; }
 /* r41 owner 11/12 (Dollhouse at dusk over the garage: "geometry problem at the top of garage roof - all these roofs should hit at the same
    point"). From the model's planes (meta roofs, top = plane + th): the garage's west slope runs to the upper-storey wall (world z = -2.25)
    all the way to the ridge, but its east slope stopped 1.48 ft short of the wall (z = -0.77) between the ridge and the valley it forms with
