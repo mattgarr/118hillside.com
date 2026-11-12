@@ -160,7 +160,7 @@
       W.light = lightPlane({floor: 'SP-L1-GREAT', ppf: 26, gain: 2.3, sources: [windowSource('WN-L1-03', {room: 'SP-L1-GREAT', shade: 'WN-L1-03', bars: [[-.17, .17, 0, 9]]})]});
       // Pepper's rainbow: card and tracing paper on the film of lower-level bedroom 2's window, a 9 at half past five in July
       const src0 = windowSource('WN-L0-07', {room: 'SP-L0-BED2'}), op = src0.op, out = src0.out();
-      const strips = makeStrips('9', {o: [-22.72, LY + .05, -33.49], right: [.975, 0, -.222], up: [-.222, 0, -.975], size: 1.2, pitch: 1.5}, {p: [op.c[0], 0, op.c[1]], n: [out.x, 0, out.z]}, 17.625);   // between half past five and a quarter to six
+      const strips = makeStrips('9', {o: [-22.71, LY + .05, -33.83], right: [.975, 0, -.222], up: [-.222, 0, -.975], size: 1.05, pitch: 1.5}, {p: [op.c[0], 0, op.c[1]], n: [out.x, 0, out.z]}, 17.625);   // between half past five and a quarter to six
       W.paper = buildPaper(strips, [-out.x * .03, 0, -out.z * .03]);
       W.film = windowSource('WN-L0-07', {room: 'SP-L0-BED2', top: 1.06, film: true, strips, gate: () => has('metPepper')});
       W.rainbow = lightPlane({floor: 'SP-L0-BED2', ppf: 40, gain: 1.9, holes: [[[-30.05, -39.6], [-24.4, -39.6], [-24.4, -32.3], [-30.05, -32.3]]], sources: [W.film], after: p => paperLight(p.s)});
