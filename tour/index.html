@@ -1880,6 +1880,45 @@ const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const lerp = (a,b,t) => a + (b-a)*t;
 const smooth = (a,b,x) => { const t = clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* r40 two environments (tour/LIGHTING.md). There was ONE image-based light for the whole scene, swapped by where the camera stood:
+   from outside the rooms seen through the windows were lit by the open sky, from inside the garden was lit by the room's panorama.
+   Both looked wrong, so the glass faked the difference (22 % transmission from outside, 60 % from inside, an orange glow and a grade
+   tint at dusk). Now every standard material is lit by the environment of the side of the walls it is ON: scene.environment (the
+   sky) outside, R40E.U.envMapB (the room, crossfaded by R40X) inside, chosen per fragment from a plan-grid mask of the BIM interior
+   spaces (R40M: per 6-in cell up to two height intervals of interior air), sampled 9 in off the surface along its normal so a wall's
+   room face reads the room and its outer face the sky. Glass reflects the side the camera is on. Installed here, before any material
+   is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
+const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0,
+  U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}}};
+if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
+  C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
+  C.worldpos_vertex += `\n${G}\nvR40W = worldPosition.xyz;\n#endif\n`;
+  C.envmap_physical_pars_fragment += `
+#if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
+uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K;
+float r40Interior( const in GeometricContext geometry ){
+  if( r40Mode.x < 0.5 ) return 0.0;
+  if( r40Mode.y > 0.5 || r40MB.z <= 0.0 ) return r40K;
+  vec3 P = vR40W + inverseTransformDirection( geometry.normal, viewMatrix ) * 0.75;
+  vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
+  if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
+  vec4 t = texture2D( r40Mask, uv ) * 255.0; float y = ( P.y - r40MY.x ) / r40MY.y;
+  return max( clamp( y - t.r + 0.5, 0.0, 1.0 ) * clamp( t.g - y + 0.5, 0.0, 1.0 ), clamp( y - t.b + 0.5, 0.0, 1.0 ) * clamp( t.a - y + 0.5, 0.0, 1.0 ) );
+}
+vec3 r40IrrB( const in GeometricContext geometry ){ return PI * textureCubeUV( envMapB, inverseTransformDirection( geometry.normal, viewMatrix ), 1.0 ).rgb * envMapIntensity; }
+vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughness ){ vec3 r = reflect( -viewDir, normal ); r = normalize( mix( r, normal, roughness * roughness ) );
+  return textureCubeUV( envMapB, inverseTransformDirection( r, viewMatrix ), roughness ).rgb * envMapIntensity; }
+#endif
+`;
+  const M0 = C.lights_fragment_maps, I0 = 'iblIrradiance += getLightProbeIndirectIrradiance( geometry, maxMipLevel );', R0 = 'radiance += getLightProbeIndirectRadiance( geometry.viewDir, geometry.normal, material.specularRoughness, maxMipLevel );';
+  if(M0.includes(I0) && M0.includes(R0)){
+    C.lights_fragment_maps = `#if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tfloat r40m = r40Interior( geometry );\n#endif\n` + M0
+      .replace(I0, `if( r40m < 0.999 ) iblIrradiance += ( 1.0 - r40m ) * getLightProbeIndirectIrradiance( geometry, maxMipLevel );\n\t\tif( r40m > 0.001 ) iblIrradiance += r40m * r40IrrB( geometry );`)
+      .replace(R0, `#if defined( STANDARD ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tif( r40m < 0.999 ) radiance += ( 1.0 - r40m ) * getLightProbeIndirectRadiance( geometry.viewDir, geometry.normal, material.specularRoughness, maxMipLevel );\n\tif( r40m > 0.001 ) radiance += r40m * r40RadB( geometry.viewDir, geometry.normal, material.specularRoughness );\n\t#else\n\t${R0}\n\t#endif`);
+    // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
+    THREE.Material.prototype.onBeforeCompile = function(sh){ if(this.isMeshStandardMaterial) r40Uniforms(this, sh, false); };
+  } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
+function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const v = (m.userData.r40Mode || (m.userData.r40Mode = {value: new THREE.Vector2()})); v.value.set(R40E.on && !m.envMap ? 1 : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
 const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawing registered to the A2.2 walls
@@ -6814,17 +6853,24 @@ function navQA(){
     performance.now = () => vt; R37S.qaNoDraw = false;
     try{
       for(const [a, b] of seq){ await pause(); const id = STOPS[a].id + '>' + STOPS[b].id; tour(a); settle(o.lightSettle || 90);
-        let p = grab(), e0 = renderer.toneMappingExposure, tod0 = TOD_KEY, n = 0, after = 0, worst = 0, at = 0, wE = 0, todCh = false, cuts = 0, s0 = lst(), sAt = null; const fades0 = R40X.fades, P0 = camera.position.clone();
+        /* the reference view: after each frame the start view is drawn again with the frame's lighting (uniforms, environments, exposure,
+           glass) and read back too. Nothing in it moves, so its change from frame to frame is the lighting change alone; the walking view's
+           own (robust) change is reported beside it. The meter is held off for that draw so it only ever meters the walking view. */
+        const refQ = camera.quaternion.clone(), refP = camera.position.clone(), bq = new THREE.Quaternion(), bp = new V3();
+        const refGrab = () => { bp.copy(camera.position); bq.copy(camera.quaternion); camera.position.copy(refP); camera.quaternion.copy(refQ); camera.updateMatrixWorld(); const mo = LIGHT.meter.on; LIGHT.meter.on = false;
+          try{ if(useAO && composer) composer.render(dt); else renderer.render(scene, camera); return grab(); } finally { LIGHT.meter.on = mo; camera.position.copy(bp); camera.quaternion.copy(bq); camera.updateMatrixWorld(); } };
+        let p = grab(), pr = refGrab(), e0 = renderer.toneMappingExposure, tod0 = TOD_KEY, n = 0, after = 0, worst = 0, at = 0, wE = 0, wV = 0, todCh = false, cuts = 0, s0 = lst(), sAt = null; const fades0 = R40X.fades, P0 = camera.position.clone();
         showStop(b); const A = anim;
-        while(n < 1500 && ((A && anim === A) || after++ < 45)){ const c = frame(); n++; for(let i = 0; i < W * H; i++) D[i] = c[i] - p[i]; const e = renderer.toneMappingExposure, es = Math.abs(Math.log2(e / e0)), s1 = lst();
+        while(n < 1500 && ((A && anim === A) || after++ < 45)){ const c = frame(), cr = refGrab(); n++; const e = renderer.toneMappingExposure, es = Math.abs(Math.log2(e / e0)), s1 = lst();
           const cut = camera.position.distanceTo(P0) > R40L.jump; P0.copy(camera.position); if(TOD_KEY !== tod0) todCh = true;
-          if(cut) cuts++; else { const m = Math.abs(med()); if(m > worst){ worst = m; at = n; sAt = [s0, s1]; } if(es > wE) wE = es; }   // a cut (the camera jumps) changes the whole picture: not a lighting step
-          p = c; e0 = e; tod0 = TOD_KEY; s0 = s1; }
-        const row = {id, frames: n, step: +worst.toFixed(2), at, stops: +wE.toFixed(4), fades: R40X.fades - fades0, tod: todCh, cuts, state: sAt}; rows.push(row);
+          if(cut) cuts++; else { for(let i = 0; i < W * H; i++) D[i] = cr[i] - pr[i]; const m = Math.abs(med()); if(m > worst){ worst = m; at = n; sAt = [s0, s1]; } if(es > wE) wE = es;
+            for(let i = 0; i < W * H; i++) D[i] = c[i] - p[i]; wV = Math.max(wV, Math.abs(med())); }   // a cut (the camera jumps) changes the whole picture: not a lighting step
+          p = c; pr = cr; e0 = e; tod0 = TOD_KEY; s0 = s1; }
+        const row = {id, frames: n, step: +worst.toFixed(2), at, view: +wV.toFixed(2), stops: +wE.toFixed(4), fades: R40X.fades - fades0, tod: todCh, cuts, state: sAt}; rows.push(row);
         if(todCh){ R.note('light', id, 'changes the time of day (not judged): largest step ' + row.step + ' / 255'); continue; }
         if(worst > chk) R.fail('light', id, 'a one-frame lighting step of ' + row.step + ' / 255 at frame ' + at + ' (' + Math.round(1 / dt) + ' fps); lighting state ' + JSON.stringify(sAt));
         if(wE > chkS) R.fail('light', id, 'the exposure moved ' + row.stops + ' stops in one frame');
-        R.note('light', id, n + ' frames, largest lighting step ' + row.step + ' / 255, exposure ' + row.stops + ' stops/frame, ' + row.fades + ' environment fades'); }
+        R.note('light', id, n + ' frames, largest lighting step ' + row.step + ' / 255 (walking view, lighting and content: ' + row.view + '), exposure ' + row.stops + ' stops/frame, ' + row.fades + ' environment fades'); }
       // the same view from two histories settles to the same exposure
       for(const [v, f1, f2] of (o.lightSame || [['kitchen', 'living', 'great'], ['entry', 'porch', 'living'], ['great', 'kitchen', 'mainbeds'], ['lounge', 'terrace', 'office']])){ await pause(); const es = [];
         for(const f of [f1, f2]){ tour(ix(f)); settle(90); showStop(ix(v)); for(let i = 0; i < 1500 && anim; i++) settle(1); settle(Math.round(8 / dt)); es.push(renderer.toneMappingExposure); }
@@ -7481,7 +7527,7 @@ function tick(qa){
     const inExpo = LOOK.inExpo(DUSK, BASE_EXPOSURE); LIGHT_BASE_EXPO = BASE_EXPOSURE * Math.pow(inExpo / BASE_EXPOSURE, EXPO_IN); renderer.toneMappingExposure = LIGHT_BASE_EXPO * lightMeterMul(dt);   // r40: blended in stops (log), not linearly
     fitSunShadow(); }
   // sliding doors fade open when the camera is near
-  for(const s of SLIDERS){ const d=Math.hypot(camera.position.x-s.cx, camera.position.z-s.cz) + Math.abs(camera.position.y-EYE-s.y+3)*.5; const o = isDoll()? .2 : clamp((d-3)/5,0,1)*(DUSK?.6:.22); s.mesh.material.opacity=o; s.mesh.visible=o>.01; }
+  for(const s of SLIDERS){ const d=Math.hypot(camera.position.x-s.cx, camera.position.z-s.cz) + Math.abs(camera.position.y-EYE-s.y+3)*.5; const gm = DUSK ? .6 : .22, o = isDoll()? .2 : R40E.on ? gm * clamp((d - .7) / .8, 0, 1) : clamp((d-3)/5,0,1)*gm; s.mesh.material.opacity=o; s.mesh.visible=o>.01; }   // r40: clear glass is there at every distance (it faded from 8 ft to 3 ft); only the last foot before the pane fades
   dollLiftStep(); dollRayN++;
   // labels
   if(isDoll() && vis.labels){
@@ -10035,6 +10081,7 @@ glassify = function(m, opts){
   const panes = thick ? 1 : 2, a = thick ? GLASS20.aThick / 2 : GLASS20.aThin;
   m.onBeforeCompile = (sh) => {
     sh.uniforms.gIn = inside ? {value: 1} : GLASS20_U.gIn; sh.uniforms.gEm = GLASS20_U.gEm; sh.uniforms.gGround = GLASS20_U.gGround; sh.uniforms.gMax = local.gMax;
+    if(R40E.on) r40Uniforms(m, sh, !inside);   // r40: a pane reflects the environment of the side the camera is on (indoor glass: its own side)
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float gIn, gMax, gEm, gGround;')
       .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', `
       float gNoV = clamp(abs(dot(normal, geometry.viewDir)), 0.0, 1.0);
@@ -20967,7 +21014,7 @@ function bim3ShingleCourses(){
 /* the glow is the lit room seen THROUGH the frosted pane, so it shows only from outside (camera not indoors, as v29's glass rule);
    from inside the pane is lit by the exterior (dusk sky) like the clear windows. Checked every frame with the page's glass state. */
 let B3OB_KEY = '';
-function bim3ObscureFrame(){ const m = M.glassObscure35; if(!m) return; const kO = DUSK ? 1 - Math.max(0, Math.min(1, EXPO_IN)) : 0, on = kO > 0, key = kO.toFixed(3) + ':' + (on ? M.glass.emissive.getHexString() : '');   // r40: blended by EXPO_IN
+function bim3ObscureFrame(){ const m = M.glassObscure35; if(!m) return; const kO = DUSK && !R40E.on ? 1 - Math.max(0, Math.min(1, EXPO_IN)) : 0, on = kO > 0, key = kO.toFixed(3) + ':' + (on ? M.glass.emissive.getHexString() : '');   // r40: blended by EXPO_IN
   if(key === B3OB_KEY) return; B3OB_KEY = key; if(on){ m.emissive.copy(M.glass.emissive); m.emissiveIntensity = .55 * kO; } else { m.emissive.set(0x000000); m.emissiveIntensity = 1; } }
 { const _g35 = glass20Frame; glass20Frame = function(){ _g35.apply(this, arguments); try{ bim3ObscureFrame(); }catch(e){} }; }
 { const _b3ob = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3ob.apply(this, arguments); try{ B3OB_KEY = ''; bim3ObscureFrame(); }catch(e){} return r; }; }
@@ -21949,7 +21996,7 @@ if(R13.on){
   // the corner bands fade with the page's own smoothed indoor factor, Tour / Walk only (exteriors, dollhouse, design: off)
   // own rAF tick (outside every render call: the SSAO normal pass hides these decals through o.visible, so visibility must never be
   // written from inside a scene render)
-  const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0; R13.k.value = k;
+  const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? (R40E.on ? 1 : Math.max(0, Math.min(1, EXPO_IN))) : 0; R13.k.value = k;   // r40: with two environments the rooms' corner bands stay on when seen from outside
       if(R13.edges) for(const m of R13.edges) m.visible = k > .01 && ACTIVE_VAR === 'asbuilt';   // r35: the corner bands are the as-built rooms' corners; in a layout idea they would hang in the air where walls were
       r13Sync(); }catch(e){} requestAnimationFrame(tick13); };
   requestAnimationFrame(tick13); }
@@ -22146,7 +22193,7 @@ function r17Bands(){ if(!BIM2S || typeof walkSurfaceAt !== 'function' || typeof 
 if(R17.on){
   const poll17 = setInterval(() => { try{ const L = document.querySelector('#loading'); if(!(L && L.classList.contains('done')) || !BIM2S) return; clearInterval(poll17);
       (window.requestIdleCallback || setTimeout)(() => { const t0 = performance.now(); try{ R17.meshes = r17Bands(); }catch(e){ console.warn('[r17] bands', e); } R17.report.buildMs = +(performance.now() - t0).toFixed(1); }, {timeout: 1500}); }catch(e){} }, 1000);
-  const tick17 = () => { try{ const on = (mode === 'tour' || mode === 'walk' || mode === 'doll'), k = on ? 1 - Math.max(0, Math.min(1, typeof EXPO_IN === 'number' ? EXPO_IN : 0)) : 0; R17.k.value = k;
+  const tick17 = () => { try{ const on = (mode === 'tour' || mode === 'walk' || mode === 'doll'), k = on ? (R40E.on ? 1 : 1 - Math.max(0, Math.min(1, typeof EXPO_IN === 'number' ? EXPO_IN : 0))) : 0; R17.k.value = k;   // r40: the exterior bands stay on when seen from inside
       if(R17.meshes) for(const m of R17.meshes) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick17); };
   requestAnimationFrame(tick17); }
 BIM3.report.r17 = R17.report;
@@ -23005,14 +23052,15 @@ function r40InK(dt){ const L = R40L, t = L.state ? 1 : 0; if(L.p !== t){ const s
 function r40CoverStep(cov){ const L = R40L; if(L.covF === L.frame) return; L.covF = L.frame; const t = cov ? 1 : 0;
   if(L.covSnap || !L.on){ L.covP = t; L.covSnap = false; return; } const s = L.dt / L.coverDur; L.covP = t > L.covP ? Math.min(t, L.covP + s) : Math.max(t, L.covP - s); }
 // the glass transmission uniform for an outdoor value outV (cov: the covered-porch rule applies), blended to the indoor value by EXPO_IN
-function r40GlassT(outV, cov){ const k = r40C(EXPO_IN); let o = outV; if(cov && !DUSK && typeof GLASS21 !== 'undefined') o += (Math.max(outV, GLASS21.covered) - outV) * r40S(R40L.covP);
+function r40GlassT(outV, cov){ if(R40E.on) return 1;   // two environments: the glass is clear from both sides; what is behind it is lit as it is
+  const k = r40C(EXPO_IN); let o = outV; if(cov && !DUSK && typeof GLASS21 !== 'undefined') o += (Math.max(outV, GLASS21.covered) - outV) * r40S(R40L.covP);
   const inV = DUSK ? 1 : LIGHT.glassIn; return o + (inV - o) * k; }
 // the per-material glass look the tick used to set on an inside / outside change (colour, opacity, environment, dusk glow), blended by EXPO_IN
 function r40GlassLook(){ const k = r40C(EXPO_IN), key = (DUSK ? 'd' : 'n') + k.toFixed(4) + ':' + GLOW.length; if(key === R40L.glassKey) return; R40L.glassKey = key;
   const C = R40L.c.set(DUSK ? 0x2a2420 : 0x14191d).convertSRGBToLinear().lerp(R40L.c2.set(0xeef2f2).convertSRGBToLinear(), k), L = (a, b) => a + (b - a) * k;
   const op = L(DUSK ? .88 : .58, .06), env = L(DUSK ? .35 : 2.4, .6);
   M.glass.emissiveIntensity = (DUSK ? .8 : 0) * (1 - k); M.glass.opacity = op; M.glass.color.copy(C); M.glass.envMapIntensity = env; M.glass.roughness = .04;
-  for(const m of GLOW){ m.emissiveIntensity = (DUSK ? .7 : 0) * (1 - k); m.color.copy(C); m.envMapIntensity = env; } }
+  for(const m of GLOW){ m.emissiveIntensity = (DUSK ? .7 : 0) * (1 - k); m.color.copy(C); m.envMapIntensity = env; if(R40E.on) m.opacity = 1; } }   // r40: a pane is a whole pane from both sides (opacity is its presence)
 // ---- R40X: environment crossfade
 const R40X = window.R40X = {out: null, prev: null, B: null, k: 1, mat: null, mesh: null, cam: null, snapNext: true, draws: 0, fades: 0, seen: new WeakSet()};
 function r40XMake(t){ const X = R40X, w = t.image && t.image.width, h = t.image && t.image.height; if(!(w > 0 && h > 0)) return false;
@@ -23039,7 +23087,14 @@ function r40XTarget(t){ const X = R40X;
   if(snap){ X.B = t; X.k = 1; r40XDraw(t, t, 1, X.out); X.snapNext = false; return; }
   r40XDraw(X.out.texture, X.out.texture, 0, X.prev); X.B = t; X.k = 0; X.fades++; X.dur = R40L.flipF === R40L.frame ? R40L.inDur : R40L.envDur; R40L.ev('env fade', LIGHT_ENV_ID); }   // stepping in or out: the same time as EXPO_IN
 // after anything that sets scene.environment: take what it set as the target and give the materials the crossfaded texture
-function r40EnvSync(){ if(!R40L.on) return; const e = scene.environment; if(e && e.isTexture && (!R40X.out || e !== R40X.out.texture)){ try{ r40XTarget(e); }catch(err){ console.warn('[r40] env', err); return; } }
+function r40InTarget(){ const r = ENV_INSIDE && LIGHT_ENV_ID ? LIGHT_ENV.get(LIGHT_ENV_ID) : null; return r ? r.texture : ENV_IN ? ENV_IN.texture : null; }
+function r40EnvSync(){
+  if(R40E.on){   // two environments: the sky stays the scene environment; the room environment (crossfaded) is envMapB
+    if(!R40M.done || (R40L.frame % 120) === 0) try{ r40BuildMask(); }catch(err){ if(!R40M.warned){ R40M.warned = true; console.warn('[r40] mask', err); } }
+    const t = r40InTarget(); if(t) try{ r40XTarget(t); }catch(err){ console.warn('[r40] env', err); }
+    if(R40X.out) R40E.U.envMapB.value = R40X.out.texture; R40E.U.r40K.value = r40C(EXPO_IN);
+    if(ENV_RT && scene.environment !== ENV_RT.texture) scene.environment = ENV_RT.texture; return; }
+  if(!R40L.on) return; const e = scene.environment; if(e && e.isTexture && (!R40X.out || e !== R40X.out.texture)){ try{ r40XTarget(e); }catch(err){ console.warn('[r40] env', err); return; } }
   if(R40X.out && scene.environment) scene.environment = R40X.out.texture; }
 function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.k = Math.min(1, X.k + R40L.dt / (X.dur || R40L.envDur)); r40XDraw(X.prev.texture, X.B, r40S(X.k), X.out); }
 { const _ae = applyEnv; applyEnv = function(){ const r = _ae.apply(this, arguments); r40EnvSync(); return r; }; }
@@ -23047,6 +23102,42 @@ function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.
 { const _st = setTOD; setTOD = function(){ R40X.snapNext = true; R40L.snap = true; const r = _st.apply(this, arguments); r40EnvSync(); return r; }; }
 { const _rf = renderFrame; renderFrame = function(){ if(!R37S.qaNoDraw) try{ r40EnvSync(); r40EnvStep(); }catch(e){ if(!renderFrame.r40w){ renderFrame.r40w = true; console.warn('[r40] frame', e); } }
     try{ return _rf.apply(this, arguments); } finally { R40L.snapEnv = false; } }; }
+// ---- R40M: the interior mask. Per 6-in plan cell, up to two height intervals of interior air (BIM interior spaces, floor to the
+// ceiling over that cell), closed by 1 ft so interior walls and the door openings between rooms count as inside (the outer walls do not)
+const R40M = window.R40M = {c: .5, done: false, key: '', ms: 0, nx: 0, nz: 0, filled: 0};
+function r40BuildMask(){
+  if(typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false; const S = BIM2.state, sp = S.spaces.filter(s => s.interior); if(!sp.length) return false;
+  const key = (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '') + ':' + S.spaces.length + ':' + sp.length; if(R40M.done && key === R40M.key) return true;
+  const t0 = performance.now(), c = R40M.c; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9, zlo = 1e9, zhi = -1e9;
+  for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); zlo = Math.min(zlo, s.floorZ); }
+  // world X = plan y, world Z = plan x (house_loader P2)
+  const X0 = py0 - 2, Z0 = px0 - 2, NX = Math.ceil((py1 - py0 + 4) / c), NZ = Math.ceil((px1 - px0 + 4) / c), N = NX * NZ, IV = new Array(N);
+  for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const X = X0 + (i + .5) * c, Z = Z0 + (j + .5) * c; let L = null;
+    for(const s of sp){ if(!S.contains(s, Z, X)) continue; const top = S.topOf(s, Z, X); if(!(top > s.floorZ)) continue; (L || (L = [])).push([s.floorZ, top]); if(top > zhi) zhi = top; }
+    IV[j * NX + i] = L; }
+  // closing (dilate 2 cells, erode 2 cells): fills interior walls and openings between rooms, leaves the outline where it is
+  const occ = new Uint8Array(N), dil = new Uint8Array(N), R = 2; for(let q = 0; q < N; q++) occ[q] = IV[q] ? 1 : 0;
+  for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let v = 0; for(let dj = -R; dj <= R && !v; dj++) for(let di = -R; di <= R; di++){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ && occ[b * NX + a]){ v = 1; break; } } dil[j * NX + i] = v; }
+  let filled = 0;
+  for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const q = j * NX + i; if(occ[q] || !dil[q]) continue; let ok = 1;
+    for(let dj = -R; dj <= R && ok; dj++) for(let di = -R; di <= R; di++){ const a = i + di, b = j + dj; if(a < 0 || b < 0 || a >= NX || b >= NZ || !dil[b * NX + a]){ ok = 0; break; } }
+    if(!ok) continue; const L = []; for(let dj = -R; dj <= R; dj++) for(let di = -R; di <= R; di++){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < NX && b < NZ && occ[b * NX + a]) L.push(...IV[b * NX + a]); }
+    IV[q] = L; filled++; }
+  const Y0 = zlo - 2, sc = Math.max(.25, (zhi + 3 - Y0) / 250), lv = y => Math.max(0, Math.min(255, y)), data = new Uint8Array(N * 4);
+  for(let q = 0; q < N; q++){ const L = IV[q]; let A = [255, 0], B = [255, 0];
+    if(L && L.length){ L.sort((u, v) => u[0] - v[0]); const m = [[L[0][0], L[0][1]]]; for(let k = 1; k < L.length; k++){ const t = m[m.length - 1]; if(L[k][0] <= t[1] + 3) t[1] = Math.max(t[1], L[k][1]); else m.push([L[k][0], L[k][1]]); }
+      while(m.length > 2){ m[m.length - 2][1] = m[m.length - 1][1]; m.pop(); }
+      const enc = v => [lv(Math.floor((v[0] - .3 - Y0) / sc)), lv(Math.ceil((v[1] + .3 - Y0) / sc))]; A = enc(m[0]); if(m[1]) B = enc(m[1]); }
+    data.set([A[0], A[1], B[0], B[1]], q * 4); }
+  const tex = new THREE.DataTexture(data, NX, NZ, THREE.RGBAFormat, THREE.UnsignedByteType); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.flipY = false; tex.needsUpdate = true;
+  if(R40E.U.r40Mask.value) R40E.U.r40Mask.value.dispose(); R40E.U.r40Mask.value = tex; R40E.U.r40MB.value.set(X0, Z0, 1 / (NX * c), 1 / (NZ * c)); R40E.U.r40MY.value.set(Y0, sc);
+  Object.assign(R40M, {done: true, key, ms: +(performance.now() - t0).toFixed(1), nx: NX, nz: NZ, filled, y0: Y0, sc}); return true; }
+// the interior side of a world point, as the shader reads it (QA: window.__r40at(x, y, z, nx, ny, nz))
+window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.r40Mask.value; if(!t) return null; const B = U.r40MB.value, Y = U.r40MY.value, P = [x + nx * .75, y + ny * .75, z + nz * .75];
+  const u = (P[0] - B.x) * B.z, v = (P[2] - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0; const i = Math.min(R40M.nx - 1, Math.floor(u * R40M.nx)), j = Math.min(R40M.nz - 1, Math.floor(v * R40M.nz)), d = t.image.data, o = (j * R40M.nx + i) * 4, yy = (P[1] - Y.x) / Y.y;
+  const f = (lo, hi) => Math.max(0, Math.min(1, yy - lo + .5)) * Math.max(0, Math.min(1, hi - yy + .5)); return Math.max(f(d[o], d[o + 1]), f(d[o + 2], d[o + 3])); };
+// clear glass: no glow painted on the panes and no lamp-colour grade through them at dusk (rooms are seen lit through the glass instead)
+{ const _g40 = glass20Frame; glass20Frame = function(){ _g40.apply(this, arguments); if(!R40E.on) return; GLASS20_U.gEm.value = 0; if(GRADE_PASS && GRADE_PASS.uniforms.wK) GRADE_PASS.uniforms.wK.value = 0; }; }
 window.__LSTATE = () => ({k: +EXPO_IN.toFixed(4), state: R40L.state, raw: R40L.raw, zone: R40L.zone, room: LIGHT_ENV_ID, envK: +R40X.k.toFixed(3), cov: +R40L.covP.toFixed(3), expo: +renderer.toneMappingExposure.toFixed(4), mul: +METER.mul.toFixed(4), tod: TOD_KEY});
 boot();
 })();
