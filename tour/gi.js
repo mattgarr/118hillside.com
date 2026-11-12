@@ -254,10 +254,14 @@ function meter(dt){ const H = GI.H, p = H.camera.position, inR = GI.on ? GI.room
     if(GI.Ecam > 1e-6) want = Math.max(-GI.meterStops, Math.min(GI.meterStops, GI.meterK * Math.log2(GI.meterT / GI.Ecam))); }
   GI.compS = GI.snapM || GI.compS == null ? want : GI.compS + (want - GI.compS) * (1 - Math.exp(-dt / .5)); GI.snapM = false; GI.comp = Math.pow(2, GI.compS); }
 /* r13 corner bands: their multiply decals double up with baked corners; inside the rooms their vertices are lifted to white (kept, restored when GI is off) */
+// is this band vertex on a surface of one of the rooms? The room's own space must lie 0.3 ft to one side of it (the far face of a shared
+// wall has the wall's thickness there, and stays as the page drew it: the first version lifted the hall's bands behind the kitchen)
+function inRoom(x, y, z){ const B = GI.H.BIM2S, R = GI.U.giRY.value; if(!B || y < R.x || y > R.y) return 0; const yy = Math.max(.5, Math.min(6, y));
+  for(const [dx, dz] of [[.3, 0], [-.3, 0], [0, .3], [0, -.3], [0, 0]]){ const sp = B.spaceAt(z + dz, x + dx, yy); if(sp && GI.ROOMS.includes(sp.id)) return 1; } return 0; }
 function r13Fade(){ const want = GI.on && GI.k > .5; if(GI._r13 === want && (GI.n % 120) !== 7) return; let nm = 0; GI.H.scene.traverse(o => { if(o.isMesh && o.material && o.material.name === "r13Occlusion") nm++; }); if(GI._r13 === want && nm === GI._r13m) return; GI._r13m = nm;   /* the bands are built at idle after load: look again now and then */ const H = GI.H; let n = 0;
   H.scene.traverse(o => { if(!o.isMesh || !o.material || o.material.name !== 'r13Occlusion') return; const col = o.geometry.attributes.color, pos = o.geometry.attributes.position; if(!col) return;
     if(!o.userData.giC0) o.userData.giC0 = Float32Array.from(col.array); const C0 = o.userData.giC0, P = new V3(); o.updateMatrixWorld();
-    for(let i = 0; i < col.count; i++){ P.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); const w = want ? Math.max(GI.roomAt(P.x, P.y, P.z), GI.roomAt(P.x + .4, P.y, P.z), GI.roomAt(P.x - .4, P.y, P.z), GI.roomAt(P.x, P.y, P.z + .4), GI.roomAt(P.x, P.y, P.z - .4)) : 0;
+    for(let i = 0; i < col.count; i++){ P.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); const w = want ? inRoom(P.x, P.y, P.z) : 0;
       for(let k = 0; k < 3; k++) col.array[i * 3 + k] = C0[i * 3 + k] + (1 - C0[i * 3 + k]) * w; if(w) n++; }
     col.needsUpdate = true; });
   GI._r13 = want; GI.r13n = n; }
