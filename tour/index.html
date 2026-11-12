@@ -10380,7 +10380,10 @@ function lightMeterMul(dt){
      jump in rate, so a new reading every few frames never kinks the brightness; ~2.1 s to 95 % (tau = .45 s) */
   METER.want = want; let x = Math.log(Math.max(1e-3, METER.mul)); if(METER.lx == null || Math.abs(METER.lx - x) > 1e-6){ METER.lv = 0; }
   const w = 1 / (Mt.tau || .45), g = Math.log(want), ex = Math.exp(-w * el), d = x - g, j = (METER.lv || 0) + w * d;
-  x = g + (d + j * el) * ex; METER.lv = ((METER.lv || 0) - w * j * el) * ex; METER.lx = x; METER.mul = Math.exp(x); return METER.mul;
+  const x0 = x; x = g + (d + j * el) * ex; METER.lv = ((METER.lv || 0) - w * j * el) * ex;
+  // and never faster than Mt.slew stops a second (a swing from a dark view to a bright one adapts like an eye, over a few seconds)
+  const cap = (Mt.slew || .3) * Math.LN2 * el; if(Math.abs(x - x0) > cap){ x = x0 + Math.sign(x - x0) * cap; METER.lv = Math.sign(METER.lv) * Math.min(Math.abs(METER.lv), cap / Math.max(el, 1e-3)); }
+  METER.lx = x; METER.mul = Math.exp(x); return METER.mul;
 }
 { const _setupPost = setupPost; setupPost = function(){ _setupPost.apply(this, arguments);
     METER.ok = false; if(!composer) return;
