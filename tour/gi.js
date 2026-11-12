@@ -33,6 +33,7 @@ const say = (...a) => { GI.log.push(a.join(' ')); if(GI.log.length > 60) GI.log.
 GI.tierB = MODE === '2' && (!matchMedia('(pointer:coarse)').matches || qp('girt', '') === 'force');
 if(MODE === 'bake' || GI.tierB) document.write('<script src="gi-bake.js?v=' + (qp('gibv', '2')) + '"><\/script>');
 if(GI.tierB) document.write('<script src="gi-rt.js?v=' + (qp('gibv', '2')) + '"><\/script>');
+if(qp('giqa', '')) document.write('<script src="gi-qa.js?v=' + (qp('gibv', '2')) + '"><\/script>');
 
 /* ---------------- shader hooks (appended to the r40 chunks, so they only exist where r40's interior mask r40m does) ---------------- */
 const G = '#if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )';
