@@ -1896,14 +1896,22 @@ if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && define
   C.envmap_physical_pars_fragment += `
 #if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
 uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K;
-float r40Interior( const in GeometricContext geometry ){
-  if( r40Mode.x < 0.5 ) return 0.0;
-  if( r40Mode.y > 0.5 || r40MB.z <= 0.0 ) return r40K;
-  vec3 P = vR40W + inverseTransformDirection( geometry.normal, viewMatrix ) * 0.75;
+float r40MaskAt( vec3 P ){
   vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
   if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
   vec4 t = texture2D( r40Mask, uv ) * 255.0; float y = ( P.y - r40MY.x ) / r40MY.y;
   return max( clamp( y - t.r + 0.5, 0.0, 1.0 ) * clamp( t.g - y + 0.5, 0.0, 1.0 ), clamp( y - t.b + 0.5, 0.0, 1.0 ) * clamp( t.a - y + 0.5, 0.0, 1.0 ) );
+}
+float r40Interior( const in GeometricContext geometry ){
+  if( r40Mode.x < 0.5 ) return 0.0;
+  if( r40Mode.y > 0.5 || r40MB.z <= 0.0 ) return r40K;
+  vec3 P = vR40W + inverseTransformDirection( geometry.normal, viewMatrix ) * 0.75;
+  float m = r40MaskAt( P );
+  // r41: furnishings, hardware and window coverings (mode 2) hang ON the room side of a wall; within ~6 in of an exterior wall's inner face
+  // the plan cells are not interior air, so a knob's, towel ring's or shade rail's faces along the wall read the open sky and shone.
+  // For them the room on either side, 6 in away, counts too (an outdoor piece would have to be inside the wall to reach it)
+  if( m < 0.999 && r40Mode.x > 1.5 ){ m = max( m, max( max( r40MaskAt( P + vec3( 0.5, 0.0, 0.0 ) ), r40MaskAt( P - vec3( 0.5, 0.0, 0.0 ) ) ), max( r40MaskAt( P + vec3( 0.0, 0.0, 0.5 ) ), r40MaskAt( P - vec3( 0.0, 0.0, 0.5 ) ) ) ) ); }
+  return m;
 }
 vec3 r40IrrB( const in GeometricContext geometry ){ return PI * textureCubeUV( envMapB, inverseTransformDirection( geometry.normal, viewMatrix ), 1.0 ).rgb * envMapIntensity; }
 vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughness ){ vec3 r = reflect( -viewDir, normal ); r = normalize( mix( r, normal, roughness * roughness ) );
@@ -1921,7 +1929,7 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
       get(){ const m = this; return function r40DefaultHook(sh){ if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
       set(v){ Object.defineProperty(this, 'onBeforeCompile', {value: v, writable: true, configurable: true, enumerable: true}); }});
   } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
-function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? 1 : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
+function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
 const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawing registered to the A2.2 walls
@@ -23185,8 +23193,9 @@ window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.
    in for daylight coming through them, at every time of day: at dusk (the tour's opening light) and in the night decor modes a lowered shade
    read bright cream and self-lit in a dim room. Now each shade or film panel gets its own copy of its material and its transmitted light
    follows the light actually falling on the outside of THAT window: the sky it sees (a vertical window half the sky, a skylight most of it,
-   scaled by the sky's brightness for the sun height) plus the direct sun on its outward face. The midday value is the old constant (the
-   approved daylight look); morning / afternoon / golden hour fall off with the sky and swing with the sun's side; at dusk and at night
+   scaled by the sky's brightness for the sun height) plus the direct sun on its outward face. The old constant is now the sunniest window
+   at midday (the approved daylight look); a shaded wall gets the sky's share of it, morning / afternoon / golden hour fall off with the
+   sky and swing with the sun's side; at dusk and at night
    there is none and the fabric is ordinary cloth lit by the room's lamps and the room environment. */
 const R41SH = window.R41SH = {items: [], n: 0, key: '', ref: null, last: null};
 function r41ShadeDir(){ const T = TOD.find(t => t.key === 'midday') || TOD[1], sp = sunPosition(T.h, T.doy), plan = sp.az - 46.14 * Math.PI / 180, alt = Math.max(sp.alt, -.02);
@@ -23206,16 +23215,28 @@ function r41ShadeCollect(){
       const m = o.material.userData && o.material.userData.r41of ? o.material : m0.clone(); m.name = m0.name; m.userData = Object.assign({}, m0.userData, {r41of: m0});
       it = {id: g.name, mat: m, base: m0.emissiveIntensity, nOut}; byGroup.set(g.name + '|' + m0.uuid, it); items.push(it); }
     o.material = it.mat; });
-  R41SH.items = items; R41SH.n = items.length; R41SH.key = ''; return items.length; }
+  R41SH.items = items; R41SH.n = items.length; R41SH.key = ''; R41SH.fsig = ''; return items.length; }   // new material copies: collect the r40 mode-2 set again
 function r41ShadeFrame(){
   if(!R41SH.items.length) return; const night = DUSK || (typeof HW !== 'undefined' && HW.on);
   const sunRel = night ? 0 : Math.max(0, Math.min(1.2, sun.intensity / (2.6 * V26.sunK))), skyK = night ? 0 : Math.min(1, .2 + .8 * Math.min(1, SUN_DIR.y / .5));
   const key = TOD_KEY + '|' + (night ? 1 : 0) + '|' + sunRel.toFixed(3) + '|' + SUN_DIR.x.toFixed(3) + SUN_DIR.y.toFixed(3) + SUN_DIR.z.toFixed(3); if(key === R41SH.key) return; R41SH.key = key;
   const ref = R41SH.ref || (R41SH.ref = r41ShadeDir()); const out = [];
-  for(const it of R41SH.items){ const L = night ? 0 : r41ShadeLight(it.nOut, SUN_DIR, skyK, sunRel), L0 = r41ShadeLight(it.nOut, ref, 1, 1);
+  // the old constant is the sunniest window of its kind at midday: a wall window facing the midday sun, a skylight facing straight up
+  const nV = R41SH.nV || (R41SH.nV = new THREE.Vector3(ref.x, 0, ref.z).normalize()), nUp = new THREE.Vector3(0, 1, 0);
+  for(const it of R41SH.items){ const L = night ? 0 : r41ShadeLight(it.nOut, SUN_DIR, skyK, sunRel), L0 = it.nOut.y > .5 ? r41ShadeLight(nUp, ref, 1, 1) : r41ShadeLight(nV, ref, 1, 1);
     const k = night ? 0 : Math.min(1.5, L / Math.max(.05, L0)); it.mat.emissiveIntensity = it.base * k; it.k = k; out.push([it.id, +k.toFixed(2)]); }
   R41SH.last = out; }
-{ const _rf41 = renderFrame; renderFrame = function(){ try{ const sig = (R28W.shades || []).length + ',' + (R28W.cells || []).length + ',' + (R28W.sky || []).length + ',' + (R28W.film || []).length + ',' + (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '');
+/* r41: the materials of furnishings, hardware and window coverings get r40 mode 2 (see r40Interior): wall-mounted pieces near an
+   exterior wall read the room they are in, not the sky. Collected whenever the furnishing groups change. */
+function r41FurnCollect(){ if(!R40E.on) return 0; const S = R40E.furn = new WeakSet(), W = R40E.modes; let n = 0;
+  const add = m => { if(!m || !m.isMeshStandardMaterial || m.envMap || S.has(m)) return; S.add(m); n++; const v = W && W.get(m); if(v) v.value.x = 2; };
+  for(const gn of ['furn', 'furnU', 'furn@asbuilt']) if(GROUPS[gn]) GROUPS[gn].traverse(o => { if(o.isMesh) [].concat(o.material).forEach(add); });
+  scene.traverse(o => { if(!o.isMesh) return; let g = o.parent; while(g && !/^(r35shade:|r35sky:|r28film:)/.test(g.name || '')) g = g.parent; if(g) [].concat(o.material).forEach(add); });
+  scene.traverse(o => { if(o.isMesh) for(const m of [].concat(o.material)) if(m && /^b2_(nickel_brushed|hardware_black_satin)$/.test(m.name || '')) add(m); });   // the model's door and closet hardware
+  R40E.nFurn = n; return n; }
+{ const _rf41 = renderFrame; renderFrame = function(){ try{ const fs = ['furn', 'furnU', 'furn@asbuilt'].map(g => GROUPS[g] ? GROUPS[g].children.length : 0).join(',') + '|' + (R28W.cells || []).length + ',' + (R28W.sky || []).length;
+      if(fs !== R41SH.fsig){ R41SH.fsig = fs; r41FurnCollect(); } }catch(e){ if(!R41SH.fwarn){ R41SH.fwarn = true; console.warn('[r41] furn', e); } }
+    try{ const sig = (R28W.shades || []).length + ',' + (R28W.cells || []).length + ',' + (R28W.sky || []).length + ',' + (R28W.film || []).length + ',' + (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '');
       if(sig !== R41SH.sig){ R41SH.sig = sig; r41ShadeCollect(); }   // shades are built as the house loads (rollers, cells, skylights): collect again whenever that changes
       r41ShadeFrame(); }catch(e){ if(!R41SH.warn){ R41SH.warn = true; console.warn('[r41] shades', e); } } return _rf41.apply(this, arguments); }; }
 // clear glass: no glow painted on the panes and no lamp-colour grade through them at dusk (rooms are seen lit through the glass instead)
