@@ -1,4 +1,4 @@
-/* gi-r42 bake tools (?gi=bake only). A GPU path tracer over the tour's own scene (the page as loaded: furnished, trees on, as built)
+/* gi-r43 bake tools (?gi=bake only). A GPU path tracer over the tour's own scene (the page as loaded: furnished, trees on, as built)
    that bakes the irradiance volume and the ambient-occlusion volume read by gi.js.
 
    - B.extract(): every visible lit mesh within the bake box (the rooms plus 40 ft around: decks, terrain, trees, the neighbours of the
@@ -23,7 +23,7 @@ B.host = h => { H = h; THREE = h.THREE; R = h.renderer; say('host'); };
 /* ---------------- the volume (keep in step with the index the bake writes) ---------------- */
 B.grid = {x0: -1.5, y0: .4, z0: -10.25, d: 1.25, nx: 21, ny: 12, nz: 39};
 B.box = {min: [-42, -18, -52], max: [64, 45, 78]};   // scene geometry taken into the bake
-B.aoGrid = {x0: -1.25, y0: -.1, z0: -10, d: 1 / 3, nx: 72, ny: 42, nz: 141, R: 2.5};
+B.aoGrid = {x0: -1.3, y0: -.1, z0: -10.1, d: .4, nx: 61, ny: 36, nz: 119, R: 1.5};   // R: detail below the probe spacing only (the probes carry the rest)
 
 /* ---------------- materials ---------------- */
 const _c = document.createElement('canvas'); _c.width = _c.height = 32;
@@ -44,8 +44,15 @@ function matInfo(m, mesh){ const c = m.color ? [m.color.r, m.color.g, m.color.b]
   const am = texStats(m.alphaMap, at); if(am) cov *= at > 0 ? am.cov : am.rgb[1];
   if(m.transparent) cov *= m.opacity; else if(at > 0 && m.opacity < at) cov = 0;
   if(m.vertexColors && mesh.geometry.attributes.color){ const ca = mesh.geometry.attributes.color, n = Math.min(ca.count, 2000); let s = [0, 0, 0]; for(let i = 0; i < n; i++){ const j = Math.floor(i * ca.count / n); s[0] += ca.getX(j); s[1] += ca.getY(j); s[2] += ca.getZ(j); } alb = alb.map((v, i) => v * s[i] / n); }
-  const met = m.metalness || 0; alb = alb.map(v => Math.min(.92, v * (1 - .6 * met)));
-  return {alb, cov: Math.max(0, Math.min(1, cov)), side: m.side === THREE.DoubleSide ? 1 : m.side === THREE.BackSide ? 2 : 0, name: m.name || ''}; }
+  const met = m.metalness || 0; alb = alb.map(v => v * (1 - .6 * met));
+  // measured, not guessed: the oak floor from listing photo p01 (two floor patches against the white cabinet doors beside them, linear,
+  // chromaticity r:g:b .98:.70:.47, set to a clear-finished white oak's reflectance .38). The texture's own mean is [.50, .32, .19].
+  const src = m.map && m.map.image && (m.map.image.currentSrc || m.map.image.src) || ''; let tag = '';
+  if(/oak_floor/.test(src)){ alb = B.ALB.oak.slice(); tag = 'oak'; }
+  // no real surface reflects more than a fresh white paint (about .85): cap the luminance, keep the hue
+  const Y = .2126 * alb[0] + .7152 * alb[1] + .0722 * alb[2], mx = Math.max(alb[0], alb[1], alb[2]), k = Math.min(1, B.ALB.white / Math.max(1e-6, Y), .9 / Math.max(1e-6, mx)); alb = alb.map(v => v * k);
+  return {alb, cov: Math.max(0, Math.min(1, cov)), side: m.side === THREE.DoubleSide ? 1 : m.side === THREE.BackSide ? 2 : 0, name: m.name || tag}; }
+B.ALB = {oak: [.50, .36, .24], white: .85};
 function skip(o, m){ if(!m || !m.visible) return 'hidden'; if(o.isSprite || o.isPoints || o.isLine) return 'helper';
   if(m.isMeshBasicMaterial || m.isShaderMaterial || m.isRawShaderMaterial || m.isMeshDepthMaterial) return 'basic';
   if(m.userData && m.userData.glass20) return 'glass'; if((m.transmission || 0) > 0 || /glass/i.test(m.name || '')) return 'glass';
@@ -230,7 +237,7 @@ B.run = async function(comp, o = {}){ const U = mat().uniforms, np = B.np, dirs 
   if(comp === 'lamp') setLights(o.lights || B.lights());
   const maxRows = Math.min(rows, o.rows || 4096), chunk = o.chunkRows || 64;
   if(!B.rt || B.rt.width !== W || B.rt.height < maxRows){ if(B.rt) B.rt.dispose(); B.rt = new THREE.WebGLRenderTarget(W, maxRows, {type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false}); }
-  const acc = new Float64Array(np * 12), aoS = comp === 'ao' ? new Float64Array(np * 3) : null, stat = new Float64Array(np * 3), buf = new Float32Array(W * chunk * 4);
+  const acc = new Float64Array(np * 12), aoS = comp === 'ao' ? new Float64Array(np * 6) : null, stat = new Float64Array(np * 3), buf = new Float32Array(W * chunk * 4);
   const prevRT = R.getRenderTarget(), prevAC = R.autoClear; R.autoClear = false;
   const probesPerBatch = Math.floor(maxRows * W / dirs);
   try{ for(let pass = 0; pass < passes; pass++){ const jit = [Math.random(), Math.random()]; U.uJit.value.set(jit[0], jit[1]); const DD = Array.from({length: dirs}, (_, j) => dirOf(j, jit, sq)); U.uSeed.value = (o.seed || 1) * 1000 + pass;
@@ -238,14 +245,16 @@ B.run = async function(comp, o = {}){ const U = mat().uniforms, np = B.np, dirs 
         for(let y = 0; y < rr; y += chunk){ const h = Math.min(chunk, rr - y); B.rt.scissor.set(0, y, W, h); B.rt.scissorTest = true; B.rt.viewport.set(0, 0, W, maxRows); R.setRenderTarget(B.rt); R.render(B.qs, B.cam);
           R.readRenderTargetPixels(B.rt, 0, y, W, h, buf);
           for(let k = 0; k < W * h; k++){ const pix = (y * W) + k, pr = p0 + Math.floor(pix / dirs); if(pr >= p0 + nb) break; const j = pix % dirs, q = k * 4, dd = DD[j], f = buf[q + 3];
-            if(aoS){ const r = o.R || 2.5; if(f < 0) aoS[pr * 3 + 1]++; else if(f < r) aoS[pr * 3] += 1 - f / r; aoS[pr * 3 + 2]++; continue; }
+            if(aoS){ const r = o.R || 2.5, s6 = pr * 6; let V = 1; if(f < 0){ aoS[s6 + 4]++; V = 0; } else if(f < r){ V = f / r; V = V * V * (3 - 2 * V); } aoS[s6] += V; aoS[s6 + 1] += V * dd[0]; aoS[s6 + 2] += V * dd[1]; aoS[s6 + 3] += V * dd[2]; aoS[s6 + 5]++; continue; }
             const a = pr * 12; for(let c = 0; c < 3; c++){ const L = buf[q + c]; acc[a + c] += L * .282095; acc[a + 3 + c] += L * .488603 * dd[0]; acc[a + 6 + c] += L * .488603 * dd[1]; acc[a + 9 + c] += L * .488603 * dd[2]; }
             const s = pr * 3; if(f < 0) stat[s]++; else if(f < 1e8) stat[s + 1] += f; stat[s + 2]++; }
           await yield_(); } }
       if(o.onPass) o.onPass(pass); } }
   finally{ R.setRenderTarget(prevRT); R.autoClear = prevAC; }
   const ms = performance.now() - t0, N = dirs * passes;
-  if(aoS){ const ao = new Float32Array(np * 2); for(let p = 0; p < np; p++){ ao[p * 2] = aoS[p * 3] / Math.max(1, aoS[p * 3 + 2]); ao[p * 2 + 1] = aoS[p * 3 + 1] / Math.max(1, aoS[p * 3 + 2]); } return {comp, ms, N, ao}; }
+  // ao per probe: [back share, a, bx, by, bz]: the cosine-weighted visibility of the hemisphere about n is a + b . n (1 = open)
+  if(aoS){ const ao = new Float32Array(np * 2), vis = new Float32Array(np * 4); for(let p = 0; p < np; p++){ const n = Math.max(1, aoS[p * 6 + 5]); ao[p * 2] = 1 - aoS[p * 6] / n; ao[p * 2 + 1] = aoS[p * 6 + 4] / n;
+      vis[p * 4] = aoS[p * 6] / n; for(let k = 1; k < 4; k++) vis[p * 4 + k] = 2 * aoS[p * 6 + k] / n; } return {comp, ms, N, ao, vis}; }
   // SH (radiance) -> irradiance-ready L1: E(n) = a + b . n, per channel; layout a.rgb, bx.rgb, by.rgb, bz.rgb
   const sh = new Float32Array(np * 12), A0 = Math.PI * .282095, A1 = 2 * Math.PI / 3 * .488603, k = 4 * Math.PI / N;
   for(let p = 0; p < np; p++) for(let c = 0; c < 3; c++){ const a = p * 12; sh[a + c] = acc[a + c] * k * A0; sh[a + 3 + c] = acc[a + 3 + c] * k * A1; sh[a + 6 + c] = acc[a + 6 + c] * k * A1; sh[a + 9 + c] = acc[a + 9 + c] * k * A1; }
@@ -253,7 +262,7 @@ B.run = async function(comp, o = {}){ const U = mat().uniforms, np = B.np, dirs 
   return {comp, ms: Math.round(ms), N, sh, back, rays: np * N}; };
 
 /* ---------------- IndexedDB checkpoints ---------------- */
-function db(){ return B._db || (B._db = new Promise((res, rej) => { const r = indexedDB.open('gi-r42', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); }
+function db(){ return B._db || (B._db = new Promise((res, rej) => { const r = indexedDB.open('gi-r43', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); }
 B.put = async (k, v) => { const d = await db(); return new Promise((res, rej) => { const t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(true); t.onerror = () => rej(t.error); }); };
 B.get = async k => { const d = await db(); return new Promise((res, rej) => { const t = d.transaction('kv', 'readonly'), r = t.objectStore('kv').get(k); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); };
 B.keys = async () => { const d = await db(); return new Promise((res, rej) => { const t = d.transaction('kv', 'readonly'), r = t.objectStore('kv').getAllKeys(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); };
@@ -302,10 +311,10 @@ function inReg(l){ const p = l.getWorldPosition(new THREE.Vector3()), g = B.grid
 B.bakeAO = async function(o = {}){ const A = Object.assign({}, B.aoGrid, o.grid || {}), BS = H.BIM2S, N = A.nx * A.ny * A.nz, list = [], P = [];
   for(let y = 0; y < A.ny; y++) for(let z = 0; z < A.nz; z++) for(let x = 0; x < A.nx; x++){ const X = A.x0 + x * A.d, Y = A.y0 + y * A.d, Z = A.z0 + z * A.d;
     if(GI.roomAt(X, Y, Z) > 0 || GI.roomAt(X + .6, Y, Z) > 0 || GI.roomAt(X - .6, Y, Z) > 0 || GI.roomAt(X, Y, Z + .6) > 0 || GI.roomAt(X, Y, Z - .6) > 0){ list.push((y * A.nz + z) * A.nx + x); P.push([X, Y, Z]); } }
-  const out = new Float32Array(N * 2).fill(-1), step = o.batch || 60000, t0 = performance.now();
+  const out = new Float32Array(N * 5).fill(-1), step = o.batch || 60000, t0 = performance.now();
   for(let s = 0; s < list.length; s += step){ B.probes(P.slice(s, s + step)); const r = await B.run('ao', {passes: o.passes || 1, dirs: o.dirs || 64, R: A.R});
-    for(let k = 0; k < r.ao.length / 2; k++){ out[list[s + k] * 2] = r.ao[k * 2]; out[list[s + k] * 2 + 1] = r.ao[k * 2 + 1]; } say('ao', s, '/', list.length); }
-  await B.put((o.tag || 'v1') + ':ao', {grid: A, ao: out}); B.probes(B.list ? B.list.map(gpos) : undefined); return {voxels: list.length, ms: Math.round(performance.now() - t0)}; };
+    for(let k = 0; k < r.ao.length / 2; k++){ const q = list[s + k] * 5; out[q] = r.ao[k * 2 + 1]; out[q + 1] = r.vis[k * 4]; out[q + 2] = r.vis[k * 4 + 1]; out[q + 3] = r.vis[k * 4 + 2]; out[q + 4] = r.vis[k * 4 + 3]; } say('ao', s, '/', list.length); }
+  await B.put((o.tag || 'v1') + ':ao', {grid: A, ao: out, v: 2}); B.probes(B.list ? B.list.map(gpos) : undefined); return {voxels: list.length, ms: Math.round(performance.now() - t0)}; };
 
 /* ---------------- from the checkpoints to the files ---------------- */
 function jacobi(Ain, n){ const A = Ain.map(r => r.slice()), V = Array.from({length: n}, (_, i) => Array.from({length: n}, (_, j) => i === j ? 1 : 0));
@@ -365,19 +374,21 @@ B.finish = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get
   pu.bases.forEach((U, b) => push(U, 'sun', pu.coef.map(c => c[b])));
   push(lampM, 'lamp', null);
   let ao = null; const AOr = await B.get(tag + ':ao');
-  if(AOr && o.ao !== false){ const A = AOr.grid, n = A.nx * A.ny * A.nz, a = new Uint8Array(n);
-    const raw = AOr.ao, val = new Float32Array(n).fill(-1);
-    for(let i = 0; i < n; i++){ if(raw[i * 2] < 0) continue; if(raw[i * 2 + 1] > .25) continue; val[i] = raw[i * 2]; }   // inside a solid: filled from outside neighbours below
-    for(let r = 0; r < 3; r++){ const nv = Float32Array.from(val); for(let i = 0; i < n; i++){ if(val[i] >= 0 || raw[i * 2] < 0) continue; const x = i % A.nx, z = Math.floor(i / A.nx) % A.nz, y = Math.floor(i / (A.nx * A.nz)); let s = 0, m = 0;
-        for(const [dx, dy, dz] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= A.nx || Y >= A.ny || Z >= A.nz) continue; const j = (Y * A.nz + Z) * A.nx + X; if(val[j] >= 0){ s += val[j]; m++; } }
-        if(m) nv[i] = s / m; } val.set(nv); }
-    // the obscurance of open floor seen from the sampling offset above it (the median of that layer): no darkening there
-    const yl = Math.round(((o.aoOff || .2) - A.y0) / A.d), lay = []; for(let i = yl * A.nx * A.nz; i < (yl + 1) * A.nx * A.nz; i++) if(val[i] >= 0) lay.push(val[i]); lay.sort((x, y) => x - y); const flat = o.aoFlat || lay[lay.length >> 1] || .4; B.st.aoFlat = flat;
-    for(let i = 0; i < n; i++){ const v = val[i]; a[i] = v < 0 ? 255 : Math.round(255 * Math.max(0, Math.min(1, 1 - Math.max(0, v - flat) / (1 - flat) * (o.aoK || 1.6)))); }
-    ao = {x0: A.x0, y0: A.y0, z0: A.z0, d: A.d, nx: A.nx, ny: A.ny, nz: A.nz, tx: Math.ceil(Math.sqrt(A.ny * A.nz / A.nx)), off: o.aoOff || .2}; ao.ty = Math.ceil(A.ny / ao.tx); parts.push(a); }
+  if(AOr && o.ao !== false){ const A = AOr.grid, n = A.nx * A.ny * A.nz, raw = AOr.ao, val = new Float32Array(n * 4), ok = new Uint8Array(n);
+    // a voxel is good if it was traced and is not inside a solid; the others are filled from good neighbours (three rings), so the
+    // texture filter never mixes a wall's inside into the air beside it
+    for(let i = 0; i < n; i++){ if(raw[i * 5] < 0 || raw[i * 5] > .25){ val[i * 4] = 1; continue; } ok[i] = 1; for(let k = 0; k < 4; k++) val[i * 4 + k] = raw[i * 5 + 1 + k]; }
+    for(let r = 0; r < 3; r++){ const add = []; for(let i = 0; i < n; i++){ if(ok[i]) continue; const x = i % A.nx, z = Math.floor(i / A.nx) % A.nz, y = Math.floor(i / (A.nx * A.nz)); let m = 0; const s4 = [0, 0, 0, 0];
+        for(let dy = -1; dy <= 1; dy++) for(let dz = -1; dz <= 1; dz++) for(let dx = -1; dx <= 1; dx++){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= A.nx || Y >= A.ny || Z >= A.nz) continue; const j = (Y * A.nz + Z) * A.nx + X; if(!ok[j]) continue; const w = 1 / (Math.abs(dx) + Math.abs(dy) + Math.abs(dz)); m += w; for(let k = 0; k < 4; k++) s4[k] += w * val[j * 4 + k]; }
+        if(m) add.push([i, s4.map(v => v / m)]); } for(const [i, v] of add){ val.set(v, i * 4); ok[i] = 1; } }
+    const a = new Uint8Array(n * 4), q8 = v => Math.max(0, Math.min(255, Math.round(255 * v)));
+    for(let i = 0; i < n; i++){ a[i] = q8(val[i * 4]); for(let k = 1; k < 4; k++) a[k * n + i] = q8(val[i * 4 + k] * .5 + .5); }   // planes: a, then bx, by, bz as .5 + b / 2
+    ao = {v: 2, x0: A.x0, y0: A.y0, z0: A.z0, d: A.d, nx: A.nx, ny: A.ny, nz: A.nz, R: A.R, tx: Math.ceil(Math.sqrt(A.ny * A.nz / A.nx)), off: o.aoOff || .15}; ao.ty = Math.ceil(A.ny / ao.tx); parts.push(a); }
   let tot = 0; for(const p of parts) tot += p.length; const all = new Uint8Array(tot); let off = 0; for(const p of parts){ all.set(p, off); off += p.length; }
-  const z = await deflate(all), ver = o.version || ('gi-' + tag);
-  const index = {version: ver, made: meta.made, file: ver + '.bin', bytes: z.length, raw: tot, grid: g, nOff: o.nOff || .45, room: {y0: -1, y1: 15},
+  // each byte stored as its difference from the one before (smooth fields deflate far better); gi.js undoes it when index.delta is set
+  const dl = new Uint8Array(tot); for(let i = 0, p = 0; i < tot; i++){ dl[i] = (all[i] - p) & 255; p = all[i]; }
+  const z = await deflate(dl), ver = o.version || ('gi-' + tag);
+  const index = {version: ver, made: meta.made, file: ver + '.bin', bytes: z.length, raw: tot, delta: 1, ev: o.ev != null ? o.ev : GI.EV, alb: B.ALB, grid: g, nOff: o.nOff || .45, room: {y0: -1, y1: 15},
     keys: meta.keys.map(k => ({h: k.h, doy: k.doy, dusk: k.dusk, dir: k.dir.map(v => +v.toFixed(5)), sky: k.sky.map(v => +v.toPrecision(6)), sunCol: k.sunCol.map(v => +v.toFixed(4))})),
     lampRef: meta.lampRef, lights: meta.lights, passes: meta.passes, rays: meta.passes * 64, probes: list.length, vols, ao,
     pca: {sky: {rank: ps.bases.length, energy: +ps.energy.toFixed(6), err: err(sky, ps)}, sun: {rank: pu.bases.length, energy: +pu.energy.toFixed(6), err: err(sun, pu)}}};
