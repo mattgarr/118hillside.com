@@ -2031,8 +2031,8 @@ const STOPS = [
   p:'The heritage oak stands over the terrace. It is the tree you can see from the front porch, through both pairs of doors. The RV hookups are at the side of the house.'},
  {id:'garage', t:'Garage', lvl:'Driveway level', photo:29, level:'garage', rooms:['garage'], pos:S(822,2200,LV.garage+5), look:S(822,2600,LV.garage+5),
   p:'A door on the lower level opens into the oversized one-car garage. It has a high ceiling with overhead storage racks, a pull-down attic ladder, and a 50-amp, 240-volt outlet.'},
- {id:'dusk', t:'Evening in Woodside Glens', photo:2, tod:'dusk', level:'outside', nav:'orbit', rooms:['street'], pos:S(1290,3000,2.6), look:S(1000,2300,3.6),
-  p:'Out through the garage door and back to the front walk. At dusk the lights are on behind the iron-and-glass front doors. The house is in Woodside Glens, about a mile from Town Center, and in the Woodside Elementary School District.'},
+ {id:'dusk', t:'Back out front', photo:2, level:'outside', nav:'orbit', rooms:['street'], pos:S(1290,3000,2.6), look:S(1000,2300,3.6),   // r41 (owner 11/12): keeps the visitor's time of day (was 'Evening in Woodside Glens', forced to dusk); the id stays 'dusk' so old ?stop=dusk links work
+  p:'Out through the garage door and back to the front walk. The house is in Woodside Glens, about a mile from Town Center, and in the Woodside Elementary School District.'},
 ];
 /* v20 story: rooms (gallery sections, Walk-to menu) follow the tour - each room sits with the first stop that visits it */
 { const ord = []; for(const st of STOPS) for(const id of st.rooms) if(!ord.includes(id)) ord.push(id);
@@ -6548,7 +6548,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   lounge: {at: [-14.4, -15.4], to: [-23.5, -21.0], hf: 100},   // r36: three feet further in than photo p65, same direction, so the cafe table is no longer in the foreground: the glass door, TV, refreshment counter and beverage cooler:     // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
   terrace: {at: [8, -20], to: [-8, -36]},   // out on the gravel under the oak -> rear facade, lounge set, outdoor kitchen + pergola, hills
   yard: {at: [31.21, -12.08], to: [23.69, -18.67]},   // NE corner of the yard -> heritage oak, house, pergola
-  dusk: {at: [-4.5, 43], to: [-7.5, 0]},   // front walk at dusk -> lit garage, entry glow, kitchen window
+  dusk: {at: [-4.5, 43], to: [-7.5, 0]},   // the last stop, back out front: front walk -> garage, porch and the iron-and-glass entry, kitchen window (r41: in any time of day, no longer forced to dusk)
   }};
 function frame22Lens(cam){                                  // R3: one lens rule for every aspect
   const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight, a = w / h, R = Math.PI / 360;
@@ -6875,7 +6875,8 @@ function navQA(){
      another), with the lighting settled at the start stop first. Each frame the canvas is read back at 48x30 and compared with the last
      one: the median of the per-pixel luma change is the lighting step (a door frame or wall sweeping across the view moves a minority of
      pixels and leaves the median near 0; a lighting change moves them all). A move fails when that step is over R40L.chk (1.5 / 255) or
-     the exposure moves more than R40L.chkStops in one frame. Moves that change the time of day (the Dusk stop) are noted, not judged.
+     the exposure moves more than R40L.chkStops in one frame. A move that changes the time of day fails (r41: none does; the moves to and
+     from the last stop used to switch to dusk and were noted, not judged).
      Then a few views are reached from two different stops and must settle to the same exposure (within 2 %). Table: window.__LIGHT. */
   SEC.light = async R => { const dt = o.lightDt || 1 / 30, realNow = performance.now.bind(performance); let vt = realNow(); const W = 48, H = 30, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const g = cv.getContext('2d', {willReadFrequently: true}), rows = [], chk = R40L.chk || 1.5, chkS = R40L.chkStops || .045;
@@ -6907,7 +6908,7 @@ function navQA(){
             for(let i = 0; i < W * H; i++) D[i] = c[i] - p[i]; wV = Math.max(wV, Math.abs(med())); }   // a cut (the camera jumps) changes the whole picture: not a lighting step
           p = c; pr = cr; e0 = e; tod0 = TOD_KEY; s0 = s1; }
         const row = {id, frames: n, step: +worst.toFixed(2), at, view: +wV.toFixed(2), stops: +wE.toFixed(4), fades: R40X.fades - fades0, tod: todCh, cuts, state: sAt}; rows.push(row);
-        if(todCh){ R.note('light', id, 'changes the time of day (not judged): largest step ' + row.step + ' / 255'); continue; }
+        if(todCh){ R.fail('light', id, 'changes the time of day during the move (' + TOD_KEY + '): largest step ' + row.step + ' / 255'); continue; }
         if(worst > chk) R.fail('light', id, 'a one-frame lighting step of ' + row.step + ' / 255 at frame ' + at + ' (' + Math.round(1 / dt) + ' fps); lighting state ' + JSON.stringify(sAt));
         if(wE > chkS) R.fail('light', id, 'the exposure moved ' + row.stops + ' stops in one frame');
         R.note('light', id, n + ' frames, largest lighting step ' + row.step + ' / 255 (walking view, lighting and content: ' + row.view + '), exposure ' + row.stops + ' stops/frame, ' + row.fades + ' environment fades'); }
@@ -21302,11 +21303,13 @@ BIM3.report.golden = GOLDEN35;
      header with the price and the same pill. It opens a contact sheet in place (SELL36.open), so nobody is thrown out of the tour to book.
      Every fact in it is the landing page's: agent, brokerage and licence line, number, email, price, disclaimer.
    - the price under the address on the plate, and the address is a link to the listing page on every screen size.
-   - the finale: the last stop is at dusk with the house lights on (GH-1 above had turned every dusk stop into golden hour), and a closing card
-     comes up over it with the address, price, beds / baths / square feet, the booking control, Call / Text, and quieter links onward.
+   - the finale: a closing card comes up over the last stop (back out front, in whatever time of day the visitor is in; r41: it no longer
+     switches to dusk) with the address, price, beds / baths / square feet, the booking control, Call / Text, and quieter links onward.
    - Photos: the top bar stays above the gallery (it was underneath, so the only ways out were Esc and "Show in 3D").
    Games loaded by URL (?room= ...) keep their own header and get none of this. */
-{ const f = STOPS.find(s => s.id === 'dusk'); if(f) f.tod = 'dusk'; }
+/* r41 (owner 11/12: "at the end of the tour, when we exit the garage, switching to the evening looks weird and abrupt. We could just keep the same
+   time of day"): the last stop no longer sets dusk. It keeps the time of day like every other stop (the GOLDEN35 default, or the visitor's own
+   choice from the Time of day control), both ways and when ?stop=dusk opens on it. */
 const SELL36 = window.SELL36 = (() => {
   const root = document.documentElement, bar = document.querySelector('header.bar'), plate = bar && bar.querySelector('.plate'), app = document.getElementById('app'), card = $('#card');
   if(!bar || !plate || !app || !card) return null;
@@ -21469,7 +21472,7 @@ const SELL36 = window.SELL36 = (() => {
     '<p class="fn">' + F.agent + ', Compass · ' + F.telTxt + '</p></div></div>' +
     '<div class="fl"><button type="button" data-a="again">Start the tour again</button><button type="button" data-a="photos">See the photos</button><a href="' + up('games/') + '">Play the games</a></div>';
   card.before(fin);
-  let finT = 0, finClosed = false, finWait = 0, todBack = null, finSeen = false;
+  let finT = 0, finClosed = false, finWait = 0, finSeen = false;
   const atEnd = () => mode === 'tour' && stopIdx === STOPS.length - 1 && gal.hidden && !inGame();
   function finPlace(){ try{ const cr = card.getBoundingClientRect(), A = app.getBoundingClientRect(); let top = cr.top; const seg = $('#realSeg');
       // a computer with the stop card open: the finale stands beside the card, not on top of the house above it
@@ -21479,15 +21482,12 @@ const SELL36 = window.SELL36 = (() => {
       if(seg && root.classList.contains('ph') && !seg.hidden){ const r = seg.getBoundingClientRect(); if(r.height > 0) top = Math.min(top, r.top); }
       fin.style.setProperty('--fin36b', Math.max(12, Math.round(A.bottom - top + 12)) + 'px'); }catch(e){} }
   function finShow(){ if(!atEnd() || finClosed) return; if(anim && performance.now() - finWait < 9000){ finT = setTimeout(finShow, 200); return; }   // the card comes up once the camera has arrived
-    finPlace(); fin.hidden = false; void fin.offsetWidth; fin.classList.add('on'); root.classList.add('fin36on'); if(!finSeen){ finSeen = true; ga('tour_finale', {}); } }
+    finPlace(); fin.hidden = false; void fin.offsetWidth; fin.classList.add('on'); root.classList.add('fin36on'); if(!finSeen){ finSeen = true; ga('tour_finale', {tod: TOD_KEY}); } }
   function finHide(){ fin.classList.remove('on'); root.classList.remove('fin36on'); clearTimeout(finT); finT = setTimeout(() => { if(!fin.classList.contains('on')) fin.hidden = true; }, 900); }
-  function finSync(){ const end = atEnd();
-    // the last stop is at dusk with the lights on, also for a viewer who picked another time of day earlier; their own time comes back when they leave it
-    try{ if(end){ if(TOD_KEY !== 'dusk'){ todBack = TOD_KEY; setTOD('dusk'); } } else if(todBack){ const k = todBack; todBack = null; if(TOD_KEY === 'dusk' && mode === 'tour') setTOD(k); } }catch(e){ console.warn('[sell36] dusk', e); }
+  function finSync(){ const end = atEnd();   // (r41: the time of day is left as it is; the last stop used to switch to dusk here and back on leaving)
     if(!end){ finClosed = false; if(!fin.hidden) finHide(); return; }
     if(finClosed || fin.classList.contains('on')) return;
     clearTimeout(finT); finWait = performance.now(); finT = setTimeout(finShow, 700); }
-  $('#tod').addEventListener('click', () => { todBack = null; }, true);   // a time picked at the finale is the viewer's own choice
   fin.addEventListener('click', e => { const t = e.target.closest ? e.target.closest('[data-a],.fx,a[href]') : null; if(!t) return; e.stopPropagation();
     if(t.classList.contains('fx')){ finClosed = true; finHide(); return; }
     const a = t.getAttribute('data-a');
