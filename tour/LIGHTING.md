@@ -142,3 +142,35 @@ Principle: light every surface by what actually lights it; let the glass be glas
   a move starts. That switch changes the picture in one frame at the start of a move (measured 2-3 / 255 in the hidden test pane,
   where the governor sat at level 7 of 1). It is not lighting and was left; the light check holds the governor's level.
 - Golden-hour interiors are as bright as before (very white); that is the existing exposure choice, not changed here.
+
+## 5. Measured (r40)
+
+Largest one-frame lighting step per move (/255, 30 fps, the move's start view redrawn each frame with that frame's lighting, no
+post-processing, same harness on both builds):
+
+| move | main f90810b | r40 |
+|---|---|---|
+| living > kitchen | 11.86 | 0.79 |
+| kitchen > great | 0.21 | 0.00 |
+| great > mainbeds | 10.50 | 0.28 |
+| stairs > loft | 18.70 | 0.64 |
+| porch > entry | 23.00 | 0.93 |
+| lounge > terrace | 11.15 | 0.72 |
+| terrace > yard | 0.28 | 0.07 |
+| yard > garage | 17.07 | 1.00 |
+| kitchen > living | 13.65 | 1.00 |
+| mainbeds > great | 12.49 | 0.21 |
+| loft > stairs | 14.43 | 0.07 |
+| entry > porch | 9.36 | 1.00 |
+| terrace > lounge | 15.93 | 0.79 |
+| garage > yard | 19.28 | 1.00 |
+
+Real time (requestAnimationFrame, ~55 fps): living > kitchen > great now makes two room changes, each crossfaded; main swapped the
+lighting in single frames four times on that walk. porch > entry: one 'in' and one room change, crossfaded; main flipped in / out /
+in within 38 frames.
+
+Same view from two histories (4 views): exposure within 0.00-0.12 %.
+
+Phone viewport (375x812 emulated, phone path), median frame time / draw calls, main -> r40: street 25.7 -> 24.7 ms (1399 calls
+both), living 25.2 -> 23.8 (1153), great 9.2 -> 10.0 (176), kitchen 27.2 -> 29.7 (1373), primary 12.4 -> 14.5 (354), terrace
+19.4 -> 16.9 (586); programs 50 -> 51 (the crossfade quad). Within run-to-run noise; no added draw calls or passes.
