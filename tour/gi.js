@@ -59,9 +59,13 @@ ${GI.rt ? GI.rt.PARS : ''}
 `;
   C.lights_fragment_maps += `
 ${G}
-if( giOn > 0.5 && r40m > 0.001 ){
+if( giOn > 0.5 ){
   vec3 giNw = inverseTransformDirection( geometry.normal, viewMatrix );
-  float giW = giK * r40m * giRoomW( vR40W + giNw * 0.75 );
+  // inside? r40's interior mask, except high up: its ceiling height is the BIM space's top in 8-bit steps, and on the sloped ceilings (and
+  // the tops of the walls under them) the real surface sits within a step of it, which showed as stripes of sky light. Above 6-7 ft a
+  // surface that does not face up counts as inside when the plan 1.5 ft in front of it is well inside the rooms.
+  float giIn = max( r40m, smoothstep( 6.0, 7.0, vR40W.y ) * step( giNw.y, 0.5 ) * smoothstep( 0.55, 0.9, giRoomW( vR40W + giNw * 1.5 ) ) );
+  float giW = giK * giIn * giRoomW( vR40W + giNw * 0.75 );
   if( giW > 0.001 ){
     vec3 giE = giIrr( vR40W + giNw * giNOff, giNw ) * giGain;
     float giO = mix( 1.0, giAOat( vR40W + giNw * giAOff, giNw ), giAOK );
