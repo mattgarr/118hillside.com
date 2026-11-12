@@ -244,7 +244,7 @@
           x.lineWidth = lw * .45; x.strokeStyle = `hsla(${hue - 6},${sat - 8}%,${li + 13}%,.55)`; x.beginPath(); x.moveTo(mx, my - lw * .2); x.lineTo(ex, ey); x.stroke(); };
         for(let s = .02; s < .985; s += .0105) [-1, 1].forEach(sd => needle(s, sd, 1, 1.0 + R() * .3, 5.2, 0));
         for(let s = .03; s < .97; s += .016) needle(s, R() > .5 ? 1 : -1, .55, .3 + R() * .35, 5, 4);
-        if(flock){ for(let i = 0; i < 900; i++){ const s = R(), sd = R() > .5 ? 1 : -1, d = R() * .42 * w, px = cx(s) + sd * d * Math.sin(1.1), py = h * (1 - s) - d * .45, rr = 3 + R() * 7;
+        if(flock){ for(let i = 0; i < 1500; i++){ const s = R(), sd = R() > .5 ? 1 : -1, d = R() * .42 * w, px = cx(s) + sd * d * Math.sin(1.1), py = h * (1 - s) - d * .45, rr = 4 + R() * 8;
             const gr = x.createRadialGradient(px, py, 0, px, py, rr); gr.addColorStop(0, 'rgba(250,252,255,.95)'); gr.addColorStop(.7, 'rgba(240,244,248,.8)'); gr.addColorStop(1, 'rgba(240,244,248,0)'); x.fillStyle = gr; x.beginPath(); x.arc(px, py, rr, 0, 7); x.fill(); } } });
       return t; });
     const firMat = flock => tex('firMat' + (flock ? 'F' : ''), () => { const m = new THREE.MeshStandardMaterial({color: 0xffffff, map: sprayTex(flock), vertexColors: true, alphaTest: .42, side: THREE.DoubleSide, roughness: flock ? .9 : .78, metalness: 0});
@@ -255,7 +255,8 @@
     const TLITE = {classic: ['#ffe0b0'], fir: ['#ff4136', '#2fd158', '#3a82ff', '#ffc928', '#ff8a1e'], flocked: ['#ffe0b0'], pencil: ['#ffcf6a'], small: ['#ffe0b0']};
     const TINT = {classic: [.96, 1.0, .9], fir: [.86, .98, 1.06], pencil: [.98, 1.0, .9], flocked: [1, 1, 1]};   // Fraser deep green; the noble fir a little blue
     function conifer(g, o){ const R = rng(o.seed || 11), h = o.h, r = o.r, kind = o.kind, flock = kind === 'flocked', small = !!o.small, t3 = new THREE.Group(); t3.position.set(o.x, o.y, o.z); g.add(t3);
-      const sc = clamp(r / 2.2, .5, 1), yb = o.pot ? .58 : .16, y0 = Math.max(yb + .25, h * .12), yTop = h - .42, tint = TINT[kind] || TINT.classic;
+      const sc = kind === 'pencil' ? .74 : clamp(r / 2.2, .62, 1),   // fronds keep a real size on the slim and the little trees (they read sparse and twiggy when they shrank with the radius)
+        yb = o.pot ? .58 : .16, y0 = Math.max(yb + .25, h * .12), yTop = h - .42, tint = TINT[kind] || TINT.classic;
       const prof = t => Math.pow(1 - t, .92) * (1 + .06 * Math.sin(t * 9 + (o.seed || 11))), W = new GB(), F = new GB(), wc = new THREE.Color(), fc = new THREE.Color();
       const _n = new V3(), _r = new V3(), sh = (p, nc) => { _r.set(p.x, 0, p.z); const d = _r.length(); if(d > 1e-4) _r.divideScalar(d); return _n.copy(nc).multiplyScalar(.38).addScaledVector(_r, .62).addScaledVector(Y, .22).normalize(); };
       const shadeC = (p, base) => { const t = clamp((p.y - y0) / (h - y0), 0, 1), rad = Math.hypot(p.x, p.z) / (r * prof(Math.min(.98, t)) + .25), ao = lerp(.5, 1.06, clamp((rad - .12) / .8, 0, 1)) * lerp(.9, 1.06, t);
