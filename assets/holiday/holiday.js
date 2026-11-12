@@ -356,30 +356,41 @@
           if(kind === 'winter' && wantDusk) dusk(true);
           if(H.mode === 'tour' && !/[?&]stop=/.test(location.search)) show.start({auto: false}); }, 700); })(); } }
 
-  /* ---------- r41 decor QA: every ordered pair of dresses must end exactly as a clean switch from 'None' to the target ----------
-     HOLIDAY.qa() (and navCheck's 'decor' section) takes a reference for each dress from 'None' (two readings 0.7 s apart: fields that move
-     between them, a candle's flicker, are that dress's own and are not compared), then goes A -> B for all twelve ordered pairs and B -> None,
-     and compares HOLIDAY_HOST.snap() field by field: objects, lights, every material's colours and uniforms, fog, sky, grade, exposure,
-     time of day, the UI theme (classes, colour variables, the active tab and the header buttons), favicon and title. */
+  /* ---------- decor QA (r41, r43): every ordered pair of dresses must end exactly as a clean switch from 'None' to the target ----------
+     HOLIDAY.qa() (HOLIDAY.debug.qa; navCheck's 'decor' section) waits for the house to finish (trees planted, nothing loading), takes a reference
+     for each dress from 'None' (two readings 0.7 s apart: fields that move between them, a candle's flicker, are that dress's own and are not
+     compared; the chain is sound because each X -> None is itself checked against the first clean 'None'), then goes A -> B for all six
+     ordered pairs and B -> None, and compares HOLIDAY_HOST.snap() field by field: objects, lights, every material's colours and uniforms, fog,
+     sky, grade, exposure, time of day, the UI theme (classes, colour variables, the active tab and the header buttons), favicon and title.
+     It does this three times: at the time of day it finds, at dusk, and in the Dollhouse; then Winter at dusk (its own "See it at dusk") into
+     each other dress and back to None; then a pick made while another dress is still going up. {quick: true}: the first pass only. */
   async function qa(o){ o = o || {}; if(!H.snap || !H.ready) return {ok: false, why: 'not ready'};
-    const t0 = performance.now(), wait = async ms => { await paint(); await sleep(ms); await paint(); }, S = () => H.snap(), start = current(), tod0 = H.todGet();
+    const t0 = performance.now(), wait = async ms => { await paint(); await sleep(ms); await paint(); }, S = () => H.snap(), start = current(), tod0 = H.todGet(), mode0 = H.mode;
+    for(let i = 0; i < 120 && !(window.__perfTrees === true && !busy); i++) await sleep(250);   // the oaks and the rest of the planting arrive after the first view
     const go = async k => { await set(k, {from: 'qa'}); await wait(o.wait || 500); return current() === k; };
     const fields = v => String(v).split('|'), vol = (a, b) => { const out = new Set(); for(const k of new Set([...Object.keys(a), ...Object.keys(b)])){ if(!(k in a) || !(k in b)){ out.add(k + '#*'); continue; } const x = fields(a[k]), y = fields(b[k]); for(let i = 0; i < Math.max(x.length, y.length); i++) if(x[i] !== y[i]) out.add(k + '#' + i); } return out; };
     const cmp = (got, ref) => { const out = []; for(const k of new Set([...Object.keys(got), ...Object.keys(ref.s)])){ if(ref.vol.has(k + '#*')) continue; if(got[k] === ref.s[k]) continue;
         if(!(k in got) || !(k in ref.s)){ out.push([k, ref.s[k] == null ? '(none)' : ref.s[k], got[k] == null ? '(none)' : got[k]]); continue; }
         const x = fields(got[k]), y = fields(ref.s[k]); if(x.some((v, i) => v !== y[i] && !ref.vol.has(k + '#' + i)) || x.length !== y.length) out.push([k, ref.s[k], got[k]]); } return out; };
-    const ref = {}, res = {ok: true, pairs: [], refs: {}, ms: 0}, kinds = o.kinds || KINDS;
+    const res = {ok: true, pairs: [], refs: {}, ms: 0}, kinds = (o.kinds || KINDS).filter(k => k !== 'none');
     const take = async () => { const a = S(); await wait(700); const b = S(); return {s: b, vol: vol(a, b)}; };
-    if(!(await go('none'))) return {ok: false, why: 'could not take the decorations down'};
-    ref.none = await take();
-    for(const k of kinds) if(k !== 'none'){ const up = await go(k); ref[k] = await take(); res.refs[k] = {up, objects: ref[k].s.objects, dressObjects: ref[k].s.dressObjects, volatile: ref[k].vol.size};
-      await go('none'); const d = cmp(S(), ref.none); res.pairs.push({from: k, to: 'none', ok: !d.length, diff: d.slice(0, 12), n: d.length}); }
-    for(const a of kinds) for(const b of kinds){ if(a === b || a === 'none' || b === 'none') continue; await go('none'); await go(a); const up = await go(b);
-      const d = cmp(S(), ref[b]); if(!up) d.unshift(['current', b, current()]); res.pairs.push({from: a, to: b, ok: !d.length, diff: d.slice(0, 12), n: d.length}); }
-    /* a pick while another is still going up: the newest pick wins and the scene matches it */
-    { await go('none'); const p1 = set(kinds.includes('thanksgiving') ? 'thanksgiving' : 'halloween', {from: 'qa'}); await sleep(30); set('winter', {from: 'qa'}); await p1; await wait(o.wait || 500);
-      const d = cmp(S(), ref.winter); if(current() !== 'winter') d.unshift(['current', 'winter', current()]); res.pairs.push({from: 'interrupted', to: 'winter', ok: !d.length, diff: d.slice(0, 12), n: d.length}); }
-    await go('none'); if(start !== 'none') await go(start); try{ if(H.tod !== tod0.key) H.todSet(tod0.key, tod0.manual); }catch(e){}
+    const row = (ctx, from, to, d, up) => { if(up === false) d.unshift(['current', to, current()]); res.pairs.push({ctx, from, to, ok: !d.length, diff: d.slice(0, 12), n: d.length}); };
+    const CTX = [['as found', () => {}], ['dusk', () => H.todSet('dusk', true)], ['dollhouse', () => { H.todSet(tod0.key, tod0.manual); H.setMode('doll'); }]].slice(0, o.quick ? 1 : 3);
+    let ref = null;
+    for(const [ctx, enter] of CTX){
+      if(!(await go('none'))) return {ok: false, why: 'could not take the decorations down'};
+      try{ enter(); }catch(e){ console.warn('[holiday] qa ' + ctx, e); } await wait(900);
+      ref = {none: await take()}; res.refs[ctx] = {};
+      for(const k of kinds){ const up = await go(k); ref[k] = await take(); res.refs[ctx][k] = {up, objects: ref[k].s.objects, dressObjects: ref[k].s.dressObjects, volatile: ref[k].vol.size};
+        await go('none'); row(ctx, k, 'none', cmp(S(), ref.none)); }
+      for(const a of kinds) for(const b of kinds){ if(a === b) continue; await go('none'); await go(a); const up = await go(b); row(ctx, a, b, cmp(S(), ref[b]), up); }
+      if(ctx === 'as found' && kinds.includes('winter')){
+        /* Winter's own "See it at dusk", then another dress: the time of day Winter set is handed back before the next dress goes up */
+        for(const b of kinds.concat('none')){ if(b === 'winter') continue; await go('none'); await go('winter'); dusk(true); await wait(900); const up = await go(b); row(ctx, 'winter@dusk', b, cmp(S(), ref[b]), up); }
+        /* a pick while another is still going up: the newest pick wins and the scene matches it */
+        { await go('none'); const p1 = set(kinds.includes('thanksgiving') ? 'thanksgiving' : 'halloween', {from: 'qa'}); await sleep(30); set('winter', {from: 'qa'}); await p1; await wait(o.wait || 500);
+          row(ctx, 'interrupted', 'winter', cmp(S(), ref.winter), current() === 'winter'); } } }
+    await go('none'); try{ if(H.mode !== mode0) H.setMode(mode0); }catch(e){} try{ if(H.tod !== tod0.key) H.todSet(tod0.key, tod0.manual); }catch(e){} if(start !== 'none') await go(start);
     res.ok = res.pairs.every(p => p.ok); res.leftovers = res.pairs.reduce((n, p) => n + p.n, 0); res.ms = Math.round(performance.now() - t0); res.sweeps = lastSweep.slice(); window.__DECORQA = res; return res; }
 
   window.HOLIDAY = {set, dusk, qa, sweep, prepare, get season(){ return SEASON; }, get prep(){ return PREP; }, debug: {qa: o => qa(o), snap: () => H.snap && H.snap(), sweep: () => sweep()}, get current(){ return current(); }, get busy(){ return busy; }, show: o => show.start(o), stopShow: () => show.stop(), open: () => open(btn), close: () => close(false),

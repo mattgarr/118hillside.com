@@ -6933,7 +6933,7 @@ function navQA(){
   /* r41 decor: every ordered pair of holiday dresses ends exactly as a clean switch from 'None' (assets/holiday/holiday.js, HOLIDAY.qa) */
   SEC.decor = async R => { const Q = window.HOLIDAY; if(!Q || !Q.qa){ R.note('decor', '-', 'no holiday control on this page'); return; } setMode('tour'); finish();
     const q = await Q.qa(); if(!q.pairs){ R.fail('decor', '-', 'qa did not run: ' + q.why); return; } R.n += q.pairs.length;
-    for(const p of q.pairs) if(!p.ok) R.fail('decor', p.from + '>' + p.to, p.n + ' leftover(s): ' + p.diff.slice(0, 4).map(d => d[0] + ' ' + d[1] + ' -> ' + d[2]).join('; '));
+    for(const p of q.pairs) if(!p.ok) R.fail('decor', (p.ctx ? p.ctx + ': ' : '') + p.from + '>' + p.to, p.n + ' leftover(s): ' + p.diff.slice(0, 4).map(d => d[0] + ' ' + d[1] + ' -> ' + d[2]).join('; '));
     R.note('decor', '-', q.pairs.length + ' switches, ' + q.leftovers + ' leftover(s), ' + q.ms + ' ms' + (q.sweeps.length ? ', swept ' + q.sweeps.join(' ') : '')); };
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
@@ -24098,4 +24098,4 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=11" defer></script>
+<script src="../assets/holiday/holiday.js?v=12" defer></script>
