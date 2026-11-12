@@ -23280,7 +23280,7 @@ if(GHOST41.on){
   LOOK.aoStrength = 0;
   // G5: the camera meter reads where the camera STANDS, not where it looks
   if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
-    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, every: 10000, gap: 500, last: new THREE.Vector3(1e9, 0, 0), M: METER,
+    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, every: 10000, gap: 500, last: new THREE.Vector3(1e9, 0, 0), movedAt: 0, M: METER,
       // the calibration (ghost41MeterCal): per room (R40L.zone), the screen meter's reading at the room's tour stop(s) over the all-round
       // reading there, so each stop is exposed as before. Measured 11/12 with GHOST41.calibrate() (?qa=1) at every stop: by day the
       // geometric mean of morning, midday and golden (they agree within 3 %), dusk on its own (lamps: the view mattered more, 0.84-1.25).
@@ -23294,8 +23294,9 @@ if(GHOST41.on){
       if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
       const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
       if(!G5.rt){ G5.rt = new THREE.WebGLRenderTarget(2 * Q, 2 * Q, {minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat}); G5.rt.texture.generateMipmaps = false; }
-      const rest = cp.distanceToSquared(G5.last) < 1e-8; G5.last.copy(cp);   // the eye stopped this frame: measure where it stands at once
-      if(G5.k >= 4 && ((cp.distanceToSquared(G5.pos) > .04 && (rest || now - G5.at > G5.gap)) || now - G5.at > G5.every || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; }
+      const rest = cp.distanceToSquared(G5.last) < 1e-8; if(!rest) G5.movedAt = now; G5.last.copy(cp);   // the eye stopped this frame: measure where it stands at once
+      const fading = R40X.k < 1 || (EXPO_IN > .001 && EXPO_IN < .999), settled = now - G5.movedAt > 1500 && G5.at < G5.movedAt + 1500;   // the room light still crossfading; and once more when it has settled
+      if(G5.k >= 4 && ((cp.distanceToSquared(G5.pos) > .04 && (rest || now - G5.at > G5.gap)) || (fading && now - G5.at > G5.gap) || settled || now - G5.at > G5.every || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; }
       if(G5.k < 4){   // one of four level views (90 deg each, the full circle around the eye) per frame into a 2 x 2 atlas
         const c = G5.cam, prev = r.getRenderTarget(), q = G5.k; c.near = camera.near; c.far = camera.far; c.updateProjectionMatrix(); c.position.copy(G5.pos); c.rotation.set(0, q * Math.PI / 2, 0, 'YXZ'); c.updateMatrixWorld();
         const vp = G5.rt.viewport, sc = G5.rt.scissor; vp.set((q & 1) * Q, (q >> 1) * Q, Q, Q); sc.copy(vp); G5.rt.scissorTest = true;
@@ -23310,7 +23311,7 @@ if(GHOST41.on){
    G5b rule:meter-calibration-applied - the page's lightMeterPoll is replaced whole by r10 (colour meter + AWB), so the all-round
       reading was centre-weighted and never calibrated (the first pass put both in the replaced function). Both now run in the
       poll that is in use (ghost41MeterCal, called from r10's poll and from the page's own); the factors are measured by
-      GHOST41.calibrate() (?qa=1). The atlas (four small extra scene draws) is redrawn when the eye has moved 2.4" (at once when it stops, at most every .5 s while it moves, so a walk does not pay a draw every frame) and every 10 s (doors, shades); turning in place never redraws it.
+      GHOST41.calibrate() (?qa=1). The atlas (four small extra scene draws) is redrawn when the eye has moved 2.4" (at once when it stops, at most every .5 s while it moves or the room light crossfades, so a walk does not pay a draw every frame), once more 1.5 s after it stops, and every 10 s (doors, shades); turning in place does not redraw it.
    G6 rule:one-shadow-map-size - the governor's levels carried their own shadow-map size (8192 / 4096 / 2048 / 1024) and the phone
       cap followed the level being drawn: a level change while moving, or the still frame at the top level on a phone in Ultra,
       reallocated and redrew the sun's map at another resolution, so window-blind and rail shadows changed in one frame. One size
