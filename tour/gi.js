@@ -182,7 +182,7 @@ GI.frame = function(){ const H = GI.H; if(!H) return; GI.n++;
   r13Fade(); ssaoFade(dt); };
 GI.srcN = 0;
 /* r13 corner bands: their multiply decals double up with baked corners; inside the rooms their vertices are lifted to white (kept, restored when GI is off) */
-function r13Fade(){ const want = GI.on && GI.k > .5; if(GI._r13 === want) return; const H = GI.H; let n = 0;
+function r13Fade(){ const want = GI.on && GI.k > .5; if(GI._r13 === want && (GI.n % 120) !== 7) return; let nm = 0; GI.H.scene.traverse(o => { if(o.isMesh && o.material && o.material.name === "r13Occlusion") nm++; }); if(GI._r13 === want && nm === GI._r13m) return; GI._r13m = nm;   /* the bands are built at idle after load: look again now and then */ const H = GI.H; let n = 0;
   H.scene.traverse(o => { if(!o.isMesh || !o.material || o.material.name !== 'r13Occlusion') return; const col = o.geometry.attributes.color, pos = o.geometry.attributes.position; if(!col) return;
     if(!o.userData.giC0) o.userData.giC0 = Float32Array.from(col.array); const C0 = o.userData.giC0, P = new V3(); o.updateMatrixWorld();
     for(let i = 0; i < col.count; i++){ P.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); const w = want ? Math.max(GI.roomAt(P.x, P.y, P.z), GI.roomAt(P.x + .4, P.y, P.z), GI.roomAt(P.x - .4, P.y, P.z), GI.roomAt(P.x, P.y, P.z + .4), GI.roomAt(P.x, P.y, P.z - .4)) : 0;
