@@ -23961,7 +23961,7 @@ if(/[?&]qa=1\b/.test(location.search)){
 window.__LSTATE = () => ({k: +EXPO_IN.toFixed(4), state: R40L.state, raw: R40L.raw, zone: R40L.zone, room: LIGHT_ENV_ID, envK: +R40X.k.toFixed(3), cov: +R40L.covP.toFixed(3), expo: +renderer.toneMappingExposure.toFixed(4), mul: +METER.mul.toFixed(4), tod: TOD_KEY});
 /* gi-r42 (tour/gi.js, ?gi= only): the prototype's host - the scene's lights and state it reads, and a frame hook before each draw */
 if(window.GI && GI.host) try{ GI.host({THREE, scene, renderer, camera, canvas, sun, hemi, amb, SUN_DIR, DUSK_LIGHTS, TOD, sunPosition, skyMat, R40E, R40M, STOPS, GROUPS, LIGHT, METER,
-    get TOD_KEY(){ return TOD_KEY; }, get DUSK(){ return DUSK; }, get ENV_RT(){ return ENV_RT; }, get ssao(){ return ssao; }, get composer(){ return useAO ? composer : null; }, get mode(){ return mode; },
+    get TOD_KEY(){ return TOD_KEY; }, get DUSK(){ return DUSK; }, get ENV_RT(){ return ENV_RT; }, get ENV_IN(){ return ENV_IN; }, get ssao(){ return ssao; }, get composer(){ return useAO ? composer : null; }, get mode(){ return mode; },
     get variant(){ return ACTIVE_VAR; }, get BIM2S(){ return typeof BIM2S !== 'undefined' ? BIM2S : null; }, get EXPO_IN(){ return EXPO_IN; }, setTOD: k => setTOD(k), renderFrame: dt => renderFrame(dt)});
   const _rf = renderFrame; renderFrame = function(){ try{ GI.frame(); }catch(e){ if(!renderFrame.giw){ renderFrame.giw = true; console.warn('[gi] frame', e); } } return _rf.apply(this, arguments); }; }catch(e){ console.warn('[gi] host', e); }
 boot();

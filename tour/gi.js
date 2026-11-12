@@ -20,7 +20,7 @@ const V3 = THREE.Vector3;
 const qp = (k, d) => { const m = new RegExp('[?&]' + k + '=([^&]*)').exec(Q); return m ? decodeURIComponent(m[1]) : d; };
 const GI = window.GI = {mode: MODE, ver: 1, on: false, ready: false, why: 'loading', H: null, n: 0, composes: 0, k: 0, t: 0, ssaoK: 0,
   // tuning (also from the URL: &gigain=, &gispec=, &giao=, &gissao=keep)
-  gain: +qp('gigain', 1), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
+  gain: qp('gigain', 'auto'), match: +qp('gimatch', .85), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
   base: qp('gibase', 'gi/'),
   U: {giOn: {value: 0}, giK: {value: 0}, giGain: {value: 1}, giHemi: {value: 1}, giSpec: {value: .7}, giAOK: {value: 1},
     giT0: {value: null}, giT1: {value: null}, giAO: {value: null}, giRoom: {value: null},
@@ -156,6 +156,14 @@ GI.compose = function(){ const S = GI.state(), sc = GI.scales(S), D = GI.data, N
     for(let o = 0; o < NP * 6; o += 6){ A[o] += F[o] * s[0]; A[o + 1] += F[o + 1] * s[1]; A[o + 2] += F[o + 2] * s[2]; A[o + 3] += F[o + 3] * sl; A[o + 4] += F[o + 4] * sl; A[o + 5] += F[o + 5] * sl; } });
   const [h0, h1] = GI.half;
   for(let p = 0, o = 0, q = 0; p < NP; p++, o += 6, q += 4){ h0[q] = toHalf(Math.max(0, A[o])); h0[q + 1] = toHalf(Math.max(0, A[o + 1])); h0[q + 2] = toHalf(Math.max(0, A[o + 2])); h0[q + 3] = toHalf(A[o + 3]); h1[q] = toHalf(A[o + 4]); h1[q + 1] = toHalf(A[o + 5]); }
+  // level: the physical bounce is ~30x darker than the tour's painted indoor light (the white-room panorama), which the tour's exposure
+  // and grade are tuned to. Like a camera exposing for the room, the volume's mean over the rooms is matched to GI.match of that
+  // panorama's level; everything spatial and directional (corners, fall-off from the windows, bounce colour) is kept. ?gigain=<k> fixes it.
+  if(!GI.meanIdx && GI.mask){ const g = GI.index.grid; GI.meanIdx = []; for(let p = 0; p < NP; p++){ const x = p % g.nx, z = Math.floor(p / g.nx) % g.nz, y = Math.floor(p / (g.nx * g.nz)), X = g.x0 + x * g.d, Y = g.y0 + y * g.d, Z = g.z0 + z * g.d;
+    if(Y < 9 && GI.roomAt(X, Y, Z) > .5) GI.meanIdx.push(p); } }
+  let m = 0, n = 0; for(const p of (GI.meanIdx || [])){ const l = .2126 * A[p * 6] + .7152 * A[p * 6 + 1] + .0722 * A[p * 6 + 2]; if(l > 0){ m += l; n++; } } m = n ? m / n : 0;
+  const ein = GI.H.ENV_IN, src = ein && ein.giSrc; if(src && GI._inSrc !== src){ GI._inSrc = src; const sh = GI.skySH(src); GI.inLum = .2126 * sh[0] + .7152 * sh[1] + .0722 * sh[2]; }
+  GI.mean = m; GI.autoGain = m > 1e-6 && GI.inLum ? Math.max(1, Math.min(200, GI.match * GI.inLum / m)) : 1;
   for(const t of GI.tex) t.needsUpdate = true; GI.composes++; GI.S = S; return S; };
 // what the volume gives at a point and normal (QA), from the composed (float) data
 GI.at = function(x, y, z, n = [0, 1, 0]){ const g = GI.index.grid, A = GI.acc, dims = [g.nx, g.ny, g.nz], f = [(x - g.x0) / g.d, (y - g.y0) / g.d, (z - g.z0) / g.d].map((v, i) => Math.max(0, Math.min(dims[i] - 1, v)));
@@ -173,11 +181,11 @@ GI.frame = function(){ const H = GI.H; if(!H) return; GI.n++;
   // off for the design ideas (they move walls and cabinets: the bake would be wrong), and if forced off
   const want = (H.variant === 'asbuilt' && !GI.forceOff && GI.mask) ? 1 : 0;
   GI.k = GI.snap ? want : (GI.k < want ? Math.min(want, GI.k + dt / .8) : Math.max(want, GI.k - dt / .8)); GI.snap = false;
-  const U = GI.U; U.giOn.value = GI.k > 0 ? 1 : 0; U.giK.value = GI.k * GI.k * (3 - 2 * GI.k); U.giGain.value = GI.gain; U.giSpec.value = GI.spec; U.giAOK.value = GI.aoK; U.giHemi.value = GI.hemiKill;
+  const U = GI.U; U.giOn.value = GI.k > 0 ? 1 : 0; U.giK.value = GI.k * GI.k * (3 - 2 * GI.k); U.giGain.value = GI.gain === 'auto' ? (GI.autoGain || 1) : +GI.gain; U.giSpec.value = GI.spec; U.giAOK.value = GI.aoK; U.giHemi.value = GI.hemiKill;
   GI.on = GI.k > 0;
-  const s = H.SUN_DIR, c = H.sun.color, env = H.ENV_RT, src = env && env.giSrc;
+  const s = H.SUN_DIR, c = H.sun.color, env = H.ENV_RT, src = env && env.giSrc, ein = H.ENV_IN, isrc = ein && ein.giSrc;
   let ln = 0; for(const l of H.DUSK_LIGHTS) ln += l.intensity;
-  const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0);
+  const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0) + ':' + (isrc ? (isrc.__giId || (isrc.__giId = ++GI.srcN)) : 0) + ':' + !!GI.mask;
   if(key !== GI.last && GI.on){ GI.last = key; try{ GI.compose(); }catch(e){ console.warn('[gi] compose', e); GI.ready = false; } }
   r13Fade(); ssaoFade(dt); };
 GI.srcN = 0;
@@ -200,6 +208,6 @@ GI.host = function(H){ GI.H = H;
   patchChunks(); Object.assign(H.R40E.U, GI.U); patchPMREM();
   if(MODE !== 'bake' || /[?&]giload=1\b/.test(Q)) load(); else GI.why = 'bake page';
   if(GI.bake && GI.bake.host) try{ GI.bake.host(H); }catch(e){ console.warn('[gi] bake host', e); } };
-GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes,
+GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), gain: GI.gain === 'auto' ? +(GI.autoGain || 0).toFixed(2) : GI.gain, mean: +(GI.mean || 0).toFixed(4), inLum: +(GI.inLum || 0).toFixed(3), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes,
   S: GI.S ? {w: GI.S.w.map(v => +v.toFixed(3)), tint: GI.S.tint.map(v => +v.toFixed(3)), sun: GI.S.sun.map(v => +v.toFixed(3)), lamp: +GI.S.lamp.toFixed(3)} : null});
 })();
