@@ -1921,7 +1921,7 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
       get(){ const m = this; return function r40DefaultHook(sh){ if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
       set(v){ Object.defineProperty(this, 'onBeforeCompile', {value: v, writable: true, configurable: true, enumerable: true}); }});
   } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
-function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const v = (m.userData.r40Mode || (m.userData.r40Mode = {value: new THREE.Vector2()})); v.value.set(R40E.on && !m.envMap ? 1 : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
+function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? 1 : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
 const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawing registered to the A2.2 walls
