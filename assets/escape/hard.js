@@ -40,7 +40,7 @@
         note: 'The bonus lounge: a big TV, a refreshment counter, glass doors to the terrace, and the wall under the stairs.'},
       office:   {name: 'Skylit office', short: 'Office', floor: 'lower', pos: [-28.0, LE, -10.6], face: [-23.8, LY + 1.6, -5.4], map: [-27.0, -7.5],
         note: 'The skylit office, across the lower entry from the laundry room. Two skylights, and windows on two walls.'},
-      terrace:  {name: 'Terrace', floor: 'lower', pos: [-6.4, TY + EYE, -27.0], face: [-2.6, TY + 1.0, -34.6], map: [-4.0, -33.0],
+      terrace:  {name: 'Terrace', floor: 'lower', pos: [-4.6, TY + EYE, -29.4], face: [-4.8, TY + .8, -39.0], map: [-4.0, -33.0],
         note: 'Paver stone, an outdoor kitchen under the pergola, and the heritage oak over it all.'}};
     const NODES = {a1: [4.4, -4.9], a2: [11.4, -4.9], a3: [12.6, -1.0], a4: [12.75, 5.1], kh: [20.3, 9.3], h1: [23.8, 8.3], h2: [23.8, 13.5]};
     const EDGES = [['entry', 'living'], ['living', 'a1'], ['a1', 'a2'], ['a2', 'a3'], ['a3', 'a4'], ['a4', 'kitchen'], ['kitchen', 'kh'], ['kh', 'h1'], ['h1', 'hall'], ['hall', 'h2'], ['h2', 'middlebed']];
@@ -90,7 +90,7 @@
       if(floor === 'upper') ink.line([[c[0] - 44, c[1] + 44], [c[0] + 44, c[1] - 44]], 10, '#c0392b');
       if(floor === 'main') ink.line([[c[0] - 44, c[1] - 44], [c[0] + 44, c[1] + 44]], 10, '#c0392b');
       if(floor === 'lower'){ x.strokeStyle = '#c0392b'; x.lineWidth = 8; x.beginPath(); x.arc(c[0], c[1], 66, 0, 7); x.stroke(); }
-      ink.text({upper: 'upstairs', main: 'main floor', lower: 'downstairs'}[floor], 120, h - 46, 46, '#5a6478'); }, floor.length); }
+      if(bg) ink.text({upper: 'upstairs', main: 'main floor', lower: 'downstairs'}[floor], 130, h - 46, 46, '#5a6478'); }, floor.length); }
     // the mirror writing on the shower glass, and the same words as they show in the mirror
     function glassCanvas(mirror){ const c = document.createElement('canvas'); c.width = 1400; c.height = 520; const x = c.getContext('2d');
       x.save(); if(!mirror){ x.translate(c.width, 0); x.scale(-1, 1); }
@@ -109,7 +109,7 @@
 
     /* ---------------------------------------------------------------- the world */
     const W = {};
-    const SEAT = [-23.8, 7.05, -5.8], MABEL0 = [-3.0, TY, -34.4], MABEL1 = [-0.4, TY, -37.0], CLO = [19.6, 0, 17.2], BOWL = [5.75, 3.01, 10.25];
+    const SEAT = [-23.8, 7.05, -5.8], MABEL0 = [-4.2, -4.75, -39.3], MABEL1 = [-6.7, -4.75, -39.6], CLO = [19.6, 0, 17.2], BOWL = [5.75, 3.01, 10.25];
     const kitchenSun = () => { const d = sunDir(S.hour); return d.y > .03 && d.x < -.03; };   // the sink window faces the afternoon sun
     const admiralInSun = () => kitchenSun() && shadeT('WN-L1-02') < .5;
     function build(){
@@ -120,8 +120,8 @@
       const grid = [[-1.46, -1.3, 0, 9], [1.3, 1.46, 0, 9], [-4.4, 4.4, 2.8, 2.94], [-4.4, 4.4, 5.28, 5.42]];
       const PR = []; const seg = (a, b, n) => { for(let i = 0; i <= n; i++){ const t = i / n; PR.push([a[0] + (b[0] - a[0]) * t + (i % 2 ? .18 : -.18), a[1] + (b[1] - a[1]) * t, Math.atan2(b[0] - a[0], b[1] - a[1])]); } };
       seg([-4.5, 2.1], [-8.5, 2.1], 7); seg([-8.5, 1.6], [-9.3, -2.4], 7);
-      const prints = (g, uv) => { if(!has('metBiscuit')) return; g.globalAlpha = .72; g.fillStyle = '#000';
-        for(const [px, pz, a] of PR){ const c = uv(new THREE.Vector3(px, 0, pz)); g.save(); g.translate(c[0], c[1]); g.rotate(-a); const s = 30 / 34 * .9; g.scale(s, s);
+      const prints = (g, uv) => { if(!has('metBiscuit')) return; g.globalAlpha = .9; g.fillStyle = '#000';
+        for(const [px, pz, a] of PR){ const c = uv(new THREE.Vector3(px, 0, pz)); g.save(); g.translate(c[0], c[1]); g.rotate(-a); const s = 1.35; g.scale(s, s);
           g.beginPath(); g.ellipse(0, 4, 7, 6, 0, 0, 7); g.fill(); for(const [dx, dy] of [[-7, -5], [-2.5, -8.5], [2.5, -8.5], [7, -5]]){ g.beginPath(); g.ellipse(dx, dy, 2.2, 3, 0, 0, 7); g.fill(); } g.restore(); }
         g.globalAlpha = 1; };
       W.front = windowSource('D-LG-02', {room: 'SP-L1-ENTRY', bot: .1, top: 7.8, inset: .25, bars: grid, decal: prints});
@@ -132,9 +132,9 @@
       const dS = sunDir(T_DESK), t0 = (s12.R.c.y - DY) / dS.y, cen = [s12.R.c.x - dS.x * t0, s12.R.c.z - dS.z * t0];
       const deskStrips = makeStrips('5', {o: [cen[0] - .55, DY + .02, cen[1] - .38], right: [0, 0, 1], up: [1, 0, 0], size: .7, pitch: 1.5}, {p: s12.R.c.toArray(), n: s12.R.n.toArray()}, T_DESK);
       W.skyPaper = buildPaper(deskStrips, [0, -.01, 0]);
-      const skySrc = (s, strips, gate) => ({out: () => s.out, quad: () => s.it.t > .5 ? null : s.quad, strips: strips ? () => strips : null, gate});
+      const skySrc = (s, strips, gate) => ({out: () => s.out, quad: () => s.it.t > .5 ? null : s.quad, strips: strips ? () => strips : null, gate, color: 'rgba(255,250,232,1)'});
       W.officeFloor = lightPlane({floor: 'SP-L0-OFFICE', ppf: 30, gain: 1.6, sources: [skySrc(s11), skySrc(s12)], holes: [[[-25.25, -7.15], [-23.2, -7.15], [-23.2, -3.35], [-25.25, -3.35]]]});
-      W.desk = lightPlane({clip: [[-25.2, -7.1], [-23.25, -7.1], [-23.25, -3.4], [-25.2, -3.4]], y: DY + .01, ppf: 60, gain: 1.8, sources: [skySrc(s11), skySrc(s12, deskStrips, () => has('metPepper'))], after: p => paperLight(p.s)});
+      W.desk = lightPlane({clip: [[-25.2, -7.1], [-23.25, -7.1], [-23.25, -3.4], [-25.2, -3.4]], y: DY + .01, ppf: 60, blend: 'paint', shade: 'rgba(132,124,114,.9)', sources: [skySrc(s11), skySrc(s12, deskStrips, () => has('metPepper'))]});
       W.deskCen = cen;
       // ---- Admiral's shadow show: a cut-out hanging outside the sink window; with the shade down, the late sun puts its shadow on the shade (a 3 at five o'clock)
       const ks = shadeItem('WN-L1-02'), KX = ks.F.cx + ks.F.inn[0] * (ks.d + .05), KZ = ks.F.cz, KW = ks.F.W - .3, KY0 = ks.y0 + .1, KY1 = ks.y1 - .45, T_SH = 17;
@@ -149,17 +149,17 @@
       const slStrips = makeStrips('8', {o: [-13.4, UY + .05, -29.4], right: [1, 0, 0], up: [0, 0, -1], size: 1.15, pitch: 1.5}, {p: [sop.c[0], 0, sop.c[1]], n: [sout.x, 0, sout.z]}, T_SUN);
       W.slPaper = buildPaper(slStrips, [-sout.x * .03, 0, -sout.z * .03], 'upper');
       W.slider = windowSource('D-L2-01', {room: 'SP-L2-PRIMARY', shade: 'D-L2-01', bot: UY + .1, bars: [[-1.5, -1.38, 0, 20], [1.38, 1.5, 0, 20]], strips: slStrips, gate: () => has('sunsetNote')});
-      W.primary = lightPlane({floor: 'SP-L2-PRIMARY', ppf: 30, gain: 1.7, group: 'upper', sources: [W.slider], holes: [[[-24.2, -36.8], [-16.5, -36.8], [-16.5, -29.7], [-24.2, -29.7]]], after: p => paperLight(p.s)});
+      W.primary = lightPlane({floor: 'SP-L2-PRIMARY', ppf: 34, gain: 2.4, group: 'upper', sources: [W.slider], holes: [[[-24.2, -36.8], [-16.5, -36.8], [-16.5, -29.7], [-24.2, -29.7]]], after: p => paperLight(p.s)});
       const nc = keep('sunsetNote', () => noteCanvas('Last job of the day.', 'when the sun touches the hills'));
       W.sunsetNote = nc.mesh = prop(nc.cv, [-17.6, UY + 4.4, -39.95], [0, 0, 1], 1.4, 1.05, {group: 'upper'});
       // ---- the shower glass and the mirror
       W.glass = prop(glassCanvas(false), [-11.2, UY + 3.5, -19.40], [0, 0, -1], 3.6, 1.34, {group: 'upper', tone: 1, both: false});
-      W.mirror = prop(glassCanvas(true), [-11.4, UY + 3.9, -25.53], [0, 0, 1], 3.0, 1.11, {group: 'upper', tone: 1}); W.mirror.visible = false;
+      W.mirror = prop(glassCanvas(true), [-11.4, 10.85, -25.53], [0, 0, 1], 3.0, 1.11, {group: 'upper', tone: 1}); W.mirror.visible = false;
       // ---- the window seat cushion and the upper sheet under it
       const ks2 = keep('sheetUp', () => sheetDraw('upper', true)); W.sheetUp = ks2.mesh = prop(ks2.cv, [SEAT[0], SEAT[1] + .02, SEAT[2]], [0, 1, 0], 1.6, 1.25, {group: 'upper', spin: -Math.PI / 2}); W.sheetUp.visible = false;
       // ---- the main sheet (Clover leaves it on the closet floor) and the lower sheet (under Mabel)
       const ks3 = keep('sheetMain', () => sheetDraw('main', true)); W.sheetMain = ks3.mesh = prop(ks3.cv, [CLO[0] + 2.6, .03, CLO[2] + .3], [0, 1, 0], 1.5, 1.17, {spin: Math.PI / 2}); W.sheetMain.visible = false;
-      const ks4 = keep('sheetLow', () => sheetDraw('lower', true)); W.sheetLow = ks4.mesh = prop(ks4.cv, [MABEL0[0], TY + .04, MABEL0[2]], [0, 1, 0], 1.5, 1.17, {group: 'main', spin: Math.PI});
+      const ks4 = keep('sheetLow', () => sheetDraw('lower', true)); W.sheetLow = ks4.mesh = prop(ks4.cv, [MABEL0[0], MABEL0[1] + .03, MABEL0[2]], [0, 1, 0], 1.5, 1.17, {group: 'main', spin: Math.PI});
       // ---- the strongbox behind the hidden door
       const box = W.box = new THREE.Group(); const steel = new THREE.MeshStandardMaterial({color: lin(0x3a4250), roughness: .45, metalness: .7});
       const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 1.1), steel); body.position.y = .55; box.add(body);
@@ -168,11 +168,11 @@
       const ft = texOf(fc); W.boxTex = ft; const face = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .55), new THREE.MeshBasicMaterial({map: ft, toneMapped: false})); face.position.set(0, .62, -.56); face.rotation.y = Math.PI; box.add(face);
       box.position.set(-12.3, LY, -10.6); box.traverse(o => { o.raycast = () => {}; }); H.grp('main').add(box); boxFace('');
       // ---- the animals and their things
-      petAt('biscuit', [-4.0, 0, 1.4], yawTo([-4.0, 0, 1.4], [-5.7, 0, -4.6]));
+      petAt('biscuit', [-2.4, 0, -0.4], yawTo([-2.4, 0, -0.4], [-5.7, 0, -4.6]));
       petAt('admiral', BOWL, yawTo(BOWL, [12.4, 0, 9.6]));
       petAt('pepper', [-26.8, LY, -6.2], yawTo([-26.8, 0, -6.2], [-28.0, 0, -10.6]));
       petAt('clover', CLO, yawTo(CLO, [29.8, 0, 15.6])); PETS.clover.scale.setScalar(.56); PETS.clover.visible = false;
-      petAt('mabel', [MABEL0[0], TY + .02, MABEL0[2]], yawTo(MABEL0, [-6.4, 0, -27.0])); PETS.mabel.scale.setScalar(.42);
+      petAt('mabel', [MABEL0[0], MABEL0[1] + .02, MABEL0[2]], yawTo(MABEL0, [-6.4, 0, -27.0])); PETS.mabel.scale.setScalar(.42);
       E.cat; }
     function boxFace(cur, st){ const c = W.boxFace; if(!c) return; const x = c.getContext('2d'); x.fillStyle = '#e9e2cf'; x.fillRect(0, 0, 512, 256);
       const pts = [.1, .37, .63, .9].map(t => { const a = Math.PI * (1 - t); return [256 + Math.cos(a) * 215, 230 - Math.sin(a) * 170]; });
@@ -194,7 +194,7 @@
         if(id === 'desk' && deskUp()) readN('p_pepper', 'pepper', '5', 'Sun on the desk', ['#fff1c2', '#f3cf7c'], 'The skylight’s square of sun on the desk, early in the afternoon. The paper on the skylight leaves a five.', ['FIVE! FIVE! SUN ON THE DESK!', 'pepper']);
         if(id === 'screen' && shadowUp()) readN('p_admiral', 'admiral', '3', 'Shadow on the shade', ['#fff6e0', '#f1dcb2'], 'Late in the afternoon, with the shade down, the cut-out hanging outside throws a three onto it.', ['A three. Hideous. Now leave the shade down.', 'admiral']);
         if(id === 'floorP' && sunsetUp()) readN('p_sunset', 'snowball', '8', 'The last light', ['#ffd9a8', '#f39c5a'], 'At sunset, the low sun through the balcony doors writes an eight across the bedroom floor.', ['Last job of the day. Eight. I’m very thorough.']); }
-      if(has('metMabel') && !has('sheetLow') && sunIn('mabelMoves')){ give('sheetLow'); petWalk('mabel', [MABEL1[0], TY + .02, MABEL1[2]], 5200); setTimeout(() => say('Cold. Moving. Slowly.', 4600, false, 'mabel'), 400);
+      if(has('metMabel') && !has('sheetLow') && sunIn('mabelMoves')){ give('sheetLow'); petWalk('mabel', [MABEL1[0], MABEL1[1] + .02, MABEL1[2]], 5200); setTimeout(() => say('Cold. Moving. Slowly.', 4600, false, 'mabel'), 400);
         note('sheetLow', {title: 'Tracing paper: downstairs', where: 'Under Mabel, on the terrace', img: () => KEEP.sheetLow.cv, text: 'The lower level in pencil, with the stairs, and a red circle on the lounge wall.'}); }
       if(S.place === 'kitchen' || (S.ex && S.ex.id === 'admiral')) admiralPose(); }
     function admiralPose(){ const g = PETS.admiral; if(!g) return; g.rotation.y = admiralInSun() ? yawTo(BOWL, [3, 0, 10]) + Math.PI : yawTo(BOWL, [12.4, 0, 9.6]); }
@@ -206,7 +206,7 @@
 
     /* ---------------------------------------------------------------- things to look at */
     const SP = {
-      biscuit: {from: ['entry'], label: () => 'Biscuit', at: () => [-4.0, 2.0, 1.4], pos: [-5.0, 4.4, -1.6], look: [-4.0, 1.0, 1.4], fit: {w: 3, h: 2.6},
+      biscuit: {from: ['entry'], label: () => 'Biscuit', at: () => [-2.4, 2.0, -0.4], pos: [-4.4, 4.4, -3.4], look: [-2.4, 1.0, -0.4], fit: {w: 3, h: 2.6},
         sheet: () => ({title: 'Biscuit', body: `${line('biscuit', 'He went past me first thing. Sun was coming in the front doors. Didn’t wipe his paws.')}${line('biscuit', 'He took my ball. I liked my ball.')}`}),
         seen(){ if(give('metBiscuit')){ sunKey(true); W.entry.update(); } }},
       prints: {from: ['entry'], sun: true, when: () => has('metBiscuit') && W.front.s > .05, label: () => 'Sun on the floor', at: () => [-7.0, .2, 0.6], pos: [-6.6, 8.6, -5.8], look: [-6.8, 0, .2], fit: {w: 7, h: 6.4},
@@ -215,8 +215,8 @@
         seen(){ checks(); }},
       admiral: {from: ['kitchen'], label: () => 'Admiral', at: () => [BOWL[0], BOWL[1] + 1.0, BOWL[2]], pos: [8.6, 5.0, 10.2], look: [BOWL[0], BOWL[1] + .4, BOWL[2]], fit: {w: 2.6, h: 2.4},
         sheet: () => admiralInSun() ? {title: 'Admiral', body: `${line('admiral', 'Direct sun. On my bowl. I shan’t speak until it stops.', true)}<p>The goldfish has turned his back on you and is sulking behind his castle. The afternoon sun is pouring through the window over the sink.</p>`}
-          : {title: 'Admiral', body: `${line('admiral', 'The cat came by this afternoon and hung some rubbish outside my window. On a string. Lower the shade and you’ll see it. I would rather not.')}${line('admiral', 'He also took my castle.')}`},
-        seen(){ if(!admiralInSun() && give('metAdmiral')) setTimeout(() => say('He says afternoon. He means late. Fish are very precise.', 5000), 1600); }},
+          : {title: 'Admiral', body: `${line('admiral', 'The cat hung some rubbish outside my window. On a string. He said it’s for late in the afternoon, with my shade down. I shan’t be watching.')}${line('admiral', 'He also took my castle.')}`},
+        seen(){ if(!admiralInSun() && give('metAdmiral')) setTimeout(() => say('Late afternoon, shade down. Fish are very precise.', 5000), 1600); }},
       kshade: {from: ['kitchen'], when: () => has('metAdmiral'), label: () => shadeT('WN-L1-02') > .5 ? 'Shade on the window' : 'Window over the sink', at: () => [4.9, 5.4, 9.5], pos: [9.6, 5.3, 9.5], look: [4.7, 5.0, 9.5], fit: {w: 6.4, h: 4.6},
         sheet: () => shadeT('WN-L1-02') > .5 ? {title: 'The kitchen shade', body: '<p>A light-filtering roller shade, all the way down. When the sun is on the window, it glows.</p>', acts: [{label: 'Raise the shade', cls: '', run: () => act(() => { SND.shade(); shade('WN-L1-02', false); }, 900)}]}
           : {title: 'The window over the sink', body: '<p>A big window over the sink, with a roller shade rolled up at the top. Something papery is hanging outside, on a string.</p>', acts: [{label: 'Lower the shade', run: () => act(() => { SND.shade(); shade('WN-L1-02', true); give('kitchenDown'); admiralPose(); }, 900)}]}},
@@ -236,14 +236,14 @@
       note: {from: ['primary'], label: () => 'Note on the doors', at: () => [-17.6, UY + 4.4, -39.6], pos: [-17.6, UE - .2, -35.6], look: [-17.6, UY + 4.3, -39.95], fit: {w: 2.0, h: 1.6},
         sheet: () => ({title: 'Snowball’s note', body: `${line('snowball', 'Last job of the day. When the sun touches the hills.')}<p>Taped to the stacking doors to the balcony. Below it, strips of paper on the glass. Beyond the glass, the hills.</p>`}),
         seen(){ if(give('sunsetNote')){ note('sunsetNote', {title: 'Last job of the day', where: 'On the balcony doors', img: () => KEEP.sunsetNote.cv, text: 'Snowball’s note: the last job of the day was when the sun touched the hills.'}); sunKey(true); } }},
-      floorP: {from: ['primary'], sun: true, when: () => has('sunsetNote') && W.slider.s > .05, label: () => 'Light on the floor', at: () => [-12.8, UY + .2, -30.4], pos: [-11.6, UY + 7.2, -24.6], look: [-12.8, UY, -30.6], fit: {w: 4.4, h: 3.8},
+      floorP: {from: ['primary'], sun: true, when: () => has('sunsetNote') && W.slider.s > .05, label: () => 'Light on the floor', at: () => [-12.8, UY + .2, -30.4], pos: [-11.6, UY + 6.4, -26.9], look: [-12.8, UY, -30.6], fit: {w: 4.0, h: 3.4},
         sheet: () => sunsetUp() ? {title: 'The last light', body: '<p>Low gold light from the balcony doors, all the way across the floor. The card on the glass leaves a figure in it.</p>'}
           : {title: 'Light on the floor', body: '<p>Sun from the balcony doors on the floor. The shadows of the paper are long and out of shape. Not quite the moment.</p>'},
         seen(){ checks(); }},
       glass: {from: ['pbath'], label: () => 'Writing on the glass', at: () => [-11.2, UY + 3.5, -19.6], pos: [-11.2, UY + 3.8, -23.6], look: [-11.2, UY + 3.5, -19.4], fit: {w: 4.4, h: 2.2},
         sheet: () => ({title: 'Writing on the shower glass', body: `<p>Big soapy letters on the shower glass. They don’t read right.</p>${line('snowball', 'I wrote that. It’s not wrong. You’re looking at it wrong.')}`}),
         seen(){ give('sawGlass'); }},
-      mirror: {from: ['pbath'], when: () => has('sawGlass'), label: () => 'Mirror', at: () => [-11.4, UY + 3.9, -25.3], pos: [-11.6, UY + 4.0, -21.4], look: [-11.4, UY + 3.9, -25.56], fit: {w: 3.6, h: 2.2},
+      mirror: {from: ['pbath'], when: () => has('sawGlass'), label: () => 'Mirror', at: () => [-11.4, 10.85, -25.3], pos: [-11.6, 10.9, -21.4], look: [-11.4, 10.85, -25.56], fit: {w: 4.4, h: 4.4},
         sheet: () => ({title: 'In the mirror', body: '<p>The shower glass is behind you, and in the mirror over the sinks the soapy letters read the right way round.</p>' + line('snowball', 'There we are. Off you go.')}),
         seen(){ W.mirror.visible = true; if(give('mirror')) note('mirror', {title: 'In the mirror', where: 'Primary bath', img: () => glassCanvas(true), text: 'The writing on the shower glass, read in the mirror: WINDOW SEAT.'}); }},
       seat: {from: ['loft'], when: () => has('mirror'), label: () => has('sheetUp') ? 'Window seat' : 'Cushion on the window seat', at: () => [SEAT[0] + .3, SEAT[1] + .6, SEAT[2]], pos: [-20.0, UE, -6.4], look: [SEAT[0], SEAT[1], SEAT[2]], fit: {w: 3.2, h: 2.6},
@@ -258,7 +258,7 @@
       cshade: {from: ['middlebed'], when: () => has('metClover'), label: () => shadeT('WN-L1-08') > .5 ? 'Shade' : 'Big window', at: () => [31.9, 4.6, 19.0], pos: [26.0, 5.2, 18.6], look: [32.3, 4.4, 19.0], fit: {w: 6.6, h: 5.2},
         sheet: () => shadeT('WN-L1-08') > .5 ? {title: 'The bedroom shade', body: '<p>A blackout honeycomb shade, all the way down. The room is dim and quiet.</p>'}
           : {title: 'The big window', body: '<p>A big window with a blackout honeycomb shade drawn right up under the head.</p>', acts: [{label: 'Lower the shade', run: () => act(() => { SND.shade(); shade('WN-L1-08', true); setTimeout(cloverOut, 700); }, 1000)}]}},
-      mabel: {from: ['terrace'], label: () => 'Mabel', at: () => { const g = PETS.mabel; return g ? [g.position.x, TY + 1.2, g.position.z] : MABEL0; }, pose: () => { const g = PETS.mabel, p = g ? g.position : {x: MABEL0[0], z: MABEL0[2]}; return {pos: [p.x - 2.6, TY + 4.0, p.z + 2.6], look: [p.x, TY + .4, p.z], fit: {w: 3.4, h: 2.6}}; },
+      mabel: {from: ['terrace'], label: () => 'Mabel', at: () => { const g = PETS.mabel; return g ? [g.position.x, TY + 1.2, g.position.z] : MABEL0; }, pose: () => { const g = PETS.mabel, p = g ? g.position : {x: MABEL0[0], z: MABEL0[2]}; return {pos: [p.x + .4, TY + 3.8, p.z + 3.6], look: [p.x, TY + .4, p.z], fit: {w: 3.4, h: 2.6}}; },
         sheet: () => has('sheetLow') ? {title: 'Mabel', body: `${line('mabel', 'Warm here. This spot. For now.')}<p>She left a sheet of tracing paper on the paving: the lower level in pencil, the stairs, and a red circle.</p>${line('mabel', 'He took my strawberry. I’ll get over it. Slowly.')}`}
           : {title: 'Mabel', body: `${line('mabel', 'Warm. Staying.', true)}<p>Mabel is sitting on the warm paving, on top of something papery. She isn’t going anywhere while the sun’s on her.</p>${line('mabel', 'I move when the sun moves. Not before.')}`},
         seen(){ if(give('metMabel')){ sunKey(true); setTimeout(checks, 500); } }},
@@ -276,13 +276,13 @@
       const R = rig, a = yp([-12.3, LE - .6, -14.4], [-12.3, LY + .8, -10.6]); rigTravel([[R.pos.x, R.pos.y, R.pos.z], [-12.3, LE - .6, -14.4]], {yaw: a[0], pitch: a[1], fov: aspect() < 1 ? 80 : 56, off: [0, 0]}, {dur: 1.0});
       setTimeout(() => { if(W.lid){ W.lid.position.z = .3; W.lid.rotation.x = -1.1; wake(10); } SND.fridge(); toast('Everyone’s favourite things.', 2600); }, 900);
       setTimeout(() => { // cut to the terrace at sunset: everyone has their thing back
-        const sh = aspect() < 1 ? {pos: [-8.2, TY + 4.2, -27.4], look: [-1.8, TY + 1.4, -36.4], fov: 78} : {pos: [-8.6, TY + 4.6, -26.6], look: [-1.6, TY + 1.6, -36.4], fov: 60};
+        const sh = aspect() < 1 ? {pos: [0.6, TY + 4.2, -31.6], look: [-4.6, TY + 1.2, -39.4], fov: 78} : {pos: [1.0, TY + 4.6, -31.2], look: [-4.4, TY + 1.4, -39.4], fov: 58};
         const a1 = yp(sh.pos, sh.look);
         fadeThrough(() => { door('D-L0-10', true, true); rigCut(sh.pos, a1[0], a1[1], sh.fov); setSlider(20.25);
-          const P = [['biscuit', [-4.6, TY, -33.0]], ['mabel', [-2.2, TY + .02, -33.6]], ['clover', [-3.4, TY, -35.6]], ['pepper', [-1.2, TY, -35.0]]];
+          const P = [['biscuit', [-6.4, -4.75, -38.6]], ['mabel', [-2.4, -4.73, -38.4]], ['clover', [-4.0, -4.75, -37.8]], ['pepper', [-5.4, -4.75, -40.4]]];
           for(const [who, p] of P){ const g = petAt(who, p, yawTo(p, sh.pos)); if(who === 'clover') g.scale.setScalar(.56); if(who === 'mabel') g.scale.setScalar(.42); g.visible = true; }
-          const ad = petAt('admiral', [-5.6, TY + 2.45, -36.2], yawTo([-5.6, 0, -36.2], sh.pos));
-          things(); catAt([-3.2, TY, -31.8]);
+          petAt('admiral', [-1.2, -4.75, -40.0], yawTo([-1.2, 0, -40.0], sh.pos));
+          things(); catAt([-3.4, -4.75, -36.4]);
           rigTravel([sh.pos, [sh.pos[0] + .6, sh.pos[1] - .2, sh.pos[2] - 1.4]], {yaw: a1[0], pitch: a1[1], fov: sh.fov, off: aspect() < 1 ? [0, -.3] : [-.16, 0]}, {dur: 9}); }, 520);
         setTimeout(() => say('Not a heist. A lost and found. Everything was under a sofa somewhere. You’re welcome.', 7000), 1800);
         setTimeout(() => finishCard({title: 'Sunset.', bubbles: false,
@@ -290,11 +290,12 @@
           real: '118 Hillside Drive faces the sun all day: morning light through the front doors, skylights over the office and the primary bedroom, and sunset over the hills from the balcony. Six bedrooms and three full baths, with a terrace under a heritage oak, in Woodside, California.',
           share: t => `Locked In at Hillside, Hard: I tracked Snowball through every room of 118 Hillside Drive from sunrise to sunset and opened his strongbox in ${t}. Your turn.`}), 5200); }, 3600); }
     function things(){ const add = (geo, col, p, s) => { const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color: lin(col), roughness: .5})); m.position.set(...p); if(s) m.scale.set(...s); m.raycast = () => {}; H.grp('main').add(m); return m; };
-      add(new THREE.SphereGeometry(.22, 18, 14), 0xd8e04a, [-3.9, TY + .22, -33.4]);                        // Biscuit's ball
-      add(new THREE.SphereGeometry(.16, 14, 10), 0xd6303a, [-1.6, TY + .16, -33.9], [1, 1.2, 1]);            // Mabel's strawberry
-      add(new THREE.ConeGeometry(.06, .4, 10), 0xf08a24, [-2.9, TY + .06, -35.6]).rotation.z = Math.PI / 2;   // Clover's carrot
-      add(new THREE.BoxGeometry(.04, .02, .6), 0xd63a2e, [-.8, TY + .02, -35.3]);                            // Pepper's red feather
-      const c = add(new THREE.CylinderGeometry(.16, .2, .4, 8), 0x9aa3ad, [-5.0, TY + 2.65, -36.2]); add(new THREE.ConeGeometry(.18, .22, 8), 0xc0392b, [-5.0, TY + 2.96, -36.2]); }   // Admiral's castle
+      const G = -4.75;
+      add(new THREE.SphereGeometry(.22, 18, 14), 0xd8e04a, [-5.6, G + .22, -37.9]);                         // Biscuit's ball
+      add(new THREE.SphereGeometry(.16, 14, 10), 0xd6303a, [-1.8, G + .16, -37.8], [1, 1.2, 1]);             // Mabel's strawberry
+      add(new THREE.ConeGeometry(.06, .4, 10), 0xf08a24, [-3.5, G + .06, -37.3]).rotation.z = Math.PI / 2;    // Clover's carrot
+      add(new THREE.BoxGeometry(.6, .02, .05), 0xd63a2e, [-4.8, G + .02, -39.7]);                             // Pepper's red feather
+      add(new THREE.CylinderGeometry(.16, .2, .4, 8), 0x9aa3ad, [-.5, G + .2, -39.6]); add(new THREE.ConeGeometry(.18, .22, 8), 0xc0392b, [-.5, G + .51, -39.6]); }   // Admiral's castle
 
     return {places: PL, start: 'entry', nodes: NODES, edges: EDGES, walks: WALKS, spots: SP, book: true,
       mapRooms: ['SP-L1-ENTRY', 'SP-L1-LIVING', 'SP-L1-KITCHEN', 'SP-L1-HALL', 'SP-L1-BED2', 'SP-L1-BED2-CLOSET', 'SP-L2-LOFT', 'SP-L2-HALL', 'SP-L2-PBATH', 'SP-L2-PRIMARY', 'SP-L0-LOUNGE', 'SP-L0-ENTRY', 'SP-L0-OFFICE', 'SP-L0-STORAGE-B'],
@@ -303,10 +304,10 @@
       restore(){ door('R28-POCKET', true, true); door('D-L1-06', true, true); door('D-L2-02', true, true); door('D-L2-03', true, true); door('D-L2-04', true, true);
         if(doorT('D-L1-07') > .5) PETS.clover.visible = true;
         if(has('sheetMain')){ PETS.clover.visible = true; PETS.clover.position.set(CLO[0] + 3.2, 0, CLO[2] - .4); W.sheetMain.visible = true; }
-        if(has('sheetLow')) PETS.mabel.position.set(MABEL1[0], TY + .02, MABEL1[2]);
+        if(has('sheetLow')) PETS.mabel.position.set(MABEL1[0], MABEL1[1] + .02, MABEL1[2]);
         if(has('sheetUp')) W.sheetUp.visible = true; if(has('mirror')) W.mirror.visible = true; admiralPose(); E.LIGHT.update(); },
       begin(resumed){ if(!S.notes.includes('first')) note('first', {title: 'Snowball’s first note', where: 'From the start', img: () => KEEP.first.cv, text: 'The longest day of the year. The sun’s path from morning to sunset, with four paw prints along it.'});
-        catAt(resumed ? [-7.5, 0, -1.0] : [-7.6, 0, 1.6]); if(!resumed) setTimeout(() => say('The longest day of the year. Lots of daylight to work with. Ask Biscuit.', 5200), E.phone() ? 7200 : 2600); },
+        catAt([-9.2, 0, -5.6]); if(!resumed) setTimeout(() => say('The longest day of the year. Lots of daylight to work with. Ask Biscuit.', 5200), E.phone() ? 7200 : 2600); },
       onHour(){ checks(); },
       onArrive(k){ if(k === 'kitchen') admiralPose(); if(k === 'terrace') door('D-L0-10', true); },
       progress: () => { const n = ['p_biscuit', 'p_pepper', 'p_admiral', 'p_sunset'].filter(has).length, m = ['sheetUp', 'sheetMain', 'sheetLow'].filter(has).length; return (n || m) ? `Numbers ${n}/4 · Sheets ${m}/3` : ''; },
@@ -335,5 +336,5 @@
   }
   window.ESCAPE_LEVELS.hard = {make, card: {
     lede: 'The longest day of the year, quarter to seven in the morning. Snowball has a plan, and by sunset he means to have pulled it off.',
-    note: E => `<div class="note"><p>Today is the longest day of the year, so it’s the best day for a heist. By sunset I’ll have taken everyone’s favourite thing and locked it all in my strongbox, somewhere you’ll never find.</p><p>Everybody saw a bit of what I did. None of them will just tell you. Here’s my day, if it helps:</p>${E.arcSVG(340, 150, false)}<p class="sig"><svg class="paw" viewBox="0 0 44 44" role="img" aria-label="Signed with a paw print"><g fill="currentColor"><ellipse cx="22" cy="29" rx="10" ry="8.4"/><ellipse cx="8.6" cy="18" rx="4" ry="5.2" transform="rotate(-24 8.6 18)"/><ellipse cx="16.6" cy="10" rx="4" ry="5.4" transform="rotate(-8 16.6 10)"/><ellipse cx="27.4" cy="10" rx="4" ry="5.4" transform="rotate(8 27.4 10)"/><ellipse cx="35.4" cy="18" rx="4" ry="5.2" transform="rotate(24 35.4 18)"/></g></svg></p></div>`}};
+    note: E => `<div class="note"><p>Today is the longest day of the year, so it’s the best day for a heist. I’ve taken everyone’s favourite thing and locked it all in my strongbox, somewhere you’ll never find.</p><p>I left my numbers around the house, written in light. Each one only shows at its own time of day. Everybody saw a bit of what I did. None of them will just tell you.</p><p>Here’s my day, if it helps:</p>${E.arcSVG(340, 150, false)}<p class="sig"><svg class="paw" viewBox="0 0 44 44" role="img" aria-label="Signed with a paw print"><g fill="currentColor"><ellipse cx="22" cy="29" rx="10" ry="8.4"/><ellipse cx="8.6" cy="18" rx="4" ry="5.2" transform="rotate(-24 8.6 18)"/><ellipse cx="16.6" cy="10" rx="4" ry="5.4" transform="rotate(-8 16.6 10)"/><ellipse cx="27.4" cy="10" rx="4" ry="5.4" transform="rotate(8 27.4 10)"/><ellipse cx="35.4" cy="18" rx="4" ry="5.2" transform="rotate(24 35.4 18)"/></g></svg></p></div>`}};
 })();

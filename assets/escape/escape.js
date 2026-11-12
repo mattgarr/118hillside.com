@@ -71,6 +71,7 @@
   const sunIn = id => { const st = LG && LG.steps[id]; return !!(st && st.sun) && S.hour >= st.sun[0] - 1e-6 && S.hour <= st.sun[1] + 1e-6; };
   function give(){ let any = false; for(const f of arguments){ if(!S.f[f]){ S.f[f] = true; any = true; if(/^p_/.test(f) && S.read[f] == null) S.read[f] = S.hour; } }
     if(!any) return false; S.lastProgress = performance.now(); ga('esc_step', {flags: Array.from(arguments).join(',')});
+    const fresh = LG ? LG.goals.filter(g => g.needs.some(f => Array.prototype.includes.call(arguments, f)) && g.needs.every(has) && !g.done.some(has)) : []; if(fresh.length) UI.goalId = fresh[0].id;
     const was = UI.goalId; setGoal(); if(UI.goalId !== was) { hintReset(); } if(!S.ex) setMarks(); save(); return true; }
 
   /* ================================================================== sun */
@@ -244,7 +245,9 @@
           const s = src.s = clamp((d.y - .02) / .09, 0, 1) * clamp(into / .14, 0, 1) * (src.k ? src.k() : 1); if(s <= 0) continue; any = true; best = Math.max(best, s);
           const path = (ctx, pts) => { ctx.beginPath(); pts.forEach((p, i) => { const q = toUV(api.proj(p, d)); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); };
           const col = paint ? (src.color || 'rgba(255,246,224,1)') : `rgb(255,${Math.round(238 - 46 * low)},${Math.round(206 - 86 * low)})`;
-          tg.clearRect(0, 0, cv.width, cv.height); tg.globalCompositeOperation = 'source-over'; tg.globalAlpha = 1; tg.fillStyle = tg.shadowColor = col; tg.shadowBlur = o.blur != null ? o.blur : 3; path(tg, quad); tg.fill();
+          tg.clearRect(0, 0, cv.width, cv.height); tg.globalCompositeOperation = 'source-over'; tg.globalAlpha = 1;
+          if(o.shade){ g.save(); g.globalAlpha = s; g.fillStyle = o.shade; path(g, quad); g.fill(); g.restore(); }
+          tg.fillStyle = tg.shadowColor = col; tg.shadowBlur = o.blur != null ? o.blur : 3; path(tg, quad); tg.fill();
           if(src.film){ // rainbow film: the colour sweeps across the pane, a different hue every hand's width
             const a = toUV(api.proj(quad[0], d)), b = toUV(api.proj(quad[1], d)), gr = tg.createLinearGradient(a[0], a[1], b[0], b[1]);
             for(let i = 0; i <= 12; i++) gr.addColorStop(i / 12, `hsl(${(i * 47 + 8) % 360},100%,56%)`);
@@ -832,8 +835,8 @@
   function sheetLock(sp){ const K = LG.locks[sp.lock], n = K.answer.length, r = sp.sheet ? sp.sheet() : {};
     padCur = padCur.length > n ? '' : padCur; padLock = false;
     const disp = sp.arc ? `<div class="escArc">${arcSVG(330, 138, true)}<div class="escDisp" id="escDisp" aria-live="polite"></div></div>` : `<div class="escDisp" id="escDisp" aria-live="polite"></div>`;
-    sheet(r.title || 'The lock', (r.body || '') + disp + `<p class="escPause" id="escPause"></p><div class="escPad" id="escPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button type="button" data-n="${k}">${k}</button>`).join('')}<button type="button" class="z" data-n="0">0</button><button type="button" class="c" data-n="c" aria-label="Delete the last digit">⌫</button></div>`, r.acts);
-    padDraw(); $$('.escPad button', sheetE).forEach(b => b.onclick = () => padPress(b.dataset.n)); pauseTick(); }
+    sheet(r.title || 'The lock', (r.body || '') + disp + (sp.arc ? `<div style="display:flex;justify-content:center;margin:4px 0 0"><button type="button" class="escBtn" id="escDel" style="min-height:42px;padding:0 16px" aria-label="Delete the last digit">⌫ Delete</button></div>` : '') + `<p class="escPause" id="escPause"></p><div class="escPad" id="escPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button type="button" data-n="${k}">${k}</button>`).join('')}<button type="button" class="z" data-n="0">0</button><button type="button" class="c" data-n="c" aria-label="Delete the last digit">⌫</button></div>`, r.acts);
+    padDraw(); $$('.escPad button', sheetE).forEach(b => b.onclick = () => padPress(b.dataset.n)); if($('#escDel')) $('#escDel').onclick = () => padPress('c'); pauseTick(); }
   function padDraw(cls){ const d = $('#escDisp'); if(!d) return; const sp = SPOTS[S.ex && S.ex.id]; if(!sp || !sp.lock) return; const n = LG.locks[sp.lock].answer.length;
     d.className = 'escDisp ' + (cls || '');
     if(sp.arc){ const pts = arcPts(330, 138); d.innerHTML = pts.map((p, i) => `<i style="left:${(p[0] / 330 * 100).toFixed(1)}%;top:${(p[1] / 138 * 100).toFixed(1)}%">${padCur[i] || ''}</i>`).join(''); }
