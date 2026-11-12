@@ -1916,7 +1916,10 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
       .replace(I0, `if( r40m < 0.999 ) iblIrradiance += ( 1.0 - r40m ) * getLightProbeIndirectIrradiance( geometry, maxMipLevel );\n\t\tif( r40m > 0.001 ) iblIrradiance += r40m * r40IrrB( geometry );`)
       .replace(R0, `#if defined( STANDARD ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tif( r40m < 0.999 ) radiance += ( 1.0 - r40m ) * getLightProbeIndirectRadiance( geometry.viewDir, geometry.normal, material.specularRoughness, maxMipLevel );\n\tif( r40m > 0.001 ) radiance += r40m * r40RadB( geometry.viewDir, geometry.normal, material.specularRoughness );\n\t#else\n\t${R0}\n\t#endif`);
     // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
-    THREE.Material.prototype.onBeforeCompile = function(sh){ if(this.isMeshStandardMaterial) r40Uniforms(this, sh, false); };
+    // (an accessor: page hooks keep the previous hook and call it as a plain function, so the default returns one bound to its material)
+    Object.defineProperty(THREE.Material.prototype, 'onBeforeCompile', {configurable: true,
+      get(){ const m = this; return function r40DefaultHook(sh){ if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
+      set(v){ Object.defineProperty(this, 'onBeforeCompile', {value: v, writable: true, configurable: true, enumerable: true}); }});
   } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
 function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const v = (m.userData.r40Mode || (m.userData.r40Mode = {value: new THREE.Vector2()})); v.value.set(R40E.on && !m.envMap ? 1 : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
