@@ -20832,7 +20832,7 @@ function r42DoorContact(G, na, I, nIa){
       for(const [a, b] of q){ h0 = Math.min(h0, a); h1 = Math.max(h1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
       area += Math.abs((q[1][0] - q[0][0]) * (q[2][1] - q[0][1]) - (q[2][0] - q[0][0]) * (q[1][1] - q[0][1])) / 2; }
     d0 = P0[tris[0][0] * 3] * n.x + P0[tris[0][0] * 3 + 1] * n.y + P0[tris[0][0] * 3 + 2] * n.z;
-    if(!ok || Math.abs(area - (h1 - h0) * (y1 - y0)) > .01 * (h1 - h0) * (y1 - y0) || h1 - h0 < 2.5 * W || y1 - y0 < 2.5 * W){ for(const t of tris) split(V(t[0]), V(t[1]), V(t[2]), sg, 0); continue; }
+    if(!ok || Math.abs(area - (h1 - h0) * (y1 - y0)) > .01 * (h1 - h0) * (y1 - y0) || h1 - h0 < 2.5 * W || y1 - y0 < 2.5 * W){ for(const t of tris) split(V(t[0]), V(t[1]), V(t[2]), sg, 0); R42D.split = (R42D.split || 0) + 1; continue; }
     // world point of (h, y) on this panel floor: p = hx * h + up * y + n * d (n, hx horizontal and orthonormal)
     const uvf = (() => { const t = tris[0], A = t.map(v => [P0[v * 3] * hx.x + P0[v * 3 + 2] * hx.z, P0[v * 3 + 1], U0 ? U0[v * 2] : 0, U0 ? U0[v * 2 + 1] : 0]);
       const det = (A[1][0] - A[0][0]) * (A[2][1] - A[0][1]) - (A[2][0] - A[0][0]) * (A[1][1] - A[0][1]);
@@ -20889,9 +20889,10 @@ function r42DoorSticking(G, na, nb, I, nIa){
   for(const x of inner){ if(partner.has(x)) continue; let best = null; for(const y of inner){ if(!partner.has(y) || Math.sign(D[y]) !== Math.sign(D[x])) continue; const d = inPlane(x, y); if(d < .002 && (!best || d < best.d)) best = {y, d}; } if(best) tgt.set(x, tgt.get(best.y)); }
   for(const [x, q] of tgt){ P[x * 3] = q[0]; P[x * 3 + 1] = q[1]; P[x * 3 + 2] = q[2]; }
   const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
-  for(let t = 0; t < nIa; t += 3){ const a = I[t], b = I[t + 1], q = I[t + 2]; if(!inner.has(a) && !inner.has(b) && !inner.has(q)) continue;
+  for(let t = 0; t < nIa; t += 3){ const a = I[t], b = I[t + 1], q = I[t + 2], mv = inner.has(a) || inner.has(b) || inner.has(q);
     A.fromArray(P, a * 3); B.fromArray(P, b * 3); C.fromArray(P, q * 3); const f = e1.subVectors(B, A).cross(e2.subVectors(C, A)); if(f.length() < 1e-8) continue; f.normalize();
-    const sg = Math.sign(D[a] || D[b] || D[q]); if((f.x * n.x + f.y * n.y + f.z * n.z) * sg < 0) f.negate();   // faces out of the slab on its own side
+    if(mv){ const sg = Math.sign(D[a] || D[b] || D[q]); if((f.x * n.x + f.y * n.y + f.z * n.z) * sg < 0) f.negate(); }   // a moved face looks out of the slab on its own side
+    else { const o = N[a * 3] + N[b * 3] + N[q * 3], o1 = N[a * 3 + 1] + N[b * 3 + 1] + N[q * 3 + 1], o2 = N[a * 3 + 2] + N[b * 3 + 2] + N[q * 3 + 2]; if(f.x * o + f.y * o1 + f.z * o2 < 0) f.negate(); }   // every other face: its own flat normal, on the model's side
     for(const v of [a, b, q]){ N[v * 3] = f.x; N[v * 3 + 1] = f.y; N[v * 3 + 2] = f.z; } }
   return inner.size; }
 function r42MergeDoorPanels(){
@@ -20902,7 +20903,7 @@ function r42MergeDoorPanels(){
     if(F.material !== T.material || F.matrix.equals(T.matrix) === false){ R42D.skipped.push(it.id + ':' + p.k + (F.material !== T.material ? ' material' : ' matrix')); continue; }
     const A = T.geometry, Bg = F.geometry, attrs = ['position', 'normal', 'uv'].filter(k => A.attributes[k] && Bg.attributes[k]);
     if(!A.index || !Bg.index || attrs.length < 2){ R42D.skipped.push(it.id + ':' + p.k + ' attrs'); continue; }
-    const na = A.attributes.position.count, nb = Bg.attributes.position.count, G = new THREE.BufferGeometry();
+    let na = A.attributes.position.count; const nb = Bg.attributes.position.count, G = new THREE.BufferGeometry();
     for(const k of attrs){ const a = A.attributes[k], b = Bg.attributes[k], s = a.itemSize, arr = new Float32Array((na + nb) * s);
       const gc = (q, i, c) => c === 0 ? q.getX(i) : c === 1 ? q.getY(i) : c === 2 ? q.getZ(i) : q.getW(i);
       for(let i = 0; i < na; i++) for(let c = 0; c < s; c++) arr[i * s + c] = gc(a, i, c);
@@ -20910,6 +20911,15 @@ function r42MergeDoorPanels(){
       G.setAttribute(k, new THREE.BufferAttribute(arr, s)); }
     const ia = A.index, ib = Bg.index; let I = new (na + nb > 65535 ? Uint32Array : Uint16Array)(ia.count + ib.count);
     for(let i = 0; i < ia.count; i++) I[i] = ia.getX(i); for(let i = 0; i < ib.count; i++) I[ia.count + i] = na + ib.getX(i);
+    // hard edges: the model shares a few vertices between faces that meet at an angle; give every frame triangle its own three vertices so
+    // the bevel, the shoulder and the faces each keep their own flat normal (no smoothing across the edges)
+    { const nIa = ia.count, keys = Object.keys(G.attributes), nn = nIa + nb;
+      for(const k of keys){ const a = G.attributes[k], sz = a.itemSize, src = a.array, dst = new Float32Array(nn * sz);
+        for(let i = 0; i < nIa; i++) for(let c = 0; c < sz; c++) dst[i * sz + c] = src[I[i] * sz + c];
+        for(let j = 0; j < nb; j++) for(let c = 0; c < sz; c++) dst[(nIa + j) * sz + c] = src[(na + j) * sz + c];
+        G.setAttribute(k, new THREE.BufferAttribute(dst, sz)); }
+      const I2 = new (nn > 65535 ? Uint32Array : Uint16Array)(I.length); for(let i = 0; i < nIa; i++) I2[i] = i; for(let i = nIa; i < I.length; i++) I2[i] = I[i] - na + nIa;
+      I = I2; na = nIa; }
     try{ const nv = r42DoorSticking(G, na, nb, I, ia.count); R42D.bevel += nv; (R42D.per || (R42D.per = {}))[it.id + ':' + p.k] = nv; }catch(e){ R42D.skipped.push(it.id + ':' + p.k + ' bevel ' + e); }
     try{ const r = r42DoorContact(G, na, I, ia.count); if(r){ I = r; R42D.ao++; } }catch(e){ R42D.skipped.push(it.id + ':' + p.k + ' contact ' + e); }
     // in place on the frame's own geometry object: the design-concept switch (BIM2.setVariant) hides an element by collapsing its triangles
