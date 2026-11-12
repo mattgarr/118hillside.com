@@ -158,7 +158,7 @@
       // ---- the shower glass and the mirror
       W.glass = prop(glassCanvas(false), [-11.2, UY + 3.5, -19.40], [0, 0, -1], 3.6, 1.34, {group: 'upper', tone: 1, both: false});
       // lined up with the real reflection as seen from the mirror pose, and shown only there (some phones draw the mirror without a reflection)
-      W.mirror = prop(glassCanvas(true), [-11.44, 10.16, -25.5], [0, 0, 1], 1.45, .54, {group: 'upper', tone: 1}); W.mirror.visible = false;
+      W.mirror = prop(glassCanvas(true), [-11.39, 10.04, -25.5], [0, 0, 1], 1.45, .54, {group: 'upper', tone: 1}); W.mirror.visible = false;
       // ---- the window seat cushion and the upper sheet under it
       const ks2 = keep('sheetUp', () => sheetDraw('upper', true)); W.sheetUp = ks2.mesh = prop(ks2.cv, [SEAT[0], SEAT[1] + .02, SEAT[2]], [0, 1, 0], 1.6, 1.25, {group: 'upper', spin: -Math.PI / 2}); W.sheetUp.visible = false;
       // ---- the main sheet (Clover leaves it on the closet floor) and the lower sheet (under Mabel)
