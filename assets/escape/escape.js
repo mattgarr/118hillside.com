@@ -247,8 +247,8 @@
           tg.clearRect(0, 0, cv.width, cv.height); tg.globalCompositeOperation = 'source-over'; tg.globalAlpha = 1; tg.fillStyle = tg.shadowColor = col; tg.shadowBlur = o.blur != null ? o.blur : 3; path(tg, quad); tg.fill();
           if(src.film){ // rainbow film: the colour sweeps across the pane, a different hue every hand's width
             const a = toUV(api.proj(quad[0], d)), b = toUV(api.proj(quad[1], d)), gr = tg.createLinearGradient(a[0], a[1], b[0], b[1]);
-            for(let i = 0; i <= 12; i++) gr.addColorStop(i / 12, `hsl(${(i * 47 + 8) % 360},95%,62%)`);
-            tg.globalCompositeOperation = 'source-atop'; tg.shadowBlur = 0; tg.fillStyle = gr; tg.globalAlpha = .82; path(tg, quad); tg.fill(); tg.globalAlpha = 1; }
+            for(let i = 0; i <= 12; i++) gr.addColorStop(i / 12, `hsl(${(i * 47 + 8) % 360},100%,56%)`);
+            tg.globalCompositeOperation = 'source-atop'; tg.shadowBlur = 0; tg.fillStyle = gr; tg.globalAlpha = 1; path(tg, quad); tg.fill(); tg.globalAlpha = 1; }
           tg.globalCompositeOperation = 'destination-out'; tg.shadowColor = tg.fillStyle = '#000'; tg.shadowBlur = 2;
           for(const b of (src.bars ? src.bars() : [])){ path(tg, b); tg.fill(); }
           for(const st of (src.strips ? src.strips() : [])){ tg.globalAlpha = st.card ? 1 : .1; tg.shadowBlur = st.card ? 2.5 : 0; path(tg, st.quad); tg.fill(); }
@@ -256,6 +256,7 @@
           if(src.decal){ tg.globalCompositeOperation = 'destination-out'; src.decal(tg, v => toUV(v)); }
           tg.globalCompositeOperation = 'source-over';
           g.save(); g.globalAlpha = s; g.drawImage(tmp, 0, 0); g.restore(); }
+        if(any && o.base){ g.save(); g.globalCompositeOperation = 'destination-over'; g.globalAlpha = best; g.fillStyle = o.base; g.fillRect(0, 0, cv.width, cv.height); g.restore(); }   // a screen: shadow where the light isn't
         if(any && clip){ g.save(); g.globalCompositeOperation = 'destination-in'; g.beginPath(); clip.forEach((p, i) => { const q = toUV(new THREE.Vector3(p[0], F.O.y, p[1])); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); g.restore(); }
         if(any && o.holes) for(const hp of o.holes){ g.save(); g.globalCompositeOperation = 'destination-out'; g.beginPath(); hp.forEach((p, i) => { const q = toUV(new THREE.Vector3(p[0], F.O.y, p[1])); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fill(); g.restore(); }
         api.s = best; mesh.visible = any; const gain = o.gain || 1.45; if(!paint) mat.color.setRGB(gain, gain * .94, gain * .8); tex.needsUpdate = true; if(o.after) o.after(api); }};
@@ -821,7 +822,8 @@
     $('#escBack span').textContent = 'Back to the ' + PLACES[S.place].name.toLowerCase(); }
   function sheetFor(ex){ const sp = SPOTS[ex.id]; if(!sp) return; if(sp.lock) return sheetLock(sp); const r = sp.sheet(); sheet(r.title, r.body, r.acts); if(r.after) r.after(sheetE); }
   // an animal's line, with its picture
-  const line = (who, text, big) => `<div class="line${big ? ' big' : ''}">${window.ESC_PETS && who !== 'snowball' ? ESC_PETS.icon(who, 30) : ''}<span>${esc(text)}</span></div>`;
+  const CATICON = () => UI.cat || (UI.cat = window.SNOWBALL ? SNOWBALL.svg({id: 'sbln', seed: 7}).replace(/viewBox="[^"]+"/, 'viewBox="130 20 240 250"').replace('<svg ', '<svg width="30" height="30" ') : '');
+  const line = (who, text, big) => `<div class="line${big ? ' big' : ''}">${who === 'snowball' ? CATICON() : window.ESC_PETS ? ESC_PETS.icon(who, 30) : ''}<span>${esc(text)}</span></div>`;
   // do something to the house from a sheet, then let it finish moving before the sheet and the view catch up
   function act(fn, ms){ S.busy = true; try{ fn(); }catch(e){ console.error('[escape] act', e); } setTimeout(() => { S.busy = false; if(S.ex){ sheetFor(S.ex); reframe(); } else setMarks(); save(); }, reduce ? 60 : (ms || 700)); }
 
@@ -851,7 +853,7 @@
   /* ---- the notebook (Medium and Hard): every clue at full size, and the numbers so far */
   const NOTES = {};   // id -> {title, img: canvas, text, kind, who}
   const bookOpen = () => !!bookE && bookE.classList.contains('on');
-  function note(id, def){ if(def) NOTES[id] = Object.assign(NOTES[id] || {}, def); if(!S.notes.includes(id)){ S.notes.push(id); const b = $('#escBookBtn'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); SND.paper(); toast('In your notebook: ' + (NOTES[id].title || 'a clue').toLowerCase(), 2000); }
+  function note(id, def){ if(def) NOTES[id] = Object.assign(NOTES[id] || {}, def); if(!S.notes.includes(id)){ S.notes.push(id); const b = $('#escBookBtn'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); SND.paper(); toast('Added to your notebook: ' + (NOTES[id].title || 'a clue'), 2200); }
     bookCount(); save(); }
   function bookCount(){ const b = $('#escBookBtn'); if(!b) return; b.classList.toggle('on', !!L && !!L.book); $('#escBookN').textContent = S.notes.length + Object.keys(LG.parts).filter(p => has(p) && LG.parts[p].value.length === 1).length; }
   const imgOf = id => { const N = NOTES[id]; if(!N || !N.img) return ''; if(!N.url) try{ N.url = N.img().toDataURL('image/png'); }catch(e){ N.url = ''; } return N.url; };
@@ -888,7 +890,7 @@
     const c = el('div', {id: 'escCard'}); document.body.appendChild(c);
     const draw = () => { const M = META[LEVEL], best = store.get('esc.' + LEVEL + '.v2.best') || (LEVEL === 'easy' ? store.get('esc.easy.v2.best') : null), sv = saved(LEVEL), D = window.ESCAPE_LEVELS[LEVEL] && window.ESCAPE_LEVELS[LEVEL].card;
       const lv = LEVELS.map(k => { const m = META[k], b = store.get('esc.' + k + '.v2.best'); return `<button type="button" role="radio" aria-checked="${k === LEVEL}" data-l="${k}"><b>${m.name}</b><span class="t">${m.title}</span><small>${m.time}. ${m.who}.${b ? ` <span class="best">Best ${fmtT(b.time)}</span>` : ''}</small></button>`; }).join('');
-      const note = D ? D.note : `<div class="note"><p>${esc(M.blurb)}</p></div>`;
+      const note = D ? (typeof D.note === 'function' ? D.note(API) : D.note) : `<div class="note"><p>${esc(M.blurb)}</p></div>`;
       c.innerHTML = `<div class="c" role="dialog" aria-labelledby="escH"><p class="k">Locked In at Hillside · ${M.name} · ${M.where}</p><h2 id="escH">${M.title}</h2>
         <div class="lv" role="radiogroup" aria-label="Choose a level">${lv}</div>
         ${D && D.lede ? `<p class="lede">${D.lede}</p>` : ''}${note}

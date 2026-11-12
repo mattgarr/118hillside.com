@@ -38,7 +38,7 @@
         note: 'The skylit office, across the lower entry from the laundry room. Two skylights, and windows on two walls.'},
       lhall:    {name: 'Lower hall', short: 'Lower hall', floor: 'lower', pos: [-18.5, LE, -26.6], face: [-18.5, LY + 4.4, -36.0], map: [-18.5, -30.0],
         note: 'The lower hall: a bedroom at each end and the bath between them.'},
-      lbed2:    {name: 'Lower-level bedroom 2', short: 'Bedroom 2', floor: 'lower', pos: [-21.6, LE, -27.6], face: [-24.6, LY + 1.0, -37.4], map: [-26.0, -33.0],
+      lbed2:    {name: 'Downstairs bedroom', short: 'Bedroom', floor: 'lower', pos: [-21.6, LE, -27.6], face: [-24.6, LY + 1.0, -37.4], map: [-26.0, -33.0],
         note: 'A bedroom with skylights overhead and rainbow film on the bottom of its window.'}};
     const NODES = {k1: [15.7, 12.4], k2: [15.8, 17.2], g1: [15.2, 26.4], g2: [15.6, 32.4], fb: [17.4, 33.0], kh: [20.3, 9.3], h1: [23.8, 8.3], h2: [23.8, 13.5], hb: [23.8, 5.2],
       a1: [4.4, -4.9], a2: [11.4, -4.9], a3: [12.6, -1.0], a4: [12.75, 5.1], kk: [12.8, 8.4],
@@ -78,25 +78,26 @@
       const sp = ids.map(id => ({id, p: E.spacePoly(id)})).filter(s => s.p);
       let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for(const s of sp) for(const [a, b] of s.p){ x0 = Math.min(x0, a); x1 = Math.max(x1, a); z0 = Math.min(z0, b); z1 = Math.max(z1, b); }
       // turned so the dining table sits at the bottom and the hall runs up the page, as you'd see it walking in from the kitchen
-      const k = Math.min((w - 140) / (x1 - x0), (h - 150) / (z1 - z0)), ox = (w - (x1 - x0) * k) / 2, oy = 70 + (h - 150 - (z1 - z0) * k) / 2;
-      const P = (a, b) => [ox + (a - x0) * k, oy + (z1 - b) * k];
-      for(const s of sp){ const big = !/CLOSET/.test(s.id); ink.line(s.p.concat([s.p[0]]).map(q => P(q[0], q[1])), big ? 6 : 4, big ? '#2a3448' : '#5a6478'); }
+      // turned like the map in the corner of the screen: the long way of the wing runs across, the windows of the great room at the top
+      const k = Math.min((w - 120) / (z1 - z0), (h - 170) / (x1 - x0)), ox = (w - (z1 - z0) * k) / 2, oy = 90 + (h - 170 - (x1 - x0) * k) / 2;
+      const P = (a, b) => [ox + (b - z0) * k, oy + (x1 - a) * k];
+      for(const s of sp){ const big = !/CLOSET/.test(s.id); ink.line(s.p.concat([s.p[0]]).map(q => P(q[0], q[1])), big ? 9 : 6, big ? '#2a3448' : '#5a6478'); }
       // the dining table and its chairs, in the great room
-      const t0 = P(8.6, 23.5), t1 = P(12.8, 19.3); x.lineWidth = 6; x.strokeStyle = '#7a4b22'; x.strokeRect(t0[0], t0[1], t1[0] - t0[0], t1[1] - t0[1]);
+      const t0 = P(12.8, 19.3), t1 = P(8.6, 23.5); x.lineWidth = 7; x.strokeStyle = '#7a4b22'; x.strokeRect(t0[0], t0[1], t1[0] - t0[0], t1[1] - t0[1]);
       for(const [a, b] of [[9.5, 24.3], [11.6, 24.3], [9.5, 18.5], [11.6, 18.5], [7.8, 21.4], [13.6, 21.4]]){ const c = P(a, b); x.strokeRect(c[0] - 14, c[1] - 14, 28, 28); }
       ink.text('table', (t0[0] + t1[0]) / 2, (t0[1] + t1[1]) / 2, 40, '#7a4b22');
       // the pocket door from the dining area into the front bedroom, drawn as a gap with a little arrow
-      const d0 = P(17.2, 32.1), d1 = P(17.2, 33.9); x.fillStyle = '#fdfcf8'; x.fillRect(d0[0] - 8, Math.min(d0[1], d1[1]), 16, Math.abs(d1[1] - d0[1]));
-      ink.line([[d0[0] - 50, (d0[1] + d1[1]) / 2], [d0[0] + 40, (d0[1] + d1[1]) / 2]], 5, '#c0392b'); ink.line([[d0[0] + 22, (d0[1] + d1[1]) / 2 - 16], [d0[0] + 40, (d0[1] + d1[1]) / 2], [d0[0] + 22, (d0[1] + d1[1]) / 2 + 16]], 5, '#c0392b');
+      const d0 = P(17.2, 32.0), d1 = P(17.2, 34.0), dm = [(d0[0] + d1[0]) / 2, (d0[1] + d1[1]) / 2]; x.fillStyle = '#fdfcf8'; x.fillRect(Math.min(d0[0], d1[0]), dm[1] - 9, Math.abs(d1[0] - d0[0]), 18);
+      ink.line([[dm[0], dm[1] + 60], [dm[0], dm[1] - 40]], 6, '#c0392b'); ink.line([[dm[0] - 16, dm[1] - 20], [dm[0], dm[1] - 40], [dm[0] + 16, dm[1] - 20]], 6, '#c0392b');
       // the carrot, on the front bedroom's closet
       const c = P(31.0, 29.0); x.save(); x.translate(c[0], c[1]); x.rotate(-.5); x.fillStyle = '#f08a24'; x.beginPath(); x.moveTo(-14, -36); x.lineTo(14, -36); x.lineTo(0, 46); x.closePath(); x.fill();
       x.strokeStyle = '#b55e10'; x.lineWidth = 3; for(const y of [-20, -4, 12]){ x.beginPath(); x.moveTo(-8, y); x.lineTo(4, y + 4); x.stroke(); }
       x.fillStyle = '#3c9a3c'; for(const a of [-.5, 0, .5]){ x.save(); x.rotate(a); x.beginPath(); x.ellipse(0, -52, 6, 18, 0, 0, 7); x.fill(); x.restore(); } x.restore();
       ink.line([[c[0] - 46, c[1] - 46], [c[0] + 46, c[1] + 46]], 6, '#c0392b'); ink.line([[c[0] + 46, c[1] - 46], [c[0] - 46, c[1] + 46]], 6, '#c0392b');
-      ink.text('kitchen', P(13, 11)[0], P(13, 11)[1], 38, '#5a6478');
+      ink.text('kitchen', P(11, 10.5)[0], P(11, 10.5)[1], 44, '#5a6478');
       // signed with a rabbit's hind foot
       x.save(); x.translate(w - 110, h - 70); x.rotate(-.3); x.fillStyle = '#5f7f8c'; x.beginPath(); x.ellipse(0, 0, 18, 40, 0, 0, 7); x.fill(); for(const dx of [-12, -4, 4, 12]){ x.beginPath(); x.ellipse(dx, -46, 5, 8, 0, 0, 7); x.fill(); } x.restore();
-      ink.text('I’m here. Don’t thump.', 240, 36, 40, '#2a3448'); }, 11); }
+      ink.text('I’m here. Don’t thump.', 250, 52, 46, '#2a3448'); }, 11); }
     // Biscuit's number: six dog biscuits laid out as a big 6, on a napkin with a party hat doodled in the corner
     function biscuitCanvas(){ return paperCanvas(700, 900, 'card', (x, w, h, ink) => {
       const bone = (cx, cy, a) => { x.save(); x.translate(cx, cy); x.rotate(a); x.fillStyle = '#c98f4e'; x.strokeStyle = '#8a5a26'; x.lineWidth = 4;
@@ -140,15 +141,15 @@
     const W = {};
     const greatUp = () => shadeT('WN-L1-03') < .5;
     const BED = [11.6, 0, 25.4];   // Biscuit's bed, in the walkway between the dining table and the sitting area
-    const NEST = [-30.15, -1.62, -9.75];   // Nugget's nest, on the cube shelf in the office under the skylights
+    const NEST = [-30.15, -2.18, -9.75];   // Nugget's nest, on the cube shelf in the office under the skylights
     function build(){
       shade('WN-L1-03', true, true);   // somebody pulled the great-room shades down
       // the ring where the tin stood, flat on the coffee bar counter
       W.ring = prop(ringCanvas(), [18.0, 2.935, 12.45], [0, 1, 0], 1.1, 1.1, {tone: 1});
       // Clover's plan, under a magnet on the kitchen fridge
       const k1 = keep('plan', 1000, 760, 'paper', null); k1.make = planCanvas; k1.cv = planCanvas();
-      W.plan = k1.mesh = prop(k1.cv, [18.35, 4.55, 8.06], [0, 0, 1], 1.45, 1.1);
-      const mag = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .04, 18), new THREE.MeshStandardMaterial({color: lin(0xe8506a), roughness: .4})); mag.rotation.x = Math.PI / 2; mag.position.set(18.35, 5.02, 8.09); mag.raycast = () => {}; H.grp('main').add(mag);
+      W.plan = k1.mesh = prop(k1.cv, [17.62, 4.5, 7.82], [0, 0, 1], 1.32, 1.0);
+      const mag = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .04, 18), new THREE.MeshStandardMaterial({color: lin(0xe8506a), roughness: .4})); mag.rotation.x = Math.PI / 2; mag.position.set(17.62, 4.98, 7.86); mag.raycast = () => {}; H.grp('main').add(mag);
       // Biscuit asleep on his bed, with his number under him
       const bed = new THREE.Group(); bed.name = 'esc-dogbed';
       const rim = new THREE.Mesh(new THREE.TorusGeometry(1.15, .32, 12, 32), new THREE.MeshStandardMaterial({color: lin(0x6b7f9a), roughness: .95})); rim.rotation.x = Math.PI / 2; rim.scale.set(1.25, 1, 1); rim.position.y = .3; bed.add(rim);
@@ -156,7 +157,7 @@
       bed.position.set(BED[0], 0, BED[2]); bed.traverse(o => { o.raycast = () => {}; }); H.grp('main').add(bed);
       const k2 = keep('biscuit', 700, 900, 'card', null); k2.make = biscuitCanvas; k2.cv = biscuitCanvas();
       W.biscuitCard = k2.mesh = prop(k2.cv, [BED[0], .235, BED[2]], [0, 1, 0], 1.25, 1.6, {spin: Math.PI});
-      W.light = lightPlane({floor: 'SP-L1-GREAT', ppf: 26, sources: [windowSource('WN-L1-03', {room: 'SP-L1-GREAT', shade: 'WN-L1-03', bars: [[-.17, .17, 0, 9]]})]});
+      W.light = lightPlane({floor: 'SP-L1-GREAT', ppf: 26, gain: 2.3, sources: [windowSource('WN-L1-03', {room: 'SP-L1-GREAT', shade: 'WN-L1-03', bars: [[-.17, .17, 0, 9]]})]});
       // Pepper's rainbow: card and tracing paper on the film of lower-level bedroom 2's window, a 9 at half past five in July
       const src0 = windowSource('WN-L0-07', {room: 'SP-L0-BED2'}), op = src0.op, out = src0.out();
       const strips = makeStrips('9', {o: [-23.0, LY + .05, -34.0], right: [1, 0, 0], up: [0, 0, -1], size: 1.1, pitch: 1.5}, {p: [op.c[0], 0, op.c[1]], n: [out.x, 0, out.z]}, 17.5);
@@ -173,24 +174,24 @@
       lock.position.set(-20.76, LY + 2.45, -22.6); lock.raycast = () => {}; H.grp('main').add(lock); lockCanvas('', 'locked'); lt.needsUpdate = true;
       // the animals
       petAt('biscuit', [BED[0], .2, BED[2]], yawTo(BED, [13.6, 0, 31.6])); PETS.biscuit.rotation.z = 0;
-      petAt('clover', [31.1, 0, 27.6], yawTo([31.1, 0, 27.6], [19.4, 0, 33.4])); PETS.clover.visible = false;
+      petAt('clover', [31.1, 0, 27.6], yawTo([31.1, 0, 27.6], [19.4, 0, 33.4])); PETS.clover.scale.setScalar(.56); PETS.clover.visible = false; W.carrot = carrot([31.55, .32, 27.35]); W.carrot.visible = false;
       petAt('pepper', [-22.0, LY, -38.4], yawTo([-22.0, 0, -38.4], [-21.6, 0, -27.6]));
       petAt('nugget', [NEST[0], NEST[1] + .12, NEST[2]], yawTo(NEST, [-25.0, 0, -11.0]));
       E.makeCat = true; }
     const sleepy = g => { if(!g) return; g.rotation.z = 0; };
-    function biscuitAsleep(){ const g = PETS.biscuit; if(!g) return; g.position.set(BED[0], .2, BED[2]); g.rotation.set(0, yawTo(BED, [13.6, 0, 31.6]), 0); g.scale.set(.78, .5, .78); W.biscuitCard.visible = false; }
-    function biscuitUp(anim){ const g = PETS.biscuit; if(!g) return; g.scale.setScalar(.78); W.biscuitCard.visible = true; const to = [BED[0] + 2.6, 0, BED[2] + 1.0];
+    function biscuitAsleep(){ const g = PETS.biscuit; if(!g) return; if(!W.zb) W.zb = zzz([BED[0] + .4, 2.9, BED[2]]); W.zb.visible = true; g.position.set(BED[0], .2, BED[2]); g.rotation.set(0, yawTo(BED, [13.6, 0, 31.6]), 0); g.scale.set(.78, .5, .78); W.biscuitCard.visible = false; }
+    function biscuitUp(anim){ const g = PETS.biscuit; if(!g) return; if(W.zb) W.zb.visible = false; g.scale.setScalar(.78); W.biscuitCard.visible = true; const to = [BED[0] - 2.3, 0, BED[2] + .4];
       if(anim) petWalk('biscuit', to, 1400, () => { g.rotation.y = yawTo(to, BED); }); else { g.position.set(...to); g.rotation.y = yawTo(to, BED); } }
-    function nuggetAsleep(){ const g = PETS.nugget; if(!g) return; g.position.set(NEST[0], NEST[1] + .12, NEST[2]); g.scale.set(.2, .13, .2); W.nuggetCard.visible = false; }
-    function nuggetUp(anim){ const g = PETS.nugget; if(!g) return; g.scale.setScalar(.2); W.nuggetCard.visible = true; const to = [NEST[0], NEST[1] + .02, NEST[2] + .95];
+    function nuggetAsleep(){ const g = PETS.nugget; if(!g) return; if(!W.zn) W.zn = zzz([NEST[0], NEST[1] + 1.0, NEST[2]]); W.zn.scale.set(.7, .7, 1); W.zn.visible = true; g.position.set(NEST[0], NEST[1] + .12, NEST[2]); g.scale.set(.2, .13, .2); W.nuggetCard.visible = false; }
+    function nuggetUp(anim){ const g = PETS.nugget; if(!g) return; if(W.zn) W.zn.visible = false; g.scale.setScalar(.2); W.nuggetCard.visible = true; const to = [NEST[0], NEST[1] + .02, NEST[2] + .95];
       if(anim) petWalk('nugget', to, 900); else g.position.set(...to); }
-    function cloverOut(){ const g = PETS.clover; if(!g) return; g.visible = true; }
+    function cloverOut(){ const g = PETS.clover; if(!g) return; g.visible = true; if(W.carrot) W.carrot.visible = true; }
 
     // Biscuit wakes when the real sun reaches his bed
     function sunOnBed(){ return greatUp() && W.light && W.light.litAt(BED[0], BED[2]); }
     function checks(user){
       if(has('metBiscuit') && has('greatUp') && !has('biscuitAwake') && sunOnBed()){ give('biscuitAwake'); biscuitUp(true); SND.woof(); setTimeout(() => SND.woof(), 260);
-        say(S.place === 'great' ? 'Sun on the nose. Biscuit’s up. What was he lying on.' : 'That’s a bark. Biscuit’s awake. Great room.', 5200); }
+        say(S.place === 'great' ? 'Sun on the nose. Biscuit’s up. Check what he was lying on.' : 'That’s a bark. Biscuit’s awake. Great room.', 5200); }
       if(has('metNugget') && !has('nuggetAwake') && S.hour >= 20.75){ give('nuggetAwake', 'p_nugget', 'p_order'); nuggetUp(true); SND.squeak(); setTimeout(() => SND.squeak(), 180);
         if(S.place === 'office') say('Morning, Nugget. He was asleep on a card.', 5200); else say('Squeaking. Nugget’s up. Office.', 5200);
         noteNugget(); }
@@ -207,7 +208,7 @@
     KEEP.case = {make: caseCanvas, cv: null}; onFont(() => { if(NOTES.case) NOTES.case.url = ''; });
     const noteMap = () => note('plan', {title: 'Clover’s plan', where: 'On the kitchen fridge', img: imgK('plan'), text: 'A plan of the bedroom wing, with a carrot drawn on one closet. Look at which room the carrot is in, and where its door is.'});
     const noteBiscuit = () => note('biscuit', {title: 'Under Biscuit', where: 'On his bed, in the great room', img: imgK('biscuit'), text: 'Biscuits laid out in a six. And a party hat. Odd.'});
-    const notePepper = () => note('pepper', {title: 'Pepper’s rainbow', where: 'Lower-level bedroom 2, in the evening sun', img: () => rainbowCanvas(), text: 'In the rainbow on the floor, the card on the window leaves a nine.'});
+    const notePepper = () => note('pepper', {title: 'Pepper’s rainbow', where: 'The downstairs bedroom, in the evening sun', img: () => rainbowCanvas(), text: 'In the rainbow on the floor, the card on the window leaves a nine.'});
     const noteNugget = () => note('nugget', {title: 'Under Nugget', where: 'His nest in the skylit office', img: imgK('nugget'), text: 'Four faces in a row: Clover, Pepper, Biscuit, Nugget. His own number is a two, in sunflower seeds. And the lounge fridge, with balloons.'});
     function rainbowCanvas(){ return paperCanvas(600, 760, 'paper', (x, w, h, ink) => { const g = x.createLinearGradient(40, 0, w - 40, h); for(let i = 0; i <= 8; i++) g.addColorStop(i / 8, `hsl(${(i * 47 + 8) % 360},90%,72%)`); x.fillStyle = g; x.fillRect(40, 40, w - 80, h - 80);
       const R = {a: [.25, .9, .75, 1], b: [.75, .5, .87, .9], c: [.75, .1, .87, .5], d: [.25, 0, .75, .1], f: [.13, .5, .25, .9], g: [.25, .45, .75, .55]}; x.fillStyle = 'rgba(40,30,30,.55)';
@@ -219,11 +220,11 @@
       ring: {from: ['kitchen'], label: () => 'Where the tin was', at: () => [18.0, 3.2, 12.45], pos: [16.6, 5.2, 11.6], look: [18.0, 2.9, 12.45], fit: {w: 2.4, h: 1.8},
         sheet: () => ({title: 'Where the tin was', body: `<p>A clean ring in the crumbs on the coffee bar, exactly the size of a treat tin. Whoever took it didn’t bother to wipe up.</p>${line('snowball', 'Exhibit A. The scene of the crime. I’ve been robbed.')}`}),
         seen(){ noteCase(); }},
-      plan: {from: ['kitchen'], label: () => 'Drawing on the fridge', at: () => [18.35, 4.55, 8.2], pos: [18.35, 4.7, 11.0], look: [18.35, 4.55, 8.06], fit: {w: 1.7, h: 1.35},
+      plan: {from: ['kitchen'], label: () => 'Drawing on the fridge', at: () => [17.62, 4.5, 7.95], pos: [17.62, 4.6, 10.6], look: [17.62, 4.5, 7.82], fit: {w: 1.55, h: 1.2},
         sheet: () => ({title: 'Clover’s plan', body: `<p>A plan of the bedroom wing in pencil, held up with a magnet. Three bedrooms, a hall, a bath and the dining table, and a carrot drawn on one closet. Signed with a rabbit’s foot.</p>`}),
-        seen(){ if(give('cloverMap')){ noteMap(); say('Rabbits draw better plans than you’d think. Where’s the carrot.', 5200); } }},
+        seen(){ if(give('cloverMap')){ noteMap(); say('Rabbits draw better plans than you’d think. Find the carrot.', 5200); } }},
       biscuit: {from: ['great'], when: () => !has('biscuitAwake'), label: () => 'Biscuit', at: () => [BED[0], 1.6, BED[2]], pos: [BED[0] + 1.6, 4.6, BED[2] + 4.2], look: [BED[0], .6, BED[2]], fit: {w: 3.4, h: 2.6},
-        sheet: () => ({title: 'Biscuit', body: `${line('biscuit', 'Zzz. Mm. Sun. Where’s the sun gone.')}<p>Biscuit is fast asleep on his bed in the gloom. Both big shades are down. He looks guilty, but he always looks guilty.</p>${line('snowball', 'Biscuit only naps in the sun. Somebody pulled the shades.')}`}),
+        sheet: () => ({title: 'Biscuit', body: `${line('biscuit', 'Zzz. Mm. Sun. Sun’s gone. Zzz.')}<p>Biscuit is fast asleep on his bed in the gloom. Both big shades are down. He looks guilty, but he always looks guilty.</p>${line('snowball', 'Biscuit only naps in the sun. Somebody pulled the shades.')}`}),
         seen(){ give('metBiscuit'); checks(); }},
       shades: {from: ['great'], when: () => has('metBiscuit'), label: () => greatUp() ? 'Big windows' : 'Shades on the big windows', at: () => [4.9, 5.4, 25.4], pos: [10.6, 5.2, 25.4], look: [4.7, 4.6, 25.4], fit: {w: 14.5, h: 6.4},
         sheet: () => ({title: 'The big windows', body: greatUp() ? '<p>Fourteen feet of glass, with the roller shades rolled right up. The sun comes in here in the afternoon and moves across the floor as it goes down.</p>' : '<p>Two picture windows, fourteen feet of glass, with both roller shades pulled all the way down.</p>',
@@ -235,7 +236,7 @@
         pose: () => ({pos: [22.6, 5.2, 29.0], look: [30.4, 2.6, 29.0], fit: {w: 7.4, h: 6.6}}),
         sheet: () => { const open = doorT('D-L1-09') > .5;
           if(!open) return {title: 'The closet', body: '<p>A closet behind three sliding doors, each on its own track.</p>', acts: [{label: 'Slide the doors open', run: () => act(() => { SND.slide(); door('D-L1-09', true); setTimeout(() => { cloverOut(); }, 500); }, 1300)}]};
-          if(!has('p_clover')) return {title: 'Clover', body: `${line('clover', 'Oh. You found me. Please don’t thump.')}<p>Clover is pressed into the corner behind the coats, holding a carrot tied up in ribbon. She looks at you, and then she thumps her back foot. Again. And again.</p><div class="thumps">${['THUMP', 'THUMP', 'THUMP', 'THUMP'].map((t, i) => `<span style="animation-delay:${.45 + i * .55}s">${t}</span>`).join('')}</div>`};
+          if(!has('p_clover')) return {title: 'Clover', body: `${line('clover', 'Oh. You found me. Please don’t thump.')}<p>Clover is pressed into the corner of the closet, next to a carrot tied up in ribbon. She looks at you, and then she thumps her back foot. Again. And again.</p><div class="thumps">${['THUMP', 'THUMP', 'THUMP', 'THUMP'].map((t, i) => `<span style="animation-delay:${.45 + i * .55}s">${t}</span>`).join('')}</div>`};
           return {title: 'Clover', body: `${line('clover', 'That was my number. Four. Please go away now. Nicely.')}<div class="got">${ICON('clover', 34)}<b>4</b><span>Clover thumped four times</span></div>`}; },
         seen(){ if(doorT('D-L1-09') > .5 && !has('p_clover')){ for(let i = 0; i < 4; i++) setTimeout(() => SND.thump(), 450 + i * 550);
             setTimeout(() => { if(give('cloverFound', 'p_clover')){ note('clover', {title: 'Clover’s thumps', where: 'Front bedroom closet', img: () => thumpCanvas(), text: 'Clover thumped her foot four times. Rabbits count with their feet.'}); say('Rabbits count with their feet. That’s a four.', 5200); } }, 2800); } }},
@@ -244,7 +245,7 @@
           : {title: 'The closet', body: '<p>Another closet behind three sliding doors.</p>', acts: [{label: 'Slide the doors open', run: () => act(() => { SND.slide(); door('D-L1-07', true); }, 1300)}]}},
       pepper: {from: ['lbed2'], label: () => 'Pepper', at: () => [-22.0, LY + 2.0, -38.4], pos: [-21.2, LE - .4, -34.6], look: [-22.0, LY + 1.0, -38.6], fit: {w: 2.6, h: 2.6},
         sheet: () => ({title: 'Pepper', body: has('p_pepper') ? `${line('pepper', 'NINE! NINE! I DIDN’T SAY ANYTHING!')}<div class="got">${ICON('pepper', 34)}<b>9</b><span>Pepper’s number, in the rainbow</span></div>`
-          : `${line('pepper', 'SURPRISE! ... No. Nothing. NO RAINBOW, NO TALKING!', true)}<p>The bottom of the window behind her is covered in rainbow film, with strips of paper stuck on it in a boxy figure. Some are card, some are tracing paper.</p>`}),
+          : `${line('pepper', 'SURPRISE! ... No. Nothing. NO RAINBOW, NO TALKING!', true)}<p>The bottom of the window over the bed is covered in rainbow film, with strips of paper stuck on it in a boxy figure. Some are card, some are tracing paper.</p>`}),
         seen(){ if(give('metPepper')){ SND.chirp(); setTimeout(() => say('She said surprise. Write that down.', 4200), 1400); W.rainbow.update(); } }},
       rainbow: {from: ['lbed2'], sun: true, when: () => has('metPepper') && W.film && W.film.s > .05, label: () => 'Rainbow on the floor', at: () => [-22.5, LY + .3, -34.9], pos: [-21.2, LY + 6.4, -31.2], look: [-22.4, LY, -35.0], fit: {w: 3.6, h: 3.0},
         sheet: () => rainbowUp() ? {title: 'Rainbow on the floor', body: '<p>Colour all over the floor, and the card strips on the film leave a dark figure in it. The tracing paper lets the colour through.</p>'}
@@ -257,6 +258,19 @@
       party: {from: ['lounge'], lock: 'party', label: () => 'Drinks fridge', at: () => [-20.8, LY + 2.2, -22.6], pos: [-17.0, LE - .6, -22.6], look: [-21.2, LY + 1.8, -22.6], fit: {w: 3.0, h: 3.4},
         sheet: () => ({title: 'The lounge drinks fridge', body: has('p_order') ? '<p>A keypad lock for four digits. Nugget’s card has the order.</p>' : '<p>The drinks fridge under the TV has a keypad lock on it, for four digits. Somebody’s been busy.</p>'}),
         face: (cur, cls) => lockCanvas(cur, cls === 'ok' ? 'open' : cls === 'bad' ? 'bad' : 'locked')}};
+    function carrot(at){ const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.ConeGeometry(.09, .55, 12), new THREE.MeshStandardMaterial({color: lin(0xf08a24), roughness: .7}));
+      c.rotation.z = Math.PI / 2 + .2; g.add(c); for(const a of [-.4, 0, .4]){ const l = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshStandardMaterial({color: lin(0x3c9a3c)})); l.scale.set(1, 3, 1); l.position.set(-.3, .06, a * .12); l.rotation.z = Math.PI / 2 + a; g.add(l); }
+      const bow = new THREE.Mesh(new THREE.TorusGeometry(.07, .022, 6, 16), new THREE.MeshStandardMaterial({color: lin(0xe8506a)})); bow.position.set(-.12, .06, 0); g.add(bow);
+      g.position.set(...at); g.traverse(o => { o.raycast = () => {}; }); H.grp('main').add(g); return g; }
+    function tin(at){ const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .62, 32), new THREE.MeshStandardMaterial({color: lin(0x2f6f8f), roughness: .3, metalness: .6}));
+      body.position.y = .31; g.add(body); const lid = new THREE.Mesh(new THREE.CylinderGeometry(.44, .44, .08, 32), new THREE.MeshStandardMaterial({color: lin(0xd9b44a), roughness: .3, metalness: .7})); lid.position.y = .66; g.add(lid);
+      const rib = new THREE.MeshStandardMaterial({color: lin(0xe8506a), roughness: .5}); for(const r of [0, Math.PI / 2]){ const b = new THREE.Mesh(new THREE.TorusGeometry(.43, .03, 6, 32), rib); b.rotation.y = r; b.position.y = .35; b.scale.set(1, .85, 1); g.add(b); }
+      for(const s of [-1, 1]){ const l = new THREE.Mesh(new THREE.TorusGeometry(.13, .035, 8, 18), rib); l.position.set(s * .12, .8, 0); l.rotation.y = Math.PI / 2; l.scale.set(1, .7, 1); g.add(l); }
+      g.position.set(...at); g.traverse(o => { o.raycast = () => {}; }); H.grp('main').add(g); return g; }
+    // a little "z z z" over an animal that's asleep
+    function zzz(at){ const c = document.createElement('canvas'); c.width = 256; c.height = 256; const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.strokeStyle = 'rgba(31,41,72,.75)'; x.lineWidth = 8;
+      for(const [t, px, py, sz] of [['z', 60, 210, 70], ['z', 120, 140, 90], ['Z', 190, 70, 110]]){ x.font = `600 ${sz}px Caveat, cursive`; x.strokeText(t, px, py); x.fillText(t, px, py); }
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: texOf(c), transparent: true, depthWrite: false})); sp.scale.set(1.1, 1.1, 1); sp.position.set(...at); sp.renderOrder = 6; sp.raycast = () => {}; H.grp('main').add(sp); return sp; }
     function thumpCanvas(){ return paperCanvas(700, 500, 'paper', (x, w, h, ink) => { face(x, 'clover', 120, 130, 150); ['THUMP', 'THUMP', 'THUMP', 'THUMP'].forEach((t, i) => ink.text(t, 330 + (i % 2) * 220, 110 + Math.floor(i / 2) * 120, 70, '#3f5f6c')); ink.text('four', w / 2, 420, 90, '#9b2c3c'); }, 61); }
 
     /* ---------------------------------------------------------------- the reveal */
@@ -269,10 +283,10 @@
         [['#e8506a', -19.6, -18.2], ['#4aa3df', -20.2, -20.0], ['#ffd34d', -19.8, -24.4], ['#7cf0a6', -14.0, -24.8], ['#e8506a', -12.4, -16.0]].forEach(([c, bx, bz], i) => {
           const b = new THREE.Mesh(new THREE.SphereGeometry(.42, 18, 14), new THREE.MeshStandardMaterial({color: lin(c), roughness: .35, emissive: lin(c), emissiveIntensity: .25})); b.scale.y = 1.2; b.position.set(bx, LY + 7.6 + (i % 2) * .4, bz); b.raycast = () => {}; H.grp('main').add(b);
           const s = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, 3.2), new THREE.MeshBasicMaterial({color: 0xffffff})); s.position.set(bx, LY + 5.6 + (i % 2) * .4, bz); H.grp('main').add(s); });
-        petAt('biscuit', [-15.6, LY, -21.0], yawTo([-15.6, 0, -21.0], [-15.2, 0, -15.0])); PETS.biscuit.scale.setScalar(.78);
+        petAt('biscuit', [-18.4, LY, -23.2], yawTo([-18.4, 0, -23.2], [-15.2, 0, -15.0])); PETS.biscuit.scale.setScalar(.78); tin([-21.7, -1.55, -21.1]);
         petAt('clover', [-18.0, LY, -19.2], yawTo([-18.0, 0, -19.2], [-15.2, 0, -15.0]));
-        petAt('pepper', [-20.9, LY + 2.95, -18.4], yawTo([-20.9, 0, -18.4], [-15.2, 0, -15.0]));
-        petAt('nugget', [-21.4, LY + 2.95, -24.2], yawTo([-21.4, 0, -24.2], [-15.2, 0, -15.0])); PETS.nugget.scale.setScalar(.2);
+        petAt('pepper', [-21.2, -1.55, -18.0], yawTo([-20.9, 0, -18.4], [-15.2, 0, -15.0]));
+        petAt('nugget', [-21.5, -1.55, -19.9], yawTo([-21.5, 0, -19.9], [-15.2, 0, -15.0])); PETS.nugget.scale.setScalar(.26);
         catAt([-17.4, LY, -17.4]); wake(40); }, 1500);
       setTimeout(() => say('You all knew. Fine. I’m not crying. It’s the dust.', 6000), 3600);
       setTimeout(() => finishCard({title: 'Surprise!', bubbles: false,
