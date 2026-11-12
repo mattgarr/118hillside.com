@@ -22841,12 +22841,33 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
           for(let pass = 0; pass < 5; pass++) for(let i = 2; i < n - 2; i++){ const q = pts[i], f = q.y - EYE, x = (pts[i - 1].x + q.x * 2 + pts[i + 1].x) / 4, z = (pts[i - 1].z + q.z * 2 + pts[i + 1].z) / 4; if(Math.hypot(x - q.x, z - q.z) < .01 || !r36At(x, z, f) || !fr(x, z, f)) continue; const y = navSupport(x, z, f + .3); if(Math.abs(y - f) < .3){ q.x = x; q.z = z; q.y = y + EYE; } }   // and no kinks left in the line
         } finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }catch(e){ console.warn('[r37 nav] clearance', e); }
       if(!R36N.noRelax) pts = r37Relax(pts);   // r37: rounded corners, the middle of each doorway
+      if(!R36N.noRelax) try{ pts = r41EndIn(pts); }catch(e){ console.warn('[r41 nav] end', e); }   // r41: the last few feet curve in to the stop
       for(let pass = 0; pass < (R36N.noRelax ? 3 : 10); pass++) for(let i = 2; i < pts.length - 2; i++) pts[i].y = (pts[i - 1].y + pts[i].y * 2 + pts[i + 1].y) / 4;   // r37: 10 passes (was 3), so a landing is a gentle change of slope   // stair nosings and thresholds become one even climb
       { const n = pts.length, k0 = Math.min(R36N.noRelax ? 6 : 10, Math.floor((n - 2) / 2)), y0 = pts[0].y, y1 = pts[n - 1].y; for(let i = 1; i <= k0; i++){ const w = R36N.noRelax ? i / (k0 + 1) : smooth(0, 1, i / (k0 + 1)); pts[i].y = lerp(y0, pts[i].y, w); pts[n - 1 - i].y = lerp(y1, pts[n - 1 - i].y, w); } }
       const cum = [0]; for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
       const doors = []; for(const it of r36Doors()){ const q = it.coll; for(let i = 0; i < pts.length; i++){ const p = pts[i]; if(p.x > q.x0 - .25 && p.x < q.x1 + .25 && p.z > q.z0 - .25 && p.z < q.z1 + .25 && p.y - EYE > q.y0 - 1.5 && p.y - EYE < q.y1 - 2){ doors.push({it, s: cum[i], x: p.x, z: p.z}); break; } } }
       res = {pts, cum, L: cum[cum.length - 1], doors}; } }catch(e){ console.warn('[r36 nav] route', e); }
   if(R36N.cache.size > 400) R36N.cache.clear(); R36N.cache.set(key, res); return res; }
+/* r41: the last few feet of a route curve gently in to where you stop. The route used to reach a grid node beside or past the stop and then make a
+   last short sidestep (or a step back) of half a foot to a foot onto the stop's own spot, a kink of 90-180 deg in the last frames of the walk, so the
+   camera slid sideways or backwards as it arrived (great room -> bedroom wing, lower bath -> lower bedroom, laundry -> office). Now the line from
+   R ft out (3, else 2, else 1.4) is one smooth curve that leaves the route along its own way and arrives with no doubling back, kept only where
+   it stays on level, walkable, unobstructed ground. */
+function r41EndIn(pts){ const n = pts.length; if(n < 6) return pts; const B = pts[n - 1], fB = B.y - EYE; let tot = 0; for(let i = 1; i < n; i++) tot += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z); if(tot < 4) return pts;
+  const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
+  try{ const fr = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; }, offB = r36At(B.x, B.z, fB) !== 1;
+    for(const R of [Math.min(3, tot * .3), 2, 1.4]){ let j = n - 1, acc = 0; while(j > 1 && acc < R){ acc += Math.hypot(pts[j].x - pts[j - 1].x, pts[j].z - pts[j - 1].z); j--; }
+      const A = pts[j], fA = A.y - EYE; if(Math.abs(fA - fB) > .25) continue;   // level ground only (not the foot or the head of a stair)
+      let tx = pts[j + 1].x - pts[j - 1].x, tz = pts[j + 1].z - pts[j - 1].z; const tl = Math.hypot(tx, tz); if(tl < 1e-3) continue; tx /= tl; tz /= tl;
+      const ax = B.x - A.x, az = B.z - A.z, ab = Math.hypot(ax, az), pr = ax * tx + az * tz; if(ab < .3 || pr < .25 * ab) continue;   // the stop is beside or behind: no gentle curve from here
+      let kink = 0; for(let i = j + 1; i < n - 1; i++){ const ux = pts[i].x - pts[i - 1].x, uz = pts[i].z - pts[i - 1].z, vx = pts[i + 1].x - pts[i].x, vz = pts[i + 1].z - pts[i].z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); if(lu > .02 && lv > .02) kink = Math.max(kink, Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1))); }
+      if(kink < .6) return pts;   // no sharp turn in the last few feet: leave the line as it is
+      const d = pr * .5, Cx = A.x + tx * d, Cz = A.z + tz * d, k = Math.max(2, Math.ceil(acc / .5)), Q = []; let ok = true;
+      for(let q = 1; q < k; q++){ const u = q / k, x = (1 - u) * (1 - u) * A.x + 2 * u * (1 - u) * Cx + u * u * B.x, z = (1 - u) * (1 - u) * A.z + 2 * u * (1 - u) * Cz + u * u * B.z, f = lerp(fA, fB, u), y = navSupport(x, z, f + .3);
+        if(Math.abs(y - f) > .3 || !fr(x, z, y) || (!(offB && Math.hypot(x - B.x, z - B.z) < 1.5) && r36At(x, z, y) === 0)){ ok = false; break; } Q.push(new THREE.Vector3(x, y + EYE, z)); }
+      if(ok) return pts.slice(0, j + 1).concat(Q, [B]); } }
+  finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); }
+  return pts; }
 function r36PathPos(p, s, out){ const c = p.cum; let lo = 0, hi = c.length - 1; s = clamp(s, 0, p.L); while(hi - lo > 1){ const m = (lo + hi) >> 1; if(c[m] <= s) lo = m; else hi = m; } const d = c[hi] - c[lo]; return out.lerpVectors(p.pts[lo], p.pts[hi], d > 1e-6 ? (s - c[lo]) / d : 0); }
 const r36Ease = t => { const a = .16, v = 1 / (1 - a); return t < a ? v * t * t / (2 * a) : t > 1 - a ? 1 - v * (1 - t) * (1 - t) / (2 * a) : v * (t - a / 2); };
 function r36OpenDoor(it, x, z){ if(DOOR28.moving.has(it)){ if(it.dir < 0) it.dir = 1; return; } if(it.t < .5){ if(it.sl && x != null){ it.r37a = null; try{ bim3SlideSide(it, bim3SlideAt(it, x, z)); }catch(e){} } door28Toggle(it); } }
@@ -22996,7 +23017,10 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
       if(!dir){ acc += d; if(Math.abs(acc) > 1.5 * DG) dir = Math.sign(acc); } else if(sg !== dir){ opp += Math.abs(d); if(opp > 1.5 * DG){ rev++; dir = sg; opp = 0; } } else opp = 0; } return {tv: tv / DG, rev}; };
   const alts = d => Math.abs(d) > 110 * DG ? [d, d - Math.sign(d) * 2 * Math.PI] : [d];   // a turn of about half a circle may go either way round: the way that keeps turning the same way
   const cands = [];
-  if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1); for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + d * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp, gEnd: g[N - 1]}); }
+  if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1), P0 = p.pts[0], P1 = p.pts[p.pts.length - 1], hz = Math.hypot(P1.x - P0.x, P1.z - P0.z);
+    // a short step taken facing the way you step (not a step back) also ends facing within BACKDEG of it, and the rest of the turn is made standing
+    let dW = d; if(hz > 1 && Math.abs(angDiff(Math.atan2(-(P1.x - P0.x), -(P1.z - P0.z)), y0)) < Math.PI / 2){ const r = angDiff(tN, y0 + d); if(Math.abs(r) > MB) dW = d - (r - Math.sign(r) * MB); }
+    for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + dW * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp, gEnd: y0 + d}); }
   else {
     for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1v = psi[N - 1] + d1, y1u = endW(y1v), dd = Math.abs(d0) / DG, da = Math.abs(y1u - psi[N - 1]) / DG;
       const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, L * .7);
@@ -23027,9 +23051,9 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
   const ys = [], ps = [], ss = []; let y = g[0], w = 0, pt = gp[0], pw = 0; const wn = 9, YW = YAW * DG, YA = YACC * DG, PW = S.PYAW * DG, PA = S.PACC * DG;
   // r41: the walk itself ends on g[N - 1], within BACKDEG of the way in; the head goes on round to the stop's view (gE) as you slow to a stop (only as far
   // as keeps the step along the view over -.15 ft/s) and then standing, braking so that it never overshoots
-  const gE = C.gEnd, offE = gE - tN, sgE = Math.sign(offE), stand = C.stand > .2 * DG;
+  const gE = C.gEnd, gW = g[N - 1], rem = gE - gW, sgE = Math.sign(rem), o0 = angDiff(tN, gW), away = Math.sign(o0) === sgE, stand = C.stand > .2 * DG;
   for(let k = 0; k < n1 + 240 * 6; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], v = (sN - s) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt; let tg = G(g, sN), tr = (tg - G(g, s)) / dt, ya = YA, yw = YW, st = false;
-    if(stand && s > L - 4){ const lim = v < .15 ? Infinity : MB + Math.asin(Math.min(1, .15 / v)), e = tN + sgE * Math.min(Math.abs(offE), lim); if((e - tg) * sgE > 0){ tg = e; tr = 0; ya = AS; yw = WS; st = true; } }
+    if(stand && s > L - 4){ const more = v < .15 || !away ? Infinity : Math.max(0, MB - Math.abs(o0)) + Math.asin(Math.min(1, .15 / v)), e = gW + sgE * Math.min(Math.abs(rem), more); if((e - tg) * sgE > 0){ tg = e; tr = 0; ya = AS; yw = WS; st = true; } }
     ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - gE) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
     let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -ya, ya); w = clamp(w + ac * dt, -yw, yw); if(st){ const br = Math.sqrt(1.7 * ya * Math.abs(tg - y)); if(w * (tg - y) > 0 && Math.abs(w) > br) w = Math.sign(w) * br; } y += w * dt;
     ac = clamp(wn * wn * (pg - pt) + 2 * wn * (prr - pw), -PA, PA); pw = clamp(pw + ac * dt, -PW, PW); pt += pw * dt; }
