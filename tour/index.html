@@ -20376,6 +20376,39 @@ function bim3Glass35(){
   for(const m of BIM2S.meshes){ const nm = (m.userData.bim2 && m.userData.bim2.name) || m.name || ''; if(/^glass\|/.test(nm) || /\|glass\|/.test(nm)){ m.castShadow = false; rep.noShadow = (rep.noShadow || 0) + 1; } }
   BIM3.report.glass35 = rep; return rep; }
 { const _b3g = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3g.apply(this, arguments); try{ bim3Glass35(); }catch(e){ console.warn('[bim3] glass35', e); } return r; }; }
+/* r42 owner 11/12 rule:shower-glass-low-iron ("the glass in the shower is not tinted, so that should be basically clear glass. If anything, it
+   has that really, really subtle green tinge that glass has"). Photos p45 / IMG_0595: 3/8" low-iron clear panels; through them the tile is
+   the same tone as beside them, the only colour is a faint aqua line on the polished edges. Every FIX shower / tub screen (showerGlass, the
+   sliding kind included) gets its own pane and edge materials instead of the shared fixture glass: the pane is the GLASS20 thick-slab model
+   (one Fresnel interface a face, n = 1.5) with low-iron absorption (.4 % a face, was 2.5 %: ~92 % through a panel at normal incidence, as real
+   10 mm low-iron) and reflections that pick up only a whisper of green as they go grazing; the edges are a pale, half-clear aqua-grey (the
+   shared edge was a .9-opaque green-grey frame round each panel). Frosted panes (model glass-obscure windows) are not touched. */
+const R42G = window.R42G = {a: .004, edge: 0xc6dbd0, edgeOp: .42, graze: [.95, 1, .97], n: 0, panes: 0};
+let R42G_M = null, R42G_E = null;
+function r42ShowerGlass(){
+  if(R42G_M) return R42G_M;
+  const m = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: .02, metalness: 0, transparent: true, depthWrite: false, side: THREE.DoubleSide}); m.name = 'showerGlass42';
+  glassify(m, {inside: true, thick: true});
+  const prev = m.onBeforeCompile, pk = m.customProgramCacheKey, G = R42G.graze;
+  m.onBeforeCompile = function(sh, r){ if(prev) prev.call(this, sh, r);
+    sh.fragmentShader = sh.fragmentShader.replace(/exp\(-[0-9.]+ \/ gCt\)/, 'exp(-' + R42G.a.toFixed(4) + ' / gCt)')
+      .replace('gl_FragColor = vec4(gRefl * gP,', 'gRefl *= mix(vec3(1.0), vec3(' + G.map(v => v.toFixed(3)).join(', ') + '), pow(1.0 - gNoV, 3.0));\n      gl_FragColor = vec4(gRefl * gP,'); };
+  m.customProgramCacheKey = () => (pk ? pk.call(m) : '') + '|r42sg'; m.needsUpdate = true;
+  return R42G_M = m; }
+function r42ShowerEdge(){
+  if(R42G_E) return R42G_E;
+  const m = new THREE.MeshStandardMaterial({color: new THREE.Color(R42G.edge).convertSRGBToLinear(), roughness: .1, metalness: 0, transparent: true, opacity: R42G.edgeOp, depthWrite: false}); m.name = 'showerGlassEdge42';
+  return R42G_E = m; }
+function r42ShowerScreen(g){
+  const pane = FIX.mat('glass'), edge = FIX.mat('glassEdge'); let n = 0;
+  g.traverse(o => { if(!o.isMesh || Array.isArray(o.material)) return;
+    if(o.material === pane || o.material.name === 'glass'){ o.material = r42ShowerGlass(); o.userData.glass20 = true; o.castShadow = false; o.renderOrder = 2;
+      try{ if(glass20Slab(o)) o.material = [r42ShowerGlass(), r42ShowerEdge()]; }catch(e){} n++; }
+    else if(o.material === edge || o.material.name === 'glassEdge'){ o.material = r42ShowerEdge(); o.userData.glass20 = true; o.castShadow = false; o.renderOrder = 2; } });
+  R42G.n++; R42G.panes += n; return n; }
+if(window.FIX && FIX.make){ const _mk42 = FIX.make; FIX.make = function(kind){ const g = _mk42.apply(this, arguments);
+    try{ if(kind === 'showerGlass' && g) r42ShowerScreen(g); }catch(e){ console.warn('[r42] shower glass', e); }
+    return g; }; }
 /* G35-3 skylights (v33 buildSkylightsK + int21 I8 look): the unit's cladding (library 'skylight-frame') is dark aluminium (v33 'steel'),
    not the white exterior trim; its glass (kernel R4b 'skylight-glass') is v33's clear skylight pane (light, 30 %), seen from the room
    below as sky, from above as a glint. */
