@@ -427,7 +427,7 @@ def staging():
     WS = 9.49                                                   # the old kitchen window (WN-L1-02) centre
     add('windowSeat', (WS, Y_S), 90, {'w': 8.3, 'd': 1.9}, key='seat', back=True)
     add('seatCushion', (0, 0), 90, {'w': 8.2, 'd': 1.85, 'fabric': 'seatGrey'}, on='seat')
-    add('pillows', (0, 0), 90, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowCream', -2.9, 1.4, 1.4, .08], ['pillowSlate', -1.7, 1.4, 1.4, -.05], ['pillowGreyLinen', 2.6, 1.4, 1.4, .1]]}, on='seat').update({'stageZ': .5})
+    add('pillows', (0, 0), 90, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowCream', -2.9, 1.4, 1.4, .08], ['pillowSlate', -1.7, 1.4, 1.4, -.05], ['pillowGreyLinen', 2.6, 1.4, 1.4, .1]]}, on='seat').update({'stageZ': .05})
     add('books', (0, 0), 90, {'n': 3}, on='seat', dx=1.2, dz=.15)
     add('builtinBookcase', (14.85, Y_S), 90, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 2.5, 'levels': [3.9, 5.1, 6.3], 'lights': False, 'seed': 11, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 2.3}, lib='BUILTIN')
     add('builtinBookcase', (X_OK, 8.6), 0, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 2.5, 'levels': [3.9, 5.1, 6.3], 'lights': False, 'seed': 13, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 3.4}, lib='BUILTIN')
