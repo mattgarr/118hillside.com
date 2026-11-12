@@ -5930,7 +5930,7 @@ const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last
   orbitStep(st, dx, dy, proj, th, ph, h){
     const k0 = 2 * Math.PI / h * .75, kv = k0 * .8, J = this.jac(proj, th, ph), n = Math.hypot(dx, dy); this.rep.orbit++;
     if(!J) return [st.lx * dx * k0, st.ly * dy * kv];
-    const okx = !st.wx && Math.sign(J.xt) === st.lx, oky = !st.wy && Math.sign(J.yp) === st.ly, det = J.xt * J.yp - J.xp * J.yt; let dt, dp;
+    const Lo = .03 * h, okx = !st.wx && Math.sign(J.xt) === st.lx && Math.abs(J.xt) > Lo, oky = !st.wy && Math.sign(J.yp) === st.ly && Math.abs(J.yp) > Lo, det = J.xt * J.yp - J.xp * J.yt; let dt, dp;   // r41b: leverage that fades mid-drag (near a tilt limit) turns at the ordinary gain, not a lurch
     if(okx && oky && Math.abs(det) > .3 * Math.abs(J.xt * J.yp)){ dt = (dx * J.yp - dy * J.xp) / det; dp = (J.xt * dy - J.yt * dx) / det; }
     else { dt = okx ? dx / J.xt : st.lx * dx * k0; dp = oky ? dy / J.yp : st.ly * dy * kv;
       if(okx && Math.abs(dt) < .2 * k0 * Math.abs(dx)) dt = Math.sign(dt || st.lx * dx) * .2 * k0 * Math.abs(dx);
