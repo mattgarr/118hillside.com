@@ -20788,7 +20788,7 @@ const R42D = window.R42D = {merged: 0, tris: 0, bevel: 0, skipped: []};
 const R42S = {back: .4};
 function r42DoorSticking(G, na, nb, I, nIa){
   const P = G.attributes.position.array, N = G.attributes.normal.array, n = new THREE.Vector3(N[na * 3], N[na * 3 + 1], N[na * 3 + 2]).normalize(), c = new THREE.Vector3();
-  for(let i = na; i < na + nb; i++){ c.x += P[i * 3]; c.y += P[i * 3 + 1]; c.z += P[i * 3 + 2]; } c.multiplyScalar(1 / nb);
+  { c.fromArray(P, na * 3); let lo = 1e9, hi = -1e9; for(let i = na; i < na + nb; i++){ const d = (P[i * 3] - c.x) * n.x + (P[i * 3 + 1] - c.y) * n.y + (P[i * 3 + 2] - c.z) * n.z; lo = Math.min(lo, d); hi = Math.max(hi, d); } c.addScaledVector(n, (lo + hi) / 2); }   // mid-plane of the slab: halfway between the two panel floors (a vertex mean leans to the side with more vertices)
   const dep = i => (P[i * 3] - c.x) * n.x + (P[i * 3 + 1] - c.y) * n.y + (P[i * 3 + 2] - c.z) * n.z;
   let fd = 0, half = 0; for(let i = na; i < na + nb; i++) fd = Math.max(fd, Math.abs(dep(i))); for(let i = 0; i < na; i++) half = Math.max(half, Math.abs(dep(i)));
   if(!(fd > .005 && half - fd > .01 && half < .2)) return 0;
