@@ -6793,7 +6793,8 @@ function navQA(){
     const ev = (t, x, y, type, b) => canvas.dispatchEvent(new PointerEvent(t, {pointerId: type === 'touch' ? 41 : 1, pointerType: type, isPrimary: true, clientX: x, clientY: y, button: t === 'pointermove' ? -1 : 0, buttons: b, bubbles: true, cancelable: true, composed: true}));
     const frames = n => new Promise(res => { let k = 0; const t = setTimeout(res, 150 + n * 40), f = () => { if(++k >= n){ clearTimeout(t); res(); } else requestAnimationFrame(f); }; requestAnimationFrame(f); });
     const settle = async () => { step(2); if(H) await frames(30); step(1); camera.updateMatrixWorld(); };
-    const drag = async (x0, y0, dx, dy, type = 'mouse') => { ev('pointerdown', x0, y0, type, 1); const G = GRAB.pickAt(x0, y0), s0 = scr(G);   // the point under the pointer once it is down (a press mid-move may land the flight first)
+    const drag = async (x0, y0, dx, dy, type = 'mouse') => { if(lensTw && !anim){ lensTw.t0 = -1e9; lensStep(); camera.updateMatrixWorld(); }   // a lens change still easing in (after a mode switch) would move the point too: land it first
+      ev('pointerdown', x0, y0, type, 1); const G = GRAB.pickAt(x0, y0), s0 = scr(G);   // the point under the pointer once it is down (a press mid-move may land the flight first)
       for(let i = 1; i <= 10; i++){ ev('pointermove', x0 + dx * i / 10, y0 + dy * i / 10, type, 1); if(H) await frames(1); else step(1); }
       ev('pointerup', x0 + dx, y0 + dy, type, 0); await settle(); const s1 = s0 && scr(G), n = Math.hypot(dx, dy);
       if(!s1) return {k: -9, along: -9, G}; const along = ((s1[0] - s0[0]) * dx + (s1[1] - s0[1]) * dy) / n; return {G, s0, s1, along, k: along / n}; };
