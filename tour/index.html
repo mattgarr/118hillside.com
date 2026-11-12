@@ -1889,13 +1889,13 @@ const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: r
    room face reads the room and its outer face the sky. Glass reflects the side the camera is on. Installed here, before any material
    is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
 const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .1, duskIn: .3,
-  U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}}};
+  U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}, r40MetK: {value: 1}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
   C.worldpos_vertex += `\n${G}\nvR40W = worldPosition.xyz;\n#endif\n`;
   C.envmap_physical_pars_fragment += `
 #if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
-uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K;
+uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K, r40MetK;
 float r40MaskAt( vec3 P ){
   vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
   if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
@@ -1922,7 +1922,7 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
   if(M0.includes(I0) && M0.includes(R0)){
     C.lights_fragment_maps = `#if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tfloat r40m = r40Interior( geometry );\n#endif\n` + M0
       .replace(I0, `if( r40m < 0.999 ) iblIrradiance += ( 1.0 - r40m ) * getLightProbeIndirectIrradiance( geometry, maxMipLevel );\n\t\tif( r40m > 0.001 ) iblIrradiance += r40m * r40IrrB( geometry );`)
-      .replace(R0, `#if defined( STANDARD ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tif( r40m < 0.999 ) radiance += ( 1.0 - r40m ) * getLightProbeIndirectRadiance( geometry.viewDir, geometry.normal, material.specularRoughness, maxMipLevel );\n\tif( r40m > 0.001 ) radiance += r40m * r40RadB( geometry.viewDir, geometry.normal, material.specularRoughness );\n\t#else\n\t${R0}\n\t#endif`);
+      .replace(R0, `#if defined( STANDARD ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tif( r40m < 0.999 ) radiance += ( 1.0 - r40m ) * getLightProbeIndirectRadiance( geometry.viewDir, geometry.normal, material.specularRoughness, maxMipLevel );\n\tif( r40m > 0.001 ) radiance += r40m * r40RadB( geometry.viewDir, geometry.normal, material.specularRoughness ) * mix( 1.0, r40MetK, step( 0.5, metalnessFactor ) );\n\t#else\n\t${R0}\n\t#endif`);
     // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
     // (an accessor: page hooks keep the previous hook and call it as a plain function, so the default returns one bound to its material)
     Object.defineProperty(THREE.Material.prototype, 'onBeforeCompile', {configurable: true,
@@ -18708,7 +18708,13 @@ function v33Env(){
   for(const key in M){ const m = M[key]; if(!/^beam/i.test(key) || !m || !m.isMeshStandardMaterial) continue;
     if(!V33.beamBase.has(m)) V33.beamBase.set(m, m.envMapIntensity); const v = V33.beamBase.get(m) * (k > 1 ? k * V33.beamK : k); if(m.envMapIntensity !== v) m.envMapIntensity = v; n++; }
   V33.report.beams = n;
-  // S6: indoor metals
+  /* S6: indoor metals. r41 (owner 11/12: knobs, pulls, mirrors and trim that "appear luminescent" at dusk): this raised every metal's
+     envMapIntensity x k (3 at dusk), which with r40's two environments also multiplied the SKY a metal outside sees (outdoor kitchen,
+     balcony and door hardware), and the probe mirrors, whose own room capture is already the room's real light, read x2.7 brighter than
+     the room around them. With two environments the x k (the lamp-lit panorama is too dim for the lamps' real bounce) now applies in
+     the shader to the ROOM environment only, for metals (metalness >= .5) lit by it: r40MetK. Mirrors (their own capture) and the sky
+     side are left at x1, and materials made after the first dusk are covered too (the old list was collected once). */
+  if(R40E.on){ R40E.U.r40MetK.value = k; for(const m of (V33.metals || [])) if(V33.metBase.has(m)) m.envMapIntensity = V33.metBase.get(m); V33.metals = []; V33.report.metals = 'shader:' + k; return; }
   if(k > 1 && !V33.metals){ const set = new Set(); scene.traverse(o => { if(!o.isMesh) return; for(const m of (Array.isArray(o.material) ? o.material : [o.material])) if(m && m.isMeshStandardMaterial && m.metalness >= .5 && m.envMapIntensity > 0) set.add(m); }); V33.metals = [...set]; }
   let nm = 0; for(const m of (V33.metals || [])){ if(!V33.metBase.has(m)) V33.metBase.set(m, m.envMapIntensity); const v = V33.metBase.get(m) * k; if(m.envMapIntensity !== v){ m.envMapIntensity = v; } nm++; }
   V33.report.metals = nm;
@@ -24008,6 +24014,17 @@ function r41FurnCollect(){ if(!R40E.on) return 0; const S = R40E.furn = new Weak
     try{ const sig = (R28W.shades || []).length + ',' + (R28W.cells || []).length + ',' + (R28W.sky || []).length + ',' + (R28W.film || []).length + ',' + (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '');
       if(sig !== R41SH.sig){ R41SH.sig = sig; r41ShadeCollect(); }   // shades are built as the house loads (rollers, cells, skylights): collect again whenever that changes
       r41ShadeFrame(); }catch(e){ if(!R41SH.warn){ R41SH.warn = true; console.warn('[r41] shades', e); } } return _rf41.apply(this, arguments); }; }
+/* r41: the pergolas' translucent polycarbonate roofs (p26poly / p27poly) carried their midday "transmitted daylight" emissive (dayGlow
+   .25 / .5) at every daytime light, so at golden hour, with the sun low and the sky dimmed, the sheet over the outdoor kitchen and the
+   dining terrace still read as a lit panel. Like the shades, the daytime value now follows the light on the sheet's top face (sky share
+   for the sun height + direct sun, the same r41ShadeLight model), relative to midday; dusk keeps its own small value (the LED strips under it). */
+function r41PolyScale(P, nm, Z){ if(!P || !P.mat || !P.mat[nm] || !Z || !Z.sheet) return; let night = false; try{ night = !!DUSK || (typeof HW !== 'undefined' && HW.on); }catch(e){}
+  if(night) return; const up = new THREE.Vector3(0, 1, 0), sunRel = Math.max(0, Math.min(1.2, sun.intensity / (2.6 * V26.sunK))), skyK = Math.min(1, .2 + .8 * Math.min(1, SUN_DIR.y / .5));
+  const k = Math.min(1.2, r41ShadeLight(up, SUN_DIR, skyK, sunRel) / Math.max(.05, r41ShadeLight(up, r41ShadeDir(), 1, 1))), v = Z.sheet.dayGlow * k;
+  if(P.group) P.group.traverse(o => { if(o.isMesh && o.name === nm) for(const x of [].concat(o.material)) if(x) x.emissiveIntensity = v; });
+  P.mat[nm].emissiveIntensity = v; P.polyK = +k.toFixed(3); }
+{ const _s = setTOD; setTOD = function(){ const r = _s.apply(this, arguments);
+    try{ r41PolyScale(window.PERGOLA26, 'p26poly', window.PERGOLA26_SPEC); r41PolyScale(window.PERGOLA27, 'p27poly', window.PERGOLA27_SPEC); }catch(e){ console.warn('[r41] pergola sheet', e); } return r; }; }
 // clear glass: no glow painted on the panes and no lamp-colour grade through them at dusk (rooms are seen lit through the glass instead)
 { const _g40 = glass20Frame; glass20Frame = function(){ _g40.apply(this, arguments); if(!R40E.on) return; GLASS20_U.gEm.value = 0; if(GRADE_PASS && GRADE_PASS.uniforms.wK) GRADE_PASS.uniforms.wK.value = 0; }; }
 /* ?qa=1: a contact sheet of tour views (stops, mid-flight points or poses) drawn after the lighting settles on a simulated clock,
