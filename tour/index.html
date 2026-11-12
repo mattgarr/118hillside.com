@@ -5392,7 +5392,7 @@ function treeTrunkColliders(g, inst, DEF){
     t.updateMatrixWorld(true); const P = b.geometry.attributes.position, gy = ground(t.position.x, t.position.z); let cx = t.position.x, cz = t.position.z, rmax = 0;
     if(I && I.n > 1 && I.start + I.n * I.W <= P.count){ for(let k = 0; k < I.n; k++){ let mx = 0, my = 0, mz = 0; const m = I.W - 1, R = [];
         for(let j = 0; j < m; j++){ v.fromBufferAttribute(P, I.start + k * I.W + j).applyMatrix4(b.matrixWorld); mx += v.x; my += v.y; mz += v.z; R.push([v.x, v.z]); } mx /= m; my /= m; mz /= m;
-        if(my < gy - .5 || my > gy + 5.8) continue; if(!rmax){ cx = mx; cz = mz; } for(const q of R) rmax = Math.max(rmax, Math.hypot(q[0] - cx, q[1] - cz)); } }
+        if(my < gy - .15 || my > gy + 5.8) continue; if(!rmax){ cx = mx; cz = mz; } for(const q of R) rmax = Math.max(rmax, Math.hypot(q[0] - cx, q[1] - cz)); } }
     if(!rmax){ const d = parseFloat((t.userData.opts && t.userData.opts.trunkDia) || 20); rmax = d / 24 * 1.5; }
     out.push(t.name + ' r' + rmax.toFixed(2) + ' stop ' + treeTrunkCollider(cx, cz, gy, rmax, t.name).toFixed(2)); }
   for(const q of inst){ const D = DEF[q.kind] || {}, r = (D.trunkDia || 24) / 24 * (q.scale || 1) * 1.5; out.push(q.id + ' r' + r.toFixed(2) + ' stop ' + treeTrunkCollider(q.x, q.z, ground(q.x, q.z), r, 'tree:' + q.id).toFixed(2)); }

@@ -981,7 +981,7 @@ function lightGrid(sk, A, cardArea) {
 function barkColor(K, sk, G, o) {
   return function (b, i, p) {
     var c = K.barkTint(b, p, sk), sky = G ? G.sky(p) : 1;
-    var ao = b.order === 0 ? lerp(0.6, 1.0, Math.pow(sky, 0.7)) * lerp(0.86, 1, smooth(0, 2.5, p[1]))   // r40: a trunk under a dense crown still reads as grey-brown bark, not a black post
+    var ao = b.order === 0 ? lerp(0.72, 1.0, Math.pow(sky, 0.7)) * lerp(0.9, 1, smooth(0, 2.5, p[1]))   // r40: a trunk under a dense crown still reads as grey-brown bark, not a black post
       : lerp(0.42, 1.0, Math.pow(sky, 0.7)) * lerp(0.75, 1, smooth(0, 2.5, p[1]));
     if (b.dead) c = mixc(c, [0.55, 0.52, 0.48], 0.6);
     return mulc(c, ao);
@@ -1009,7 +1009,7 @@ function buildHero(K, sk, o, budget, mid) {
     tubeMesh(bm, b, sides, tile, bc, b.order === 0 ? K.trunkShape(sk) : null, step, (b.order === 0 && sk.capTrunk) || b.pruned);
     if (b.order === 0 && !trunkRings) {   // r40: where the trunk's rings sit in the bark geometry, so a page can put lights on (and a collider round) the real surface
       var cap = (sk.capTrunk || b.pruned) ? 1 : 0, split = null;
-      b.kids.forEach(function (c) { if (c.order === 1 && c.tp != null) { var y = b.at(c.tp).p[1]; if (split === null || y < split) split = y; } });
+      b.kids.forEach(function (c) { if (c.order === 1 && c.pts.length) { var y = c.pts[0][1]; if (split === null || y < split) split = y; } });
       trunkRings = { start: v0, W: sides + 1, n: Math.round((bm.v - v0 - cap) / (sides + 1)), split: split };
     }
   });
