@@ -20635,7 +20635,7 @@ function r36GableCasing(){ const zF = -40.358, w = .29, g = grp('upper'), mat = 
     const m = new THREE.Mesh(new THREE.BoxGeometry(L, w, .09), mat); m.name = 'r36-gable-casing'; m.position.set(xm, roof(xm) - w / 2 / cs, zF - .045); m.rotation.z = sg * ang; m.castShadow = m.receiveShadow = true; g.add(m); }
   R36G.added.push({el: 'R36-GABLE-CASING', n: 2}); }
 function r36PrimaryCeiling(){
-  const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, R2 = {x0: xB, x1: -8.6, z0: -36.52, z1: -25.55}, xc = -10.6, zc = -31;
+  const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, R2 = {x0: -12.03, x1: -8.6, z0: -36.52, z1: -25.55}, xc = -10.6, zc = -31;   // r41: the roof is cut from where the dormer roof rises out of it (main top 7.5068 - .583 x = dormer top 11.515 - .25 x at x = -12.036), not from the ceiling break: between them the main slope is still the roof (its underside clears the bay ceiling), and cutting it there left a 7 in slit over the whole bay, open to the ceiling
   // the plane through a triangle, read at the middle of the dormer bay
   const at = (a, b, c) => { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; if(Math.abs(ny) < 1e-6) return null; return a[1] - (nx * (xc - a[0]) + nz * (zc - a[2])) / ny; };
   r36CutTris(/^ceilings\|L2\|/, R, (a, b, c) => [a, b, c].every(v => Math.abs(v[1] - gable(v[0])) < .06), 'primary gable ceiling past the break');
@@ -20643,9 +20643,16 @@ function r36PrimaryCeiling(){
   // the dormer bay had no ceiling of its own (the roof's tan underside showed): one painted plane just under it, in the upper level's ceiling mesh
   /* r37: the bay's plane now starts a hair under the gable just past the break (the 3/8 in step there showed as a dotted line), reaches both end walls, and the hole the model left in the gable ceiling beside the bay's end (the roof soffit showed through it as loose panels) is closed */
   const xL = xB - .04;
-  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xL, gable(xL) - .005, -36.52], [-8.76, dorm(-8.76) - .03, -36.52], [-8.76, dorm(-8.76) - .03, -26.15], [xL, gable(xL) - .005, -26.15], [0, -1, 0]],
-    [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]],   // and the bay's end, where the gable carries on below it
-    [[-12.5, gable(-12.5) - .012, -37.8], [-10.78, gable(-10.78) - .012, -37.8], [-10.78, gable(-10.78) - .012, -36.5], [-12.5, gable(-12.5) - .012, -36.5], [0, -1, 0]]]);
+  /* r41 owner 11/12 ("this geometry is incorrect - the ceiling in the window alcove is actually flat... so it slopes with the main ceiling and
+     then becomes flat 2 ft before the wall"): the bay is a 2 ft window alcove (its outer wall x = -8.78, the room's wall line x = -10.78).
+     Its ceiling was one plane from the break up to the dormer roof, shallower than the room's slope, so at the alcove's end (z = -36.52)
+     it stood above the room ceiling beside it and a sloped wedge with a boxed end dropped into the corner. Now: the room's own slope
+     carries on over the bay to the wall line (one plane with the ceiling beside it), then a flat ceiling at that height, gable(-10.78)
+     = 13.60 ft, over the 2 ft alcove to its outer wall. The alcove's walls and the window heads (13.06 ft) are under it. */
+  const xF = -10.78, yF = gable(xF) - .005;
+  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xL, gable(xL) - .005, -36.52], [xF, yF, -36.52], [xF, yF, -26.15], [xL, gable(xL) - .005, -26.15], [0, -1, 0]],
+    [[xF, yF, -36.52], [-8.76, yF, -36.52], [-8.76, yF, -26.15], [xF, yF, -26.15], [0, -1, 0]],
+    [[xL, gable(xL) - .012, -37.8], [-10.78, gable(-10.78) - .012, -37.8], [-10.78, gable(-10.78) - .012, -36.5], [xL, gable(xL) - .012, -36.5], [0, -1, 0]]]);   // r41: from xL (was -12.5): the model's ceiling between the break and -12.5 beside the alcove's end is a shallower plane up to 3/4 in above the room's slope, which read as a grey bar on the ceiling
   // wall paint where the model left bare framing: the bath-side gable above 15.7 ft right of the ridge, that wall inside the bay, and the top of the short return wall at the bay's other end
   r36AddFaces(/^walls\|L2\|paint-int-flat#PAINT-SW-6241-ALEUTIAN$/, 'R37-PRIMARY-WALLS', [
     [[-17.6, 15.7, -26.17], [(7.3135 - 15.7) / .583, 15.7, -26.17], [-16, gable(-16), -26.17], [-17.6, gable(-17.6), -26.17], [0, 0, -1]],
@@ -20655,6 +20662,63 @@ function r36PrimaryCeiling(){
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36GableCasing(); }catch(e){ console.warn('[r36] gable casing', e); R36G.err.push(String(e)); }
     try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
+/* r41 owner 11/12 (Dollhouse at dusk over the garage: "geometry problem at the top of garage roof - all these roofs should hit at the same
+   point"). From the model's planes (meta roofs, top = plane + th): the garage's west slope runs to the upper-storey wall (world z = -2.25)
+   all the way to the ridge, but its east slope stopped 1.48 ft short of the wall (z = -0.77) between the ridge and the valley it forms with
+   the entry roof's cross slope (RF-ENTRY plane 3, which carries on under it to the wall). The kernel gave that patch to the entry roof,
+   whose plane is up to 0.67 ft LOWER there, so a triangular notch opened beside the ridge where it dies into the wall: the garage ceiling
+   showed through, with a step of fascia and soffit around it. G1 lays the east slope's own shingle plane over the notch, from the ridge to
+   the valley line (garage east = entry: x = -(9.5998 - z / 4) / .583) and to the wall, UVs carried on from the slope's own triangles, so both
+   slopes, the ridge and the valley now end on one line against the wall. G2 is the counter-flashing that line never had: a painted
+   metal strip on the siding, 3 in up from the roof surface, along the garage's two slopes and the entry roof under the same wall. */
+const R41R = window.R41R = {added: [], err: []};
+function r41AddPlanar(rx, el, poly){   // poly: convex [[x,y,z]...] lying in a plane the mesh already has; appended with that plane's normal and UV mapping
+  const S = BIM2S, r = {el, tris: 0}; R41R.added.push(r); const dst = S && S.meshes && S.meshes.find(m => rx.test(m.name));
+  if(!dst || !dst.geometry.index){ r.skip = 'no mesh'; return r; } dst.updateWorldMatrix(true, false); if(!dst.matrixWorld.equals(new THREE.Matrix4())){ r.skip = 'moved mesh'; return r; }
+  const G = dst.geometry, names = Object.keys(G.attributes); if(names.some(k => !['position', 'normal', 'uv'].includes(k) || G.attributes[k].isInterleavedBufferAttribute)){ r.skip = 'attributes'; return r; }
+  const V3 = THREE.Vector3, p0 = new V3(...poly[0]), pn = new V3(...poly[1]).sub(p0).cross(new V3(...poly[2]).sub(p0)).normalize(), P = G.attributes.position, U = G.attributes.uv, I = G.index;
+  let best = null, bestA = 0; const a = new V3(), b = new V3(), c = new V3(), n = new V3(), e = new V3();
+  for(let t = 0; t < I.count / 3; t++){ a.fromBufferAttribute(P, I.getX(3 * t)); b.fromBufferAttribute(P, I.getX(3 * t + 1)); c.fromBufferAttribute(P, I.getX(3 * t + 2));
+    n.subVectors(b, a).cross(e.subVectors(c, a)); const ar = n.length() / 2; if(ar < bestA || ar < 1e-3) continue; n.normalize();
+    if(Math.abs(n.dot(pn)) < .9995 || Math.abs(n.dot(p0) - n.dot(a)) > .01) continue; best = [I.getX(3 * t), I.getX(3 * t + 1), I.getX(3 * t + 2)]; bestA = ar; }
+  if(!best || !U){ r.skip = 'no coplanar triangle'; return r; }
+  const A = new V3().fromBufferAttribute(P, best[0]), B = new V3().fromBufferAttribute(P, best[1]), C = new V3().fromBufferAttribute(P, best[2]), e0 = B.clone().sub(A), e1 = C.clone().sub(A);
+  const d00 = e0.dot(e0), d01 = e0.dot(e1), d11 = e1.dot(e1), den = d00 * d11 - d01 * d01, ua = [U.getX(best[0]), U.getY(best[0])], ub = [U.getX(best[1]), U.getY(best[1])], uc = [U.getX(best[2]), U.getY(best[2])];
+  const uvAt = p => { const e2 = p.clone().sub(A), d20 = e2.dot(e0), d21 = e2.dot(e1), v = (d11 * d20 - d01 * d21) / den, w = (d00 * d21 - d01 * d20) / den, u = 1 - v - w; return [u * ua[0] + v * ub[0] + w * uc[0], u * ua[1] + v * ub[1] + w * uc[1]]; };
+  const nrm = e0.clone().cross(e1).normalize(), tri = [];   // the reference triangle's own winding gives the outward side
+  for(let k = 1; k < poly.length - 1; k++){ const q = [poly[0], poly[k], poly[k + 1]].map(v => new V3(...v)); const f = q[1].clone().sub(q[0]).cross(q[2].clone().sub(q[0]));
+    tri.push(f.dot(nrm) < 0 ? [q[0], q[2], q[1]] : q); }
+  const nv = P.count, add = tri.length * 3, pos = [], nor = [], uvs = []; for(const t of tri) for(const v of t){ pos.push(v.x, v.y, v.z); nor.push(nrm.x, nrm.y, nrm.z); uvs.push(...uvAt(v)); }
+  const put = (k, src, sz) => { const at = G.attributes[k]; if(!at) return; const arr = new at.array.constructor((nv + add) * sz); arr.set(at.array.subarray(0, nv * sz)); arr.set(src, nv * sz); G.setAttribute(k, new THREE.BufferAttribute(arr, sz, at.normalized)); };
+  put('position', pos, 3); put('normal', nor, 3); put('uv', uvs, 2);
+  const n0 = I.count, ia = new (nv + add > 65535 ? Uint32Array : I.array.constructor)(n0 + add); ia.set(I.array.subarray(0, n0)); for(let j = 0; j < add; j++) ia[n0 + j] = nv + j;
+  G.setIndex(new THREE.BufferAttribute(ia, 1)); G.boundingBox = null; G.boundingSphere = null;
+  const ud = dst.userData.bim2; if(ud && ud.ranges) ud.ranges.push([el, null, n0 / 3, tri.length]); if(dst.userData.idx0) dst.userData.idx0 = G.index; if(dst.userData.alt) dst.userData.alt = {};
+  r.tris = tri.length; r.n = nrm.toArray().map(v => +v.toFixed(3)); return r; }
+function r41GarageRidge(){
+  const th = .38, east = x => -.268527 - .583 * x + th, west = x => 20.681578 + .583 * x + th, entry = z => 9.33125 - .25 * z + th;
+  const zW = -2.25, zN = -.77, xR = -17.93, xV = z => -(9.33125 - .25 * z + .268527) / .583;   // the mesh's east-slope edge at the ridge; the valley line
+  const lift = .002, P = (x, z) => [x, east(x) + lift, z];
+  r41AddPlanar(/^roofs\|L1\|comp-shingle-arch$/, 'R41-GARAGE-RIDGE', [P(xR, zW), P(xV(zW), zW), P(xV(zN), zN), P(xR, zN)]);
+  // G2 counter-flashing on the wall face: roof line along the wall (west slope from where it reaches the wall, ridge, east slope to the valley, entry roof)
+  const xRidge = -(20.681578 + .268527) / 1.166, line = [];
+  for(const x of [-21.49, -19.15, xRidge]) line.push([x, west(x)]);
+  line.push([xV(zW), entry(zW)], [-10.73, entry(zW)]);
+  const H = .25, T = .012, z0 = zW + .004, pos = [], idx = [];
+  for(const [x, y] of line) pos.push(x, y - .02, z0 + T, x, y + H, z0 + T, x, y + H, z0);
+  for(let i = 0; i + 1 < line.length; i++){ const a = 3 * i, b = 3 * (i + 1); idx.push(a, b, b + 1, a, b + 1, a + 1, a + 1, b + 1, b + 2, a + 1, b + 2, a + 2); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const m = new THREE.Mesh(g, M.stepFlash22 || M.trimExt); m.name = 'r41-garage-flashing'; m.castShadow = false; m.receiveShadow = true; grp('roof').add(m);
+  R41R.added.push({el: 'R41-GARAGE-FLASHING', segs: line.length - 1}); }
+/* r41 primary window alcove (see r36PrimaryCeiling): fixtures that seat themselves on the ceiling (the alcove's two cans) read the model's
+   ceiling, which still has the old single bay plane; inside the bay they now get the ceiling that is built: the room's slope to the wall
+   line x = -10.78, flat at 13.6 ft over the alcove. BIM frame: bx = world z, by = world x. */
+{ const _ca41 = bim2CeilingAt; bim2CeilingAt = function(bx, by, fz){
+    if(bx > -36.52 && bx < -26.15 && by > -12.62 && by < -8.76 && Math.abs(fz - (LEVEL_Z.L2 != null ? LEVEL_Z.L2 : 5.57)) < 1){
+      const g = x => 7.3135 - .583 * x - .005; if(by >= -10.78) return {z: g(-10.78), n: [0, -1, 0]};
+      const v = new THREE.Vector3(-.583, -1, 0).normalize(); return {z: g(by), n: [v.x, v.y, v.z]}; }
+    return _ca41.apply(this, arguments); }; }
+{ const _bh41 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh41.apply(this, arguments); try{ r41GarageRidge(); }catch(e){ console.warn('[r41] garage ridge', e); R41R.err.push(String(e)); } return r; }; }
 /* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
    the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
    both sides, flush cup pulls) that slides into the wall on the fridge side (owner 11/10) and can be closed; the wall closed above it; and the attic
@@ -22189,14 +22253,38 @@ const R17CO = {k: .62};   // R17-3 outdoor contact strength (pieces in open shad
    the last foot under the overhang. The same faces get a band down from the face top (1.0 ft), skipped where a window or door head
    reaches into it. Both fade with 1 - EXPO_IN (outdoor views), in Tour, Walk and Dollhouse. */
 const R17E = {step: .75, gW: 1.8, wW: 1.2, eW: 1.1, sG: .5, sW: .62, sE: .66, lift: .02};   // outdoors (sun + sky) needs a deeper band than r13's indoor corners to read
+/* r41 (owner 11/12 "a weird semi transparent artifact above the garage"): the R17-2 eave band was hung from the top of each exterior
+   face's band boxes (meta exteriorFaces bands[].z). On a gable end that box is a rectangle up to the ridge (W-LG-003, the garage front:
+   shingle band z 5.66-10.21 across the whole 14.5 ft), so a 1.1 ft multiply-blended strip ran flat at ridge height from corner to
+   corner: over the sky above both rakes, a pale off-white quad with a level top and vertical ends. The wall's real upper outline
+   comes from the house's own wall meshes: every wall triangle lying in the face's outer plane (normal along n, within 0.3 ft),
+   projected to (s, z); top(s) = the highest point of those triangles over the vertical line at s, or null where no wall is there. */
+function r41WallTris(){ const T = [], A = new THREE.Vector3(), B = new THREE.Vector3(), Cc = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+  for(const gn of ['main', 'upper']){ const g = GROUPS[gn]; if(!g) continue; g.updateMatrixWorld(true);
+    for(const o of g.children){ if(!o.isMesh || !/^walls\|/.test(o.name) || !o.geometry || !o.geometry.attributes.position) continue;
+      const P = o.geometry.attributes.position, I = o.geometry.index, nt = (I ? I.count : P.count) / 3, M = o.matrixWorld;
+      for(let t = 0; t < nt; t++){ const ia = I ? I.getX(3 * t) : 3 * t, ib = I ? I.getX(3 * t + 1) : 3 * t + 1, ic = I ? I.getX(3 * t + 2) : 3 * t + 2;
+        A.fromBufferAttribute(P, ia).applyMatrix4(M); B.fromBufferAttribute(P, ib).applyMatrix4(M); Cc.fromBufferAttribute(P, ic).applyMatrix4(M);
+        e1.subVectors(B, A); e2.subVectors(Cc, A); e1.cross(e2); const l = e1.length(); if(l < 1e-8 || Math.abs(e1.y) / l > .3) continue;   // vertical faces only
+        T.push(e1.z / l, e1.x / l, A.z, A.x, A.y, B.z, B.x, B.y, Cc.z, Cc.x, Cc.y); } } }   // plan normal (bim x = world z, bim y = world x), then 3 x (bim x, bim y, z)
+  return T; }
+function r41FaceTop(T, f){ if(!T || !T.length) return null; const n = f.n, u = f.u, o = f.origin, S = [];
+  for(let i = 0; i < T.length; i += 11){ if(Math.abs(T[i] * n[0] + T[i + 1] * n[1]) < .95) continue; const q = [];
+    for(let j = 0; j < 3; j++){ const dx = T[i + 2 + 3 * j] - o[0], dy = T[i + 3 + 3 * j] - o[1], d = dx * n[0] + dy * n[1]; if(Math.abs(d) > .3) break; q.push(dx * u[0] + dy * u[1], T[i + 4 + 3 * j]); }
+    if(q.length === 6 && Math.max(q[0], q[2], q[4]) > f.s[0] && Math.min(q[0], q[2], q[4]) < f.s[1]) S.push(q); }
+  if(!S.length) return null;
+  return s => { let best = null; for(const q of S){ for(let a = 0; a < 3; a++){ const b = (a + 1) % 3, sa = q[2 * a], sb = q[2 * b], za = q[2 * a + 1], zb = q[2 * b + 1];
+        if(s < Math.min(sa, sb) - 1e-4 || s > Math.max(sa, sb) + 1e-4) continue; const z = Math.abs(sb - sa) < 1e-6 ? Math.max(za, zb) : za + (zb - za) * (s - sa) / (sb - sa);
+        if(best === null || z > best) best = z; } } return best; }; }
 function r17Bands(){ if(!BIM2S || typeof walkSurfaceAt !== 'function' || typeof r13Band !== 'function') return null;
   const F = BIM2S.exteriorFaces || (BIM2S.meta && BIM2S.meta.exteriorFaces) || [], OP = BIM2S.openings || [], E = R17E, P = {}, C = {}, rep = {faces: 0, base: 0, eave: 0, tris: 0};
   const opening = (x, y, z0, z1) => { for(const o of OP){ const ax = o.axis || [1, 0], nn = o.normal || [-ax[1], ax[0]], dx = x - o.center[0], dy = y - o.center[1];
       if(Math.abs(dx * ax[0] + dy * ax[1]) < o.width / 2 + .1 && Math.abs(dx * nn[0] + dy * nn[1]) < (o.thickness || .5) / 2 + .5 && o.sill < z1 && o.head > z0) return true; } return false; };
   const V = (x, y, z) => { const w = W2(x, y); return [w[0], z, w[1]]; };
   const prof = R13U.map(u => (1 - u) * (1 - u));
+  const WT = r41WallTris(); rep.eaveCut = 0; rep.eaveNoWall = 0;
   for(const f of F){ if(!f.origin || !f.u || !f.n || !f.s || !f.bands) continue; const s0 = f.s[0], s1 = f.s[1], L = s1 - s0; if(L < .8) continue; rep.faces++;
-    const key = f.storey === 'L2' ? 'upper' : 'main', N = Math.max(1, Math.ceil(L / E.step)), mk = () => R13U.map(() => []), gr = mk(), wb = mk(), eb = mk();
+    const key = f.storey === 'L2' ? 'upper' : 'main', N = Math.max(1, Math.ceil(L / E.step)), mk = () => R13U.map(() => []), gr = mk(), wb = mk(), eb = mk(), top = r41FaceTop(WT, f);
     for(let k = 0; k <= N; k++){ const s = s0 + Math.min(L - .02, Math.max(.02, L * k / N)), x = f.origin[0] + f.u[0] * s, y = f.origin[1] + f.u[1] * s;
       let z0 = Infinity, z1 = -Infinity; for(const b of f.bands){ if(s >= b.s[0] - 1e-3 && s <= b.s[1] + 1e-3){ z0 = Math.min(z0, b.z[0]); z1 = Math.max(z1, b.z[1]); } }
       const ox = x + f.n[0] * .45, oy = y + f.n[1] * .45, wo = W2(ox, oy); let g = null; try{ g = walkSurfaceAt(wo[0], wo[1], z0 + .5); }catch(e){}
@@ -22205,8 +22293,11 @@ function r17Bands(){ if(!BIM2S || typeof walkSurfaceAt !== 'function' || typeof 
         const d = u * E.gW, q = W2(x + f.n[0] * (d + .01), y + f.n[1] * (d + .01)); let gz = g; try{ gz = walkSurfaceAt(q[0], q[1], g + .4); }catch(e){}
         gr[r].push(Math.abs(gz - g) < .35 ? V(x + f.n[0] * (d + .01), y + f.n[1] * (d + .01), gz + E.lift) : null);
         wb[r].push(V(x + f.n[0] * .012, y + f.n[1] * .012, g + .01 + u * E.wW)); });
-      const okE = isFinite(z1) && z1 - z0 > 3 && !opening(x, y, z1 - E.eW, z1 + .2);
-      R13U.forEach((u, r) => eb[r].push(okE ? V(x + f.n[0] * .012, y + f.n[1] * .012, z1 - .02 - u * E.eW) : null)); }
+      // r41: the eave band hangs from the wall's REAL top at s (its siding's upper outline), not the top of the face's band boxes: a
+      // gable end's band box runs flat at ridge height across the whole face, so the band floated over the sky above both rakes
+      let zt = z1; if(top){ const t = top(s); if(t == null){ zt = -Infinity; rep.eaveNoWall++; } else if(t < z1 - .05){ zt = t; rep.eaveCut++; } }
+      const okE = isFinite(zt) && zt - z0 > 3 && !opening(x, y, zt - E.eW, zt + .2);
+      R13U.forEach((u, r) => eb[r].push(okE ? V(x + f.n[0] * .012, y + f.n[1] * .012, zt - .02 - u * E.eW) : null)); }
     for(let k = 0; k <= N; k++) if(gr.some(r => !r[k])) for(const r of gr) r[k] = null;
     const p = P[key] = P[key] || [], c = C[key] = C[key] || [];
     r13Band(p, c, gr, r13Shade(gr, E.sG)); r13Band(p, c, wb, r13Shade(wb, E.sW)); r13Band(p, c, eb, r13Shade(eb, E.sE));
