@@ -21058,7 +21058,7 @@ const R42G = window.R42G = {a: .004, edge: 0xc6dbd0, edgeOp: .42, graze: [.95, 1
 let R42G_M = null, R42G_E = null;
 function r42ShowerGlass(){
   if(R42G_M) return R42G_M;
-  const m = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: .02, metalness: 0, transparent: true, depthWrite: false, side: THREE.DoubleSide}); m.name = 'showerGlass42';
+  const m = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: .02, metalness: 0, transparent: true, opacity: .28, depthWrite: false, side: THREE.DoubleSide}); m.name = 'showerGlass42';   // opacity: unused by the glass shader; kept at the fixture glass's .28 so picks and the nav probes still see through it as before
   glassify(m, {inside: true, thick: true});
   const prev = m.onBeforeCompile, pk = m.customProgramCacheKey, G = R42G.graze;
   m.onBeforeCompile = function(sh, r){ if(prev) prev.call(this, sh, r);
