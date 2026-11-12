@@ -10356,8 +10356,7 @@ function lightMeterPoll(){
   gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
   let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = METER.atlas ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
   METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt;
-  if(METER.atlas){ const A = METER.atlas, V = []; for(let q = 0; q < 256; q++) V.push(METER.buf[q * 4] / 255); V.sort((p, q) => p - q);   // r41 G5: all-round view, trimmed mean (no night windows, no lamp hot spots)
-    let t = 0; const a = Math.floor(256 * A.lo), b = Math.ceil(256 * A.hiQ); for(let q = a; q < b; q++) t += V[q]; METER.m = t / Math.max(1, b - a) * A.cal; METER.hi *= A.hiK; }   // r41 G5: the all-round view (see GHOST r41)
+  if(METER.atlas){ const A = METER.atlas; METER.m *= DUSK ? A.calDusk : A.cal; METER.hi *= A.hiK; }   // r41 G5: the all-round view, evenly weighted; calibrated to the screen meter's mean over the 18 room stops (see GHOST r41)   // r41 G5: the all-round view (see GHOST r41)
 }
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
@@ -22249,7 +22248,13 @@ BIM3.report.r17 = R17.report;
       closet door and the corner, ...). Right after the model loads, each such room face is moved onto the plane of the longer segment
       it meets: wall paint, baseboard and casing vertices within 1" in front of the short face, the ceiling / floor edge on that line,
       and the room polygon's edge (so the corner bands and the interior mask follow). Real jogs (more than 3") are untouched.
-   ?ghost41=0 turns G1-G4 off. */
+   G5 rule:meter-where-you-stand - the camera meter read the picture on screen (centre-weighted 16x16): turning 5 degrees in place moved
+      the exposure by up to .1 stop (14/255 on a white wall, stairs and loft stops), so recessed cans or a window entering the frame
+      brightened or darkened the whole room. The meter now reads four level 90-degree views around the eye (one 32-px view per frame
+      into a 2 x 2 atlas, redrawn when the eye moves 2.4" or every 1.5 s), evenly weighted: the same for every direction you look from
+      one spot. Calibrated so the 18 room stops average what the screen meter gave (day x.97, dusk x.906 on the mean; individual stops
+      within about +/-.35 stop of before, most within .16). The eye-adaptation ease (tau .45 s, .3 stop/s) is unchanged.
+   ?ghost41=0 turns G1-G5 off (?ghost41m=0: G5 only). */
 const GHOST41 = window.GHOST41 = {on: !/[?&]ghost41=0\b/.test(location.search), jogs: [], shadowSkips: 0, cullShown: 0, ssao: 'off'};
 function ghostFlattenJogs(S){
   if(!GHOST41.on || !S || !S.colliders || !S.meshes) return 0;
@@ -22305,9 +22310,9 @@ if(GHOST41.on){
   LOOK.aoStrength = 0;
   // G5: the camera meter reads where the camera STANDS, not where it looks
   if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
-    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, lo: .25, hiQ: .9, cal: 1, hiK: 1, M: METER};
+    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, cal: .97, calDusk: .906, hiK: 1, M: METER};
     METER_PASS.render = function(r, w, read){
-      if(!LIGHT.meter.on || !METER.quad) return; if(G5.off){ METER.atlas = null; return orig.call(this, r, w, read); }   // G5.off: QA comparison with the screen meter
+      if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
       const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
       if(!G5.rt){ G5.rt = new THREE.WebGLRenderTarget(2 * Q, 2 * Q, {minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat}); G5.rt.texture.generateMipmaps = false; }
       if(G5.k >= 4 && (cp.distanceToSquared(G5.pos) > .04 || now - G5.at > 1500 || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; }
