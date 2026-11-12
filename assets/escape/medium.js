@@ -16,9 +16,9 @@
 
     /* ---------------------------------------------------------------- places */
     const PL = {
-      kitchen:  {name: 'Coffee bar', short: 'Kitchen', floor: 'main', pos: [15.0, EYE, 9.3], face: [20.0, 2.6, 11.6], map: [19.0, 9.6],
+      kitchen:  {name: 'Coffee bar', short: 'Coffee bar', floor: 'main', pos: [15.0, EYE, 9.3], face: [20.0, 2.6, 11.6], map: [19.0, 9.6],
         note: 'The coffee bar, with its own drinks fridge, beside the kitchen. The treats live here. Lived here.'},
-      great:    {name: 'Great room', floor: 'main', pos: [13.6, EYE, 31.6], face: [11.0, 1.4, 25.0], fov: 58, map: [10.4, 28.2],
+      great:    {name: 'Great room', floor: 'main', pos: [14.8, EYE, 31.2], face: [11.0, 1.8, 25.0], fov: 58, map: [10.4, 28.2],
         note: 'The dining table and the sitting area share one long room, with large windows along one side.'},
       frontbed: {name: 'Front bedroom', short: 'Front bed', floor: 'main', pos: [19.4, EYE, 33.4], face: [29.0, 4.0, 29.0], map: [23.5, 30.5],
         note: 'The first of three bedrooms on the main level. Its door is a pocket door off the dining area.'},
@@ -34,7 +34,7 @@
         note: 'The entry, with the stairs off to the side: up to the loft, down to the lower level.'},
       lounge:   {name: 'Bonus lounge', short: 'Lounge', floor: 'lower', pos: [-14.4, LE, -15.6], face: [-22.6, LY + 2.6, -21.4], map: [-16.5, -18.5],
         note: 'The bonus lounge: a big TV, a refreshment counter with its own drinks fridge, and glass doors to the terrace.'},
-      office:   {name: 'Skylit office', short: 'Office', floor: 'lower', pos: [-25.0, LE, -11.0], face: [-30.0, LY + 3.0, -8.4], map: [-27.0, -7.5],
+      office:   {name: 'Skylit office', short: 'Office', floor: 'lower', pos: [-27.3, LE, -11.4], face: [-30.2, LY + 2.4, -7.6], map: [-27.0, -7.5],
         note: 'The skylit office, across the lower entry from the laundry room. Two skylights, and windows on two walls.'},
       lhall:    {name: 'Lower hall', short: 'Lower hall', floor: 'lower', pos: [-18.5, LE, -26.6], face: [-18.5, LY + 4.4, -36.0], map: [-18.5, -30.0],
         note: 'The lower hall: a bedroom at each end and the bath between them.'},
@@ -227,7 +227,7 @@
         sheet: () => ({title: 'Biscuit', body: `${line('biscuit', 'Zzz. Mm. Sun. Sun’s gone. Zzz.')}<p>Biscuit is fast asleep on his bed in the gloom. Both big shades are down. He looks guilty, but he always looks guilty.</p>${line('snowball', 'Biscuit only naps in the sun. Somebody pulled the shades.')}`}),
         seen(){ give('metBiscuit'); checks(); }},
       shades: {from: ['great'], when: () => has('metBiscuit'), label: () => greatUp() ? 'Big windows' : 'Shades on the big windows', at: () => [4.9, 5.4, 25.4], pos: [10.6, 5.2, 25.4], look: [4.7, 4.6, 25.4], fit: {w: 14.5, h: 6.4},
-        sheet: () => ({title: 'The big windows', body: greatUp() ? '<p>Fourteen feet of glass, with the roller shades rolled right up. The sun comes in here in the afternoon and moves across the floor as it goes down.</p>' : '<p>Two picture windows, fourteen feet of glass, with both roller shades pulled all the way down.</p>',
+        sheet: () => ({title: 'The big windows', body: greatUp() ? '<p>Two large picture windows, with the roller shades rolled right up. The sun comes in here in the afternoon and moves across the floor as it goes down.</p>' : '<p>Two large picture windows, with both roller shades pulled all the way down.</p>',
           acts: [greatUp() ? {label: 'Lower the shades', cls: '', run: () => act(() => { SND.shade(); shade('WN-L1-03', true); }, 900)} : {label: 'Raise the shades', run: () => act(() => { SND.shade(); shade('WN-L1-03', false); give('greatUp'); setTimeout(() => { checks(); if(!has('biscuitAwake')) sunKey(true); }, 700); }, 900)}]})},
       bed: {from: ['great'], when: () => has('biscuitAwake'), label: () => 'Biscuit’s bed', at: () => [BED[0], .6, BED[2]], pos: [BED[0] + .3, 5.0, BED[2] + 2.4], look: [BED[0], .2, BED[2]], fit: {w: 2.4, h: 2.4},
         sheet: () => ({title: 'Under Biscuit', body: `<p>He was lying on a napkin. On it, six dog biscuits laid out in a big six. In the corner, a little party hat.</p>${line('biscuit', 'Those are for later. Not for now. Nobody said anything.')}<div class="got">${ICON('biscuit', 34)}<b>6</b><span>Biscuit’s number</span></div>`}),
@@ -247,7 +247,7 @@
         sheet: () => ({title: 'Pepper', body: has('p_pepper') ? `${line('pepper', 'NINE! NINE! I DIDN’T SAY ANYTHING!')}<div class="got">${ICON('pepper', 34)}<b>9</b><span>Pepper’s number, in the rainbow</span></div>`
           : `${line('pepper', 'SURPRISE! ... No. Nothing. NO RAINBOW, NO TALKING!', true)}<p>The bottom of the window over the bed is covered in rainbow film, with strips of paper stuck on it in a boxy figure. Some are card, some are tracing paper.</p>`}),
         seen(){ if(give('metPepper')){ SND.chirp(); setTimeout(() => say('She said surprise. Write that down.', 4200), 1400); W.rainbow.update(); } }},
-      rainbow: {from: ['lbed2'], sun: true, when: () => has('metPepper') && W.film && W.film.s > .05, label: () => 'Rainbow on the floor', at: () => [-22.5, LY + .3, -34.9], pos: [-21.8, LY + 7.2, -32.2], look: [-22.4, LY, -35.0], fit: {w: 3.6, h: 3.0},
+      rainbow: {from: ['lbed2'], sun: true, when: () => has('metPepper') && W.film && W.film.s > .05, label: () => 'Rainbow on the floor', at: () => [-22.55, LY + .3, -35.3], pos: [-21.9, LY + 7.2, -32.6], look: [-22.55, LY, -35.45], fit: {w: 3.6, h: 3.0},
         sheet: () => rainbowUp() ? {title: 'Rainbow on the floor', body: '<p>Colour all over the floor, and the card strips on the film leave a dark figure in it. The tracing paper lets the colour through.</p>'}
           : {title: 'Rainbow on the floor', body: '<p>Colour on the floor, but the shadows of the paper are pulled out of shape. Not quite the right time.</p>'},
         seen(){ if(rainbowUp()) readRainbow(); }},

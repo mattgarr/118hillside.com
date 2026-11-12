@@ -588,7 +588,7 @@
     #escSheet.on{transform:none}#escSheet h3{font-size:24px}#escSheet p{font-size:15.5px}#escSheet .line{font-size:21px}
     html.esc-ex #escDock{visibility:hidden}html.esc-ex.esc-exsun #escSun{visibility:visible;position:fixed;left:10px;right:10px;bottom:calc(var(--sheet-h,180px) + 18px)}
     html.esc-ex #escBack{display:none}
-    .escPad{grid-template-columns:repeat(5,1fr);gap:7px}.escPad button{height:50px}.escPad .z{grid-column:auto}.escPad .c{display:none}.escDisp .c2{display:grid!important}.escDelW{display:flex}
+    .escPad{grid-template-columns:repeat(5,1fr);gap:7px}.escPad button{height:50px}.escPad .z{grid-column:auto}.escPad .c{display:none}.escDisp .c2{display:grid!important}.escDelW{display:flex}#escToast{top:40%}
     #escCard .c{padding:20px 18px 18px}#escCard .note{font-size:21px}#escCard .lede{font-size:19px}
     #escCard .lv{gap:6px}#escCard .lv button{padding:8px 9px 8px}#escCard .lv .t{font-size:17px}#escCard .lv small{font-size:12px}
     #escCard.side{place-items:end center;padding:8px}#escCard.side .c{box-sizing:border-box;max-width:560px;max-height:calc(100% - 180px);padding:16px 16px 14px}#escCard.side h2{font-size:32px}#escCard.side .lede{font-size:18px;margin-bottom:10px}#escCard.side .stats{margin-bottom:10px}
@@ -780,7 +780,7 @@
     else { stack(dockL, r.left, r.left + 290, 66); stack(dockR, r.left + r.width - 290, r.left + r.width, 66); }
     for(const it of items){ const m = it.m;
       if(!it.docked){ const y0 = it.y, all = obs.concat(placed), free = y => { it.y = y; const q = box(it); return !all.some(o => hit(q, o)); };
-        if(!free(y0)){ let ok = false; for(let k = 1; k <= 24 && !ok; k++) for(const d of (y0 > r.top + r.height * .55 ? [-1, 1] : [1, -1])){ const y = y0 + d * 30 * k; if(y < r.top + top || y > r.top + bot) continue; if(free(y)){ ok = true; break; } } if(!ok) it.y = y0; }
+        if(!free(y0)){ let ok = false; for(let k = 1; k <= 3 && !ok; k++) for(const d of (y0 > r.top + r.height * .55 ? [-1, 1] : [1, -1])){ const y = y0 + d * 30 * k; if(y < r.top + top || y > r.top + bot) continue; if(free(y)){ ok = true; break; } } if(!ok) it.y = y0; }
         placed.push(box(it)); }
       m.b.style.transform = `translate(${it.x.toFixed(1)}px,${it.y.toFixed(1)}px)`; const cls = 'escMk ' + m.kind + ' on' + (it.edge ? ' edge ' + it.edge : '') + (m.kind === 'walk' && !S.coach.walk ? ' first' : '');
       if(m.b.className !== cls) m.b.className = cls; m.on = true; } }
@@ -832,7 +832,10 @@
     for(const a of (acts || [])){ const b = el('button', {class: 'escBtn ' + (a.cls || 'dark'), type: 'button'}, a.label); b.onclick = () => { if(S.busy || rig.move) return; SND.unlock(); a.run(); }; row.appendChild(b); }
     const bk = el('button', {class: 'escBtn', type: 'button'}, `${ICO.back}<span>Back to the ${esc(PLACES[S.place].name.toLowerCase())}</span>`); bk.onclick = () => back(); row.appendChild(bk);
     $('#escBack span').textContent = 'Back to the ' + PLACES[S.place].name.toLowerCase(); }
-  function sheetFor(ex){ const sp = SPOTS[ex.id]; if(!sp) return; if(sp.lock) return sheetLock(sp); const r = sp.sheet(); sheet(r.title, r.body, r.acts); if(r.after) r.after(sheetE); }
+  function sheetFor(ex){ const sp = SPOTS[ex.id]; if(!sp) return; if(sp.lock) return sheetLock(sp); const h0 = sheetE.getBoundingClientRect().height, r = sp.sheet(); sheet(r.title, r.body, r.acts); if(r.after) r.after(sheetE);
+    // a sheet that grows or shrinks moves the sun slider and, on a phone, the space left for the picture
+    const h1 = sheetE.getBoundingClientRect().height; document.documentElement.style.setProperty('--sheet-h', Math.round(h1) + 'px');
+    if(phone() && h0 > 0 && Math.abs(h1 - h0) > 40 && S.ex && !S.busy && !rig.move){ S.busy = true; frameExamine(.5, () => { S.busy = false; }); } }
   // an animal's line, with its picture
   const CATICON = () => UI.cat || (UI.cat = window.SNOWBALL ? SNOWBALL.svg({id: 'sbln', seed: 7}).replace(/viewBox="[^"]+"/, 'viewBox="130 20 240 250"').replace('<svg ', '<svg width="30" height="30" ') : '');
   const line = (who, text, big) => `<div class="line${big ? ' big' : ''}">${who === 'snowball' ? CATICON() : window.ESC_PETS ? ESC_PETS.icon(who, 30) : ''}<span>${esc(text)}</span></div>`;

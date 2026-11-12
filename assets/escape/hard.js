@@ -128,6 +128,13 @@
           g.beginPath(); g.ellipse(0, 4, 7, 6, 0, 0, 7); g.fill(); for(const [dx, dy] of [[-7, -5], [-2.5, -8.5], [2.5, -8.5], [7, -5]]){ g.beginPath(); g.ellipse(dx, dy, 2.2, 3, 0, 0, 7); g.fill(); } g.restore(); }
         g.globalAlpha = 1; };
       W.front = windowSource('D-LG-02', {room: 'SP-L1-ENTRY', bot: .1, top: 7.8, inset: .25, bars: grid, decal: prints});
+      // the dust itself, drawn on the floor and faded in only while the low morning sun is on it (the holes in the light alone are too faint on a bright phone screen)
+      { const X0 = -10.2, Z0 = -3.2, FW = 6.6, FH = 6.0, K = 100, cv = document.createElement('canvas'); cv.width = FW * K; cv.height = FH * K; const g = cv.getContext('2d');
+        g.fillStyle = 'rgba(92,74,52,.62)';
+        for(let i = 0; i < PR.length; i++){ const [px, pz] = PR[i], n = PR[Math.min(i + 1, PR.length - 1)], q = PR[Math.max(i - 1, 0)], du = n[0] - q[0], dv = n[1] - q[1];
+          g.save(); g.translate((px - X0) * K, (pz - Z0) * K); g.rotate(Math.atan2(du, -dv)); g.scale(3.6, 3.6);
+          g.beginPath(); g.ellipse(0, 4, 7, 6, 0, 0, 7); g.fill(); for(const [dx, dy] of [[-7, -5], [-2.5, -8.5], [2.5, -8.5], [7, -5]]){ g.beginPath(); g.ellipse(dx, dy, 2.2, 3, 0, 0, 7); g.fill(); } g.restore(); }
+        W.pm = prop(cv, [X0 + FW / 2, .03, Z0 + FH / 2], [0, 1, 0], FW, FH, {tone: 1}); W.pm.material.opacity = 0; W.pm.visible = false; }
       W.entry = lightPlane({floor: 'SP-L1-ENTRY', ppf: 34, gain: 1.7, sources: [W.front, windowSource('D-L0-11', {room: 'SP-L1-ENTRY', bot: .1, top: 7.8, inset: .25, bars: grid})]});
       // ---- Pepper's desk: the office skylights, the square of light on the floor and the desk; paper on one skylight leaves a 5 on the desk at a quarter past two
       const skyQuad = id => { const it = shadeItem(id), R = it.rects[0], P = (a, b) => R.c.clone().addScaledVector(R.u, a).addScaledVector(R.v, b); return {it, R, quad: [P(-R.hu * .92, -R.hv * .92), P(R.hu * .92, -R.hv * .92), P(R.hu * .92, R.hv * .92), P(-R.hu * .92, R.hv * .92)], out: R.n.clone().negate()}; };
@@ -316,7 +323,8 @@
         catAt([-9.2, 0, -5.6]); if(!resumed) setTimeout(() => say('The longest day of the year. Lots of daylight to work with. Ask Biscuit.', 5200), E.phone() ? 7200 : 2600); },
       onHour(){ checks(); },
       onArrive(k){ if(k === 'kitchen') admiralPose(); if(k === 'terrace') door('D-L0-10', true); },
-      frame: () => { if(W.mirror) W.mirror.visible = !!(S.ex && S.ex.id === 'mirror' && !S.backing); },
+      frame: () => { if(W.mirror) W.mirror.visible = !!(S.ex && S.ex.id === 'mirror' && !S.backing);
+        if(W.pm){ const on = printsUp() ? 1 : 0, o = W.pm.material.opacity; if(Math.abs(on - o) > .01){ W.pm.material.opacity = o + (on - o) * .18; wake(2); } else W.pm.material.opacity = on; W.pm.visible = W.pm.material.opacity > .01; } },
       progress: () => { const n = ['p_biscuit', 'p_pepper', 'p_admiral', 'p_sunset'].filter(has).length, m = ['sheetUp', 'sheetMain', 'sheetLow'].filter(has).length; return (n || m) ? `Numbers ${n}/4 · Sheets ${m}/3` : ''; },
       numbers: () => [['p_biscuit', 'biscuit'], ['p_pepper', 'pepper'], ['p_admiral', 'admiral'], ['p_sunset', 'snowball']].filter(([p]) => has(p))
         .map(([p, who]) => ({icon: who === 'snowball' ? '' : ICON(who, 28), value: E.LG.parts[p].value, label: 'Read at ' + fmtH(S.read[p] != null ? S.read[p] : S.hour)})),
