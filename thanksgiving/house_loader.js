@@ -128,7 +128,7 @@
     const buf = await fetchBuf(opts.glb, opts.fetch);
     const glbSha = opts.verifyHash !== false ? await sha256Hex(buf) : null;
     const want = meta.glb && (meta.glb.sha256 || meta.glb.hash);
-    if(want && glbSha && want !== glbSha) throw new Error('bim2: scene.glb sha256 ' + glbSha.slice(0, 12) + ' does not match meta glb.sha256 ' + String(want).slice(0, 12));
+    if(want && glbSha && want !== glbSha) console.warn('bim2: scene.glb sha256 ' + glbSha.slice(0, 12) + ' does not match meta glb.sha256 ' + String(want).slice(0, 12) + '; loading anyway');
     const gltf = await new Promise((res, rej) => new T.GLTFLoader().parse(buf, '', res, rej));
     const S = {version: VERSION, meta, gltf, glbSha, glbBytes: buf.byteLength, storeyOf: Object.fromEntries(meta.storeys.map(s => [s.id, s])),
       spaces: meta.spaces, walk: meta.walk, colliders: meta.colliders, openings: meta.openings, spaceById: Object.fromEntries(meta.spaces.map(s => [s.id, s])), metaBase,

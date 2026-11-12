@@ -1858,7 +1858,7 @@ html.tgload .loading::after{content:"";position:absolute;left:0;right:0;top:-60p
   i.src = tg ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/tg_poster_ph.jpg' : 'thumbs/tg_poster.jpg') : hw ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/hw_poster_ph.jpg' : 'thumbs/hw_poster.jpg') : (() => { try{ const k = sessionStorage.getItem('hillside.tod.v27'); if(k && k !== 'dusk') return 'thumbs/p69.jpg'; }catch(e){} return 'thumbs/p02.jpg'; })(); })();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="house_loader.js?v=42"></script>
+<script src="house_loader.js?v=43"></script>
 <script>/* v20 reveal: count three.js loads in flight */ (function(){ var M = window.THREE && THREE.DefaultLoadingManager; if(!M) return;
   var R = window.__revealLM = {pending: 0, errors: 0, last: 0}, s = M.itemStart, e = M.itemEnd, x = M.itemError;
   M.itemStart = function(u){ R.pending++; R.last = performance.now(); return s.apply(this, arguments); };
@@ -22607,6 +22607,10 @@ const SELL36 = window.SELL36 = (() => {
   for(const ev of ['pointerdown', 'wheel', 'touchstart']) fin.addEventListener(ev, e => e.stopPropagation());   // the card is not the canvas: no drag or walk through it
   { const _ss = showStop; showStop = function(){ const r = _ss.apply(this, arguments); try{ finSync(); }catch(e){ console.warn('[sell36] finale', e); } return r; }; }
   { const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); try{ finSync(); }catch(e){ console.warn('[sell36] finale', e); } return r; }; }
+  /* r43 analytics: one GA4 event per stop reached (tour_stop) and per mode change (tour_mode), so the owner can see how far visitors get */
+  { let gaStop = -1, gaMode = mode, gaSeen = 0; const gaSend = (n, p) => { try{ if(typeof window.gtag === 'function') window.gtag('event', n, p); }catch(e){} };
+    const _ssA = showStop; showStop = function(){ const r = _ssA.apply(this, arguments); try{ if(stopIdx !== gaStop){ gaStop = stopIdx; gaSeen++; const s = STOPS[stopIdx] || {}; gaSend('tour_stop', {stop_id: s.id, stop_name: s.t, stop_number: stopIdx + 1, stops_seen: gaSeen, mode: mode}); } }catch(e){} return r; };
+    const _smA = setMode; setMode = function(){ const r = _smA.apply(this, arguments); try{ if(mode !== gaMode){ gaMode = mode; gaSend('tour_mode', {mode: mode, stop_id: (STOPS[stopIdx] || {}).id}); } }catch(e){} return r; }; }
   addEventListener('resize', () => { if(!fin.hidden) finPlace(); });
   if(window.ResizeObserver) new ResizeObserver(() => { if(!fin.hidden) finPlace(); }).observe(card);
   return {open, close, dlg, fin, facts: F, sync: finSync};
