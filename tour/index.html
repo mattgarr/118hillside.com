@@ -20782,9 +20782,9 @@ const R42D = window.R42D = {merged: 0, tris: 0, bevel: 0, ao: 0, skipped: []};
 /* r42 (lead 11/12: "real recessed panels that read clearly ... a real contact-shadow cue: ambient occlusion baked per vertex into the panel's inner
    perimeter, a few inches wide and subtle, on the geometry. No colour tint on the panel field"). The room light that reaches a panel's floor
    next to the bevel is cut by the bevel and the rail above it (the light of a recessed panel is darkest in that corner, open in the middle).
-   Each panel floor is split into triangles no longer than R42C.cell (edges split at midpoints only, so neighbours agree and no T-joints)
-   and every vertex carries 'r42occ' = how much of the ambient (image) light it loses: R42C.max at the bevel's foot, easing to 0 R42C.width
-   in; the bevel itself loses R42C.max at its foot and R42C.bevelTop at its top edge. The trim paint's shader multiplies only the indirect
+   Each rectangular panel floor becomes an inset ring (10 triangles a panel face; a non-rectangular one is split into triangles no longer
+   than R42C.cell instead) and every vertex carries 'r42occ' = how much of the ambient (image) light it loses: R42C.max at the bevel's foot,
+   fading to 0 R42C.width in; the bevel itself loses R42C.max at its foot and R42C.bevelTop at its top edge. The trim paint's shader multiplies only the indirect
    (ambient) light by 1 - r42occ: direct sun and lamps, colour and roughness are untouched, and every other trim mesh has no such attribute
    (WebGL reads 0: no change). */
 const R42C = {max: .42, width: 2.75 / 12, cell: .2, bevelTop: .1};
@@ -20818,7 +20818,37 @@ function r42DoorContact(G, na, I, nIa){
     else if(m === lbc){ const d = mid(b, c); split(a, b, d, sg, depth + 1); split(a, d, c, sg, depth + 1); }
     else { const d = mid(c, a); split(a, b, d, sg, depth + 1); split(d, b, c, sg, depth + 1); } };
   const V = i => [P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2], U0 ? U0[i * 2] : 0, U0 ? U0[i * 2 + 1] : 0];
-  for(const t of floorT) split(V(t[0]), V(t[1]), V(t[2]), side(t[0]), 0);
+  // a rectangular panel (the usual case: the leaf stands upright, the panel is a rectangle in its plane) gets an inset ring: 4 trapezoids
+  // from the outline (R42C.max) to a rectangle R42C.width in (0) and the open middle, 10 triangles a panel face, the falloff linear across
+  // the ring; anything else (or a panel too small for the ring) is split into small triangles and shaded per vertex as above
+  const up = new THREE.Vector3(0, 1, 0), hx = new THREE.Vector3().crossVectors(up, n); const rect = hx.lengthSq() > .5; hx.normalize();
+  const par = floorT.map((t, i) => i), find = i => { while(par[i] !== i) i = par[i] = par[par[i]]; return i; }, owner = new Map();
+  floorT.forEach((t, i) => { const sg = side(t[0]); for(const v of t){ const k = sg + ':' + pk(P0[v * 3], P0[v * 3 + 1], P0[v * 3 + 2]); const j = owner.get(k); if(j == null) owner.set(k, i); else par[find(i)] = find(j); } });
+  const comps = new Map(); floorT.forEach((t, i) => { const r = find(i); (comps.get(r) || comps.set(r, []).get(r)).push(t); });
+  const W = R42C.width;
+  for(const tris of comps.values()){ const sg = side(tris[0][0]);
+    let ok = rect, h0 = 1e9, h1 = -1e9, y0 = 1e9, y1 = -1e9, area = 0, d0 = 0;
+    for(const t of tris){ const q = t.map(v => [P0[v * 3] * hx.x + P0[v * 3 + 2] * hx.z, P0[v * 3 + 1]]);
+      for(const [a, b] of q){ h0 = Math.min(h0, a); h1 = Math.max(h1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }
+      area += Math.abs((q[1][0] - q[0][0]) * (q[2][1] - q[0][1]) - (q[2][0] - q[0][0]) * (q[1][1] - q[0][1])) / 2; }
+    d0 = P0[tris[0][0] * 3] * n.x + P0[tris[0][0] * 3 + 1] * n.y + P0[tris[0][0] * 3 + 2] * n.z;
+    if(!ok || Math.abs(area - (h1 - h0) * (y1 - y0)) > .01 * (h1 - h0) * (y1 - y0) || h1 - h0 < 2.5 * W || y1 - y0 < 2.5 * W){ for(const t of tris) split(V(t[0]), V(t[1]), V(t[2]), sg, 0); continue; }
+    // world point of (h, y) on this panel floor: p = hx * h + up * y + n * d (n, hx horizontal and orthonormal)
+    const uvf = (() => { const t = tris[0], A = t.map(v => [P0[v * 3] * hx.x + P0[v * 3 + 2] * hx.z, P0[v * 3 + 1], U0 ? U0[v * 2] : 0, U0 ? U0[v * 2 + 1] : 0]);
+      const det = (A[1][0] - A[0][0]) * (A[2][1] - A[0][1]) - (A[2][0] - A[0][0]) * (A[1][1] - A[0][1]);
+      if(Math.abs(det) < 1e-9) return () => [0, 0];
+      return (h, y) => { const s1 = ((h - A[0][0]) * (A[2][1] - A[0][1]) - (A[2][0] - A[0][0]) * (y - A[0][1])) / det, s2 = ((A[1][0] - A[0][0]) * (y - A[0][1]) - (h - A[0][0]) * (A[1][1] - A[0][1])) / det;
+        return [A[0][2] + s1 * (A[1][2] - A[0][2]) + s2 * (A[2][2] - A[0][2]), A[0][3] + s1 * (A[1][3] - A[0][3]) + s2 * (A[2][3] - A[0][3])]; }; })();
+    const pt = (h, y, o) => { const x = hx.x * h + n.x * d0, z = hx.z * h + n.z * d0, k = sg + ':' + pk(x, y, z); let i = vmap.get(k); if(i != null) return i; i = P.length / 3; vmap.set(k, i);
+      const uv = uvf(h, y); P.push(x, y, z); N.push(n.x * sg, n.y * sg, n.z * sg); if(U) U.push(uv[0], uv[1]); O.push(o); return i; };
+    const o = [pt(h0, y0, R42C.max), pt(h1, y0, R42C.max), pt(h1, y1, R42C.max), pt(h0, y1, R42C.max)], q = [pt(h0 + W, y0 + W, 0), pt(h1 - W, y0 + W, 0), pt(h1 - W, y1 - W, 0), pt(h0 + W, y1 - W, 0)];
+    // winding: as the model's own floor triangles face (+sg n); test one and flip all if needed
+    const t0 = tris[0], fa = new THREE.Vector3().fromArray(P0, t0[0] * 3), fb = new THREE.Vector3().fromArray(P0, t0[1] * 3), fc = new THREE.Vector3().fromArray(P0, t0[2] * 3);
+    const wantCCW = new THREE.Vector3().subVectors(fb, fa).cross(new THREE.Vector3().subVectors(fc, fa)).dot(n) * sg > 0;
+    const tri = (a, b, c) => { const A = new THREE.Vector3(P[a * 3], P[a * 3 + 1], P[a * 3 + 2]), B = new THREE.Vector3(P[b * 3], P[b * 3 + 1], P[b * 3 + 2]), C = new THREE.Vector3(P[c * 3], P[c * 3 + 1], P[c * 3 + 2]);
+      const ccw = new THREE.Vector3().subVectors(B, A).cross(new THREE.Vector3().subVectors(C, A)).dot(n) * sg > 0; if(ccw === wantCCW) out.push(a, b, c); else out.push(a, c, b); };
+    for(let k = 0; k < 4; k++){ const k1 = (k + 1) % 4; tri(o[k], o[k1], q[k1]); tri(o[k], q[k1], q[k]); }
+    tri(q[0], q[1], q[2]); tri(q[0], q[2], q[3]); R42D.rings = (R42D.rings || 0) + 1; }
   const nv = P.length / 3, I2 = new (nv > 65535 ? Uint32Array : Uint16Array)(nIa + out.length); I2.set(I.subarray(0, nIa)); I2.set(out, nIa);
   G.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3)); G.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N), 3));
   if(U) G.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(U), 2)); G.setAttribute('r42occ', new THREE.BufferAttribute(new Float32Array(O), 1));
