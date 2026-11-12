@@ -9454,7 +9454,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? window.__FEAST_SRC : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=9' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=47' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=41' : '../assets/escape/escape.js?v=39'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? window.__FEAST_SRC : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=10' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=49' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=42' : '../assets/escape/escape.js?v=40'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
@@ -22919,5 +22919,5 @@ html.ph .gsec .gh h3{grid-column:1;grid-row:1;margin:0}
 html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
-<script src="../assets/games-menu.js?v=1" defer></script>
+<script src="../assets/games-menu.js?v=2" defer></script>
 <script src="../assets/holiday/holiday.js?v=7" defer></script>

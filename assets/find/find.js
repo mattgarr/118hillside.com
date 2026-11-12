@@ -36,46 +36,46 @@
      are never offered as choices together. fit = which part of a tall photo the choice button shows. Facts come from the site's own copy. */
   const ROOM = {
     entry:   {name: 'Entry', at: 'in the entry', photo: '../images/entry-800.jpg', ar: .586, grp: ['front'], fy: 0, cam: [[.5, .05, 'the starburst light']],
-      fact: 'A cathedral ceiling and a starburst light, added in 2024.', say: 'Catch me if you can.', v: [[-12.25, -3.3, 90]],
+      fact: 'A cathedral ceiling and a starburst light, added in 2024.', say: 'Oh. You saw me. Bye.', v: [[-12.25, -3.3, 90]],
       spots: [{p: [-5.93, .06, -4.07], n: 'sitting in the middle of the entry', d: 0}]},
     living:  {name: 'Living room', at: 'in the living room', photo: '../images/living-room-800.jpg', ar: .591, grp: ['front'], fy: 0, cam: [[.62, .1, 'the wood beams'], [.5, .74, 'the glass coffee table']],
-      fact: 'Wood beams cross the ceiling. This part of the house is from the 1920s.', say: 'This rug is my favorite.', v: [[.8, -2.2, 125, 60, 95], [12.4, -4.6, 285, 240]],
+      fact: 'Wood beams cross the ceiling. This part of the house is from the 1920s.', say: 'Fine. The rug is still mine.', v: [[.8, -2.2, 125, 60, 95], [12.4, -4.6, 285, 240]],
       spots: [{p: [7.5, 1.39, -6.5], n: 'on the sofa, between the pillows', d: 1}, {p: [13.2, .05, -2.6], n: 'in a cardboard box by the big picture', d: 1, box: 1}, {p: [10, .06, -2.5], n: 'behind the coffee table', d: 2},
         {p: [12, .03, -7], n: 'at the far end of the sofa', d: 2}, {p: [10.5, .03, 2.5], n: 'tucked behind an armchair', d: 2, w: 1}, {p: [12.5, .03, -8.5], n: 'beside the lamp table', d: 2, w: 1}, {p: [13, .03, 4], n: 'behind the far armchair', d: 3}]},
     kitchen: {name: 'Kitchen', at: 'in the kitchen', photo: '../images/kitchen-800.jpg', ar: .64, grp: ['great'], fy: 0, cam: [[.45, .15, 'the shiny stove hood'], [.2, .76, 'the woven kitchen stools']],
-      fact: 'White quartz counters, and a peninsula big enough for homework.', say: 'I was only checking on dinner.', v: [[15.2, 10.2, 315, 225], [15, 18.6, 320, 240]],
+      fact: 'White quartz counters, and a long peninsula with stools.', say: 'I wasn’t licking anything.', v: [[15.2, 10.2, 315, 225], [15, 18.6, 320, 240]],
       spots: [{p: [6.5, 3.04, 13.5], n: 'on the counter by the sink', d: 1}, {p: [7, 2.18, 12], n: 'in the kitchen sink', d: 2}, {p: [14, .03, 17], n: 'at the end of the kitchen island', d: 2},
         {p: [6.5, .03, 18.5], n: 'past the last kitchen stool', d: 2, w: 1}, {p: [10, .03, 15.5], n: 'under the island, between the stools', d: 3, w: 1}, {p: [8.5, .03, 18.5], n: 'behind the kitchen stools', d: 3, w: 1}]},
     great:   {name: 'Great room', at: 'in the great room', photo: '../images/dining-800.jpg', ar: .7325, grp: ['great'], fy: 0, cam: [[.5, .82, 'the glass dining table'], [.12, .7, 'the wooden sideboard']],
-      fact: 'Kitchen, sitting area and dining table share one long, bright room.', say: 'I was watching the birds.', v: [[15, 26, 315, 223], [6.4, 23.9, 60, 135]],
+      fact: 'Kitchen, sitting area and dining table share one long, bright room.', say: 'The birds started it.', v: [[15, 26, 315, 223], [6.4, 23.9, 60, 135]],
       spots: [{p: [5.5, 2.62, 34], n: 'on the back of the big sofa', d: 1}, {p: [9.5, 2.53, 20.5], n: 'on the dining table', d: 1}, {p: [15.8, .05, 32.5], n: 'in a cardboard box by the big sofa', d: 1, box: 1}, {p: [13.5, 1.65, 21.5], n: 'on a dining chair', d: 2},
         {p: [8.5, .06, 29], n: 'behind the round coffee table', d: 2}, {p: [11, .06, 32], n: 'between the sofa and the coffee table', d: 2}, {p: [6.5, .03, 18.5], n: 'behind the dining chairs', d: 3}]},
     mainbeds: {name: 'Main-level bedroom', at: 'in the main-level bedroom', photo: 'thumbs/p74.jpg', big: 'photos/p74.jpg', ar: .667, grp: ['bed'], fy: 0, cam: [[.2, .6, 'the wooden bedside table'], [.5, .12, 'the ceiling fan']],
-      fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'I was keeping the bed warm.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
+      fact: 'One of three bedrooms on a quiet hall of the main level.', say: 'Bed’s warm. You’re welcome.', v: [[19, 33.5, 141, 78], [26.9, 29.5, 250, 200]],
       spots: [{p: [22.5, 2.08, 29], n: 'on the bed', d: 1}, {p: [27, .03, 34], n: 'beside the white chair', d: 2}, {p: [27.5, .03, 29], n: 'on the far side of the bed', d: 2}, {p: [28, .03, 26], n: 'by the far bedside table', d: 2}, {p: [28, .03, 35], n: 'behind the white chair', d: 3}]},
     loft:    {name: 'Loft', at: 'in the loft', photo: 'thumbs/x06.jpg', big: 'photos/x06.jpg', ar: 1.333, fit: '50% 36%', grp: ['loft'], fy: 5.57, cam: [[.4, .66, 'the railing at the top of the stairs'], [.62, .3, 'the triangle windows']],
-      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'I like the sun up here.', v: [[-19.8, -9.8, 345, 180, 20], [-19, -16.8, 180, 0]],
+      fact: 'A sitting spot under the skylights, at the top of the stairs.', say: 'This sunbeam was taken.', v: [[-19.8, -9.8, 345, 180, 20], [-19, -16.8, 180, 0]],
       spots: [{p: [-24, 7.06, -7.5], n: 'on the window seat', d: 1}, {p: [-18, 5.6, -4.5], n: 'at the top of the stairs, behind the railing', d: 2}, {p: [-18, 5.6, -18], n: 'down the upstairs hall', d: 2},
         {p: [-21, 5.6, -20], n: 'round the corner in the upstairs hall', d: 2, w: 1}, {p: [-24, 5.6, -13.5], n: 'behind the big plant', d: 2}]},
     primary: {name: 'Primary bedroom', at: 'in the primary bedroom', photo: '../images/primary-bedroom-800.jpg', ar: .68, grp: ['suite', 'bed'], fy: 5.57, cam: [[.3, .5, 'the blue bedroom wall'], [.74, .5, 'the doors to the balcony']],
-      fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'The big bed is the best bed.', v: [[-12.8, -33.5, 274, 215, 330], [-16.6, -38.4, 20, 320]],
+      fact: 'Four skylights overhead, and glass doors to a private balcony.', say: 'Big bed. Best bed. Mine.', v: [[-12.8, -33.5, 274, 215, 330], [-16.6, -38.4, 20, 320]],
       spots: [{p: [-18.5, 7.66, -31], n: 'on the big bed', d: 1}, {p: [-19.5, 5.63, -38], n: 'at the corner of the big bed', d: 2}, {p: [-9.5, 5.6, -28.5], n: 'behind the dresser', d: 2},
         {p: [-21.5, 5.63, -37.5], n: 'between the bed and the balcony doors', d: 3}, {p: [-21, 5.63, -29], n: 'on the far side of the big bed', d: 3}]},
     pbath:   {name: 'Primary bath', at: 'in the primary bath', photo: '../images/primary-bath-800.jpg', ar: .68, grp: ['pbath'], fy: 5.57, cam: [[.88, .36, 'the brass shower'], [.2, .62, 'the towels on their rings']],
-      fact: 'Heated floors, two sinks, and a shower big enough for two.', say: 'The floor in here is warm.', v: [[-13.5, -22, 180, 27, 100]],
+      fact: 'Heated floors, two sinks, and a shower big enough for two.', say: 'Warm floor. I’m staying.', v: [[-13.5, -22, 180, 27, 100]],
       spots: [{p: [-10, 8.43, -25.1], n: 'on the bathroom counter', d: 1}, {p: [-9.5, 5.6, -19.1], n: 'in the gap by the shower glass', d: 1}, {p: [-11.5, 5.6, -19.1], n: 'in the shower, behind the glass', d: 2}, {p: [-14, 5.6, -16.1], n: 'round the little wall by the shower', d: 3}]},
     balcony: {name: 'Balcony', at: 'on the balcony', photo: '../images/hills-view-800.jpg', ar: .71, grp: ['suite', 'outside'], fy: 5.57, tod: 'golden', cam: [[.42, .34, 'the hills at sunset'], [.22, .52, 'the tall pine and the hills']],
-      fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'I was watching the hills.', v: [[-17.7, -42.5, 235, 125, 180]],   // out on the deck, turned off the house wall (the first place stood in the slider doorway with the door frame and bedroom in view)
+      fact: 'The balcony faces the western hills, for watching the sun go down.', say: 'The hills can wait.', v: [[-17.7, -42.5, 235, 125, 180]],   // out on the deck, turned off the house wall (the first place stood in the slider doorway with the door frame and bedroom in view)
       spots: [{p: [-20.5, 6.91, -44.5], n: 'on a balcony chair', d: 1}, {p: [-21.5, 5.6, -43.5], n: 'behind a balcony chair', d: 2}, {p: [-14, 5.6, -45.5], n: 'in the corner behind a balcony chair', d: 3}]},
     lower:   {name: 'Downstairs bedroom', at: 'in the downstairs bedroom', photo: '../images/bedroom-800.jpg', ar: .68, grp: ['bed'], fy: -4.56, cam: [[.75, .34, 'the picture on the green wall'], [.12, .42, 'the dark round picture']],
-      fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It is quiet down here.', v: [[-12.3, -40.5, 216, 160, 290], [-18.2, -40.3, 135, 90]],
+      fact: 'One of two bedrooms downstairs, near the skylit office.', say: 'It was quiet. Was.', v: [[-12.3, -40.5, 216, 160, 290], [-18.2, -40.3, 135, 90]],
       spots: [{p: [-16, -2.55, -47], n: 'on the bed, by the pillows', d: 1}, {p: [-12.4, -4.51, -45.2], n: 'in a cardboard box by the window', d: 1, box: 1}, {p: [-20, -4.5, -43], n: 'at the far corner of the bed', d: 2}, {p: [-20, -4.5, -46], n: 'on the far side of the bed', d: 3}]},
     lounge:  {name: 'Bonus lounge', at: 'in the bonus lounge', photo: '../images/rec-room-800.jpg', ar: .644, grp: ['lounge'], fy: -4.56, cam: [[.43, .32, 'the big screen'], [.2, .52, 'the black glass door']],
-      fact: 'Made for movie nights, with a big TV and a refreshment counter.', say: 'I am ready for movie night.', v: [[-13, -17.5, 255, 195, 330], [-19.3, -22.5, 60, 120]],
+      fact: 'Made for movie nights, with a big TV and a refreshment counter.', say: 'I was saving you a seat.', v: [[-13, -17.5, 255, 195, 330], [-19.3, -22.5, 60, 120]],
       spots: [{p: [-22, -1.52, -19], n: 'on the counter under the big screen', d: 1}, {p: [-15.5, -4.5, -21.5], n: 'under the glass table', d: 2}, {p: [-19.5, -4.5, -13], n: 'behind the two footstools', d: 2}, {p: [-18, -4.5, -24.5], n: 'behind the table and chairs', d: 2},
         {p: [-20, -4.53, -11], n: 'in the doorway to the stairs', d: 2, w: 1}, {p: [-11.5, -4.53, -23.5], n: 'behind a chair, by the glass doors', d: 3}]},
     terrace: {name: 'Terrace', at: 'on the terrace', photo: '../images/rear-yard-800.jpg', ar: .71, grp: ['outside'], fy: -4.75, tod: 'golden', open: true, cam: [[.74, .45, 'the trunk of the big oak'], [.3, .5, 'the back of the house, lit up']],
-      fact: 'An outdoor kitchen under a pergola, beside the heritage oak.', say: 'I was guarding the barbecue.', v: [[.4, -31, 274, 197, 120], [-2, -39.5, 200, 330]],
+      fact: 'An outdoor kitchen under a pergola, beside the heritage oak.', say: 'I was guarding the grill.', v: [[.4, -31, 274, 197, 120], [-2, -39.5, 200, 330]],
       spots: [{p: [-5, -3.21, -33], n: 'on the outdoor sofa', d: 1}, {p: [-8.5, -1.72, -39.5], n: 'on the outdoor kitchen counter', d: 1}, {p: [-2.5, -4.72, -40.5], n: 'beside the outdoor dining chairs', d: 2}, {p: [.5, -4.72, -41], n: 'by the outdoor dining table', d: 2}, {p: [1, -4.72, -38.5], n: 'behind the woven chair', d: 3}]}};
   const stopOf = id => H.STOPS.find(s => s.id === id), stopIx = id => H.STOPS.findIndex(s => s.id === id);
   const POOL = Object.keys(ROOM).filter(k => k !== 'entry' && stopOf(k));
@@ -355,11 +355,11 @@
     const t = performance.now(); S.mode = 'seek'; S.tSeek = S.tHint = S.tAct = t; S.tMeow = t - 5000; S.tSeen = 0; S.miss = 0; S.asked = 0; S.turned = S.walked = S.taught = false; lastWarm = -1; placeSteps(); ui(); saveRun('seek');
     later(() => { if(S.mode !== 'seek') return; snd('bell', {pan: panOf()}); S.tMeow = performance.now();
       if(S.step === 0){ toast('There he is. Tap Snowball.', 5200); ringUntil = performance.now() + 60000; }
-      else if(S.step === 4) toast('This is the last room. Find him.', 4200);
+      else if(S.step === 4) toast('Last room. Find him.', 4200);
       else if(S.hard) return;
-      else if(S.step === 1){ toast('He is hiding in this room. Turn to look for him.', 5200); nudge('turn', 5200); }
-      else if(S.vis[0].n < SEEN() && R.v.length > 1){ toast('He is tucked away. Try walking across the room.', 5200); nudge('walk', 5200); }
-      else if(S.step === 2) toast('He hides better now. Look for his ears, or his tail.', 4800); }, 900); }
+      else if(S.step === 1){ toast('He’s in this room somewhere. Turn and look.', 5200); nudge('turn', 5200); }
+      else if(S.vis[0].n < SEEN() && R.v.length > 1){ toast('He’s tucked in tight. Walk across the room.', 5200); nudge('walk', 5200); }
+      else if(S.step === 2) toast('He’s getting sneakier. Look for ears. Or a tail.', 4800); }, 900); }
 
   /* ---------- UI ---------- */
   const css = `
@@ -486,9 +486,9 @@
      the game does the second step itself. */
   function help(auto){ if(!S.on || S.mode !== 'seek' || H.anim || walk) return; const t = performance.now(); S.tHint = S.tAct = t; S.taught = true; if(!auto){ S.helps++; ga('find_help', {step: S.step, tier: S.asked}); }
     if(!auto && !S.asked && S.step > 0){ S.asked = 1; ui(); snd('bell', {pan: panOf(), vol: 1.2}); hop(.9, 520); const v = cur();
-      if(v.n < SEEN() && S.best !== S.view){ toast('He is behind something from here. Try walking.', 3600); nudge('walk', 5000); }
-      else if(!onScreen()){ const left = relYaw() > 0; edge.className = left ? 'l on' : 'r on'; later(() => edge.classList.remove('on'), 2600); toast(left ? 'Jingle. He is to your left.' : 'Jingle. He is to your right.', 2600); nudge('turn', 2600); }
-      else toast('He is in front of you. Look closely.', 2600); return; }
+      if(v.n < SEEN() && S.best !== S.view){ toast('Something’s in the way from here. Try walking.', 3600); nudge('walk', 5000); }
+      else if(!onScreen()){ const left = relYaw() > 0; edge.className = left ? 'l on' : 'r on'; later(() => edge.classList.remove('on'), 2600); toast(left ? 'Jingle. He’s to your left.' : 'Jingle. He’s to your right.', 2600); nudge('turn', 2600); }
+      else toast('He’s right in front of you. Squint.', 2600); return; }
     S.asked = 2; ui(); const go = () => { lookAtPoint(aimPt(), 650); ringUntil = performance.now() + 7000; S.tHint = performance.now(); snd('bell'); later(() => { if(S.mode === 'seek') hop(.5, 420); }, 700); }; if(S.view !== S.best) walkTo(S.best, go); else go(); }
 
   /* ---------- where he is on the screen ---------- */
@@ -513,11 +513,11 @@
     if(r && !seen && !S.hard && inBox(r.part, cx, cy, 26, 12)){ found(); return true; }   // a sliver of him (an ear round a corner) is too little to count as seen, but a tap right on it still finds him
     for(const m of STEPS){ if(!m.visible) continue; const s = scr(m.position); if(s && Math.hypot(cx - s.x, cy - s.y) < Math.max(44, s.px * 1.15) && clearTo(anchor, m.position, .3)){ tapRing(cx, cy); walkTo(m.userData.to); return true; } }
     tapRing(cx, cy); snd('tap'); S.miss++;
-    if(r && r.part && inBox(r.part, cx, cy, 150, 110)){ toast('Very close. He is right by there.', 1800); return true; }
-    if(S.miss === 3 || S.miss % 6 === 0) toast(S.hard ? 'Not there. Keep looking.' : 'Not there. Turn until the paws light up.', 2600); return true; };
+    if(r && r.part && inBox(r.part, cx, cy, 150, 110)){ toast('So close. He’s right there.', 1800); return true; }
+    if(S.miss === 3 || S.miss % 6 === 0) toast(S.hard ? 'Nope. Keep looking.' : 'Nope. Turn until the paws light up.', 2600); return true; };
 
   /* ---------- every frame ---------- */
-  const WARMTXT = ['', 'Cold', 'Warmer', 'Warm', 'Very warm', 'Right there'];
+  const WARMTXT = ['', 'Cold', 'Cool', 'Warm', 'Hot', 'Right there'];
   let lastWarm = -1, lastStuck = false, blinkAt = 0, raf = 0, clockSec = -1;
   function frame(t){ if(dead) return; raf = requestAnimationFrame(frame);
     try{ if(walk && walk.t0){ const o = walk, k = Math.min(1, (t - o.t0) / o.dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; anchor.lerpVectors(o.from, o.to, e); aim(o.yaw, o.pitch); if(k >= 1) o.land(); }
@@ -584,15 +584,15 @@
     return `<div class="fndCam"><img src="${rm.photo}" alt="" ${st}>${rm.big ? `<img src="${rm.big}" alt="" ${st}>` : ''}${IC.ears}</div>`; }
   function clue(){ if(dead) return; S.mode = 'clue'; ui(); saveRun('clue'); const next = S.trail[S.step + 1], first = S.step === 0, q = pickClue(next, room(), stepR(2)), sees = S.hard ? '' : ` He can see ${esc(q.c[2])}.`;
     const c = put(el('div', {id: 'fndCard', class: 'clue', role: 'dialog', 'aria-label': 'Where did Snowball go?'}, `<div class="c"><h2>Where did he go?</h2>
-      <div class="camrow">${camHTML(next, q.c)}<p>${first ? 'He ran off. This is his view right now.' : 'Gone again. This is his view now.'}${sees} <b>Tap the room he is in.</b></p></div>
+      <div class="camrow">${camHTML(next, q.c)}<p>${first ? 'And he’s gone. This is his view now.' : 'Gone again. Here’s his view.'}${sees} <b>Tap the room he’s in.</b></p></div>
       <div class="picks">${q.opts.map(k => `<button type="button" data-k="${k}"><img src="${ROOM[k].photo}" alt=""${ROOM[k].fit ? ` style="object-position:${ROOM[k].fit}"` : ''}><span>${esc(ROOM[k].name)}</span></button>`).join('')}</div></div>`));
-    c.querySelectorAll('.picks button').forEach(b => b.onclick = () => { if(b.dataset.k !== next){ b.classList.add('no'); b.disabled = true; S.wrong++; snd('wrong'); c.querySelector('.camrow p').innerHTML = 'Not that room. Find what he sees in one of the other photos. <b>Tap that room.</b>'; return; }
+    c.querySelectorAll('.picks button').forEach(b => b.onclick = () => { if(b.dataset.k !== next){ b.classList.add('no'); b.disabled = true; S.wrong++; snd('wrong'); c.querySelector('.camrow p').innerHTML = 'Nope. Find what he sees in one of the other photos. <b>Tap that room.</b>'; return; }
       b.classList.add('yes'); snd('right'); c.querySelectorAll('button').forEach(x => x.disabled = true); later(() => { c.remove(); S.step++; travel(room(), false, arrive); }, 500); }); }
 
   /* ---------- the last room: he gives up ---------- */
   function confetti(){ if(reduce) return; const cols = ['#e0862a', '#9b2c3c', '#2d5a3e', '#e8b84a', '#3b6fd8', '#f6f5f1']; for(let i = 0; i < 70; i++){ const c = put(el('i', {class: 'fndConf'})); c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length]; c.style.animationDuration = 1.6 + Math.random() * 1.8 + 's'; c.style.animationDelay = Math.random() * .5 + 's'; later(() => c.remove(), 4200); } }
   function hearts(){ if(reduce) return; for(let i = 0; i < 5; i++) later(() => { const s = scr(headPt()); if(!s) return; const h = put(el('i', {class: 'fndHeart'}, '&#9829;')); h.style.left = s.x + (Math.random() * 60 - 30) + 'px'; h.style.top = s.y - 20 + 'px'; later(() => h.remove(), 1500); }, i * 260); }
-  function finale(){ const secs = (performance.now() - S.t0) / 1000, id = S.trail[4]; snd('fanfare', {at: .2}); confetti(); hearts(); say('You found me. Now it is dinner time.', 2600); hop(1.2, 560, () => hop(.7, 420, () => hop(.35, 320)));
+  function finale(){ const secs = (performance.now() - S.t0) / 1000, id = S.trail[4]; snd('fanfare', {at: .2}); confetti(); hearts(); say('Fine, you win. Dinner time.', 2600); hop(1.2, 560, () => hop(.7, 420, () => hop(.35, 320)));
     let first = false; if(S.daily && SV.last !== DAY){ first = true; const y = new Date(now); y.setDate(y.getDate() - 1); SV.streak = SV.last === ymd(y) ? (SV.streak || 0) + 1 : 1; SV.last = DAY; }
     SV.total = (SV.total || 0) + 1; save(); store.set(RUNKEY, null); ga('find_found', {secs: Math.round(secs), daily: S.daily, hard: S.hard, wrong: S.wrong, helps: S.helps, room: id, spot: S.spot.i, fresh: S.fresh});
     later(() => { S.mode = 'done'; ui(); finishCard(secs, first); }, 2700); }
@@ -600,21 +600,21 @@
   const SITE = (() => { const m = /githack/.test(location.host) ? location.pathname.match(/^(\/[^\/]+\/[^\/]+\/[^\/]+)\//) : location.pathname.match(/^(.*)\/(tour|thanksgiving|halloween|games|woodside)\//); return m ? m[1] : ''; })();
   const gameURL = () => location.origin + SITE + '/games/snowball/' + (SITE ? 'index.html' : '');
   function finishCard(secs, first){ const id = S.trail[4], where = S.spot.s.n + (S.spot.i >= 0 && !S.spot.s.n.includes(ROOM[id].name.toLowerCase()) ? ', ' + ROOM[id].at : ''), clean = !S.wrong && !S.helps, got = Object.keys(SV.spots).filter(k => { const q = k.split('.'); return ROOM[q[0]] && ROOM[q[0]].spots[+q[1]]; }).length, streak = SV.streak || 0, done = SV.last === DAY;
-    const medal = S.hard ? (clean && secs < 150 ? 'Gold medal. No help, no wrong rooms, and fast.' : clean ? 'Silver medal. No help and no wrong rooms.' : 'Bronze medal. You beat sneaky mode.') : '';
+    const medal = S.hard ? (clean && secs < 150 ? 'Gold medal. No hints, no wrong rooms, and fast.' : clean ? 'Silver medal. No hints and no wrong rooms.' : 'Bronze medal. You beat sneaky mode.') : '';
     const c = put(el('div', {id: 'fndCard', role: 'dialog', 'aria-label': 'You found Snowball'}, `<div class="c fin"><div class="cat">${window.SNOWBALL.svg({id: 'sbw', seed: 7, wear: WEAR, bell: BELL})}</div><h2>You found Snowball</h2>
-      <p>He was ${esc(where)}. Dinner is served.${medal ? ' ' + medal : clean ? ' You never needed a hint.' : ''}</p>
+      <p>He was ${esc(where)}. Now he’s hungry.${medal ? ' ' + medal : clean ? ' Not one hint, either.' : ''}</p>
       <div class="stats"><div><b>${fmtT(secs)}</b><span>${S.daily ? "today's trail" : 'this trail'}</span></div><div><b>${streak}</b><span>${streak === 1 ? 'day in a row' : 'days in a row'}</span></div><div><b>${got} of ${ALLSPOTS}</b><span>hiding places found</span></div></div>
       <p class="book"><i><u style="width:${Math.max(2, Math.round(got / ALLSPOTS * 100))}%"></u></i>${S.fresh ? (S.fresh === 1 ? 'One new hiding place' : S.fresh + ' new hiding places') + ' on this trail. ' : 'No new hiding places this time. '}${first ? 'That was today’s trail. He hides somewhere new tomorrow.' : S.daily ? '' : done ? 'Today’s trail is done, so this one was for practice.' : 'This one was for practice.'}</p>
-      <div class="cta"><b>This house is real, and it is for sale.</b><span>118 Hillside Drive, Woodside. Six bedrooms, three baths, and every room Snowball just ran through.</span><a class="fndBtn primary" href="/#contact" id="fndSee">See it in person</a></div>
+      <div class="cta"><b>This house is real, and it’s for sale.</b><span>118 Hillside Drive, Woodside. Six bedrooms, three baths, and every room Snowball just ran through.</span><a class="fndBtn primary" href="/#contact" id="fndSee">See it in person</a></div>
       <button class="fndBtn next" type="button" id="fndAgain">Play a new trail</button><button class="fndBtn" type="button" id="fndShare">Share this game</button><a class="fndBtn" href="/games/">More games</a><a class="fndBtn" href="/tour/">Explore the house</a></div>`));
     $('#fndAgain').focus(); $('#fndSee').onclick = () => ga('find_cta', {cta: 'see_in_person'});
     $('#fndAgain').onclick = () => { c.remove(); S.daily = false; begin(Math.floor(Math.random() * 1e9)); };
-    $('#fndShare').onclick = async e => { const b = e.currentTarget, url = gameURL(), n = S.got.length, text = `Where's Snowball? I found the cat in ${n === 1 ? 'one hiding place' : n + ' hiding places'} around a real house in ${fmtT(secs)}${S.daily ? ', on today’s trail' : ''}. He hides somewhere new every day.`; ga('find_share');
+    $('#fndShare').onclick = async e => { const b = e.currentTarget, url = gameURL(), n = S.got.length, text = `Where's Snowball? I found a smug orange cat in ${n === 1 ? 'one hiding place' : n + ' hiding places'} around a real house in ${fmtT(secs)}${S.daily ? ', on today’s trail' : ''}. New hiding places every day.`; ga('find_share');
       const say2 = (label, msg) => { b.textContent = label; toast(msg, 3200); later(() => { b.textContent = 'Share this game'; }, 3200); };
-      try{ if(navigator.share){ await navigator.share({title: "Where's Snowball?", text, url}); say2('Shared', 'Shared. Thank you.'); return; } }catch(err){ if(err && err.name === 'AbortError') return; }
-      try{ await navigator.clipboard.writeText(text + ' ' + url); say2('Link copied', 'Copied. Paste it in a message to a friend.'); }
+      try{ if(navigator.share){ await navigator.share({title: "Where's Snowball?", text, url}); say2('Shared', 'Shared. Thanks!'); return; } }catch(err){ if(err && err.name === 'AbortError') return; }
+      try{ await navigator.clipboard.writeText(text + ' ' + url); say2('Link copied', 'Copied. Paste it to a friend.'); }
       catch(err){ let i = c.querySelector('.link'); if(!i){ i = el('input', {class: 'link', readonly: '', 'aria-label': 'Link to this game', value: url}); b.parentNode.appendChild(i); } i.focus(); i.select(); try{ i.scrollIntoView({block: 'nearest'}); }catch(e2){}
-        let ok = false; try{ ok = document.execCommand('copy'); }catch(e2){} if(ok) say2('Link copied', 'Copied. Paste it in a message to a friend.'); else toast('Here is the link. Copy it and send it to a friend.', 5000); } }; }
+        let ok = false; try{ ok = document.execCommand('copy'); }catch(e2){} if(ok) say2('Link copied', 'Copied. Paste it to a friend.'); else toast('Here’s the link. Copy it and send it to a friend.', 5000); } }; }
 
   /* ---------- start ---------- */
   function begin(seed, saved){ document.documentElement.classList.toggle('fnd-hard', S.hard); S.dev = false; newTrail(seed); S.on = true; document.documentElement.classList.add('fnd-on'); S.mode = 'travel'; lastWarm = -1;
@@ -624,12 +624,12 @@
     ga(saved ? 'find_resume' : 'find_start', {daily: S.daily, hard: S.hard, step: S.step}); }
   function startCard(){ const sv = savedRun(), rm = sv && ROOM[sv.trail[sv.step]];
     const c = put(el('div', {id: 'fndCard', role: 'dialog', 'aria-label': "Where's Snowball?"}, `<div class="c"><div class="cat">${window.SNOWBALL.svg({id: 'sbs', seed: 7, wear: WEAR, bell: BELL})}</div><h2>Where's Snowball?</h2>
-      <p>${sv ? `You were ${esc(rm.at)}, and you have found him ${sv.step + (sv.phase === 'clue' ? 1 : 0)} of 5 times.` : 'Dinner is ready, but Snowball wants to play hide and seek first. Find him in five rooms of this house.'}</p>
+      <p>${sv ? `You were ${esc(rm.at)}, and you’ve found him ${sv.step + (sv.phase === 'clue' ? 1 : 0)} of 5 times.` : 'Snowball’s dinner is ready, and he’d rather play hide and seek. Find him in five rooms of the house.'}</p>
       <ul class="how"><li>${IC.look}Turn and walk to look around the room</li><li>${PAWSVG()}Tap Snowball when you spot him</li><li>${IC.photo}His photo shows where he ran next</li></ul>
       <button class="fndBtn big" type="button" id="fndGo">${sv ? 'Keep looking' : 'Start looking'}</button>${sv ? '<button class="fndBtn" type="button" id="fndOver">Start a new trail</button>' : ''}
       <div class="opt">${sv ? '' : `<button type="button" id="fndHard" aria-pressed="${S.hard}">Sneaky mode</button>`}<button type="button" class="fndSnd" id="fndSnd2">${IC.snd}<span></span></button></div>
       <p class="sub" id="fndSub"></p></div>`));
-    const sub = () => { $('#fndSub').textContent = sv ? '' : S.hard ? 'Sneaky mode: only his ears or his tail show, nothing lights up, and there is a medal for speed.' : SV.streak > 1 && SV.last ? `You have found him ${SV.streak} days in a row.` : dailyDone ? 'You finished today’s trail. This one is for practice.' : 'He hides somewhere new every day. Listen for the bell on his collar.'; }; sub();
+    const sub = () => { $('#fndSub').textContent = sv ? '' : S.hard ? 'Sneaky mode: just ears or a tail, nothing lights up, and there’s a medal for speed.' : SV.streak > 1 && SV.last ? `You’ve found him ${SV.streak} days in a row.` : dailyDone ? 'Today’s trail is done. This one’s for practice.' : 'He hides somewhere new every day. Listen for his bell.'; }; sub();
     const fresh = () => { S.daily = !dailyDone && !Q.get('seed'); begin(Q.get('seed') ? +Q.get('seed') : S.daily ? dayNum * 7919 + 13 : Math.floor(Math.random() * 1e9)); };
     $('#fndGo').focus(); $('#fndSnd2').onclick = () => { ac(); setMute(!SV.mute); snd('bell'); }; setMute(SV.mute); if($('#fndHard')) $('#fndHard').onclick = e => { S.hard = !S.hard; SV.hard = S.hard; save(); e.currentTarget.setAttribute('aria-pressed', String(S.hard)); sub(); };
     $('#fndGo').onclick = () => { c.remove(); ac(); if(sv){ S.daily = !!sv.daily; S.hard = !!sv.hard; begin(sv.seed, sv); } else fresh(); };

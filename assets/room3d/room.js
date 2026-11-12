@@ -75,7 +75,7 @@
     garden: [{note: 'view:oak', op: 'WN-L1-06', label: 'Window', t: 'This window looks into the back garden, straight at the heritage oak.'}],
     middle: [{note: 'view:side', op: 'WN-L1-08', label: 'Window', t: 'A wide window onto the side garden. The hall bath is the next door along the hallway.'}],
     front: [{note: 'view:street', op: 'WN-L1-05', label: 'Windows', t: 'Two windows over the front garden, toward Hillside Drive.'},
-      {note: 'x:pocket', op: 'D-L1-08', y: 3.6, label: 'Pocket door', t: 'A pocket door straight into the dining and sitting area. This bedroom is not on the bedroom hallway.'}],
+      {note: 'x:pocket', op: 'D-L1-08', y: 3.6, label: 'Pocket door', t: 'A pocket door straight into the dining and sitting area. This bedroom isn’t on the bedroom hallway.'}],
     corner: [{note: 'film', op: 'WN-L0-03', label: 'Rainbow window', t: 'Rainbow film on every pane. When the sun comes through it, the floor goes all colours.'},
       {note: 'view:terrace', op: 'WN-L0-06', label: 'Terrace window', t: 'This one looks onto the terrace and the outdoor kitchen under the pergola.'}],
     side: [{note: 'film', op: 'WN-L0-07', label: 'Rainbow window', t: 'Rainbow film on the lower panes, clear glass above.'},
@@ -828,18 +828,18 @@
   function refresh(flash){ renderTray(); const prev = renderClues(flash); drawLabels(); PAWN.sync(); objective(); layoutVars(); return prev; }
   function objective(){ if(!S.L || S.done) return; const left = S.L.guests.filter(g => !S.at[g]), bad = S.status.filter(x => x.s === 'bad').length, uns = S.status.filter(x => x.s === 'unseen').length;
     if(S.view === 'room'){ const r = RINGS[S.room] || [], todo = r.filter(q => !hasNote(S.room, q.note)).length;
-      setGoal(todo ? 'Look around. Tap a gold ring to note what is here.' : !SAVE.light[S.room] ? 'Drag the sun across the day and watch the floor.' : (occupant(S.room) ? 'You have seen this room. ' + NmOf(occupant(S.room)) + ' is staying here. Go back out to the whole house.' : 'You have seen this room. Put a guest here, or go back out.'), true); return; }
+      setGoal(todo ? 'Look around. Tap a gold ring to note what’s here.' : !SAVE.light[S.room] ? 'Drag the sun across the day and watch the floor.' : (occupant(S.room) ? 'You’ve seen this room. ' + NmOf(occupant(S.room)) + ' is staying here. Head back out to the whole house.' : 'You’ve seen this room. Put a guest here, or head back out.'), true); return; }
     if(S.sel) setGoal('Choose a room for ' + nmOf(S.sel) + '.', true);
     else if(bad) setGoal(bad === 1 ? 'One clue is broken. Move a guest.' : bad + ' clues are broken. Move a guest.', true);
-    else if(!left.length && uns) setGoal('Everyone has a room, but Snowball cannot check ' + (uns === 1 ? 'one clue' : uns + ' clues') + ' yet.', true);
+    else if(!left.length && uns) setGoal('Everyone has a room, but Snowball can’t check ' + (uns === 1 ? 'one clue' : uns + ' clues') + ' yet.', true);
     else if(left.length === S.L.guests.length) setGoal('Give every guest a room. Tap a room to go inside and look.', true);
     else if(left.length) setGoal(left.length === 1 ? NmOf(left[0]) + ' still ' + LG.vb(left[0], 'needs', 'need') + ' a room.' : left.length + ' guests still need a room.', true);
     else setGoal('Everyone has a room.', true); }
   function select(g){ if(S.done) return; S.sel = g; if(g) SND.pick(); renderTray(); renderClues(); drawLabels(); objective();
-    if(g && S.view === 'over'){ tip(LG.isP(g) ? 'Tap one of the six bedrooms' : 'Tap a room that is not a bedroom'); } else tip('');
+    if(g && S.view === 'over'){ tip(LG.isP(g) ? 'Tap one of the six bedrooms' : 'Tap a room that isn’t a bedroom'); } else tip('');
     $('#rfeLift').classList.toggle('pulse', !!g && S.view === 'over' && S.upperOn && ORDER.some(id => covered(id) && fits(g, id))); }
   function place(g, slot, opts){ opts = opts || {}; if(S.done || !S.L || S.L.guests.indexOf(g) < 0) return false;
-    if(!fits(g, slot)){ toast(LG.isP(g) ? `The ${LG.SLOTS[slot].name.toLowerCase()} is not a bedroom. ${NmOf(g)} ${LG.vb(g, 'needs', 'need')} one of the six bedrooms.` : `${NmOf(g)} ${LG.vb(g, 'goes', 'go')} in a room that is not a bedroom: the loft, the office, the lounge or the garage.`, 4200); SND.bad(); return false; }
+    if(!fits(g, slot)){ toast(LG.isP(g) ? `The ${LG.SLOTS[slot].name.toLowerCase()} isn’t a bedroom. ${NmOf(g)} ${LG.vb(g, 'needs', 'need')} one of the six bedrooms.` : `${NmOf(g)} ${LG.vb(g, 'goes', 'go')} in a room that isn’t a bedroom: the loft, the office, the lounge or the garage.`, 4200); SND.bad(); return false; }
     if(!S.t0) S.t0 = performance.now(); const was = S.status.map(x => x.s), prevSlot = S.at[g], occ = occupant(slot);
     if(occ && occ !== g){ if(prevSlot && fits(occ, prevSlot)) S.at[occ] = prevSlot; else delete S.at[occ]; }
     S.at[g] = slot; S.sel = null; S.lastAct = performance.now(); tip(''); $('#rfeLift').classList.remove('pulse'); if(!PAWN.g[g]) PAWN.build(g); S.hinting = !!opts.hint; try{ refresh(true); }finally{ S.hinting = false; } PAWN.drop(g); if(occ && occ !== g && S.at[occ]) PAWN.drop(occ);
@@ -848,7 +848,7 @@
     ga('rfe3d_place', {level: S.L.id}); if(solved()) setTimeout(win, 700); else coachAfterPlace(); return true; }
   function unplace(g){ if(S.done || !S.at[g]) return; delete S.at[g]; S.sel = null; SND.tap(); refresh(true); }
   function coachAfterPlace(){ if(SAVE.tips.unseen) return; const i = S.status.findIndex(x => x.s === 'unseen'); if(i < 0) return; SAVE.tips.unseen = 1; save();
-    setTimeout(() => { if(!S.done) say('I only tick a clue once we have both seen the proof. Tap a room and go and look.', 8000); }, 900); }
+    setTimeout(() => { if(!S.done) say('I won’t tick a clue till I’ve seen it with my own eyes. Go look in the room.', 8000); }, 900); }
 
   /* ---- chips: tap to pick up, or drag onto a room */
   let drag = null;
@@ -1002,7 +1002,7 @@
     const H2 = (S.L.hints || {})[g], own = S.L.clues.filter(c => LG.whoOf(c).indexOf(g) >= 0);
     if(tier === 0) say(H2 ? H2[0] : 'Start with ' + nmOf(g) + '. ' + (own[0] ? own[0].t : ''), 9000);
     else if(tier === 1) say(H2 ? H2[1] : NmOf(g) + ' ' + LG.vb(g, 'belongs', 'belong') + (LG.SLOTS[slot].lv === 'garage' ? ' in a room with a car door.' : ' on the ' + LG.LEVEL_NAME[LG.SLOTS[slot].lv] + '.'), 9000);
-    else { const put = () => { say(`I will do it. ${NmOf(g)} ${LG.vb(g, 'goes', 'go')} in the ${LG.SLOTS[slot].name}.`, 7000);
+    else { const put = () => { say(`Fine, I’ll do it. ${NmOf(g)} ${LG.vb(g, 'goes', 'go')} in the ${LG.SLOTS[slot].name}.`, 7000);
           // what I show you counts as seen
           for(const c of own) for(const n of LG.needs(c, Object.assign({}, S.at, {[g]: slot}))){ if(n[1] === 'light') SAVE.light[n[0]] = 1; else if(n[2]){ SAVE.notes[n[0]] = SAVE.notes[n[0]] || {}; SAVE.notes[n[0]][n[1]] = 1; } else SAVE.seen[n[0]] = 1; } save();
           if(covered(slot) && S.view === 'over') setUpper(!S.upperOn); place(g, slot, {hint: true}); S.hintFor = null; S.hintTier = 0; };
@@ -1019,17 +1019,17 @@
   function nextLevel(){ const i = LG.LEVELS.findIndex(L => !SAVE.solved[L.id]); return i < 0 ? 'daily' : i; }
   function titleCard(){ closeCard(); try{ orbitFit(); }catch(e){} const first = !Object.keys(SAVE.solved).length, nx = nextLevel();
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">A logic puzzle inside a real house</p><h2 id="rfeH">Room for Everyone</h2>
-      <p class="lede">Snowball the cat lives at 118 Hillside Drive, and his friends are coming to stay. Every one of them has asked for something. Work out who gets which room. Some of what you need is written in the clues. The rest you find by going into the rooms and looking.</p>
+      <p class="lede">Snowball’s friends are coming to stay at 118 Hillside Drive, and every one of them has asked for something. Work out who gets which room. Some of it’s in the clues. The rest you find by going into the rooms and looking.</p>
       <ul class="how"><li>${ICO.bed}Tap a guest, then a room</li><li>${ICO.house}Tap a room on its own to go inside</li><li>${ICO.ring}Tap gold rings and drag the sun to see what a room has</li></ul>
       ${first ? '' : levelList()}
       <div class="acts"><button class="rfeBtn primary" type="button" id="rfeGo" style="min-width:150px;min-height:52px;font-size:17px">${first ? 'Meet the guests' : nx === 'daily' ? 'Play today’s guest list' : 'Play puzzle ' + (nx + 1)}</button>${sndBtn()}</div>
-      <p class="foot">Five puzzles and a new one every day, each with exactly one answer. The house is real: 118 Hillside Drive in Woodside, California, and it is for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day. The animals are made up.</p></div>`);
+      <p class="foot">Five puzzles, and a new one every day. The house is real: 118 Hillside Drive in Woodside, California, and it’s for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day. The animals are made up.</p></div>`);
     document.body.appendChild(c); bindSnd0(); const go = v => { SND.unlock(); SND.tap(); introCard(v === 'daily' ? LG.daily(LG.dayNumber(new Date())) : LG.LEVELS[v]); };
     $('#rfeGo').onclick = () => go(nx); $$('#rfeCard .lv button').forEach(b => b.onclick = () => go(b.dataset.lv === 'daily' ? 'daily' : +b.dataset.lv)); try{ $('#rfeGo').focus({preventScroll: true}); }catch(e){} }
   // who takes a bedroom and what does not: said once, on the card for each puzzle
   function ruleTxt(L){ const join = a => a.length > 2 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join(' and ');
     const ps = L.guests.filter(LG.isP), ts = L.guests.filter(g => !LG.isP(g)), tn = ts.map((g, i) => i ? nmOf(g) : NmOf(g));
-    return `${join(ps.map(nmOf))} each get a bedroom of their own.` + (ts.length ? ` ${join(tn)} ${ts.length > 1 ? 'go in rooms that are not bedrooms' : 'goes in a room that is not a bedroom'}: the loft, the office, the lounge or the garage.` : ''); }
+    return `${join(ps.map(nmOf))} each get a bedroom of their own.` + (ts.length ? ` ${join(tn)} ${ts.length > 1 ? 'go in rooms that aren’t bedrooms' : 'goes in a room that isn’t a bedroom'}: the loft, the office, the lounge or the garage.` : ''); }
   function introCard(L){ closeCard(); if(!L){ titleCard(); return; } try{ orbitFit(); }catch(e){} const i = LG.LEVELS.indexOf(L);
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">${i >= 0 ? 'Puzzle ' + (i + 1) + ' of ' + LG.LEVELS.length : new Date().toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})}</p><h2 id="rfeH">${esc(L.title)}</h2>
       <p class="lede">${esc(L.story)}</p>
@@ -1044,7 +1044,7 @@
       S.view = 'over'; HOUSE.over(); layoutVars(); refresh(); orbitFit(); layoutVars(); orbitFit(); ga('rfe3d_start', {level: L.id});
       const u = new URL(location.href); u.searchParams.set('puzzle', L.daily ? 'daily' : String(S.li + 1)); try{ history.replaceState(null, '', u); }catch(e){}
       const bc = $('#rfeBackCard'); if(bc) bc.remove();
-      if(!SAVE.tips.first){ SAVE.tips.first = 1; save(); setTimeout(() => { if(!S.done && !Object.keys(S.at).length) say('Pick a guest, then tap a room. Or tap a room and go and have a look first.', 8000); }, 1800); } };
+      if(!SAVE.tips.first){ SAVE.tips.first = 1; save(); setTimeout(() => { if(!S.done && !Object.keys(S.at).length) say('Pick a guest, then tap a room. Or tap a room and go have a look first.', 8000); }, 1800); } };
     if(S.view === 'room'){ S.busy = false; rig.move = null; dissolve(() => { S.view = 'over'; S.room = null; SUN.show(null); for(const m of marks) m.b.remove(); marks.length = 0; document.documentElement.classList.remove('rfe-in', 'rfe-clues'); begin(); rigCut(orbitPose()); }); }
     else { begin(); rigCut(orbitPose()); } }
 
@@ -1075,17 +1075,17 @@
   function showLink(btn, url){ let i = btn.parentNode.querySelector('input.shareLink'); if(!i){ i = document.createElement('input'); i.className = 'shareLink'; i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Link to this game'); i.style.cssText = 'flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1.5px solid #d9a24a;border-radius:12px;font:14px Jost,sans-serif;color:#1f2433;background:#fff'; btn.parentNode.appendChild(i); } btn.textContent = 'Copy the link below'; i.focus(); i.select(); }
   function endCard(){ const L = S.L, t = elapsed(), i = LG.LEVELS.indexOf(L), nx = nextLevel(), last = nx === 'daily' && !!SAVE.solved['day' + LG.dayNumber(new Date())];
     const nextTxt = last ? 'Play one again' : nx === 'daily' ? 'Play today’s guest list' : 'Next puzzle: ' + LG.LEVELS[nx].title;
-    const learned = {warm: 'You have just learned what the listing takes a page to say: a primary suite upstairs with its own bath, three bedrooms beside the kitchen, and two more downstairs.',
+    const learned = {warm: 'You’ve just learned what the listing takes a page to say: a primary suite upstairs with its own bath, three bedrooms beside the kitchen, and two more downstairs.',
       sun: 'Now you know where the light goes in this model of the house: morning sun at the front, evening sun at the back, and a bedroom the old oak keeps in shade.',
-      wheel: 'Three levels, with a flight of stairs between each. That is how a squeaky wheel and a light sleeper can share this house.',
-      stars: 'A loft, a skylit office and a lounge that opens onto the terrace, on top of six bedrooms. There is a room here for whatever a visitor brings along.',
+      wheel: 'Three levels, with a flight of stairs between each. That’s how a squeaky wheel and a light sleeper can share this house.',
+      stars: 'A loft, a skylit office and a lounge that opens onto the terrace, on top of six bedrooms. There’s a room here for whatever a visitor brings along.',
       full: 'Six bedrooms on three levels, three full baths, and still a loft, an office, a lounge and a garage left over. Room for everyone.'}[L.id] || 'Six bedrooms on three levels, with a loft, a skylit office and a lounge besides. Every day the guest list changes and they all still fit.';
     const c = el('div', {id: 'rfeCard'}, `<div class="c" role="dialog" aria-labelledby="rfeH"><p class="k">${i >= 0 ? 'Puzzle ' + (i + 1) + ' of ' + LG.LEVELS.length + ' · ' + esc(L.title) : 'Today’s guest list'}</p><h2 id="rfeH">Everyone has a room.</h2>
       <p class="lede">${esc(L.epi || 'The lights are on, every bed and basket is taken, and nobody is on the sofa.')}</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint from Snowball' : 'hints from Snowball'}</span></div></div>
       ${S.hints === 0 || S.clean ? `<div class="badges">${S.hints === 0 ? '<span>No hints</span>' : ''}${S.clean ? '<span>Never broke a clue</span>' : ''}</div>` : ''}
       <div class="acts" style="margin-bottom:14px"><button class="rfeBtn dark" type="button" id="rfeNextB" style="min-height:52px;font-size:16.500px">${esc(nextTxt)}</button></div>
-      <div class="cta"><b>The house is real, and it is for sale.</b><span>${esc(learned)} It is 118 Hillside Drive in Woodside, California, and you can walk through it in person.</span>
+      <div class="cta"><b>The house is real, and it’s for sale.</b><span>${esc(learned)} It’s 118 Hillside Drive in Woodside, California, and you can walk through it in person.</span>
         <div class="acts"><a class="rfeBtn primary" href="/#contact" id="rfeSee" style="min-height:52px;font-size:17px">See it in person</a><a class="rfeBtn light" href="/tour/" id="rfeFree">Explore the house</a></div></div>
       <div class="more"><button class="rfeBtn" type="button" id="rfeShare">Share</button><a class="rfeBtn" href="/games/">More games</a><button class="rfeBtn" type="button" id="rfeStay">Look at the house</button></div></div>`);
     document.body.appendChild(c); $('#rfeSee').onclick = () => ga('rfe3d_cta', {cta: 'see_in_person'}); $('#rfeFree').onclick = () => ga('rfe3d_cta', {cta: 'explore'});
@@ -1155,7 +1155,7 @@
     // beds in the bedrooms and the oak outside the windows: the game needs the furniture and the trees on, and puts the visitor's own saved choice back straight away
     for(const [id, k] of [['furnBtn', 'hillside.furniture'], ['treesBtn', 'hillside.trees']]) try{ const b = document.getElementById(id); if(b && b.getAttribute('aria-pressed') === 'false'){ const was = localStorage.getItem(k); b.click(); if(was == null) localStorage.removeItem(k); else localStorage.setItem(k, was); } }catch(e){}
     const base = (document.currentScript && document.currentScript.src) || '';
-    loadScript('../assets/room3d/room-logic.js?v=3', () => loadScript('../assets/room3d/room-data.js?v=2', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
+    loadScript('../assets/room3d/room-logic.js?v=4', () => loadScript('../assets/room3d/room-data.js?v=2', () => { const go = () => { LG = window.ROOM_LOGIC; DATA = window.ROOM_DATA || {}; if(!LG){ console.error('[room] the puzzle rules did not load'); return; }
         try{ measure(); buildUI(); buildLabels(); TINT.build(); S.view = 'title'; HOUSE.over(); orbitFit(); rigCut(orbitPose()); UI.live = true; applyHour(13, true); setTimeout(() => { try{ dev.verify(); }catch(e){ console.warn('[room] verify', e); } }, 4000); }catch(e){ console.error('[room] build', e); }
         requestAnimationFrame(frame);
         const first = () => { document.documentElement.classList.add('rfe-up'); const v = Q.get('puzzle'), n = parseInt(v, 10);

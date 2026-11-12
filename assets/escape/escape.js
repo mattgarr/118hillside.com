@@ -618,11 +618,11 @@
 
   /* ---- objective */
   const GOALS = {
-    arrive: 'The champagne is locked in a drinks fridge somewhere in this house. Find it.',
-    fridge: 'The lock wants three digits. Find what Snowball left for you.',
-    drawing: 'Snowball’s drawing is a set of instructions. Make the house match it.',
-    light: 'The sun is where the drawing put it. Find where that light lands.',
-    code: 'You have three digits. Take them to the lock.',
+    arrive: 'Snowball locked the champagne in a drinks fridge. Find the fridge.',
+    fridge: 'It needs a three-digit code. Snowball left you something.',
+    drawing: 'Snowball’s drawing is a to-do list. Make the house match it.',
+    light: 'The sun’s where he drew it. Now find where the light lands.',
+    code: 'Three digits. Take them to the fridge.',
     done: 'The fridge is open.'};
   const RANK = ['arrive', 'fridge', 'drawing', 'light', 'code', 'done'];
   function setStage(st){ if(RANK.indexOf(st) <= RANK.indexOf(S.stage)) return false; S.stage = st; S.lastProgress = performance.now(); hintIx = 0; ga('esc_step', {step: st}); setGoal(); $('#escHint').classList.remove('nudge');
@@ -636,7 +636,7 @@
   const lightOn = h => h >= 14.75 && h <= 17.25;                        // there is paper-shadow on the floor at all
   function onSlide(h, user){ const was = S.hour; setClock(h); applyHour(h); if(user) S.lastProgress = performance.now(); if(lightOn(h) !== lightOn(was) && !S.ex) setMarks();
     if(lightUp(h) && !lightUp(was)){ SND.reveal(); if(!S.sawLight){ S.sawLight = true;
-        if(S.place === 'great' || (S.ex && S.ex.id === 'floor')) say('There it is.', 3600, true); else say('Something in the house just changed.', 5200, true);
+        if(S.place === 'great' || (S.ex && S.ex.id === 'floor')) say('There it is.', 3600, true); else say('Something just changed. Go look.', 5200, true);
         if(S.stage === 'drawing') setStage('light'); } }
     if(S.ex && S.ex.id === 'floor') sheetFor(S.ex); }
   function setSlider(h){ $('#escSlider').value = h; onSlide(h); applyHour(h, true); }
@@ -755,14 +755,14 @@
     if(id === 'fridge') return sheetFridge();
     if(id === 'pocket'){ if(!S.doorShut){ sheet(`<h3>The pocket door</h3><p>It slides out of the wall between the fridge and the coffee bar, and closes the kitchen off from the bedroom hall.</p><button class="escBtn dark" type="button" data-a="act">Slide it shut</button>`);
         sheetE.querySelector('[data-a=act]').onclick = () => { if(S.busy || rig.move) return; slideDoor(true); S.busy = true; setTimeout(() => { S.busy = false; sheetFor(ex); frameExamine(.9, () => { S.busy = false; if(!S.sawDrawing){ S.sawDrawing = true; say('I drew that. The clock took three tries.'); setStage(lightUp(S.hour) ? 'light' : 'drawing'); } }); S.busy = true; }, reduce ? 50 : 720); }; }
-      else { sheet(`<h3>Snowball’s drawing</h3><p>Kraft paper, taped where nobody sees it while the door is open. A low sun, two tall windows side by side, light landing on a floor, and a clock. It is signed with a paw print.</p><button class="escBtn" type="button" data-a="act">Slide the door open</button>`);
+      else { sheet(`<h3>Snowball’s drawing</h3><p>Kraft paper, taped where you can’t see it while the door is open. A low sun, two tall windows side by side, light landing on a floor, and a clock. Signed with a paw print.</p><button class="escBtn" type="button" data-a="act">Slide the door open</button>`);
         sheetE.querySelector('[data-a=act]').onclick = () => { if(S.busy || rig.move) return; slideDoor(false); S.busy = true; setTimeout(() => { S.busy = false; sheetFor(ex); frameExamine(.9, () => { S.busy = false; }); S.busy = true; }, reduce ? 50 : 500); }; }
       return; }
     if(id === 'paper'){ const lit = LIGHT.dining && LIGHT.dining.wins[0].s > .3;
-      return sheet(`<h3>Paper on the window</h3><p>Strips of paper taped to the glass in three boxy figures. Some are white card and some are tracing paper.</p><p>${lit ? 'With the sun behind them, the card goes dark and the tracing paper glows.' : 'With no sun on this side of the house, they all look the same.'}</p>`); }
+      return sheet(`<h3>Paper on the window</h3><p>Strips of paper taped to the glass in three boxy figures. Some are white card and some are tracing paper.</p><p>${lit ? 'With the sun behind them, the card goes dark and the tracing paper glows.' : 'No sun on this side of the house, so they all look the same.'}</p>`); }
     if(id === 'floor'){ const up = lightUp(S.hour), on = lightOn(S.hour);
       return sheet(up ? `<h3>Light on the floor</h3><p>The card strips block the sun and the tracing paper lets it through. Three digits, the right way up from here.</p>`
-        : on ? `<h3>Light on the floor</h3><p>Shadows from the paper on the window, pulled out of shape. The sun is not quite where Snowball drew it.</p>`
+        : on ? `<h3>Light on the floor</h3><p>Shadows from the paper on the window, pulled out of shape. The sun isn’t quite where Snowball drew it.</p>`
         : `<h3>The floor</h3><p>No sun through the big windows at this hour.</p>`); } }
   function onExamined(id){ if(id === 'fridge'){ if(S.stage === 'arrive'){ setStage('fridge'); say('Locked. I did that.', 3800); } }
     if(id === 'paper'){ SND.paper(); if(!S.said_paper){ S.said_paper = true; say('Light can tell them apart.', 4600); } }
@@ -784,18 +784,18 @@
     if(n === 'c'){ padCur = padCur.slice(0, -1); padDraw(); SND.tap(); return; } if(padCur.length >= 3) return; padCur += n; padDraw(); SND.key(padCur.length);
     if(padCur.length < 3) return; padLock = true;
     if(padCur === CODE){ padDraw('ok'); SND.right(); setTimeout(win, 620); }
-    else { padDraw('bad'); SND.wrong(); S.wrong++; ga('esc_wrong', {n: S.wrong}); setTimeout(() => { padCur = ''; padLock = false; padDraw(); if(S.wrong === 1) say('No.', 2600); else if(S.wrong % 3 === 0) say('Guessing is a thousand tries. I can wait.', 4600); }, 650); } }
+    else { padDraw('bad'); SND.wrong(); S.wrong++; ga('esc_wrong', {n: S.wrong}); setTimeout(() => { padCur = ''; padLock = false; padDraw(); if(S.wrong === 1) say('No.', 2600); else if(S.wrong % 3 === 0) say('Only a thousand to go. I can wait.', 4600); }, 650); } }
 
   /* ================================================================== hints: Snowball, three levels for the step you are on */
   let hintIx = 0;
   const HINTS = {
     arrive: [['Coffee bar. Past the kitchen. Follow the white circles.'], ['I’ll wait by the kitchen door.', () => catAt([12.2, 0, 3.7])], ['Fine. Come with me.', () => { catAt([17.8, 0, 9.0]); goTo('coffee'); }]],
-    fridge: [['I put my clue where you only see it with the kitchen shut.'], ['I’m sitting next to it. The door that slides into the wall.', () => { catAt([21.3, 0, 8.6]); if(S.place !== 'coffee') goTo('coffee'); }],
+    fridge: [['My clue only shows when the kitchen’s shut.'], ['I’m sitting right by it. The door that slides into the wall.', () => { catAt([21.3, 0, 8.6]); if(S.place !== 'coffee') goTo('coffee'); }],
       ['Tap the pocket door and slide it shut.', () => { catAt([21.3, 0, 8.6]); if(S.place !== 'coffee') goTo('coffee'); }]],
-    drawing: [['Read my drawing again. Start with the clock.'], ['A low sun. The two big windows by the dining table. Four o’clock. The slider at the bottom is the sun.', () => sunKey(true)], ['I’ll do it. Four in the afternoon.', () => sweepTo(T_SUN, 1500)]],
+    drawing: [['Read my drawing again. Start with the clock.'], ['A low sun. The two big windows by the dining table. Four o’clock. The slider at the bottom is the sun.', () => sunKey(true)], ['Fine, I’ll do it. Four o’clock.', () => sweepTo(T_SUN, 1500)]],
     light: [['The two tall windows in my drawing are in the great room. Look down.'], ['I’m lying in the warm bit. You can’t miss me.', () => { catAt([14.3, 0, 24.7]); if(lightOn(S.hour) === false) sweepTo(T_SUN, 1200); }],
       ['Tap the light on the floor.', () => { const go = () => setTimeout(() => examine('floor'), 250); if(!lightUp(S.hour)) setSlider(T_SUN); if(S.ex) return; if(S.place === 'great') go(); else goTo('great', {done: go}); }]],
-    code: [['You’ve read it. Now go and use it.'], ['Left to right, as it lies on the floor.'], ['Three, two, seven. You’re welcome.']]};
+    code: [['You’ve got the code. Go use it.'], ['Left to right, as it lies on the floor.'], ['Three, two, seven. You’re welcome.']]};
   function hint(){ if(!S.started || S.done || rig.move || S.busy) return; const tiers = HINTS[S.stage]; if(!tiers) return; const i = Math.min(hintIx, tiers.length - 1), t = tiers[i]; hintIx = Math.min(i + 1, tiers.length - 1);
     S.hints++; S.lastProgress = performance.now(); $('#escHint').classList.remove('nudge'); ga('esc_hint', {stage: S.stage, tier: i + 1});
     const run = () => { say(t[0], 7000); if(t[1]) t[1](); };
@@ -804,16 +804,16 @@
   /* ================================================================== start and finish */
   function startCard(){ const best = store.get(KEY + '.best');
     const c = el('div', {id: 'escCard'}, `<div class="c" role="dialog" aria-labelledby="escH"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Pop the Cork</h2>
-      <p class="lede">Snowball is the cat of the house. There is champagne for this evening, and he has locked it in a drinks fridge to find out whether you are as clever as he is.</p>
-      <div class="note"><p>Welcome. I have locked the champagne away. The code is hidden in the house. I left one clue, and it is a good one.</p><p class="sig">${PAW}</p><p class="ps">P.S. The doorbell rings at dusk. If you get stuck, ask me. I like being asked.</p></div>
+      <p class="lede">Snowball, the orange tabby who runs this house, has locked tonight’s champagne in a drinks fridge. He wants to see if you’re as clever as he is.</p>
+      <div class="note"><p>I locked up the champagne. The code is somewhere in the house. I left you one clue. It’s a good one.</p><p class="sig">${PAW}</p><p class="ps">P.S. If you get stuck, ask me. I love being asked.</p></div>
       <ul class="how"><li>${ICO.drag}Drag to look around</li><li>${ICO.disc}Tap a white circle to walk there</li><li>${ICO.ring}Tap a gold ring to look closer</li></ul>
       <div class="acts"><button class="escBtn primary" type="button" id="escGo" style="min-width:150px;min-height:52px;font-size:17px">Go inside</button><button class="escBtn" type="button" id="escSnd0"></button></div>
-      <p class="foot">About five minutes${best ? ', and your best so far is ' + fmtT(best.time) : ''}. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it is for sale.</p></div>`);
+      <p class="foot">About five minutes${best ? ', and your best so far is ' + fmtT(best.time) : ''}. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it’s for sale.</p></div>`);
     document.body.appendChild(c); const s0 = $('#escSnd0'), d0 = () => { s0.innerHTML = (SND.muted ? ICO.mute : ICO.sound) + '<span>' + (SND.muted ? 'Sound is off' : 'Sound is on') + '</span>'; s0.setAttribute('aria-pressed', String(!SND.muted)); };
     s0.onclick = () => { SND.setMuted(!SND.muted); d0(); UI.drawSnd(); if(!SND.muted) SND.goal(); }; d0(); try{ $('#escGo').focus({preventScroll: true}); }catch(e){}
     $('#escGo').onclick = () => { SND.unlock(); SND.tap(); $('#escGo').disabled = true; fadeThrough(() => { c.remove(); begin(); }, 420); }; }
   function begin(){ document.documentElement.classList.remove('esc-pre'); const p = standPose('entry'); rigCut(PLACES.entry.pos, p.yaw, p.pitch, p.fov); S.started = true; S.t0 = S.lastProgress = performance.now(); ga('esc_start');
-    arrive('entry', true); catAt([-.2, 0, -4.6]); setTimeout(() => { if(S.stage === 'arrive' && !rig.move) say('It is all in plain sight. That is the sporting way.', 4600); }, phone() ? 7200 : 2600); }   // on a phone, after the place card has gone
+    arrive('entry', true); catAt([-.2, 0, -4.6]); setTimeout(() => { if(S.stage === 'arrive' && !rig.move) say('Nothing’s hidden in a drawer. I don’t do drawers.', 4600); }, phone() ? 7200 : 2600); }   // on a phone, after the place card has gone
   function win(){ if(S.done) return; S.done = true; S.tEnd = performance.now(); S.stage = 'done'; const t = elapsed(); ga('esc_win', {secs: Math.round(t), hints: S.hints});
     const best = store.get(KEY + '.best'); if(!best || t < best.time) store.set(KEY + '.best', {time: t, hints: S.hints});
     sheetE.classList.remove('on'); document.documentElement.classList.add('esc-cine'); for(const m of marks) m.b.classList.remove('on'); $('#escGoalT').textContent = GOALS.done;
@@ -834,9 +834,9 @@
   function showLink(btn, url){ let i = btn.parentNode.querySelector('input.shareLink'); if(!i){ i = document.createElement('input'); i.className = 'shareLink'; i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Link to this game'); i.style.cssText = 'flex:1 1 100%;width:100%;min-width:0;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1.5px solid #d9a24a;border-radius:12px;font:14px Jost,sans-serif;color:#1f2433;background:#fff'; btn.parentNode.appendChild(i); } btn.textContent = 'Copy the link below'; i.focus(); i.select(); }
   function finishCard(){ const t = elapsed(); SND.cork();
     const c = el('div', {id: 'escCard', class: 'side'}, `<div class="c" role="dialog" aria-labelledby="escH"><p class="k">Locked In at Hillside · Easy</p><h2 id="escH">Cork popped.</h2>
-      <p class="lede">The doorbell is ringing and the house is lit for the evening. Snowball says you are nearly as clever as he is, and he is keeping the box the champagne came in.</p>
+      <p class="lede">The house is lit for the evening. Snowball says you’re nearly as clever as he is. He’s keeping the box the champagne came in.</p>
       <div class="stats"><div><b>${fmtT(t)}</b><span>your time</span></div><div><b>${S.hints}</b><span>${S.hints === 1 ? 'hint from Snowball' : 'hints from Snowball'}</span></div></div>
-      <div class="cta"><b>The house is real, and it is for sale.</b><span>118 Hillside Drive is in Woodside, California, with six bedrooms and three full baths. The afternoon sun really does come through the great room like that. Come and stand in it.</span>
+      <div class="cta"><b>The house is real, and it’s for sale.</b><span>118 Hillside Drive is in Woodside, California, with six bedrooms and three full baths. The afternoon sun really does come through the great room like that. Come and stand in it.</span>
         <div class="acts"><a class="escBtn primary" href="/#contact" id="escSee" style="min-height:52px;font-size:17px">See it in person</a><a class="escBtn light" href="/tour/" id="escFree">Explore the house freely</a></div></div>
       <div class="more"><button class="escBtn" type="button" id="escShare">Share</button><button class="escBtn" type="button" id="escAgain">Play again</button><a class="escBtn" href="/games/">More games</a></div></div>`);
     document.body.appendChild(c); const card = c.querySelector('.c');

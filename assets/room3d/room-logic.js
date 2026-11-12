@@ -55,15 +55,15 @@
      and the things. */
   const GUESTS = {
     puddle:  {name: 'Puddle', kind: 'p', col: '#2b7c9e', ico: 'duck',
-      bio: 'A duck. She takes a long bath every morning and does not share the tub.', yay: 'Quack. That means yes.'},
+      bio: 'A duck. She takes a long bath every morning, and she doesn’t share the tub.', yay: 'Quack. That means yes.'},
     biscuit: {name: 'Biscuit', kind: 'p', col: '#c08a2b', ico: 'dog',
-      bio: 'An old, gentle golden dog and a regular visitor. He follows his nose and will not do stairs.', yay: 'No stairs between me and the kitchen.'},
+      bio: 'A gentle old golden dog who visits a lot. He follows his nose and doesn’t do stairs.', yay: 'No stairs between me and the kitchen.'},
     admiral: {name: 'Admiral', kind: 'p', col: '#d2622a', ico: 'fish',
-      bio: 'A goldfish in a round glass bowl. Direct sun warms the water, so the bowl stays in the shade.', yay: 'Shade all day. Blub.'},
+      bio: 'A goldfish in a round glass bowl. Direct sun warms the water. He won’t have it.', yay: 'Shade all day. Most agreeable.'},
     rufus:   {name: 'Rufus', kind: 'p', col: '#a8323a', ico: 'rooster',
-      bio: 'A rooster. He is up before the sun and likes everyone to know it.', yay: 'First sun on my perch. I shall announce it.'},
+      bio: 'A rooster. He’s up before the sun and wants everyone to know it.', yay: 'First sun on my perch. I shall announce it.'},
     ziggy:   {name: 'Ziggy', kind: 'p', col: '#8f8a2a', ico: 'lizard',
-      bio: 'A bearded dragon. He spends all day getting warm and saves his best basking for last.', yay: 'There is my sunset.'},
+      bio: 'A bearded dragon. He spends all day warming up and saves the best basking for last.', yay: 'There’s my sunset.'},
     olive:   {name: 'Olive', kind: 'p', col: '#5b4a9c', ico: 'owl',
       bio: 'A visiting barn owl. She keeps night hours and watches the sky.', yay: 'Stars, straight from my perch.'},
     nugget:  {name: 'Nugget', kind: 'p', col: '#8c5a3c', ico: 'hamster',
@@ -71,11 +71,11 @@
     clover:  {name: 'Clover', kind: 'p', col: '#5f7f8c', ico: 'rabbit',
       bio: 'A shy rabbit with very good ears. One thump overhead and Clover is under the bed.', yay: 'Not a footstep. Thank you.'},
     pepper:  {name: 'Pepper', kind: 'p', col: '#b8408a', ico: 'parrot',
-      bio: 'A grey parrot who loves colour and repeats whatever was said last.', yay: 'Rainbows on the floor. Rainbows on the floor.'},
+      bio: 'A loud grey parrot who loves colour and repeats whatever she heard last.', yay: 'Rainbows on the floor! Rainbows on the floor!'},
     truffle: {name: 'Truffle', kind: 'p', col: '#2f8f6b', ico: 'guinea',
-      bio: 'A guinea pig who is never far from the next meal.', yay: 'A short trot from bed to lettuce.'},
-    wheel:   {name: 'Nugget’s wheel', short: 'The wheel', kind: 't', col: '#8c5a3c', ico: 'wheel', bio: 'It squeaks, and it turns from dusk until dawn.', yay: 'Squeak. Squeak. Squeak.'},
-    mabel:   {name: 'Mabel', kind: 't', col: '#2f8a80', ico: 'tortoise', bio: 'A tortoise who likes warm paving and takes her time. She sleeps in her shell, so she does not need a bedroom.', yay: 'Already outside. It took a while.'},
+      bio: 'A guinea pig who’s never far from the next snack.', yay: 'A short trot from bed to lettuce.'},
+    wheel:   {name: 'Nugget’s wheel', short: 'The wheel', kind: 't', col: '#8c5a3c', ico: 'wheel', bio: 'It squeaks. From dusk until dawn.', yay: 'Squeak. Squeak. Squeak.'},
+    mabel:   {name: 'Mabel', kind: 't', col: '#2f8a80', ico: 'tortoise', bio: 'A tortoise who likes warm paving and takes her time. She sleeps in her shell, so she doesn’t need a bedroom.', yay: 'Already outside. It took a while.'},
     lettuce: {name: 'Truffle’s lettuce', short: 'The lettuce', kind: 't', col: '#2f8f6b', ico: 'lettuce', bio: 'A tray of it, still growing. It needs daylight.', yay: 'Growing nicely.'},
     scope:   {name: 'Olive’s telescope', short: 'The telescope', kind: 't', col: '#5b4a9c', ico: 'scope', bio: 'It points at the sky. Olive has claimed it as a perch.', yay: 'Pointed at the sky.'},
     van:     {name: 'the van', short: 'The van', kind: 't', col: '#3d5a98', ico: 'van', bio: 'Electric, and nearly flat after bringing everyone here.', yay: 'Plugged in.'}
@@ -147,25 +147,25 @@
      must: asked every time that guest appears (it is who they are). may: asked on some days. The words are written once, here.
      The garage has a 50-amp, 240-volt outlet and no charger: no line may say or imply that a charger is installed. */
   const T = {
-    puddleBath: 'Puddle takes a long bath every morning. She wants the one bathroom that nobody else walks into.',
-    biscuitMain: 'Biscuit will not do stairs. Put him on the same level as the kitchen.',
+    puddleBath: 'Puddle takes a long morning bath. She wants the one bathroom nobody else walks into.',
+    biscuitMain: 'Biscuit doesn’t do stairs. Put him on the same level as the kitchen.',
     biscuitOak: 'Biscuit likes to watch the old oak. He wants it outside his window.',
     biscuitAm: 'Biscuit likes the morning sun on his bed.',
-    admiralNone: 'Admiral must be kept out of direct sun. The bowl goes in a room that gets none at any hour.',
-    rufusAm: 'Rufus is up before anyone. He wants the morning sun in his room.',
-    rufusHall: 'Rufus crows at first light. Nobody else should have a bedroom on his hallway.',
+    admiralNone: 'Admiral will not be seen in direct sun. The bowl goes in a room that gets none, at any hour.',
+    rufusAm: 'Rufus is up before anyone. He wants morning sun in his room.',
+    rufusHall: 'Rufus crows at first light, so nobody else gets a bedroom on his hallway.',
     ziggyPm: 'Ziggy saves his best basking for last. He needs the evening sun in his room.',
     ziggyTerrace: 'Ziggy has his eye on the warm paving. He wants to see the terrace from his window.',
     oliveSky: 'Olive watches the sky all night. Her room needs a skylight.',
-    oliveScope: 'Olive likes to sit on the telescope. Put her on the same level as it.',
-    cloverOver: 'Clover bolts at a footstep. Nobody may have the bedroom over hers.',
-    cloverHall: 'Clover also wants a hallway with nobody else on it.',
+    oliveScope: 'Olive perches on the telescope, so she goes on its level.',
+    cloverOver: 'Clover bolts at one footstep. Nobody gets the bedroom over hers.',
+    cloverHall: 'Clover would also like a hallway to herself.',
     cloverOak: 'Clover would like the old oak outside her window.',
-    pepperFilm: 'Pepper loves colour. She wants a room where the window throws rainbows on the floor.',
-    pepperSky: 'Pepper wants a skylight as well.',
+    pepperFilm: 'Pepper loves colour! She wants a window that throws rainbows on the floor.',
+    pepperSky: 'Pepper wants a skylight too.',
     truffleLettuce: 'Truffle wants a bed on the same level as the lettuce.',
-    wheelQuiet: 'The wheel squeaks all night. Nobody can have a bedroom on the same level as the wheel.',
-    wheelIn: 'The wheel stays in the house, not the garage. That is too far for a hamster to walk.',
+    wheelQuiet: 'The wheel squeaks all night, so nobody can have a bedroom on its level.',
+    wheelIn: 'The wheel stays in the house, not the garage. That’s a long walk for a hamster.',
     mabelOut: 'Mabel takes her time. She needs a door that opens straight onto the terrace.',
     lettuceSky: 'Lettuce needs daylight from above. The tray goes in a room with a skylight in its own ceiling.',
     scopeUp: 'The telescope goes as high in the house as it can.',
@@ -180,7 +180,7 @@
     admiral: {must: [{k: 'attr', attr: 'none', t: T.admiralNone}]},
     rufus: {must: [{k: 'attr', attr: 'am', t: T.rufusAm}], may: [
       {k: 'nohall', t: T.rufusHall},
-      {k: 'attr', attr: 'view:street', t: 'Rufus likes to see who is coming up the front walk. He wants a window toward the street.'}]},
+      {k: 'attr', attr: 'view:street', t: 'Rufus likes to see who’s coming up the front walk. He wants a window on the street.'}]},
     ziggy: {must: [{k: 'attr', attr: 'pm', t: T.ziggyPm}], may: [
       {k: 'attr', attr: 'out', t: 'Ziggy wants to step straight outside from his room.'},
       {k: 'attr', attr: 'view:terrace', t: T.ziggyTerrace}]},
@@ -208,11 +208,11 @@
   const mk = (g, a) => { const c = Object.assign({}, a); if('b' in c) c.a = g; else c.who = g; return c; };
   const REL = [
     {k: 'same', sym: 1, t: (a, b) => `${nm(a)} ${vb(a, 'wants', 'want')} to be on the same level as ${nm(b)}.`},
-    {k: 'diff', sym: 1, t: (a, b) => `${nm(a)} and ${nm(b)} are better on different levels this time.`},
+    {k: 'diff', sym: 1, t: (a, b) => `${nm(a)} and ${nm(b)} need different levels. Long story.`},
     {k: 'higher', t: (a, b) => `${nm(a)} ${vb(a, 'sleeps', 'sleep')} on a higher level than ${nm(b)}.`},
     {k: 'hall', sym: 1, t: (a, b) => `${nm(a)} ${vb(a, 'wants', 'want')} a door on the same hallway as ${nm(b)}.`},
     {k: 'hall', sym: 1, no: true, t: (a, b) => `${nm(a)} would rather not share a hallway with ${nm(b)}.`},
-    {k: 'apart', sym: 1, t: (a, b) => `${nm(a)} must not have the bedroom directly over or under ${nm(b)}.`}];
+    {k: 'apart', sym: 1, t: (a, b) => `${nm(a)} won’t sleep directly over or under ${nm(b)}.`}];
 
   /* ------------------------------------------------------------------ building a puzzle from a seed, proven by the same solver */
   function rng(seed){ let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -247,14 +247,14 @@
     return null; }
   const dayNumber = d => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
   function daily(day){ const L = build(day, {}); if(!L) return null; L.id = 'day' + day; L.daily = day; L.title = 'Today’s guest list';
-    L.story = 'A different guest list every day, and exactly one way to fit everyone in.'; return L; }
+    L.story = 'A new guest list every day, and somehow they all fit.'; return L; }
 
   /* ------------------------------------------------------------------ the hand-made puzzles
      order: the order a careful player can work them out in, which is also the order Snowball's hints go in.
      hints: two nudges per guest (the third hint always puts that guest in their room). */
   const LEVELS = [
     {id: 'warm', title: 'First visitors',
-      story: 'Snowball lives at 118 Hillside, and this weekend he has company. Puddle, Biscuit and Olive are on their way. Three bedrooms to choose.',
+      story: 'Snowball has company this weekend. Puddle, Biscuit and Olive are on their way. Three bedrooms to hand out.',
       guests: ['puddle', 'biscuit', 'olive'],
       clues: [
         {k: 'attr', who: 'puddle', attr: 'own', t: T.puddleBath},
@@ -262,12 +262,12 @@
         {k: 'attr', who: 'biscuit', attr: 'view:oak', t: T.biscuitOak},
         {k: 'attr', who: 'olive', attr: 'sky', t: T.oliveSky}],
       order: ['puddle', 'biscuit', 'olive'],
-      hints: {puddle: ['One bedroom has a bathroom all to itself. It is upstairs.', 'Go into the Primary suite and tap the gold ring by its bath.'],
+      hints: {puddle: ['One bedroom has a bathroom all to itself. It’s upstairs.', 'Go into the Primary suite and tap the gold ring by its bath.'],
         biscuit: ['The kitchen is on the main level. So are three bedrooms.', 'Look out of the windows on the main level. One of them is full of oak.'],
         olive: ['Two bedrooms have skylights, and one of those is taken.', 'Go downstairs to the Side bedroom and look up.']},
-      epi: 'Three visitors settled, and Puddle is already running the bath.'},
+      epi: 'All three settled, and Puddle is already running the bath.'},
     {id: 'sun', title: 'The longest day',
-      story: 'Midsummer, the longest day of the year, and every visitor has a firm opinion about the sun. Even the big room upstairs is free.',
+      story: 'It’s midsummer, the longest day of the year, and every visitor has strong feelings about the sun. Even the big room upstairs is free.',
       guests: ['admiral', 'rufus', 'ziggy', 'pepper', 'van'],
       clues: [
         {k: 'attr', who: 'admiral', attr: 'none', t: T.admiralNone},
@@ -282,11 +282,11 @@
       hints: {admiral: ['Go into each bedroom and drag the sun across the day. One bedroom never gets any.', 'The old oak shades one room on the main level from morning to night.'],
         rufus: ['Two bedrooms get the morning sun. One of them shares a hallway with Admiral.', 'Rufus needs the morning room that has no neighbour on its hallway.'],
         pepper: ['Two windows downstairs wear rainbow film. Only one of those rooms has skylights too.', 'Look up in both lower bedrooms.'],
-        ziggy: ['Three bedrooms get the evening sun. Ziggy has to be above Pepper.', 'There is only one bedroom higher than the lower level with evening sun.'],
+        ziggy: ['Three bedrooms get the evening sun. Ziggy has to be above Pepper.', 'Only one bedroom above the lower level gets evening sun.'],
         van: ['Only one room in the house has an outlet big enough for the van.', 'Have a look in the garage.']},
       epi: 'The sun went down at half past eight, and Ziggy got the last of it.'},
     {id: 'wheel', title: 'The squeaky wheel',
-      story: 'Nugget brought the wheel. Nobody asked for that. Mabel is heading for the terrace at her own speed, Clover has not slept properly since Tuesday, and the wheel is still in the entry.',
+      story: 'Nugget brought the wheel. Nobody asked him to. Mabel is heading for the terrace at her own speed, Clover hasn’t slept properly since Tuesday, and the wheel is still in the entry.',
       guests: ['puddle', 'biscuit', 'nugget', 'clover', 'wheel', 'mabel'],
       clues: [
         {k: 'attr', who: 'mabel', attr: 'out', t: T.mabelOut},
@@ -294,13 +294,13 @@
         {k: 'notin', who: 'wheel', slots: ['garage'], t: T.wheelIn},
         {k: 'attr', who: 'puddle', attr: 'own', t: T.puddleBath},
         {k: 'level', who: 'biscuit', lv: ['main'], t: T.biscuitMain},
-        {k: 'nowall', who: 'clover', t: 'Clover hears everything. Nobody may have a bedroom on the other side of one of her walls.'},
+        {k: 'nowall', who: 'clover', t: 'Clover hears everything. Nobody can have a bedroom on the other side of her walls.'},
         {k: 'hall', a: 'biscuit', b: 'clover', t: 'Biscuit keeps an eye on Clover. He wants a door on the same hallway as hers.'}],
       order: ['mabel', 'puddle', 'wheel', 'clover', 'biscuit', 'nugget'],
-      hints: {mabel: ['One room that is not a bedroom has doors straight onto the terrace.', 'Go into the Bonus lounge and look at the glass doors.'],
+      hints: {mabel: ['One room that isn’t a bedroom has doors straight onto the terrace.', 'Go into the Bonus lounge and look at the glass doors.'],
         puddle: ['Same as ever: the bedroom with its own bath.', 'The Primary suite, upstairs.'],
         wheel: ['The wheel needs a level where no bedroom is taken. Puddle is upstairs, and the garage is out.', 'That leaves one room on the lower level, so nobody has a bedroom down there tonight.'],
-        clover: ['If no bedroom downstairs is taken, three visitors share the main level. One bedroom there has no bedroom through any wall.', 'Lift the upper level off and look at the main level from above. One bedroom stands apart from the other two.'],
+        clover: ['No bedroom downstairs is taken, so three visitors share the main level. One bedroom there has no bedroom through any wall.', 'Lift the upper level off and look at the main level from above. One bedroom stands apart from the other two.'],
         biscuit: ['Two bedrooms on the main level open onto the same short hallway.', 'Clover has one of them. Biscuit takes the other.'],
         nugget: ['One bedroom left on the main level.', 'The Front bedroom.']},
       epi: 'Nugget ran until dawn. Clover slept through it. Nobody can explain this.'},
@@ -318,16 +318,16 @@
         {k: 'attr', who: 'rufus', attr: 'am', t: T.rufusAm},
         {k: 'nohall', who: 'rufus', t: T.rufusHall}],
       order: ['scope', 'olive', 'lettuce', 'ziggy', 'truffle', 'clover', 'rufus'],
-      hints: {scope: ['Two rooms are on the upper level, and only one of them is not a bedroom.', 'The Loft, at the top of the stairs.'],
-        olive: ['Olive goes on the telescope’s level.', 'There is one bedroom up there.'],
-        lettuce: ['One room that is not a bedroom has skylights of its own.', 'It says so on the door: the Skylit office.'],
+      hints: {scope: ['Two rooms are on the upper level, and only one of them isn’t a bedroom.', 'The Loft, at the top of the stairs.'],
+        olive: ['Olive goes on the telescope’s level.', 'There’s one bedroom up there.'],
+        lettuce: ['One room that isn’t a bedroom has skylights of its own.', 'It says so on the door: the Skylit office.'],
         ziggy: ['Look out of the windows downstairs. One of them faces the terrace.', 'One lower bedroom looks straight at the outdoor kitchen.'],
         truffle: ['Truffle sleeps on the lettuce’s level, and Ziggy has one of the two bedrooms there.', 'The Side bedroom.'],
-        clover: ['Olive is upstairs, so Clover cannot be under her. One other bedroom looks at the oak.', 'The Garden bedroom, on the main level.'],
+        clover: ['Olive is upstairs, so Clover can’t be under her. One other bedroom looks at the oak.', 'The Garden bedroom, on the main level.'],
         rufus: ['Two bedrooms get the morning sun. One shares Clover’s hallway.', 'The Front bedroom.']},
       epi: 'Forty-one meteors. Rufus slept through every one.'},
     {id: 'full', title: 'Full house',
-      story: 'Everyone said yes. Six bedrooms, six visitors and one squeaky wheel. Puddle has given up the big bath for the night and says it will be fine.',
+      story: 'Everyone said yes. Six bedrooms, six visitors and one squeaky wheel. Puddle has given up the big bath for the night and says it’ll be fine.',
       guests: ['puddle', 'biscuit', 'rufus', 'ziggy', 'clover', 'nugget', 'wheel'],
       clues: [
         {k: 'noover', who: 'clover', t: T.cloverOver},
@@ -338,17 +338,17 @@
         {k: 'attr', who: 'biscuit', attr: 'am', t: T.biscuitAm},
         {k: 'attr', who: 'ziggy', attr: 'pm', t: T.ziggyPm},
         {k: 'attr', who: 'ziggy', attr: 'view:terrace', t: T.ziggyTerrace},
-        {k: 'attr', who: 'puddle', attr: 'pm', t: 'Puddle only asks for the evening sun.'},
+        {k: 'attr', who: 'puddle', attr: 'pm', t: 'All Puddle asks for tonight is evening sun.'},
         {k: 'isin', who: 'wheel', slots: ['garage'], t: 'Every level with a bedroom has somebody on it, so the wheel goes out to the garage.'}],
       order: ['wheel', 'rufus', 'clover', 'biscuit', 'ziggy', 'puddle', 'nugget'],
-      hints: {wheel: ['This one is spelled out for you.', 'The garage.'],
+      hints: {wheel: ['Every level with a bedroom has somebody on it. That leaves the wheel one place to go.', 'The garage.'],
         rufus: ['Every bedroom is taken tonight. Two bedrooms get the morning sun, and one of them shares a hallway.', 'Rufus needs the morning room that opens off the dining area, not the bedroom hallway.'],
-        clover: ['Every bedroom is taken, so somebody has the Primary suite. Clover cannot be under it, and she wants a hallway to herself.', 'Rufus has the Front bedroom. Only one room is left that has nobody overhead and nobody on its hallway.'],
+        clover: ['Every bedroom is taken, so somebody has the Primary suite. Clover can’t be under it, and she wants a hallway to herself.', 'Rufus has the Front bedroom. Only one room is left that has nobody overhead and nobody on its hallway.'],
         biscuit: ['Main level, with the morning sun, and Rufus has one of those.', 'The Middle bedroom.'],
         ziggy: ['Evening sun and a window onto the terrace.', 'The Corner bedroom, downstairs.'],
         puddle: ['Two bedrooms left. Only one of them gets the evening sun.', 'The Side bedroom, under the skylights.'],
         nugget: ['One bedroom left.', 'The Garden bedroom. Nugget can hear the wheel from there, just.']},
-      epi: 'Six bedrooms, all taken, and the wheel in the one place nobody could object.'}
+      epi: 'Six bedrooms, all taken, and the wheel in the one place nobody could object to.'}
   ];
 
   return {SLOTS, WHERE, SLOT_IDS, BEDS, SPARE, LEVEL_NAME, LEVEL_RANK, HALLS, WALLS, WALLS_UNSURE, OVER, GUESTS, KINDS, ASK, REL, WITH, LEVELS, WORLDS,
