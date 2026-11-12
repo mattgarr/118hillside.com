@@ -1587,7 +1587,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
       x = pick(gaps(q.y, q.y + h, L, R, O), w, mid); if(x !== null) return put(x, q.y, q.top);
       /* r41: no room for the one line beside what is on that edge (a small computer: the stop card and the floor-plan button leave a gap
          narrower than the sentence): the same words on two lines in the widest gap of that edge row, still on the edge */
-      G2 = gaps(q.top ? q.y : q.y - h * 1.6, q.top ? q.y + h * 2.6 : q.y + h, L, R, O); g = null;
+      G2 = gaps(q.top ? q.y : q.y - h * .7, q.top ? q.y + h * 1.7 : q.y + h, L, R, O); g = null;
       for(n = 0; n < G2.length; n++) if(!g || G2[n][1] - G2[n][0] > g[1] - g[0]) g = G2[n];
       if(!g || (gw = Math.min(Math.floor(g[1] - g[0]), Math.ceil(w * .5 + 60))) < 200) continue;
       b.style.setProperty('--v33w', gw + 'px'); b.classList.add('v33wrap'); h2 = b.getBoundingClientRect().height;
