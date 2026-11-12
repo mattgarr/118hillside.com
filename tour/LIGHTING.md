@@ -178,3 +178,25 @@ Same view from two histories (4 views): exposure within 0.00-0.01 %.
 Phone viewport (375x812 emulated, phone path), median frame time / draw calls, main -> r40: street 25.7 -> 24.7 ms (1399 calls
 both), living 25.2 -> 23.8 (1153), great 9.2 -> 10.0 (176), kitchen 27.2 -> 29.7 (1373), primary 12.4 -> 14.5 (354), terrace
 19.4 -> 16.9 (586); programs 50 -> 51 (the crossfade quad). Within run-to-run noise; no added draw calls or passes.
+
+## 6. Things that glowed but are not lights (r41)
+
+Owner, 11/12: surfaces that "appear luminescent". Only real light sources (lamps and their lit shades, bulbs, LED strips, screens,
+candles, holiday lights, fixture lenses) may emit. Audit of every material in the scene (emissive, emissiveMap, `toneMapped: false`,
+unlit `MeshBasicMaterial` on lit objects, envMapIntensity, own envMaps, the r40 sky/room side), daylight and dusk:
+
+| Offender | Was | Now |
+|---|---|---|
+| Light-filtering shades (roller, honeycomb, skylight) and the rainbow privacy film | fixed emissive (.14 / .22 / .5 / .32) at every hour | `R41SH`: each panel transmits the daylight on its own window (sky share + direct sun on its face; the old value is the sunniest window at midday); none at dusk / night |
+| Probe mirrors | the staging mirror's grey emissive x.25 in an un-tone-mapped material, and x2.7 at dusk (below) | reflection only |
+| Beverage-cooler door streaks | unlit, un-tone-mapped white `MeshBasicMaterial` | an additive metallic film reflecting the room |
+| Wall-mounted hardware, shade rails near exterior walls | the r40 mask's ~6 in band inside exterior walls read the sky | r40 mode 2 (furnishings, hardware, coverings) also accepts the room 6 in to either side |
+| Chrome | a 100 % white mirror | chromium's ~.55 reflectance |
+| Metals at dusk (v33 S6) | every metal's envMapIntensity x3 at dusk: with two environments that tripled the dusk SKY on outdoor metals (outdoor kitchen, balcony, exterior door hardware), and the probe mirrors (their own capture is already the room's light) read 2.7x the room | `r40MetK`: the x3 (the lamp-lit panorama is dimmer than the lamps' real bounce; a white metal sphere at x3 is about as bright as a 50 % grey diffuse sphere beside it, at x1 it is darker) multiplies only the ROOM environment, for metalness >= .5; the sky side and own-envMap materials stay x1 |
+| Pergola polycarbonate roofs | the midday "transmitted daylight" emissive (.25 / .5) all day | follows the light on the sheet like the shades (x.53 at golden hour); dusk keeps its small LED-lit value |
+| Thick-glass edges (`glassEdge20`) | fixed green emissive x.15 | daylight only |
+| Garage door jamb boards | bare stained fir | painted trim (`M.trim`) |
+
+Left as designed: lamp bulbs and lit lamp shades (`r13lit`, on at every hour as staged), recessed-can lenses, under-cabinet and
+cooler LEDs, appliance displays and the fridge dispenser icons, the artika pendant, mirror LED halos, exterior and pool lights (dusk
+only), the terrain lift (1.4), game and holiday sprites, contact-shadow and AO decals (multiply: they only darken).

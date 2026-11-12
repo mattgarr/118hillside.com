@@ -629,7 +629,7 @@ var MATDEF = {
   cabinetWhite: function () { return std({ color: 0xf3f2ec, roughness: 0.45, metalness: 0 }); },
   cabinetOak: function () { return std({ color: 0xffffff, map: getTex('oakLight'), roughness: 0.55, metalness: 0 }); },
   stainless: function () { return std({ color: 0xe6e8ea, map: getTex('brushed'), metalness: 0.85, roughness: 0.32 }); },
-  chrome: function () { return std({ color: 0xffffff, metalness: 1, roughness: 0.12 }); },
+  chrome: function () { return std({ color: 0xc4c5c4, metalness: 1, roughness: 0.12 }); },   // r41: chromium's measured reflectance (~.55 linear), not a 100 % mirror: white chrome knobs and trim read self-lit in a dim room
   blackMetal: function () { return std({ color: 0x161617, metalness: 0.5, roughness: 0.5 }); },
   brass: function () { return std({ color: 0xc8a25e, metalness: 1, roughness: 0.35 }); },
   castIron: function () { return std({ color: 0x0e0e0e, metalness: 0.25, roughness: 0.8 }); },
