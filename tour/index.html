@@ -23073,7 +23073,8 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
   for(let k = 0; k < n1 + 240 * 6; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], v = (sN - s) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt; let tg = G(g, sN), tr = (tg - G(g, s)) / dt, ya = YA, yw = YW, st = false;
     if(stand && s > L - 4){ let e = gE; if(v >= .15){ const b1 = G(sgE > 0 ? bHi : bLo, s), b2 = G(trv, s) + sgE * MB, lim = gW + angDiff(gW, (sgE > 0 ? Math.min(b1, b2) : Math.max(b1, b2)) + sgE * Math.asin(Math.min(1, .15 / v))); e = gW + sgE * clamp((lim - gW) * sgE, 0, Math.abs(rem)); } if((e - tg) * sgE > 0){ tg = e; tr = 0; ya = AS; yw = WS; st = true; } }
     ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - gE) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
-    let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -ya, ya); w = clamp(w + ac * dt, -yw, yw); if(st){ const br = Math.sqrt(1.7 * ya * Math.abs(tg - y)); if(w * (tg - y) > 0 && Math.abs(w) > br) w = Math.sign(w) * br; } y += w * dt;
+    let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -ya, ya); if(st){ const er = tg - y; if(w * er > 0 && w * w > 1.6 * ya * Math.abs(er)) ac = -Math.sign(w) * ya; }   // brakes in time: never past the stop's view
+    { const w2 = w + ac * dt; w = Math.abs(w2) > yw ? Math.sign(w2) * Math.max(yw, Math.abs(w) - ya * dt) : w2; } y += w * dt;   // a lower cap (walking after standing) is reached by slowing, not at once
     ac = clamp(wn * wn * (pg - pt) + 2 * wn * (prr - pw), -PA, PA); pw = clamp(pw + ac * dt, -PW, PW); pt += pw * dt; }
   ys[ys.length - 1] = gE; ps[ps.length - 1] = gp[N - 1];
   const nT = ss.length; a.tl = {dt, n: nT, s: Float64Array.from(ss), yaw: Float64Array.from(ys), pitch: Float64Array.from(ps)}; a.dur = Math.max(.05, (nT - 1) * dt);
