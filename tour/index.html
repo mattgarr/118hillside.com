@@ -15997,7 +15997,7 @@ html.ph #pk42h h2{font-family:var(--sf,inherit);font-style:normal;font-weight:60
 html.ph .pk42p .p42lede{display:none}
 html.ph .pk42p .p42list{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin:4px -2px 0;padding:2px 2px 6px;scrollbar-width:none}
 html.ph .pk42p .p42list::-webkit-scrollbar{display:none}
-html.ph .pk42p .k42c{flex:0 0 min(300px,82vw);scroll-snap-align:start;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:10px;background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph .pk42p .k42c{flex:0 0 min(290px,74vw);scroll-snap-align:start;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:10px;background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
 html.ph .pk42p .k42c[aria-checked="true"]{border-color:var(--pt,var(--accent));box-shadow:0 0 0 1.5px var(--pt,var(--accent)) inset}
 html.ph .pk42p .k42c[aria-checked="true"]::after{color:var(--pt,var(--accent))}
 html.ph .pk42p .k42s{width:62px;height:62px}
@@ -16029,11 +16029,12 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     + '<p class="p42fine">The house is offered as it is today. The other plans are ideas only.</p>';
   const list = pick.querySelector('.p42list'), foot = pick.querySelector('.p42ft');
 
-  let pickerUsed = ss('hillside.cta42.used') === '1', nudgeOn = false, nudgeStop = -1, placedIn = null, lastSig = '';
+  let sheetByPk = false, pickerUsed = ss('hillside.cta42.used') === '1', nudgeOn = false, nudgeStop = -1, placedIn = null, lastSig = '';
   const seen = new Set();
 
   /* ---- the picker */
   const setPk = on => root.classList.toggle('pk42', !!on);
+  const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
   function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {}, sl = list.scrollLeft;
     for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
     list.innerHTML = '';
@@ -16065,7 +16066,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     hideNudge();
     for(const p of plans()) load(p.id);
     setPk(true); if(mode !== 'design') setMode('design'); else { try{ DESIGN.view(1.2); }catch(e){} }
-    try{ if(isPh() && $('#card').classList.contains('min')) $('#collapse').click(); }catch(e){}
+    try{ if(isPh() && $('#card').classList.contains('min')){ $('#collapse').click(); sheetByPk = true; } }catch(e){}
     render(); lastSig = ''; sync();
     setTimeout(() => { const c = list.querySelector('.k42c[aria-checked="true"]') || list.querySelector('.k42c'); if(c) try{ c.focus({preventScroll: true}); }catch(e){} const cd = $('#card'); if(cd) cd.scrollTop = 0; }, 60); }
 
@@ -16086,7 +16087,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     else { hm.style.setProperty('--hm42t', Math.round(r.bottom + 8) + 'px'); hm.style.setProperty('--hm42l', Math.round(r.left) + 'px'); hm.style.setProperty('--hm42w', Math.round(r.width) + 'px'); } }
 
   /* ---- the chip and the nudge */
-  function chipKind(){ if(inGame() || mode !== 'tour' || !$('#gallery').hidden || root.classList.contains('clean27') || root.classList.contains('phm')) return '';
+  function chipKind(){ if(inGame() || mode !== 'tour' || photoUp() || root.classList.contains('clean27') || root.classList.contains('phm')) return '';
     const hs = $('#holShow'); if(hs && !hs.hidden) return ''; const P = $('#holPanel'); if(P && !P.hidden) return '';
     const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
     const id = stopId(); return PLAN_STOPS.has(id) && plans().length > 1 ? 'plans' : DECOR_STOPS.has(id) && window.HOLIDAY ? 'decor' : ''; }
@@ -16122,7 +16123,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     for(const n of [chip, nudge]){ n.style.setProperty('--c42l', Math.round(left) + 'px'); n.style.setProperty('--c42b', Math.round(n === nudge ? nb : bottom) + 'px'); n.style.setProperty('--c42w', Math.round(maxW) + 'px'); } }
 
   /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
-  function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = !$('#gallery').hidden;
+  function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
     const show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || (pickerUsed && !root.classList.contains('ideas35on')));
     root.classList.toggle('cb42on', show && v !== 'asbuilt');
     if(!show){ banner.hidden = true; return; }
@@ -16156,6 +16157,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
 
   function sync(){ try{
     if(root.classList.contains('pk42') && mode !== 'design') setPk(false);
+    if(sheetByPk && !root.classList.contains('pk42') && mode !== 'design'){ sheetByPk = false; try{ if(isPh() && !$('#card').classList.contains('min')) $('#collapse').click(); }catch(e){} }   // a phone sheet opened for the picker folds away again
     if(nudgeOn && (stopIdx !== nudgeStop || mode !== 'tour' || inGame())) hideNudge();
     const k = nudgeOn ? '' : chipKind();
     if(k){ const sig = k + bedsPhrase() + isPh(); if(chip._s !== sig){ chip._s = sig; chip.dataset.k = k; chip.innerHTML = chipText(k);
