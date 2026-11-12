@@ -20790,8 +20790,13 @@ const R42D = window.R42D = {merged: 0, tris: 0, bevel: 0, ao: 0, skipped: []};
 const R42C = {max: .26, width: 1.5 / 12, cell: .2, bevelTop: .06};   // tuned on the GPU against p59 / x04: a soft line, not a pillow
 function r42DoorContact(G, na, I, nIa){
   const P0 = G.attributes.position.array, N0 = G.attributes.normal.array, U0 = G.attributes.uv ? G.attributes.uv.array : null;
-  const floorT = []; for(let t = nIa; t < I.length; t += 3) floorT.push([I[t], I[t + 1], I[t + 2]]); if(!floorT.length) return null;
   const n = new THREE.Vector3(N0[I[nIa] * 3], N0[I[nIa] * 3 + 1], N0[I[nIa] * 3 + 2]).normalize();
+  // panel floors only (faces parallel to the slab); the model also gives some panels thin end faces hidden in the stiles: kept as they are
+  const floorT = [], keepT = []; for(let t = nIa; t < I.length; t += 3){ const a = I[t], b = I[t + 1], c = I[t + 2];
+    const ux = P0[b * 3] - P0[a * 3], uy = P0[b * 3 + 1] - P0[a * 3 + 1], uz = P0[b * 3 + 2] - P0[a * 3 + 2], vx = P0[c * 3] - P0[a * 3], vy = P0[c * 3 + 1] - P0[a * 3 + 1], vz = P0[c * 3 + 2] - P0[a * 3 + 2];
+    const fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx, fl = Math.hypot(fx, fy, fz) || 1;
+    (Math.abs((fx * n.x + fy * n.y + fz * n.z) / fl) > .9 ? floorT : keepT).push([a, b, c]); }
+  if(!floorT.length) return null;
   const side = v => Math.sign(N0[v * 3] * n.x + N0[v * 3 + 1] * n.y + N0[v * 3 + 2] * n.z) || 1;
   const pk = (x, y, z) => Math.round(x * 2e3) + ',' + Math.round(y * 2e3) + ',' + Math.round(z * 2e3);
   // panel outline per face: edges used by one floor triangle only
@@ -20849,6 +20854,7 @@ function r42DoorContact(G, na, I, nIa){
       const ccw = new THREE.Vector3().subVectors(B, A).cross(new THREE.Vector3().subVectors(C, A)).dot(n) * sg > 0; if(ccw === wantCCW) out.push(a, b, c); else out.push(a, c, b); };
     for(let k = 0; k < 4; k++){ const k1 = (k + 1) % 4; tri(o[k], o[k1], q[k1]); tri(o[k], q[k1], q[k]); }
     tri(q[0], q[1], q[2]); tri(q[0], q[2], q[3]); R42D.rings = (R42D.rings || 0) + 1; }
+  for(const t of keepT) for(const v of t){ const i = P.length / 3; P.push(P0[v * 3], P0[v * 3 + 1], P0[v * 3 + 2]); N.push(N0[v * 3], N0[v * 3 + 1], N0[v * 3 + 2]); if(U) U.push(U0[v * 2], U0[v * 2 + 1]); O.push(0); out.push(i); }
   const nv = P.length / 3, I2 = new (nv > 65535 ? Uint32Array : Uint16Array)(nIa + out.length); I2.set(I.subarray(0, nIa)); I2.set(out, nIa);
   G.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3)); G.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N), 3));
   if(U) G.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(U), 2)); G.setAttribute('r42occ', new THREE.BufferAttribute(new Float32Array(O), 1));
