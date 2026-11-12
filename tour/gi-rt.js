@@ -42,7 +42,7 @@ void main(){
 }`;
 const FS_GATH = () => B.FSLIB + `
 uniform sampler2D uG0, uG1, uPrev, giT0, giT1, giRoom;
-uniform float uN, uNOff, uLampOn, uR; uniform vec3 uSunC, uLampK, giB0, giBS, giN; uniform vec4 giRB; uniform vec2 giRY; uniform int uFrame;
+uniform float uN, uNOff, uLampOn, uR, uCap; uniform vec3 uSunC, uLampK, giB0, giBS, giN; uniform vec4 giRB; uniform vec2 giRY; uniform int uFrame;
 float roomW(vec3 P){ vec2 uv = (P.xz - giRB.xy) * giRB.zw; if(uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 || P.y < giRY.x || P.y > giRY.y) return 0.0; return texture(giRoom, uv).r; }
 void probeAB(vec3 P, out vec3 a, out vec3 b){
   vec3 g = clamp((P - giB0) * giBS, vec3(0.0), giN - 1.0); float y0 = floor(g.y), f = g.y - y0, y1 = min(y0 + 1.0, giN.y - 1.0);
@@ -71,7 +71,11 @@ void main(){
         float att = (LP.w > 0.0 && LC.w > 0.0) ? pow(clamp(1.0 - dl / LP.w, 0.0, 1.0), LC.w) : 1.0;
         if(LD.w > 0.5) att *= smoothstep(uLE[li].x, uLE[li].y, dot(-wl, LD.xyz));
         if(cl > 0.0 && att > 0.0 && !isect(Po, wl, dl - 4e-3, true, hsh(rid + 99u))) Ln += alb * LC.rgb * uLampK * (cl * att * float(uNL)); } }
-    L = mix(Ln, Lfar, w); }
+    L = mix(Ln, Lfar, w);
+    // a near surface in full sun is some 60 times brighter than the room and is hit by one ray in a hundred: left alone it sparkles for
+    // thousands of samples. One sample may bring at most uCap times the probes' radiance for its direction (the usual firefly clamp; it
+    // gives up part of the bounce right beside a sun patch, which the probes' far field still carries in its smooth form).
+    float m = dot(L, vec3(0.2126, 0.7152, 0.0722)), cap = uCap * max(dot(Lfar, vec3(0.2126, 0.7152, 0.0722)), dot(a0, vec3(0.0677, 0.2277, 0.023))); if(m > cap) L *= cap / m; }
   oc = vec4(mix(prev, L * 3.14159265, 1.0 / (uN + 1.0)), G0.w);
 }`;
 
@@ -106,7 +110,7 @@ RT.init = function(){ H = GI.H; THREE = H.THREE; R = H.renderer;
   const base = () => ({uTri: {value: B.tTri}, uNode: {value: B.tNode}, uMat: {value: B.tMat}, uSky: {value: null}, uNoGeo: {value: 0}});
   RT.uP = Object.assign(base(), {uIVP: {value: new THREE.Matrix4()}, uCam: {value: new THREE.Vector3()}, uRes: {value: new THREE.Vector2()}, uOut: {value: 0}});
   const g = GI.U;
-  RT.uG = Object.assign(base(), lampU(), {uG0: {value: null}, uG1: {value: null}, uPrev: {value: null}, uN: {value: 0}, uR: {value: RT.R}, uNOff: g.giNOff, uLampOn: {value: 0}, uSunC: {value: new THREE.Vector3()}, uLampK: {value: new THREE.Vector3(1, 1, 1)}, uSun: {value: new THREE.Vector3(0, 1, 0)}, uFrame: {value: 0},
+  RT.uG = Object.assign(base(), lampU(), {uG0: {value: null}, uG1: {value: null}, uPrev: {value: null}, uN: {value: 0}, uR: {value: RT.R}, uCap: {value: +qp('gicap', 6)}, uNOff: g.giNOff, uLampOn: {value: 0}, uSunC: {value: new THREE.Vector3()}, uLampK: {value: new THREE.Vector3(1, 1, 1)}, uSun: {value: new THREE.Vector3(0, 1, 0)}, uFrame: {value: 0},
     giT0: g.giT0, giT1: g.giT1, giRoom: g.giRoom, giB0: g.giB0, giBS: g.giBS, giN: g.giN, giRB: g.giRB, giRY: g.giRY});
   RT.mP = quadMat(FS_PRIM(), RT.uP); RT.mG = quadMat(FS_GATH(), RT.uG);
   RT.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), RT.mP); RT.quad.frustumCulled = false; RT.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); RT.qs = new THREE.Scene(); RT.qs.add(RT.quad);
