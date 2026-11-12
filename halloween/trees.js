@@ -865,7 +865,7 @@ function tubeMesh(m, b, sides, tile, colorFn, shapeFn, step, cap) {
   }
   var W = sides + 1;
   for (k = 0; k < idx.length - 1; k++) for (j = 0; j < sides; j++) {
-    var a0 = ring0 + k * W + j; m.quad(a0, a0 + W, a0 + W + 1, a0 + 1);
+    var a0 = ring0 + k * W + j; m.quad(a0, a0 + 1, a0 + W + 1, a0 + W);   // r40: counter-clockwise seen from outside (it was wound inward, so the bark culled the near wall and every trunk read as a hollow half-shell)
   }
   if (cap) {   // close the open end (trunk tops that split into leaders; pruning cuts get a paler, callused face)
     var last = idx[idx.length - 1], cc = colorFn(b, last, pts[last]);

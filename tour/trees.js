@@ -842,35 +842,46 @@ function tubeMesh(m, b, sides, tile, colorFn, shapeFn, step, cap) {
   step = step || 1;
   for (i = 0; i < n; i += step) idx.push(i);
   if (idx[idx.length - 1] !== n - 1) idx.push(n - 1);
-  var T = [], N = [], ring0 = m.v, rAvg = 0;
-  idx.forEach(function (ii) { rAvg += b.rad[ii]; }); rAvg /= idx.length;
-  var urep = Math.max(1, Math.round(TAU * rAvg / tile[0])), vOff = (b.id * 0.618) % 1;
+  // r40: rings to draw: {p, r, cum, ii (nearest skeleton point, for the colour)}. A shaped trunk gets extra rings up to 4 ft so its root
+  // flare and buttress lobes curve into the ground instead of reading as a faceted lamp-shade between 1.2 ft rings
+  var S = [];
   for (var k = 0; k < idx.length; k++) {
-    var a = idx[Math.max(0, k - 1)], c = idx[Math.min(idx.length - 1, k + 1)];
-    T.push(vnorm(vsub(pts[c], pts[a])));
+    var i0 = idx[k];
+    S.push({ p: pts[i0], r: b.rad[i0], cum: b.cum[i0], ii: i0 });
+    if (shapeFn && b.order === 0 && k < idx.length - 1) {
+      var i1 = idx[k + 1], lo = Math.min(pts[i0][1], pts[i1][1]);
+      if (lo < 4) { var sub = lo < 1.5 ? 5 : 2; for (var q = 1; q < sub; q++) { var f = q / sub; S.push({ p: vlerp(pts[i0], pts[i1], f), r: lerp(b.rad[i0], b.rad[i1], f), cum: lerp(b.cum[i0], b.cum[i1], f), ii: f < 0.5 ? i0 : i1 }); } }
+    }
+  }
+  var T = [], N = [], ring0 = m.v, rAvg = 0;
+  S.forEach(function (sm) { rAvg += sm.r; }); rAvg /= S.length;
+  var urep = Math.max(1, Math.round(TAU * rAvg / tile[0])), vOff = (b.id * 0.618) % 1;
+  for (k = 0; k < S.length; k++) {
+    var pa = S[Math.max(0, k - 1)].p, pc = S[Math.min(S.length - 1, k + 1)].p;
+    T.push(vnorm(vsub(pc, pa)));
   }
   var Nn = perp(T[0]);
-  for (k = 0; k < idx.length; k++) {
+  for (k = 0; k < S.length; k++) {
     Nn = vnorm(vsub(Nn, vsc(T[k], vdot(Nn, T[k]))));
     N.push(Nn);
   }
-  for (k = 0; k < idx.length; k++) {
-    var ii = idx[k], p = pts[ii], t = T[k], nn = N[k], bb = vcross(t, nn), r = b.rad[ii], col = colorFn(b, ii, p);
-    var dr = k > 0 ? (b.rad[idx[k - 1]] - r) / Math.max(1e-3, vlen(vsub(pts[idx[k - 1]], p))) : 0;
+  for (k = 0; k < S.length; k++) {
+    var sm = S[k], p = sm.p, t = T[k], nn = N[k], bb = vcross(t, nn), r = sm.r, col = colorFn(b, sm.ii, p);
+    var dr = k > 0 ? (S[k - 1].r - r) / Math.max(1e-3, vlen(vsub(S[k - 1].p, p))) : 0;
     for (var j = 0; j <= sides; j++) {
       var th = j / sides * TAU, dir = vadd(vsc(nn, Math.cos(th)), vsc(bb, Math.sin(th)));
-      var rm = shapeFn ? shapeFn(b, ii, th, p) : 1, q = vmad(p, dir, r * rm);
-      m.vert(q, vnorm(vmad(dir, t, dr * 0.6)), j / sides * urep, b.cum[ii] / tile[1] + vOff, col);
+      var rm = shapeFn ? shapeFn(b, sm.ii, th, p) : 1, qv = vmad(p, dir, r * rm);
+      m.vert(qv, vnorm(vmad(dir, t, dr * 0.6)), j / sides * urep, sm.cum / tile[1] + vOff, col);
     }
   }
   var W = sides + 1;
-  for (k = 0; k < idx.length - 1; k++) for (j = 0; j < sides; j++) {
-    var a0 = ring0 + k * W + j; m.quad(a0, a0 + W, a0 + W + 1, a0 + 1);
+  for (k = 0; k < S.length - 1; k++) for (j = 0; j < sides; j++) {
+    var a0 = ring0 + k * W + j; m.quad(a0, a0 + 1, a0 + W + 1, a0 + W);   // r40: counter-clockwise seen from outside (it was wound inward, so a FrontSide bark culled the near wall and every trunk read as a hollow half-shell)
   }
   if (cap) {   // close the open end (trunk tops that split into leaders; pruning cuts get a paler, callused face)
-    var last = idx[idx.length - 1], cc = colorFn(b, last, pts[last]);
+    var last = S[S.length - 1], cc = colorFn(b, last.ii, last.p);
     if (b.pruned) cc = mulc(mixc(cc, [0.62, 0.5, 0.36], 0.55), 1.1);
-    var ce = m.vert(pts[last], T[T.length - 1], 0.5, 0.5, cc), base = ring0 + (idx.length - 1) * W;
+    var ce = m.vert(last.p, T[T.length - 1], 0.5, 0.5, cc), base = ring0 + (S.length - 1) * W;
     for (j = 0; j < sides; j++) m.tri(base + j, base + j + 1, ce);
   }
 }
@@ -970,14 +981,15 @@ function lightGrid(sk, A, cardArea) {
 function barkColor(K, sk, G, o) {
   return function (b, i, p) {
     var c = K.barkTint(b, p, sk), sky = G ? G.sky(p) : 1;
-    var ao = lerp(0.42, 1.0, Math.pow(sky, 0.7)) * lerp(0.75, 1, smooth(0, 2.5, p[1]));
+    var ao = b.order === 0 ? lerp(0.72, 1.0, Math.pow(sky, 0.7)) * lerp(0.9, 1, smooth(0, 2.5, p[1]))   // r40: a trunk under a dense crown still reads as grey-brown bark, not a black post
+      : lerp(0.42, 1.0, Math.pow(sky, 0.7)) * lerp(0.75, 1, smooth(0, 2.5, p[1]));
     if (b.dead) c = mixc(c, [0.55, 0.52, 0.48], 0.6);
     return mulc(c, ao);
   };
 }
 
 function buildHero(K, sk, o, budget, mid) {
-  var L = K.leaf, bm = new Mesher(), lm = new Mesher(), R = rng(seedOf(o.seed, mid ? 'midcards' : 'hero'));
+  var L = K.leaf, bm = new Mesher(), lm = new Mesher(), R = rng(seedOf(o.seed, mid ? 'midcards' : 'hero')), trunkRings = null;
   var A = leafAnchors(sk, L, o), cl = clumpsOf(A, sk, o), G = lightGrid(sk, A, L.size * L.size * 0.45 * (L.perAnchor || 2.5));
   var bc = barkColor(K, sk, G, o), tile = BARK[K.bark(o)].tile;
   // branches: thickest first, stop adding twig tubes once over the branch budget
@@ -990,10 +1002,16 @@ function buildHero(K, sk, o, budget, mid) {
   });
   else bl.forEach(function (b) {
     var sides = (K.sides || SIDES.hero)[Math.min(b.order, 5)];
+    if (b.order === 0) sides = Math.max(sides, 28);   // r40: the trunk is what a visitor walks up to: round, not an 18-gon
     if (b.order >= 3 && bm.tris() > brBudget) return;
     if (b.rad[0] < 0.012) return;
-    var step = b.order >= 4 ? Math.max(1, b.pts.length - 1) : b.order === 3 ? 2 : 1;
+    var step = b.order >= 4 ? Math.max(1, b.pts.length - 1) : b.order === 3 ? 2 : 1, v0 = bm.v;
     tubeMesh(bm, b, sides, tile, bc, b.order === 0 ? K.trunkShape(sk) : null, step, (b.order === 0 && sk.capTrunk) || b.pruned);
+    if (b.order === 0 && !trunkRings) {   // r40: where the trunk's rings sit in the bark geometry, so a page can put lights on (and a collider round) the real surface
+      var cap = (sk.capTrunk || b.pruned) ? 1 : 0, split = null;
+      b.kids.forEach(function (c) { if (c.order === 1 && c.pts.length) { var y = c.pts[0][1]; if (split === null || y < split) split = y; } });
+      trunkRings = { start: v0, W: sides + 1, n: Math.round((bm.v - v0 - cap) / (sides + 1)), split: split };
+    }
   });
   // cards
   var nCards = Math.max(50, Math.floor((budget - bm.tris()) / 2)), per = nCards / Math.max(1, A.length);
@@ -1026,7 +1044,7 @@ function buildHero(K, sk, o, budget, mid) {
     }
   });
   return { bark: bm.tris() ? bm.geometry() : null, leaf: lm.tris() ? lm.geometry() : null, leafMat: 'leaf:' + L.set,
-    info: { anchors: A.length, clumps: cl.length, branches: sk.list.length, barkTris: bm.tris(), leafTris: lm.tris() } };
+    info: { anchors: A.length, clumps: cl.length, branches: sk.list.length, barkTris: bm.tris(), leafTris: lm.tris(), trunk: trunkRings } };
 }
 
 function buildMid(K, sk, o, budget) {
@@ -1187,8 +1205,8 @@ function defKind(K) { KINDS[K.kind] = K; KIND_ORDER.push(K.kind); }
 function flareShape(sk, lobes, flare, burl) {
   var s = sk.seed;
   return function (b, i, th, p) {
-    var y = Math.max(0, p[1]), f = 1 + flare * Math.exp(-y / 1.6) + flare * 0.35 * Math.exp(-y / 5);
-    var lb = 1 + lobes * Math.pow(0.5 + 0.5 * Math.cos(th * 5 + s % 7 + Math.sin(th * 3) * 0.8), 3) * Math.exp(-y / 2.2);
+    var y = Math.max(0, p[1]), f = 1 + flare * Math.exp(-y / 1.6) + flare * 0.35 * Math.exp(-y / 5) + flare * 0.45 * Math.exp(-y / 0.5);   // r40: last term: the roots spread into the ground
+    var lb = 1 + lobes * Math.pow(0.5 + 0.5 * Math.cos(th * 5 + s % 7 + Math.sin(th * 3) * 0.8), 3) * (Math.exp(-y / 2.2) + 0.6 * Math.exp(-y / 0.6));
     var bu = 1 + burl * fbm3(Math.cos(th) * 1.3, y * 0.35, Math.sin(th) * 1.3, s, 3);
     return f * lb * bu;
   };

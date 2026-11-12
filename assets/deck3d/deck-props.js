@@ -220,37 +220,104 @@
       if(P.includes('rangoli')) rangoli(g, -5, floorY(-5, 23.4, 2, -3.5), 23.4, 2.3, 1);
       return g; }
 
-    /* ---------- trees ---------- */
-    const needleTex = () => tex('needle', () => canvasTex(64, 128, (x, w, h) => { const g = x.createLinearGradient(0, h, 0, 0); g.addColorStop(0, '#8d8d8d'); g.addColorStop(.7, '#d6d6d6'); g.addColorStop(1, '#ffffff'); x.fillStyle = g; x.fillRect(0, 0, w, h); const R = rng(8);
-      for(let i = 0; i < 260; i++){ x.strokeStyle = R() > .5 ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.2)'; x.lineWidth = 1; const px = R() * w, py = R() * h; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (R() - .5) * 5, py - 6 - R() * 12); x.stroke(); } }));
+    /* ---------- trees ----------
+       r40 (owner 11/11: "the Christmas trees ... has a weird sort of solid cone shape in the middle. Let's make that a little bit more realistic").
+       The old tree was a dark solid cone with 4,000 needle-textured spikes stuck in it. Now a fir is built the way one grows: a thin tapering
+       trunk and leader, whorls of branches that get shorter toward the top, each branch drooping and turning up at the tip, carrying flat
+       fronds of needle sprays (alpha-cut cards in a shallow V, painted on canvas). Everything green is ONE merged mesh and one material;
+       trunk and branch wood is a second; ornaments hang from branch tips, the string of lights is draped along the branches, the topper
+       sits on the leader. No per-frame work beyond the light shader everything else already uses. */
+    function GB(){ this.p = []; this.n = []; this.u = []; this.c = []; this.i = []; this.v = 0; }
+    GB.prototype.vert = function(p, n, u, v, c){ this.p.push(p.x, p.y, p.z); this.n.push(n.x, n.y, n.z); this.u.push(u, v); this.c.push(c.r, c.g, c.b); return this.v++; };
+    GB.prototype.add = function(geo, M, c){ const P = geo.attributes.position, N = geo.attributes.normal, UV = geo.attributes.uv, I = geo.index, NM = new THREE.Matrix3().getNormalMatrix(M), v = new V3(), n = new V3(), o = this.v;
+      for(let k = 0; k < P.count; k++){ v.fromBufferAttribute(P, k).applyMatrix4(M); n.fromBufferAttribute(N, k).applyMatrix3(NM).normalize(); this.vert(v, n, UV ? UV.getX(k) : 0, UV ? UV.getY(k) : 0, c); }
+      if(I) for(let k = 0; k < I.count; k++) this.i.push(o + I.getX(k)); else for(let k = 0; k < P.count; k++) this.i.push(o + k); };
+    GB.prototype.geo = function(){ const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(this.p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(this.n, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(this.u, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(this.c, 3)); g.setIndex(this.v > 65535 ? new THREE.Uint32BufferAttribute(this.i, 1) : new THREE.Uint16BufferAttribute(this.i, 1)); g.computeBoundingSphere(); return g; };
+    /* one fir frond seen from above: a twig with two ranks of needles curving forward, a third rank lying over the twig, paler new growth
+       at the tip; the flocked tree's copy is dusted white. 256 x 512, alpha-cut. */
+    const sprayTex = flock => tex('spray' + (flock ? 'F' : ''), () => { const t = canvasTex(256, 512, (x, w, h) => { const R = rng(flock ? 44 : 43), cx = s => w / 2 + Math.sin(s * 2.6) * w * .035;
+        x.lineCap = 'round'; x.strokeStyle = '#5b4a30'; for(let s = 0; s < 1; s += .02){ x.lineWidth = 7 - s * 4.5; x.beginPath(); x.moveTo(cx(s), h * (1 - s)); x.lineTo(cx(s + .02), h * (1 - s - .02)); x.stroke(); }
+        const needle = (s, side, lenK, ang, lw, light) => { const px = cx(s), py = h * (1 - s), L = w * .43 * lenK * (s > .8 ? 1 - (s - .8) * 2.4 : 1) * (.86 + R() * .26), a = ang + (R() - .5) * .22, ex = px + side * Math.sin(a) * L, ey = py - Math.cos(a) * L, mx = px + side * Math.sin(a) * L * .5, my = py - Math.cos(a) * L * .5 + L * .07;
+          const hue = 128 + R() * 22 - (s > .78 ? 18 : 0), sat = 38 + R() * 16, li = (s > .78 ? 30 : 16) + R() * 9 + light;
+          x.lineWidth = lw; x.strokeStyle = `hsl(${hue},${sat}%,${li}%)`; x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(mx, my, ex, ey); x.stroke();
+          x.lineWidth = lw * .45; x.strokeStyle = `hsla(${hue - 6},${sat - 8}%,${li + 13}%,.55)`; x.beginPath(); x.moveTo(mx, my - lw * .2); x.lineTo(ex, ey); x.stroke(); };
+        for(let s = .02; s < .985; s += .0105) [-1, 1].forEach(sd => needle(s, sd, 1, 1.0 + R() * .3, 5.2, 0));
+        for(let s = .03; s < .97; s += .016) needle(s, R() > .5 ? 1 : -1, .55, .3 + R() * .35, 5, 4);
+        if(flock){ for(let i = 0; i < 1200; i++){ const s = R(), sd = R() > .5 ? 1 : -1, d = R() * .42 * w, px = cx(s) + sd * d * Math.sin(1.1), py = h * (1 - s) - d * .45, rr = 3.5 + R() * 7.5;
+            const gr = x.createRadialGradient(px, py, 0, px, py, rr); gr.addColorStop(0, 'rgba(250,252,255,.95)'); gr.addColorStop(.7, 'rgba(240,244,248,.8)'); gr.addColorStop(1, 'rgba(240,244,248,0)'); x.fillStyle = gr; x.beginPath(); x.arc(px, py, rr, 0, 7); x.fill(); } } });
+      return t; });
+    const firMat = flock => tex('firMat' + (flock ? 'F' : ''), () => { const m = new THREE.MeshStandardMaterial({color: 0xffffff, map: sprayTex(flock), vertexColors: true, alphaTest: .42, side: THREE.DoubleSide, roughness: flock ? .9 : .78, metalness: 0});
+      m.onBeforeCompile = s => { s.fragmentShader = s.fragmentShader.replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('normal = normal * faceDirection;', '')); };   // fronds are lit by their rounded normals from both sides
+      if(!flock) m.color.setRGB(.5, .66, .6);   // a deep blue-green: under the room's lights the painted needles alone read as lawn green
+      m.customProgramCacheKey = () => 'deck-fir'; m.name = 'deck-fir'; return m; });
+    const woodMat = () => std('#ffffff', {vertexColors: true, roughness: .92});
     const ORN = {classic: ['#b3141f', '#e0b33c', '#c9a24a', '#f1e3b4', '#8e1f2b', '#e0b33c'], fir: ['#c81e2b', '#e0b33c', '#1f5fbf', '#c9d0d8', '#1d8a4a', '#b8327a'], flocked: ['#d9b866', '#e9edf1', '#c9a24a', '#b8c4d0'], pencil: ['#e0b33c', '#c9a24a', '#f0d27a'], small: ['#c81e2b', '#e0b33c']};
     const TLITE = {classic: ['#ffe0b0'], fir: ['#ff4136', '#2fd158', '#3a82ff', '#ffc928', '#ff8a1e'], flocked: ['#ffe0b0'], pencil: ['#ffcf6a'], small: ['#ffe0b0']};
-    function conifer(g, o){ const R = rng(o.seed || 11), h = o.h, r = o.r, kind = o.kind, y0 = h * .12, t3 = new THREE.Group(); t3.position.set(o.x, o.y, o.z); g.add(t3);
-      const flock = kind === 'flocked', greens = flock ? ['#eef2ee', '#dfe8e2', '#d2ded4', '#f6f8f6'] : ['#1c4a2c', '#25593a', '#1f5133', '#2f6a41'];
-      t3.add(mesh(G.cyl, std('#4a3424'), 0, (y0 + .4) / 2, 0, .1, y0 + .4, .1));
-      if(o.pot){ t3.add(mesh(new THREE.CylinderGeometry(.42, .33, .62, 16), std(o.pot, {roughness: .6}), 0, .31, 0)); }
-      else { const sk = new THREE.Mesh(new THREE.ConeGeometry(r * .92, .2, 28, 1, true), std('#8e1f2b', {side: THREE.DoubleSide, roughness: .95})); sk.position.y = .1; t3.add(sk); const tr = new THREE.Mesh(new THREE.TorusGeometry(r * .9, .035, 6, 40), std('#efe6d2')); tr.rotation.x = Math.PI / 2; tr.position.y = .03; t3.add(tr); }
-      t3.add(mesh(new THREE.ConeGeometry(r * .5, h - y0 - .1, 10), std(flock ? '#a9b8ab' : '#12301d'), 0, y0 + (h - y0 - .1) / 2, 0));
-      const boughs = [], orn = [], tiers = Math.max(6, Math.round(h * 2.1)), prof = t => r * Math.pow(1 - t, .82) + .1;
-      const push = (base, dir, len, wd) => { const X = new V3().crossVectors(Y, dir).normalize(), Z = new V3().crossVectors(X, dir).normalize(); boughs.push({p: base, q: basisQ(X, dir, Z), s: [len * wd, len, len * .17], c: greens[Math.floor(R() * 4)]}); return X; };
-      for(let i = 0; i < tiers; i++){ const t = i / (tiers - 1), y = y0 + .12 + (h - y0 - .5) * t, rr = prof(t), n = Math.max(5, Math.round(6 + rr * 7.5)), off = R() * 6.283;
-        for(let k = 0; k < n; k++){ const a = off + k / n * 6.283 + (R() - .5) * .3, len = rr * (.86 + R() * .28), droop = .36 + R() * .16 - t * .3, dir = new V3(Math.sin(a) * Math.cos(droop), -Math.sin(droop), Math.cos(a) * Math.cos(droop)), base = new V3(0, y, 0);
-          const X = push(base, dir, len, .34), up = new V3().crossVectors(dir, X).normalize(); [-1, 1].forEach(sd => { const d2 = dir.clone().multiplyScalar(Math.cos(.62)).addScaledVector(X, sd * Math.sin(.62)).normalize(); push(base.clone().addScaledVector(dir, len * .36), d2, len * .56, .4); });
-          const nt = o.small ? 3 : 5; for(let j = 0; j < nt; j++){ const u = .28 + j / nt * .7, at = base.clone().addScaledVector(dir, len * u), tl = len * (.34 - u * .14) * (.8 + R() * .4);   // feather each bough with short side shoots so it reads as fir, not folded paper
-            [-1, 1].forEach(sd => push(at, dir.clone().multiplyScalar(.62).addScaledVector(X, sd * .78).addScaledVector(up, .12 + R() * .2).normalize(), tl, .42)); push(at, dir.clone().multiplyScalar(.7).addScaledVector(up, .7).addScaledVector(X, (R() - .5) * .5).normalize(), tl * .7, .45); }
-          if((i * 7 + k) % 3 === 0 && t < .93) orn.push({p: base.clone().addScaledVector(dir, len * .93).add(new V3(0, -.13, 0)), s: (o.small ? .07 : .095) + R() * .04, c: (ORN[o.small ? 'small' : kind] || ORN.fir)[Math.floor(R() * 99) % (ORN[o.small ? 'small' : kind] || ORN.fir).length]}); } }
-      t3.add(inst(G.spike, std('#ffffff', {map: needleTex(), roughness: .9}), boughs));
-      t3.add(inst(G.sph, std('#ffffff', {metalness: .65, roughness: .2}), orn));
-      const lp = [], pal = TLITE[o.small ? 'small' : kind] || TLITE.fir, N = Math.round(h * r * (o.small ? 12 : 13));
-      for(let i = 0; i < N; i++){ const u = 1 - Math.sqrt(1 - (i + .5) / N), a = i * 2.39996, rr = prof(u) * .93, y = y0 + .05 + (h - y0 - .45) * u - rr * .3; lp.push({p: new V3(o.x + Math.sin(a) * rr, o.y + y, o.z + Math.cos(a) * rr), c: pal[i % pal.length], s: pal.length > 1 ? .56 : .5, r: .03}); }
+    const TINT = {classic: [.96, 1.0, .9], fir: [.86, .98, 1.06], pencil: [.98, 1.0, .9], flocked: [1, 1, 1]};   // Fraser deep green; the noble fir a little blue
+    function conifer(g, o){ const R = rng(o.seed || 11), h = o.h, r = o.r, kind = o.kind, flock = kind === 'flocked', small = !!o.small, t3 = new THREE.Group(); t3.position.set(o.x, o.y, o.z); g.add(t3);
+      const sc = kind === 'pencil' ? .74 : clamp(r / 2.2, .62, 1),   // fronds keep a real size on the slim and the little trees (they read sparse and twiggy when they shrank with the radius)
+        yb = o.pot ? .58 : .16, y0 = Math.max(yb + .25, h * .12), yTop = h - .42, tint = TINT[kind] || TINT.classic;
+      const prof = t => Math.pow(1 - t, .92) * (1 + .06 * Math.sin(t * 9 + (o.seed || 11))), W = new GB(), F = new GB(), wc = new THREE.Color(), fc = new THREE.Color();
+      const _n = new V3(), _r = new V3(), sh = (p, nc) => { _r.set(p.x, 0, p.z); const d = _r.length(); if(d > 1e-4) _r.divideScalar(d); return _n.copy(nc).multiplyScalar(.38).addScaledVector(_r, .62).addScaledVector(Y, .22).normalize(); };
+      const shadeC = (p, base) => { const t = clamp((p.y - y0) / (h - y0), 0, 1), rad = Math.hypot(p.x, p.z) / (r * prof(Math.min(.98, t)) + .25), ao = lerp(.5, 1.06, clamp((rad - .12) / .8, 0, 1)) * lerp(.9, 1.06, t);
+        return fc.setRGB(base[0] * ao, base[1] * ao, base[2] * ao); };
+      /* a frond card in a shallow V: base, direction, length, width, fold (rad); S0 a side vector when the frond stands upright */
+      const frond = (b, D, len, wid, k, S0) => { const S = S0 ? S0.clone() : new V3().crossVectors(D, Y); if(S.lengthSq() < 1e-6) S.set(1, 0, 0); S.normalize(); const Nc = new V3().crossVectors(S, D).normalize(), fold = .42 + R() * .2, roll = (R() - .5) * .5;
+        const Sr = S.clone().multiplyScalar(Math.cos(roll)).addScaledVector(Nc, Math.sin(roll)), Nr = Nc.clone().multiplyScalar(Math.cos(roll)).addScaledVector(S, -Math.sin(roll));
+        const L = Sr.clone().multiplyScalar(-Math.cos(fold)).addScaledVector(Nr, Math.sin(fold)), Rt = Sr.clone().multiplyScalar(Math.cos(fold)).addScaledVector(Nr, Math.sin(fold));
+        const base = [tint[0] * k * (.9 + R() * .2), tint[1] * k * (.9 + R() * .2), tint[2] * k * (.9 + R() * .2)], tip = b.clone().addScaledVector(D, len).addScaledVector(Y, -len * .08), o0 = F.v;
+        [[b, 0], [tip, 1]].forEach(([p, v], e) => { const hw = wid * (e ? .82 : 1) / 2; [[L, 0], [null, .5], [Rt, 1]].forEach(([side, u]) => { const q = side ? p.clone().addScaledVector(side, hw) : p.clone(); F.vert(q, sh(q, Nr), u, v, shadeC(q, base)); }); });
+        F.i.push(o0, o0 + 1, o0 + 4, o0, o0 + 4, o0 + 3, o0 + 1, o0 + 2, o0 + 5, o0 + 1, o0 + 5, o0 + 4); };
+      /* wood: a tapered n-gon tube through points */
+      const tube = (pts, rads, n, hex) => { wc.copy(col(hex)); const o0 = W.v; for(let i = 0; i < pts.length; i++){ const D = pts[Math.min(pts.length - 1, i + 1)].clone().sub(pts[Math.max(0, i - 1)]).normalize(), S = new V3().crossVectors(D, Math.abs(D.y) > .95 ? new V3(1, 0, 0) : Y).normalize(), N2 = new V3().crossVectors(S, D);
+          for(let j = 0; j <= n; j++){ const a = j / n * 6.283, d = S.clone().multiplyScalar(Math.cos(a)).addScaledVector(N2, Math.sin(a)); W.vert(pts[i].clone().addScaledVector(d, rads[i]), d, j / n, i, wc); } }
+        for(let i = 0; i < pts.length - 1; i++) for(let j = 0; j < n; j++){ const a = o0 + i * (n + 1) + j, b = a + n + 1; W.i.push(a, a + 1, b + 1, a, b + 1, b); } };
+      const tw = small ? .055 : .085;
+      tube([new V3(0, o.pot ? .3 : 0, 0), new V3(.006, y0, -.004), new V3(-.01, (y0 + h) / 2, .006), new V3(0, h - .3, 0), new V3(0, h + .03, 0)], [tw, tw * .9, tw * .55, tw * .3, .012], 7, '#5a4330');
+      /* whorls of branches; each branch: polyline bp(u), fronds along its axis, alternating side fronds, a paler upturned tip */
+      const tiers = Math.max(8, Math.round((yTop - y0) / (small ? .24 : .27))), lights = [], tips = [];
+      for(let i = 0; i < tiers; i++){ const t = i / (tiers - 1), y = y0 + (yTop - y0) * (1 - Math.pow(1 - t, 1.18)) + (i && i < tiers - 1 ? (R() - .5) * .08 : 0), rr = r * prof(t) + .12, nb = Math.max(4, Math.round((small ? 3.5 : 4.5) + rr * (kind === 'pencil' ? 4.2 : 3.6))), off = i * 2.39996 + R();
+        for(let k = 0; k < nb; k++){ if(R() < .06 && t < .9) continue;   // a gap here and there, as a real tree has
+          const a = off + k / nb * 6.283 + (R() - .5) * .38, Hd = new V3(Math.sin(a), 0, Math.cos(a)), L = rr * (.84 + R() * .3), e = lerp(-.1, .62, Math.pow(t, 1.2)) + (R() - .5) * .14, drop = Math.min(L * lerp(.3, .06, t) * (.8 + R() * .4), Math.max(0, y + L * Math.sin(e) - (o.pot ? .74 : .34)));   // the lowest whorl droops, but its tips stay off the skirt and the floor
+          const B = new V3(0, y, 0), bp = u => B.clone().addScaledVector(Hd, L * Math.cos(e) * u).addScaledVector(Y, L * Math.sin(e) * u - drop * u * u + (u > .82 ? L * .5 * (u - .82) * (u - .82) : 0)), bd = u => bp(Math.min(1, u + .04)).sub(bp(Math.max(0, u - .04))).normalize();
+          tube([bp(0), bp(.45), bp(.85)], [tw * .32, tw * .2, .008], 4, '#4e3b2a');
+          const fl = .44 * sc, fw = fl * .5, Sm = new V3().crossVectors(Hd, Y).normalize();
+          const na = Math.max(1, Math.ceil(L * .78 / (fl * .72))); for(let j = 0; j < na; j++){ const u = .22 + j * .78 / na; frond(bp(u), bd(u), Math.min(fl, L * .78 / na * 1.35), fw, 1); }
+          frond(bp(.93), bd(.93).addScaledVector(Y, .25).normalize(), fl * .7, fw * .9, 1.16);   // this year's growth at the tip
+          let sd = R() > .5 ? 1 : -1; for(let u = .16; u < .9; u += (.15 * sc + .05) / Math.max(.4, L) * (.85 + R() * .3)){ sd = -sd; const ll = (.26 + .52 * (1 - u)) * Math.min(1, .58 + L * .3) * sc * 1.25, ang = .78 + (R() - .5) * .3;
+            const D = bd(u).multiplyScalar(Math.cos(ang)).addScaledVector(Sm, sd * Math.sin(ang)).addScaledVector(Y, .1 + R() * .12).normalize(), b0 = bp(u);
+            if(ll > fl * 1.1){ frond(b0, D, ll * .55, fw, .96); const D2 = D.clone().addScaledVector(Y, -.12).normalize(); frond(b0.clone().addScaledVector(D, ll * .5), D2, ll * .55, fw * .9, 1.04); } else frond(b0, D, ll, fw * .95, 1); }
+          const nl = L * (small ? 1.5 : 1.6); for(let j = 0; j < nl; j++){ const u = .38 + .58 * ((j + R()) / Math.max(1, nl)); lights.push(bp(u).addScaledVector(Sm, (R() - .5) * .22 * sc).addScaledVector(Y, .055)); }
+          if(t < .93) tips.push({p: bp(.9), t}); } }
+      for(let k = 0; k < 4; k++){ const a = k * 1.571 + R() * .3, S0 = new V3(Math.cos(a), 0, Math.sin(a)); frond(new V3(0, yTop - .1, 0), new V3(Math.sin(a) * .18, 1, Math.cos(a) * .18).normalize(), .52 * sc + .1, .2 * sc, 1.12, S0); }   // the leader's own shoots
+      const fm = new THREE.Mesh(F.geo(), firMat(flock)); fm.name = 'fir-fronds'; fm.userData.own = true; t3.add(fm);   // own: bake() leaves it whole (it would drop the vertex colours) and scrap() frees its geometry
+      /* stand and skirt: a draped velvet skirt with a cream hem, one mesh; the window tree stands in its pot */
+      if(o.pot){ t3.add(mesh(new THREE.CylinderGeometry(.42, .33, .62, 16), std(o.pot, {roughness: .6}), 0, .31, 0)); t3.add(mesh(G.cyl, std('#3a2a1e', {roughness: 1}), 0, .6, 0, .39, .02, .39)); }
+      else { const SK = new GB(), NA = 56, rings = [[.05, .24, 0], [.11, .2, 0], [.3, .15, 0], [.6, .07, .4], [.85, .035, .8], [1, .03, 1], [1, .03, 1, 1], [1.07, .015, 1, 1]], red = col('#8e1f2b'), cream = col('#efe6d2'), Rs = r * .85;
+        rings.forEach(([f, yy, fold, hem]) => { for(let j = 0; j <= NA; j++){ const a = j / NA * 6.283, w = Math.sin(a * 7 + 1.3) * .5 + Math.sin(a * 3 + .4) * .3, rad = Rs * f * (1 + .03 * w * fold); SK.vert(new V3(Math.cos(a) * rad, yy + .045 * w * fold, Math.sin(a) * rad), new V3(Math.cos(a) * .25 * fold, 1, Math.sin(a) * .25 * fold).normalize(), j / NA, f, hem ? cream : red); } });
+        for(let i = 0; i < rings.length - 1; i++) for(let j = 0; j < NA; j++){ const a = i * (NA + 1) + j, b = a + NA + 1; SK.i.push(a, b, a + 1, a + 1, b, b + 1); }
+        const sk = new THREE.Mesh(SK.geo(), std('#ffffff', {vertexColors: true, side: THREE.DoubleSide, roughness: .95})); sk.name = 'fir-skirt'; sk.userData.own = true; t3.add(sk); }
+      const wm = new THREE.Mesh(W.geo(), woodMat()); wm.name = 'fir-wood'; wm.userData.own = true; t3.add(wm);
+      /* ornaments hang a hand's width below branch tips, each with a little gold cap */
+      const pal = ORN[small ? 'small' : kind] || ORN.fir, nO = Math.round(h * r * (small ? 1.7 : 5)), orn = [], caps = [];
+      for(let i = tips.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [tips[i], tips[j]] = [tips[j], tips[i]]; }
+      for(const q of tips){ if(orn.length >= nO) break; if(orn.some(z => z.p.distanceTo(q.p) < .5 * sc + .1)) continue; const s = (small ? .07 : .09) + R() * .04, p = q.p.clone().add(new V3(0, -.07 - s, 0));
+        orn.push({p, s, c: pal[Math.floor(R() * 99) % pal.length]}); caps.push({p: p.clone().add(new V3(0, s * .93, 0)), s: [s * .3, s * .22, s * .3]}); }
+      if(orn.length){ t3.add(inst(G.sph, std('#ffffff', {metalness: .65, roughness: .2}), orn)); t3.add(inst(G.cylLo, metal('#c9a24a', .35), caps)); }
+      /* the string of lights, draped along the branches (as many as the old tree carried), twinkling as before */
+      const lp = [], lpal = TLITE[small ? 'small' : kind] || TLITE.fir, N = Math.round(h * r * (small ? 12 : 13));
+      for(let i = lights.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [lights[i], lights[j]] = [lights[j], lights[i]]; }
+      lights.slice(0, N).sort((a, b) => a.y - b.y).forEach((p, i) => lp.push({p: new V3(o.x + p.x, o.y + p.y, o.z + p.z), c: lpal[i % lpal.length], s: lpal.length > 1 ? .56 : .5, r: .03, q: i}));
       lightSet(g, lp, {mode: 1, seq: o.seq == null ? 2 : o.seq, body: true, seed: 12});
-      if(!o.pot && !o.small){ const gifts = [[-.9, .9, .7, .5, .6, '#b3232c', '#f1e3b4'], [.8, 1.1, .55, .7, .55, '#1f4f8f', '#e8edf3'], [1.25, .2, .8, .42, .6, '#e8e0cf', '#b3232c'], [-1.3, -.1, .5, .36, .5, '#2d6b3c', '#e0b33c']];
-        gifts.forEach(q => { const k = r / 2.3, bx = mesh(G.box, std(q[5], {roughness: .6}), q[0] * k, q[3] / 2, q[1] * k, q[2], q[3], q[4]); bx.rotation.y = q[0]; t3.add(bx); const rb = std(q[6], {roughness: .5}); const r1 = mesh(G.box, rb, q[0] * k, q[3] / 2, q[1] * k, q[2] + .012, q[3] + .012, .08); r1.rotation.y = q[0]; t3.add(r1); const r2 = mesh(G.box, rb, q[0] * k, q[3] / 2, q[1] * k, .08, q[3] + .012, q[4] + .012); r2.rotation.y = q[0]; t3.add(r2); }); }
-      if(o.topper === 'star'){ const m = own(new THREE.MeshStandardMaterial({color: col('#f2c14e'), metalness: .7, roughness: .3, emissive: col('#ffb53a'), emissiveIntensity: 0})); const s = new THREE.Mesh(tex('topStar', () => starGeo(.34, .14, .09)), m); s.position.set(0, h + .1, 0); s.scale.setScalar(o.small ? .6 : 1); t3.add(s);
-        const set = lightSet(g, [{p: new V3(o.x, o.y + h + .1, o.z), c: '#ffd27a', s: o.small ? 1.3 : 2.1}], {mode: 3, seq: 4}); set.mat.uniforms.uMode.value = 0; set.glows.push({m, k: 1.3}); applyOn(set, ON); }
-      if(o.topper === 'flake'){ const m = own(new THREE.MeshStandardMaterial({color: col('#f4f8ff'), emissive: col('#bfe0ff'), emissiveIntensity: 0, roughness: .4})), f = new THREE.Group(); f.position.set(0, h + .16, 0);
+      if(!o.pot && !small){ const gifts = [[-.9, .9, .7, .5, .6, '#b3232c', '#f1e3b4'], [.8, 1.1, .55, .7, .55, '#1f4f8f', '#e8edf3'], [1.25, .2, .8, .42, .6, '#e8e0cf', '#b3232c'], [-1.3, -.1, .5, .36, .5, '#2d6b3c', '#e0b33c']], GG = new GB(), M = new THREE.Matrix4(), Q = new THREE.Quaternion();
+        gifts.forEach(q => { const k = r / 2.3, at = new V3(q[0] * k, q[3] / 2 + .005, q[1] * k); Q.setFromAxisAngle(Y, q[0]); [[q[2], q[3], q[4], q[5]], [q[2] + .012, q[3] + .012, .08, q[6]], [.08, q[3] + .012, q[4] + .012, q[6]]].forEach(([bx, by, bz, hx]) => GG.add(G.box, M.compose(at, Q, new V3(bx, by, bz)), col(hx))); });
+        const gm = new THREE.Mesh(GG.geo(), std('#ffffff', {vertexColors: true, roughness: .55})); gm.name = 'fir-gifts'; gm.userData.own = true; t3.add(gm); }
+      if(o.topper === 'star'){ const m = own(new THREE.MeshStandardMaterial({color: col('#f2c14e'), metalness: .7, roughness: .3, emissive: col('#ffb53a'), emissiveIntensity: 0})); const s = new THREE.Mesh(tex('topStar', () => starGeo(.34, .14, .09)), m), ss = small ? .6 : 1; s.position.set(0, h + .03 + .13 * ss, 0); s.scale.setScalar(ss); t3.add(s);   // the star's lower notch sits on the leader
+        const set = lightSet(g, [{p: new V3(o.x, o.y + s.position.y, o.z), c: '#ffd27a', s: small ? 1.3 : 2.1}], {mode: 3, seq: 4}); set.mat.uniforms.uMode.value = 0; set.glows.push({m, k: 1.3}); applyOn(set, ON); }
+      if(o.topper === 'flake'){ const m = own(new THREE.MeshStandardMaterial({color: col('#f4f8ff'), emissive: col('#bfe0ff'), emissiveIntensity: 0, roughness: .4})), f = new THREE.Group(); f.position.set(0, h + .3, 0);
         for(let i = 0; i < 3; i++){ const arm = mesh(G.box, m, 0, 0, 0, .05, .72, .04); arm.rotation.z = i * Math.PI / 3; f.add(arm); [-1, 1].forEach(e => [-1, 1].forEach(sd => { const b = mesh(G.box, m, 0, 0, 0, .035, .17, .035); const a = i * Math.PI / 3; b.position.set(-Math.sin(a) * e * .22, Math.cos(a) * e * .22, 0); b.rotation.z = a + sd * .9 * e; b.position.x += Math.cos(a) * sd * .05; b.position.y += Math.sin(a) * sd * .05; f.add(b); })); } t3.add(f);
-        const set = lightSet(g, [{p: new V3(o.x, o.y + h + .16, o.z), c: '#cfe6ff', s: 1.9}], {mode: 3, seq: 4}); set.mat.uniforms.uMode.value = 0; set.glows.push({m, k: 1.2}); applyOn(set, ON); }
+        const set = lightSet(g, [{p: new V3(o.x, o.y + h + .3, o.z), c: '#cfe6ff', s: 1.9}], {mode: 3, seq: 4}); set.mat.uniforms.uMode.value = 0; set.glows.push({m, k: 1.2}); applyOn(set, ON); }
       if(o.shadow !== false) blob(g, o.x, o.y, o.z, r * 1.25, .75); }
     function olive(g, o){ const R = rng(23), t3 = new THREE.Group(); t3.position.set(o.x, o.y, o.z); g.add(t3);
       t3.add(mesh(new THREE.CylinderGeometry(.62, .44, .95, 20), std('#b9643c', {roughness: .75}), 0, .475, 0)); t3.add(mesh(new THREE.TorusGeometry(.62, .05, 6, 24).rotateX(Math.PI / 2), std('#b9643c', {roughness: .75}), 0, .95, 0)); t3.add(mesh(G.cyl, std('#3a2c22'), 0, .9, 0, .56, .04, .56));
@@ -325,25 +392,38 @@
 
     /* ---------- the heritage oak and the terrace ---------- */
     const OAKS = {};
-    function oakInfo(name){ name = name || 'tree:OAK-BACK'; let OAK = OAKS[name]; if(OAK) return OAK; let bark = null; H.scene.traverse(o => { if(o.name === name) bark = o.children.find(c => c.name === 'bark') || bark; }); if(!bark) return {trunk: [], canopy: []};   // not remembered: the trees are planted a moment after the house
+    function oakInfo(name){ name = name || 'tree:OAK-BACK'; let OAK = OAKS[name]; if(OAK) return OAK; let tree = null, bark = null; H.scene.traverse(o => { if(o.name === name){ tree = o; bark = o.children.find(c => c.name === 'bark') || bark; } }); if(!bark) return {trunk: [], canopy: []};   // not remembered: the trees are planted a moment after the house
       bark.updateWorldMatrix(true, false); const P = bark.geometry.attributes.position, v = new V3(), V = []; for(let i = 0; i < P.count; i++){ v.fromBufferAttribute(P, i).applyMatrix4(bark.matrixWorld); V.push(v.clone()); }
       const low = V.filter(q => q.y < -1.5 && q.y > -5); let cx = 8.3, cz = -27.2; if(low.length){ cx = low.reduce((s, q) => s + q.x, 0) / low.length; cz = low.reduce((s, q) => s + q.z, 0) / low.length; }
-      const g0 = floorY(cx + 2.6, cz, 6, -4.8), trunk = []; let px = cx, pz = cz;
-      for(let y = g0 + .3; y < g0 + 9.5; y += .3){ const sl = V.filter(q => Math.abs(q.y - y) < .7 && Math.hypot(q.x - px, q.z - pz) < 2.4); if(sl.length < 4) continue; const mx = sl.reduce((s, q) => s + q.x, 0) / sl.length, mz = sl.reduce((s, q) => s + q.z, 0) / sl.length, r = sl.reduce((s, q) => s + Math.hypot(q.x - mx, q.z - mz), 0) / sl.length;
-        if(r > 1.9 && y > g0 + 3) break; px = mx; pz = mz; trunk.push({y, x: mx, z: mz, r: clamp(r, .7, y < g0 + 2 ? 1.75 : 1.45)}); }
-      const top = trunk.length ? trunk[trunk.length - 1].y : g0 + 7;
+      const g0 = floorY(cx + 2.6, cz, 6, -4.8); let trunk = [], top = null;
+      /* r40: the trunk's own rings (trees.js records where they sit in the bark geometry): a radius for every 7.5 degrees round each ring, so
+         a string wrapped on it follows the root flare, the buttress lobes and the burls instead of a mean circle that dipped into the bark */
+      const TR = tree && tree.userData && tree.userData.info && tree.userData.info.trunk, NB = 48, TAU = Math.PI * 2;
+      if(TR && TR.n > 2 && TR.start + TR.n * TR.W <= P.count){
+        for(let k = 0; k < TR.n; k++){ const m = TR.W - 1, ring = []; let mx = 0, my = 0, mz = 0; for(let j = 0; j < m; j++){ const q = V[TR.start + k * TR.W + j]; ring.push(q); mx += q.x; my += q.y; mz += q.z; } mx /= m; my /= m; mz /= m;
+          const pa = ring.map(q => [Math.atan2(q.z - mz, q.x - mx), Math.hypot(q.x - mx, q.z - mz)]).sort((p, q) => p[0] - q[0]), rs = new Float32Array(NB); let rm = 0;
+          for(let bI = 0; bI < NB; bI++){ const an = -Math.PI + (bI + .5) / NB * TAU; let i1 = pa.findIndex(e => e[0] >= an); if(i1 < 0) i1 = 0; const i0 = (i1 - 1 + pa.length) % pa.length; let a0 = pa[i0][0], a1 = pa[i1][0], aa = an; if(a1 <= a0) a1 += TAU; if(aa < a0) aa += TAU;
+            rs[bI] = lerp(pa[i0][1], pa[i1][1], clamp((aa - a0) / Math.max(1e-6, a1 - a0), 0, 1)); rm += rs[bI]; }
+          trunk.push({y: my, x: mx, z: mz, r: rm / NB, rs}); }
+        trunk.sort((p, q) => p.y - q.y); const k0 = Math.max(0, trunk.findIndex(q => q.y > g0) - 1); trunk = trunk.slice(k0);
+        if(trunk.length > 2){ cx = trunk[0].x; cz = trunk[0].z; top = TR.split != null ? new V3(0, TR.split, 0).applyMatrix4(bark.matrixWorld).y - .45 : trunk[trunk.length - 1].y; top = Math.min(top, trunk[trunk.length - 1].y); }
+        else trunk = []; }
+      if(!trunk.length){ let px = cx, pz = cz;   // older trees.js: slices of the bark's vertices
+        for(let y = g0 + .3; y < g0 + 9.5; y += .3){ const sl = V.filter(q => Math.abs(q.y - y) < .7 && Math.hypot(q.x - px, q.z - pz) < 2.4); if(sl.length < 4) continue; const mx = sl.reduce((s, q) => s + q.x, 0) / sl.length, mz = sl.reduce((s, q) => s + q.z, 0) / sl.length, r = sl.reduce((s, q) => s + Math.hypot(q.x - mx, q.z - mz), 0) / sl.length;
+          if(r > 1.9 && y > g0 + 3) break; px = mx; pz = mz; trunk.push({y, x: mx, z: mz, r: clamp(r, .7, y < g0 + 2 ? 1.75 : 1.45)}); } }
+      top = top != null ? top : trunk.length ? trunk[trunk.length - 1].y : g0 + 7;
       OAK = OAKS[name] = {trunk, canopy: V.filter(q => q.y > top + 1.5 && q.y < top + 24 && Math.hypot(q.x - cx, q.z - cz) < 24), cx, cz, g0, top}; return OAK; }
-    /* a trunk wrapped in one warm string; the tour's holiday dress also wraps the leaning oak by the street */
-    function trunkWrap(g, o, seq, seed){ if(o.trunk.length < 3) return; const pts = [], T = o.trunk, y0 = T[0].y, y1 = T[T.length - 1].y; let a = 0;
-      for(let y = y0; y < y1; ){ const f = (y - y0) / .3, i = Math.min(T.length - 2, Math.floor(f)), k = clamp(f - i, 0, 1), cx = lerp(T[i].x, T[i + 1].x, k), cz = lerp(T[i].z, T[i + 1].z, k), r = lerp(T[i].r, T[i + 1].r, k) * 1.08 + .08;
-        pts.push({p: new V3(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r), c: '#ffd596', s: .62, q: pts.length * .25, r: .035}); const da = .24 / r; a += da; y += da / 6.283 * .62; }
+    /* the trunk's surface at height y and compass angle a (radians, atan2(dz, dx)) */
+    function trunkAt(o, y){ const T = o.trunk; let i = 0; while(i < T.length - 2 && T[i + 1].y < y) i++; const A = T[i], B = T[i + 1], k = clamp((y - A.y) / Math.max(.01, B.y - A.y), 0, 1); return {A, B, k, x: lerp(A.x, B.x, k), z: lerp(A.z, B.z, k)}; }
+    function trunkR(s, a){ const A = s.A, B = s.B; if(!A.rs || !B.rs) return lerp(A.r, B.r, s.k) * 1.08 + .01; const NB = A.rs.length, f = (a + Math.PI) / (Math.PI * 2) * NB - .5, fl = Math.floor(f), t = f - fl, i0 = ((fl % NB) + NB) % NB, i1 = (i0 + 1) % NB;
+      return lerp(lerp(A.rs[i0], A.rs[i1], t), lerp(B.rs[i0], B.rs[i1], t), s.k); }
+    /* a trunk wrapped in one warm string, bulbs resting on the bark all the way round; the tour's holiday dress also wraps the leaning oak by the street */
+    function trunkWrap(g, o, seq, seed){ if(o.trunk.length < 3) return; const pts = [], T = o.trunk, y0 = Math.max(T[0].y, (o.g0 != null ? o.g0 : T[0].y) + .18), y1 = Math.min(o.top != null ? o.top : 1e9, T[T.length - 1].y); let a = 0;
+      for(let y = y0; y < y1; ){ const s = trunkAt(o, y), r = trunkR(s, a) + .07; pts.push({p: new V3(s.x + Math.cos(a) * r, y, s.z + Math.sin(a) * r), c: '#ffd596', s: .62, q: pts.length * .25, r: .035}); const da = .24 / r; a += da; if(a > Math.PI) a -= Math.PI * 2; y += da / 6.283 * .62; }
       lightSet(g, pts, {mode: 1, seq, body: true, seed}); }
     function buildOakFront(S){ if(!S.oakFront) return null; const o = oakInfo('tree:OAK-FRONT'); if(o.trunk.length < 3) return null; const g = grp('oakfront'); trunkWrap(g, o, 1, 22); return g; }
     function buildOak(S){ if(S.oak === 'none') return null; const o = oakInfo(), g = grp('oak'), R = rng(9);
-      if((S.oak === 'wrap' || S.oak === 'both') && o.trunk.length > 2){ const pts = [], T = o.trunk, y0 = T[0].y, y1 = T[T.length - 1].y; let a = 0;
-        for(let y = y0; y < y1; ){ const f = (y - y0) / .3, i = Math.min(T.length - 2, Math.floor(f)), k = clamp(f - i, 0, 1), cx = lerp(T[i].x, T[i + 1].x, k), cz = lerp(T[i].z, T[i + 1].z, k), r = lerp(T[i].r, T[i + 1].r, k) * 1.08 + .08;
-          pts.push({p: new V3(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r), c: '#ffd596', s: .62, q: pts.length * .25, r: .035}); const da = .24 / r; a += da; y += da / 6.283 * .62; }
-        lightSet(g, pts, {mode: 1, seq: 1, body: true, seed: 2}); }
+      if((S.oak === 'wrap' || S.oak === 'both') && o.trunk.length > 2) trunkWrap(g, o, 1, 2);
       if((S.oak === 'branches' || S.oak === 'both') && o.canopy.length){ const pts = [], n = Math.min(900, o.canopy.length); for(let i = 0; i < n; i++){ const q = o.canopy[Math.floor(R() * o.canopy.length)]; pts.push({p: new V3(q.x + (R() - .5) * .5, q.y + (R() - .5) * .5 - .1, q.z + (R() - .5) * .5), c: R() > .25 ? '#ffe2b4' : '#ffc978', s: .7 + R() * .35}); }
         lightSet(g, pts, {mode: 1, seq: 2, seed: 6}); }
       return g; }
