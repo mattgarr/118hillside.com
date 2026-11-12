@@ -23159,7 +23159,7 @@ if(/[?&]qa=1\b/.test(location.search)){
         if(typeof id === 'string'){ T.setMode('tour'); T.showStop(ix(id)); T.finish(); }
         else if(id.from){ T.setMode('tour'); T.showStop(ix(id.from)); T.finish(); T.showStop(ix(id.to)); T.mid(id.f); const c = T.camera, d = new THREE.Vector3(); c.getWorldDirection(d); const p = c.position.toArray(), at = c.position.clone().addScaledVector(d, 10).toArray(); T.finish(); T.look(p, at); }
         else T.look(id.pos, id.at);
-        if(tod) setTOD(tod); await step(o.settle || 150);
+        if(tod) setTOD(tod); await step(o.settle || 150); vt += 1000 / 30; T.step(1);   // the last frame drawn in this task (the canvas is cleared once the task yields)
         const x = (k % cols) * tw, y = 24 + Math.floor(k / cols) * th; g.drawImage(gl, x, y, tw, th);
         g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(x, y, 150, 18); g.fillStyle = '#fff'; g.font = '12px sans-serif'; g.fillText((typeof id === 'string' ? id : id.name) + ' ' + (tod || TOD_KEY), x + 4, y + 13);
         await new Promise(r => setTimeout(r, 0)); } }
