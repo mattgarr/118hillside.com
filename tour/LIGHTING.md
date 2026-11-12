@@ -97,8 +97,8 @@ r40 stage 1:
   eases over 1 s. A cut (camera jumps more than 6 ft in a frame), a mode change, a time-of-day change or the loading screen snaps
   everything: the picture changes at once there anyway.
 - `R40X`: the environment the page asks for becomes a target; materials see `R40X.out`, a PMREM-sized texture crossfaded from
-  the last one. In / out: 1.6 s, with `EXPO_IN`. Room to room: .9 s, longer (up to 2.6 s) the more the two panoramas' measured mean
-  brightness differs (a windowless hall next to a bright room); the curve is half linear, half smoothstep. One 768x768 quad per
+  the last one. In / out: 1.6 s, with `EXPO_IN`. Room to room: .9 s, longer (up to 2.6 s) the more the two panoramas' measured brightness
+  differs (largest difference over six regions: four wall quarters, the upper and the lower half) (a windowless hall next to a bright room); the curve is half linear, half smoothstep. One 768x768 quad per
   frame, only while a fade runs.
 - `lightMeterMul`: continuous target, log-space ease on real time.
 - navCheck `light`: every move forward and back, drawn at 30 fps on a simulated clock (with short yields so the meter's GPU
