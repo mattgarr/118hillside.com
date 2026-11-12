@@ -17,8 +17,12 @@
   const ga = (n, p) => { try{ window.gtag && gtag('event', n, p || {}); }catch(e){} };
   const isPh = () => root.classList.contains('ph');
   const HW = () => window.HALLOWEEN, TG = () => window.THANKSGIVING;
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const paint = () => new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; requestAnimationFrame(() => setTimeout(f, 0)); setTimeout(f, 180); });   // a hidden tab gets no frames: the timer backs it up
+  /* PUMP (QA only, HOLIDAY.debug.pump(fn)): in a hidden tab, where the browser gives no frames and slows timers to a crawl, a QA harness steps
+     frames itself; waits here are then counted in frames it pumps (60 to the second) instead of timers */
+  let PUMP = null;
+  const pumped = async n => { for(let i = 0; i < n; i++){ PUMP(); if(i % 4 === 3) await Promise.resolve(); } };
+  const sleep = ms => PUMP ? pumped(Math.max(1, Math.min(45, Math.round(ms / 16.7)))) : new Promise(r => setTimeout(r, ms));
+  const paint = () => PUMP ? pumped(2) : new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; requestAnimationFrame(() => setTimeout(f, 0)); setTimeout(f, 180); });   // a hidden tab gets no frames: the timer backs it up
   const ASSET = (document.currentScript && document.currentScript.src || '../assets/holiday/holiday.js').replace(/holiday\/holiday\.js.*$/, '');
 
   /* ---------- what each dress is, and the best places to see it from ---------- */
@@ -416,7 +420,7 @@
     await go('none'); try{ if(H.mode !== mode0) H.setMode(mode0); }catch(e){} try{ if(H.tod !== tod0.key) H.todSet(tod0.key, tod0.manual); }catch(e){} if(start !== 'none') await go(start);
     res.ok = res.pairs.every(p => p.ok); res.leftovers = res.pairs.reduce((n, p) => n + p.n, 0); res.ms = Math.round(performance.now() - t0); res.sweeps = lastSweep.slice(); window.__DECORQA = res; return res; }
 
-  window.HOLIDAY = {set, dusk, qa, sweep, prepare, get season(){ return SEASON; }, get prep(){ return PREP; }, debug: {qa: o => qa(o), snap: () => H.snap && H.snap(), sweep: () => sweep()}, get current(){ return current(); }, get busy(){ return busy; }, show: o => show.start(o), stopShow: () => show.stop(), open: () => open(btn), close: () => close(false),
+  window.HOLIDAY = {set, dusk, qa, sweep, prepare, get season(){ return SEASON; }, get prep(){ return PREP; }, debug: {qa: o => qa(o), snap: () => H.snap && H.snap(), sweep: () => sweep(), pump: fn => { PUMP = typeof fn === 'function' ? fn : null; }}, get current(){ return current(); }, get busy(){ return busy; }, show: o => show.start(o), stopShow: () => show.stop(), open: () => open(btn), close: () => close(false),
     state: () => ({current: current(), busy, marks: JSON.parse(JSON.stringify(marks)), mode: H.mode, tod: H.tod, winter: {on: W.on, built: W.built, count: W.P ? W.P.count() : null, visible: W.P ? W.P.root.visible : false}, ms: Object.assign({}, lastMs), show: show.on ? show.i : null, panel: panel ? !panel.hidden : false}),
     get props(){ return W.P; }, WINTER, DRESS};
 })();

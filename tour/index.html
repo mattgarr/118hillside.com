@@ -17231,7 +17231,7 @@ function tgOff(){
 function tgDispose(){ for(const g of [TG.ext, TG.inn, TG.innU]) if(g){ if(g.parent) g.parent.remove(g); g.traverse(o => { if(o.isInstancedMesh){ o.dispose && o.dispose(); if(o.userData.t33) o.geometry.dispose(); } else if(o.isMesh && o.userData.t33) o.geometry.dispose(); }); } TG.built = false; TG.flames = null; }
 /* r41: THANKSGIVING.prepare({idle}) builds the set in slices and compiles its few materials for the dinner-time light set (lamps on), so on() only
    has to show it. idle(): a function that says whether the visitor is idle; while it says no, the work waits (the season's idle preload). */
-function tgPrepare(o){ o = o || {}; TG.prepIdle = o.idle || null; TG.prepSlice = o.slice || (o.idle ? 10 : 40);
+function tgPrepare(o){ o = o || {}; if(!(o.idle && TG.prepP)){ TG.prepIdle = o.idle || null; TG.prepSlice = o.slice || (o.idle ? 10 : 40); }   // r43: an idle call never slows a build a pick is waiting for (that one lifts the gate)
   if(!MODEL || !BIM || !FURN.items().length) return Promise.resolve(false);
   const wait = ms => new Promise(r => setTimeout(r, ms)), idleOK = () => !TG.prepIdle || TG.prepIdle();
   const build = () => { if(TG.built && TG.key === ACTIVE_VAR) return Promise.resolve(true); if(TG.on) return Promise.resolve(false);
@@ -24098,7 +24098,7 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=16" defer></script>
+<script src="../assets/holiday/holiday.js?v=17" defer></script>
 <script>/* r43 service worker (../sw.js; what it does and how to turn it off are at the top of that file): registered a few seconds after the page has
    loaded, only on 118hillside.com itself (or with ?sw=1 anywhere, for testing); ?sw=0 unregisters it and clears its caches in this browser. */
 (function(){ try{ if(!('serviceWorker' in navigator)) return; var q = location.search;
