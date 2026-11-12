@@ -16161,7 +16161,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
 
   function sync(){ try{
     if(root.classList.contains('pk42') && mode !== 'design') setPk(false);
-    if(sheetByPk && !root.classList.contains('pk42') && mode !== 'design'){ sheetByPk = false; try{ if(isPh() && !$('#card').classList.contains('min')) $('#collapse').click(); }catch(e){} }   // a phone sheet opened for the picker folds away again
+    if(sheetByPk && !root.classList.contains('pk42') && mode !== 'design'){ sheetByPk = false; setTimeout(() => { try{ if(isPh() && mode !== 'design' && !root.classList.contains('pk42') && !$('#card').classList.contains('min')) $('#collapse').click(); }catch(e){} }, 450); }   // a phone sheet opened for the picker folds away again
     if(nudgeOn && (stopIdx !== nudgeStop || mode !== 'tour' || inGame())) hideNudge();
     const k = nudgeOn ? '' : chipKind();
     if(k){ const sig = k + bedsPhrase() + isPh(); if(chip._s !== sig){ chip._s = sig; chip.dataset.k = k; chip.innerHTML = chipText(k);
