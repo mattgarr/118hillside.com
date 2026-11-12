@@ -23854,7 +23854,7 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
       try{ for(const k of ['sky', 'env', 'sun', 'win', 'glowScale']) S['v27:' + k] = JSON.stringify(V27D[k]); }catch(e){}
       try{ S.hwState = [HW.on, !!(HW.ext && HW.ext.parent), !!(HW.inn && HW.inn.parent), !!(HW.sky && HW.sky.parent), HW.hidden.size, HW.bind.length, !!HW22.fix, !!HW22.lamps].join('|'); }catch(e){}
       try{ S.tgState = [TG.on, !!(TG.ext && TG.ext.parent), !!(TG.inn && TG.inn.parent), !!(TG.innU && TG.innU.parent), TG.hidden.length, !!TG.savedV, TG.dimF].join('|'); }catch(e){}
-      const R = document.documentElement, cs = getComputedStyle(R); S.htmlClass = R.className.split(/\s+/).filter(c => /hallow|thanks|winter|holiday|season/i.test(c)).sort().join(' '); S.bodyClass = document.body.className;
+      const R = document.documentElement, cs = getComputedStyle(R); S.htmlClass = R.className.split(/\s+/).filter(c => /hallow|thanks|winter|holiday|season|^hw|^tg|^hol/i.test(c)).sort().join(' '); S.bodyClass = document.body.className;
       for(const v of ['--paper', '--paper-2', '--ink', '--muted', '--line', '--accent', '--accent-ink', '--glass', '--pg', '--pgs', '--pt', '--ph-hi', '--busy-surface', '--busy-accent']) S['css' + v] = cs.getPropertyValue(v).trim();
       const tab = document.querySelector('.tab[aria-selected="true"]'); if(tab){ const t = getComputedStyle(tab); S.tabLook = t.backgroundColor + '|' + t.color + '|' + t.boxShadow; }
       for(const id of ['viewBtn', 'holBtn', 'busy24']){ const e = document.getElementById(id); if(e && (id !== 'busy24' || e.classList.contains('on'))){ const t = getComputedStyle(e); S['ui:' + id] = t.backgroundColor + '|' + t.color + '|' + t.borderColor; } }
@@ -24659,7 +24659,7 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=23" defer></script>
+<script src="../assets/holiday/holiday.js?v=24" defer></script>
 <script>/* r43 service worker (../sw.js; what it does and how to turn it off are at the top of that file): registered a few seconds after the page has
    loaded, only on 118hillside.com itself (or with ?sw=1 anywhere, for testing); ?sw=0 unregisters it and clears its caches in this browser. */
 (function(){ try{ if(!('serviceWorker' in navigator)) return; var q = location.search;

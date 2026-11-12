@@ -394,8 +394,25 @@
      sky, grade, exposure, time of day, the UI theme (classes, colour variables, the active tab and the header buttons), favicon and title.
      It does this three times: at the time of day it finds, at dusk, and in the Dollhouse; then Winter at dusk (its own "See it at dusk") into
      each other dress and back to None; then a pick made while another dress is still going up. {quick: true}: the first pass only. */
-  async function qa(o){ o = o || {}; if(!H.snap || !H.ready) return {ok: false, why: 'not ready'};
-    const t0 = performance.now(), wait = async ms => { await paint(); await sleep(ms); await paint(); }, S = () => H.snap(), start = current(), tod0 = H.todGet(), mode0 = H.mode;
+  /* r43: while the QA runs it also keeps count of the timers and listeners the page sets up (setInterval, and addEventListener on window,
+     the document and anything still in it), and of this file's own loops (the winter frame loop, the late-oak watch, the slideshow's pace):
+     a dress that leaves one running after it is down shows up as a field that differs from the clean reference */
+  function tracker(){ const iv = new Map(), ls = [], _si = window.setInterval, _ci = window.clearInterval, EP = EventTarget.prototype, _ae = EP.addEventListener, _re = EP.removeEventListener;
+    const cap = o => !!(o === true || (o && o.capture));
+    const who = t => t === window ? 'window' : t === document ? 'document' : t === root ? 'html' : t === document.body ? 'body' : t && t.id ? '#' + t.id : t && t.nodeName ? t.nodeName.toLowerCase() : (t && t.constructor && t.constructor.name) || '?';
+    window.setInterval = function(f, ms){ const id = _si.apply(this, arguments); iv.set(id, ms | 0); return id; };
+    window.clearInterval = function(id){ iv.delete(id); return _ci.apply(this, arguments); };
+    EP.addEventListener = function(type, fn, o){ if(fn && !(o && o.once) && !ls.some(e => e[0] === this && e[1] === type && e[2] === fn && e[3] === cap(o))) ls.push([this, type, fn, cap(o)]); return _ae.apply(this, arguments); };
+    EP.removeEventListener = function(type, fn, o){ const i = ls.findIndex(e => e[0] === this && e[1] === type && e[2] === fn && e[3] === cap(o)); if(i >= 0) ls.splice(i, 1); return _re.apply(this, arguments); };
+    return {read(){ const S = {}; S['timers:intervals'] = [...iv.values()].sort((a, b) => a - b).join(',') || '-';
+        const by = {}; for(const [t, type] of ls){ if(t && t.nodeType && !t.isConnected) continue; const k = who(t) + ':' + type; by[k] = (by[k] || 0) + 1; }
+        S['listeners'] = Object.keys(by).sort().map(k => k + '=' + by[k]).join(',') || '-';
+        S['loops:holiday'] = [!!W.raf, !!W.late, !!show.t, show.on, !!W.on, !!(W.P && W.P.root.parent)].join('|'); return S; },
+      stop(){ window.setInterval = _si; window.clearInterval = _ci; EP.addEventListener = _ae; EP.removeEventListener = _re; }}; }
+  async function qa(o){ if(!H.snap || !H.ready) return {ok: false, why: 'not ready'}; const T = tracker();
+    try{ return await qaRun(o || {}, T); } finally{ T.stop(); } }
+  async function qaRun(o, T){
+    const t0 = performance.now(), wait = async ms => { await paint(); await sleep(ms); await paint(); }, S = () => Object.assign(H.snap(), T.read()), start = current(), tod0 = H.todGet(), mode0 = H.mode;
     for(let i = 0; i < 120 && !(window.__perfTrees === true && !busy); i++) await sleep(250);   // the oaks and the rest of the planting arrive after the first view
     const go = async k => { await set(k, {from: 'qa'}); await wait(o.wait || 500); return current() === k; };
     const fields = v => String(v).split('|'), vol = (a, b) => { const out = new Set(); for(const k of new Set([...Object.keys(a), ...Object.keys(b)])){ if(!(k in a) || !(k in b)){ out.add(k + '#*'); continue; } const x = fields(a[k]), y = fields(b[k]); for(let i = 0; i < Math.max(x.length, y.length); i++) if(x[i] !== y[i]) out.add(k + '#' + i); } return out; };
