@@ -5,10 +5,12 @@
 
    - When the camera has stood still for a few frames, each pixel's visible surface point is found by a ray from the camera through
      the same BVH the bake uses (gi-bake.js), and then, a few samples a frame, a ray leaves that point in a cosine-weighted direction.
-     Where it escapes it brings the sky; where it lands it brings that surface's albedo times the light falling there: the sun (a
-     shadow ray), the lamps, and the bounce light the probes already hold. Outside the probes' rooms the path goes on by itself.
-     The running mean is the irradiance at that pixel: contact shadows, the dark under cabinets and furniture, light fall-off from
-     the windows and bounce colour, with no grid and no leaks.
+     The light is split by distance. Far field (nothing within RT.R, 4 ft): the radiance the probes hold for that direction, which
+     is smooth and free of noise. Near field: the surface the ray hits sends back its albedo times the light falling on IT: the sun
+     (a shadow ray), the lamps, and the probes' light there. So the tracing adds exactly what a 1.25 ft probe grid cannot hold:
+     contact shadows, the dark under cabinets and furniture, the bounce between close surfaces. With nothing near, the result IS
+     the probes' value, so the two tiers agree by construction, and the estimate is clean in a few dozen samples. (The first version
+     traced whole paths to the sky and the sun patches: correct, but it needed thousands of samples to lose its sparkle.)
    - The result is an irradiance cache in the screen of the pose it was traced from. The materials look it up by projecting THEIR
      world position into that pose and comparing the distance, so it stays valid while the camera then moves (irradiance on a diffuse
      surface does not depend on the viewer); what was hidden falls back to the probes. A new rest pose traces a second cache and
@@ -19,7 +21,7 @@
 'use strict';
 const GI = window.GI; if(!GI || !GI.bake) return;
 const B = GI.bake, Q = location.search, qp = (k, d) => { const m = new RegExp('[?&]' + k + '=([^&]*)').exec(Q); return m ? decodeURIComponent(m[1]) : d; };
-const RT = GI.rt = {ready: false, why: 'waiting', scale: +qp('girs', .5), max: +qp('gimax', 768), min: +qp('gimin', 48), spf: 1, spfMax: +qp('gispf', 6), still: 0, traced: 0, builds: 0, buf: [], cur: 0, log: []};
+const RT = GI.rt = {ready: false, why: 'waiting', scale: +qp('girs', .5), max: +qp('gimax', 384), min: +qp('gimin', 32), R: +qp('gir', 4), spf: 1, spfMax: +qp('gispf', 6), still: 0, traced: 0, builds: 0, buf: [], cur: 0, log: []};
 let H, THREE, R;
 
 const VS = 'in vec3 position; void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }';
@@ -40,37 +42,36 @@ void main(){
 }`;
 const FS_GATH = () => B.FSLIB + `
 uniform sampler2D uG0, uG1, uPrev, giT0, giT1, giRoom;
-uniform float uN, uNOff, uLampOn; uniform vec3 uSunC, uLampK, giB0, giBS, giN; uniform vec4 giRB; uniform vec2 giRY; uniform int uFrame;
+uniform float uN, uNOff, uLampOn, uR; uniform vec3 uSunC, uLampK, giB0, giBS, giN; uniform vec4 giRB; uniform vec2 giRY; uniform int uFrame;
 float roomW(vec3 P){ vec2 uv = (P.xz - giRB.xy) * giRB.zw; if(uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 || P.y < giRY.x || P.y > giRY.y) return 0.0; return texture(giRoom, uv).r; }
-vec3 probeE(vec3 P, vec3 n){
+void probeAB(vec3 P, out vec3 a, out vec3 b){
   vec3 g = clamp((P - giB0) * giBS, vec3(0.0), giN - 1.0); float y0 = floor(g.y), f = g.y - y0, y1 = min(y0 + 1.0, giN.y - 1.0);
   vec2 s = vec2(g.x + 0.5, g.z + 0.5) / vec2(giN.x, giN.z * giN.y), u0 = s + vec2(0.0, y0 / giN.y), u1 = s + vec2(0.0, y1 / giN.y);
   vec4 A = mix(texture(giT0, u0), texture(giT0, u1), f); vec2 Bv = mix(texture(giT1, u0).rg, texture(giT1, u1).rg, f);
-  float l = max(dot(A.rgb, vec3(0.2126, 0.7152, 0.0722)), 1e-6); return A.rgb * max(1.0 + dot(vec3(A.a, Bv), n) / l, 0.0); }
+  a = A.rgb; b = vec3(A.a, Bv) / max(dot(A.rgb, vec3(0.2126, 0.7152, 0.0722)), 1e-6); }
 void main(){
   ivec2 fc = ivec2(gl_FragCoord.xy); vec4 G0 = texelFetch(uG0, fc, 0); if(G0.w < 0.0){ oc = vec4(0.0, 0.0, 0.0, -1.0); return; }
   vec3 n = texelFetch(uG1, fc, 0).xyz, prev = texelFetch(uPrev, fc, 0).rgb;
   st = hsh(uint(fc.x) * 9781u + uint(fc.y) * 6271u + uint(uFrame) * 26699u + 1u);
-  vec3 o = G0.xyz + n * 2e-3, d = cosDir(n), L = vec3(0.0), T = vec3(1.0);
-  for(int bn = 0; bn < 4; bn++){
-    uint rid = hsh(st ^ (uint(bn + 1) * 0x68e31da4u));
-    if(!isect(o, d, 1e6, false, rid)){ L += T * sky(d); break; }
+  vec3 o = G0.xyz + n * 2e-3, d = cosDir(n), a0, b0; probeAB(G0.xyz + n * uNOff, a0, b0);
+  // far field: the radiance the probes hold for this direction (their L1: mean a / PI, tilted by b), free of noise
+  vec3 Lfar = a0 * 0.31830989 * max(0.0, 1.0 + 1.5 * dot(b0, d)), L = Lfar;
+  uint rid = hsh(st ^ 0x68e31da4u);
+  if(isect(o, d, uR, false, rid)){
+    // near field (within uR): what that surface really sends back - its albedo times the sun reaching it, the lamps, and the probes' light there
+    float w = smoothstep(uR * 0.55, uR, hitT); vec3 Ln = vec3(0.0);
     vec4 V0 = texelFetch(uTri, ix(3 * hitI), 0), E1 = texelFetch(uTri, ix(3 * hitI + 1), 0), E2 = texelFetch(uTri, ix(3 * hitI + 2), 0);
     vec3 n2 = normalize(cross(E1.xyz, E2.xyz)); bool front = dot(n2, d) < 0.0; int side = int(E2.w + 0.5); if(side == 2) front = !front;
-    if(!front && side != 1) break;
-    if(dot(n2, d) > 0.0) n2 = -n2;
-    vec3 P = o + d * hitT, alb = texelFetch(uMat, ix(int(V0.w + 0.5)), 0).rgb, Po = P + n2 * 2e-3;
-    float c = dot(n2, uSun); if(c > 0.0 && uSunC.g + uSunC.r > 1e-5 && !isect(Po, uSun, 1e6, true, hsh(rid + 77u))) L += T * alb * uSunC * c;
-    if(uLampOn > 0.5 && uNL > 0){ int li = min(int(rnd() * float(uNL)), uNL - 1); vec4 LP = uLP[li], LC = uLC[li], LD = uLD[li];
-      vec3 tl = LP.xyz - P; float dl = length(tl); vec3 wl = tl / max(dl, 1e-4); float cl = dot(n2, wl);
-      float att = (LP.w > 0.0 && LC.w > 0.0) ? pow(clamp(1.0 - dl / LP.w, 0.0, 1.0), LC.w) : 1.0;
-      if(LD.w > 0.5) att *= smoothstep(uLE[li].x, uLE[li].y, dot(-wl, LD.xyz));
-      if(cl > 0.0 && att > 0.0 && !isect(Po, wl, dl - 4e-3, true, hsh(rid + 99u))) L += T * alb * LC.rgb * uLampK * (cl * att * float(uNL)); }
-    if(roomW(P + n2 * 0.75) > 0.5){ L += T * alb * probeE(P + n2 * uNOff, n2) * 0.31830989; break; }
-    T *= alb; if(bn >= 1){ float q = clamp(max(T.r, max(T.g, T.b)) * 1.2, 0.05, 1.0); if(rnd() > q) break; T /= q; }
-    d = cosDir(n2); o = Po;
-  }
-  L = min(L, vec3(64.0));
+    if(front || side == 1){ if(dot(n2, d) > 0.0) n2 = -n2;
+      vec3 P = o + d * hitT, alb = texelFetch(uMat, ix(int(V0.w + 0.5)), 0).rgb, Po = P + n2 * 2e-3, a1, b1; probeAB(P + n2 * uNOff, a1, b1);
+      Ln = alb * a1 * 0.31830989 * max(0.0, 1.0 + dot(b1, n2));
+      float c = dot(n2, uSun); if(c > 0.0 && uSunC.g + uSunC.r > 1e-5 && !isect(Po, uSun, 1e6, true, hsh(rid + 77u))) Ln += alb * uSunC * c;
+      if(uLampOn > 0.5 && uNL > 0){ int li = min(int(rnd() * float(uNL)), uNL - 1); vec4 LP = uLP[li], LC = uLC[li], LD = uLD[li];
+        vec3 tl = LP.xyz - P; float dl = length(tl); vec3 wl = tl / max(dl, 1e-4); float cl = dot(n2, wl);
+        float att = (LP.w > 0.0 && LC.w > 0.0) ? pow(clamp(1.0 - dl / LP.w, 0.0, 1.0), LC.w) : 1.0;
+        if(LD.w > 0.5) att *= smoothstep(uLE[li].x, uLE[li].y, dot(-wl, LD.xyz));
+        if(cl > 0.0 && att > 0.0 && !isect(Po, wl, dl - 4e-3, true, hsh(rid + 99u))) Ln += alb * LC.rgb * uLampK * (cl * att * float(uNL)); } }
+    L = mix(Ln, Lfar, w); }
   oc = vec4(mix(prev, L * 3.14159265, 1.0 / (uN + 1.0)), G0.w);
 }`;
 
@@ -105,7 +106,7 @@ RT.init = function(){ H = GI.H; THREE = H.THREE; R = H.renderer;
   const base = () => ({uTri: {value: B.tTri}, uNode: {value: B.tNode}, uMat: {value: B.tMat}, uSky: {value: null}, uNoGeo: {value: 0}});
   RT.uP = Object.assign(base(), {uIVP: {value: new THREE.Matrix4()}, uCam: {value: new THREE.Vector3()}, uRes: {value: new THREE.Vector2()}, uOut: {value: 0}});
   const g = GI.U;
-  RT.uG = Object.assign(base(), lampU(), {uG0: {value: null}, uG1: {value: null}, uPrev: {value: null}, uN: {value: 0}, uNOff: g.giNOff, uLampOn: {value: 0}, uSunC: {value: new THREE.Vector3()}, uLampK: {value: new THREE.Vector3(1, 1, 1)}, uSun: {value: new THREE.Vector3(0, 1, 0)}, uFrame: {value: 0},
+  RT.uG = Object.assign(base(), lampU(), {uG0: {value: null}, uG1: {value: null}, uPrev: {value: null}, uN: {value: 0}, uR: {value: RT.R}, uNOff: g.giNOff, uLampOn: {value: 0}, uSunC: {value: new THREE.Vector3()}, uLampK: {value: new THREE.Vector3(1, 1, 1)}, uSun: {value: new THREE.Vector3(0, 1, 0)}, uFrame: {value: 0},
     giT0: g.giT0, giT1: g.giT1, giRoom: g.giRoom, giB0: g.giB0, giBS: g.giBS, giN: g.giN, giRB: g.giRB, giRY: g.giRY});
   RT.mP = quadMat(FS_PRIM(), RT.uP); RT.mG = quadMat(FS_GATH(), RT.uG);
   RT.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), RT.mP); RT.quad.frustumCulled = false; RT.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); RT.qs = new THREE.Scene(); RT.qs.add(RT.quad);
