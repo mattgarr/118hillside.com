@@ -1840,7 +1840,7 @@ html.tgload .loading::after{content:"";position:absolute;left:0;right:0;top:-60p
   i.src = tg ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/tg_poster_ph.jpg' : 'thumbs/tg_poster.jpg') : hw ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/hw_poster_ph.jpg' : 'thumbs/hw_poster.jpg') : (() => { try{ const k = sessionStorage.getItem('hillside.tod.v27'); if(k && k !== 'dusk') return 'thumbs/p69.jpg'; }catch(e){} return 'thumbs/p02.jpg'; })(); })();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="house_loader.js"></script>
+<script src="house_loader.js?v=42"></script>
 <script>/* v20 reveal: count three.js loads in flight */ (function(){ var M = window.THREE && THREE.DefaultLoadingManager; if(!M) return;
   var R = window.__revealLM = {pending: 0, errors: 0, last: 0}, s = M.itemStart, e = M.itemEnd, x = M.itemError;
   M.itemStart = function(u){ R.pending++; R.last = performance.now(); return s.apply(this, arguments); };
@@ -2039,8 +2039,8 @@ const STOPS = [
   p:'The heritage oak stands over the terrace. It is the tree you can see from the front porch, through both pairs of doors. The RV hookups are at the side of the house.'},
  {id:'garage', t:'Garage', lvl:'Driveway level', photo:29, level:'garage', rooms:['garage'], pos:S(822,2200,LV.garage+5), look:S(822,2600,LV.garage+5),
   p:'A door on the lower level opens into the oversized one-car garage. It has a high ceiling with overhead storage racks, a pull-down attic ladder, and a 50-amp, 240-volt outlet.'},
- {id:'dusk', t:'Evening in Woodside Glens', photo:2, tod:'dusk', level:'outside', nav:'orbit', rooms:['street'], pos:S(1290,3000,2.6), look:S(1000,2300,3.6),
-  p:'Out through the garage door and back to the front walk. At dusk the lights are on behind the iron-and-glass front doors. The house is in Woodside Glens, about a mile from Town Center, and in the Woodside Elementary School District.'},
+ {id:'dusk', t:'Back out front', photo:2, level:'outside', nav:'orbit', rooms:['street'], pos:S(1290,3000,2.6), look:S(1000,2300,3.6),   // r41 (owner 11/12): keeps the visitor's time of day (was 'Evening in Woodside Glens', forced to dusk); the id stays 'dusk' so old ?stop=dusk links work
+  p:'Out through the garage door and back to the front walk. The house is in Woodside Glens, about a mile from Town Center, and in the Woodside Elementary School District.'},
 ];
 /* v20 story: rooms (gallery sections, Walk-to menu) follow the tour - each room sits with the first stop that visits it */
 { const ord = []; for(const st of STOPS) for(const id of st.rooms) if(!ord.includes(id)) ord.push(id);
@@ -6544,7 +6544,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   hallbath: {at: [31.0, 9.6], to: [25.8, 5.8], ph: [27.6, 5.2], hf: 100},   // r38: the window corner by the tub, looking back past the open door's edge to the marble-topped vanity and the hall (photo p57's spot, by the door, has the open leaf in front of the vanity)
   backbed: {at: [21.0, 3.7], to: [24.4, -6.6], hf: 100},   // r38: by the south wall, the way photo p73 faces: closet left, window, leaning mirror right, the oval desk. Two feet further from the door than this, the walk on to the stairs plans 10.1-10.5 s (here 8.2 s)
   stairs: {at: [-9.5, -3], to: [-18.5, -8], hf: 100, rise: .08},   // foyer edge, square to the stair hall -> open treads and cable rails of both flights as one sculptural run, landing bench, loft rail and window light above
-  loft: {at: [-13.5, -10.8], to: [-24.7, -2.8], rise: .2},   // stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
+  loft: {at: [-19.8, -11.7], to: [-23.2, -3.6], rise: .05},   // r41: on the loft floor two steps past the top tread, turned toward the window seat: cable rail over the stairwell left, gable clerestory with the trees, the corner windows and the window seat, the art wall's edge. Was over the stairwell itself (-13.5, -10.8, hovering 8 ft over the flight): the walk up climbed to the top and then backed 5 ft out over the stairs to reach it (owner 11/12: "a weird pull back to the camera view once you get to the top of the stairs")    // was: stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
   primary: {at: [-10.2, -27.5], to: [-24, -40]},   // loft-side corner -> bed, skylights, glazed gable, slider to the balcony
   pbath: {at: [-14.4, -23.0], to: [-7.76, -15.52], hf: 100},   // r36: photo p45's own spot and direction: window, curbless shower behind its glass. Was turned 60 degrees from the photo:     // just inside the door -> double vanity + round mirrors, window, curbless shower glass
   balcony: {at: [-14.5, -41.1], to: [-28, -54], rise: -.18, ph: [-24, -56], riseP: .08},   // balcony corner by the house wall (downspout + siding frame the left edge) -> chairs and deck, parapet, oak, the valley and hills at golden hour; the frame falls (rise) to trade sky for deck
@@ -6556,7 +6556,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   lounge: {at: [-14.4, -15.4], to: [-23.5, -21.0], hf: 100},   // r36: three feet further in than photo p65, same direction, so the cafe table is no longer in the foreground: the glass door, TV, refreshment counter and beverage cooler:     // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
   terrace: {at: [8, -20], to: [-8, -36]},   // out on the gravel under the oak -> rear facade, lounge set, outdoor kitchen + pergola, hills
   yard: {at: [31.21, -12.08], to: [23.69, -18.67]},   // NE corner of the yard -> heritage oak, house, pergola
-  dusk: {at: [-4.5, 43], to: [-7.5, 0]},   // front walk at dusk -> lit garage, entry glow, kitchen window
+  dusk: {at: [-4.5, 43], to: [-7.5, 0]},   // the last stop, back out front: front walk -> garage, porch and the iron-and-glass entry, kitchen window (r41: in any time of day, no longer forced to dusk)
   }};
 function frame22Lens(cam){                                  // R3: one lens rule for every aspect
   const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight, a = w / h, R = Math.PI / 360;
@@ -6845,11 +6845,47 @@ function navQA(){
     for(const r of rows) delete r.trace; window.__SMOOTH = {rows, fps, dt: dt0}; const s = k => rows.reduce((x, r) => Math.max(x, r[k]), 0);
     R.note('smooth', 'summary', rows.length + ' walked moves at ' + Math.round(1 / dt0) + ' fps: yaw max ' + s('rate') + ' deg/s, ' + s('acc') + ' deg/s2; most reversals ' + s('rev') + '; most excess turning ' + s('excess') + ' deg; longest ' + s('dur') + ' s');
     tour(0); };
+  /* r41 'back' (owner 11/12, the walk up to the loft: "a weird pull back to the camera view once you get to the top of the stairs"): every walked
+     move a visitor can make - the tour's moves in order, forward and back, 'Walk to' every room in turn, and 'Back to the tour' from each of those
+     rooms - stepped with a fixed simulated frame time, nothing drawn (as 'smooth'). Over the last 40 % of each move the camera must not step
+     backwards (its level velocity along its level view under R41B.dot ft/s for R41B.hold s or more) and must not double back along its way
+     (its way of travel, taken over R41B.win s at over R41B.vmin ft/s, turning more than R41B.turn deg within R41B.turnS s: a U-turn, not a
+     corner, a switchback landing or a sub-inch wiggle in the line at a crawl). A short step back to a spot just behind you (under R41B.step ft,
+     turning under R41B.stepTurn deg) and a move listed in R41B.known (empty) are noted, not failed (see there).
+     {backDt: 1/30} steps at another frame rate. Table: window.__BACK. */
+  SEC.back = async R => { const dt = o.backDt || 1 / 60, K = R41B, realNow = performance.now.bind(performance), V = new V3(), rows = []; let vt = realNow();
+    const run = (A, id, x) => { const fr = [], P1 = camera.position.clone(), L0 = A.path.L; let t = 0;
+      while(anim === A && t < 25){ vt += dt * 1000; tick0(true); t += dt; camera.updateMatrixWorld(); camera.getWorldDirection(V); const P = camera.position; fr.push([t, (P.x - P1.x) / dt, (P.z - P1.z) / dt, V.x, V.z, P.x, P.z]); P1.copy(P); }
+      finish(); let r = 0; const m = Object.assign({id, dur: +t.toFixed(2), back: 0, backV: 0, backAt: null, turn: 0, turnAt: null}, x), lag = Math.max(1, Math.round(K.turnS / dt));
+      for(let i = 0; i < fr.length; i++){ const [tt, vx, vz, fx, fz] = fr[i]; if(tt < t * (1 - K.tail)) continue; const dv = (vx * fx + vz * fz) / (Math.hypot(fx, fz) || 1); m.backV = Math.min(m.backV, dv);
+        if(dv < K.dot){ r += dt; if(r > m.back){ m.back = r; m.backAt = tt; } } else r = 0;
+        const w = Math.max(1, Math.round(K.win / dt)), A1 = fr[i - w], B0 = fr[i - lag], B1 = fr[i - lag - w];   // the way of travel over the last K.win s, against the same K.turnS s earlier
+        if(A1 && B1){ const ax = fr[i][5] - A1[5], az = fr[i][6] - A1[6], bx = B0[5] - B1[5], bz = B0[6] - B1[6], la = Math.hypot(ax, az), lb = Math.hypot(bx, bz);
+          if(la > K.vmin * K.win && lb > K.vmin * K.win){ const a = Math.acos(clamp((ax * bx + az * bz) / la / lb, -1, 1)) * 180 / Math.PI; if(a > m.turn){ m.turn = a; m.turnAt = tt; } } } }
+      for(const k of ['back', 'backV', 'turn', 'backAt', 'turnAt']) if(m[k] != null) m[k] = +m[k].toFixed(2);
+      m.L = +L0.toFixed(1); { const a = fr[0], b = fr[fr.length - 1]; m.net = a && b ? Math.round(Math.acos(clamp((a[3] * b[3] + a[4] * b[4]) / (Math.hypot(a[3], a[4]) * Math.hypot(b[3], b[4]) || 1), -1, 1)) * 180 / Math.PI) : 0; }
+      m.step = m.L < K.step && m.net < K.stepTurn; m.bad = !m.step && (m.back >= K.hold - dt / 2 || m.turn > K.turn); rows.push(m);
+      const why = []; if(m.back >= K.hold - dt / 2) why.push('steps backwards for ' + m.back + ' s (down to ' + m.backV + ' ft/s along the view; ' + m.backAt + ' of ' + m.dur + ' s)'); if(m.turn > K.turn) why.push('doubles back (its way turns ' + Math.round(m.turn) + ' deg in ' + K.turnS + ' s; ' + m.turnAt + ' of ' + m.dur + ' s)');
+      if(!why.length) R.note('back', id, 'forward all the way in (' + m.dur + ' s; least ' + m.backV + ' ft/s along the view)'); else if(m.step) R.note('back', id, 'a step back to a spot just behind, facing the same way (' + m.L + ' ft, the head turns ' + m.net + ' deg): ' + why.join(', '));
+      else if(K.known.includes(id)) R.note('back', id, 'known: ' + why.join(', ')); else R.fail('back', id, why.join(', ')); };
+    R37S.qaNoDraw = true; performance.now = () => vt;
+    try{ const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)); tour(seq[0]);
+      for(let q = 1; q < seq.length; q++){ await pause(); showStop(seq[q]); const A = anim; if(!A || !A.path){ finish(); continue; } run(A, STOPS[seq[q - 1]].id + '>' + STOPS[seq[q]].id, {from: seq[q - 1], to: seq[q]}); }
+      const rooms = ROOMS.filter(r => r.level !== 'outside' || r.id === 'street');
+      setMode('walk'); finish(); let prev = 'start';
+      for(const r of rooms){ await pause(); r36GoRoom(r); const A = anim; if(A && A.path) run(A, 'walk:' + prev + '>' + r.id, {walk: true}); else finish(); prev = r.id; }
+      if(window.__back38) for(const r of rooms){ await pause(); r36GoRoom(r); finish(); __back38.go(); const A = anim, to = STOPS[stopIdx].id; if(A && A.path) run(A, 'back:' + r.id + '>' + to, {walk: true}); else finish(); }
+      setMode('tour'); finish(); }
+    finally{ performance.now = realNow; R37S.qaNoDraw = false; try{ clock.oldTime = realNow(); for(const it of DOOR28.moving) it.lt = 0; if(anim) anim.t0 = -1e9; }catch(e){} }
+    window.__BACK = rows; const nb = rows.filter(r => r.bad);
+    R.note('back', 'summary', rows.length + ' walked moves; ' + nb.length + ' step backwards or double back near the end, ' + nb.filter(r => !K.known.includes(r.id)).length + ' of them not in R41B.known; ' + rows.filter(r => r.step).length + ' short steps back (not judged)');
+    tour(0); };
   /* r40 'light': every tour move in order, forward and back, stepped and DRAWN at a fixed simulated frame time (1/30 s; {lightDt} for
      another), with the lighting settled at the start stop first. Each frame the canvas is read back at 48x30 and compared with the last
      one: the median of the per-pixel luma change is the lighting step (a door frame or wall sweeping across the view moves a minority of
      pixels and leaves the median near 0; a lighting change moves them all). A move fails when that step is over R40L.chk (1.5 / 255) or
-     the exposure moves more than R40L.chkStops in one frame. Moves that change the time of day (the Dusk stop) are noted, not judged.
+     the exposure moves more than R40L.chkStops in one frame. A move that changes the time of day fails (r41: none does; the moves to and
+     from the last stop used to switch to dusk and were noted, not judged).
      Then a few views are reached from two different stops and must settle to the same exposure (within 2 %). Table: window.__LIGHT. */
   SEC.light = async R => { const dt = o.lightDt || 1 / 30, realNow = performance.now.bind(performance); let vt = realNow(); const W = 48, H = 30, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const g = cv.getContext('2d', {willReadFrequently: true}), rows = [], chk = R40L.chk || 1.5, chkS = R40L.chkStops || .045;
@@ -6881,7 +6917,7 @@ function navQA(){
             for(let i = 0; i < W * H; i++) D[i] = c[i] - p[i]; wV = Math.max(wV, Math.abs(med())); }   // a cut (the camera jumps) changes the whole picture: not a lighting step
           p = c; pr = cr; e0 = e; tod0 = TOD_KEY; s0 = s1; }
         const row = {id, frames: n, step: +worst.toFixed(2), at, view: +wV.toFixed(2), stops: +wE.toFixed(4), fades: R40X.fades - fades0, tod: todCh, cuts, state: sAt}; rows.push(row);
-        if(todCh){ R.note('light', id, 'changes the time of day (not judged): largest step ' + row.step + ' / 255'); continue; }
+        if(todCh){ R.fail('light', id, 'changes the time of day during the move (' + TOD_KEY + '): largest step ' + row.step + ' / 255'); continue; }
         if(worst > chk) R.fail('light', id, 'a one-frame lighting step of ' + row.step + ' / 255 at frame ' + at + ' (' + Math.round(1 / dt) + ' fps); lighting state ' + JSON.stringify(sAt));
         if(wE > chkS) R.fail('light', id, 'the exposure moved ' + row.stops + ' stops in one frame');
         R.note('light', id, n + ' frames, largest lighting step ' + row.step + ' / 255 (walking view, lighting and content: ' + row.view + '), exposure ' + row.stops + ' stops/frame, ' + row.fades + ' environment fades'); }
@@ -6892,6 +6928,7 @@ function navQA(){
         if(d > .02) R.fail('light', 'same ' + v, 'settles to a different exposure from ' + f1 + ' (' + es[0].toFixed(4) + ') and ' + f2 + ' (' + es[1].toFixed(4) + ')'); } }
     finally{ performance.now = realNow; if(GV) GV.fix = gfix; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
     window.__LIGHT = rows; tour(0); };
+  SEC.ideas = async R => { if(!window.__IDEA42){ R.note('ideas', '-', 'no idea hook'); return; } await __IDEA42.navCheck(R, {moveTo: (x, z, f) => moveTo(x, z, f), collide: (p, f) => collide(p, f), finish, step, probe, geo}); };   // r42: walk each layout idea that carries viewpoints
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
     const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
@@ -8421,7 +8458,7 @@ const DESIGN = (() => {
     $('#blurb').textContent = sel === 'asbuilt' ? 'This is the house as it stands. Try a remodel idea for the original part of the home, move the furniture, or see the outside in another color or with a new garden.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
     $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'An idea only. It is not engineered, permitted or priced.'
-      : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and the house is sold as built.';
+      : (d && d.label ? d.label + ' ' : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and ') + (d && d.label ? 'The house is sold as built.' : 'the house is sold as built.');
     $('#dNote').hidden = sel === 'asbuilt';
     try{ IDEAS35.sync(); }catch(e){}
   }
@@ -8433,7 +8470,7 @@ const DESIGN = (() => {
       if(mode === 'walk'){ feet = walkSurfaceAt(camera.position.x, camera.position.z, feet + .6); updateWalkRoom(true); } }
     if(mode !== 'design'){ hlBox.visible = false; pre.visible = false; } else hl();
   }
-  function badge(){ if(ACTIVE_VAR !== 'asbuilt') $('#dims').textContent = 'Original home: ' + nameOf(ACTIVE_VAR) + (ACTIVE_VAR === 'custom' ? '' : ' (2024 concept)'); }
+  function badge(){ if(ACTIVE_VAR !== 'asbuilt') $('#dims').textContent = 'Original home: ' + nameOf(ACTIVE_VAR) + (ACTIVE_VAR === 'custom' ? '' : (defOf(ACTIVE_VAR) || {}).label ? ' (illustrative idea)' : ' (2024 concept)'); }
   function open(prev){ if(prev !== 'design' && vis.level !== 'main') setLevel('main', {instant: true, keepCam: true}); card(); chips(); status(); hl(); if(prev !== 'design') view(); }
   /* r35: the layout view - the original house (the part the ideas change) fills the part of the screen the panel leaves free:
      beside the panel on a wide screen, above the sheet on a phone. Same fit as the Dollhouse camera. */
@@ -9210,7 +9247,7 @@ async function buildLightFixtures(){
       if(nick){ let lo = cz; for(let a = 0; a < 8; a++) lo = Math.min(lo, bim2CeilingAt(bx + 2.25 * Math.cos(a * Math.PI / 4), by + 2.25 * Math.sin(a * Math.PI / 4), fz).z); rod = clamp(Math.max(rod, cz - lo + .7 - .5), .5, 2); }   // r37: long enough that the blade tips clear a sloped ceiling by 8 in
       const o = nick ? r37JavaFan(rod, body, blade) : FIX.make('ceilingFan', {dia: nick ? 54 / 12 : dia, downrod: rod, light: nick || /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
       o.traverse(k => { if(!k.isMesh) return; if(k.name === 'blackMetal') k.material = body; else if(k.name === 'plasticWhite') k.material = blade; k.castShadow = true; k.receiveShadow = true; });
-      o.position.set(wx, cz, wz); o.rotation.y = Math.PI / 6; o.userData.kind = 'ceilingFan'; grp(isUp ? 'furnU' : 'furn').add(o);
+      o.position.set(wx, cz, wz); o.rotation.y = Math.PI / 6; o.userData.kind = 'ceilingFan'; o.userData.lid = f.id; grp(isUp ? 'furnU' : 'furn').add(o);   // r42: lid = its light record (an option without it hides it)
       window.__FANS.push({item: f.item, where, x: +bx.toFixed(2), y: +by.toFixed(2), ceiling: +cz.toFixed(2), downrod: +rod.toFixed(2), dia: +dia.toFixed(2), bladesAFF: +(cz - .2 - rod - .24 - fz).toFixed(2)}); }
   }catch(e){ console.warn('fan', f.item, e); } }
   window.__FAN = window.__FANS[0];
@@ -15820,6 +15857,442 @@ const TREAT = (() => {
 })();
 window.TREAT28 = TREAT;
 
+/* ---------------- r42 cta42: remodel and redecorate, easy to find (owner 11/12: "People don't know that there's going to be a design mode ... make sure
+   that it's obvious to go redecorate and remodel ... and also to choose alternative floor plans, but making it clear that those are design concepts
+   based on prior work with an architect"). UI only: no camera pose, stop, geometry or holiday-control internals change here.
+   - a small chip above the stop card (inside the card when it is open): "Compare floor plans: 6, 5 or 4 bedrooms" on the stops the plans change
+     (living room through the main-level bedrooms), "See it decorated for the holidays" on the stops the decor dresses (street, porch, foyer, terrace, yard)
+   - a one-time nudge after five stops, with both, that can be dismissed; one line on the closing card
+   - the floor plan picker: Design opened on a short list of plans, one card each (bedroom count first, then baths, name, one line, a sketch of the
+     main level, and its label). Picking one shows it from the layout view Design already uses; "Back to as built", "More design tools" (the full
+     Design panel), and the card's own "Back to the tour". The list is read from the scene's options, so a new concept shows up on its own.
+   - a banner whenever a concept is on screen, in any mode, with the way back to the real house; "As built" in the same place once the picker was used
+   - next to the holiday control, while it is open: paint colors and furniture, for more redecorating
+   Analytics: design_cta, decor_cta, plan_pick, plan_walk, design_more, cta_nudge. */
+const CTA42 = (() => {
+  const root = document.documentElement, Q = location.search;
+  if(/[?&](escape|snowball|deck|room|feast|game)=/.test(Q) || /\/(thanksgiving|halloween)\//.test(location.pathname)) return null;   // games keep their own screen
+  const ga = (ev, p) => { try{ if(typeof window.gtag === 'function') window.gtag('event', ev, Object.assign({page: location.pathname}, p || {})); }catch(e){} };
+  const isPh = () => root.classList.contains('ph');
+  const inGame = () => /(^|\s)(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on|bk38game)(\s|$)/.test(root.className) || !!(window.HWGAMES && HWGAMES.active) || !!window.HILLSIDE;
+  const ls = (k, v) => { try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } };
+  const ss = (k, v) => { try{ if(v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); }catch(e){ return null; } };
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
+  const stopId = () => { try{ return (STOPS[stopIdx] || {}).id || ''; }catch(e){ return ''; } };
+
+  /* which stops carry which chip: the plans change the original part of the main level; the decor dresses the front, the foyer and the back yard */
+  const PLAN_STOPS = new Set(['living', 'kitchen', 'great', 'mainbeds', 'middlebed', 'hallbath', 'backbed']);
+  const DECOR_STOPS = new Set(['street', 'porch', 'entry', 'terrace', 'yard']);
+  /* the concepts that come from the owner's earlier work with an architect (the two in the scene before r42); any other concept is labelled an illustrative idea */
+  const ARCH = new Set(['jan24', 'apr24b']);
+  const LAB = {real: 'The real house',
+    arch: 'Design concept, based on earlier work with an architect. Not reviewed for permits or structure.',
+    ill: 'Illustrative idea. Not designed or reviewed by an architect or engineer.',
+    mine: 'Your own changes. Not designed or reviewed by an architect or engineer.'};
+  /* r43 owner 11/12: four cards, the real house plus three concepts, in this order: 6 bedrooms (as built), 6 bedrooms (alternate layout),
+     5 bedrooms (open plan), 4 bedrooms (open great room). The Semi-open plan is shown as the alternate six-bedroom layout. */
+  const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
+  const RANK = {apr24b: 0, jan24: 1, open4: 2};
+  const LINE = {asbuilt: 'The house as it is today.',
+    apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
+    jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
+    open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.'};
+  const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
+  const FACTS = {}, SPACES = {}, FETCH = {};
+
+  /* bedrooms, baths and the office, counted from a plan's own rooms ('Bedroom hallway' and closets are not bedrooms; a bath's WC is part of that bath) */
+  function count(spaces){ let beds = 0, baths = 0, office = false;
+    for(const s of spaces || []){ const n = String(s.name || '').trim(), id = String(s.id || ''); if(/closet/i.test(n)) continue;
+      if(/bedroom$/i.test(n)) beds++; else if(/\bbath$/i.test(n) && !/-WC$/i.test(id)) baths++; if(/office/i.test(n)) office = true; }
+    return beds ? {beds, baths, office} : null; }
+  const polyOf = s => s.polygon || s.poly || null;
+  const baseSpaces = () => { try{ return (BIM2S && BIM2S.meta && BIM2S.meta.spaces) || null; }catch(e){ return null; } };
+  const optMeta = id => { try{ return (typeof BIM2 !== 'undefined' && BIM2S) ? BIM2.option(id) : null; }catch(e){ return null; } };
+  function metaUrl(o){ try{ if(BIM2S && BIM2S.metaBase) return new URL(o.meta, BIM2S.metaBase).href; return new URL(o.meta, new URL(BIM2_CFG.meta, location.href)).href; }catch(e){ return 'bim2/' + o.meta; } }
+  function load(id){
+    if(SPACES[id]) return Promise.resolve(true); if(FETCH[id]) return FETCH[id];
+    if(id === 'asbuilt'){ const s = baseSpaces(); if(s){ SPACES[id] = s; FACTS[id] = count(s) || FACTS[id]; } return Promise.resolve(!!s); }
+    const o = optMeta(id); if(!o) return Promise.resolve(false);
+    if(o.data && o.data.spaces){ SPACES[id] = o.data.spaces; FACTS[id] = count(o.data.spaces) || FACTS[id]; return Promise.resolve(true); }
+    if(!o.meta) return Promise.resolve(false);
+    return (FETCH[id] = fetch(metaUrl(o)).then(r => r.ok ? r.json() : null).then(j => { if(j && j.spaces){ SPACES[id] = j.spaces; FACTS[id] = count(j.spaces) || FACTS[id]; } FETCH[id] = null; lastSig = ''; sync(); return !!j; })
+      .catch(e => { FETCH[id] = null; console.warn('[cta42] plan file', id, e); return false; })); }
+  function facts(id){ if(FACTS[id]) return FACTS[id]; const o = optMeta(id) || {};
+    if(o.bedrooms) return {beds: +o.bedrooms, baths: +o.baths || 0, office: o.office !== false};   // a plan may state its own counts
+    return KNOWN[id] || null; }
+  const factLine = f => f ? f.baths + (f.baths === 1 ? ' bath' : ' baths') + (f.office ? ' + office' : '') : '';
+  const bedLine = f => f ? f.beds + (f.beds === 1 ? ' bedroom' : ' bedrooms') : '';
+  const kindOf = id => id === 'asbuilt' ? 'real' : id === 'custom' ? 'mine' : ARCH.has(id) ? 'arch' : 'ill';
+
+  /* the plans: as built first, then each concept in the scene, most bedrooms first */
+  function plans(){ let L = []; try{ L = (bim2DesignOptions() || []).filter(d => d && d.id && d.id !== 'custom'); }catch(e){}
+    const out = L.map(d => { const o = optMeta(d.id) || {};
+      return {id: d.id, name: NAME[d.id] || DESIGN.nameOf(d.id), line: LINE[d.id] || o.description || d.description || 'Another way to lay out the main level of the original house.'}; });
+    const b = p => (facts(p.id) || {beds: 0}).beds, r = p => RANK[p.id] ?? 9;
+    return [{id: 'asbuilt', name: 'As built', line: LINE.asbuilt}].concat(out.sort((p, q) => r(p) - r(q) || b(q) - b(p))); }
+  const ideaWords = n => (['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][n] || String(n)) + (n === 1 ? ' idea' : ' ideas');
+  function bedsPhrase(){ const n = [...new Set(plans().map(p => (facts(p.id) || {}).beds).filter(Boolean))].sort((a, b) => b - a);
+    if(n.length < 2) return ''; return n.slice(0, -1).join(', ') + ' or ' + n[n.length - 1] + ' bedrooms'; }
+
+  /* a sketch of the main level: bedrooms warm, baths cool, other rooms pale; the street at the bottom */
+  function sketch(id){ const S = SPACES[id], none = '<span class="k42s k42e" aria-hidden="true"></span>'; if(!S) return none;
+    const L = S.filter(s => s.storey === 'L1' && s.interior !== false && Array.isArray(polyOf(s)) && polyOf(s).length > 2); if(!L.length) return none;
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for(const s of L) for(const p of polyOf(s)){ x0 = Math.min(x0, p[1]); x1 = Math.max(x1, p[1]); y0 = Math.min(y0, p[0]); y1 = Math.max(y1, p[0]); }
+    const pad = 1.5, f = n => (+n).toFixed(1);
+    const parts = L.map(s => { const n = String(s.name || '').trim(), c = /closet|stairs|storage/i.test(n) ? 'kc' : /bedroom$/i.test(n) ? 'kb' : /\bbath$/i.test(n) ? 'kw' : 'kr';
+      return '<path class="' + c + '" d="M' + polyOf(s).map(p => f(p[1]) + ' ' + f(p[0])).join('L') + 'Z"/>'; }).join('');
+    return '<svg class="k42s" viewBox="' + f(x0 - pad) + ' ' + f(y0 - pad) + ' ' + f(x1 - x0 + 2 * pad) + ' ' + f(y1 - y0 + 2 * pad) + '" aria-hidden="true" focusable="false">' + parts + '</svg>'; }
+
+  const ICON_PLAN = '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3.5 3.5h13v13h-13zM3.5 10h5.5M9 3.5v4M9 12.5v4M12.5 10h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  const ICON_DECOR = '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 2.5l1.6 4.4 4.4 1.6-4.4 1.6L10 14.5l-1.6-4.4L4 8.5l4.4-1.6zM15.5 13.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  const ARROW = '<svg class="c42a" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M4.2 2.5 7.8 6l-3.6 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  const css = el('style'); css.id = 'cta42css'; css.textContent = `
+#cta42,#ng42,#cb42,#hm42{font-family:inherit;-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+#cta42{position:fixed;z-index:57;left:var(--c42l,24px);bottom:var(--c42b,96px);display:inline-flex;align-items:center;gap:8px;max-width:var(--c42w,460px);min-height:40px;padding:0 14px 0 12px;border:1px solid var(--line);border-radius:999px;
+  background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1);box-shadow:0 2px 10px rgba(20,24,26,.14);color:var(--ink);font-size:14px;font-weight:500;line-height:1.2;text-align:left;cursor:pointer;
+  opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease,background-color .15s ease}
+#cta42.c42on{opacity:1;transform:none}
+#cta42[hidden],#ng42[hidden],#cb42[hidden],#hm42[hidden]{display:none!important}
+#cta42 svg{flex:0 0 auto;color:var(--accent)}#cta42 .c42a{color:var(--muted)}
+#cta42 .c42x{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cta42 .c42x b{font-weight:500}#cta42 .c42x i{font-style:normal;color:var(--muted)}
+#cta42:hover{background:var(--paper)}#cta42:hover .c42a{color:var(--ink)}
+#cta42:focus-visible,#ng42 button:focus-visible,#cb42 button:focus-visible,#hm42 button:focus-visible,.pk42p button:focus-visible,.fin36 .fl .c42f:focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
+/* inside the open stop card: a quiet row under the caption */
+#cta42.c42in{position:static;display:flex;width:auto;max-width:none;margin:2px 14px 10px;opacity:1;transform:none;box-shadow:none;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
+#cta42.c42in:hover{background:var(--hov27,rgba(27,31,34,.05))}
+/* the one-time nudge */
+#ng42{position:fixed;z-index:57;left:var(--c42l,24px);bottom:var(--c42b,96px);width:min(400px,calc(100vw - 32px));padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--glass);
+  -webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);box-shadow:var(--shadow);color:var(--ink);opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+#ng42.g42on{opacity:1;transform:none}
+#ng42 .g42h{margin:0 34px 4px 0;font-family:var(--f-display);font-style:italic;font-weight:500;font-size:21px;line-height:1.15}
+#ng42 .g42t{margin:0 0 12px;font-size:14px;line-height:1.45;color:var(--ink)}
+#ng42 .g42a{display:flex;flex-wrap:wrap;gap:8px}
+#ng42 .g42a button{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px 0 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+#ng42 .g42a button svg{color:var(--accent)}#ng42 .g42a button:hover{border-color:var(--ink)}
+#ng42 .g42x{position:absolute;top:6px;right:6px;width:38px;height:38px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}#ng42 .g42x:hover{background:var(--hov27,rgba(27,31,34,.06));color:var(--ink)}
+/* the concept banner, and "As built" */
+#cb42{position:fixed;z-index:57;left:var(--cb42x,50%);top:var(--cb42t,80px);transform:translateX(-50%);display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:var(--cb42w,calc(100vw - 32px));
+  padding:8px 8px 8px 16px;border-radius:16px;background:#2b2418;color:#fbf6ec;box-shadow:0 8px 26px rgba(20,16,10,.32);border:1px solid rgba(232,211,176,.35);font-size:13.5px;line-height:1.35}
+#cb42 .b42m{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+html:not(.ph) #cb42:not(.b42ab){flex-wrap:nowrap}html:not(.ph) #cb42:not(.b42ab) .b42m{min-width:min(300px,100%)}
+#cb42 .b42m b{font-weight:600;letter-spacing:.005em}#cb42 .b42m b::before{content:"";display:inline-block;width:8px;height:8px;margin:0 8px 1px 0;border-radius:50%;background:#e2a33c;vertical-align:middle}
+#cb42 .b42m span{font-size:12.5px;color:rgba(251,246,236,.82)}
+#cb42 .b42s{display:flex;gap:6px;flex-wrap:wrap}
+#cb42 button{min-height:36px;padding:0 14px;border:0;border-radius:999px;background:#fbf6ec;color:#1f1a12;font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+#cb42 button.b42alt{background:rgba(251,246,236,.14);color:#fbf6ec}
+#cb42 button[hidden]{display:none}
+#cb42 button:hover{background:#fff}#cb42 button.b42alt:hover{background:rgba(251,246,236,.24)}
+#cb42.b42ab{padding:6px 14px;gap:8px;background:var(--glass);color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 10px rgba(20,24,26,.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:13px;flex-wrap:nowrap;pointer-events:none}
+#cb42.b42ab .b42m{flex:0 1 auto}#cb42.b42ab .b42m b{font-weight:500}#cb42.b42ab .b42m b::before{background:var(--accent)}#cb42.b42ab .b42m span,#cb42.b42ab .b42s{display:none}
+html.cb42on .ideas35{display:none!important}
+html.ph.bks36on.cb42on .perfpill{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
+html.ph.cb42on .qhint{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
+/* next to the holiday control: more ways to redecorate */
+#hm42{position:fixed;z-index:62;top:var(--hm42t,0px);left:var(--hm42l,0px);width:var(--hm42w,316px);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;padding:5px 6px 5px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);
+  box-shadow:0 6px 20px rgba(20,24,26,.16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink);font-size:13px;line-height:1.3}
+#hm42 p{margin:0 2px 0 0;color:var(--muted)}
+#hm42 button{min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}#hm42 button:hover{border-color:var(--ink)}
+/* the floor plan picker (Design opened on the plans only) */
+#pk42h{display:none}
+html.pk42 #card .tb>:not(#pk42h){display:none!important}
+html.pk42 #pk42h{display:block;padding:12px 14px 2px}
+#pk42h .p42e{margin:0;font-family:var(--f-data);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+#pk42h h2{padding:2px 0 0}
+html.pk42 #card .body>:not(#design){display:none!important}
+html.pk42 #design>:not(#pk42){display:none!important}
+html.pk42 #design{grid-template-columns:minmax(0,1fr)}
+.pk42p{display:none;min-width:0}
+html.pk42 .pk42p{display:block}
+.pk42p .p42lede{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink)}
+.pk42p .p42list{display:grid;grid-template-columns:1fr;gap:7px}
+.pk42p .k42c{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);gap:11px;align-items:start;width:100%;margin:0;padding:9px 12px 10px 9px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+.pk42p .k42c:hover{border-color:var(--ink)}
+.pk42p .k42c[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
+.pk42p .k42c[aria-checked="true"]::after{content:"Showing";position:absolute;top:10px;right:12px;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--accent)}
+.pk42p .k42c.k42busy::after{content:"Loading…";color:var(--muted)}
+.pk42p .k42s{display:block;width:64px;height:64px;border-radius:8px;background:var(--paper-2,#e4e7e1);padding:4px;box-sizing:border-box}
+.pk42p .k42s path{stroke:#4a4e50;stroke-width:.3;stroke-linejoin:round;fill:#f7f5ef}
+.pk42p .k42s path.kb{fill:#e2c79c}.pk42p .k42s path.kw{fill:#bcd0d8}.pk42p .k42s path.kc{fill:#dcdcd4}
+.pk42p .k42x{display:block;min-width:0}
+.pk42p .k42n{display:block;font-family:var(--f-display);font-weight:500;font-size:22px;line-height:1.05;letter-spacing:-.005em;padding-right:64px}
+.pk42p .k42b{display:block;margin-top:2px;font-size:13.5px;font-weight:500;color:var(--ink)}
+.pk42p .k42t{display:block;margin-top:5px;font-size:14px;font-weight:600}
+.pk42p .k42d{display:block;margin-top:1px;font-size:13px;line-height:1.4;color:var(--muted)}
+.pk42p .k42l{display:block;margin-top:5px;font-size:12px;line-height:1.4;color:#7a5520}
+.pk42p .k42c[data-k="real"] .k42l{color:var(--accent);font-weight:600}
+.pk42p .p42ft{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.pk42p .p42ft button{min-height:38px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px;font-weight:500;cursor:pointer}.pk42p .p42ft button:hover{border-color:var(--ink)}
+.pk42p .p42ft button[hidden]{display:none}
+.pk42p .p42fine{margin:8px 0 2px;font-size:12px;line-height:1.45;color:var(--muted)}
+.fin36 .fl .c42f .c42n{display:none}html.ph .fin36 .fl .c42f .c42w{display:none}html.ph .fin36 .fl .c42f .c42n{display:inline}
+/* phones (r43 owner 11/12: "every call to action clear and beautiful on a phone"): text 14 px or more, tap targets 44 px or more.
+   The chip sits on the left above the stop sheet, beside the 3D model / Photo switch when it fits there and above it when it does not. */
+html.ph #cta42{min-height:44px;padding:0 14px 0 12px;font-size:15px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph #cta42 svg{color:currentColor}html.ph #cta42 .c42a{color:currentColor;opacity:.6}
+html.ph #cta42 .c42x i{display:none}
+html.ph #cta42.c42in{background:var(--pl,rgba(255,255,255,.08));margin:2px 0 8px;grid-column:1 / -1}
+html.ph #ng42{left:max(var(--gut,12px),env(safe-area-inset-left,0px));right:max(var(--gut,12px),env(safe-area-inset-right,0px));width:auto;max-width:480px;padding:14px 14px 14px 16px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph #ng42 .g42h{margin-right:40px;font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:17px}
+html.ph #ng42 .g42t{color:var(--pt,var(--ink));font-size:15px}
+html.ph #ng42 .g42a button{flex:1 1 140px;min-width:0;min-height:46px;padding:0 10px;justify-content:center;white-space:nowrap;font-size:15px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
+html.ph #ng42 .g42a button svg{display:none}
+html.ph #ng42 .g42x{top:4px;right:4px;width:44px;height:44px;color:var(--pm,var(--muted))}
+/* the concept banner: under the booking line, as wide as the screen, buttons on their own row */
+html.ph #cb42{font-family:var(--sf,inherit);width:calc(100vw - 2 * var(--gut,12px));max-width:520px;padding:10px 10px 10px 14px;border-radius:14px;flex-wrap:wrap;gap:8px;font-size:14px;line-height:1.35}
+html.ph #cb42 .b42m{flex:1 1 100%}html.ph #cb42 .b42m span{font-size:14px;line-height:1.35}
+html.ph #cb42 .b42s{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap;gap:8px}
+html.ph #cb42 button{min-height:44px;padding:0 14px;font-size:14px}
+html.ph #cb42 button.b42alt{flex:0 1 auto}
+/* a phone in the floor plan picker: one slim line over the house (the plan's details and label are in the sheet right below) */
+html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:7px 16px;flex-wrap:nowrap;text-align:center}html.ph #cb42.b42sl .b42s{display:none}html.ph #cb42.b42sl .b42m b::before{display:none}
+html.ph #cb42.b42ab{width:max-content;max-width:calc(100vw - 24px);padding:6px 14px;font-size:14px}
+/* the holiday control's companion */
+html.ph #hm42{left:8px!important;right:8px;width:auto!important;padding:6px 6px 6px 14px;font-size:14px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line))}
+html.ph #hm42 p{color:var(--pm,var(--muted));margin-right:auto}html.ph #hm42 button{min-height:44px;padding:0 16px;font-size:14.5px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
+/* the closing card's links: two tidy columns, full-height targets */
+html.ph .fin36 .fl{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+html.ph .fin36 .fl :is(a,button){min-height:44px;padding:4px 0;font-size:15px;text-align:left;justify-content:flex-start}
+@media (orientation:landscape){html.ph .fin36 .fl{display:flex;flex-wrap:wrap;gap:0 20px}html.ph #fin36 .fing{grid-template-columns:auto minmax(0,1fr);gap:8px 24px;align-items:center}html.ph #fin36 .fl{margin-top:6px}html.ph #fin36{padding-top:12px;padding-bottom:4px}html.ph #fin36 .fa{flex-direction:row;align-items:stretch;gap:8px;margin-right:34px}html.ph #fin36 .fa .fb.go{flex:1 1 auto;padding:0 14px}html.ph #fin36 .fa .fb2{flex:0 0 auto}html.ph #fin36 .fa .fb2 .fb{flex:0 0 auto;padding:0 16px}}   /* held sideways (r43: the card ran up under the booking line): the address beside the buttons, the links in one row */
+html.fin36on #cb42.b42ab{display:none!important}   /* the closing card says what the house is */
+/* the picker on a phone held upright: the plans as a 2 x 2 grid of tiles (all four in view, the chosen one filled), the chosen plan's
+   details and label underneath. Held sideways: a list in the side sheet. */
+html.ph #pk42h{padding:4px 0 0}
+html.ph #pk42h .p42e{font-family:var(--sf,inherit);letter-spacing:.02em;text-transform:none;font-size:14px;color:var(--pm,var(--muted))}
+html.ph #pk42h h2{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:20px}
+html.ph .pk42p .p42lede{display:none}
+html.ph .pk42p .k42c{background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:600;font-size:19px;padding-right:0}
+html.ph .pk42p .k42b,html.ph .pk42p .k42t{color:var(--pt,var(--ink))}
+html.ph .pk42p .k42d{font-size:14px;color:var(--pm,var(--muted))}
+html.ph .pk42p .k42l{font-size:14px;color:var(--pt,var(--ink))}
+html.ph .pk42p .p42ft button{flex:1 1 auto;min-height:44px;background:var(--pl,var(--paper));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph .pk42p .p42fine{font-size:14px;color:var(--pm,var(--muted))}
+.pk42p .p42det{display:none}
+@media (orientation:portrait){
+  html.ph.pk42 #card .body{max-height:calc(49vh - 140px);max-height:calc(49dvh - 140px)}
+  html.ph .pk42p .p42list{grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+  html.ph.pk42 #pk42h .p42e{display:none}html.ph.pk42 #pk42h{padding-top:2px}
+  html.ph .pk42p .k42c{display:flex;flex-direction:column;justify-content:center;gap:1px;min-height:58px;padding:7px 12px;border-radius:12px}
+  html.ph .pk42p .k42c :is(.k42s,.k42b,.k42d,.k42l){display:none}
+  html.ph .pk42p .k42c .k42t{margin:0;font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html.ph .pk42p .k42c[data-k="real"] .k42t::after{content:" · real house";opacity:.75}
+  html.ph .pk42p .k42c[aria-checked="true"]{background:var(--ph-hi,#1f1f1d);border-color:var(--ph-hi,#1f1f1d);box-shadow:none}
+  html.ph .pk42p .k42c[aria-checked="true"] :is(.k42n,.k42t){color:var(--ph-ink,#fbfaf7)}
+  html.ph .pk42p .k42c[aria-checked="true"]::after,html.ph .pk42p .k42c.k42busy::after{display:none}
+  html.ph .pk42p .k42c.k42busy{opacity:.7}
+  html.ph .pk42p .p42det{display:block;margin:8px 2px 0;font-family:var(--sf,inherit);font-size:14px;line-height:1.4;color:var(--pt,var(--ink))}
+  html.ph .pk42p .p42det b{font-weight:600}html.ph .pk42p .p42det .k42d{display:block;margin-top:4px}html.ph .pk42p .p42det .k42l{display:block;margin-top:3px}
+  html.ph .pk42p .p42det .k42l::before{content:"";display:inline-block;width:8px;height:8px;margin:0 7px 1px 0;border-radius:50%;background:#c98a2b;vertical-align:middle}
+  html.ph .pk42p .p42det[data-k="real"] .k42l::before{background:var(--accent,#55633a)}
+  html.ph .pk42p .p42fine{display:none}
+}
+@media (orientation:landscape){
+  html.ph.pk42 #card .body{max-height:calc(100vh - 235px);max-height:calc(100dvh - 235px)}
+  html.ph #cb42{width:max-content;max-width:var(--cb42w,calc(100vw - 24px))}
+  html.ph .pk42p .k42c{grid-template-columns:52px minmax(0,1fr);gap:10px;padding:8px 10px}
+  html.ph .pk42p .k42s{width:52px;height:52px}
+  html.ph .pk42p .k42c[aria-checked="true"]{border-color:var(--pt,var(--accent));box-shadow:0 0 0 2px var(--pt,var(--accent)) inset}
+  html.ph .pk42p .k42c[aria-checked="true"]::after{font-size:14px;color:var(--pt,var(--accent))}
+}
+html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36on.ph :is(#cta42,#ng42){display:none!important}
+@media (prefers-reduced-motion:reduce){#cta42,#ng42{transition:none}}
+`;
+  document.head.appendChild(css);
+
+  /* ---- elements */
+  const chip = el('button'); chip.type = 'button'; chip.id = 'cta42'; chip.hidden = true;
+  const nudge = el('aside'); nudge.id = 'ng42'; nudge.hidden = true; nudge.setAttribute('aria-label', 'Ideas for this house');
+  nudge.innerHTML = '<button type="button" class="g42x" aria-label="Dismiss">×</button><p class="g42h">Ideas for this house</p><p class="g42t"></p>'
+    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>Compare floor plans</span></button><button type="button" data-a="decor">' + ICON_DECOR + '<span>Holiday decor</span></button></div>';
+  const banner = el('div'); banner.id = 'cb42'; banner.hidden = true; banner.setAttribute('role', 'status');
+  banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">Back to floor plans</button><button type="button" data-a="real">Back to the real house</button></div>';
+  const hm = el('div'); hm.id = 'hm42'; hm.hidden = true;
+  hm.innerHTML = '<p>Also try</p><button type="button" data-a="paint">Paint colors</button><button type="button" data-a="furn">Furniture</button>';
+  const head = el('div'); head.id = 'pk42h'; head.innerHTML = '<p class="p42e">Floor plans</p><h2 id="pk42H">Compare floor plans</h2>';
+  const pick = el('div', 'pk42p'); pick.id = 'pk42'; pick.setAttribute('role', 'region'); pick.setAttribute('aria-labelledby', 'pk42H');
+  pick.innerHTML = '<p class="p42lede"></p>'
+    + '<div class="p42list" role="radiogroup" aria-label="Floor plans"></div><div class="p42det" aria-live="polite"></div>'
+    + '<div class="p42ft"><button type="button" data-a="walk" hidden>Walk through this plan</button><button type="button" data-a="asbuilt" hidden>Back to as built</button><button type="button" data-a="more">More design tools</button></div>'
+    + '<p class="p42fine">The house is offered as it is today. The other plans are ideas only.</p>';
+  const list = pick.querySelector('.p42list'), foot = pick.querySelector('.p42ft'), det = pick.querySelector('.p42det');
+
+  let sheetByPk = false, pickerUsed = ss('hillside.cta42.used') === '1', nudgeOn = false, nudgeStop = -1, placedIn = null, lastSig = '';
+  const seen = new Set();
+
+  /* ---- the picker */
+  const setPk = on => root.classList.toggle('pk42', !!on);
+  /* a phone held sideways: the sheet is a column on the left, so the plan is framed in the space to its right (Design's own layout view,
+     worked out as it is for a computer; the phone class is off only for that one synchronous calculation) */
+  function sideFit(){ if(!(isPh() && innerWidth > innerHeight && innerWidth >= 600 && mode === 'design')) return;
+    root.classList.remove('ph'); try{ DESIGN.view(1.2); }catch(e){} finally{ root.classList.add('ph'); } }
+  const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
+  function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {};
+    pick.querySelector('.p42lede').textContent = L.length > 1 ? ideaWords(L.length - 1) + ' for the main level, plus the house as it is. Pick one to see it in 3D.' : '';
+    for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
+    list.innerHTML = '';
+    for(const p of L){ const f = facts(p.id), k = kindOf(p.id), b = el('button', 'k42c' + (busy[p.id] ? ' k42busy' : '')); b.type = 'button'; b.dataset.id = p.id; b.dataset.k = k; b.setAttribute('role', 'radio');
+      const on = cur === p.id; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1;
+      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? bedLine(f) : p.name) + '</span><span class="k42t">' + p.name + '</span>' + (f ? '<span class="k42b">' + factLine(f) + '</span>' : '')
+        + '<span class="k42d">' + p.line + '</span><span class="k42l">' + LAB[k] + '</span></span>';
+      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' : '') + p.name + (f ? ', ' + factLine(f) : '') + '. ' + p.line + ' ' + LAB[k]);
+      b.addEventListener('click', () => choose(p.id, 'picker')); list.appendChild(b); }
+    if(!list.querySelector('[tabindex="0"]') && list.firstChild) list.firstChild.tabIndex = 0;
+    { const p = L.find(q => q.id === cur) || L[0], f = facts(p.id), k = kindOf(p.id);   // a phone held upright: the chosen plan's details under the tiles
+      det.dataset.k = k; det.innerHTML = '<b>' + p.name + '</b>' + (f ? ' · ' + bedLine(f) + ', ' + factLine(f) : '') + '<span class="k42l">' + LAB[k] + '</span><span class="k42d">' + p.line + '</span>'; }
+    if(cur !== render.cur){ render.cur = cur; const c = list.querySelector('.k42c[aria-checked="true"]');   // the chosen card scrolls into the panel
+      const cd = isPh() ? $('#card .body') : $('#card');
+      if(c && cd){ const r = c.getBoundingClientRect(), k = cd.getBoundingClientRect(), bk = $('#bk38'), lo = !isPh() && bk && !bk.hidden ? bk.getBoundingClientRect().top - 8 : k.bottom - 8;
+        if(r.bottom > lo) cd.scrollTop += Math.min(r.bottom - lo, r.top - k.top - 8); else if(r.top < k.top + 8) cd.scrollTop -= k.top + 8 - r.top; } }   // (its top stays in view)
+    foot.querySelector('[data-a=asbuilt]').hidden = cur === 'asbuilt'; foot.querySelector('[data-a=walk]').hidden = cur === 'asbuilt'; }
+  list.addEventListener('keydown', e => { const L = [...list.querySelectorAll('.k42c')], i = L.indexOf(document.activeElement); if(i < 0) return;
+    const j = /^Arrow(Down|Right)$/.test(e.key) ? (i + 1) % L.length : /^Arrow(Up|Left)$/.test(e.key) ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
+    e.preventDefault(); e.stopPropagation(); const id = L[j].dataset.id; choose(id, 'picker'); const n = list.querySelector('.k42c[data-id="' + id + '"]'); if(n) n.focus(); });
+  pick.addEventListener('keydown', e => { if(e.key !== 'Escape' && e.key !== 'Tab') e.stopPropagation(); });   // arrows and Space stay in the picker
+  foot.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; const a = b.dataset.a;
+    if(a === 'asbuilt') choose('asbuilt', 'picker');
+    else if(a === 'walk'){ ga('plan_walk', {plan: ACTIVE_VAR}); const w = $('#dWalk'); if(w) w.click(); }
+    else if(a === 'more'){ ga('design_more', {where: 'picker', plan: ACTIVE_VAR}); setPk(false); try{ DESIGN.open('design'); }catch(x){} sync(); const c = $('#card'); if(c) c.scrollTop = 0; } });
+  function choose(id, where){ if(mode !== 'design') setMode('design');
+    const f = facts(id); ga('plan_pick', {plan: id, beds: f ? f.beds : 0, concept: kindOf(id), where: where || 'picker'});
+    try{ DESIGN.choose(id, true); }catch(e){ console.warn('[cta42] choose', e); } sideFit();
+    if(id !== 'asbuilt'){ let p = null; try{ p = bim2EnsureOption(id); }catch(e){}
+      if(p && p.then){ const mark = on => { const n = list.querySelector('.k42c[data-id="' + id + '"]'); if(n) n.classList.toggle('k42busy', on); }; render(); mark(true); p.then(() => mark(false), () => mark(false)); } }
+    lastSig = ''; sync(); }
+  function openPicker(where){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
+    if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
+    hideNudge();
+    for(const p of plans()) load(p.id);
+    const wasMin = isPh() && $('#card').classList.contains('min');   // (Design opens the sheet itself)
+    setPk(true); if(mode !== 'design') setMode('design'); else { try{ DESIGN.view(1.2); }catch(e){} }
+    try{ if(wasMin) sheetByPk = true; if(isPh() && $('#card').classList.contains('min')) $('#collapse').click(); }catch(e){}
+    sideFit(); render(); lastSig = ''; sync();
+    setTimeout(() => { const c = list.querySelector('.k42c[aria-checked="true"]') || list.querySelector('.k42c'); if(c) try{ c.focus({preventScroll: true}); }catch(e){} const cd = $('#card'); if(cd) cd.scrollTop = 0; }, 60); }
+
+  /* ---- holiday decor, and more ways to redecorate */
+  function openDecor(where){ ga('decor_cta', {where, stop: stopId()}); hideNudge();
+    try{ if(window.HOLIDAY && HOLIDAY.open){ HOLIDAY.open(); return; } }catch(e){ console.warn('[cta42] holiday', e); }
+    const b = $('#holBtn'); if(b) b.click(); }
+  function moreDecor(which){ ga('decor_cta', {where: 'holiday-panel', target: which}); try{ if(window.HOLIDAY) HOLIDAY.close(); }catch(e){}
+    hm.hidden = true; setPk(false); if(mode !== 'design') setMode('design');
+    setTimeout(() => { const s = $(which === 'paint' ? '#pSec' : '#fSec'); if(s) try{ s.scrollIntoView({block: 'start', behavior: 'smooth'}); }catch(e){}
+      if(which === 'paint'){ try{ IDEAS35.look('street'); }catch(e){} } }, 150); }
+  hm.addEventListener('click', e => { const b = e.target.closest('button'); if(b) moreDecor(b.dataset.a); });
+  let hmT = 0;
+  function hmSync(){ const P = $('#holPanel'), open = !!(P && !P.hidden && getComputedStyle(P).display !== 'none' && P.getBoundingClientRect().height > 20) && !inGame() && mode !== 'design';
+    if(!open){ if(!hm.hidden && !hmT) hmT = setTimeout(() => { hmT = 0; const P2 = $('#holPanel'); if(!P2 || P2.hidden || mode === 'design') hm.hidden = true; }, 350); return; }   // a click on these buttons closes the panel first: they stay a moment
+    clearTimeout(hmT); hmT = 0; hm.hidden = false; const r = P.getBoundingClientRect(), h = hm.offsetHeight || 52;
+    if(isPh()) hm.style.setProperty('--hm42t', Math.max(8, Math.round(r.top - h - 8)) + 'px');
+    else { hm.style.setProperty('--hm42t', Math.round(r.bottom + 6) + 'px'); hm.style.setProperty('--hm42l', Math.round(r.left) + 'px'); hm.style.setProperty('--hm42w', Math.round(r.width) + 'px'); } }
+
+  /* ---- the chip and the nudge */
+  function chipKind(){ if(inGame() || mode !== 'tour' || photoUp() || root.classList.contains('clean27') || root.classList.contains('phm')) return '';
+    const hs = $('#holShow'); if(hs && !hs.hidden) return ''; const P = $('#holPanel'); if(P && !P.hidden) return '';
+    const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
+    const id = stopId(); return PLAN_STOPS.has(id) && plans().length > 1 ? 'plans' : DECOR_STOPS.has(id) && window.HOLIDAY ? 'decor' : ''; }
+  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>Compare floor plans</b>' + (b ? '<i>: ' + b + '</i>' : '') + '</span>' + ARROW; }
+    return ICON_DECOR + '<span class="c42x"><b>' + (isPh() ? 'Holiday decor' : 'See it decorated for the holidays') + '</b></span>' + ARROW; }
+  chip.addEventListener('click', e => { e.stopPropagation(); const where = chip.classList.contains('c42in') ? 'stop-card' : 'stop-chip'; if(chip.dataset.k === 'plans') openPicker(where); else openDecor(where); });
+  for(const n of [chip, nudge, banner, hm]) for(const ev of ['pointerdown', 'wheel', 'touchstart']) n.addEventListener(ev, e => e.stopPropagation(), {passive: true});   // not the canvas: no drag or walk through them
+  nudge.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
+    if(b.classList.contains('g42x')){ ga('cta_nudge', {action: 'dismiss', stop: stopId()}); hideNudge(); return; }
+    if(b.dataset.a === 'plans') openPicker('nudge'); else openDecor('nudge'); });
+  function hideNudge(){ if(!nudgeOn) return; nudgeOn = false; nudge.classList.remove('g42on'); setTimeout(() => { if(!nudgeOn) nudge.hidden = true; }, 400); }
+  function maybeNudge(){ if(mode !== 'tour' || inGame()) return; seen.add(stopIdx);
+    if(nudgeOn || ls('hillside.cta42.nudge') === '1' || seen.size < 5 || !chipKind()) return;
+    ls('hillside.cta42.nudge', '1'); nudgeOn = true; nudgeStop = stopIdx; const b = bedsPhrase();
+    nudge.querySelector('.g42t').textContent = b ? 'See the main level laid out with ' + b + ', or see the house decorated for the holidays.' : 'See other floor plans for the main level, or see the house decorated for the holidays.';
+    nudge.hidden = false; void nudge.offsetWidth; nudge.classList.add('g42on'); ga('cta_nudge', {action: 'shown', stop: stopId()}); }
+
+  /* where the chip and the nudge sit: just above the stop card on the left, clear of the 3D model / Photo switch on a phone; inside the card when it is open */
+  function place(){ const card = $('#card'); if(!card) return;
+    const cr = card.getBoundingClientRect(), open = !card.classList.contains('min') && cr.height > 120, kind = chip.dataset.k || '';
+    const want = kind && open && !nudgeOn ? 'in' : 'out';
+    if(want !== placedIn){ placedIn = want;
+      if(want === 'in'){ const bl = $('#blurb'); chip.classList.add('c42in', 'c42on'); if(bl && bl.parentNode) bl.after(chip); else card.appendChild(chip); }
+      else { chip.classList.remove('c42in', 'c42on'); document.body.appendChild(chip); if(!chip.hidden) requestAnimationFrame(() => chip.classList.add('c42on')); } }
+    if(want === 'in') return;
+    let bottom = innerHeight - cr.top + 8, left = cr.left, maxW = Math.max(200, Math.min(520, innerWidth - left - 16));
+    const seg = $('#realSeg');
+    if(isPh() && seg && !seg.hidden && seg.offsetParent){ const r = seg.getBoundingClientRect(); if(r.height > 4 && r.bottom > cr.top - 70){ const room = r.left - 8 - left;
+        const need = chip.hidden ? 0 : chip.offsetWidth - (chip.querySelector('.c42x') || chip).clientWidth + (chip.querySelector('.c42x') || chip).scrollWidth + 2;   // the chip's full width
+        if(room >= need && room >= 150) maxW = room; else { bottom = innerHeight - r.top + 8; maxW = Math.max(200, innerWidth - left - 12); } } }
+    const ng = document.querySelector('.navguide:not([hidden])'); if(ng && ng.offsetParent){ const r = ng.getBoundingClientRect(); if(r.height > 4 && r.left < left + maxW && r.bottom > innerHeight - bottom - 60) bottom = Math.max(bottom, innerHeight - r.top + 8); }
+    let nb = bottom;   // the nudge is as wide as the screen on a phone: it goes above the 3D model / Photo switch too
+    if(isPh() && seg && !seg.hidden && seg.offsetParent){ const r = seg.getBoundingClientRect(); if(r.height > 4) nb = Math.max(nb, innerHeight - r.top + 8); }
+    for(const n of [chip, nudge]){ n.style.setProperty('--c42l', Math.round(left) + 'px'); n.style.setProperty('--c42b', Math.round(n === nudge ? nb : bottom) + 'px'); n.style.setProperty('--c42w', Math.round(maxW) + 'px'); } }
+
+  /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
+  function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
+    const hp = $('#holPanel'), holOpen = !!(hp && !hp.hidden);
+    const show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || (pickerUsed && !root.classList.contains('ideas35on') && !holOpen));
+    root.classList.toggle('cb42on', show && v !== 'asbuilt');
+    if(!show){ banner.hidden = true; return; }
+    const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
+    if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
+    else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
+      const same = f && (facts('asbuilt') || {}).beds === f.beds, nm = (plans().find(p => p.id === v) || {}).name || '';   // a concept with as many bedrooms as the house says which one it is
+      const sl = banner.classList.contains('b42sl');   // the slim line on a phone: what it is, then 'Not the house as it is.' on a line of its own
+      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '') + (sl ? '' : '. Not the house as it is.');
+      s.textContent = sl ? 'Not the house as it is.' : k === 'arch' ? 'Based on earlier work with an architect. Not reviewed for permits or structure.' : 'Not designed or reviewed by an architect or engineer.';
+      banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
+    banner.hidden = false;
+    // under the top bar (the booking line on a phone); on a computer centred over the part of the screen the Design panel leaves free
+    const bar = document.querySelector('header.bar'), bk = $('#bks36'); let top = 70;
+    if(isPh()){ const r = bk && bk.offsetParent ? bk.getBoundingClientRect() : (bar ? bar.getBoundingClientRect() : null); if(r) top = r.bottom + 8; }
+    else if(bar){ let bt = 0; for(const c of bar.children){ const r = c.getBoundingClientRect(); if(r.height > 0 && r.top < 200) bt = Math.max(bt, r.bottom); } top = (bt || bar.getBoundingClientRect().bottom) + 10; }
+    let cx = innerWidth / 2, w = innerWidth - 32; const card = $('#card');
+    const side = !isPh() || innerWidth > innerHeight;   // a computer, or a phone held sideways: the open card is a column on the left
+    if(side && card){ const r = card.getBoundingClientRect(); if(!card.classList.contains('min') && r.height > 120 && r.right < innerWidth * .55){ cx = (r.right + innerWidth) / 2; w = innerWidth - r.right - 32; } }
+    banner.style.setProperty('--cb42t', Math.round(top) + 'px'); banner.style.setProperty('--cb42x', Math.round(cx) + 'px'); banner.style.setProperty('--cb42w', Math.round(Math.min(w, 860)) + 'px');
+    root.style.setProperty('--cb42t', Math.round(top) + 'px'); root.style.setProperty('--cb42h', Math.round(banner.offsetHeight || 0) + 'px'); }
+  banner.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
+    if(b.dataset.a === 'plans'){ ga('design_cta', {where: 'banner', stop: stopId(), kind: 'plans'}); setPk(true); setMode('design'); lastSig = ''; sync(); return; }
+    ga('plan_pick', {plan: 'asbuilt', concept: 'real', where: 'banner'});
+    const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); });
+
+  /* ---- the closing card: one line with both */
+  function finLinks(){ const fl = document.querySelector('#fin36 .fl'); if(!fl) return false; if(fl.querySelector('.c42f')) return true;
+    const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Compare floor plans';
+    const d = el('button', 'c42f', '<span class="c42w">See it decorated for the holidays</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
+    a.addEventListener('click', e => { e.stopPropagation(); openPicker('finale'); });
+    d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); });
+    const ph = fl.querySelector('[data-a="photos"]'); if(ph) ph.after(a, d); else fl.append(a, d); return true; }
+
+  function sync(){ try{
+    if(root.classList.contains('pk42') && mode !== 'design') setPk(false);
+    if(sheetByPk && !root.classList.contains('pk42') && mode !== 'design'){ sheetByPk = false; setTimeout(() => { try{ if(isPh() && mode !== 'design' && !root.classList.contains('pk42') && !$('#card').classList.contains('min')) $('#collapse').click(); }catch(e){} }, 450); }   // a phone sheet opened for the picker folds away again
+    if(nudgeOn && (stopIdx !== nudgeStop || mode !== 'tour' || inGame())) hideNudge();
+    const k = nudgeOn ? '' : chipKind();
+    if(k){ const sig = k + bedsPhrase() + isPh(); if(chip._s !== sig){ chip._s = sig; chip.dataset.k = k; chip.innerHTML = chipText(k);
+        chip.setAttribute('aria-label', k === 'plans' ? 'Compare floor plans' + (bedsPhrase() ? ': ' + bedsPhrase() : '') : 'See the house decorated for the holidays'); }
+      if(chip.hidden){ chip.hidden = false; requestAnimationFrame(() => chip.classList.add('c42on')); } }
+    else if(!chip.hidden){ chip.hidden = true; if(!chip.classList.contains('c42in')) chip.classList.remove('c42on'); chip.dataset.k = ''; chip._s = ''; }
+    place(); label(); hmSync();
+    if(root.classList.contains('pk42')){ const s = ACTIVE_VAR + '|' + plans().map(p => p.id + ':' + !!SPACES[p.id]).join(); if(s !== lastSig){ lastSig = s; render(); } }
+  }catch(e){ console.warn('[cta42]', e); } }
+
+  function init(){
+    document.body.append(chip, nudge, banner, hm);
+    const tb = document.querySelector('#card .tb'); if(tb) tb.appendChild(head);
+    const d = $('#design'); if(d) d.insertBefore(pick, d.firstChild);
+    { const _ss = showStop; showStop = function(){ const r = _ss.apply(this, arguments); try{ maybeNudge(); sync(); }catch(e){} return r; }; }
+    { const _sm = setMode; setMode = function(m){ const was = mode; const r = _sm.apply(this, arguments);
+        try{ if(was === 'design' && m === 'walk' && root.classList.contains('pk42') && DESIGN.walking()) root.classList.add('pk42w'); else if(m !== 'walk' && m !== 'design') root.classList.remove('pk42w');
+          if(m === 'design' && was === 'walk' && root.classList.contains('pk42w')){ root.classList.remove('pk42w'); setPk(true); } lastSig = ''; sync(); }catch(e){} return r; }; }
+    for(const p of plans()) if(!KNOWN[p.id]) load(p.id);   // a new concept's bedroom count, for the chip's wording
+    let tries = 0; const fl = setInterval(() => { if(finLinks() || ++tries > 240) clearInterval(fl); }, 500);
+    addEventListener('resize', () => requestAnimationFrame(sync));
+    setInterval(sync, 400);
+    seen.add(stopIdx); sync(); }
+  (function wait(n){ const L = $('#loading'), ok = typeof DESIGN !== 'undefined' && $('#card') && $('#design') && (!L || L.classList.contains('done'));
+    if(!ok){ if(n < 1200) setTimeout(() => wait(n + 1), 250); return; } try{ init(); }catch(e){ console.warn('[cta42] init', e); } })(0);
+  return {openPicker, openDecor, choose, plans, facts, sync, get used(){ return pickerUsed; }};
+})();
+window.CTA42 = CTA42;
+
+
 /* ---------------- v27 ui27: auto-hide, clean view, View menu, compact card, pad / plan chip (patch_v27_ui) ---------------- */
 const UI27 = (() => {
   const root = document.documentElement, card = $('#card'), col = $('#collapse'), vb = $('#viewBtn'), menu = $('#phMenu'), fsb = $('#fsBtn');
@@ -18275,17 +18748,22 @@ function v33Accent(){
       const P = g.attributes.position, idx = g.index ? g.index.array : null, nv = idx ? idx.length : P.count;
       const groups = g.groups.length ? g.groups.map(q => ({start: q.start, count: Math.min(q.count, nv - q.start), mi: q.materialIndex || 0})) : [{start: 0, count: nv, mi: 0}];
       o.updateMatrixWorld(); const mw = o.matrixWorld; let any = false; const out = [];
-      for(const q of groups){ const keep = [], acc = [];
+      for(const q of groups){ const keep = [], acc = [], keepT = [], accT = [];
         for(let t = q.start; t + 2 < q.start + q.count; t += 3){ const i0 = idx ? idx[t] : t, i1 = idx ? idx[t + 1] : t + 1, i2 = idx ? idx[t + 2] : t + 2;
           let on = false;
           if(isPaint(mats[q.mi])){ A.fromBufferAttribute(P, i0).applyMatrix4(mw); Bv.fromBufferAttribute(P, i1).applyMatrix4(mw); C.fromBufferAttribute(P, i2).applyMatrix4(mw);
             nrm.crossVectors(e1.subVectors(Bv, A), e2.subVectors(C, A)); if(nrm.lengthSq() > 1e-12){ nrm.normalize(); T.copy(A).add(Bv).add(C).multiplyScalar(1 / 3); on = hit(T, nrm); } }
-          (on ? acc : keep).push(i0, i1, i2); }
-        if(acc.length) any = true; out.push([q.mi, keep], [-1, acc]); }
+          (on ? acc : keep).push(i0, i1, i2); (on ? accT : keepT).push(t / 3); }
+        if(acc.length) any = true; out.push([q.mi, keep, keepT], [-1, acc, accT]); }
       if(!any) return;
       const ml = mats.slice(); let ai = ml.indexOf(am); if(ai < 0){ ml.push(am); ai = ml.length - 1; }
-      const arr = [], ng = []; for(const [mi, list] of out){ if(!list.length) continue; ng.push({start: arr.length, count: list.length, materialIndex: mi < 0 ? ai : mi}); for(const v of list) arr.push(v); }
+      const arr = [], ng = [], ord = []; for(const [mi, list, tl] of out){ if(!list.length) continue; ng.push({start: arr.length, count: list.length, materialIndex: mi < 0 ? ai : mi}); for(const v of list) arr.push(v); for(const t of tl) ord.push(t); }
       g.setIndex(arr); g.clearGroups(); for(const q of ng) g.addGroup(q.start, q.count, q.materialIndex); o.material = ml;
+      /* r42: this splits a mesh's triangles by material, which reorders them; a compiled package mesh keeps its element ranges (picking,
+         the dollhouse cut, and the triangles a design option hides) by re-deriving them in the new order */
+      try{ const u = o.userData, R = u && u.bim2 && u.bim2.ranges; if(R && R.length){ const rs = R.slice().sort((a, b) => a[2] - b[2]), of = t => { let lo = 0, hi = rs.length - 1; while(lo <= hi){ const m = (lo + hi) >> 1, r = rs[m]; if(t < r[2]) hi = m - 1; else if(t >= r[2] + r[3]) lo = m + 1; else return r; } return null; };
+          const NR = []; ord.forEach((t, j) => { const r = of(t), el = r ? r[0] : null, bd = r ? r[1] : null, L = NR[NR.length - 1]; if(L && L[0] === el && L[1] === bd && L[2] + L[3] === j) L[3]++; else NR.push([el, bd, j, 1]); });
+          u.bim2.ranges = NR.filter(r => r[0] != null); if(u.idx0) u.idx0 = g.index; if(u.alt) u.alt = {}; } }catch(e){ console.warn('[r42] ranges after paint split', e); }
       V33.report.accMeshes++; V33.report.acc += out.filter(x => x[0] < 0).reduce((s2, x) => s2 + x[1].length / 3, 0);
     });
   }
@@ -19897,7 +20375,10 @@ const B2OPT = {busy: {}, built: {}, hideFx: [], absent: {}};
 function bim2DesignOptions(){                                         // the Design tab's concept list: meta options, legacy text only for the card copy
   const leg = (BIM && BIM.options) || [], M = (BIM2S && BIM2S.meta.options) || []; if(!M.length) return leg;
   return M.map(o => { const id = o.legacyId || o.id, d = leg.find(q => q.id === id) || {};
-    return Object.assign({}, d, {id, name: o.name || d.name || id, short: 'Remodel concept',   /* owner 11/7: no dates on the concepts */ region: d.region || null, elements: d.elements || [], removes: d.removes || [], bim2: o.id}); }); }
+    return Object.assign({}, d, {id, name: o.name || d.name || id, short: o.short || 'Remodel concept',   /* owner 11/7: no dates on the concepts */ region: d.region || o.region || null,
+      elements: d.elements || (o.labels || []).map((l, i) => ({id: id + '-L' + (i + 1), ifc: 'IfcAnnotation', kind: 'roomLabel', name: l.name, at: l.at})), removes: d.removes || [], bim2: o.id,
+      description: d.description || o.description, walkStart: d.walkStart || o.walkStart,   /* r42: an option the scene meta describes itself (no legacy entry): its card text, labels and walk start come from there */
+      beds: o.beds, baths: o.baths, office: o.office, label: o.label || null, views: o.views || null}); }); }
 function bim2BuildVariant(id, def){
   if(BIM2S && BIM2.option(id)){ bim2EnsureOption(id); return []; }
   VARGEO[id] = {list: WALLGEO, opens: OPENRECTS}; if(!bim2BuildVariant.told){ bim2BuildVariant.told = true; console.info('[bim2] design', id, 'has no compiled package: it shows the as-built house'); } return []; }
@@ -19923,7 +20404,7 @@ function bim2OptionData(o){                                            // walls 
   const D = o.data || {}, keep = new Set((D.furnishings || []).map(f => f.id)), baseIds = new Set((BIM2S.meta.furnishings || []).concat(BIM2S.meta.builtins || []).map(f => f.id)),
     biKinds = new Set((BIM2S.meta.builtins || []).map(b => b.kind));   // rule:option-skips-builtins - built-ins (downspouts, hatch, racks, closets, blinds) come from the kernel; the page drew them as 2-ft white placeholder cubes (owner 11/7)
   for(const F of FIXOBJ){ if(!F.id || !baseIds.has(F.id) || keep.has(F.id) || F.v) continue; let e = B2OPT.hideFx.find(q => q.o === F.obj); if(!e) B2OPT.hideFx.push(e = {o: F.obj, vars: new Set()}); e.vars.add(v); }
-  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN').map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
+  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN' && f.render.lib !== 'STAGE' /* r42: STAGE rows are staged by opt42Stage */).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
   if(add.length){ const n0 = FIXOBJ.length; try{ buildFixturesBIM(add); }catch(e){ console.warn('[bim2] option furnishings', v, e); } for(let i = n0; i < FIXOBJ.length; i++){ FIXOBJ[i].v = v; if(window.__c22OnlyVar) __c22OnlyVar(FIXOBJ[i].obj, v); } }
   window.__B2OPT = Object.assign(window.__B2OPT || {}, {[v]: {walls: C.WALLGEO.length, opens: C.OPENRECTS.length, collidersAbsent: COLLIDERS.filter(c => c.__absent && c.__absent.has(v)).length, floorsAdded: C.FLOORS.filter(f => !baseF.has(f.bim2)).length,
     furnHidden: B2OPT.hideFx.filter(e => e.vars.has(v)).length, furnAdded: add.length}}); }
@@ -19985,6 +20466,131 @@ function bim2TrimOut(){ if(!M.trimOut) M.trimOut = M.trimExt; }                 
         BIM2.setVariant(v && B2OPT.built[v] ? v : null);
         for(const e of B2OPT.hideFx){ const h = e.vars.has(ACTIVE_VAR); if(h && e.o.visible){ e.o.visible = false; e.hid = true; } else if(!h && e.hid){ e.o.visible = true; e.hid = false; } } } }catch(e){ console.warn('[bim2] variant', e); }
     return _av.apply(this, arguments); }; }
+/* concept r42 (tour/CONCEPT-4BR.md; package built by tour/bim2/tools/build_open4.py): what an option package can carry beyond walls and
+   floors, read from its own data. Only an option that says so (scene.meta options[] pageExtras: true) gets any of it: "Open great room"
+   (open4) does; the two 2024 concepts do not, so they show exactly as before.
+   - furnishings with render.lib 'STAGE': staged like the house's own STAGING rows (staging.js, falling back to fixtures.js). at = the
+     centre of the piece on the floor (at[2] = height of a hung piece's canopy), rot 0 / 90 / 180 / 270 = facing east / north / west / south,
+     stageBack = the point is on the wall behind it, stageKey / stageOn / stageDx / stageDz / stageZ = decor sitting on a piece. They live
+     in 'furn@<option>' and join the furniture registry (on / off, drag in Design).
+   - lights: the option's own downlight list. While it shows, the house's instanced downlights give way to the option's, and a ceiling fan
+     whose light record the option does not have is hidden.
+   - clearRegion (scene.meta options[]): plan polygon; page-built pieces of the house standing there that belong to no option hide while it
+     shows (the kitchen pieces the option keeps stay).
+   - views (scene.meta options[]): named viewpoints in the world frame, for Design and for the QA hook window.__IDEA42. */
+const OPT42 = {staged: {}, cans: {}, cleared: {}};
+const opt42On = o => !!(o && o.pageExtras);
+function opt42Stage(o){
+  if(!opt42On(o)) return; const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.staged[v] != null || !(window.STAGE && STAGE.make)) return; OPT42.staged[v] = 0;
+  const rows = (D.furnishings || []).filter(f => f.render && f.render.lib === 'STAGE' && f.at); if(!rows.length) return;
+  const hosts = {}, g = grp('furn@' + v); let n = 0;
+  for(const f of rows){ try{
+      const yaw = (f.rot || 0) * Math.PI / 180, opts = Object.assign({}, f.params || {});
+      if(f.stageOn){ const h = hosts[f.stageOn]; if(!h) continue; const hs = h.userData.size; if(opts.mountY === undefined) opts.mountY = hs[2] + .005;
+        const d = STAGE.make(f.render.kind, opts), sz = d.userData.size;
+        d.position.set(f.stageDx || 0, 0, f.stageZ != null ? f.stageZ : hs[1] / 2 + (f.stageDz || 0) - sz[1] / 2); stagedShadows(d); d.userData.decor = true; h.add(d); continue; }
+      const [wx, wz] = W2(f.at[0], f.at[1]), d = STAGE.make(f.render.kind, opts), sz = d.userData.size, off = f.stageBack ? 0 : sz[1] / 2;
+      d.position.set(wx - Math.sin(yaw) * off, LV.main + (f.at[2] || 0), wz - Math.cos(yaw) * off); d.rotation.y = yaw; stagedShadows(d);
+      d.userData.el = f.id; g.add(d); if(f.stageKey) hosts[f.stageKey] = d; n++;
+      if(!(f.at[2] > 0)) try{ FURN.add(d, f.id, v, LV.main, {room: 'concept', wall: !!f.stageBack, outdoor: false}); }catch(e){}
+    }catch(e){ console.warn('[r42] stage', f.id, e); } }
+  for(const k in hosts){ try{ stageMergeDecor(hosts[k]); }catch(e){ console.warn('[r42] decor merge', k, e); } }
+  OPT42.staged[v] = n; }
+const opt42BaseCans = () => (typeof VAULT_CANS !== 'undefined' && VAULT_CANS) ? grp('ceil').children.filter(c => c.isInstancedMesh && (c.material === VAULT_CANS.ringM || c.material === VAULT_CANS.lensM)) : [];
+function opt42Cans(o){
+  if(!opt42On(o)) return; const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.cans[v] !== undefined) return; OPT42.cans[v] = null;
+  if(!Array.isArray(D.lights) || typeof VAULT_CANS === 'undefined' || !VAULT_CANS || !VAULT_CANS.ringG || !opt42BaseCans().length) return;
+  const skip = new Set((VAULT_CANS.list || []).map(c => c.id)), room = id => ((BIM2S.spaceById[id] || {}).name || '');
+  let L = D.lights.filter(l => l.render && l.render.kind === 'recessedLight' && l.at).map(l => ({id: l.id, type: 'recessed', x: l.at[0], y: l.at[1], level: l.storey, room: room(l.space), z: l.at[2]}))
+    .concat((D.furnishings || []).filter(f => f.render && f.render.kind === 'inWallSpeaker' && f.params && f.params.ceiling && f.at).map(f => ({id: f.id, type: 'SPEAKER', x: f.at[0], y: f.at[1], level: f.storey, room: room(f.space)})));
+  try{ L = GARAGE22.cans(L); }catch(e){}
+  L = L.filter(c => !skip.has(c.id));
+  const sp = {}; for(const s of (D.spaces || [])) sp[s.id] = s;
+  const ceilAt = (c) => {   // the option's own ceiling where it has one (its new room), else the house's
+    const fz = LEVEL_Z[c.level] != null ? LEVEL_Z[c.level] : 0, S = (D.spaces || []).find(s => s.storey === c.level && BIM2.inPoly(s.polygon, c.x, c.y));
+    if(S && S.ceiling && S.ceiling.planes) for(const p of S.ceiling.planes){ if(p.poly && !BIM2.inPoly(p.poly, c.x, c.y)) continue; const P = p.P || {};
+      const z = P.c + (P.gx || 0) * c.x + (P.gy || 0) * c.y, nv = new THREE.Vector3(P.gy || 0, -1, P.gx || 0).normalize(); return {z, n: [nv.x, nv.y, nv.z]}; }
+    return bim2CeilingAt(c.x, c.y, fz); };
+  const iR = new THREE.InstancedMesh(VAULT_CANS.ringG, VAULT_CANS.ringM, L.length), iL = new THREE.InstancedMesh(VAULT_CANS.lensG, VAULT_CANS.lensM, L.length), q = new THREE.Quaternion(), m4 = new THREE.Matrix4();
+  let nL = 0;
+  L.forEach((c, i) => { const ce = ceilAt(c), [wx, wz] = W2(c.x, c.y), nv = new THREE.Vector3(...ce.n);
+    q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), nv.clone().negate());
+    m4.compose(new THREE.Vector3(wx, ce.z - .012, wz), q, new THREE.Vector3(1, 1, 1)); iR.setMatrixAt(i, m4);
+    if(!/SPEAKER/i.test(c.type)){ m4.compose(new THREE.Vector3(wx, ce.z - .03, wz), q, new THREE.Vector3(1, 1, 1)); iL.setMatrixAt(nL++, m4); } });
+  iL.count = nL; iR.userData.noAO = iL.userData.noAO = true; iR.userData.r42cans = iL.userData.r42cans = v; grp('ceil@' + v).add(iR, iL);
+  OPT42.cans[v] = {n: L.length, lenses: nL}; }
+function opt42Clear(v, o){
+  if(OPT42.cleared[v]) return OPT42.cleared[v]; const R = o && o.clearRegion; if(!R || R.length < 3) return (OPT42.cleared[v] = []);
+  const keep = new Set(((o.data || {}).furnishings || []).map(f => f.id)), fx = new Map(FIXOBJ.map(F => [F.obj, F])), B = new THREE.Box3(), out = [];
+  const only = new Set(C22_ONLY.map(e => e.o)), opId = c => { const m = c.name && /(?:^|:)((?:D|WN|OP|SK)-[A-Z0-9]+-[A-Z0-9]+)(?::|$)/.exec(c.name); return m ? m[1] : null; };   // pieces of an opening: gone35 decides
+  for(const k of ['main', 'furn', 'ceil', 'trim']){ const G = GROUPS[k]; if(!G) continue;
+    for(const c of G.children){ if(c.isInstancedMesh || (c.userData && (c.userData.kind === 'ceilingFan' || c.userData.bim2))) continue;
+      const F = fx.get(c); if((F && (F.v || keep.has(F.id))) || only.has(c) || opId(c)) continue;
+      B.setFromObject(c); if(B.isEmpty()) continue; const sx = B.max.z - B.min.z, sy = B.max.x - B.min.x;
+      if(sx > 14 || sy > 14 || B.max.y < -.5 || B.min.y > 13) continue;
+      if(!BIM2.inPoly(R, (B.min.z + B.max.z) / 2, (B.min.x + B.max.x) / 2)) continue;
+      out.push(c); } }
+  window.__R42cleared = Object.assign(window.__R42cleared || {}, {[v]: out.map(c => c.name || (c.userData && (c.userData.kind || c.userData.el)) || c.type)});
+  return (OPT42.cleared[v] = out); }
+function opt42Vis(){
+  const on = typeof BIM2S !== 'undefined' && BIM2S && ACTIVE_VAR !== 'asbuilt', o = on ? BIM2.option(ACTIVE_VAR) : null, D = o && o.data, v = ACTIVE_VAR;
+  const own = !!(D && OPT42.cans[v]);
+  for(const c of opt42BaseCans()){ if(own){ if(c.visible){ c.visible = false; c.userData.r42 = true; } } else if(c.userData.r42){ c.visible = true; c.userData.r42 = false; } }
+  const lids = opt42On(o) && D && Array.isArray(D.lights) && D.lights.length ? new Set(D.lights.map(l => l.id)) : null;
+  for(const c of (GROUPS.furn ? GROUPS.furn.children : [])){ const u = c.userData; if(u.kind !== 'ceilingFan' || !u.lid) continue;
+    const hide = !!(lids && !lids.has(u.lid)); if(hide && c.visible){ c.visible = false; u.r42 = true; } else if(!hide && u.r42){ c.visible = true; u.r42 = false; } }
+  const clr = new Set(opt42On(o) && B2OPT.built[v] ? opt42Clear(v, o) : []);
+  for(const k in OPT42.cleared) for(const c of OPT42.cleared[k]){ const hide = clr.has(c); if(hide && c.visible){ c.visible = false; c.userData.r42c = true; } else if(!hide && c.userData.r42c){ c.visible = true; c.userData.r42c = false; } } }
+/* the page's door and closet colliders (a shut door blocks a walker) are built for the as-built openings; one an option removes stops
+   colliding while that option shows, so a walker crosses the floor where a removed closet or pocket door was */
+function opt42Doors(o){
+  if(!opt42On(o)) return 0; const v = o.legacyId || o.id, G = gone35(v); if(!G || !G.size) return 0;
+  const R = (BASE_OPENRECTS || OPENRECTS).filter(r => G.has(r.id)); let n = 0;
+  for(const c of COLLIDERS){ if(c.bim2 || c.tree || (c.v != null && c.v !== '__none')) continue; const cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2;
+    if(!R.some(r => cx >= r[0] - .08 && cx <= r[2] + .08 && cz >= r[1] - .08 && cz <= r[3] + .08)) continue;
+    const d = Object.getOwnPropertyDescriptor(c, 'v');
+    if(d && d.get){ if(c.__absent) c.__absent.add(v); }
+    else { const ab = new Set([v]); Object.defineProperty(c, '__absent', {value: ab, enumerable: false}); Object.defineProperty(c, 'v', {get: () => ab.has(ACTIVE_VAR) ? '__none' : null, set: () => {}, configurable: true, enumerable: true}); }
+    n++; }
+  return n; }
+{ const _od = bim2OptionData; bim2OptionData = function(o){ const r = _od.apply(this, arguments); try{ opt42Stage(o); }catch(e){ console.warn('[r42] stage', e); } try{ opt42Cans(o); }catch(e){ console.warn('[r42] cans', e); }
+    try{ OPT42.doors = Object.assign(OPT42.doors || {}, {[o.legacyId || o.id]: opt42Doors(o)}); }catch(e){ console.warn('[r42] doors', e); } return r; }; }
+{ const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); try{ opt42Vis(); }catch(e){ console.warn('[r42] visibility', e); } return r; }; }
+/* QA hook (?qa=1 and the page console): window.__IDEA42.plans() lists the floor plans with their facts; set(id) shows one in Design;
+   view(name, id, as) stands at one of the option's viewpoints in its walk-through (outdoors too: 'street'), or for 'aerial' looks at
+   it from above in Design (roof and upper level off), showing layout `as` (default the option itself; 'asbuilt' for the same view of the house today); navCheck(R, qa) walks the option (called by __TOUR.navCheck's 'ideas' section). */
+window.__IDEA42 = {
+  plans(){ const A = (BIM2S && BIM2S.meta.asBuilt) || {name: 'As built', beds: 6, baths: 3, office: true};   /* scene.meta asBuilt (the loader keeps only the keys it knows) */ return [Object.assign({id: 'asbuilt'}, A)].concat(bim2DesignOptions().map(d => ({id: d.id, name: DESIGN.nameOf(d.id), beds: d.beds, baths: d.baths, office: d.office, label: d.label || null, description: d.description || null}))); },
+  async set(v){ v = v || 'asbuilt'; if(v !== 'asbuilt'){ const ok = await bim2EnsureOption(v); if(!ok) return 'not loaded'; }
+    if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return ACTIVE_VAR; },
+  async view(name, v, as){   // as: the layout to show from that viewpoint (default v; 'asbuilt' for the before view)
+    v = v || (ACTIVE_VAR !== 'asbuilt' ? ACTIVE_VAR : 'open4'); const o = BIM2.option(v), w = o && o.views && o.views[name]; if(!w) return 'no view ' + name;
+    await this.set(as || v);
+    if(name === 'aerial'){ try{ if(vis.level !== 'main') setLevel('main', {keepCam: true, instant: true}); }catch(e){} DESIGN.view(.01); return 'design layout view'; }
+    setMode('walk', {keep: true}); feet = walkSurfaceAt(w.pos[0], w.pos[2], w.pos[1] - EYE + .6); anim = null; glide = null; nav = 'look'; camera.position.set(...w.pos); camera.lookAt(new THREE.Vector3(...w.look)); lookFromCamera();
+    return ACTIVE_VAR; },
+  /* walk the option: every viewpoint and a grid over its new room must be standable floor (eye at standing height, not in a wall), the
+     removed walls' lines must be free to cross, and the rebuilt walls must still stop a walker */
+  async navCheck(R, qa){
+    for(const d of bim2DesignOptions()){ const o = BIM2.option(d.id); if(!o || !o.views) continue; const v = d.id;
+      const ok = await bim2EnsureOption(v); if(!ok){ R.fail('ideas', v, 'option package did not load'); continue; }
+      await this.set(v); setMode('walk', {keep: true}); if(ACTIVE_VAR !== v){ R.fail('ideas', v, 'walk-through shows ' + ACTIVE_VAR); continue; }
+      for(const [name, w] of Object.entries(o.views)){ if(w.pos[1] > 8) continue;
+        qa.moveTo(w.pos[0], w.pos[2], 0); qa.finish(); qa.step(1); const m = qa.probe(); R.row('ideas', v + ':' + name, m);
+        if(Math.abs(m.eye - EYE) > .15) R.fail('ideas', v + ':' + name, 'eye ' + m.eye + ' ft over the floor');
+        const g = qa.geo(m); if(g) R.fail('ideas', v + ':' + name, g); }
+      const reg = o.clearRegion || []; let n = 0, bad = 0;
+      for(let x = 15; x <= 36; x += 1.5) for(let y = 6; y <= 31; y += 1.5){ if(reg.length && !BIM2.inPoly(reg, x, y)) continue; const [wx, wz] = W2(x, y);
+        const f = walkSurfaceAt(wx, wz, .6), p = {x: wx, z: wz}; qa.collide(p, f); n++;
+        if(Math.abs(f) > .05){ bad++; R.fail('ideas', v + ':floor@' + x + ',' + y, 'no floor (' + f.toFixed(2) + ')'); } }
+      for(const [a, b, want] of (o.walkTests || [])){ const [ax, az] = W2(a[0], a[1]), [bx, bz] = W2(b[0], b[1]), L = Math.hypot(bx - ax, bz - az), k = Math.ceil(L / .25); let stopped = null;
+        for(let i = 0; i <= k; i++){ const p = {x: ax + (bx - ax) * i / k, z: az + (bz - az) * i / k}, p0 = {x: p.x, z: p.z}; qa.collide(p, 0); if(Math.hypot(p.x - p0.x, p.z - p0.z) > .05){ stopped = [+(p0.z).toFixed(2), +(p0.x).toFixed(2)]; break; } }
+        const id = v + ':' + a.join(',') + '>' + b.join(','); R.row('ideas', id, {stopped});
+        if(want === 'open' && stopped) R.fail('ideas', id, 'a walker is stopped at bim ' + stopped + ' (a removed wall still collides?)');
+        if(want === 'wall' && !stopped) R.fail('ideas', id, 'a walker passes through a wall'); }
+      R.note('ideas', v, n + ' floor samples, ' + bad + ' without floor; cleared ' + ((window.__R42cleared || {})[v] || []).length + ' house pieces; cans ' + JSON.stringify(OPT42.cans[v]) + '; staged ' + OPT42.staged[v]); }
+    setMode('tour'); qa.finish(); }
+};
 /* ---- the page modules that used to read the legacy model (landscape, Halloween props, AV, light fixtures) read the scene meta
    through these views, in the legacy record shapes they consume (BIM plan frame: x east, y north, feet). Lookup only. ---- */
 const B2L = {
@@ -20297,7 +20903,7 @@ function bim3StageSettle(){
 }
 { const _sc3 = stg33Check; stg33Check = function(){ try{ bim3StageSettle(); }catch(e){ console.warn('[bim3] stage settle', e); } return _sc3.apply(this, arguments); }; }
 /* Design tab order (owner/OPTIONS 11/3): jan24 "Open Plan" first, then apr24b "Semi-Open Plan" */
-{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
+{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1, open4: 2}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
 /* rack wire deck: library-less render material 'wire-deck' (kernel BI3) = white 2" x 4" wire grid, alpha-tested (UV = feet) */
 BIM2_MATKEY['wire-deck'] = 'bim3WireDeck';
 { const _bl3 = bim2Load; bim2Load = async function(){
@@ -21282,11 +21888,13 @@ BIM3.report.golden = GOLDEN35;
      header with the price and the same pill. It opens a contact sheet in place (SELL36.open), so nobody is thrown out of the tour to book.
      Every fact in it is the landing page's: agent, brokerage and licence line, number, email, price, disclaimer.
    - the price under the address on the plate, and the address is a link to the listing page on every screen size.
-   - the finale: the last stop is at dusk with the house lights on (GH-1 above had turned every dusk stop into golden hour), and a closing card
-     comes up over it with the address, price, beds / baths / square feet, the booking control, Call / Text, and quieter links onward.
+   - the finale: a closing card comes up over the last stop (back out front, in whatever time of day the visitor is in; r41: it no longer
+     switches to dusk) with the address, price, beds / baths / square feet, the booking control, Call / Text, and quieter links onward.
    - Photos: the top bar stays above the gallery (it was underneath, so the only ways out were Esc and "Show in 3D").
    Games loaded by URL (?room= ...) keep their own header and get none of this. */
-{ const f = STOPS.find(s => s.id === 'dusk'); if(f) f.tod = 'dusk'; }
+/* r41 (owner 11/12: "at the end of the tour, when we exit the garage, switching to the evening looks weird and abrupt. We could just keep the same
+   time of day"): the last stop no longer sets dusk. It keeps the time of day like every other stop (the GOLDEN35 default, or the visitor's own
+   choice from the Time of day control), both ways and when ?stop=dusk opens on it. */
 const SELL36 = window.SELL36 = (() => {
   const root = document.documentElement, bar = document.querySelector('header.bar'), plate = bar && bar.querySelector('.plate'), app = document.getElementById('app'), card = $('#card');
   if(!bar || !plate || !app || !card) return null;
@@ -21449,7 +22057,7 @@ const SELL36 = window.SELL36 = (() => {
     '<p class="fn">' + F.agent + ', Compass · ' + F.telTxt + '</p></div></div>' +
     '<div class="fl"><button type="button" data-a="again">Start the tour again</button><button type="button" data-a="photos">See the photos</button><a href="' + up('games/') + '">Play the games</a></div>';
   card.before(fin);
-  let finT = 0, finClosed = false, finWait = 0, todBack = null, finSeen = false;
+  let finT = 0, finClosed = false, finWait = 0, finSeen = false;
   const atEnd = () => mode === 'tour' && stopIdx === STOPS.length - 1 && gal.hidden && !inGame();
   function finPlace(){ try{ const cr = card.getBoundingClientRect(), A = app.getBoundingClientRect(); let top = cr.top; const seg = $('#realSeg');
       // a computer with the stop card open: the finale stands beside the card, not on top of the house above it
@@ -21459,15 +22067,12 @@ const SELL36 = window.SELL36 = (() => {
       if(seg && root.classList.contains('ph') && !seg.hidden){ const r = seg.getBoundingClientRect(); if(r.height > 0) top = Math.min(top, r.top); }
       fin.style.setProperty('--fin36b', Math.max(12, Math.round(A.bottom - top + 12)) + 'px'); }catch(e){} }
   function finShow(){ if(!atEnd() || finClosed) return; if(anim && performance.now() - finWait < 9000){ finT = setTimeout(finShow, 200); return; }   // the card comes up once the camera has arrived
-    finPlace(); fin.hidden = false; void fin.offsetWidth; fin.classList.add('on'); root.classList.add('fin36on'); if(!finSeen){ finSeen = true; ga('tour_finale', {}); } }
+    finPlace(); fin.hidden = false; void fin.offsetWidth; fin.classList.add('on'); root.classList.add('fin36on'); if(!finSeen){ finSeen = true; ga('tour_finale', {tod: TOD_KEY}); } }
   function finHide(){ fin.classList.remove('on'); root.classList.remove('fin36on'); clearTimeout(finT); finT = setTimeout(() => { if(!fin.classList.contains('on')) fin.hidden = true; }, 900); }
-  function finSync(){ const end = atEnd();
-    // the last stop is at dusk with the lights on, also for a viewer who picked another time of day earlier; their own time comes back when they leave it
-    try{ if(end){ if(TOD_KEY !== 'dusk'){ todBack = TOD_KEY; setTOD('dusk'); } } else if(todBack){ const k = todBack; todBack = null; if(TOD_KEY === 'dusk' && mode === 'tour') setTOD(k); } }catch(e){ console.warn('[sell36] dusk', e); }
+  function finSync(){ const end = atEnd();   // (r41: the time of day is left as it is; the last stop used to switch to dusk here and back on leaving)
     if(!end){ finClosed = false; if(!fin.hidden) finHide(); return; }
     if(finClosed || fin.classList.contains('on')) return;
     clearTimeout(finT); finWait = performance.now(); finT = setTimeout(finShow, 700); }
-  $('#tod').addEventListener('click', () => { todBack = null; }, true);   // a time picked at the finale is the viewer's own choice
   fin.addEventListener('click', e => { const t = e.target.closest ? e.target.closest('[data-a],.fx,a[href]') : null; if(!t) return; e.stopPropagation();
     if(t.classList.contains('fx')){ finClosed = true; finHide(); return; }
     const a = t.getAttribute('data-a');
@@ -22832,12 +23437,49 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
           for(let pass = 0; pass < 5; pass++) for(let i = 2; i < n - 2; i++){ const q = pts[i], f = q.y - EYE, x = (pts[i - 1].x + q.x * 2 + pts[i + 1].x) / 4, z = (pts[i - 1].z + q.z * 2 + pts[i + 1].z) / 4; if(Math.hypot(x - q.x, z - q.z) < .01 || !r36At(x, z, f) || !fr(x, z, f)) continue; const y = navSupport(x, z, f + .3); if(Math.abs(y - f) < .3){ q.x = x; q.z = z; q.y = y + EYE; } }   // and no kinks left in the line
         } finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }catch(e){ console.warn('[r37 nav] clearance', e); }
       if(!R36N.noRelax) pts = r37Relax(pts);   // r37: rounded corners, the middle of each doorway
+      if(!R36N.noRelax) try{ pts = r41EndIn(r41Despike(pts)); }catch(e){ console.warn('[r41 nav] end', e); }   // r41: no out-and-back in the line; the last few feet curve in to the stop
       for(let pass = 0; pass < (R36N.noRelax ? 3 : 10); pass++) for(let i = 2; i < pts.length - 2; i++) pts[i].y = (pts[i - 1].y + pts[i].y * 2 + pts[i + 1].y) / 4;   // r37: 10 passes (was 3), so a landing is a gentle change of slope   // stair nosings and thresholds become one even climb
       { const n = pts.length, k0 = Math.min(R36N.noRelax ? 6 : 10, Math.floor((n - 2) / 2)), y0 = pts[0].y, y1 = pts[n - 1].y; for(let i = 1; i <= k0; i++){ const w = R36N.noRelax ? i / (k0 + 1) : smooth(0, 1, i / (k0 + 1)); pts[i].y = lerp(y0, pts[i].y, w); pts[n - 1 - i].y = lerp(y1, pts[n - 1 - i].y, w); } }
       const cum = [0]; for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
       const doors = []; for(const it of r36Doors()){ const q = it.coll; for(let i = 0; i < pts.length; i++){ const p = pts[i]; if(p.x > q.x0 - .25 && p.x < q.x1 + .25 && p.z > q.z0 - .25 && p.z < q.z1 + .25 && p.y - EYE > q.y0 - 1.5 && p.y - EYE < q.y1 - 2){ doors.push({it, s: cum[i], x: p.x, z: p.z}); break; } } }
       res = {pts, cum, L: cum[cum.length - 1], doors}; } }catch(e){ console.warn('[r36 nav] route', e); }
   if(R36N.cache.size > 400) R36N.cache.clear(); R36N.cache.set(key, res); return res; }
+/* r41: the last few feet of a route curve gently in to where you stop. The route used to reach a grid node beside or past the stop and then make a
+   last short sidestep (or a step back) of half a foot to a foot onto the stop's own spot, a kink of 90-180 deg in the last frames of the walk, so the
+   camera slid sideways or backwards as it arrived (great room -> bedroom wing, lower bath -> lower bedroom, laundry -> office). Now the line from
+   R ft out (3, else 2, 1.4 or 1) is one smooth curve that leaves the route along its own way and arrives with no doubling back, kept only where
+   it stays on level, walkable, unobstructed ground. */
+/* r41: no out-and-back in a route. Pulled round an open door leaf, the line could run a foot past the doorway and come back to it before going on
+   (the bedroom wing to the hall bath: out to 25.5 ft, back to 24.5, on again), a U-turn the walk made at a crawl. A turn of more than 120 deg at a
+   point is cut out: the shortest stretch round it whose chord the line leaves and rejoins at under 60 deg, with every point it drops within 0.6 ft
+   of that chord (so nothing is cut across), on level ground. */
+function r41Despike(pts){ const turn = (P, i) => { const a = P[i - 1], b = P[i], c = P[i + 1], ux = b.x - a.x, uz = b.z - a.z, vx = c.x - b.x, vz = c.z - b.z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); return lu < .02 || lv < .02 ? 0 : Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1)); };
+  const ang = (a, b, c, d) => { const ux = b.x - a.x, uz = b.z - a.z, vx = d.x - c.x, vz = d.z - c.z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); return lu < .02 || lv < .02 ? 0 : Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1)); };
+  for(let round = 0; round < 6; round++){ const n = pts.length; let v = -1; for(let i = 2; i < n - 2; i++) if(turn(pts, i) > 120 * Math.PI / 180){ v = i; break; } if(v < 0) return pts;
+    let best = null; for(let span = 2; span <= 16 && !best; span++) for(let a = Math.max(1, v - span + 1); a < v && !best; a++){ const b = a + span; if(b > n - 2 || b <= v) continue; const A = pts[a], B = pts[b], L = Math.hypot(B.x - A.x, B.z - A.z); if(L < .3 || Math.abs(A.y - B.y) > .25) continue;
+        if(ang(pts[a - 1], A, A, B) > Math.PI / 3 || ang(A, B, B, pts[b + 1]) > Math.PI / 3) continue; let far = 0; for(let i = a + 1; i < b; i++){ const P = pts[i], u = clamp(((P.x - A.x) * (B.x - A.x) + (P.z - A.z) * (B.z - A.z)) / (L * L), 0, 1); far = Math.max(far, Math.hypot(P.x - A.x - (B.x - A.x) * u, P.z - A.z - (B.z - A.z) * u), Math.abs(P.y - A.y)); }
+        if(far < .6) best = [a, b]; }
+    if(!best) return pts; const [a, b] = best, A = pts[a], B = pts[b], k = Math.max(1, Math.round(Math.hypot(B.x - A.x, B.z - A.z) / .5)), Q = []; for(let q = 1; q < k; q++) Q.push(A.clone().lerp(B, q / k));
+    pts = pts.slice(0, a + 1).concat(Q, pts.slice(b)); }
+  return pts; }
+function r41EndIn(pts){ const n = pts.length; if(n < 6) return pts; const B = pts[n - 1], fB = B.y - EYE; let tot = 0; for(let i = 1; i < n; i++) tot += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z); if(tot < 4) return pts;
+  const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
+  try{ const fr = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; }, offB = r36At(B.x, B.z, fB) !== 1;
+    for(const R of [Math.min(3, tot * .3), 2, 1.4, 1]){ let j = n - 1, acc = 0; while(j > 1 && acc < R){ acc += Math.hypot(pts[j].x - pts[j - 1].x, pts[j].z - pts[j - 1].z); j--; }
+      const A = pts[j], fA = A.y - EYE; if(Math.abs(fA - fB) > .25) continue;   // level ground only (not the foot or the head of a stair)
+      let tx = pts[j + 1].x - pts[j - 1].x, tz = pts[j + 1].z - pts[j - 1].z; const tl = Math.hypot(tx, tz); if(tl < 1e-3) continue; tx /= tl; tz /= tl;
+      const ax = B.x - A.x, az = B.z - A.z, ab = Math.hypot(ax, az), pr = ax * tx + az * tz; if(ab < .3 || pr < .25 * ab) continue;   // the stop is beside or behind: no gentle curve from here
+      let kink = 0; for(let i = j + 1; i < n - 1; i++){ const ux = pts[i].x - pts[i - 1].x, uz = pts[i].z - pts[i - 1].z, vx = pts[i + 1].x - pts[i].x, vz = pts[i + 1].z - pts[i].z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); if(lu > .02 && lv > .02) kink = Math.max(kink, Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1))); }
+      if(kink < .6) return pts;   // no sharp turn in the last few feet: leave the line as it is
+      const d = pr * .5, Cx = A.x + tx * d, Cz = A.z + tz * d, k = Math.max(2, Math.ceil(acc / .5)), Q = []; let ok = true, z0 = 0;
+      for(let i = j + 1; i < n - 1; i++) if(r36At(pts[i].x, pts[i].z, pts[i].y - EYE) === 0) z0++;
+      // a threshold or a rug edge the line it replaces crosses is no obstacle: a point within half a foot of that line is taken as clear
+      const near = (x, z) => { let b = 99; for(let i = j; i < n - 1; i++){ const P = pts[i], Q2 = pts[i + 1], dx = Q2.x - P.x, dz = Q2.z - P.z, l2 = dx * dx + dz * dz, u = l2 > 1e-9 ? clamp(((x - P.x) * dx + (z - P.z) * dz) / l2, 0, 1) : 0; b = Math.min(b, Math.hypot(x - P.x - dx * u, z - P.z - dz * u)); } return b; };   // the line it replaces may already pass a cell short of a shoulder's clearance: no more of those than it had
+      for(let q = 1; q < k; q++){ const u = q / k, x = (1 - u) * (1 - u) * A.x + 2 * u * (1 - u) * Cx + u * u * B.x, z = (1 - u) * (1 - u) * A.z + 2 * u * (1 - u) * Cz + u * u * B.z, f = lerp(fA, fB, u), y = navSupport(x, z, f + .3);
+        if(Math.abs(y - f) > .3 || (!fr(x, z, y) && near(x, z) > .5)){ ok = false; break; } if(!(offB && Math.hypot(x - B.x, z - B.z) < 1.5) && r36At(x, z, y) === 0 && --z0 < 0){ ok = false; break; } Q.push(new THREE.Vector3(x, y + EYE, z)); }
+      if(ok) return pts.slice(0, j + 1).concat(Q, [B]); } }
+  finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); }
+  return pts; }
 function r36PathPos(p, s, out){ const c = p.cum; let lo = 0, hi = c.length - 1; s = clamp(s, 0, p.L); while(hi - lo > 1){ const m = (lo + hi) >> 1; if(c[m] <= s) lo = m; else hi = m; } const d = c[hi] - c[lo]; return out.lerpVectors(p.pts[lo], p.pts[hi], d > 1e-6 ? (s - c[lo]) / d : 0); }
 const r36Ease = t => { const a = .16, v = 1 / (1 - a); return t < a ? v * t * t / (2 * a) : t > 1 - a ? 1 - v * (1 - t) * (1 - t) / (2 * a) : v * (t - a / 2); };
 function r36OpenDoor(it, x, z){ if(DOOR28.moving.has(it)){ if(it.dir < 0) it.dir = 1; return; } if(it.t < .5){ if(it.sl && x != null){ it.r37a = null; try{ bim3SlideSide(it, bim3SlideAt(it, x, z)); }catch(e){} } door28Toggle(it); } }
@@ -22858,7 +23500,7 @@ const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
       acceleration capped), and each frame reads the plan at its own time, so 30, 60 and 120 fps show the same motion.
    A door on the way opens a second ahead of you; if one is still swinging the walk eases to a stop before it. Free walking and drag-to-look
    are not touched. */
-Object.assign(R36N, {YAW: 50, YACC: 120, YAWL: 60, YACCL: 145, LONG: 45, PYAW: 30, PACC: 70, TUBE: 18, TUBEL: 22, LA: 4.5, ACC: 5.5, DEC: 4.5});   // deg/s, deg/s2, ft, ft/s2 (a walk over LONG ft may turn up to YAWL: a two-flight move turns about 450 deg)
+Object.assign(R36N, {YAW: 50, YACC: 120, YAWL: 60, YACCL: 145, LONG: 45, PYAW: 30, PACC: 70, TUBE: 18, TUBEL: 22, LA: 4.5, ACC: 5.5, DEC: 4.5, BACKDEG: 82, YAWS: 60, YACCS: 150});   // deg/s, deg/s2, ft, ft/s2 (a walk over LONG ft may turn up to YAWL: a two-flight move turns about 450 deg); r41: BACKDEG, the most the head leads the way you are walking over the second half of a walk, and YAWS / YACCS, the turn made standing once you have stopped (see r37Plan)
 function r37Dist(g){   // clearance (ft) from each walkable cell of a level grid to the nearest cell that is not (chamfer transform), kept on the grid
   if(g.dist) return g.dist; const G = R36N.lv, NX = G.NX, NZ = G.NZ, n = NX * NZ, D = new Float32Array(n), b = Math.SQRT2;
   for(let k = 0; k < n; k++) D[k] = g.ok[k] ? 1e6 : 0;
@@ -22965,35 +23607,55 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
     const y = hz > .3 ? Math.atan2(-dx, -dz) : last; psi[i] = i ? psi[i - 1] + angDiff(psi[i - 1], y) : y; last = y; tp[i] = hz > .3 ? clamp(Math.atan2(W.y - V.y, hz) * .45, -.2, .2) : 0; slope[i] = hz > .3 ? Math.abs(W.y - V.y) / hz : 0; }
   sm(tp, 30, true); tp[0] = tp[N - 1] = 0;
   const y0 = a.yaw0, y1 = a.yaw1;
+  /* r41 (owner 11/12, the walk up to the loft: "a weird pull back to the camera view once you get to the top of the stairs"): no walking backwards.
+     A stop that looks back across the room (or back the way you came) used to be reached by turning the head onto its view over the last several
+     feet while still walking in, so the camera slid backwards into the stop, like a dolly pulling back (2-8 ft/s on 34 tour moves). Now, over the
+     second half of a walk, the head leads the way you are going (trv: the route's heading over half a foot) by at most R36N.BACKDEG, also against the way you will be
+     going over the next 2 ft (the head follows its plan a little late, and a corner turned away from it is covered). A candidate's walk ends on the
+     nearest heading in that band to the stop's view (endW); the rest of the turn is made as you stop and standing (R36N.YAWS, YACCS), and its time
+     counts in choosing the plan. */
+  const MB = S.BACKDEG * DG, trv = new Float64Array(N), WS = S.YAWS * DG, AS = S.YACCS * DG, standT = A => A < .2 * DG ? 0 : A > WS * WS / AS ? A / WS + WS / AS : 2 * Math.sqrt(A / AS);
+  for(let i = 0; i < N; i++){ const s = sAt(i), sa = Math.max(0, Math.min(s - .25, L - .5)), sb = Math.min(L, sa + .5); r36PathPos(p, sa, V); r36PathPos(p, sb, W); const dx = W.x - V.x, dz = W.z - V.z; trv[i] = Math.hypot(dx, dz) > .1 ? psi[i] + angDiff(psi[i], Math.atan2(-dx, -dz)) : (i ? trv[i - 1] : psi[i]); }
+  sm(trv, 2, true);   // the way you are going over half a foot: a last turn of the line in to the stop counts
+  const bLo = new Float64Array(N), bHi = new Float64Array(N), lead = L >= 6; for(let i = 0; i < N; i++){ let a0 = -Infinity, a1 = Infinity; for(let j = Math.max(0, i - 1); j <= Math.min(N - 1, i + 8); j++){ a0 = Math.max(a0, trv[j]); a1 = Math.min(a1, trv[j]); } const M = lerp(4 * Math.PI, MB, smooth(L * .25, L * .5, sAt(i))); bLo[i] = a0 - M; bHi[i] = a1 + M; }
+  const tN = trv[N - 1], endW = (x, wrap) => { if(!lead) return x; let r = x - tN; const k = wrap ? Math.round(r / (2 * Math.PI)) : 0; r -= 2 * Math.PI * k; return tN + 2 * Math.PI * k + clamp(r, -MB, MB); };
   // heading candidates: 'travel' faces the way ahead (easing out of the start view and onto the stop's); 'direct' turns once, start view to stop
   // view, leaning at most 30 deg toward the way ahead (a short move back the way you came is a step back, not a turn around and a turn back)
-  // the least-turning heading within TUBE degrees of a candidate: the taut string through that band (both ends pinned), its corners then rounded
-  const taut = (g, wide) => { const lo = new Float64Array(N), hi = new Float64Array(N); for(let i = 0; i < N; i++){ const t = TUBE * (wide || 1) * DG * Math.min(1, sAt(i) / 2, (L - sAt(i)) / 2); lo[i] = g[i] - t; hi[i] = g[i] + t; }
+  // the least-turning heading within TUBE degrees of a candidate and within the lead band: the taut string through both (both ends pinned), its corners then rounded
+  const taut = (g, wide) => { const lo = new Float64Array(N), hi = new Float64Array(N); for(let i = 0; i < N; i++){ const t = TUBE * (wide || 1) * DG * Math.min(1, sAt(i) / 2, (L - sAt(i)) / 2); lo[i] = g[i] - t; hi[i] = g[i] + t;
+      if(lead && i > 0 && i < N - 1){ const l2 = Math.max(lo[i], bLo[i]), h2 = Math.min(hi[i], bHi[i]); if(l2 <= h2){ lo[i] = l2; hi[i] = h2; } else { const e = hi[i] < bLo[i] ? bLo[i] : bHi[i]; lo[i] = hi[i] = e; } } }
     g.set(r37Taut(lo, hi)); sm(g, 60, true); };
   const turns = g => { let tv = 0, rev = 0, dir = 0, opp = 0, acc = 0; for(let i = 1; i < N; i++){ const d = g[i] - g[i - 1]; tv += Math.abs(d); if(Math.abs(d) < 1e-9) continue; const sg = Math.sign(d);
-      if(!dir){ acc += d; if(Math.abs(acc) > 1.5 * DG) dir = Math.sign(acc); } else if(sg !== dir){ opp += Math.abs(d); if(opp > 1.5 * DG){ rev++; dir = sg; opp = 0; } } else opp = 0; } return {tv: tv / DG, rev}; };
+      if(!dir){ acc += d; if(Math.abs(acc) > 1.5 * DG) dir = Math.sign(acc); } else if(sg !== dir){ opp += Math.abs(d); if(opp > 1.5 * DG){ rev++; dir = sg; opp = 0; } } else opp = 0; } return {tv: tv / DG, rev, dir}; };
   const alts = d => Math.abs(d) > 110 * DG ? [d, d - Math.sign(d) * 2 * Math.PI] : [d];   // a turn of about half a circle may go either way round: the way that keeps turning the same way
   const cands = [];
-  if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1); for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + d * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp}); }
+  if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1), P0 = p.pts[0], P1 = p.pts[p.pts.length - 1], hz = Math.hypot(P1.x - P0.x, P1.z - P0.z);
+    // a short step taken facing the way you step (not a step back) also ends facing within BACKDEG of it, and the rest of the turn is made standing
+    let dW = d; if(hz > 1 && Math.abs(angDiff(Math.atan2(-(P1.x - P0.x), -(P1.z - P0.z)), y0)) < Math.PI / 2){ const r = angDiff(tN, y0 + d); if(Math.abs(r) > MB) dW = d - (r - Math.sign(r) * MB); }
+    for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + dW * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp, gEnd: y0 + d}); }
   else {
-    for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1u = psi[N - 1] + d1, dd = Math.abs(d0) / DG, da = Math.abs(d1) / DG;
+    for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1v = psi[N - 1] + d1, y1u = endW(y1v), dd = Math.abs(d0) / DG, da = Math.abs(y1u - psi[N - 1]) / DG;
       const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, L * .7);
       for(let i = 0; i < N; i++){ const s = sAt(i), wd = smooth(0, Ld, s), wa = smooth(L - La, L, s); g[i] = lerp(lerp(y0u, psi[i], wd), y1u, wa); gp[i] = lerp(lerp(a.pitch0, tp[i], wd), a.pitch1, wa); }
-      g[0] = y0 + Math.round((y0u - y0) / (2 * Math.PI)) * 2 * Math.PI; const h = g.slice(), h0 = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'travel', g, gp}); taut(h, 1.6); cands.push({k: 'travel+', g: h, gp}); if(LONG){ const h2 = h0; taut(h2, 2.4); cands.push({k: 'travel++', g: h2, gp}); } }
-    if(L < 40) for(const d of alts(angDiff(y0, y1))){ const g = new Float64Array(N), gp = new Float64Array(N), M = 30 * DG;
-      for(let i = 0; i < N; i++){ const s = sAt(i), w = smooth(0, 1, s / L), base = y0 + d * w, wl = smooth(0, 4, s) * (1 - smooth(L - 5, L, s)); g[i] = base + M * Math.tanh(angDiff(base, psi[i]) / M) * wl; gp[i] = lerp(lerp(a.pitch0, tp[i], wl), a.pitch1, w * w); }
-      const h = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'direct', g, gp}); taut(h, 1.6); cands.push({k: 'direct+', g: h, gp}); } }
+      g[0] = y0 + Math.round((y0u - y0) / (2 * Math.PI)) * 2 * Math.PI; const h = g.slice(), h0 = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'travel', g, gp, gEnd: y1v}); taut(h, 1.6); cands.push({k: 'travel+', g: h, gp, gEnd: y1v}); if(LONG || L > 30){ const h2 = h0; taut(h2, 2.4); cands.push({k: 'travel++', g: h2, gp, gEnd: y1v}); } }   // (r41: and over 30 ft, where a wider band can take the wiggle of a hall out of the head)
+    if(L < 40) for(const d of alts(angDiff(y0, y1))){ const g = new Float64Array(N), gp = new Float64Array(N), M = 30 * DG, dW = endW(y0 + d, true) - y0;
+      for(let i = 0; i < N; i++){ const s = sAt(i), w = smooth(0, 1, s / L), base = y0 + dW * w, wl = smooth(0, 4, s) * (1 - smooth(L - 5, L, s)); g[i] = base + M * Math.tanh(angDiff(base, psi[i]) / M) * wl; gp[i] = lerp(lerp(a.pitch0, tp[i], wl), a.pitch1, w * w); }
+      const h = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'direct', g, gp, gEnd: y0 + d}); taut(h, 1.6); cands.push({k: 'direct+', g: h, gp, gEnd: y0 + d}); } }
+  for(const c of cands) c.stand = Math.abs(c.gEnd - c.g[N - 1]);
   // speed: cruise, slower where the head would turn faster than the cap, on stairs and in doorways; eased in and out
-  const Vc = L > S.PACE * S.MAXS ? clamp(L / 5.6, S.PACE, 13) : S.PACE;
-  const pace = (g, gp) => { const v = new Float64Array(N);
+  const V0 = L > S.PACE * S.MAXS ? clamp(L / 5.6, S.PACE, 13) : S.PACE;
+  const pace = (g, gp, vk) => { const v = new Float64Array(N), Vc = V0 * (vk || 1);
     for(let i = 0; i < N; i++){ const i0 = Math.max(0, i - 1), i1 = Math.min(N - 1, i + 1), d1 = Math.abs(g[i1] - g[i0]) / ((i1 - i0) * ds) / DG, d2 = i0 < i && i1 > i ? Math.abs(g[i1] - 2 * g[i] + g[i0]) / ds / ds / DG : 0, s = sAt(i), p1 = Math.abs(gp[i1] - gp[i0]) / ((i1 - i0) * ds) / DG;
       let m = Math.min(Vc, YAW * .88 / Math.max(1e-6, d1), Math.sqrt(YACC * .6 / Math.max(1e-6, d2)), S.PYAW * .8 / Math.max(1e-6, p1));
       if(slope[i] > .25) m = Math.min(m, Math.min(Vc, 9.5) * .75); for(const q of p.doors) if(Math.abs(q.s - s) < 2) m = Math.min(m, Vc * .8); v[i] = Math.max(.8, m); }
     v[0] = 0; for(let i = 1; i < N; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] * v[i - 1] + 2 * S.ACC * ds)); v[N - 1] = 0; for(let i = N - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * S.DEC * ds));
     const tS = new Float64Array(N); for(let i = 1; i < N; i++) tS[i] = tS[i - 1] + 2 * ds / Math.max(.05, v[i - 1] + v[i]); return tS; };
-  // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk)
-  for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.tv = q.tv; c.rev = q.rev; c.cost = c.tS[N - 1] + c.tv / 90 + c.rev * 3 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.g[N - 1] - c.g[0]) / DG - 200) / 20; }   // a turn of more than 200 deg in all is never chosen when less will do
-  const C = cands.reduce((x, c) => !x || c.cost < x.cost ? c : x, null), g = C.g, gp = C.gp, tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev).join(',');
+  // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk); a turn made standing counts its time, and as a reversal when it turns back on the walk's last turn
+  for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.tv = q.tv + c.stand / DG; c.rev = q.rev + (c.stand > 1.5 * DG && q.dir && Math.sign(c.gEnd - c.g[N - 1]) !== q.dir ? 1 : 0); c.cost = c.tS[N - 1] + standT(c.stand) + c.tv / 90 + c.rev * 3 + Math.max(0, c.rev - 1) * 8 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.gEnd - c.g[0]) / DG - 200) / 20; }   // a turn of more than 200 deg in all is never chosen when less will do; nor (r41) a second reversal when a plan with one will do
+  const C = cands.reduce((x, c) => !x || c.cost < x.cost ? c : x, null), g = C.g, gp = C.gp;
+  // r41: a long walk that the turn made standing would take just past the 10 s rule (R38.MAXD; the garage out to the yard) cruises up to 15 % faster rather than become a dissolve
+  { const tot = () => C.tS[N - 1] + standT(C.stand) + .5, M38 = (window.R38 && R38.MAXD) || 10; if(L > 30 && tot() > M38 - .1) for(const vk of [1.05, 1.1, 1.15]){ C.tS = pace(g, gp, vk); C.vk = vk; if(tot() <= M38 - .1) break; } }
+  const tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev + (c.stand > .2 * DG ? '/st' + (c.stand / DG).toFixed(0) : '')).join(',');
   // s(t) on a 240 Hz clock, its speed softened (no sudden change of pace), then the head integrated along it
   const dt = 1 / 240, T1 = tS[N - 1], n1 = Math.ceil(T1 / dt) + 1, sT = new Float64Array(n1);
   for(let k = 0, i = 0; k < n1; k++){ const t = Math.min(T1, k * dt); while(i < N - 2 && tS[i + 1] < t) i++; const u = clamp((t - tS[i]) / Math.max(1e-9, tS[i + 1] - tS[i]), 0, 1); sT[k] = lerp(sAt(i), sAt(i + 1), u); }
@@ -23002,11 +23664,16 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
     let tot = 0; for(let k = 1; k < n1; k++) tot += vs[k] * dt; const sc = tot > 1e-6 ? L / tot : 1; sT[0] = 0; for(let k = 1; k < n1; k++) sT[k] = Math.min(L, sT[k - 1] + vs[k] * dt * sc); sT[n1 - 1] = L; }
   const G = (A, s) => { const f = clamp(s / L, 0, 1) * (N - 1), i = Math.min(N - 2, Math.floor(f)); return lerp(A[i], A[i + 1], f - i); };
   const ys = [], ps = [], ss = []; let y = g[0], w = 0, pt = gp[0], pw = 0; const wn = 9, YW = YAW * DG, YA = YACC * DG, PW = S.PYAW * DG, PA = S.PACC * DG;
-  for(let k = 0; k < n1 + 240 * 3; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], tg = G(g, sN), tr = (tg - G(g, s)) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt;
-    ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - g[N - 1]) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
-    let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -YA, YA); w = clamp(w + ac * dt, -YW, YW); y += w * dt;
+  // r41: the walk itself ends on g[N - 1], within BACKDEG of the way in; the head goes on round to the stop's view (gE) once you have stopped (under .15
+  // ft/s), braking so that it never overshoots. (Begun earlier, as you slow, it came back a few degrees as the line curved in: a second turning reversal)
+  const gE = C.gEnd, gW = g[N - 1], rem = gE - gW, sgE = Math.sign(rem), stand = C.stand > .2 * DG;
+  for(let k = 0; k < n1 + 240 * 6; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], v = (sN - s) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt; let tg = G(g, sN), tr = (tg - G(g, s)) / dt, ya = YA, yw = YW, st = false;
+    if(stand && s > L - .5 && v < .15){ tg = gE; tr = 0; ya = AS; yw = WS; st = true; }
+    ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - gE) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
+    let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -ya, ya); if(st){ const er = tg - y; if(w * er > 0 && w * w > 1.6 * ya * Math.abs(er)) ac = -Math.sign(w) * ya; }   // brakes in time: never past the stop's view
+    { const w2 = w + ac * dt; w = Math.abs(w2) > yw ? Math.sign(w2) * Math.max(yw, Math.abs(w) - ya * dt) : w2; } y += w * dt;   // a lower cap (walking after standing) is reached by slowing, not at once
     ac = clamp(wn * wn * (pg - pt) + 2 * wn * (prr - pw), -PA, PA); pw = clamp(pw + ac * dt, -PW, PW); pt += pw * dt; }
-  ys[ys.length - 1] = g[N - 1]; ps[ps.length - 1] = gp[N - 1];
+  ys[ys.length - 1] = gE; ps[ps.length - 1] = gp[N - 1];
   const nT = ss.length; a.tl = {dt, n: nT, s: Float64Array.from(ss), yaw: Float64Array.from(ys), pitch: Float64Array.from(ps)}; a.dur = Math.max(.05, (nT - 1) * dt);
   a.dts = p.doors.map(q => { let k = 0; while(k < nT - 1 && ss[k] < q.s - .3) k++; return k * dt; });
   a.tv = 0; a.rate = 1; a.t0m = a.t0; a.lastNow = a.t0; return a.tl; }
@@ -23148,6 +23815,17 @@ function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golde
 { const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
 /* r37 smooth walking: the caps the ?qa=1 'smooth' check holds every walked move to; qaNoDraw lets that check step frames without drawing them */
 const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false, anim: () => anim, leaves: () => r37Leaves()};
+/* r41: the ?qa=1 'back' check's limits (see SEC.back in navQA). Over the last 40 % (tail) of a walked move: no velocity along the view under
+   dot ft/s for hold s or more, and no U-turn (the way of travel over win s, at over vmin ft/s, turning more than turn deg within turnS s).
+   A move of under step ft whose head turns under stepTurn deg in all is a step back to a spot just behind you, facing the same way ('Back to
+   the tour' from the front deck to the porch: 2.5 ft, no turn), and is noted, not judged. known: moves noted, not failed; empty since r41.
+   When the check came in (r41, 60 fps) 50 moves were listed there: the stop looks back across the room (or back the way you came) and r37's walk
+   turned the head onto that view over the last several feet while still walking in, so the camera slid backwards as it swung round (up to 8
+   ft/s); and some routes ended with a last sidestep or step back of half a foot to a foot onto the stop's spot, or ran out and back at a door.
+   r37Plan now keeps the head within R36N.BACKDEG of the way you are going over the second half and makes the rest of the turn as you stop and
+   standing; r41EndIn curves the last few feet in to the stop and r41Despike cuts out an out-and-back. A move that fails here and is not in
+   known fails the check. back:street>street is back:street>dusk when 'Back to the tour' picks the Street stop (the two stand together). */
+const R41B = window.R41B = {dot: -.2, hold: .2, turn: 150, turnS: .5, win: .2, vmin: 1.25, tail: .4, step: 3, stepTurn: 30, known: []};
 { const _rf37 = renderFrame; renderFrame = function(){ if(R37S.qaNoDraw){ if(DOOR28.moving.size) try{ door28Step(); }catch(e){} return; } return _rf37.apply(this, arguments); }; }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 { let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)
