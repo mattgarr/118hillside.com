@@ -15980,10 +15980,14 @@ html.ph #ng42 .g42t{color:var(--pt,var(--ink));font-size:14.5px}
 html.ph #ng42 .g42a{flex-wrap:nowrap}html.ph #ng42 .g42a button{flex:1 1 0;min-width:0;padding:0 10px;justify-content:center;min-height:44px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
 html.ph #ng42 .g42a button svg{color:currentColor}
 html.ph #ng42 .g42x{color:var(--pm,var(--muted))}
-html.ph #cb42{font-family:var(--sf,inherit);width:calc(100vw - 2 * var(--gut,12px));max-width:none;padding:8px 8px 8px 12px;border-radius:14px;flex-wrap:nowrap;font-size:13px}
-html.ph #cb42 .b42m{flex:1 1 auto}html.ph #cb42 .b42m span{font-size:12px}
-html.ph #cb42 .b42s{flex:0 0 auto;flex-direction:column}
+html.ph #cb42{font-family:var(--sf,inherit);width:calc(100vw - 2 * var(--gut,12px));max-width:none;padding:8px 8px 8px 12px;border-radius:14px;flex-wrap:wrap;gap:6px 8px;font-size:13px}
+html.ph #cb42 .b42m{flex:1 1 100%}html.ph #cb42 .b42m span{font-size:12px;line-height:1.35}
+html.ph #cb42 .b42s{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap}
 html.ph #cb42 button{min-height:36px;padding:0 12px;font-size:13px}
+/* a phone in the floor plan picker: one slim line (the chosen card right below carries the label and the way back) */
+html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:6px 12px;flex-wrap:nowrap;font-size:12.5px}html.ph #cb42.b42sl .b42m span,html.ph #cb42.b42sl .b42s{display:none}
+html.ph #cb42.b42sl .b42m b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.ph.pk42 #card{max-height:48vh;max-height:48dvh}
 html.ph #cb42.b42ab{width:max-content;max-width:calc(100vw - 24px);padding:5px 12px}
 html.ph #hm42{left:8px!important;right:8px;width:auto!important;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line))}
 html.ph #hm42 p{color:var(--pm,var(--muted))}html.ph #hm42 button{min-height:40px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
@@ -16000,7 +16004,7 @@ html.ph .pk42p .k42s{width:62px;height:62px}
 html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:600;font-size:20px}
 html.ph .pk42p .k42b,html.ph .pk42p .k42t{color:var(--pt,var(--ink))}
 html.ph .pk42p .k42d{color:var(--pm,var(--muted))}
-html.ph .pk42p .k42l{color:#c9a46a}html.ph .pk42p .k42c[data-k="real"] .k42l{color:var(--pt,var(--accent))}
+html.ph .pk42p .k42l{color:var(--pt,var(--ink));opacity:.8}html.ph .pk42p .k42c[data-k="real"] .k42l{color:var(--pt,var(--accent))}
 html.ph .pk42p .p42ft button{flex:1 1 auto;min-height:44px;background:var(--pl,var(--paper));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
 html.ph .pk42p .p42fine{color:var(--pm,var(--muted))}
 html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36on.ph :is(#cta42,#ng42){display:none!important}
@@ -16122,9 +16126,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     root.classList.toggle('cb42on', show && v !== 'asbuilt');
     if(!show){ banner.hidden = true; return; }
     const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
-    if(v === 'asbuilt'){ banner.classList.add('b42ab'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
-    else { banner.classList.remove('b42ab'); const k = kindOf(v), f = facts(v);
-      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + bedLine(f) + ', ' + factLine(f) : '') + '. Not the house as it is.';
+    if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
+    else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
+      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + bedLine(f) + (banner.classList.contains('b42sl') ? '' : ', ' + factLine(f)) : '') + '. Not the house as it is.';
       s.textContent = k === 'arch' ? 'Based on earlier work with an architect. Not reviewed for permits or structure.' : 'Not designed or reviewed by an architect or engineer.';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
     banner.hidden = false;
