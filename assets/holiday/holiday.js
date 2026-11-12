@@ -412,7 +412,12 @@
   async function qa(o){ if(!H.snap || !H.ready) return {ok: false, why: 'not ready'}; const T = tracker();
     try{ return await qaRun(o || {}, T); } finally{ T.stop(); } }
   async function qaRun(o, T){
-    const t0 = performance.now(), wait = async ms => { await paint(); await sleep(ms); await paint(); }, S = () => Object.assign(H.snap(), T.read()), start = current(), tod0 = H.todGet(), mode0 = H.mode;
+    /* the frame loop applies part of every dress (Halloween's sky and light levels, the grade, the trees' level of detail): a reading taken while the page
+       draws no frames (a hidden or covered window) shows the last frame's leftovers, not the dress's. Each reading waits for four drawn frames; a pair
+       that had to be read without them is marked noFrames, so a covered window is not mistaken for a leftover. */
+    let starved = 0; const drawn = async n => { const R = H.renderer; if(!R || !R.info) return true; const f0 = R.info.render.frame, ts = performance.now();
+      while(R.info.render.frame - f0 < n){ if(performance.now() - ts > 8000) return false; await (PUMP ? pumped(1) : new Promise(r => setTimeout(r, 50))); } return true; };
+    const t0 = performance.now(), wait = async ms => { await paint(); await sleep(ms); if(!(await drawn(4))) starved++; await paint(); }, S = () => Object.assign(H.snap(), T.read()), start = current(), tod0 = H.todGet(), mode0 = H.mode;
     for(let i = 0; i < 120 && !(window.__perfTrees === true && !busy); i++) await sleep(250);   // the oaks and the rest of the planting arrive after the first view
     const go = async k => { await set(k, {from: 'qa'}); await wait(o.wait || 500); return current() === k; };
     const fields = v => String(v).split('|'), vol = (a, b) => { const out = new Set(); for(const k of new Set([...Object.keys(a), ...Object.keys(b)])){ if(!(k in a) || !(k in b)){ out.add(k + '#*'); continue; } const x = fields(a[k]), y = fields(b[k]); for(let i = 0; i < Math.max(x.length, y.length); i++) if(x[i] !== y[i]) out.add(k + '#' + i); } return out; };
@@ -422,7 +427,7 @@
         const x = fields(got[k]), y = fields(ref.s[k]); if(x.some((v, i) => v !== y[i] && !ref.vol.has(k + '#' + i)) || x.length !== y.length) out.push([k, ref.s[k], got[k]]); } return out; };
     const res = {ok: true, pairs: [], refs: {}, ms: 0}, kinds = (o.kinds || KINDS).filter(k => k !== 'none');
     const take = async () => { const a = S(); await wait(700); const b = S(); return {s: b, vol: vol(a, b)}; };
-    const row = (ctx, from, to, d, up) => { if(up === false) d.unshift(['current', to, current()]); res.pairs.push({ctx, from, to, ok: !d.length, diff: d.slice(0, 12), n: d.length}); };
+    const row = (ctx, from, to, d, up) => { if(up === false) d.unshift(['current', to, current()]); res.pairs.push({ctx, from, to, ok: !d.length, diff: d.slice(0, 12), n: d.length, noFrames: starved > 0}); res.starved = (res.starved || 0) + (starved > 0 ? 1 : 0); starved = 0; };
     const CTX = [['as found', () => {}], ['dusk', () => H.todSet('dusk', true)], ['dollhouse', () => { H.todSet(tod0.key, tod0.manual); H.setMode('doll'); }]].slice(0, o.quick ? 1 : 3);
     let ref = null;
     for(const [ctx, enter] of CTX){
