@@ -194,7 +194,7 @@ variables that flipped with the view:
 
 r41 (GHOST r41 in index.html): SSAO off at every level; the shadow pass draws what the scene holds (the cull hides from the eye
 only; no redraw inside a probe capture); one shadow-map size at every level; the meter reads four level views around the eye (an
-atlas, redrawn when the eye moves 2.4" or every 3 s), calibrated per room so each stop keeps its exposure (GHOST41.calibrate(),
+atlas, redrawn after the eye moves 2.4" (at most every .5 s) and every 10 s), calibrated per room so each stop keeps its exposure (GHOST41.calibrate(),
 ?qa=1); the still-frame accumulator compares this frame's camera pose; level surfaces read the room mask 3" to each side (the 6-in
 cells along every wall read the sky). Same test after: 1248 casters at every redraw, one map size, no SSAO, exposure range .01
 stops. `?ghost41=0` turns r41 off.
