@@ -23336,7 +23336,14 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
     /* r41: the visitor has not touched anything for ms and nothing is moving (the idle warm-up's own test) */
     idle: (ms = 2500) => { try{ return w24Idle(ms); }catch(e){ return false; } },
     /* r43: compile a list of objects' programs for the tour's light set (~12 ms a call; true while more are left): a dress made ready off-screen draws its first frame without compiling */
-    compile: objs => w24Compile(objs),
+    /* r43: like w24Compile, but eight objects to a renderer.compile() call: each call walks the whole scene for its lights first (about 10 ms
+       here), so one object a call made a 100-material set take a second and more */
+    compile(objs, budget = 12){ const proxy = Object.create(scene); let batch = []; proxy.traverseVisible = cb => scene.traverseVisible(cb); proxy.traverse = cb => { for(const o of batch) cb(o); };
+      const flips = []; scene.traverse(o => { if(o.isLight && !o.visible && (o.isPointLight || o.isSpotLight || o.isRectAreaLight) && o.userData.perfOff){ o.visible = true; flips.push(o); } });
+      const rt0 = renderer.getRenderTarget(); renderer.setRenderTarget(typeof HITCH_SCENE_RT === 'function' ? HITCH_SCENE_RT() : null); const ts = performance.now();
+      try{ while(objs.length && performance.now() - ts < budget){ batch = objs.splice(Math.max(0, objs.length - 8)); renderer.compile(proxy, camera); } }
+      finally{ for(const l of flips) l.visible = false; renderer.setRenderTarget(rt0); }
+      return objs.length > 0; },
     /* r43: Halloween made ready before it is shown: its set built (one block: it is not sliced) and its programs compiled in ~12 ms slices, so the
        first frame with it does not stall on them (170 ms on a laptop). idle(): optional, the slices wait while it says the visitor is busy. */
     async hwPrepare(idle){ if(HW.on) return true;
@@ -23344,7 +23351,7 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
       else if(HW.builtKey !== hw22Key()) return false;   // a layout change since: hwOn() rebuilds it
       if(WARM24.hwSetWarm === HW.ext) return true; const objs = [], seen = new Set(), ext = HW.ext;
       for(const g of [HW.ext, HW.inn, HW.sky]) if(g) g.traverse(o => { if(!o.material || !(o.isMesh || o.isPoints || o.isLine || o.isSprite)) return; const k = [].concat(o.material).map(m => m.uuid).join() + (o.isInstancedMesh ? 'i' : ''); if(!seen.has(k)){ seen.add(k); objs.push(o); } });
-      while(objs.length){ if(idle && !idle()){ await new Promise(r => setTimeout(r, 400)); continue; } let more = false; try{ more = w24Compile(objs); }catch(e){ console.warn('[halloween] warm', e); break; } if(more) await new Promise(r => setTimeout(r, 16)); }
+      while(objs.length){ if(idle && !idle()){ await new Promise(r => setTimeout(r, 400)); continue; } let more = false; try{ more = HH.compile(objs); }catch(e){ console.warn('[halloween] warm', e); break; } if(more) await new Promise(r => setTimeout(r, 16)); }
       WARM24.hwSetWarm = ext; return true; },
     get hwReady(){ try{ return HW.built && HW.builtKey === hw22Key() && WARM24.hwSetWarm === HW.ext; }catch(e){ return false; } },
     /* a time of day chosen from the holiday control holds like one chosen from the Time of day button (manual), and is handed back exactly as it was found */
