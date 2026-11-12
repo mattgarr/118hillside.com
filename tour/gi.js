@@ -20,7 +20,7 @@ const V3 = THREE.Vector3;
 const qp = (k, d) => { const m = new RegExp('[?&]' + k + '=([^&]*)').exec(Q); return m ? decodeURIComponent(m[1]) : d; };
 const GI = window.GI = {mode: MODE, ver: 2, on: false, ready: false, why: 'loading', H: null, n: 0, composes: 0, k: 0, t: 0, ssaoK: 0,
   // tuning (also from the URL: &gigain=, &gispec=, &giao=, &gissao=keep)
-  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
+  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), wbLight: +qp('giwbl', .5), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
   base: qp('gibase', 'gi/'),
   U: {giOn: {value: 0}, giK: {value: 0}, giGain: {value: new V3(1, 1, 1)}, giHemi: {value: 1}, giSpec: {value: .7}, giAOK: {value: 1},
     giT0: {value: null}, giT1: {value: null}, giAO: {value: null}, giRoom: {value: null},
@@ -182,7 +182,7 @@ GI.evNow = () => GI.ev !== '' ? +GI.ev : (GI.index && GI.index.ev != null ? GI.i
    (sky, sun bounce) are lifted by 2^EV, the same in every room and at every time; the r40 meter then exposes the frame. The lamps are
    authored at interior exposure already and are not lifted.
    White balance: the cast a camera balances away is the ROOM's (the oak floor tints everything it bounces), not the illuminant's: golden
-   hour stays golden. So the reference is the rooms' mean bounce (probes below 9 ft) under the same sun and sky made white; its
+   hour stays golden (half of the illuminant's colour is followed, as a camera's auto balance does). So the reference is the rooms' mean bounce (probes below 9 ft) under the same sun and sky made white; its
    colour is taken to neutral with strength GI.wb. The lamps keep their warmth against that daylight balance. */
 GI.compose = function(){ const S = GI.state(), sc = GI.scales(S), D = GI.data, NP = D.NP, A = GI.acc; A.fill(0);
   const add = kind => D.vols.forEach((v, i) => { if((v.kind === 'lamp') !== kind) return; const s = kind ? sc[i].map((x, c) => x / GI.gainNow[c]) : sc[i], sl = .2126 * s[0] + .7152 * s[1] + .0722 * s[2]; if(Math.abs(s[0]) + Math.abs(s[1]) + Math.abs(s[2]) < 1e-9) return; const F = v.F;
@@ -198,7 +198,9 @@ GI.compose = function(){ const S = GI.state(), sc = GI.scales(S), D = GI.data, N
       for(let c = 0; c < 3; c++){ m[c] += vm[c] * sc[i][c]; mw[c] += vm[c] * (v.kind === 'sky' ? k * lumC(S.tint.map((t, q) => t * ref[q])) / Math.max(1e-6, ref[c]) : ys); } }); }
   const Y = Math.max(0, lumC(m)), Yw = lumC(mw), lift = Math.pow(2, GI.evNow());
   GI.mean = Y; GI.meanRGB = m; GI.cast = Yw > 1e-7 ? mw.map(v => v / Yw) : [1, 1, 1];
-  GI.wbGain = GI.cast.map(v => v > 1e-4 ? Math.pow(1 / v, GI.wb) : 1); { const w = GI.wbGain, y = lumC(w); GI.wbGain = w.map(v => v / y); }
+  // and half of the illuminant's own colour (a camera's auto white balance follows a golden sun part of the way, not all of it)
+  const act = Y > 1e-7 ? m.map(v => Math.max(1e-4, v / Y)) : [1, 1, 1];
+  GI.wbGain = GI.cast.map((v, c) => v > 1e-4 ? Math.pow(1 / v, GI.wb) * Math.pow(v / act[c], GI.wbLight) : 1); { const w = GI.wbGain, y = lumC(w); GI.wbGain = w.map(v => v / y); }
   GI.gainNow = GI.wbGain.map(v => v * lift);
   add(true);   // the lamps, divided by the daylight gain so they arrive unlifted and unbalanced
   const [h0, h1] = GI.half;
@@ -225,7 +227,7 @@ GI.frame = function(){ const H = GI.H; if(!H) return; GI.n++;
   GI.on = GI.k > 0;
   const s = H.SUN_DIR, c = H.sun.color, env = H.ENV_RT, src = env && env.giSrc, isrc = null;
   let ln = 0; for(const l of H.DUSK_LIGHTS) ln += l.intensity;
-  const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln, GI.evNow(), GI.wb].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0) + ':' + (isrc ? (isrc.__giId || (isrc.__giId = ++GI.srcN)) : 0) + ':' + !!GI.mask;
+  const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln, GI.evNow(), GI.wb, GI.wbLight].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0) + ':' + (isrc ? (isrc.__giId || (isrc.__giId = ++GI.srcN)) : 0) + ':' + !!GI.mask;
   if(key !== GI.last && GI.on){ GI.last = key; try{ GI.compose(); }catch(e){ console.warn('[gi] compose', e); GI.ready = false; } }
   r13Fade(); ssaoFade(dt); if(GI.rt) try{ GI.rt.frame(); }catch(e){ if(!GI.rt.err){ GI.rt.err = String(e && e.message || e); console.warn('[gi-rt] frame', e); } } };
 GI.srcN = 0;
