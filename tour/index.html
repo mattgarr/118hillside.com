@@ -1895,6 +1895,7 @@ if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && define
   C.worldpos_vertex += `\n${G}\nvR40W = worldPosition.xyz;\n#endif\n`;
   C.envmap_physical_pars_fragment += `
 #if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
+#define R41G8 ${/[?&]ghost41=0\b/.test(location.search) ? 'false' : 'true'}
 uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K;
 float r40At( const in vec3 P ){
   vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
@@ -1908,7 +1909,7 @@ float r40Interior( const in GeometricContext geometry ){
   vec3 N = inverseTransformDirection( geometry.normal, viewMatrix ), P = vR40W + N * 0.75;
   float m = r40At( P );
   // r41 G8: a level surface (ceiling, floor, counter top) keeps its test point over the wall line: also read 3 in to each side
-  if( m < 0.999 && abs( N.y ) > 0.5 ) m = max( m, max( max( r40At( P + vec3( 0.25, 0.0, 0.0 ) ), r40At( P - vec3( 0.25, 0.0, 0.0 ) ) ), max( r40At( P + vec3( 0.0, 0.0, 0.25 ) ), r40At( P - vec3( 0.0, 0.0, 0.25 ) ) ) ) );
+  if( R41G8 && m < 0.999 && abs( N.y ) > 0.5 ) m = max( m, max( max( r40At( P + vec3( 0.25, 0.0, 0.0 ) ), r40At( P - vec3( 0.25, 0.0, 0.0 ) ) ), max( r40At( P + vec3( 0.0, 0.0, 0.25 ) ), r40At( P - vec3( 0.0, 0.0, 0.25 ) ) ) ) );
   return m;
 }
 vec3 r40IrrB( const in GeometricContext geometry ){ return PI * textureCubeUV( envMapB, inverseTransformDirection( geometry.normal, viewMatrix ), 1.0 ).rgb * envMapIntensity; }
@@ -22998,6 +22999,15 @@ function ghostFlattenJogs(S){
         if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; k++; } }
       if(k){ J.poly = (J.poly || []).concat(s.id); if(s.bb) s.bb = [Math.min(...s.poly.map(p => p[0])), Math.min(...s.poly.map(p => p[1])), Math.max(...s.poly.map(p => p[0])), Math.max(...s.poly.map(p => p[1]))]; } } }
   return GHOST41.jogs.length; }
+/* QA (?qa=1): the shadow-pass trace and a window on the renderer state for the pivot test (GHOST41.trace = true to record) */
+if(/[?&]qa=1\b/.test(location.search)){ const SM = renderer.shadowMap, orig = SM.render.bind(SM); GHOST41.sm = [];
+  SM.render = function(lights, sc, cam){ if(GHOST41.trace && (SM.autoUpdate || SM.needsUpdate) && sun.castShadow){ let n = 0, hidden = 0;
+      const vis = o => { for(let x = o; x; x = x.parent) if(!x.visible) return false; return true; };
+      sc.traverse(o => { if(!o.isMesh || !o.castShadow) return; if(vis(o) && o.layers.test(sun.shadow.camera.layers)) n++; else if(o.visible === false || !o.layers.test(sun.shadow.camera.layers)) hidden++; });
+      const rt = renderer.getRenderTarget(); GHOST41.sm.push({f: renderer.info.render.frame, t: +performance.now().toFixed(1), casters: n, off: hidden, size: sun.shadow.mapSize.x, rt: rt ? (rt.isWebGLCubeRenderTarget ? 'cube' : 'rt' + rt.width) : 'screen', cam: cam === camera ? 'eye' : 'other'});
+      if(GHOST41.sm.length > 4000) GHOST41.sm.splice(0, 1000); }
+    return orig(lights, sc, cam); };
+  window.__g41 = {GOV, METER, sun, renderer, scene, camera, LOOK, PERF, R40X, R40L, ACC: window.__aa && __aa.ACC, get EXPO_IN(){ return EXPO_IN; }, get room(){ return LIGHT_ENV_ID; }, get DUSK(){ return DUSK; }, get TOD(){ return TOD_KEY; }}; }
 if(GHOST41.on){
   // G1: the shadow map is drawn with what the scene really holds
   { const SM = renderer.shadowMap, orig = SM.render.bind(SM);
