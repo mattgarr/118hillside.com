@@ -400,6 +400,7 @@
     const go = async k => { await set(k, {from: 'qa'}); await wait(o.wait || 500); return current() === k; };
     const fields = v => String(v).split('|'), vol = (a, b) => { const out = new Set(); for(const k of new Set([...Object.keys(a), ...Object.keys(b)])){ if(!(k in a) || !(k in b)){ out.add(k + '#*'); continue; } const x = fields(a[k]), y = fields(b[k]); for(let i = 0; i < Math.max(x.length, y.length); i++) if(x[i] !== y[i]) out.add(k + '#' + i); } return out; };
     const cmp = (got, ref) => { const out = []; for(const k of new Set([...Object.keys(got), ...Object.keys(ref.s)])){ if(ref.vol.has(k + '#*')) continue; if(got[k] === ref.s[k]) continue;
+        if(!(k in ref.s) && /^mat:trees:/.test(k)) continue;   // the hero oaks are planted late (after the first view, later still in a background tab): new tree materials are the planting, not a dress; a tree material in both is still compared
         if(!(k in got) || !(k in ref.s)){ out.push([k, ref.s[k] == null ? '(none)' : ref.s[k], got[k] == null ? '(none)' : got[k]]); continue; }
         const x = fields(got[k]), y = fields(ref.s[k]); if(x.some((v, i) => v !== y[i] && !ref.vol.has(k + '#' + i)) || x.length !== y.length) out.push([k, ref.s[k], got[k]]); } return out; };
     const res = {ok: true, pairs: [], refs: {}, ms: 0}, kinds = (o.kinds || KINDS).filter(k => k !== 'none');
