@@ -6884,6 +6884,7 @@ function navQA(){
         if(d > .02) R.fail('light', 'same ' + v, 'settles to a different exposure from ' + f1 + ' (' + es[0].toFixed(4) + ') and ' + f2 + ' (' + es[1].toFixed(4) + ')'); } }
     finally{ performance.now = realNow; if(GV) GV.fix = gfix; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
     window.__LIGHT = rows; tour(0); };
+  SEC.ideas = async R => { if(!window.__IDEA42){ R.note('ideas', '-', 'no idea hook'); return; } await __IDEA42.navCheck(R, {moveTo: (x, z, f) => moveTo(x, z, f), collide: (p, f) => collide(p, f), finish, step, probe, geo}); };   // r42: walk each layout idea that carries viewpoints
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
     const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
@@ -8413,7 +8414,7 @@ const DESIGN = (() => {
     $('#blurb').textContent = sel === 'asbuilt' ? 'This is the house as it stands. Try a remodel idea for the original part of the home, move the furniture, or see the outside in another color or with a new garden.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
     $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'An idea only. It is not engineered, permitted or priced.'
-      : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and the house is sold as built.';
+      : (d && d.label ? d.label + ' ' : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and ') + (d && d.label ? 'The house is sold as built.' : 'the house is sold as built.');
     $('#dNote').hidden = sel === 'asbuilt';
     try{ IDEAS35.sync(); }catch(e){}
   }
@@ -8425,7 +8426,7 @@ const DESIGN = (() => {
       if(mode === 'walk'){ feet = walkSurfaceAt(camera.position.x, camera.position.z, feet + .6); updateWalkRoom(true); } }
     if(mode !== 'design'){ hlBox.visible = false; pre.visible = false; } else hl();
   }
-  function badge(){ if(ACTIVE_VAR !== 'asbuilt') $('#dims').textContent = 'Original home: ' + nameOf(ACTIVE_VAR) + (ACTIVE_VAR === 'custom' ? '' : ' (2024 concept)'); }
+  function badge(){ if(ACTIVE_VAR !== 'asbuilt') $('#dims').textContent = 'Original home: ' + nameOf(ACTIVE_VAR) + (ACTIVE_VAR === 'custom' ? '' : (defOf(ACTIVE_VAR) || {}).label ? ' (illustrative idea)' : ' (2024 concept)'); }
   function open(prev){ if(prev !== 'design' && vis.level !== 'main') setLevel('main', {instant: true, keepCam: true}); card(); chips(); status(); hl(); if(prev !== 'design') view(); }
   /* r35: the layout view - the original house (the part the ideas change) fills the part of the screen the panel leaves free:
      beside the panel on a wide screen, above the sheet on a phone. Same fit as the Dollhouse camera. */
@@ -9200,7 +9201,7 @@ async function buildLightFixtures(){
       if(nick){ let lo = cz; for(let a = 0; a < 8; a++) lo = Math.min(lo, bim2CeilingAt(bx + 2.25 * Math.cos(a * Math.PI / 4), by + 2.25 * Math.sin(a * Math.PI / 4), fz).z); rod = clamp(Math.max(rod, cz - lo + .7 - .5), .5, 2); }   // r37: long enough that the blade tips clear a sloped ceiling by 8 in
       const o = nick ? r37JavaFan(rod, body, blade) : FIX.make('ceilingFan', {dia: nick ? 54 / 12 : dia, downrod: rod, light: nick || /LED|light/i.test(f.fixture), color: 'black', bladeMat: 'plasticWhite'});
       o.traverse(k => { if(!k.isMesh) return; if(k.name === 'blackMetal') k.material = body; else if(k.name === 'plasticWhite') k.material = blade; k.castShadow = true; k.receiveShadow = true; });
-      o.position.set(wx, cz, wz); o.rotation.y = Math.PI / 6; o.userData.kind = 'ceilingFan'; grp(isUp ? 'furnU' : 'furn').add(o);
+      o.position.set(wx, cz, wz); o.rotation.y = Math.PI / 6; o.userData.kind = 'ceilingFan'; o.userData.lid = f.id; grp(isUp ? 'furnU' : 'furn').add(o);   // r42: lid = its light record (an option without it hides it)
       window.__FANS.push({item: f.item, where, x: +bx.toFixed(2), y: +by.toFixed(2), ceiling: +cz.toFixed(2), downrod: +rod.toFixed(2), dia: +dia.toFixed(2), bladesAFF: +(cz - .2 - rod - .24 - fz).toFixed(2)}); }
   }catch(e){ console.warn('fan', f.item, e); } }
   window.__FAN = window.__FANS[0];
@@ -20313,7 +20314,10 @@ const B2OPT = {busy: {}, built: {}, hideFx: [], absent: {}};
 function bim2DesignOptions(){                                         // the Design tab's concept list: meta options, legacy text only for the card copy
   const leg = (BIM && BIM.options) || [], M = (BIM2S && BIM2S.meta.options) || []; if(!M.length) return leg;
   return M.map(o => { const id = o.legacyId || o.id, d = leg.find(q => q.id === id) || {};
-    return Object.assign({}, d, {id, name: o.name || d.name || id, short: 'Remodel concept',   /* owner 11/7: no dates on the concepts */ region: d.region || null, elements: d.elements || [], removes: d.removes || [], bim2: o.id}); }); }
+    return Object.assign({}, d, {id, name: o.name || d.name || id, short: o.short || 'Remodel concept',   /* owner 11/7: no dates on the concepts */ region: d.region || o.region || null,
+      elements: d.elements || (o.labels || []).map((l, i) => ({id: id + '-L' + (i + 1), ifc: 'IfcAnnotation', kind: 'roomLabel', name: l.name, at: l.at})), removes: d.removes || [], bim2: o.id,
+      description: d.description || o.description, walkStart: d.walkStart || o.walkStart,   /* r42: an option the scene meta describes itself (no legacy entry): its card text, labels and walk start come from there */
+      beds: o.beds, baths: o.baths, office: o.office, label: o.label || null, views: o.views || null}); }); }
 function bim2BuildVariant(id, def){
   if(BIM2S && BIM2.option(id)){ bim2EnsureOption(id); return []; }
   VARGEO[id] = {list: WALLGEO, opens: OPENRECTS}; if(!bim2BuildVariant.told){ bim2BuildVariant.told = true; console.info('[bim2] design', id, 'has no compiled package: it shows the as-built house'); } return []; }
@@ -20339,7 +20343,7 @@ function bim2OptionData(o){                                            // walls 
   const D = o.data || {}, keep = new Set((D.furnishings || []).map(f => f.id)), baseIds = new Set((BIM2S.meta.furnishings || []).concat(BIM2S.meta.builtins || []).map(f => f.id)),
     biKinds = new Set((BIM2S.meta.builtins || []).map(b => b.kind));   // rule:option-skips-builtins - built-ins (downspouts, hatch, racks, closets, blinds) come from the kernel; the page drew them as 2-ft white placeholder cubes (owner 11/7)
   for(const F of FIXOBJ){ if(!F.id || !baseIds.has(F.id) || keep.has(F.id) || F.v) continue; let e = B2OPT.hideFx.find(q => q.o === F.obj); if(!e) B2OPT.hideFx.push(e = {o: F.obj, vars: new Set()}); e.vars.add(v); }
-  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN').map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
+  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN' && f.render.lib !== 'STAGE')   // r42: STAGE rows: opt42Stage.map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
   if(add.length){ const n0 = FIXOBJ.length; try{ buildFixturesBIM(add); }catch(e){ console.warn('[bim2] option furnishings', v, e); } for(let i = n0; i < FIXOBJ.length; i++){ FIXOBJ[i].v = v; if(window.__c22OnlyVar) __c22OnlyVar(FIXOBJ[i].obj, v); } }
   window.__B2OPT = Object.assign(window.__B2OPT || {}, {[v]: {walls: C.WALLGEO.length, opens: C.OPENRECTS.length, collidersAbsent: COLLIDERS.filter(c => c.__absent && c.__absent.has(v)).length, floorsAdded: C.FLOORS.filter(f => !baseF.has(f.bim2)).length,
     furnHidden: B2OPT.hideFx.filter(e => e.vars.has(v)).length, furnAdded: add.length}}); }
@@ -20401,6 +20405,129 @@ function bim2TrimOut(){ if(!M.trimOut) M.trimOut = M.trimExt; }                 
         BIM2.setVariant(v && B2OPT.built[v] ? v : null);
         for(const e of B2OPT.hideFx){ const h = e.vars.has(ACTIVE_VAR); if(h && e.o.visible){ e.o.visible = false; e.hid = true; } else if(!h && e.hid){ e.o.visible = true; e.hid = false; } } } }catch(e){ console.warn('[bim2] variant', e); }
     return _av.apply(this, arguments); }; }
+/* concept r42 (tour/CONCEPT-4BR.md; package built by tour/bim2/tools/build_open4.py): what an option package can carry beyond walls and
+   floors, read from its own data. "Open great room" (open4) uses all of it; the two 2024 concepts carry none of it, so they are unchanged.
+   - furnishings with render.lib 'STAGE': staged like the house's own STAGING rows (staging.js, falling back to fixtures.js). at = the
+     centre of the piece on the floor (at[2] = height of a hung piece's canopy), rot 0 / 90 / 180 / 270 = facing east / north / west / south,
+     stageBack = the point is on the wall behind it, stageKey / stageOn / stageDx / stageDz / stageZ = decor sitting on a piece. They live
+     in 'furn@<option>' and join the furniture registry (on / off, drag in Design).
+   - lights: the option's own downlight list. While it shows, the house's instanced downlights give way to the option's, and a ceiling fan
+     whose light record the option does not have is hidden.
+   - clearRegion (scene.meta options[]): plan polygon; page-built pieces of the house standing there that belong to no option hide while it
+     shows (the kitchen pieces the option keeps stay).
+   - views (scene.meta options[]): named viewpoints in the world frame, for Design and for the QA hook window.__IDEA42. */
+const OPT42 = {staged: {}, cans: {}, cleared: {}};
+function opt42Stage(o){
+  const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.staged[v] != null || !(window.STAGE && STAGE.make)) return; OPT42.staged[v] = 0;
+  const rows = (D.furnishings || []).filter(f => f.render && f.render.lib === 'STAGE' && f.at); if(!rows.length) return;
+  const hosts = {}, g = grp('furn@' + v); let n = 0;
+  for(const f of rows){ try{
+      const yaw = (f.rot || 0) * Math.PI / 180, opts = Object.assign({}, f.params || {});
+      if(f.stageOn){ const h = hosts[f.stageOn]; if(!h) continue; const hs = h.userData.size; if(opts.mountY === undefined) opts.mountY = hs[2] + .005;
+        const d = STAGE.make(f.render.kind, opts), sz = d.userData.size;
+        d.position.set(f.stageDx || 0, 0, f.stageZ != null ? f.stageZ : hs[1] / 2 + (f.stageDz || 0) - sz[1] / 2); stagedShadows(d); d.userData.decor = true; h.add(d); continue; }
+      const [wx, wz] = W2(f.at[0], f.at[1]), d = STAGE.make(f.render.kind, opts), sz = d.userData.size, off = f.stageBack ? 0 : sz[1] / 2;
+      d.position.set(wx - Math.sin(yaw) * off, LV.main + (f.at[2] || 0), wz - Math.cos(yaw) * off); d.rotation.y = yaw; stagedShadows(d);
+      d.userData.el = f.id; g.add(d); if(f.stageKey) hosts[f.stageKey] = d; n++;
+      if(!(f.at[2] > 0)) try{ FURN.add(d, f.id, v, LV.main, {room: 'concept', wall: !!f.stageBack, outdoor: false}); }catch(e){}
+    }catch(e){ console.warn('[r42] stage', f.id, e); } }
+  for(const k in hosts){ try{ stageMergeDecor(hosts[k]); }catch(e){ console.warn('[r42] decor merge', k, e); } }
+  OPT42.staged[v] = n; }
+const opt42BaseCans = () => (typeof VAULT_CANS !== 'undefined' && VAULT_CANS) ? grp('ceil').children.filter(c => c.isInstancedMesh && (c.material === VAULT_CANS.ringM || c.material === VAULT_CANS.lensM)) : [];
+function opt42Cans(o){
+  const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.cans[v] !== undefined) return; OPT42.cans[v] = null;
+  if(!Array.isArray(D.lights) || typeof VAULT_CANS === 'undefined' || !VAULT_CANS || !VAULT_CANS.ringG || !opt42BaseCans().length) return;
+  const skip = new Set((VAULT_CANS.list || []).map(c => c.id)), room = id => ((BIM2S.spaceById[id] || {}).name || '');
+  let L = D.lights.filter(l => l.render && l.render.kind === 'recessedLight' && l.at).map(l => ({id: l.id, type: 'recessed', x: l.at[0], y: l.at[1], level: l.storey, room: room(l.space), z: l.at[2]}))
+    .concat((D.furnishings || []).filter(f => f.render && f.render.kind === 'inWallSpeaker' && f.params && f.params.ceiling && f.at).map(f => ({id: f.id, type: 'SPEAKER', x: f.at[0], y: f.at[1], level: f.storey, room: room(f.space)})));
+  try{ L = GARAGE22.cans(L); }catch(e){}
+  L = L.filter(c => !skip.has(c.id));
+  const sp = {}; for(const s of (D.spaces || [])) sp[s.id] = s;
+  const ceilAt = (c) => {   // the option's own ceiling where it has one (its new room), else the house's
+    const fz = LEVEL_Z[c.level] != null ? LEVEL_Z[c.level] : 0, S = (D.spaces || []).find(s => s.storey === c.level && BIM2.inPoly(s.polygon, c.x, c.y));
+    if(S && S.ceiling && S.ceiling.planes) for(const p of S.ceiling.planes){ if(p.poly && !BIM2.inPoly(p.poly, c.x, c.y)) continue; const P = p.P || {};
+      const z = P.c + (P.gx || 0) * c.x + (P.gy || 0) * c.y, nv = new THREE.Vector3(P.gy || 0, -1, P.gx || 0).normalize(); return {z, n: [nv.x, nv.y, nv.z]}; }
+    return bim2CeilingAt(c.x, c.y, fz); };
+  const iR = new THREE.InstancedMesh(VAULT_CANS.ringG, VAULT_CANS.ringM, L.length), iL = new THREE.InstancedMesh(VAULT_CANS.lensG, VAULT_CANS.lensM, L.length), q = new THREE.Quaternion(), m4 = new THREE.Matrix4();
+  let nL = 0;
+  L.forEach((c, i) => { const ce = ceilAt(c), [wx, wz] = W2(c.x, c.y), nv = new THREE.Vector3(...ce.n);
+    q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), nv.clone().negate());
+    m4.compose(new THREE.Vector3(wx, ce.z - .012, wz), q, new THREE.Vector3(1, 1, 1)); iR.setMatrixAt(i, m4);
+    if(!/SPEAKER/i.test(c.type)){ m4.compose(new THREE.Vector3(wx, ce.z - .03, wz), q, new THREE.Vector3(1, 1, 1)); iL.setMatrixAt(nL++, m4); } });
+  iL.count = nL; iR.userData.noAO = iL.userData.noAO = true; iR.userData.r42cans = iL.userData.r42cans = v; grp('ceil@' + v).add(iR, iL);
+  OPT42.cans[v] = {n: L.length, lenses: nL}; }
+function opt42Clear(v, o){
+  if(OPT42.cleared[v]) return OPT42.cleared[v]; const R = o && o.clearRegion; if(!R || R.length < 3) return (OPT42.cleared[v] = []);
+  const keep = new Set(((o.data || {}).furnishings || []).map(f => f.id)), fx = new Map(FIXOBJ.map(F => [F.obj, F])), B = new THREE.Box3(), out = [];
+  for(const k of ['main', 'furn', 'ceil', 'trim']){ const G = GROUPS[k]; if(!G) continue;
+    for(const c of G.children){ if(c.isInstancedMesh || (c.userData && (c.userData.kind === 'ceilingFan' || c.userData.bim2))) continue;
+      const F = fx.get(c); if(F && (F.v || keep.has(F.id))) continue;
+      B.setFromObject(c); if(B.isEmpty()) continue; const sx = B.max.z - B.min.z, sy = B.max.x - B.min.x;
+      if(sx > 14 || sy > 14 || B.max.y < -.5 || B.min.y > 13) continue;
+      if(!BIM2.inPoly(R, (B.min.z + B.max.z) / 2, (B.min.x + B.max.x) / 2)) continue;
+      out.push(c); } }
+  window.__R42cleared = Object.assign(window.__R42cleared || {}, {[v]: out.map(c => c.name || (c.userData && (c.userData.kind || c.userData.el)) || c.type)});
+  return (OPT42.cleared[v] = out); }
+function opt42Vis(){
+  const on = typeof BIM2S !== 'undefined' && BIM2S && ACTIVE_VAR !== 'asbuilt', o = on ? BIM2.option(ACTIVE_VAR) : null, D = o && o.data, v = ACTIVE_VAR;
+  const own = !!(D && OPT42.cans[v]);
+  for(const c of opt42BaseCans()){ if(own){ if(c.visible){ c.visible = false; c.userData.r42 = true; } } else if(c.userData.r42){ c.visible = true; c.userData.r42 = false; } }
+  const lids = D && Array.isArray(D.lights) && D.lights.length ? new Set(D.lights.map(l => l.id)) : null;
+  for(const c of (GROUPS.furn ? GROUPS.furn.children : [])){ const u = c.userData; if(u.kind !== 'ceilingFan' || !u.lid) continue;
+    const hide = !!(lids && !lids.has(u.lid)); if(hide && c.visible){ c.visible = false; u.r42 = true; } else if(!hide && u.r42){ c.visible = true; u.r42 = false; } }
+  const clr = new Set(o && B2OPT.built[v] ? opt42Clear(v, o) : []);
+  for(const k in OPT42.cleared) for(const c of OPT42.cleared[k]){ const hide = clr.has(c); if(hide && c.visible){ c.visible = false; c.userData.r42c = true; } else if(!hide && c.userData.r42c){ c.visible = true; c.userData.r42c = false; } } }
+/* the page's door and closet colliders (a shut door blocks a walker) are built for the as-built openings; one an option removes stops
+   colliding while that option shows, so a walker crosses the floor where a removed closet or pocket door was */
+function opt42Doors(o){
+  const v = o.legacyId || o.id, G = gone35(v); if(!G || !G.size) return 0;
+  const R = (BASE_OPENRECTS || OPENRECTS).filter(r => G.has(r.id)); let n = 0;
+  for(const c of COLLIDERS){ if(c.bim2 || c.tree || (c.v != null && c.v !== '__none')) continue; const cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2;
+    if(!R.some(r => cx >= r[0] - .08 && cx <= r[2] + .08 && cz >= r[1] - .08 && cz <= r[3] + .08)) continue;
+    const d = Object.getOwnPropertyDescriptor(c, 'v');
+    if(d && d.get){ if(c.__absent) c.__absent.add(v); }
+    else { const ab = new Set([v]); Object.defineProperty(c, '__absent', {value: ab, enumerable: false}); Object.defineProperty(c, 'v', {get: () => ab.has(ACTIVE_VAR) ? '__none' : null, set: () => {}, configurable: true, enumerable: true}); }
+    n++; }
+  return n; }
+{ const _od = bim2OptionData; bim2OptionData = function(o){ const r = _od.apply(this, arguments); try{ opt42Stage(o); }catch(e){ console.warn('[r42] stage', e); } try{ opt42Cans(o); }catch(e){ console.warn('[r42] cans', e); }
+    try{ OPT42.doors = Object.assign(OPT42.doors || {}, {[o.legacyId || o.id]: opt42Doors(o)}); }catch(e){ console.warn('[r42] doors', e); } return r; }; }
+{ const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); try{ opt42Vis(); }catch(e){ console.warn('[r42] visibility', e); } return r; }; }
+/* QA hook (?qa=1 and the page console): window.__IDEA42.plans() lists the floor plans with their facts; set(id) shows one in Design;
+   view(name) stands at one of the option's viewpoints in its walk-through (or, for 'aerial' and 'street', in Design with the
+   roof off / on); navCheck(R, qa) walks the option (called by __TOUR.navCheck's 'ideas' section). */
+window.__IDEA42 = {
+  plans(){ const A = (BIM2S && BIM2S.meta.asBuilt) || {name: 'As built'}; return [Object.assign({id: 'asbuilt'}, A)].concat(bim2DesignOptions().map(d => ({id: d.id, name: DESIGN.nameOf(d.id), beds: d.beds, baths: d.baths, office: d.office, label: d.label || null, description: d.description || null}))); },
+  async set(v){ v = v || 'asbuilt'; if(v !== 'asbuilt'){ const ok = await bim2EnsureOption(v); if(!ok) return 'not loaded'; }
+    if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return ACTIVE_VAR; },
+  async view(name, v){
+    v = v || (ACTIVE_VAR !== 'asbuilt' ? ACTIVE_VAR : 'open4'); const o = BIM2.option(v), w = o && o.views && o.views[name]; if(!w) return 'no view ' + name;
+    await this.set(v);
+    if(name === 'aerial'){ DESIGN.view(.01); return 'design layout view'; }
+    if(name === 'street'){ try{ setLevel('roof', {keepCam: true, instant: true}); }catch(e){} flyTo(w.pos, w.look, 'orbit', .01); return 'design, roof on'; }
+    setMode('walk', {keep: true}); feet = 0; anim = null; glide = null; nav = 'look'; camera.position.set(...w.pos); camera.lookAt(new THREE.Vector3(...w.look)); lookFromCamera();
+    return ACTIVE_VAR; },
+  /* walk the option: every viewpoint and a grid over its new room must be standable floor (eye at standing height, not in a wall), the
+     removed walls' lines must be free to cross, and the rebuilt walls must still stop a walker */
+  async navCheck(R, qa){
+    for(const d of bim2DesignOptions()){ const o = BIM2.option(d.id); if(!o || !o.views) continue; const v = d.id;
+      const ok = await bim2EnsureOption(v); if(!ok){ R.fail('ideas', v, 'option package did not load'); continue; }
+      await this.set(v); setMode('walk', {keep: true}); if(ACTIVE_VAR !== v){ R.fail('ideas', v, 'walk-through shows ' + ACTIVE_VAR); continue; }
+      for(const [name, w] of Object.entries(o.views)){ if(w.pos[1] > 8) continue;
+        qa.moveTo(w.pos[0], w.pos[2], 0); qa.finish(); qa.step(1); const m = qa.probe(); R.row('ideas', v + ':' + name, m);
+        if(Math.abs(m.eye - EYE) > .15) R.fail('ideas', v + ':' + name, 'eye ' + m.eye + ' ft over the floor');
+        const g = qa.geo(m); if(g) R.fail('ideas', v + ':' + name, g); }
+      const reg = o.clearRegion || []; let n = 0, bad = 0;
+      for(let x = 15; x <= 36; x += 1.5) for(let y = 6; y <= 31; y += 1.5){ if(reg.length && !BIM2.inPoly(reg, x, y)) continue; const [wx, wz] = W2(x, y);
+        const f = walkSurfaceAt(wx, wz, .6), p = {x: wx, z: wz}; qa.collide(p, f); n++;
+        if(Math.abs(f) > .05){ bad++; R.fail('ideas', v + ':floor@' + x + ',' + y, 'no floor (' + f.toFixed(2) + ')'); } }
+      for(const [a, b, want] of (o.walkTests || [])){ const [ax, az] = W2(a[0], a[1]), [bx, bz] = W2(b[0], b[1]), L = Math.hypot(bx - ax, bz - az), k = Math.ceil(L / .25); let stopped = null;
+        for(let i = 0; i <= k; i++){ const p = {x: ax + (bx - ax) * i / k, z: az + (bz - az) * i / k}, p0 = {x: p.x, z: p.z}; qa.collide(p, 0); if(Math.hypot(p.x - p0.x, p.z - p0.z) > .05){ stopped = [+(p0.z).toFixed(2), +(p0.x).toFixed(2)]; break; } }
+        const id = v + ':' + a.join(',') + '>' + b.join(','); R.row('ideas', id, {stopped});
+        if(want === 'open' && stopped) R.fail('ideas', id, 'a walker is stopped at bim ' + stopped + ' (a removed wall still collides?)');
+        if(want === 'wall' && !stopped) R.fail('ideas', id, 'a walker passes through a wall'); }
+      R.note('ideas', v, n + ' floor samples, ' + bad + ' without floor; cleared ' + ((window.__R42cleared || {})[v] || []).length + ' house pieces; cans ' + JSON.stringify(OPT42.cans[v]) + '; staged ' + OPT42.staged[v]); }
+    setMode('tour'); qa.finish(); }
+};
 /* ---- the page modules that used to read the legacy model (landscape, Halloween props, AV, light fixtures) read the scene meta
    through these views, in the legacy record shapes they consume (BIM plan frame: x east, y north, feet). Lookup only. ---- */
 const B2L = {
@@ -20713,7 +20840,7 @@ function bim3StageSettle(){
 }
 { const _sc3 = stg33Check; stg33Check = function(){ try{ bim3StageSettle(); }catch(e){ console.warn('[bim3] stage settle', e); } return _sc3.apply(this, arguments); }; }
 /* Design tab order (owner/OPTIONS 11/3): jan24 "Open Plan" first, then apr24b "Semi-Open Plan" */
-{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
+{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1, open4: 2}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
 /* rack wire deck: library-less render material 'wire-deck' (kernel BI3) = white 2" x 4" wire grid, alpha-tested (UV = feet) */
 BIM2_MATKEY['wire-deck'] = 'bim3WireDeck';
 { const _bl3 = bim2Load; bim2Load = async function(){
