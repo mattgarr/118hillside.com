@@ -6805,19 +6805,24 @@ function navQA(){
     const g = cv.getContext('2d', {willReadFrequently: true}), rows = [], chk = R40L.chk || 1.5, chkS = R40L.chkStops || .045;
     const grab = () => { g.drawImage(canvas, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data, L = new Float32Array(W * H); for(let i = 0; i < W * H; i++) L[i] = .2126 * d[i * 4] + .7152 * d[i * 4 + 1] + .0722 * d[i * 4 + 2]; return L; };
     const frame = () => { vt += dt * 1000; tick0(true); return grab(); };
-    const D = new Float32Array(W * H), med = () => { const b = Array.from(D).sort((x, y) => x - y); return b[b.length >> 1]; };
+    // the lighting step: the median change over the pixels that changed by less than 24 / 255 (a door leaf or frame sweeping across the
+    // view changes its pixels by much more than that and drops out; a lighting change shifts nearly every pixel by about the same)
+    const D = new Float32Array(W * H), med = () => { const b = Array.from(D).filter(v => Math.abs(v) < 24).sort((x, y) => x - y); return b.length < W * H * .3 ? 0 : b[b.length >> 1]; };
+    const lst = () => ({k: +EXPO_IN.toFixed(3), env: +R40X.k.toFixed(3), cov: +R40L.covP.toFixed(3), e: +renderer.toneMappingExposure.toFixed(4), room: LIGHT_ENV_ID, in: ENV_INSIDE});
     const seq = o.lightMoves ? o.lightMoves.map(p => p.map(v => typeof v === 'string' ? ix(v) : v)) : STOPS.map((s, i) => [i, i + 1]).filter(p => p[1] < STOPS.length).concat(STOPS.map((s, i) => [STOPS.length - 1 - i, STOPS.length - 2 - i]).filter(p => p[1] >= 0));
     const settle = n => { for(let i = 0; i < n; i++){ vt += dt * 1000; tick0(true); } };
     performance.now = () => vt; R37S.qaNoDraw = false;
     try{
       for(const [a, b] of seq){ await pause(); const id = STOPS[a].id + '>' + STOPS[b].id; tour(a); settle(o.lightSettle || 90);
-        let p = grab(), e0 = renderer.toneMappingExposure, tod0 = TOD_KEY, n = 0, after = 0, worst = 0, at = 0, wE = 0, todCh = false; const fades0 = R40X.fades;
+        let p = grab(), e0 = renderer.toneMappingExposure, tod0 = TOD_KEY, n = 0, after = 0, worst = 0, at = 0, wE = 0, todCh = false, cuts = 0, s0 = lst(), sAt = null; const fades0 = R40X.fades, P0 = camera.position.clone();
         showStop(b); const A = anim;
-        while(n < 1500 && ((A && anim === A) || after++ < 45)){ const c = frame(); n++; for(let i = 0; i < W * H; i++) D[i] = c[i] - p[i]; const m = Math.abs(med()), e = renderer.toneMappingExposure, es = Math.abs(Math.log2(e / e0));
-          if(TOD_KEY !== tod0) todCh = true; if(m > worst){ worst = m; at = n; } if(es > wE) wE = es; p = c; e0 = e; tod0 = TOD_KEY; }
-        const row = {id, frames: n, step: +worst.toFixed(2), at, stops: +wE.toFixed(4), fades: R40X.fades - fades0, tod: todCh}; rows.push(row);
+        while(n < 1500 && ((A && anim === A) || after++ < 45)){ const c = frame(); n++; for(let i = 0; i < W * H; i++) D[i] = c[i] - p[i]; const e = renderer.toneMappingExposure, es = Math.abs(Math.log2(e / e0)), s1 = lst();
+          const cut = camera.position.distanceTo(P0) > R40L.jump; P0.copy(camera.position); if(TOD_KEY !== tod0) todCh = true;
+          if(cut) cuts++; else { const m = Math.abs(med()); if(m > worst){ worst = m; at = n; sAt = [s0, s1]; } if(es > wE) wE = es; }   // a cut (the camera jumps) changes the whole picture: not a lighting step
+          p = c; e0 = e; tod0 = TOD_KEY; s0 = s1; }
+        const row = {id, frames: n, step: +worst.toFixed(2), at, stops: +wE.toFixed(4), fades: R40X.fades - fades0, tod: todCh, cuts, state: sAt}; rows.push(row);
         if(todCh){ R.note('light', id, 'changes the time of day (not judged): largest step ' + row.step + ' / 255'); continue; }
-        if(worst > chk) R.fail('light', id, 'a one-frame lighting step of ' + row.step + ' / 255 at frame ' + at + ' (' + Math.round(1 / dt) + ' fps)');
+        if(worst > chk) R.fail('light', id, 'a one-frame lighting step of ' + row.step + ' / 255 at frame ' + at + ' (' + Math.round(1 / dt) + ' fps); lighting state ' + JSON.stringify(sAt));
         if(wE > chkS) R.fail('light', id, 'the exposure moved ' + row.stops + ' stops in one frame');
         R.note('light', id, n + ' frames, largest lighting step ' + row.step + ' / 255, exposure ' + row.stops + ' stops/frame, ' + row.fades + ' environment fades'); }
       // the same view from two histories settles to the same exposure
