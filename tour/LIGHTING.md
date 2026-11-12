@@ -178,3 +178,53 @@ Same view from two histories (4 views): exposure within 0.00-0.01 %.
 Phone viewport (375x812 emulated, phone path), median frame time / draw calls, main -> r40: street 25.7 -> 24.7 ms (1399 calls
 both), living 25.2 -> 23.8 (1153), great 9.2 -> 10.0 (176), kitchen 27.2 -> 29.7 (1373), primary 12.4 -> 14.5 (354), terrace
 19.4 -> 16.9 (586); programs 50 -> 51 (the crossfade quad). Within run-to-run noise; no added draw calls or passes.
+
+## 6. Baked and traced indirect light (prototype, `?gi=1` / `?gi=2`, r43)
+
+Not on the live path: without `?gi=` the page never requests `gi.js`. Files: `gi.js` (run time), `gi-bake.js` (the WebGL2 path
+tracer, `?gi=bake`), `gi-rt.js` (tier B), `gi-qa.js` (captures, `&giqa=1`), `gi/index.json` + `gi/gi-r43-2.bin` (the data).
+
+**Tier A, baked probes (`?gi=1`).** A 21 x 12 x 39 grid, 1.25 ft apart, over the kitchen, great room and living room; 3,002 probes
+in the rooms' own air, 4,096 paths each, baked on the owner's Mac GPU (about 7 minutes). Components: sky and unit-sun bounce at 14
+sun positions (sky as 6 principal volumes, the sun exact), the lamps, and a directional ambient-occlusion volume (0.4 ft, radius 1.5 ft).
+Every standard material in the rooms takes its diffuse indirect light from it; the sun and its shadows stay real time.
+
+**Tier B, traced at rest (`?gi=2`, desktop).** When the camera stands still, each pixel's surface point sends cosine-weighted rays
+through the same BVH. Nothing within 4 ft: the probes' own radiance for that direction. Something within 4 ft: that surface's albedo
+times the sun (a shadow ray), the lamps and the probes' light arriving on it. The running mean is kept as an irradiance cache in the
+screen of the pose it was traced from; materials find their value by projecting their world position into that pose, so it stays
+valid while the camera then moves and falls back to the probes where a surface was hidden. 384 samples take 2-3 s on an M5 Max.
+
+**Units and exposure.** Sun, sky and lamps are traced in the page's own light units; nothing is rescaled per room or per time.
+One camera constant, `GI.EV` = 5.5 stops: the page draws interiors as a real-estate photograph does (exposed for the room, windows
+pulled back), so its daylight indoors sits a fixed number of stops above the physical bounce of its own sun and sky (measured at
+midday: the painted indoor light is 48x the traced mean, 5.6 stops). Daylight components are lifted by 2^EV, the same in every
+room and at every time; the lamps were authored at interior exposure and are not lifted. The r40 meter then exposes the frame.
+
+**White balance.** The cream cast of r42 was real physics (the oak floor's bounce; its albedo .50 / .36 / .24 was measured from
+listing photo p01 against the white cabinets). A camera balances it away, so the rooms' mean bounce under a white sun and sky is
+taken to neutral (strength .9), plus half of the illuminant's own colour. No surface is whiter than paint (albedo capped at .85).
+
+**The ceiling stripes.** Not the AO grid's size: the BIM space reaches above the built ceiling, and probes and AO voxels in that
+roof void were dark / closed-below and were interpolated into the ceiling under them. The bake now keeps only probes and voxels
+joined to the rooms' air (a short ray to each neighbour, the largest set that holds the eye-level points), and the AO is stored
+per direction (visibility as a + b.n), so a surface reads the openness of its own side.
+
+### 6.1 Whole-house plan
+
+1. **Coverage by region, as built first.** Five probe regions (main-floor public rooms, main bedrooms and baths, entry and stairs,
+   upper floor, garage / rec room), each its own grid and file, loaded when the camera's room first needs it. The run-time already
+   takes one region; it needs a region table and a second pair of textures for the hand-over (the feathered mask is in place).
+2. **Size budget: 2.5 MB for the house, about 0.5 MB per region**, against 0.82 MB for the three rooms today. Where it comes from:
+   store only the kept probes (3,002 of 9,828 cells are real; the rest is fill that can be rebuilt at load), the sun at 10 keys
+   instead of 14 exact (measured error 9 % at rank 12), AO at 0.5 ft and only near surfaces. Phones may skip the AO volume.
+3. **Bake time on the Mac GPU:** 15 s per component per 3,000 probes at 4,096 paths; the whole house is about 14,000 probes x 29
+   components = 35 minutes, plus AO (1 minute per region). Checkpointed in IndexedDB per component; a hidden tab works.
+4. **Design variants:** as built only. The variants move walls, so the volume is switched off for them (as now). Baking each variant
+   is 35 minutes and another 2.5 MB each; the better answer is step 6.
+5. **Doors and shades:** interior doors are baked open (their tour state). Sliders and shades change the light a room receives:
+   bake the two states of the great room's sliders / shades as one extra sky + sun set for that region and blend by the door's
+   position; other doors are left to tier B, which traces the scene as it stands once its BVH is rebuilt on a door event.
+6. **The step after: probes refreshed on the device (DDGI-style).** The same tracer updates a region's probes with a few thousand
+   rays a frame, so variants, doors, shades and the time of day need no files; the baked data becomes the first frame. This is the
+   route to covering everything, and to tier B on strong phones.
