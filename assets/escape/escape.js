@@ -809,7 +809,8 @@
     document.documentElement.style.setProperty('--sheet-h', Math.round(sheetE.getBoundingClientRect().height) + 'px');
     const free = freeArea(), pose = {yaw: a[0], pitch: a[1], fov: fitFov(po.fit, dist, free), off: [free.fx - .5, free.fy - .5]};
     rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], po.pos], pose, {dur, done: () => { rig.lim = {yaw: pose.yaw, pitch: pose.pitch, ry: .2, rp: .14}; if(done) done(); }}); }
-  function reframe(){ if(!S.ex) return; S.busy = true; frameExamine(.8, () => { S.busy = false; }); }
+  function reframe(){ if(!S.ex) return; const id = S.ex.id; S.busy = true; frameExamine(.8, () => { S.busy = false; const sp = SPOTS[id]; if(!S.ex || S.ex.id !== id) return;
+    try{ if(sp.seen) sp.seen(); }catch(e){ console.error('[escape] seen', e); } if(!sp.lock) sheetFor(S.ex); }); }
   function back(then){ if(!S.ex || rig.move || S.busy) return; const ex = S.ex; SND.back(); sheetE.classList.remove('on'); S.busy = true;
     const P = PLACES[S.place], pose = {yaw: ex.back.yaw, pitch: ex.back.pitch, fov: placeFov(P.fov), off: [0, 0]};
     rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], P.pos], pose, {dur: .85, done: () => { S.ex = null; S.busy = false; document.documentElement.classList.remove('esc-ex', 'esc-exsun'); setMarks(); if(typeof then === 'function') then(); }}); }
@@ -948,7 +949,7 @@
   const API = {H, THREE, S, has, give, can, fresh, sunIn, get LG(){ return LG; }, door, doorT, doorItem, shade, shadeT, shadeItem, opening, spacePoly, spaceFloor, inPoly,
     lightPlane, windowSource, makeStrips, buildPaper, paperLight, prop, paperCanvas, texOf, onFont, petAt, petWalk, yawTo, PETS, catAt, fadeCat, say, toast, goTo, examine, back, act, reframe,
     setSlider, sweepTo, sunKey, setGoal, setMarks, sheetFor, line, note, NOTES, setBook, bookRender, SND, PAW, ICO, esc, el, lin, wake, clamp, lerp, ease, smooth, sunDir, sunAlt,
-    rigTravel, rigCut, yp, aspect, placeFov, fadeThrough, win, finishCard, fmtT, fmtH, arcSVG, store, LIGHT, phone, reduce, hour: () => S.hour, place: () => S.place, ex: () => S.ex,
+    rig, rigTravel, rigCut, yp, aspect, placeFov, fadeThrough, win, finishCard, fmtT, fmtH, arcSVG, store, LIGHT, phone, reduce, hour: () => S.hour, place: () => S.place, ex: () => S.ex,
     get cat(){ return CAT; }, EYE, $, $$};
 
   /* ================================================================== Easy: Pop the Cork (the r35 level, with the shade fix)
@@ -1122,6 +1123,8 @@
   let lastT = performance.now(), lastTime = '';
   function frame(){ requestAnimationFrame(frame); const now = performance.now(), dt = Math.min(.1, (now - lastT) / 1000); lastT = now;
     try{ if(UI.live){ rigStep(now, dt); if(L && L.frame) L.frame(now, dt); }
+      // a shade on its way up or down moves the light under it
+      const mv = !!(window.BL35 && BL35.moving.size); if((mv && now - (UI.lu || 0) > 90) || (!mv && UI.blMv)){ UI.lu = now; LIGHT.update(); } UI.blMv = mv;
       if(S.busy && !rig.move){ if(!frame.busyAt) frame.busyAt = now; else if(now - frame.busyAt > 2600){ S.busy = false; frame.busyAt = 0; } } else frame.busyAt = 0;
       if(S.started){ marksStep(); mapStep(); coach();
         if(!S.done){ const ts = fmtT(elapsed()); if(ts !== lastTime){ lastTime = ts; $('#escTime').textContent = ts; if(+ts.split(':')[1] % 15 === 0) save(); }
