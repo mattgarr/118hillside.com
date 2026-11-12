@@ -24013,7 +24013,8 @@ function r41FurnCollect(){ if(!R40E.on) return 0; const S = R40E.furn = new Weak
       if(fs !== R41SH.fsig){ R41SH.fsig = fs; r41FurnCollect(); } }catch(e){ if(!R41SH.fwarn){ R41SH.fwarn = true; console.warn('[r41] furn', e); } }
     try{ const sig = (R28W.shades || []).length + ',' + (R28W.cells || []).length + ',' + (R28W.sky || []).length + ',' + (R28W.film || []).length + ',' + (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '');
       if(sig !== R41SH.sig){ R41SH.sig = sig; r41ShadeCollect(); }   // shades are built as the house loads (rollers, cells, skylights): collect again whenever that changes
-      r41ShadeFrame(); }catch(e){ if(!R41SH.warn){ R41SH.warn = true; console.warn('[r41] shades', e); } } return _rf41.apply(this, arguments); }; }
+      r41ShadeFrame(); if(GLASS20_EDGE){ if(GLASS20_EDGE.userData.r41em0 === undefined) GLASS20_EDGE.userData.r41em0 = GLASS20_EDGE.emissiveIntensity;
+        GLASS20_EDGE.emissiveIntensity = (DUSK || (typeof HW !== 'undefined' && HW.on)) ? 0 : GLASS20_EDGE.userData.r41em0; } }catch(e){ if(!R41SH.warn){ R41SH.warn = true; console.warn('[r41] shades', e); } } return _rf41.apply(this, arguments); }; }
 /* r41: the pergolas' translucent polycarbonate roofs (p26poly / p27poly) carried their midday "transmitted daylight" emissive (dayGlow
    .25 / .5) at every daytime light, so at golden hour, with the sun low and the sky dimmed, the sheet over the outdoor kitchen and the
    dining terrace still read as a lit panel. Like the shades, the daytime value now follows the light on the sheet's top face (sky share
@@ -24023,8 +24024,14 @@ function r41PolyScale(P, nm, Z){ if(!P || !P.mat || !P.mat[nm] || !Z || !Z.sheet
   const k = Math.min(1.2, r41ShadeLight(up, SUN_DIR, skyK, sunRel) / Math.max(.05, r41ShadeLight(up, r41ShadeDir(), 1, 1))), v = Z.sheet.dayGlow * k;
   if(P.group) P.group.traverse(o => { if(o.isMesh && o.name === nm) for(const x of [].concat(o.material)) if(x) x.emissiveIntensity = v; });
   P.mat[nm].emissiveIntensity = v; P.polyK = +k.toFixed(3); }
+{ const _p26 = p26TOD; p26TOD = function(){ const r = _p26.apply(this, arguments); try{ r41PolyScale(PERGOLA26, 'p26poly', PERGOLA26_SPEC); }catch(e){ console.warn('[r41] pergola sheet', e); } return r; };
+  const _p27 = p27TOD; p27TOD = function(){ const r = _p27.apply(this, arguments); try{ r41PolyScale(PERGOLA27, 'p27poly', PERGOLA27_SPEC); }catch(e){ console.warn('[r41] pergola sheet', e); } return r; }; }   // the pergolas call these when built and on every time-of-day change
 { const _s = setTOD; setTOD = function(){ const r = _s.apply(this, arguments);
-    try{ r41PolyScale(window.PERGOLA26, 'p26poly', window.PERGOLA26_SPEC); r41PolyScale(window.PERGOLA27, 'p27poly', window.PERGOLA27_SPEC); }catch(e){ console.warn('[r41] pergola sheet', e); } return r; }; }
+    /* r41: thick glass edges (glassEdge20: table tops, shelves, panels) carried a fixed green emissive (x.15) for the daylight piped
+       through the slab: at dusk they drew as faint green lines in a lamp-lit room. Daylight only; at dusk / night the edge is lit by the room */
+    try{ const night = !!DUSK || (typeof HW !== 'undefined' && HW.on); scene.traverse(o => { if(!o.isMesh) return; for(const m of [].concat(o.material)) if(m && m.name === 'glassEdge20'){
+        if(m.userData.r41em0 === undefined) m.userData.r41em0 = m.emissiveIntensity; m.emissiveIntensity = night ? 0 : m.userData.r41em0; } }); }catch(e){ console.warn('[r41] glass edge', e); }
+    return r; }; }
 // clear glass: no glow painted on the panes and no lamp-colour grade through them at dusk (rooms are seen lit through the glass instead)
 { const _g40 = glass20Frame; glass20Frame = function(){ _g40.apply(this, arguments); if(!R40E.on) return; GLASS20_U.gEm.value = 0; if(GRADE_PASS && GRADE_PASS.uniforms.wK) GRADE_PASS.uniforms.wK.value = 0; }; }
 /* ?qa=1: a contact sheet of tour views (stops, mid-flight points or poses) drawn after the lighting settles on a simulated clock,
