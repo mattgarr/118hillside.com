@@ -291,14 +291,22 @@ B.classify = async function(o = {}){ const g = B.grid, BS = H.BIM2S, N = g.nx * 
 /* which traced probes are in the rooms' own air: the BIM space reaches above the built ceiling in places (the void under the roof), and a
    probe there is dark and would band the ceiling below it. Probes are joined to their +x, +y, +z neighbours when nothing stands between
    them (one short ray each); the largest joined set that holds the eye-level probes is kept. Stored beside the bake's checkpoints. */
-B.reach = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get(tag + ':meta'), g = meta.grid, list = meta.list, N = g.nx * g.ny * g.nz, at = new Int32Array(N).fill(-1); list.forEach((i, k) => at[i] = k);
-  B.probes(list.map(gpos)); const blocked = []; for(const dir of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) blocked.push((await B.run('seg', {sun: dir, R: g.d, dirs: 1, passes: 1})).seg);
+async function joined(g, list, o = {}){ const N = g.nx * g.ny * g.nz, at = new Int32Array(N).fill(-1); list.forEach((i, k) => at[i] = k);
+  const pos = i => [g.x0 + (i % g.nx) * g.d, g.y0 + Math.floor(i / (g.nx * g.nz)) * g.d, g.z0 + (Math.floor(i / g.nx) % g.nz) * g.d];
+  const blocked = [new Float32Array(list.length), new Float32Array(list.length), new Float32Array(list.length)], stepN = o.batch || 60000;
+  for(let s0 = 0; s0 < list.length; s0 += stepN){ B.probes(list.slice(s0, s0 + stepN).map(pos)); for(let a = 0; a < 3; a++){ const r = await B.run('seg', {sun: [[1, 0, 0], [0, 1, 0], [0, 0, 1]][a], R: g.d, dirs: 1, passes: 1}); blocked[a].set(r.seg.subarray(0, Math.min(stepN, list.length - s0)), s0); } }
   const par = new Int32Array(list.length).map((_, i) => i), find = i => { while(par[i] !== i){ par[i] = par[par[i]]; i = par[i]; } return i; }, step = [1, g.nx * g.nz, g.nx];
   list.forEach((i, k) => { const x = i % g.nx, z = Math.floor(i / g.nx) % g.nz, y = Math.floor(i / (g.nx * g.nz)), ok = [x + 1 < g.nx, y + 1 < g.ny, z + 1 < g.nz];
     for(let a = 0; a < 3; a++){ if(!ok[a] || blocked[a][k] > .5) continue; const j = at[i + step[a]]; if(j >= 0) par[find(k)] = find(j); } });
   const cnt = new Map(); list.forEach((i, k) => { const y = g.y0 + Math.floor(i / (g.nx * g.nz)) * g.d; if(y > 3.5 && y < 6.5){ const r = find(k); cnt.set(r, (cnt.get(r) || 0) + 1); } });
-  const rooms = [...cnt.entries()].sort((a, b) => b[1] - a[1]), keepRoots = new Set(rooms.filter(r => r[1] >= (o.minEye || 12)).map(r => r[0])), keep = list.filter((i, k) => keepRoots.has(find(k)));
-  await B.put(tag + ':reach', keep); B.st.reach = {probes: list.length, kept: keep.length, sets: rooms.slice(0, 6).map(r => r[1])}; say('reach', JSON.stringify(B.st.reach)); return B.st.reach; };
+  const sets = [...cnt.entries()].sort((a, b) => b[1] - a[1]), roots = new Set(sets.filter(r => r[1] >= (o.minEye || 12)).map(r => r[0]));
+  return {keep: list.filter((i, k) => roots.has(find(k))), sets: sets.slice(0, 6).map(r => r[1])}; }
+B.reach = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get(tag + ':meta'), r = await joined(meta.grid, meta.list, o);
+  await B.put(tag + ':reach', r.keep); B.probes(meta.list.map(gpos)); B.st.reach = {probes: meta.list.length, kept: r.keep.length, sets: r.sets}; say('reach', JSON.stringify(B.st.reach)); return B.st.reach; };
+// the same for the AO voxels (a voxel in the roof void reads 'closed below' and banded the ceiling under it): the others are marked untraced
+B.reachAO = async function(o = {}){ const tag = o.tag || 'v1', rec = await B.get(tag + ':ao'), A = rec.grid, n = A.nx * A.ny * A.nz, list = []; for(let i = 0; i < n; i++) if(rec.ao[i * 5] >= 0 && rec.ao[i * 5] <= .25) list.push(i);
+  const r = await joined(A, list, Object.assign({minEye: 200}, o)), keep = new Uint8Array(n); for(const i of r.keep) keep[i] = 1; let cut = 0; for(const i of list) if(!keep[i]){ rec.ao[i * 5] = -1; cut++; }
+  await B.put(tag + ':ao', rec); B.st.reachAO = {voxels: list.length, cut, sets: r.sets}; say('reachAO', JSON.stringify(B.st.reachAO)); return B.st.reachAO; };
 
 /* ---------------- the whole bake: per key the sky and the unit sun, then the lamps at dusk; every component checkpointed ---------------- */
 B.KEYS = [{h: 7.75, doy: 288}, {h: 9.25, doy: 288}, {h: 10.75, doy: 288}, {h: 12.25, doy: 288}, {h: 13.75, doy: 288}, {h: 15.25, doy: 288}, {h: 16.5, doy: 288}, {h: 17.4, doy: 288}, {h: 18.15, doy: 288}, {h: 18.75, doy: 288, dusk: true},
