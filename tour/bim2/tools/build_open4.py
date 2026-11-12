@@ -489,6 +489,7 @@ CARD = {
     'description': 'The front and middle main-level bedrooms open into the great room: one vaulted living, dining and kitchen space with new glass toward the street. 4 bedrooms, 3 baths, plus office.',
     'note': 'Concept r42 (owner idea, 11/12/2026): remove the front and middle main-level bedrooms, keep the back bedroom and the hall bath; one cathedral room under the original gable with an exposed ridge beam; a 14-1/4 ft picture window and glazed gable on the street wall, a second north window. Status: illustrative, not designed or reviewed by an architect or engineer.',
     'status': 'illustrative', 'source': 'concept r42 (tour/CONCEPT-4BR.md)',
+    'pageExtras': True,   # the page stages its STAGE furniture, swaps in its own downlights, drops removed doors' colliders, clears its region
 }
 EXISTING_FACTS = {'OS-REMODEL-jan24': {'beds': 5, 'bedrooms': 5, 'baths': 3, 'office': True}, 'OS-REMODEL-apr24b': {'beds': 6, 'bedrooms': 6, 'baths': 3, 'office': True}}
 AS_BUILT = {'name': 'As built', 'beds': 6, 'bedrooms': 6, 'baths': 3, 'office': True, 'description': 'The house as it stands: six bedrooms (three on the main level, two on the lower level, the primary suite upstairs), three full baths and the skylit office.'}
@@ -507,11 +508,12 @@ def register(hide, hide_ranges, glb_sha):
                   'labels': [{'name': 'Living', 'at': [32.0, 18.4]}, {'name': 'Dining', 'at': [22.3, 18.4]}, {'name': 'Kitchen', 'at': [10.0, 12.0]},
                              {'name': 'Reading corner', 'at': [19.0, 28.6]}, {'name': 'Bedroom', 'at': [-0.8, 21.5]}, {'name': 'Bath', 'at': [9.4, 29.2]}],
                   'views': {
-                      'foyer': {'pos': [-5.5, 5.0, -2.3], 'look': [16.0, 4.6, 26.0]},
+                      'foyer': {'pos': [-4.0, 5.0, -3.0], 'look': [20.7, 4.7, 9.0]},
                       'kitchen': {'pos': [12.4, 5.0, 9.6], 'look': [18.6, 5.6, 36.6]},
+                      'window': {'pos': [19.8, 5.0, 14.6], 'look': [18.0, 6.3, 36.6]},
                       'street': {'pos': [18.4, 2.6, 52.0], 'look': [18.4, 6.4, 30.0]},
                       'backbed': {'pos': [23.9, 5.0, 4.6], 'look': [17.0, 5.8, 30.0]},
-                      'reading': {'pos': [29.8, 5.0, 33.6], 'look': [12.0, 5.2, 18.0]},
+                      'northeast': {'pos': [29.8, 5.0, 33.6], 'look': [12.0, 5.2, 18.0]},
                       'aerial': {'pos': [-12.0, 62.0, 52.0], 'look': [18.4, 0.0, 22.0]}}})
     opts = [o for o in meta['options'] if o['id'] != OPT_ID]
     for o in opts:

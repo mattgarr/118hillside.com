@@ -20385,7 +20385,7 @@ function bim2OptionData(o){                                            // walls 
   const D = o.data || {}, keep = new Set((D.furnishings || []).map(f => f.id)), baseIds = new Set((BIM2S.meta.furnishings || []).concat(BIM2S.meta.builtins || []).map(f => f.id)),
     biKinds = new Set((BIM2S.meta.builtins || []).map(b => b.kind));   // rule:option-skips-builtins - built-ins (downspouts, hatch, racks, closets, blinds) come from the kernel; the page drew them as 2-ft white placeholder cubes (owner 11/7)
   for(const F of FIXOBJ){ if(!F.id || !baseIds.has(F.id) || keep.has(F.id) || F.v) continue; let e = B2OPT.hideFx.find(q => q.o === F.obj); if(!e) B2OPT.hideFx.push(e = {o: F.obj, vars: new Set()}); e.vars.add(v); }
-  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN' && f.render.lib !== 'STAGE')   // r42: STAGE rows: opt42Stage.map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
+  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN' && f.render.lib !== 'STAGE' /* r42: STAGE rows are staged by opt42Stage */).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
   if(add.length){ const n0 = FIXOBJ.length; try{ buildFixturesBIM(add); }catch(e){ console.warn('[bim2] option furnishings', v, e); } for(let i = n0; i < FIXOBJ.length; i++){ FIXOBJ[i].v = v; if(window.__c22OnlyVar) __c22OnlyVar(FIXOBJ[i].obj, v); } }
   window.__B2OPT = Object.assign(window.__B2OPT || {}, {[v]: {walls: C.WALLGEO.length, opens: C.OPENRECTS.length, collidersAbsent: COLLIDERS.filter(c => c.__absent && c.__absent.has(v)).length, floorsAdded: C.FLOORS.filter(f => !baseF.has(f.bim2)).length,
     furnHidden: B2OPT.hideFx.filter(e => e.vars.has(v)).length, furnAdded: add.length}}); }
@@ -20448,7 +20448,8 @@ function bim2TrimOut(){ if(!M.trimOut) M.trimOut = M.trimExt; }                 
         for(const e of B2OPT.hideFx){ const h = e.vars.has(ACTIVE_VAR); if(h && e.o.visible){ e.o.visible = false; e.hid = true; } else if(!h && e.hid){ e.o.visible = true; e.hid = false; } } } }catch(e){ console.warn('[bim2] variant', e); }
     return _av.apply(this, arguments); }; }
 /* concept r42 (tour/CONCEPT-4BR.md; package built by tour/bim2/tools/build_open4.py): what an option package can carry beyond walls and
-   floors, read from its own data. "Open great room" (open4) uses all of it; the two 2024 concepts carry none of it, so they are unchanged.
+   floors, read from its own data. Only an option that says so (scene.meta options[] pageExtras: true) gets any of it: "Open great room"
+   (open4) does; the two 2024 concepts do not, so they show exactly as before.
    - furnishings with render.lib 'STAGE': staged like the house's own STAGING rows (staging.js, falling back to fixtures.js). at = the
      centre of the piece on the floor (at[2] = height of a hung piece's canopy), rot 0 / 90 / 180 / 270 = facing east / north / west / south,
      stageBack = the point is on the wall behind it, stageKey / stageOn / stageDx / stageDz / stageZ = decor sitting on a piece. They live
@@ -20459,8 +20460,9 @@ function bim2TrimOut(){ if(!M.trimOut) M.trimOut = M.trimExt; }                 
      shows (the kitchen pieces the option keeps stay).
    - views (scene.meta options[]): named viewpoints in the world frame, for Design and for the QA hook window.__IDEA42. */
 const OPT42 = {staged: {}, cans: {}, cleared: {}};
+const opt42On = o => !!(o && o.pageExtras);
 function opt42Stage(o){
-  const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.staged[v] != null || !(window.STAGE && STAGE.make)) return; OPT42.staged[v] = 0;
+  if(!opt42On(o)) return; const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.staged[v] != null || !(window.STAGE && STAGE.make)) return; OPT42.staged[v] = 0;
   const rows = (D.furnishings || []).filter(f => f.render && f.render.lib === 'STAGE' && f.at); if(!rows.length) return;
   const hosts = {}, g = grp('furn@' + v); let n = 0;
   for(const f of rows){ try{
@@ -20477,7 +20479,7 @@ function opt42Stage(o){
   OPT42.staged[v] = n; }
 const opt42BaseCans = () => (typeof VAULT_CANS !== 'undefined' && VAULT_CANS) ? grp('ceil').children.filter(c => c.isInstancedMesh && (c.material === VAULT_CANS.ringM || c.material === VAULT_CANS.lensM)) : [];
 function opt42Cans(o){
-  const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.cans[v] !== undefined) return; OPT42.cans[v] = null;
+  if(!opt42On(o)) return; const v = o.legacyId || o.id, D = o.data || {}; if(OPT42.cans[v] !== undefined) return; OPT42.cans[v] = null;
   if(!Array.isArray(D.lights) || typeof VAULT_CANS === 'undefined' || !VAULT_CANS || !VAULT_CANS.ringG || !opt42BaseCans().length) return;
   const skip = new Set((VAULT_CANS.list || []).map(c => c.id)), room = id => ((BIM2S.spaceById[id] || {}).name || '');
   let L = D.lights.filter(l => l.render && l.render.kind === 'recessedLight' && l.at).map(l => ({id: l.id, type: 'recessed', x: l.at[0], y: l.at[1], level: l.storey, room: room(l.space), z: l.at[2]}))
@@ -20515,15 +20517,15 @@ function opt42Vis(){
   const on = typeof BIM2S !== 'undefined' && BIM2S && ACTIVE_VAR !== 'asbuilt', o = on ? BIM2.option(ACTIVE_VAR) : null, D = o && o.data, v = ACTIVE_VAR;
   const own = !!(D && OPT42.cans[v]);
   for(const c of opt42BaseCans()){ if(own){ if(c.visible){ c.visible = false; c.userData.r42 = true; } } else if(c.userData.r42){ c.visible = true; c.userData.r42 = false; } }
-  const lids = D && Array.isArray(D.lights) && D.lights.length ? new Set(D.lights.map(l => l.id)) : null;
+  const lids = opt42On(o) && D && Array.isArray(D.lights) && D.lights.length ? new Set(D.lights.map(l => l.id)) : null;
   for(const c of (GROUPS.furn ? GROUPS.furn.children : [])){ const u = c.userData; if(u.kind !== 'ceilingFan' || !u.lid) continue;
     const hide = !!(lids && !lids.has(u.lid)); if(hide && c.visible){ c.visible = false; u.r42 = true; } else if(!hide && u.r42){ c.visible = true; u.r42 = false; } }
-  const clr = new Set(o && B2OPT.built[v] ? opt42Clear(v, o) : []);
+  const clr = new Set(opt42On(o) && B2OPT.built[v] ? opt42Clear(v, o) : []);
   for(const k in OPT42.cleared) for(const c of OPT42.cleared[k]){ const hide = clr.has(c); if(hide && c.visible){ c.visible = false; c.userData.r42c = true; } else if(!hide && c.userData.r42c){ c.visible = true; c.userData.r42c = false; } } }
 /* the page's door and closet colliders (a shut door blocks a walker) are built for the as-built openings; one an option removes stops
    colliding while that option shows, so a walker crosses the floor where a removed closet or pocket door was */
 function opt42Doors(o){
-  const v = o.legacyId || o.id, G = gone35(v); if(!G || !G.size) return 0;
+  if(!opt42On(o)) return 0; const v = o.legacyId || o.id, G = gone35(v); if(!G || !G.size) return 0;
   const R = (BASE_OPENRECTS || OPENRECTS).filter(r => G.has(r.id)); let n = 0;
   for(const c of COLLIDERS){ if(c.bim2 || c.tree || (c.v != null && c.v !== '__none')) continue; const cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2;
     if(!R.some(r => cx >= r[0] - .08 && cx <= r[2] + .08 && cz >= r[1] - .08 && cz <= r[3] + .08)) continue;
