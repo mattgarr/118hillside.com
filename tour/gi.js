@@ -23,7 +23,7 @@ const GI = window.GI = {mode: MODE, ver: 1, on: false, ready: false, why: 'loadi
   gain: +qp('gigain', 1), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
   base: qp('gibase', 'gi/'),
   U: {giOn: {value: 0}, giK: {value: 0}, giGain: {value: 1}, giHemi: {value: 1}, giSpec: {value: .7}, giAOK: {value: 1},
-    giT0: {value: null}, giT1: {value: null}, giT2: {value: null}, giAO: {value: null}, giRoom: {value: null},
+    giT0: {value: null}, giT1: {value: null}, giAO: {value: null}, giRoom: {value: null},
     giB0: {value: new V3()}, giBS: {value: new V3(1, 1, 1)}, giN: {value: new V3(1, 1, 1)}, giNOff: {value: .45},
     giRB: {value: new THREE.Vector4()}, giRY: {value: new THREE.Vector2(-1, 15)},
     giA0: {value: new V3()}, giAS: {value: new V3(1, 1, 1)}, giAN: {value: new V3(1, 1, 1)}, giAT: {value: new THREE.Vector2(1, 1)}, giAOff: {value: .2}}};
@@ -36,14 +36,15 @@ const G = '#if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_T
 function patchChunks(){ const C = THREE.ShaderChunk; if(C.__gi) return true; C.__gi = 1;
   C.envmap_physical_pars_fragment += `
 ${G}
-uniform float giOn, giK, giGain, giHemi, giSpec, giAOK, giNOff, giAOff; uniform sampler2D giT0, giT1, giT2, giAO, giRoom;
+uniform float giOn, giK, giGain, giHemi, giSpec, giAOK, giNOff, giAOff; uniform sampler2D giT0, giT1, giAO, giRoom;
 uniform vec3 giB0, giBS, giN, giA0, giAS, giAN; uniform vec4 giRB; uniform vec2 giRY, giAT;
 float giRoomW( vec3 P ){ vec2 uv = ( P.xz - giRB.xy ) * giRB.zw; if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 || P.y < giRY.x || P.y > giRY.y ) return 0.0; return texture2D( giRoom, uv ).r; }
 vec3 giIrr( vec3 P, vec3 n ){
   vec3 g = clamp( ( P - giB0 ) * giBS, vec3( 0.0 ), giN - 1.0 ); float y0 = floor( g.y ), f = g.y - y0, y1 = min( y0 + 1.0, giN.y - 1.0 );
   vec2 s = vec2( g.x + 0.5, g.z + 0.5 ) / vec2( giN.x, giN.z * giN.y ), u0 = s + vec2( 0.0, y0 / giN.y ), u1 = s + vec2( 0.0, y1 / giN.y );
-  vec4 A = mix( texture2D( giT0, u0 ), texture2D( giT0, u1 ), f ), B = mix( texture2D( giT1, u0 ), texture2D( giT1, u1 ), f ), C = mix( texture2D( giT2, u0 ), texture2D( giT2, u1 ), f );
-  return max( A.rgb + vec3( A.a, B.r, B.g ) * n.x + vec3( B.b, B.a, C.r ) * n.y + C.gba * n.z, vec3( 0.0 ) ); }
+  vec4 A = mix( texture2D( giT0, u0 ), texture2D( giT0, u1 ), f ); vec2 B = mix( texture2D( giT1, u0 ).rg, texture2D( giT1, u1 ).rg, f );
+  float l = max( dot( A.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ), 1e-6 );
+  return A.rgb * max( 1.0 + dot( vec3( A.a, B ), n ) / l, 0.0 ); }
 float giAOat( vec3 P ){
   vec3 g = clamp( ( P - giA0 ) * giAS, vec3( 0.0 ), giAN - 1.0 ); float y0 = floor( g.y ), f = g.y - y0, y1 = min( y0 + 1.0, giAN.y - 1.0 );
   vec2 s = vec2( g.x + 0.5, g.z + 0.5 ) / ( vec2( giAN.x, giAN.z ) * giAT );
@@ -109,21 +110,18 @@ async function load(){ try{
     GI.data = decode(ix, raw); setupTextures(); GI.ready = true; GI.why = 'ok'; say('data', ix.version, ix.bytes); }
   catch(e){ GI.why = 'no data: ' + (e && e.message || e); console.warn('[gi]', GI.why); } }
 GI.useData = (ix, raw) => { GI.index = ix; GI.data = decode(ix, raw); setupTextures(); GI.ready = true; GI.why = 'ok'; GI.last = ''; };   // the bake page hands its result in directly
+// volumes decode to Float32Array(6 * NP): L0 r, g, b and the luminance L1 x, y, z per probe (enc 'sq8': 6 planes of NP bytes, v = sign(t) t^2 m)
 function decode(ix, u8){ const g = ix.grid, NP = g.nx * g.ny * g.nz, vols = []; let o = 0;
-  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
-  for(const v of ix.vols){ const F = new Float32Array(12 * NP);
-    if(v.enc === 'q8'){   // per value: (q / 255) * (hi - lo) + lo, ranges per channel group
-      for(let p = 0; p < NP; p++) for(let k = 0; k < 12; k++){ const r = v.r[k]; F[p * 12 + k] = u8[o + k * NP + p] / 255 * (r[1] - r[0]) + r[0]; } o += 12 * NP; }
-    else if(v.enc === 'q16'){ for(let p = 0; p < NP; p++) for(let k = 0; k < 12; k++){ const r = v.r[k]; F[p * 12 + k] = dv.getUint16(o + (k * NP + p) * 2, true) / 65535 * (r[1] - r[0]) + r[0]; } o += 24 * NP; }
-    else if(v.enc === 'f32'){ for(let i = 0; i < 12 * NP; i++) F[i] = dv.getFloat32(o + i * 4, true); o += 48 * NP; }
+  for(const v of ix.vols){ const C = v.C || 6, F = new Float32Array(6 * NP);
+    for(let c = 0; c < C; c++){ const m = v.m[c]; for(let p = 0; p < NP; p++){ const t = (u8[o + c * NP + p] - 128) / 127; F[p * 6 + c] = Math.sign(t) * t * t * m; } } o += C * NP;
     vols.push(Object.assign({F}, v)); }
   let ao = null; if(ix.ao){ const A = ix.ao, n = A.nx * A.ny * A.nz; ao = u8.subarray(o, o + n); o += n; }
   return {NP, vols, ao}; }
 function setupTextures(){ const ix = GI.index, g = ix.grid, U = GI.U, NP = g.nx * g.ny * g.nz;
-  GI.half = [0, 1, 2].map(() => new Uint16Array(NP * 4));
+  GI.half = [0, 1].map(() => new Uint16Array(NP * 4));
   GI.tex = GI.half.map(h => { const t = new THREE.DataTexture(h, g.nx, g.nz * g.ny, THREE.RGBAFormat, THREE.HalfFloatType); t.magFilter = t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; });
-  [U.giT0.value, U.giT1.value, U.giT2.value] = GI.tex; U.giB0.value.set(g.x0, g.y0, g.z0); U.giBS.value.set(1 / g.d, 1 / g.d, 1 / g.d); U.giN.value.set(g.nx, g.ny, g.nz);
-  GI.acc = new Float32Array(NP * 12);
+  [U.giT0.value, U.giT1.value] = GI.tex; U.giB0.value.set(g.x0, g.y0, g.z0); U.giBS.value.set(1 / g.d, 1 / g.d, 1 / g.d); U.giN.value.set(g.nx, g.ny, g.nz);
+  GI.acc = new Float32Array(NP * 6);
   const A = ix.ao; if(A && GI.data.ao){ const tw = A.tx * A.nx, th = A.ty * A.nz, img = new Uint8Array(tw * th * 4).fill(255);
     for(let y = 0; y < A.ny; y++){ const ox = (y % A.tx) * A.nx, oz = Math.floor(y / A.tx) * A.nz;
       for(let z = 0; z < A.nz; z++) for(let x = 0; x < A.nx; x++){ const v = GI.data.ao[(y * A.nz + z) * A.nx + x], q = ((oz + z) * tw + ox + x) * 4; img[q] = img[q + 1] = img[q + 2] = v; } }
@@ -150,19 +148,18 @@ GI.inRegion = l => { const p = l.getWorldPosition ? l.getWorldPosition(new V3())
 GI.scales = function(S){ return GI.data.vols.map(v => { let k = 0; if(v.coef) for(let i = 0; i < S.w.length; i++) k += S.w[i] * v.coef[i];
   if(v.kind === 'sky') return S.tint.map(t => k * t); if(v.kind === 'sun') return S.sun.map(s => k * s); if(v.kind === 'lamp') return [S.lamp, S.lamp, S.lamp]; return [0, 0, 0]; }); };
 GI.compose = function(){ const S = GI.state(), sc = GI.scales(S), D = GI.data, NP = D.NP, A = GI.acc; A.fill(0);
-  D.vols.forEach((v, i) => { const s = sc[i]; if(Math.abs(s[0]) + Math.abs(s[1]) + Math.abs(s[2]) < 1e-7) return; const F = v.F;
-    for(let p = 0, o = 0; p < NP; p++, o += 12) for(let c = 0; c < 12; c += 3){ A[o + c] += F[o + c] * s[0]; A[o + c + 1] += F[o + c + 1] * s[1]; A[o + c + 2] += F[o + c + 2] * s[2]; } });
-  const [h0, h1, h2] = GI.half;
-  for(let p = 0, o = 0, q = 0; p < NP; p++, o += 12, q += 4){ h0[q] = toHalf(A[o]); h0[q + 1] = toHalf(A[o + 1]); h0[q + 2] = toHalf(A[o + 2]); h0[q + 3] = toHalf(A[o + 3]);
-    h1[q] = toHalf(A[o + 4]); h1[q + 1] = toHalf(A[o + 5]); h1[q + 2] = toHalf(A[o + 6]); h1[q + 3] = toHalf(A[o + 7]); h2[q] = toHalf(A[o + 8]); h2[q + 1] = toHalf(A[o + 9]); h2[q + 2] = toHalf(A[o + 10]); h2[q + 3] = toHalf(A[o + 11]); }
+  D.vols.forEach((v, i) => { const s = sc[i], sl = .2126 * s[0] + .7152 * s[1] + .0722 * s[2]; if(Math.abs(s[0]) + Math.abs(s[1]) + Math.abs(s[2]) < 1e-7) return; const F = v.F;
+    for(let o = 0; o < NP * 6; o += 6){ A[o] += F[o] * s[0]; A[o + 1] += F[o + 1] * s[1]; A[o + 2] += F[o + 2] * s[2]; A[o + 3] += F[o + 3] * sl; A[o + 4] += F[o + 4] * sl; A[o + 5] += F[o + 5] * sl; } });
+  const [h0, h1] = GI.half;
+  for(let p = 0, o = 0, q = 0; p < NP; p++, o += 6, q += 4){ h0[q] = toHalf(Math.max(0, A[o])); h0[q + 1] = toHalf(Math.max(0, A[o + 1])); h0[q + 2] = toHalf(Math.max(0, A[o + 2])); h0[q + 3] = toHalf(A[o + 3]); h1[q] = toHalf(A[o + 4]); h1[q + 1] = toHalf(A[o + 5]); }
   for(const t of GI.tex) t.needsUpdate = true; GI.composes++; GI.S = S; return S; };
 // what the volume gives at a point and normal (QA), from the composed (float) data
-GI.at = function(x, y, z, n = [0, 1, 0]){ const g = GI.index.grid, A = GI.acc, f = [(x - g.x0) / g.d, (y - g.y0) / g.d, (z - g.z0) / g.d].map((v, i) => Math.max(0, Math.min([g.nx, g.ny, g.nz][i] - 1, v)));
-  const i0 = f.map(Math.floor), t = f.map((v, i) => v - i0[i]), out = [0, 0, 0];
-  for(let c = 0; c < 8; c++){ const ii = [c & 1, (c >> 1) & 1, (c >> 2) & 1].map((b, k) => Math.min([g.nx, g.ny, g.nz][k] - 1, i0[k] + b)), w = [0, 1, 2].reduce((s, k) => s * (((c >> k) & 1) ? t[k] : 1 - t[k]), 1);
-    const o = ((ii[1] * g.nz + ii[2]) * g.nx + ii[0]) * 12; for(let k = 0; k < 3; k++) out[k] += w * (A[o + k] + A[o + 3 + k] * n[0] + A[o + 6 + k] * n[1] + A[o + 9 + k] * n[2]); }
-  return out.map(v => +Math.max(0, v).toFixed(5)); };
-
+GI.at = function(x, y, z, n = [0, 1, 0]){ const g = GI.index.grid, A = GI.acc, dims = [g.nx, g.ny, g.nz], f = [(x - g.x0) / g.d, (y - g.y0) / g.d, (z - g.z0) / g.d].map((v, i) => Math.max(0, Math.min(dims[i] - 1, v)));
+  const i0 = f.map(Math.floor), t = f.map((v, i) => v - i0[i]), a = [0, 0, 0], b = [0, 0, 0];
+  for(let c = 0; c < 8; c++){ const ii = [0, 1, 2].map(k => Math.min(dims[k] - 1, i0[k] + ((c >> k) & 1))), w = [0, 1, 2].reduce((s, k) => s * (((c >> k) & 1) ? t[k] : 1 - t[k]), 1);
+    const o = ((ii[1] * g.nz + ii[2]) * g.nx + ii[0]) * 6; for(let k = 0; k < 3; k++){ a[k] += w * Math.max(0, A[o + k]); b[k] += w * A[o + 3 + k]; } }
+  const l = Math.max(1e-6, .2126 * a[0] + .7152 * a[1] + .0722 * a[2]), m = Math.max(0, 1 + (b[0] * n[0] + b[1] * n[1] + b[2] * n[2]) / l);
+  return a.map(v => +(v * m).toFixed(5)); };
 /* ---------------- each frame (before the page draws) ---------------- */
 let lastT = 0;
 GI.frame = function(){ const H = GI.H; if(!H) return; GI.n++;

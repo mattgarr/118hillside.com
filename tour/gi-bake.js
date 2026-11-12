@@ -328,39 +328,42 @@ function denoise(F, valid, g, k){ if(!(k > 0)) return; const N = g.nx * g.ny * g
     for(const [dx, dy, dz] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= g.nx || Y >= g.ny || Z >= g.nz) continue; const j = (Y * g.nz + Z) * g.nx + X; if(!valid[j]) continue; n += k; for(let c = 0; c < 12; c++) s[c] += k * G[j * 12 + c]; }
     for(let c = 0; c < 12; c++) F[i * 12 + c] = s[c] / n; } }
 // low rank (no centring, so a blend of keys stays a blend of coefficients): x_k = sum_b coef[k][b] * basis_b
-function pca(vols0, used, energy, maxR){ const K = vols0.length, G = Array.from({length: K}, () => new Array(K).fill(0));
+const C6 = 6;   // stored per probe and volume: L0 rgb, then the luminance L1 (x, y, z); gi.js gives the L1 the probe's composed colour
+function mono(F){ const N = F.length / 12, M = new Float32Array(N * C6); for(let i = 0; i < N; i++){ const o = i * 12, q = i * C6; M[q] = F[o]; M[q + 1] = F[o + 1]; M[q + 2] = F[o + 2];
+    for(let k = 0; k < 3; k++) M[q + 3 + k] = .2126 * F[o + 3 + 3 * k] + .7152 * F[o + 4 + 3 * k] + .0722 * F[o + 5 + 3 * k]; } return M; }
+function pca(vols0, used, energy, maxR){ const K = vols0.length, G = Array.from({length: K}, () => new Array(K).fill(0)), C = C6;
   // each key normalised first, so a dim key (dusk) is kept as well as a bright one; its norm goes back into its coefficients
-  const nrm = vols0.map(X => { let s = 0; for(const i of used) for(let c = 0; c < 12; c++) s += X[i * 12 + c] * X[i * 12 + c]; return Math.sqrt(s) || 1; }), vols = vols0.map((X, k) => X.map(v => v / nrm[k]));
-  for(let a = 0; a < K; a++) for(let b = a; b < K; b++){ let s = 0; const A = vols[a], Bv = vols[b]; for(const i of used) for(let c = 0; c < 12; c++) s += A[i * 12 + c] * Bv[i * 12 + c]; G[a][b] = G[b][a] = s; }
+  const nrm = vols0.map(X => { let s = 0; for(const i of used) for(let c = 0; c < C; c++) s += X[i * C + c] * X[i * C + c]; return Math.sqrt(s) || 1; }), vols = vols0.map((X, k) => X.map(v => v / nrm[k]));
+  for(let a = 0; a < K; a++) for(let b = a; b < K; b++){ let s = 0; const A = vols[a], Bv = vols[b]; for(const i of used) for(let c = 0; c < C; c++) s += A[i * C + c] * Bv[i * C + c]; G[a][b] = G[b][a] = s; }
   const {val, vec} = jacobi(G, K), tot = val.reduce((x, y) => x + Math.max(0, y), 0); let r = 0, acc = 0; while(r < Math.min(K, maxR || K) && (acc < energy * tot || r < 1)){ acc += Math.max(0, val[r]); r++; }
-  const N = vols[0].length / 12, bases = [], coef = Array.from({length: K}, () => new Array(r).fill(0));
-  for(let b = 0; b < r; b++){ const sl = Math.sqrt(Math.max(1e-30, val[b])), U = new Float32Array(N * 12); for(let k = 0; k < K; k++){ const w = vec[b][k] / sl; if(!w) continue; const X = vols[k]; for(let i = 0; i < U.length; i++) U[i] += w * X[i]; }
-    // sign: the first basis positive in L0
-    let sg = 0; for(const i of used) sg += U[i * 12] + U[i * 12 + 1] + U[i * 12 + 2]; const f = sg < 0 ? -1 : 1; if(f < 0) for(let i = 0; i < U.length; i++) U[i] = -U[i];
+  const N = vols[0].length / C, bases = [], coef = Array.from({length: K}, () => new Array(r).fill(0));
+  for(let b = 0; b < r; b++){ const sl = Math.sqrt(Math.max(1e-30, val[b])), U = new Float32Array(N * C); for(let k = 0; k < K; k++){ const w = vec[b][k] / sl; if(!w) continue; const X = vols[k]; for(let i = 0; i < U.length; i++) U[i] += w * X[i]; }
+    let sg = 0; for(const i of used) sg += U[i * C] + U[i * C + 1] + U[i * C + 2]; const f = sg < 0 ? -1 : 1; if(f < 0) for(let i = 0; i < U.length; i++) U[i] = -U[i];
     for(let k = 0; k < K; k++) coef[k][b] = f * vec[b][k] * sl * nrm[k]; bases.push(U); }
   return {bases, coef, energy: acc / tot, val}; }
-function quant(F, used, NP, bits){ const r = [], mx = bits === 16 ? 65535 : 255, out = bits === 16 ? new Uint16Array(12 * NP) : new Uint8Array(12 * NP);
-  for(let c = 0; c < 12; c++){ let lo = 1e30, hi = -1e30; for(const i of used){ const v = F[i * 12 + c]; if(v < lo) lo = v; if(v > hi) hi = v; } if(!(hi > lo)){ lo = Math.min(0, lo); hi = lo + 1e-6; }
-    // zero must be exact (outside the used cells)
-    if(lo > 0) lo = 0; if(hi < 0) hi = 0; const sc = mx / (hi - lo), z = Math.round(-lo * sc); hi = lo + mx / sc; r.push([+lo.toPrecision(7), +hi.toPrecision(7)]);
-    for(let p = 0; p < NP; p++){ const v = used.has ? (used.has(p) ? F[p * 12 + c] : 0) : F[p * 12 + c]; out[c * NP + p] = Math.max(0, Math.min(mx, Math.round((v - lo) * sc))); } }
+// 8 bit, signed, square-root companded per channel (finer near zero, where the dark corners are): v = sign(t) t^2 m, t = (q - 128) / 127
+function quant(F, used, NP){ const C = C6, r = [], out = new Uint8Array(C * NP);
+  for(let c = 0; c < C; c++){ let m = 0; for(const i of used) m = Math.max(m, Math.abs(F[i * C + c])); m = m || 1e-9; r.push(+m.toPrecision(7));
+    for(let p = 0; p < NP; p++){ const v = used.has(p) ? F[p * C + c] : 0, t = Math.sign(v) * Math.sqrt(Math.abs(v) / m); out[c * NP + p] = Math.max(1, Math.min(255, Math.round(128 + 127 * t))); } }
   return {q: out, r}; }
 async function deflate(u8){ const s = new Response(new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'))); return new Uint8Array(await s.arrayBuffer()); }
 B.finish = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get(tag + ':meta'), g = meta.grid, N = g.nx * g.ny * g.nz, list = meta.list, K = meta.keys.length, t0 = performance.now();
   const valid = new Uint8Array(N); for(const i of list) valid[i] = 1;
-  const load = async nm => { const r = await B.get(nm); if(!r) throw new Error('missing ' + nm); const F = toGrid(r.sh, list, N); denoise(F, valid, g, o.blur != null ? o.blur : .35); return F; };
+  const load = async nm => { const r = await B.get(nm); if(!r) throw new Error('missing ' + nm); const F = toGrid(r.sh, list, N); for(let k = 0; k < (o.blurN || 1); k++) denoise(F, valid, g, o.blur != null ? o.blur : .35); return F; };
   const sky = [], sun = []; for(let k = 0; k < K; k++){ sky.push(await load(tag + ':' + k + ':sky')); sun.push(await load(tag + ':' + k + ':sun')); } const lamp = await load(tag + ':lamp');
-  let filled = null; for(const F of [...sky, ...sun, lamp]) filled = dilate(F, valid, g, o.rings || 3);
+  let filled = null; for(const F of [...sky, ...sun, lamp]) filled = dilate(F, valid, g, o.rings || 1);
+  for(let k = 0; k < K; k++){ sky[k] = mono(sky[k]); sun[k] = mono(sun[k]); } const lampM = mono(lamp);
   const used = []; for(let i = 0; i < N; i++) if(filled[i]) used.push(i); const usedSet = new Set(used);
   const ps = pca(sky, used, o.eSky || .9995, o.rSky || 5), pu = pca(sun, used, o.eSun || .999, o.rSun || 8);
   // reconstruction error of the low rank, at the probes in the rooms (L0 luminance, relative)
   const err = (vols, P) => { let worst = 0, tot = 0, n = 0; vols.forEach((X, k) => { for(const i of list){ let rec = 0; const L = c => .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
-      const a = [0, 1, 2].map(c => P.bases.reduce((s, U, b) => s + P.coef[k][b] * U[i * 12 + c], 0)), x = [0, 1, 2].map(c => X[i * 12 + c]); rec = Math.abs(L(a) - L(x)) / Math.max(1e-4, L(x)); worst = Math.max(worst, rec); tot += rec; n++; } }); return {mean: +(tot / n).toFixed(4), worst: +worst.toFixed(3)}; };
+      const a = [0, 1, 2].map(c => P.bases.reduce((s, U, b) => s + P.coef[k][b] * U[i * C6 + c], 0)), x = [0, 1, 2].map(c => X[i * C6 + c]); rec = Math.abs(L(a) - L(x)) / Math.max(1e-4, L(x)); worst = Math.max(worst, rec); tot += rec; n++; } }); return {mean: +(tot / n).toFixed(4), worst: +worst.toFixed(3), w: werr(vols, P)}; };
+  const werr = (vols, P) => vols.map((X, k) => { let a = 0, b = 0; const L = c => .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; for(const i of list){ const r = [0, 1, 2].map(c => P.bases.reduce((s, U, j) => s + P.coef[k][j] * U[i * C6 + c], 0)), x = [0, 1, 2].map(c => X[i * C6 + c]); a += Math.abs(L(r) - L(x)); b += Math.abs(L(x)); } return +(a / Math.max(1e-9, b)).toFixed(4); });
   const vols = [], parts = [];
-  const push = (F, kind, coef, bits) => { const qz = quant(F, usedSet, N, bits); vols.push({kind, coef: coef ? coef.map(v => +v.toPrecision(6)) : undefined, enc: bits === 16 ? 'q16' : 'q8', r: qz.r}); parts.push(new Uint8Array(qz.q.buffer)); };
-  ps.bases.forEach((U, b) => push(U, 'sky', ps.coef.map(c => c[b]), b === 0 ? 16 : (o.bits || 8)));
-  pu.bases.forEach((U, b) => push(U, 'sun', pu.coef.map(c => c[b]), b === 0 ? 16 : (o.bits || 8)));
-  push(lamp, 'lamp', null, 16);
+  const push = (F, kind, coef) => { const qz = quant(F, usedSet, N); vols.push({kind, coef: coef ? coef.map(v => +v.toPrecision(6)) : undefined, enc: 'sq8', C: C6, m: qz.r}); parts.push(qz.q); };
+  ps.bases.forEach((U, b) => push(U, 'sky', ps.coef.map(c => c[b])));
+  pu.bases.forEach((U, b) => push(U, 'sun', pu.coef.map(c => c[b])));
+  push(lampM, 'lamp', null);
   let ao = null; const AOr = await B.get(tag + ':ao');
   if(AOr && o.ao !== false){ const A = AOr.grid, n = A.nx * A.ny * A.nz, a = new Uint8Array(n);
     const raw = AOr.ao, val = new Float32Array(n).fill(-1);
