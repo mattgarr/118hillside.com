@@ -272,6 +272,7 @@ B.del = async k => { const d = await db(); return new Promise(res => { const t =
 B.prepare = function(){ const a = B.extract(), b = B.build(), c = B.upload(); B.probes(); mat(); return {extract: {tris: a.tris, mats: a.mats, ms: a.ms, skipped: a.skipped}, build: b, upload: c, probes: B.np}; };
 // a time of day by hour and day of year (the escape game's way): the page's own setTOD with a custom preset
 B.tod = function(h, doy, dusk){ const T = H.TOD; let t = T.find(x => x.key === 'gibake'); if(!t){ t = {key: 'gibake', label: 'Bake', h, doy}; T.push(t); } t.h = h; t.doy = doy; H.setTOD(dusk ? 'dusk' : 'gibake');
+  if(window.__TOUR && __TOUR.step) for(let i = 0; i < 4; i++) __TOUR.step(1);   // the lamps and fixtures settle over a few frames
   return {dir: H.SUN_DIR.toArray(), sun: [H.sun.color.r, H.sun.color.g, H.sun.color.b, H.sun.intensity], tod: H.TOD_KEY}; };
 
 /* ---------------- which probes to trace: in the three rooms' air (BIM spaces) and not inside furniture or walls ---------------- */

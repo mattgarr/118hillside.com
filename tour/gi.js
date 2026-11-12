@@ -20,7 +20,7 @@ const V3 = THREE.Vector3;
 const qp = (k, d) => { const m = new RegExp('[?&]' + k + '=([^&]*)').exec(Q); return m ? decodeURIComponent(m[1]) : d; };
 const GI = window.GI = {mode: MODE, ver: 2, on: false, ready: false, why: 'loading', H: null, n: 0, composes: 0, k: 0, t: 0, ssaoK: 0,
   // tuning (also from the URL: &gigain=, &gispec=, &giao=, &gissao=keep)
-  EV: 5, ev: qp('giev', ''), wb: +qp('giwb', .9), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
+  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
   base: qp('gibase', 'gi/'),
   U: {giOn: {value: 0}, giK: {value: 0}, giGain: {value: new V3(1, 1, 1)}, giHemi: {value: 1}, giSpec: {value: .7}, giAOK: {value: 1},
     giT0: {value: null}, giT1: {value: null}, giAO: {value: null}, giRoom: {value: null},
@@ -117,7 +117,7 @@ async function load(){ try{
     const raw = await inflate(await (await fetch(GI.base + ix.file + '?v=' + ix.version)).arrayBuffer()); GI.bytes = ix.bytes; if(ix.delta) for(let i = 1; i < raw.length; i++) raw[i] = (raw[i] + raw[i - 1]) & 255;
     GI.data = decode(ix, raw); setupTextures(); GI.ready = true; GI.why = 'ok'; say('data', ix.version, ix.bytes); }
   catch(e){ GI.why = 'no data: ' + (e && e.message || e); console.warn('[gi]', GI.why); } }
-GI.useData = (ix, raw) => { GI.index = ix; GI.data = decode(ix, raw); setupTextures(); GI.ready = true; GI.why = 'ok'; GI.last = ''; };   // the bake page hands its result in directly
+GI.useData = (ix, raw) => { GI.index = ix; GI.data = decode(ix, raw); GI.volMean = null; GI.meanIdx = null; setupTextures(); GI.ready = true; GI.why = 'ok'; GI.last = ''; };   // the bake page hands its result in directly
 // volumes decode to Float32Array(6 * NP): L0 r, g, b and the luminance L1 x, y, z per probe (enc 'sq8': 6 planes of NP bytes, v = sign(t) t^2 m)
 function decode(ix, u8){ const g = ix.grid, NP = g.nx * g.ny * g.nz, vols = []; let o = 0;
   for(const v of ix.vols){ const C = v.C || 6, F = new Float32Array(6 * NP);
@@ -167,17 +167,24 @@ GI.evNow = () => GI.ev !== '' ? +GI.ev : (GI.index && GI.index.ev != null ? GI.i
    back, so its daylight indoors sits a fixed number of stops over the physical bounce of its own sun and sky. The daylight components
    (sky, sun bounce) are lifted by 2^EV, the same in every room and at every time; the r40 meter then exposes the frame. The lamps are
    authored at interior exposure already and are not lifted.
-   White balance: a camera balances for the room's light. The daylight's mean colour over the rooms (probes below 9 ft) is taken to
-   neutral, strength GI.wb; the lamps keep their warmth against that daylight balance. */
+   White balance: the cast a camera balances away is the ROOM's (the oak floor tints everything it bounces), not the illuminant's: golden
+   hour stays golden. So the reference is the rooms' mean bounce (probes below 9 ft) under the same sun and sky made white; its
+   colour is taken to neutral with strength GI.wb. The lamps keep their warmth against that daylight balance. */
 GI.compose = function(){ const S = GI.state(), sc = GI.scales(S), D = GI.data, NP = D.NP, A = GI.acc; A.fill(0);
   const add = kind => D.vols.forEach((v, i) => { if((v.kind === 'lamp') !== kind) return; const s = kind ? sc[i].map((x, c) => x / GI.gainNow[c]) : sc[i], sl = .2126 * s[0] + .7152 * s[1] + .0722 * s[2]; if(Math.abs(s[0]) + Math.abs(s[1]) + Math.abs(s[2]) < 1e-9) return; const F = v.F;
     for(let o = 0; o < NP * 6; o += 6){ A[o] += F[o] * s[0]; A[o + 1] += F[o + 1] * s[1]; A[o + 2] += F[o + 2] * s[2]; A[o + 3] += F[o + 3] * sl; A[o + 4] += F[o + 4] * sl; A[o + 5] += F[o + 5] * sl; } });
   add(false);
   if(!GI.meanIdx && GI.mask){ const g = GI.index.grid; GI.meanIdx = []; for(let p = 0; p < NP; p++){ const x = p % g.nx, z = Math.floor(p / g.nx) % g.nz, y = Math.floor(p / (g.nx * g.nz)), X = g.x0 + x * g.d, Y = g.y0 + y * g.d, Z = g.z0 + z * g.d;
     if(Y < 9 && GI.roomAt(X, Y, Z) > .5) GI.meanIdx.push(p); } }
-  const m = [0, 0, 0]; let n = 0; for(const p of (GI.meanIdx || [])){ if(A[p * 6 + 1] > 0){ m[0] += Math.max(0, A[p * 6]); m[1] += A[p * 6 + 1]; m[2] += Math.max(0, A[p * 6 + 2]); n++; } }
-  const Y = n ? (.2126 * m[0] + .7152 * m[1] + .0722 * m[2]) / n : 0, lift = Math.pow(2, GI.evNow());
-  GI.mean = Y; GI.meanRGB = m.map(v => n ? v / n : 0); GI.wbGain = [0, 1, 2].map(c => Y > 1e-7 && m[c] > 0 ? Math.pow(Y / (m[c] / n), GI.wb) : 1); { const w = GI.wbGain, y = .2126 * w[0] + .7152 * w[1] + .0722 * w[2]; GI.wbGain = w.map(v => v / y); }
+  // each volume's mean over those probes (once): the rooms' mean for any light is then a sum over the volumes
+  if(GI.meanIdx && !GI.volMean) GI.volMean = D.vols.map(v => { const m = [0, 0, 0]; for(const p of GI.meanIdx) for(let c = 0; c < 3; c++) m[c] += v.F[p * 6 + c]; return m.map(x => x / Math.max(1, GI.meanIdx.length)); });
+  const lumC = c => .2126 * c[0] + .7152 * c[1] + .0722 * c[2], m = [0, 0, 0], mw = [0, 0, 0];
+  if(GI.volMean){ const ref = [0, 1, 2].map(c => GI.index.keys.reduce((a, k, i) => a + S.w[i] * k.sky[c], 0)), yr = lumC(ref), ys = lumC(S.sun);
+    D.vols.forEach((v, i) => { if(v.kind === 'lamp') return; const vm = GI.volMean[i]; let k = 0; if(v.coef) for(let j = 0; j < S.w.length; j++) k += S.w[j] * v.coef[j];
+      for(let c = 0; c < 3; c++){ m[c] += vm[c] * sc[i][c]; mw[c] += vm[c] * (v.kind === 'sky' ? k * lumC(S.tint.map((t, q) => t * ref[q])) / Math.max(1e-6, ref[c]) : ys); } }); }
+  const Y = Math.max(0, lumC(m)), Yw = lumC(mw), lift = Math.pow(2, GI.evNow());
+  GI.mean = Y; GI.meanRGB = m; GI.cast = Yw > 1e-7 ? mw.map(v => v / Yw) : [1, 1, 1];
+  GI.wbGain = GI.cast.map(v => v > 1e-4 ? Math.pow(1 / v, GI.wb) : 1); { const w = GI.wbGain, y = lumC(w); GI.wbGain = w.map(v => v / y); }
   GI.gainNow = GI.wbGain.map(v => v * lift);
   add(true);   // the lamps, divided by the daylight gain so they arrive unlifted and unbalanced
   const [h0, h1] = GI.half;
@@ -227,6 +234,6 @@ GI.host = function(H){ GI.H = H;
   patchChunks(); Object.assign(H.R40E.U, GI.U, GI.rt ? GI.rt.U : null); patchPMREM();
   if(MODE !== 'bake' || /[?&]giload=1\b/.test(Q)) load(); else GI.why = 'bake page';
   if(GI.bake && GI.bake.host) try{ GI.bake.host(H); }catch(e){ console.warn('[gi] bake host', e); } };
-GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), ev: GI.evNow(), gain: GI.gainNow.map(v => +v.toFixed(2)), wb: (GI.wbGain || [1, 1, 1]).map(v => +v.toFixed(3)), mean: +(GI.mean || 0).toFixed(5), meanRGB: (GI.meanRGB || []).map(v => +v.toFixed(5)), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes, rt: GI.rt ? GI.rt.status() : null,
+GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), ev: GI.evNow(), gain: GI.gainNow.map(v => +v.toFixed(2)), wb: (GI.wbGain || [1, 1, 1]).map(v => +v.toFixed(3)), cast: (GI.cast || [1, 1, 1]).map(v => +v.toFixed(3)), mean: +(GI.mean || 0).toFixed(5), meanRGB: (GI.meanRGB || []).map(v => +v.toFixed(5)), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes, rt: GI.rt ? GI.rt.status() : null,
   S: GI.S ? {w: GI.S.w.map(v => +v.toFixed(3)), tint: GI.S.tint.map(v => +v.toFixed(3)), sun: GI.S.sun.map(v => +v.toFixed(3)), lamp: +GI.S.lamp.toFixed(3)} : null});
 })();
