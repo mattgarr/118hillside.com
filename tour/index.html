@@ -15838,9 +15838,14 @@ const CTA42 = (() => {
     arch: 'Design concept, based on earlier work with an architect. Not reviewed for permits or structure.',
     ill: 'Illustrative idea. Not designed or reviewed by an architect or engineer.',
     mine: 'Your own changes. Not designed or reviewed by an architect or engineer.'};
+  /* r43 owner 11/12: four cards, the real house plus three concepts, in this order: 6 bedrooms (as built), 6 bedrooms (alternate layout),
+     5 bedrooms (open plan), 4 bedrooms (open great room). The Semi-open plan is shown as the alternate six-bedroom layout. */
+  const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
+  const RANK = {apr24b: 0, jan24: 1, open4: 2};
   const LINE = {asbuilt: 'The house as it is today.',
-    apr24b: 'An open kitchen and dining room around a long island, with a family room and three bedrooms.',
-    jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.'};
+    apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
+    jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
+    open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
 
@@ -15871,9 +15876,10 @@ const CTA42 = (() => {
   /* the plans: as built first, then each concept in the scene, most bedrooms first */
   function plans(){ let L = []; try{ L = (bim2DesignOptions() || []).filter(d => d && d.id && d.id !== 'custom'); }catch(e){}
     const out = L.map(d => { const o = optMeta(d.id) || {};
-      return {id: d.id, name: DESIGN.nameOf(d.id), line: LINE[d.id] || o.description || d.description || 'Another way to lay out the main level of the original house.'}; });
-    const b = p => (facts(p.id) || {beds: 0}).beds;
-    return [{id: 'asbuilt', name: 'As built', line: LINE.asbuilt}].concat(out.sort((p, q) => b(q) - b(p))); }
+      return {id: d.id, name: NAME[d.id] || DESIGN.nameOf(d.id), line: LINE[d.id] || o.description || d.description || 'Another way to lay out the main level of the original house.'}; });
+    const b = p => (facts(p.id) || {beds: 0}).beds, r = p => RANK[p.id] ?? 9;
+    return [{id: 'asbuilt', name: 'As built', line: LINE.asbuilt}].concat(out.sort((p, q) => r(p) - r(q) || b(q) - b(p))); }
+  const ideaWords = n => (['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][n] || String(n)) + (n === 1 ? ' idea' : ' ideas');
   function bedsPhrase(){ const n = [...new Set(plans().map(p => (facts(p.id) || {}).beds).filter(Boolean))].sort((a, b) => b - a);
     if(n.length < 2) return ''; return n.slice(0, -1).join(', ') + ' or ' + n[n.length - 1] + ' bedrooms'; }
 
@@ -15970,44 +15976,71 @@ html.pk42 .pk42p{display:block}
 .pk42p .p42ft button[hidden]{display:none}
 .pk42p .p42fine{margin:8px 0 2px;font-size:12px;line-height:1.45;color:var(--muted)}
 .fin36 .fl .c42f .c42n{display:none}html.ph .fin36 .fl .c42f .c42w{display:none}html.ph .fin36 .fl .c42f .c42n{display:inline}
-/* phones: the chip is short and sits on the left above the stop sheet; the picker cards scroll sideways */
-html.ph #cta42{min-height:42px;padding:0 13px 0 11px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+/* phones (r43 owner 11/12: "every call to action clear and beautiful on a phone"): text 14 px or more, tap targets 44 px or more.
+   The chip sits on the left above the stop sheet, beside the 3D model / Photo switch when it fits there and above it when it does not. */
+html.ph #cta42{min-height:44px;padding:0 14px 0 12px;font-size:15px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
 html.ph #cta42 svg{color:currentColor}html.ph #cta42 .c42a{color:currentColor;opacity:.6}
 html.ph #cta42 .c42x i{display:none}
 html.ph #cta42.c42in{background:var(--pl,rgba(255,255,255,.08));margin:2px 0 8px;grid-column:1 / -1}
-html.ph #ng42{left:max(var(--gut,12px),env(safe-area-inset-left,0px));right:max(var(--gut,12px),env(safe-area-inset-right,0px));width:auto;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
-html.ph #ng42 .g42h{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:17px}
-html.ph #ng42 .g42t{color:var(--pt,var(--ink));font-size:14.5px}
-html.ph #ng42 .g42a{flex-wrap:nowrap}html.ph #ng42 .g42a button{flex:1 1 0;min-width:0;padding:0 10px;justify-content:center;min-height:44px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
-html.ph #ng42 .g42a button svg{display:none}html.ph #ng42 .g42a button{white-space:nowrap;font-size:13.5px;padding:0 8px}
-html.ph #ng42 .g42x{color:var(--pm,var(--muted))}
-html.ph #cb42{font-family:var(--sf,inherit);width:calc(100vw - 2 * var(--gut,12px));max-width:none;padding:8px 8px 8px 12px;border-radius:14px;flex-wrap:wrap;gap:6px 8px;font-size:13px}
-html.ph #cb42 .b42m{flex:1 1 100%}html.ph #cb42 .b42m span{font-size:12px;line-height:1.35}
-html.ph #cb42 .b42s{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap}
-html.ph #cb42 button{min-height:36px;padding:0 12px;font-size:13px}
-/* a phone in the floor plan picker: one slim line (the chosen card right below carries the label and the way back) */
-html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:6px 12px;flex-wrap:nowrap;font-size:12.5px}html.ph #cb42.b42sl .b42m span,html.ph #cb42.b42sl .b42s{display:none}
-html.ph #cb42.b42sl .b42m b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-html.ph.pk42 #card .body{max-height:calc(46vh - 120px);max-height:calc(46dvh - 120px)}
-html.ph #cb42.b42ab{width:max-content;max-width:calc(100vw - 24px);padding:5px 12px}
-html.ph #hm42{left:8px!important;right:8px;width:auto!important;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line))}
-html.ph #hm42 p{color:var(--pm,var(--muted))}html.ph #hm42 button{min-height:40px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
+html.ph #ng42{left:max(var(--gut,12px),env(safe-area-inset-left,0px));right:max(var(--gut,12px),env(safe-area-inset-right,0px));width:auto;max-width:480px;padding:14px 14px 14px 16px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph #ng42 .g42h{margin-right:40px;font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:17px}
+html.ph #ng42 .g42t{color:var(--pt,var(--ink));font-size:15px}
+html.ph #ng42 .g42a button{flex:1 1 140px;min-width:0;min-height:46px;padding:0 10px;justify-content:center;white-space:nowrap;font-size:15px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
+html.ph #ng42 .g42a button svg{display:none}
+html.ph #ng42 .g42x{top:4px;right:4px;width:44px;height:44px;color:var(--pm,var(--muted))}
+/* the concept banner: under the booking line, as wide as the screen, buttons on their own row */
+html.ph #cb42{font-family:var(--sf,inherit);width:calc(100vw - 2 * var(--gut,12px));max-width:520px;padding:10px 10px 10px 14px;border-radius:14px;flex-wrap:wrap;gap:8px;font-size:14px;line-height:1.35}
+html.ph #cb42 .b42m{flex:1 1 100%}html.ph #cb42 .b42m span{font-size:14px;line-height:1.35}
+html.ph #cb42 .b42s{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap;gap:8px}
+html.ph #cb42 button{min-height:44px;padding:0 14px;font-size:14px}
+html.ph #cb42 button.b42alt{flex:0 1 auto}
+/* a phone in the floor plan picker: one slim line over the house (the plan's details and label are in the sheet right below) */
+html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:7px 14px;flex-wrap:nowrap;text-align:center}html.ph #cb42.b42sl .b42m span,html.ph #cb42.b42sl .b42s{display:none}
+html.ph #cb42.b42ab{width:max-content;max-width:calc(100vw - 24px);padding:6px 14px;font-size:14px}
+/* the holiday control's companion */
+html.ph #hm42{left:8px!important;right:8px;width:auto!important;padding:6px 6px 6px 14px;font-size:14px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line))}
+html.ph #hm42 p{color:var(--pm,var(--muted));margin-right:auto}html.ph #hm42 button{min-height:44px;padding:0 16px;font-size:14.5px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
+/* the closing card's links: two tidy columns, full-height targets */
+html.ph .fin36 .fl{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+html.ph .fin36 .fl :is(a,button){min-height:44px;padding:4px 0;font-size:15px;text-align:left;justify-content:flex-start}
+/* the picker on a phone held upright: the plans as a 2 x 2 grid of tiles (all four in view, the chosen one filled), the chosen plan's
+   details and label underneath. Held sideways: a list in the side sheet. */
 html.ph #pk42h{padding:4px 0 0}
-html.ph #pk42h .p42e{font-family:var(--sf,inherit);letter-spacing:.02em;text-transform:none;font-size:12.5px;color:var(--pm,var(--muted))}
-html.ph #pk42h h2{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:19px}
+html.ph #pk42h .p42e{font-family:var(--sf,inherit);letter-spacing:.02em;text-transform:none;font-size:14px;color:var(--pm,var(--muted))}
+html.ph #pk42h h2{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:20px}
 html.ph .pk42p .p42lede{display:none}
-html.ph .pk42p .p42list{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin:4px -2px 0;padding:2px 2px 6px;scrollbar-width:none}
-html.ph .pk42p .p42list::-webkit-scrollbar{display:none}
-html.ph .pk42p .k42c{flex:0 0 min(290px,74vw);scroll-snap-align:start;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:10px;background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
-html.ph .pk42p .k42c[aria-checked="true"]{border-color:var(--pt,var(--accent));box-shadow:0 0 0 1.5px var(--pt,var(--accent)) inset}
-html.ph .pk42p .k42c[aria-checked="true"]::after{color:var(--pt,var(--accent))}
-html.ph .pk42p .k42s{width:62px;height:62px}
-html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:600;font-size:20px}
+html.ph .pk42p .k42c{background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:600;font-size:19px;padding-right:0}
 html.ph .pk42p .k42b,html.ph .pk42p .k42t{color:var(--pt,var(--ink))}
-html.ph .pk42p .k42d{color:var(--pm,var(--muted))}
-html.ph .pk42p .k42l{color:var(--pt,var(--ink));opacity:.8}html.ph .pk42p .k42c[data-k="real"] .k42l{color:var(--pt,var(--accent))}
+html.ph .pk42p .k42d{font-size:14px;color:var(--pm,var(--muted))}
+html.ph .pk42p .k42l{font-size:14px;color:var(--pt,var(--ink))}
 html.ph .pk42p .p42ft button{flex:1 1 auto;min-height:44px;background:var(--pl,var(--paper));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
-html.ph .pk42p .p42fine{color:var(--pm,var(--muted))}
+html.ph .pk42p .p42fine{font-size:14px;color:var(--pm,var(--muted))}
+.pk42p .p42det{display:none}
+@media (orientation:portrait){
+  html.ph.pk42 #card .body{max-height:calc(49vh - 140px);max-height:calc(49dvh - 140px)}
+  html.ph .pk42p .p42list{grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+  html.ph .pk42p .k42c{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:64px;padding:9px 12px;border-radius:12px}
+  html.ph .pk42p .k42c :is(.k42s,.k42b,.k42d,.k42l){display:none}
+  html.ph .pk42p .k42c .k42t{margin:0;font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html.ph .pk42p .k42c[data-k="real"] .k42t::after{content:" · real house";opacity:.75}
+  html.ph .pk42p .k42c[aria-checked="true"]{background:var(--ph-hi,#1f1f1d);border-color:var(--ph-hi,#1f1f1d);box-shadow:none}
+  html.ph .pk42p .k42c[aria-checked="true"] :is(.k42n,.k42t){color:var(--ph-ink,#fbfaf7)}
+  html.ph .pk42p .k42c[aria-checked="true"]::after,html.ph .pk42p .k42c.k42busy::after{display:none}
+  html.ph .pk42p .k42c.k42busy{opacity:.7}
+  html.ph .pk42p .p42det{display:block;margin:10px 2px 0;font-family:var(--sf,inherit);font-size:14px;line-height:1.4;color:var(--pt,var(--ink))}
+  html.ph .pk42p .p42det b{font-weight:600}html.ph .pk42p .p42det .k42d{display:block;margin-top:2px}html.ph .pk42p .p42det .k42l{display:block;margin-top:6px}
+  html.ph .pk42p .p42det .k42l::before{content:"";display:inline-block;width:8px;height:8px;margin:0 7px 1px 0;border-radius:50%;background:#c98a2b;vertical-align:middle}
+  html.ph .pk42p .p42det[data-k="real"] .k42l::before{background:var(--accent,#55633a)}
+  html.ph .pk42p .p42fine{display:none}
+}
+@media (orientation:landscape){
+  html.ph.pk42 #card .body{max-height:calc(100vh - 170px);max-height:calc(100dvh - 170px)}
+  html.ph .pk42p .k42c{grid-template-columns:52px minmax(0,1fr);gap:10px;padding:8px 10px}
+  html.ph .pk42p .k42s{width:52px;height:52px}
+  html.ph .pk42p .k42c[aria-checked="true"]{border-color:var(--pt,var(--accent));box-shadow:0 0 0 2px var(--pt,var(--accent)) inset}
+  html.ph .pk42p .k42c[aria-checked="true"]::after{font-size:14px;color:var(--pt,var(--accent))}
+}
 html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36on.ph :is(#cta42,#ng42){display:none!important}
 @media (prefers-reduced-motion:reduce){#cta42,#ng42{transition:none}}
 `;
@@ -16024,30 +16057,38 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   hm.innerHTML = '<p>Also try</p><button type="button" data-a="paint">Paint colors</button><button type="button" data-a="furn">Furniture</button>';
   const head = el('div'); head.id = 'pk42h'; head.innerHTML = '<p class="p42e">Floor plans</p><h2 id="pk42H">Compare floor plans</h2>';
   const pick = el('div', 'pk42p'); pick.id = 'pk42'; pick.setAttribute('role', 'region'); pick.setAttribute('aria-labelledby', 'pk42H');
-  pick.innerHTML = '<p class="p42lede">The main level of the original house could be laid out a few ways. Pick a plan to see it in 3D.</p>'
-    + '<div class="p42list" role="radiogroup" aria-label="Floor plans"></div>'
+  pick.innerHTML = '<p class="p42lede"></p>'
+    + '<div class="p42list" role="radiogroup" aria-label="Floor plans"></div><div class="p42det" aria-live="polite"></div>'
     + '<div class="p42ft"><button type="button" data-a="walk" hidden>Walk through this plan</button><button type="button" data-a="asbuilt" hidden>Back to as built</button><button type="button" data-a="more">More design tools</button></div>'
     + '<p class="p42fine">The house is offered as it is today. The other plans are ideas only.</p>';
-  const list = pick.querySelector('.p42list'), foot = pick.querySelector('.p42ft');
+  const list = pick.querySelector('.p42list'), foot = pick.querySelector('.p42ft'), det = pick.querySelector('.p42det');
 
   let sheetByPk = false, pickerUsed = ss('hillside.cta42.used') === '1', nudgeOn = false, nudgeStop = -1, placedIn = null, lastSig = '';
   const seen = new Set();
 
   /* ---- the picker */
   const setPk = on => root.classList.toggle('pk42', !!on);
+  /* a phone held sideways: the sheet is a column on the left, so the plan is framed in the space to its right (Design's own layout view,
+     worked out as it is for a computer; the phone class is off only for that one synchronous calculation) */
+  function sideFit(){ if(!(isPh() && innerWidth > innerHeight && innerWidth >= 600 && mode === 'design')) return;
+    root.classList.remove('ph'); try{ DESIGN.view(1.2); }catch(e){} finally{ root.classList.add('ph'); } }
   const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
-  function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {}, sl = list.scrollLeft;
+  function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {};
+    pick.querySelector('.p42lede').textContent = L.length > 1 ? ideaWords(L.length - 1) + ' for the main level, plus the house as it is. Pick one to see it in 3D.' : '';
     for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
     list.innerHTML = '';
     for(const p of L){ const f = facts(p.id), k = kindOf(p.id), b = el('button', 'k42c' + (busy[p.id] ? ' k42busy' : '')); b.type = 'button'; b.dataset.id = p.id; b.dataset.k = k; b.setAttribute('role', 'radio');
       const on = cur === p.id; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1;
-      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? bedLine(f) : p.name) + '</span>' + (f ? '<span class="k42b">' + factLine(f) + '</span>' : '')
-        + '<span class="k42t">' + p.name + '</span><span class="k42d">' + p.line + '</span><span class="k42l">' + LAB[k] + '</span></span>';
-      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' + factLine(f) + '. ' : '') + p.name + '. ' + p.line + ' ' + LAB[k]);
+      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? bedLine(f) : p.name) + '</span><span class="k42t">' + p.name + '</span>' + (f ? '<span class="k42b">' + factLine(f) + '</span>' : '')
+        + '<span class="k42d">' + p.line + '</span><span class="k42l">' + LAB[k] + '</span></span>';
+      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' : '') + p.name + (f ? ', ' + factLine(f) : '') + '. ' + p.line + ' ' + LAB[k]);
       b.addEventListener('click', () => choose(p.id, 'picker')); list.appendChild(b); }
     if(!list.querySelector('[tabindex="0"]') && list.firstChild) list.firstChild.tabIndex = 0;
-    list.scrollLeft = sl; if(cur !== render.cur){ render.cur = cur; const c = list.querySelector('.k42c[aria-checked="true"]'); if(c && isPh()) list.scrollLeft = Math.max(0, c.offsetLeft - list.offsetLeft - 2);
-      else if(c){ const cd = $('#card'), r = c.getBoundingClientRect(), k = cd.getBoundingClientRect(), bk = $('#bk38'), lo = bk && !bk.hidden ? bk.getBoundingClientRect().top - 8 : k.bottom - 8;   // a computer: the chosen card scrolls into the panel
+    { const p = L.find(q => q.id === cur) || L[0], f = facts(p.id), k = kindOf(p.id);   // a phone held upright: the chosen plan's details under the tiles
+      det.dataset.k = k; det.innerHTML = '<b>' + p.name + '</b>' + (f ? ' · ' + bedLine(f) + ', ' + factLine(f) : '') + '<span class="k42d">' + p.line + '</span><span class="k42l">' + LAB[k] + '</span>'; }
+    if(cur !== render.cur){ render.cur = cur; const c = list.querySelector('.k42c[aria-checked="true"]');   // the chosen card scrolls into the panel
+      const cd = isPh() ? $('#card .body') : $('#card');
+      if(c && cd){ const r = c.getBoundingClientRect(), k = cd.getBoundingClientRect(), bk = $('#bk38'), lo = !isPh() && bk && !bk.hidden ? bk.getBoundingClientRect().top - 8 : k.bottom - 8;
         if(r.bottom > lo) cd.scrollTop += r.bottom - lo; else if(r.top < k.top + 8) cd.scrollTop -= k.top + 8 - r.top; } }
     foot.querySelector('[data-a=asbuilt]').hidden = cur === 'asbuilt'; foot.querySelector('[data-a=walk]').hidden = cur === 'asbuilt'; }
   list.addEventListener('keydown', e => { const L = [...list.querySelectorAll('.k42c')], i = L.indexOf(document.activeElement); if(i < 0) return;
@@ -16060,7 +16101,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     else if(a === 'more'){ ga('design_more', {where: 'picker', plan: ACTIVE_VAR}); setPk(false); try{ DESIGN.open('design'); }catch(x){} sync(); const c = $('#card'); if(c) c.scrollTop = 0; } });
   function choose(id, where){ if(mode !== 'design') setMode('design');
     const f = facts(id); ga('plan_pick', {plan: id, beds: f ? f.beds : 0, concept: kindOf(id), where: where || 'picker'});
-    try{ DESIGN.choose(id, true); }catch(e){ console.warn('[cta42] choose', e); }
+    try{ DESIGN.choose(id, true); }catch(e){ console.warn('[cta42] choose', e); } sideFit();
     if(id !== 'asbuilt'){ let p = null; try{ p = bim2EnsureOption(id); }catch(e){}
       if(p && p.then){ const mark = on => { const n = list.querySelector('.k42c[data-id="' + id + '"]'); if(n) n.classList.toggle('k42busy', on); }; render(); mark(true); p.then(() => mark(false), () => mark(false)); } }
     lastSig = ''; sync(); }
@@ -16071,7 +16112,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     const wasMin = isPh() && $('#card').classList.contains('min');   // (Design opens the sheet itself)
     setPk(true); if(mode !== 'design') setMode('design'); else { try{ DESIGN.view(1.2); }catch(e){} }
     try{ if(wasMin) sheetByPk = true; if(isPh() && $('#card').classList.contains('min')) $('#collapse').click(); }catch(e){}
-    render(); lastSig = ''; sync();
+    sideFit(); render(); lastSig = ''; sync();
     setTimeout(() => { const c = list.querySelector('.k42c[aria-checked="true"]') || list.querySelector('.k42c'); if(c) try{ c.focus({preventScroll: true}); }catch(e){} const cd = $('#card'); if(cd) cd.scrollTop = 0; }, 60); }
 
   /* ---- holiday decor, and more ways to redecorate */
@@ -16120,7 +16161,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     let bottom = innerHeight - cr.top + 8, left = cr.left, maxW = Math.max(200, Math.min(520, innerWidth - left - 16));
     const seg = $('#realSeg');
     if(isPh() && seg && !seg.hidden && seg.offsetParent){ const r = seg.getBoundingClientRect(); if(r.height > 4 && r.bottom > cr.top - 70){ const room = r.left - 8 - left;
-        if(room >= 150) maxW = room; else bottom = innerHeight - r.top + 8; } }
+        const need = chip.hidden ? 0 : chip.offsetWidth - (chip.querySelector('.c42x') || chip).clientWidth + (chip.querySelector('.c42x') || chip).scrollWidth + 2;   // the chip's full width
+        if(room >= need && room >= 150) maxW = room; else { bottom = innerHeight - r.top + 8; maxW = Math.max(200, innerWidth - left - 12); } } }
     const ng = document.querySelector('.navguide:not([hidden])'); if(ng && ng.offsetParent){ const r = ng.getBoundingClientRect(); if(r.height > 4 && r.left < left + maxW && r.bottom > innerHeight - bottom - 60) bottom = Math.max(bottom, innerHeight - r.top + 8); }
     let nb = bottom;   // the nudge is as wide as the screen on a phone: it goes above the 3D model / Photo switch too
     if(isPh() && seg && !seg.hidden && seg.offsetParent){ const r = seg.getBoundingClientRect(); if(r.height > 4) nb = Math.max(nb, innerHeight - r.top + 8); }
@@ -16135,7 +16177,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
     if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
     else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
-      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + bedLine(f) + (banner.classList.contains('b42sl') ? '' : ', ' + factLine(f)) : '') + '. Not the house as it is.';
+      const same = f && (facts('asbuilt') || {}).beds === f.beds, nm = (plans().find(p => p.id === v) || {}).name || '';   // a concept with as many bedrooms as the house says which one it is
+      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (banner.classList.contains('b42sl') ? '' : ', ' + factLine(f)) : '') + '. Not the house as it is.';
       s.textContent = k === 'arch' ? 'Based on earlier work with an architect. Not reviewed for permits or structure.' : 'Not designed or reviewed by an architect or engineer.';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
     banner.hidden = false;
