@@ -22841,7 +22841,7 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
           for(let pass = 0; pass < 5; pass++) for(let i = 2; i < n - 2; i++){ const q = pts[i], f = q.y - EYE, x = (pts[i - 1].x + q.x * 2 + pts[i + 1].x) / 4, z = (pts[i - 1].z + q.z * 2 + pts[i + 1].z) / 4; if(Math.hypot(x - q.x, z - q.z) < .01 || !r36At(x, z, f) || !fr(x, z, f)) continue; const y = navSupport(x, z, f + .3); if(Math.abs(y - f) < .3){ q.x = x; q.z = z; q.y = y + EYE; } }   // and no kinks left in the line
         } finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); } }catch(e){ console.warn('[r37 nav] clearance', e); }
       if(!R36N.noRelax) pts = r37Relax(pts);   // r37: rounded corners, the middle of each doorway
-      if(!R36N.noRelax) try{ pts = r41EndIn(pts); }catch(e){ console.warn('[r41 nav] end', e); }   // r41: the last few feet curve in to the stop
+      if(!R36N.noRelax) try{ pts = r41EndIn(r41Despike(pts)); }catch(e){ console.warn('[r41 nav] end', e); }   // r41: no out-and-back in the line; the last few feet curve in to the stop
       for(let pass = 0; pass < (R36N.noRelax ? 3 : 10); pass++) for(let i = 2; i < pts.length - 2; i++) pts[i].y = (pts[i - 1].y + pts[i].y * 2 + pts[i + 1].y) / 4;   // r37: 10 passes (was 3), so a landing is a gentle change of slope   // stair nosings and thresholds become one even climb
       { const n = pts.length, k0 = Math.min(R36N.noRelax ? 6 : 10, Math.floor((n - 2) / 2)), y0 = pts[0].y, y1 = pts[n - 1].y; for(let i = 1; i <= k0; i++){ const w = R36N.noRelax ? i / (k0 + 1) : smooth(0, 1, i / (k0 + 1)); pts[i].y = lerp(y0, pts[i].y, w); pts[n - 1 - i].y = lerp(y1, pts[n - 1 - i].y, w); } }
       const cum = [0]; for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
@@ -22851,12 +22851,25 @@ function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> 
 /* r41: the last few feet of a route curve gently in to where you stop. The route used to reach a grid node beside or past the stop and then make a
    last short sidestep (or a step back) of half a foot to a foot onto the stop's own spot, a kink of 90-180 deg in the last frames of the walk, so the
    camera slid sideways or backwards as it arrived (great room -> bedroom wing, lower bath -> lower bedroom, laundry -> office). Now the line from
-   R ft out (3, else 2, else 1.4) is one smooth curve that leaves the route along its own way and arrives with no doubling back, kept only where
+   R ft out (3, else 2, 1.4 or 1) is one smooth curve that leaves the route along its own way and arrives with no doubling back, kept only where
    it stays on level, walkable, unobstructed ground. */
+/* r41: no out-and-back in a route. Pulled round an open door leaf, the line could run a foot past the doorway and come back to it before going on
+   (the bedroom wing to the hall bath: out to 25.5 ft, back to 24.5, on again), a U-turn the walk made at a crawl. A turn of more than 120 deg at a
+   point is cut out: the shortest stretch round it whose chord the line leaves and rejoins at under 60 deg, with every point it drops within 0.6 ft
+   of that chord (so nothing is cut across), on level ground. */
+function r41Despike(pts){ const turn = (P, i) => { const a = P[i - 1], b = P[i], c = P[i + 1], ux = b.x - a.x, uz = b.z - a.z, vx = c.x - b.x, vz = c.z - b.z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); return lu < .02 || lv < .02 ? 0 : Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1)); };
+  const ang = (a, b, c, d) => { const ux = b.x - a.x, uz = b.z - a.z, vx = d.x - c.x, vz = d.z - c.z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); return lu < .02 || lv < .02 ? 0 : Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1)); };
+  for(let round = 0; round < 6; round++){ const n = pts.length; let v = -1; for(let i = 2; i < n - 2; i++) if(turn(pts, i) > 120 * Math.PI / 180){ v = i; break; } if(v < 0) return pts;
+    let best = null; for(let span = 2; span <= 16 && !best; span++) for(let a = Math.max(1, v - span + 1); a < v && !best; a++){ const b = a + span; if(b > n - 2 || b <= v) continue; const A = pts[a], B = pts[b], L = Math.hypot(B.x - A.x, B.z - A.z); if(L < .3 || Math.abs(A.y - B.y) > .25) continue;
+        if(ang(pts[a - 1], A, A, B) > Math.PI / 3 || ang(A, B, B, pts[b + 1]) > Math.PI / 3) continue; let far = 0; for(let i = a + 1; i < b; i++){ const P = pts[i], u = clamp(((P.x - A.x) * (B.x - A.x) + (P.z - A.z) * (B.z - A.z)) / (L * L), 0, 1); far = Math.max(far, Math.hypot(P.x - A.x - (B.x - A.x) * u, P.z - A.z - (B.z - A.z) * u), Math.abs(P.y - A.y)); }
+        if(far < .6) best = [a, b]; }
+    if(!best) return pts; const [a, b] = best, A = pts[a], B = pts[b], k = Math.max(1, Math.round(Math.hypot(B.x - A.x, B.z - A.z) / .5)), Q = []; for(let q = 1; q < k; q++) Q.push(A.clone().lerp(B, q / k));
+    pts = pts.slice(0, a + 1).concat(Q, pts.slice(b)); }
+  return pts; }
 function r41EndIn(pts){ const n = pts.length; if(n < 6) return pts; const B = pts[n - 1], fB = B.y - EYE; let tot = 0; for(let i = 1; i < n; i++) tot += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z); if(tot < 4) return pts;
   const drs = r36Doors(), was = drs.map(it => it.coll.pass); for(const it of drs) it.coll.pass = true;
   try{ const fr = (x, z, f) => { const q = {x, z}; collide(q, f); return Math.abs(q.x - x) + Math.abs(q.z - z) < .04; }, offB = r36At(B.x, B.z, fB) !== 1;
-    for(const R of [Math.min(3, tot * .3), 2, 1.4]){ let j = n - 1, acc = 0; while(j > 1 && acc < R){ acc += Math.hypot(pts[j].x - pts[j - 1].x, pts[j].z - pts[j - 1].z); j--; }
+    for(const R of [Math.min(3, tot * .3), 2, 1.4, 1]){ let j = n - 1, acc = 0; while(j > 1 && acc < R){ acc += Math.hypot(pts[j].x - pts[j - 1].x, pts[j].z - pts[j - 1].z); j--; }
       const A = pts[j], fA = A.y - EYE; if(Math.abs(fA - fB) > .25) continue;   // level ground only (not the foot or the head of a stair)
       let tx = pts[j + 1].x - pts[j - 1].x, tz = pts[j + 1].z - pts[j - 1].z; const tl = Math.hypot(tx, tz); if(tl < 1e-3) continue; tx /= tl; tz /= tl;
       const ax = B.x - A.x, az = B.z - A.z, ab = Math.hypot(ax, az), pr = ax * tx + az * tz; if(ab < .3 || pr < .25 * ab) continue;   // the stop is beside or behind: no gentle curve from here
