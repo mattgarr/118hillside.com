@@ -5899,6 +5899,12 @@ const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last
     if(J){ if(Math.abs(J.xt) > L){ st.lx = Math.sign(J.xt); st.wx = false; } if(Math.abs(J.yp) > L){ st.ly = Math.sign(J.yp); st.wy = false; } }
     st.J0 = J; return st; },
   orbitDelta(st, dx, dy, proj, th, ph, h){   // [dth, dph] that move the grabbed point by (dx, dy) px
+    /* r41b: a long pointer step (a fast flick, a slow frame, a synthetic drag) is solved in steps of at most 6 px, the leverage measured again
+       at each: one linear solve over a big step let a sideways drag also tilt the view (a real 120 px drag: the point ended 49 px too high). */
+    const n = Math.hypot(dx, dy), m = Math.min(16, Math.ceil(n / 6));
+    if(m > 1){ let t = 0, p = 0; for(let i = 0; i < m; i++){ const d = this.orbitStep(st, dx / m, dy / m, proj, th + t, ph + p, h); t += d[0]; p += d[1]; } return [t, p]; }
+    return this.orbitStep(st, dx, dy, proj, th, ph, h); },
+  orbitStep(st, dx, dy, proj, th, ph, h){
     const k0 = 2 * Math.PI / h * .75, kv = k0 * .8, J = this.jac(proj, th, ph), n = Math.hypot(dx, dy); this.rep.orbit++;
     if(!J) return [st.lx * dx * k0, st.ly * dy * kv];
     const okx = !st.wx && Math.sign(J.xt) === st.lx, oky = !st.wy && Math.sign(J.yp) === st.ly, det = J.xt * J.yp - J.xp * J.yt; let dt, dp;
