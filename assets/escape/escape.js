@@ -532,10 +532,10 @@
   #escBook .nums{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
   #escBook .num{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e3dfd5;border-radius:14px;padding:6px 12px 6px 8px;font-size:13.5px;color:#5c6575;line-height:1.25}
   #escBook .num b{font-size:28px;font-weight:500;color:#1f2a3a;line-height:1}#escBook .num svg{width:28px;height:28px;flex:none}
-  #escBook .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-  #escBook .card{border:1px solid #e3dfd5;background:#fff;border-radius:14px;padding:8px;text-align:left;cursor:pointer;font:inherit;color:inherit}
-  #escBook .card:hover{border-color:#1f2948}#escBook .card img{display:block;width:100%;height:120px;object-fit:contain;background:#ebe7dd;border-radius:8px}
-  #escBook .card span{display:block;font-size:13.5px;line-height:1.3;margin-top:6px}
+  #escBook .clues{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  #escBook .clue{border:1px solid #e3dfd5;background:#fff;border-radius:14px;padding:8px;text-align:left;cursor:pointer;font:inherit;color:inherit}
+  #escBook .clue:hover{border-color:#1f2948}#escBook .clue img{display:block;width:100%;height:120px;object-fit:contain;background:#ebe7dd;border-radius:8px}
+  #escBook .clue span{display:block;font-size:13.5px;line-height:1.3;margin-top:6px}
   #escBook .big img{display:block;max-width:100%;max-height:60vh;margin:0 auto;border-radius:10px;background:#ebe7dd}
   #escBook .big p{font-size:15.5px;line-height:1.45;margin:10px 0 0}
   #escBook .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
@@ -592,7 +592,7 @@
     #escCard .c{padding:20px 18px 18px}#escCard .note{font-size:21px}#escCard .lede{font-size:19px}
     #escCard .lv{gap:6px}#escCard .lv button{padding:8px 9px 8px}#escCard .lv .t{font-size:17px}#escCard .lv small{font-size:12px}
     #escCard.side{place-items:end center;padding:8px}#escCard.side .c{box-sizing:border-box;max-width:560px;max-height:calc(100% - 180px);padding:16px 16px 14px}#escCard.side h2{font-size:32px}#escCard.side .lede{font-size:18px;margin-bottom:10px}#escCard.side .stats{margin-bottom:10px}
-    #escBook{padding:6px}#escBook .bk{padding:14px 12px 12px}#escBook .cards{grid-template-columns:repeat(2,1fr)}
+    #escBook{padding:6px}#escBook .bk{padding:14px 12px 12px}#escBook .clues{grid-template-columns:repeat(2,1fr)}
   }
   @media (max-width:520px){#escCard .lv{grid-template-columns:1fr}#escCard .lv button{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;align-items:baseline}#escCard .lv small{grid-column:1 / -1}}
   @media (prefers-reduced-motion:reduce){.escMk.on i,#escHint.nudge,#escCoach svg,.escBub,#escSheet .thumps span{animation:none!important;opacity:1;transform:none}}
@@ -731,7 +731,16 @@
     svg += `<g id="escDot"><path d="M0 0L-9 -20A22 22 0 0 1 9 -20Z" fill="rgba(201,138,18,.35)"/><circle r="5.5" fill="#c98a12" stroke="#fff" stroke-width="2"/></g></svg>`;
     plan.innerHTML = svg + ORDER.filter(key => PLACES[key].floor === f).map(key => { const P = PLACES[key], mp = P.map || [P.pos[0], P.pos[2]], m = T.pt(mp[0], mp[1]); return `<button type="button" class="pl" data-p="${key}" style="left:${(m[0] / w * 100).toFixed(1)}%;top:${(m[1] / h * 100).toFixed(1)}%">${esc(P.short || P.name)}</button>`; }).join('');
     MAP.dot = $('#escDot'); MAP.key = ''; $$('.pl', plan).forEach(b => b.onclick = () => { SND.unlock(); if(phone()) setMap(false); if(S.ex) return; goTo(b.dataset.p); });
+    requestAnimationFrame(() => unclash(plan));
     $$('#escFloors button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === f))); if(S.place) mapPlace(S.place, true); }
+  // labels that land on each other are pushed apart, a few pixels at a time, until none overlap
+  function unclash(plan){ const pills = $$('.pl', plan); if(pills.length < 2) return; const W = plan.clientWidth, Hh = plan.clientHeight || plan.getBoundingClientRect().height; if(!W || !Hh) return;
+    const R = pills.map(b => ({b, x: parseFloat(b.style.left) / 100 * W, y: parseFloat(b.style.top) / 100 * Hh, w: b.offsetWidth + 4, h: b.offsetHeight + 3}));
+    for(let it = 0; it < 60; it++){ let moved = false;
+      for(let i = 0; i < R.length; i++) for(let j = i + 1; j < R.length; j++){ const a = R[i], c = R[j], ox = (a.w + c.w) / 2 - Math.abs(a.x - c.x), oy = (a.h + c.h) / 2 - Math.abs(a.y - c.y);
+        if(ox > 0 && oy > 0){ moved = true; const s = a.y <= c.y ? -1 : 1, d = Math.min(oy / 2 + .5, 6); a.y += s * d; c.y -= s * d; } }
+      for(const r of R){ r.y = clamp(r.y, r.h / 2, Hh - r.h / 2); r.x = clamp(r.x, r.w / 2, W - r.w / 2); } if(!moved) break; }
+    for(const r of R){ r.b.style.left = (r.x / W * 100).toFixed(1) + '%'; r.b.style.top = (r.y / Hh * 100).toFixed(1) + '%'; } }
   function mapStep(){ if(!MAP.dot || !MAP.floor) return; const here = PLACES[S.place]; const show = !!here && here.floor === MAP.floor; MAP.dot.style.display = show ? '' : 'none'; if(!show) return;
     const m = MAP.tf[MAP.floor].pt(rig.pos.x, rig.pos.z), fx = -Math.sin(rig.yaw), fz = -Math.cos(rig.yaw), a = Math.atan2(fz, fx) * 180 / Math.PI;
     const key = m[0].toFixed(1) + ',' + m[1].toFixed(1) + ',' + a.toFixed(0); if(key === MAP.key) return; MAP.key = key; MAP.dot.setAttribute('transform', `translate(${m[0].toFixed(1)} ${m[1].toFixed(1)}) rotate(${a.toFixed(1)})`); }
@@ -739,7 +748,7 @@
 
   /* ---- markers: gold rings (look closer) and white circles (walk there), projected from the house */
   const marks = [], _v = new THREE.Vector3();
-  function mark(kind, label, at, act, key){ const b = el('button', {class: 'escMk ' + kind, type: 'button', 'aria-label': (kind === 'walk' ? 'Walk to the ' + label.toLowerCase() : 'Look at the ' + label.toLowerCase())}, `<i>${kind === 'walk' ? ICO.walk : ''}</i><span>${esc(label)}</span>`);
+  function mark(kind, label, at, act, key){ const b = el('button', {class: 'escMk ' + kind, type: 'button', 'aria-label': (kind === 'walk' ? 'Walk to the ' + label.toLowerCase() : label + ', take a closer look')}, `<i>${kind === 'walk' ? ICO.walk : ''}</i><span>${esc(label)}</span>`);
     b.onclick = e => { e.stopPropagation(); SND.unlock(); act(); }; $('#escMarks').appendChild(b); const m = {b, kind, label, at, act, key, on: false}; marks.push(m); return m; }
   function setMarks(){ for(const m of marks) m.b.remove(); marks.length = 0; UI.markSig = ''; if(!S.place || S.ex || S.done) return;
     for(const w of (WALKS[S.place] || [])) if(!w.when || w.when()) mark('walk', w.label || PLACES[w.to].name, w.at, () => goTo(w.to), 'w:' + w.to);
@@ -869,7 +878,7 @@
     else if(view && view.html){ h += view.html + `<div class="acts"><button class="escBtn" type="button" data-a="all">${ICO.back}<span>All my clues</span></button></div>`; }
     else { h += `<h2>Notebook</h2><p class="sub">${cards.length ? 'Everything you’ve found. Tap a clue to see it big.' : 'Nothing yet. Clues you find go in here.'}</p>`;
       if(nums.length) h += `<div class="nums">${nums.map(n => `<div class="num">${n.icon || ''}<b>${esc(n.value)}</b><span>${esc(n.label)}</span></div>`).join('')}</div>`;
-      h += `<div class="cards">${cards.map(id => `<button class="card" type="button" data-c="${id}"><img alt="" src="${imgOf(id)}"><span>${esc(NOTES[id].title)}</span></button>`).join('')}</div>`;
+      h += `<div class="cards">${cards.map(id => `<button class="clue" type="button" data-c="${id}"><img alt="" src="${imgOf(id)}"><span>${esc(NOTES[id].title)}</span></button>`).join('')}</div>`;
       if(L.bookActs) h += `<div class="acts">${L.bookActs().map((a, i) => `<button class="escBtn dark" type="button" data-b="${i}">${esc(a.label)}</button>`).join('')}</div>`; }
     bookE.innerHTML = h + '</div>';
     bookE.querySelector('.x').onclick = () => setBook(false);

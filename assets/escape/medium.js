@@ -38,7 +38,7 @@
         note: 'The skylit office, across the lower entry from the laundry room. Two skylights, and windows on two walls.'},
       lhall:    {name: 'Lower hall', short: 'Lower hall', floor: 'lower', pos: [-18.5, LE, -26.6], face: [-18.5, LY + 4.4, -36.0], map: [-18.5, -30.0],
         note: 'The lower hall: a bedroom at each end and the bath between them.'},
-      lbed2:    {name: 'Downstairs bedroom', short: 'Bedroom', floor: 'lower', pos: [-21.6, LE, -27.6], face: [-24.6, LY + 1.0, -37.4], map: [-26.0, -33.0],
+      lbed2:    {name: 'Downstairs bedroom', short: 'Bedroom', floor: 'lower', pos: [-25.2, LE, -27.4], face: [-24.0, LY + 1.0, -37.4], map: [-26.0, -33.0],
         note: 'A bedroom with skylights overhead and rainbow film on the bottom of its window.'}};
     const NODES = {k1: [15.7, 12.4], k2: [15.8, 17.2], g1: [15.2, 26.4], g2: [15.6, 32.4], fb: [17.4, 33.0], kh: [20.3, 9.3], h1: [23.8, 8.3], h2: [23.8, 13.5], hb: [23.8, 5.2],
       a1: [4.4, -4.9], a2: [11.4, -4.9], a3: [12.6, -1.0], a4: [12.75, 5.1], kk: [12.8, 8.4],
@@ -145,18 +145,18 @@
     function build(){
       shade('WN-L1-03', true, true);   // somebody pulled the great-room shades down
       // the ring where the tin stood, flat on the coffee bar counter
-      W.ring = prop(ringCanvas(), [18.0, 2.935, 12.45], [0, 1, 0], 1.1, 1.1, {tone: 1});
+      W.ring = prop(ringCanvas(), [18.0, 3.02, 12.45], [0, 1, 0], 1.1, 1.1, {tone: 1});
       // Clover's plan, under a magnet on the kitchen fridge
       const k1 = keep('plan', 1000, 760, 'paper', null); k1.make = planCanvas; k1.cv = planCanvas();
       W.plan = k1.mesh = prop(k1.cv, [17.62, 4.5, 7.82], [0, 0, 1], 1.32, 1.0);
-      const mag = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .04, 18), new THREE.MeshStandardMaterial({color: lin(0xe8506a), roughness: .4})); mag.rotation.x = Math.PI / 2; mag.position.set(17.62, 4.98, 7.86); mag.raycast = () => {}; H.grp('main').add(mag);
+      const mag = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .04, 18), new THREE.MeshStandardMaterial({color: lin(0xe8506a), roughness: .4})); mag.rotation.x = Math.PI / 2; mag.position.set(17.05, 4.98, 7.86); mag.raycast = () => {}; H.grp('main').add(mag);
       // Biscuit asleep on his bed, with his number under him
       const bed = new THREE.Group(); bed.name = 'esc-dogbed';
       const rim = new THREE.Mesh(new THREE.TorusGeometry(1.15, .32, 12, 32), new THREE.MeshStandardMaterial({color: lin(0x6b7f9a), roughness: .95})); rim.rotation.x = Math.PI / 2; rim.scale.set(1.25, 1, 1); rim.position.y = .3; bed.add(rim);
       const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, .2, 32), new THREE.MeshStandardMaterial({color: lin(0xd9d2c3), roughness: 1})); pad.scale.set(1.25, 1, 1); pad.position.y = .12; bed.add(pad);
       bed.position.set(BED[0], 0, BED[2]); bed.traverse(o => { o.raycast = () => {}; }); H.grp('main').add(bed);
       const k2 = keep('biscuit', 700, 900, 'card', null); k2.make = biscuitCanvas; k2.cv = biscuitCanvas();
-      W.biscuitCard = k2.mesh = prop(k2.cv, [BED[0], .235, BED[2]], [0, 1, 0], 1.25, 1.6, {spin: Math.PI});
+      W.biscuitCard = k2.mesh = prop(k2.cv, [BED[0], .235, BED[2]], [0, 1, 0], 1.25, 1.6, {spin: 0});
       W.light = lightPlane({floor: 'SP-L1-GREAT', ppf: 26, gain: 2.3, sources: [windowSource('WN-L1-03', {room: 'SP-L1-GREAT', shade: 'WN-L1-03', bars: [[-.17, .17, 0, 9]]})]});
       // Pepper's rainbow: card and tracing paper on the film of lower-level bedroom 2's window, a 9 at half past five in July
       const src0 = windowSource('WN-L0-07', {room: 'SP-L0-BED2'}), op = src0.op, out = src0.out();
@@ -217,7 +217,7 @@
 
     /* ---------------------------------------------------------------- things to look at */
     const SP = {
-      ring: {from: ['kitchen'], label: () => 'Where the tin was', at: () => [18.0, 3.2, 12.45], pos: [16.6, 5.2, 11.6], look: [18.0, 2.9, 12.45], fit: {w: 2.4, h: 1.8},
+      ring: {from: ['kitchen'], label: () => 'Where the tin was', at: () => [18.0, 3.2, 12.45], pos: [15.9, 5.4, 10.4], look: [18.0, 3.0, 12.45], fit: {w: 2.2, h: 1.8},
         sheet: () => ({title: 'Where the tin was', body: `<p>A clean ring in the crumbs on the coffee bar, exactly the size of a treat tin. Whoever took it didn’t bother to wipe up.</p>${line('snowball', 'Exhibit A. The scene of the crime. I’ve been robbed.')}`}),
         seen(){ noteCase(); }},
       plan: {from: ['kitchen'], label: () => 'Drawing on the fridge', at: () => [17.62, 4.5, 7.95], pos: [17.62, 4.6, 10.6], look: [17.62, 4.5, 7.82], fit: {w: 1.55, h: 1.2},
@@ -239,7 +239,7 @@
           if(!has('p_clover')) return {title: 'Clover', body: `${line('clover', 'Oh. You found me. Please don’t thump.')}<p>Clover is pressed into the corner of the closet, next to a carrot tied up in ribbon. She looks at you, and then she thumps her back foot. Again. And again.</p><div class="thumps">${['THUMP', 'THUMP', 'THUMP', 'THUMP'].map((t, i) => `<span style="animation-delay:${.45 + i * .55}s">${t}</span>`).join('')}</div>`};
           return {title: 'Clover', body: `${line('clover', 'That was my number. Four. Please go away now. Nicely.')}<div class="got">${ICON('clover', 34)}<b>4</b><span>Clover thumped four times</span></div>`}; },
         seen(){ if(doorT('D-L1-09') > .5 && !has('p_clover')){ for(let i = 0; i < 4; i++) setTimeout(() => SND.thump(), 450 + i * 550);
-            setTimeout(() => { if(give('cloverFound', 'p_clover')){ note('clover', {title: 'Clover’s thumps', where: 'Front bedroom closet', img: () => thumpCanvas(), text: 'Clover thumped her foot four times. Rabbits count with their feet.'}); say('Rabbits count with their feet. That’s a four.', 5200); } }, 2800); } }},
+            setTimeout(() => { if(give('cloverFound', 'p_clover')){ note('clover', {title: 'Clover’s thumps', where: 'Front bedroom closet', img: () => thumpCanvas(), text: 'Clover thumped her foot four times. Rabbits count with their feet.'}); say('Rabbits count with their feet.', 4600); } }, 2800); } }},
       closetM: {from: ['middlebed'], when: () => has('cloverMap'), label: () => 'Closet with three doors', at: () => [20.9, 3.4, 18.9], pos: [27.6, 5.2, 18.9], look: [20.6, 2.8, 18.9], fit: {w: 8, h: 6.6},
         sheet: () => doorT('D-L1-07') > .5 ? {title: 'The closet', body: `<p>Shirts on hangers and a stack of boxes. No rabbit.</p>${line('snowball', 'Shirts. No rabbit. Look at her plan again.')}`, acts: [{label: 'Slide the doors shut', cls: '', run: () => act(() => { SND.slide(); door('D-L1-07', false); }, 1300)}]}
           : {title: 'The closet', body: '<p>Another closet behind three sliding doors.</p>', acts: [{label: 'Slide the doors open', run: () => act(() => { SND.slide(); door('D-L1-07', true); }, 1300)}]}},
@@ -247,11 +247,11 @@
         sheet: () => ({title: 'Pepper', body: has('p_pepper') ? `${line('pepper', 'NINE! NINE! I DIDN’T SAY ANYTHING!')}<div class="got">${ICON('pepper', 34)}<b>9</b><span>Pepper’s number, in the rainbow</span></div>`
           : `${line('pepper', 'SURPRISE! ... No. Nothing. NO RAINBOW, NO TALKING!', true)}<p>The bottom of the window over the bed is covered in rainbow film, with strips of paper stuck on it in a boxy figure. Some are card, some are tracing paper.</p>`}),
         seen(){ if(give('metPepper')){ SND.chirp(); setTimeout(() => say('She said surprise. Write that down.', 4200), 1400); W.rainbow.update(); } }},
-      rainbow: {from: ['lbed2'], sun: true, when: () => has('metPepper') && W.film && W.film.s > .05, label: () => 'Rainbow on the floor', at: () => [-22.5, LY + .3, -34.9], pos: [-21.2, LY + 6.4, -31.2], look: [-22.4, LY, -35.0], fit: {w: 3.6, h: 3.0},
+      rainbow: {from: ['lbed2'], sun: true, when: () => has('metPepper') && W.film && W.film.s > .05, label: () => 'Rainbow on the floor', at: () => [-22.5, LY + .3, -34.9], pos: [-21.8, LY + 7.2, -32.2], look: [-22.4, LY, -35.0], fit: {w: 3.6, h: 3.0},
         sheet: () => rainbowUp() ? {title: 'Rainbow on the floor', body: '<p>Colour all over the floor, and the card strips on the film leave a dark figure in it. The tracing paper lets the colour through.</p>'}
           : {title: 'Rainbow on the floor', body: '<p>Colour on the floor, but the shadows of the paper are pulled out of shape. Not quite the right time.</p>'},
         seen(){ if(rainbowUp()) readRainbow(); }},
-      nugget: {from: ['office'], label: () => has('nuggetAwake') ? 'Nugget’s nest' : 'Nugget', at: () => [NEST[0], NEST[1] + .6, NEST[2]], pos: [-26.6, LY + 4.2, -9.4], look: [NEST[0], NEST[1] + .1, NEST[2]], fit: {w: 2.0, h: 1.6},
+      nugget: {from: ['office'], sun: true, label: () => has('nuggetAwake') ? 'Nugget’s nest' : 'Nugget', at: () => [NEST[0], NEST[1] + .6, NEST[2]], pos: [-26.6, LY + 4.2, -9.4], look: [NEST[0], NEST[1] + .1, NEST[2]], fit: {w: 2.0, h: 1.6},
         sheet: () => has('nuggetAwake') ? {title: 'Under Nugget', body: `<p>He was sleeping on a card. Four faces in a row, Clover, Pepper, Biscuit and Nugget, with sunflower seeds in a two under his own face. And a drawing of the lounge drinks fridge, with balloons.</p>${line('nugget', 'That’s the order. Don’t tell Snowball. Oh.')}<div class="got">${ICON('nugget', 34)}<b>2</b><span>Nugget’s number, and the order</span></div>`}
           : {title: 'Nugget', body: `${line('nugget', 'Zzzzz.')}<p>Nugget is curled up in his nest on the shelf, under the skylights. He is very, very asleep.</p>${line('snowball', 'He sleeps all day. Useless till dark.')}`},
         seen(){ if(give('metNugget')){ sunKey(true); setTimeout(checks, 600); } }},
