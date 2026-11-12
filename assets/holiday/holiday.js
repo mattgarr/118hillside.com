@@ -72,7 +72,7 @@
       if(keys[0] === 'path' && !W.warmed){ await new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; try{ P.prewarm(WINTER, f); }catch(e){ f(); } setTimeout(f, 6000); }); W.warmed = true; await hold(); }
       /* the two oaks are planted a moment after the house (and after the first view): wait a little for them, and if they are later still, string them when they arrive */
       if(keys[0] === 'oak') for(let i = 0; i < 24 && !oaks(); i++) await sleep(250);
-      keys.forEach(k => { S[k] = WINTER[k]; }); P.apply(S, ctx()); syncVis(); await paint(); }
+      keys.forEach(k => { S[k] = WINTER[k]; }); P.apply(S, ctx()); syncVis(); await paint(); if(W.on && W.onFirst){ const f = W.onFirst; W.onFirst = null; f(); } }
     /* the props' programs, compiled for the tour's light set before they are first drawn (else the first frame with them compiles them all at once) */
     if(H.compile && !W.compiled){ const objs = [], seen = new Set(); P.root.updateMatrixWorld(true);
       P.root.traverse(o => { if(!o.material || !(o.isMesh || o.isPoints || o.isLine || o.isSprite)) return; const k = [].concat(o.material).map(m => m.uuid).join() + (o.isInstancedMesh ? 'i' : ''); if(!seen.has(k)){ seen.add(k); objs.push(o); } });
@@ -82,11 +82,11 @@
   function lateOaks(){ if(!W.oakMiss || W.late) return; let n = 0;
     W.late = setInterval(() => { if(!oaks() && ++n < 90) return; clearInterval(W.late); W.late = 0; W.oakMiss = false; const S = W.S; try{ W.P.apply(Object.assign({}, S, {oak: 'none', oakFront: false, ter2: []}), ctx()); W.P.apply(S, ctx()); syncVis(); }catch(e){} }, 1000); }
   function winterMake(){ if(!W.P){ W.P = window.DECKPROPS(H, {porchLight: false}); W.P.root.name = 'holiday-winter'; } if(!W.on && W.P.root.parent) W.P.root.parent.remove(W.P.root); return W.P; }
-  async function winterOn(step, stale){ stale = stale || (() => false);
-    await loadProps(); if(stale()) return false;
+  async function winterOn(step, stale, m){ stale = stale || (() => false); m = m || (() => {});
+    await loadProps(); m('script'); if(stale()) return false;
     const P = winterMake(); W.on = true; if(!P.root.parent) H.scene.add(P.root); P.setOn(1); P.root.visible = false;
     if(!W.raf) W.raf = requestAnimationFrame(frame);
-    if(!W.built){ W.gate = null; W.step = step; const ok = await winterReady(); W.step = null; if(stale()){ if(!W.built) W.gate = PREP.gate; return false; } if(!ok) return false; }
+    if(!W.built){ W.gate = null; W.step = step; W.onFirst = () => m('first'); const ok = await winterReady(); W.step = null; W.onFirst = null; if(stale()){ if(!W.built) W.gate = PREP.gate; return false; } if(!ok) return false; }
     syncVis(); lateOaks(); return true; }
   function winterOff(){ if(W.P && W.P.root.parent && !W.on) W.P.root.parent.remove(W.P.root); if(!W.on) return; W.on = false; if(W.raf){ cancelAnimationFrame(W.raf); W.raf = 0; } if(W.late){ clearInterval(W.late); W.late = 0; }
     if(W.P){ W.P.root.visible = false; if(W.P.root.parent) W.P.root.parent.remove(W.P.root); }
@@ -119,19 +119,24 @@
     if(kind === current() && !sweep().length){ want = null; render(); return Promise.resolve(true); }
     return (runP = drive().finally(() => { runP = null; }));
   }
+  /* r43: each switch keeps a timeline (HOLIDAY.state().marks[kind]): the loading note painted, the old dress down, the new one built, on, its first
+     frame drawn (shown), settled; and the longest gap between frames meanwhile (worst), so a slow switch says where its time went */
+  let marks = {};
+  const frameWatch = () => { const w = {worst: 0, on: true}; let last = performance.now(); (function f(){ if(!w.on) return; const t = performance.now(); w.worst = Math.max(w.worst, t - last); last = t; requestAnimationFrame(f); })(); return w; };
   async function drive(){ let ok = true, kind = null, t0 = 0;
     while(want !== null){ kind = want; want = null; const my = ++gen, stale = () => my !== gen; t0 = performance.now();
-      busy = kind; show.stop(); render(); status(busyText(kind)); await paint(); if(stale()) continue;
+      const mk = {from: current(), cold: kind === 'thanksgiving' ? !(TG() && TG().ready) : kind === 'winter' ? !W.built : kind === 'halloween' ? !(window.__HW && __HW.built) : false}, fw = frameWatch(), m = n => { mk[n] = Math.round(performance.now() - t0); };
+      busy = kind; show.stop(); render(); status(busyText(kind)); await paint(); m('note'); if(stale()){ fw.on = false; continue; }
       ok = true;
-      try{ downAll(kind); sweep(); if(stale()) continue;
-        if(kind === 'thanksgiving' && TG().prepare && !TG().ready){ await TG().prepare(); if(stale()) continue; }   // built in slices and its materials compiled, then shown in one step
-        if(kind === 'halloween') HW().on(); else if(kind === 'thanksgiving') TG().on(); else if(kind === 'winter'){ if(!(await winterOn(status, stale)) && !stale()) ok = false; }
-        if(stale()) continue;
+      try{ downAll(kind); sweep(); m('down'); if(stale()){ fw.on = false; continue; }
+        if(kind === 'thanksgiving' && TG().prepare && !TG().ready){ await TG().prepare(); m('built'); if(stale()){ fw.on = false; continue; } }   // built in slices and its materials compiled, then shown in one step
+        if(kind === 'halloween') HW().on(); else if(kind === 'thanksgiving') TG().on(); else if(kind === 'winter'){ if(!(await winterOn(status, stale, m)) && !stale()) ok = false; }
+        m('on'); if(stale()){ fw.on = false; continue; }
         sweep(); if(kind !== 'none' && current() !== kind) ok = false; }
       catch(e){ ok = false; console.warn('[holiday]', kind, e); try{ downAll(null); sweep(); }catch(x){} }
-      if(stale()) continue;
-      await settle(); if(stale()) continue;
-      lastMs[kind] = Math.round(performance.now() - t0); }
+      if(stale()){ fw.on = false; continue; }
+      await paint(); m('shown'); await settle(); m('settled'); fw.on = false; mk.worst = Math.round(fw.worst); if(stale()) continue;
+      lastMs[kind] = Math.round(performance.now() - t0); marks[kind] = mk; }
     if(kind !== null && current() !== kind && ok){ ok = false; }   // the last pick did not hold (should not happen): say so rather than show a wrong state
     busy = null;
     const live = $('#holLive'); if(live) live.textContent = !ok ? 'The decorations did not load. Try again.' : kind === 'none' ? 'The decorations are down.' : DRESS[kind].label + ' decorations are up.';
@@ -396,6 +401,6 @@
     res.ok = res.pairs.every(p => p.ok); res.leftovers = res.pairs.reduce((n, p) => n + p.n, 0); res.ms = Math.round(performance.now() - t0); res.sweeps = lastSweep.slice(); window.__DECORQA = res; return res; }
 
   window.HOLIDAY = {set, dusk, qa, sweep, prepare, get season(){ return SEASON; }, get prep(){ return PREP; }, debug: {qa: o => qa(o), snap: () => H.snap && H.snap(), sweep: () => sweep()}, get current(){ return current(); }, get busy(){ return busy; }, show: o => show.start(o), stopShow: () => show.stop(), open: () => open(btn), close: () => close(false),
-    state: () => ({current: current(), busy, mode: H.mode, tod: H.tod, winter: {on: W.on, built: W.built, count: W.P ? W.P.count() : null, visible: W.P ? W.P.root.visible : false}, ms: Object.assign({}, lastMs), show: show.on ? show.i : null, panel: panel ? !panel.hidden : false}),
+    state: () => ({current: current(), busy, marks: JSON.parse(JSON.stringify(marks)), mode: H.mode, tod: H.tod, winter: {on: W.on, built: W.built, count: W.P ? W.P.count() : null, visible: W.P ? W.P.root.visible : false}, ms: Object.assign({}, lastMs), show: show.on ? show.i : null, panel: panel ? !panel.hidden : false}),
     get props(){ return W.P; }, WINTER, DRESS};
 })();
