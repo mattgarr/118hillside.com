@@ -204,7 +204,7 @@ only), the terrain lift (1.4), game and holiday sprites, contact-shadow and AO d
 ## 7. Baked and traced indirect light (prototype, `?gi=1` / `?gi=2`, r43)
 
 Not on the live path: without `?gi=` the page never requests `gi.js`. Files: `gi.js` (run time), `gi-bake.js` (the WebGL2 path
-tracer, `?gi=bake`), `gi-rt.js` (tier B), `gi-qa.js` (captures, `&giqa=1`), `gi/index.json` + `gi/gi-r43-2.bin` (the data).
+tracer, `?gi=bake`), `gi-rt.js` (tier B), `gi-qa.js` (captures, `&giqa=1`), `gi/index.json` + `gi/gi-r43-3.bin` (the data).
 
 **Tier A, baked probes (`?gi=1`).** A 21 x 12 x 39 grid, 1.25 ft apart, over the kitchen, great room and living room; 3,002 probes
 in the rooms' own air, 4,096 paths each, baked on the owner's Mac GPU (about 7 minutes). Components: sky and unit-sun bounce at 14
@@ -231,6 +231,27 @@ taken to neutral (strength .9), plus half of the illuminant's own colour. No sur
 roof void were dark / closed-below and were interpolated into the ceiling under them. The bake now keeps only probes and voxels
 joined to the rooms' air (a short ray to each neighbour, the largest set that holds the eye-level points), and the AO is stored
 per direction (visibility as a + b.n), so a surface reads the openness of its own side.
+
+**Second round (same day).**
+
+- *Room meter.* `GI.EV` stays the base, but the page's own meter follows only 60 % of a difference within 0.6 stops (and phones have
+  none), so a room far from the midday level stayed wrong: the great room at golden hour holds 1.7x its midday light and blew out.
+  `gi.js` now meters the rooms itself: the mean lifted irradiance of the probes the lens sees (below 9 ft, within 28 ft, about 55
+  degrees either side) against 1.5, followed 85 % of the way within 1.5 stops, eased in stops over about a second. The same rule in
+  every room and at every time; outside the rooms it is 1.
+- *Lamps.* Not lifted, and balanced for the side the camera is on: 75 % toward neutral indoors (whites stay near white under warm
+  lamps), 15 % from outside (the windows keep their glow, as r40 chose). The page's direct lamp light is untouched.
+- *Region edge.* The first edge reached 2-3 ft beyond the rooms and relit the whole 3 ft hall behind the kitchen and a strip of the
+  bedroom wall. The weight is now a 1 ft blur of the plan, 1 from 0.7 ft inside and 0 from 0.7 ft outside: nothing crosses a wall,
+  and an opening hands over across about 1.4 ft. Corner bands are lifted only on the rooms' own faces of a wall.
+- *AO.* Voxels just outside a window were reached through the opening (glass is not in the BVH), read "closed toward the room" and
+  darkened the inside of the window walls in the probes-only tier. Only voxels inside the rooms' BIM spaces are kept (gi-r43-3).
+- *The floor.* In listing photo p01 the floor is 0.68-0.79 of the cabinets' luminance; the current look gives 0.70 with the same hue
+  (its painted light was tuned to that photo), the traced light 0.36-0.41 and redder. The texture is right; the photograph has every
+  recessed light on, and by daylight alone a floor of that albedo is that dark. Closing the gap is a page decision (lights on by day).
+- *Not snow.* The white ground in the first sheets is on main without the flag: from inside at midday, the sunlit terrain photo and
+  the leaves over-expose through clear glass (indoor exposure, and r40 removed the 60 % window pull). In a hidden tab the trees only
+  appear with `perf-lazytrees-off`, which is why the first captures without them looked different.
 
 ### 7.1 Whole-house plan
 
