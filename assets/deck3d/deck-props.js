@@ -274,8 +274,8 @@
       const tw = small ? .055 : .085;
       tube([new V3(0, o.pot ? .3 : 0, 0), new V3(.006, y0, -.004), new V3(-.01, (y0 + h) / 2, .006), new V3(0, h - .3, 0), new V3(0, h + .03, 0)], [tw, tw * .9, tw * .55, tw * .3, .012], 7, '#5a4330');
       /* whorls of branches; each branch: polyline bp(u), fronds along its axis, alternating side fronds, a paler upturned tip */
-      const tiers = Math.max(8, Math.round((yTop - y0) / (small ? .27 : .31))), lights = [], tips = [];
-      for(let i = 0; i < tiers; i++){ const t = i / (tiers - 1), y = y0 + (yTop - y0) * t + (i && i < tiers - 1 ? (R() - .5) * .08 : 0), rr = r * prof(t) + .12, nb = Math.max(4, Math.round((small ? 3.5 : 4.5) + rr * (kind === 'pencil' ? 4.2 : 3.6))), off = i * 2.39996 + R();
+      const tiers = Math.max(8, Math.round((yTop - y0) / (small ? .24 : .27))), lights = [], tips = [];
+      for(let i = 0; i < tiers; i++){ const t = i / (tiers - 1), y = y0 + (yTop - y0) * (1 - Math.pow(1 - t, 1.18)) + (i && i < tiers - 1 ? (R() - .5) * .08 : 0), rr = r * prof(t) + .12, nb = Math.max(4, Math.round((small ? 3.5 : 4.5) + rr * (kind === 'pencil' ? 4.2 : 3.6))), off = i * 2.39996 + R();
         for(let k = 0; k < nb; k++){ if(R() < .06 && t < .9) continue;   // a gap here and there, as a real tree has
           const a = off + k / nb * 6.283 + (R() - .5) * .38, Hd = new V3(Math.sin(a), 0, Math.cos(a)), L = rr * (.84 + R() * .3), e = lerp(-.1, .62, Math.pow(t, 1.2)) + (R() - .5) * .14, drop = L * lerp(.3, .06, t) * (.8 + R() * .4);
           const B = new V3(0, y, 0), bp = u => B.clone().addScaledVector(Hd, L * Math.cos(e) * u).addScaledVector(Y, L * Math.sin(e) * u - drop * u * u + (u > .82 ? L * .5 * (u - .82) * (u - .82) : 0)), bd = u => bp(Math.min(1, u + .04)).sub(bp(Math.max(0, u - .04))).normalize();
@@ -283,7 +283,7 @@
           const fl = .44 * sc, fw = fl * .5, Sm = new V3().crossVectors(Hd, Y).normalize();
           const na = Math.max(1, Math.ceil(L * .78 / (fl * .72))); for(let j = 0; j < na; j++){ const u = .22 + j * .78 / na; frond(bp(u), bd(u), Math.min(fl, L * .78 / na * 1.35), fw, 1); }
           frond(bp(.93), bd(.93).addScaledVector(Y, .25).normalize(), fl * .7, fw * .9, 1.16);   // this year's growth at the tip
-          let sd = R() > .5 ? 1 : -1; for(let u = .16; u < .9; u += (.15 * sc + .05) / Math.max(.4, L) * (.85 + R() * .3)){ sd = -sd; const ll = (.26 + .52 * (1 - u)) * Math.min(1, .4 + L * .35) * sc * 1.25, ang = .78 + (R() - .5) * .3;
+          let sd = R() > .5 ? 1 : -1; for(let u = .16; u < .9; u += (.15 * sc + .05) / Math.max(.4, L) * (.85 + R() * .3)){ sd = -sd; const ll = (.26 + .52 * (1 - u)) * Math.min(1, .58 + L * .3) * sc * 1.25, ang = .78 + (R() - .5) * .3;
             const D = bd(u).multiplyScalar(Math.cos(ang)).addScaledVector(Sm, sd * Math.sin(ang)).addScaledVector(Y, .1 + R() * .12).normalize(), b0 = bp(u);
             if(ll > fl * 1.1){ frond(b0, D, ll * .55, fw, .96); const D2 = D.clone().addScaledVector(Y, -.12).normalize(); frond(b0.clone().addScaledVector(D, ll * .5), D2, ll * .55, fw * .9, 1.04); } else frond(b0, D, ll, fw * .95, 1); }
           const nl = L * (small ? 1.5 : 1.6); for(let j = 0; j < nl; j++){ const u = .38 + .58 * ((j + R()) / Math.max(1, nl)); lights.push(bp(u).addScaledVector(Sm, (R() - .5) * .22 * sc).addScaledVector(Y, .055)); }
