@@ -20641,8 +20641,15 @@ function r36PrimaryCeiling(){
   // the dormer bay had no ceiling of its own (the roof's tan underside showed): one painted plane just under it, in the upper level's ceiling mesh
   /* r37: the bay's plane now starts a hair under the gable just past the break (the 3/8 in step there showed as a dotted line), reaches both end walls, and the hole the model left in the gable ceiling beside the bay's end (the roof soffit showed through it as loose panels) is closed */
   const xL = xB - .04;
-  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xL, gable(xL) - .005, -36.52], [-8.76, dorm(-8.76) - .03, -36.52], [-8.76, dorm(-8.76) - .03, -26.15], [xL, gable(xL) - .005, -26.15], [0, -1, 0]],
-    [[xB, dorm(xB) - .03, -36.52], [-10.78, gable(-10.78), -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [-10.78, dorm(-10.78) - .03, -36.52], [0, 0, 1]],   // and the bay's end, where the gable carries on below it
+  /* r41 owner 11/12 ("this geometry is incorrect - the ceiling in the window alcove is actually flat... so it slopes with the main ceiling and
+     then becomes flat 2 ft before the wall"): the bay is a 2 ft window alcove (its outer wall x = -8.78, the room's wall line x = -10.78).
+     Its ceiling was one plane from the break up to the dormer roof, shallower than the room's slope, so at the alcove's end (z = -36.52)
+     it stood above the room ceiling beside it and a sloped wedge with a boxed end dropped into the corner. Now: the room's own slope
+     carries on over the bay to the wall line (one plane with the ceiling beside it), then a flat ceiling at that height, gable(-10.78)
+     = 13.60 ft, over the 2 ft alcove to its outer wall. The alcove's walls and the window heads (13.06 ft) are under it. */
+  const xF = -10.78, yF = gable(xF) - .005;
+  r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xL, gable(xL) - .005, -36.52], [xF, yF, -36.52], [xF, yF, -26.15], [xL, gable(xL) - .005, -26.15], [0, -1, 0]],
+    [[xF, yF, -36.52], [-8.76, yF, -36.52], [-8.76, yF, -26.15], [xF, yF, -26.15], [0, -1, 0]],
     [[-12.5, gable(-12.5) - .012, -37.8], [-10.78, gable(-10.78) - .012, -37.8], [-10.78, gable(-10.78) - .012, -36.5], [-12.5, gable(-12.5) - .012, -36.5], [0, -1, 0]]]);
   // wall paint where the model left bare framing: the bath-side gable above 15.7 ft right of the ridge, that wall inside the bay, and the top of the short return wall at the bay's other end
   r36AddFaces(/^walls\|L2\|paint-int-flat#PAINT-SW-6241-ALEUTIAN$/, 'R37-PRIMARY-WALLS', [
@@ -20701,6 +20708,14 @@ function r41GarageRidge(){
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
   const m = new THREE.Mesh(g, M.stepFlash22 || M.trimExt); m.name = 'r41-garage-flashing'; m.castShadow = false; m.receiveShadow = true; grp('roof').add(m);
   R41R.added.push({el: 'R41-GARAGE-FLASHING', segs: line.length - 1}); }
+/* r41 primary window alcove (see r36PrimaryCeiling): fixtures that seat themselves on the ceiling (the alcove's two cans) read the model's
+   ceiling, which still has the old single bay plane; inside the bay they now get the ceiling that is built: the room's slope to the wall
+   line x = -10.78, flat at 13.6 ft over the alcove. BIM frame: bx = world z, by = world x. */
+{ const _ca41 = bim2CeilingAt; bim2CeilingAt = function(bx, by, fz){
+    if(bx > -36.52 && bx < -26.15 && by > -12.62 && by < -8.76 && Math.abs(fz - (LEVEL_Z.L2 != null ? LEVEL_Z.L2 : 5.57)) < 1){
+      const g = x => 7.3135 - .583 * x - .005; if(by >= -10.78) return {z: g(-10.78), n: [0, -1, 0]};
+      const v = new THREE.Vector3(-.583, -1, 0).normalize(); return {z: g(by), n: [v.x, v.y, v.z]}; }
+    return _ca41.apply(this, arguments); }; }
 { const _bh41 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh41.apply(this, arguments); try{ r41GarageRidge(); }catch(e){ console.warn('[r41] garage ridge', e); R41R.err.push(String(e)); } return r; }; }
 /* r28 owner 11/10: the kitchen-to-hall passage (between the fridge and the coffee bar). The model left it as a slot open from the floor to
    the vaulted ceiling. As built: a framed pocket door (Craftsman 3-panel leaf like the rest of the house, split jambs, Craftsman casing
