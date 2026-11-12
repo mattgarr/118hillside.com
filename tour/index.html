@@ -22982,7 +22982,7 @@ function ghostFlattenJogs(S){
     const sm = [rm.s0, rm.s1].map(v => v - ((K.a[0] - f.a[0]) * u[0] + (K.a[1] - f.a[1]) * u[1]));
     const mid = [(Mv.a[0] + Mv.b[0]) / 2 + n[0] * .6, (Mv.a[1] + Mv.b[1]) / 2 + n[1] * .6], sp = room(mid[0], mid[1], Mv.c.storey);
     if(!sp) continue;   // a room face only (siding steps outside are left as built)
-    GHOST41.jogs.push({keep: K.c.element, move: Mv.c.element, storey: Mv.c.storey, room: sp.id, inches: +((dk - dm) * 12).toFixed(2), n, u, o: K.a, dm, dk, s0: sm[0], s1: sm[1], y0: Math.min(K.c.z0, Mv.c.z0) - .3, y1: Math.max(K.c.z1, Mv.c.z1) + .3, verts: 0}); }
+    GHOST41.jogs.push({keep: K.c.element, move: Mv.c.element, storey: Mv.c.storey, room: sp.id, inches: +((dk - dm) * 12).toFixed(2), n, u, o: K.a.slice(), dm, dk, s0: sm[0], s1: sm[1], y0: Math.min(K.c.z0, Mv.c.z0) - .3, y1: Math.max(K.c.z1, Mv.c.z1) + .3, verts: 0}); }
   // de-duplicate (the same face pair is found from both walls' polygons only once, but two keeps can claim one face: take the first)
   const seen = new Set(); GHOST41.jogs = GHOST41.jogs.filter(J => { const k = J.move + '|' + J.n.map(v => v.toFixed(3)) + '|' + J.dm.toFixed(3); if(seen.has(k)) return false; seen.add(k); return true; });
   const e = new THREE.Matrix4();
@@ -22997,7 +22997,12 @@ function ghostFlattenJogs(S){
     for(const s of S.spaces){ if(s.storey !== J.storey || !s.poly) continue; let k = 0;
       for(const p of s.poly){ const sv = (p[0] - J.o[0]) * J.u[0] + (p[1] - J.o[1]) * J.u[1], t = p[0] * J.n[0] + p[1] * J.n[1] - J.dm;
         if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; k++; } }
-      if(k){ J.poly = (J.poly || []).concat(s.id); if(s.bb) s.bb = [Math.min(...s.poly.map(p => p[0])), Math.min(...s.poly.map(p => p[1])), Math.max(...s.poly.map(p => p[0])), Math.max(...s.poly.map(p => p[1]))]; } } }
+      if(k){ J.poly = (J.poly || []).concat(s.id); if(s.bb) s.bb = [Math.min(...s.poly.map(p => p[0])), Math.min(...s.poly.map(p => p[1])), Math.max(...s.poly.map(p => p[0])), Math.max(...s.poly.map(p => p[1]))]; } }
+    // r41 G4b: the moved wall's collider face goes with its paint, so walking and click-to-move keep their clearance from what is drawn
+    for(const c of S.colliders){ if(c.element !== J.move || c.storey !== J.storey || !c.poly) continue;
+      for(const p of c.poly){ const sv = (p[0] - J.o[0]) * J.u[0] + (p[1] - J.o[1]) * J.u[1], t = p[0] * J.n[0] + p[1] * J.n[1] - J.dm;
+        if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; J.coll = (J.coll || 0) + 1; } }
+      if(c.bb) c.bb = [Math.min(...c.poly.map(p => p[0])), Math.min(...c.poly.map(p => p[1])), Math.max(...c.poly.map(p => p[0])), Math.max(...c.poly.map(p => p[1]))]; } }
   return GHOST41.jogs.length; }
 /* QA (?qa=1): the shadow-pass trace and a window on the renderer state for the pivot test (GHOST41.trace = true to record) */
 if(/[?&]qa=1\b/.test(location.search)){ const SM = renderer.shadowMap, orig = SM.render.bind(SM); GHOST41.sm = [];
