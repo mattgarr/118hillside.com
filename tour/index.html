@@ -6795,6 +6795,38 @@ function navQA(){
     for(const r of rows) delete r.trace; window.__SMOOTH = {rows, fps, dt: dt0}; const s = k => rows.reduce((x, r) => Math.max(x, r[k]), 0);
     R.note('smooth', 'summary', rows.length + ' walked moves at ' + Math.round(1 / dt0) + ' fps: yaw max ' + s('rate') + ' deg/s, ' + s('acc') + ' deg/s2; most reversals ' + s('rev') + '; most excess turning ' + s('excess') + ' deg; longest ' + s('dur') + ' s');
     tour(0); };
+  /* r40 'light': every tour move in order, forward and back, stepped and DRAWN at a fixed simulated frame time (1/30 s; {lightDt} for
+     another), with the lighting settled at the start stop first. Each frame the canvas is read back at 48x30 and compared with the last
+     one: the median of the per-pixel luma change is the lighting step (a door frame or wall sweeping across the view moves a minority of
+     pixels and leaves the median near 0; a lighting change moves them all). A move fails when that step is over R40L.chk (1.5 / 255) or
+     the exposure moves more than R40L.chkStops in one frame. Moves that change the time of day (the Dusk stop) are noted, not judged.
+     Then a few views are reached from two different stops and must settle to the same exposure (within 2 %). Table: window.__LIGHT. */
+  SEC.light = async R => { const dt = o.lightDt || 1 / 30, realNow = performance.now.bind(performance); let vt = realNow(); const W = 48, H = 30, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d', {willReadFrequently: true}), rows = [], chk = R40L.chk || 1.5, chkS = R40L.chkStops || .045;
+    const grab = () => { g.drawImage(canvas, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data, L = new Float32Array(W * H); for(let i = 0; i < W * H; i++) L[i] = .2126 * d[i * 4] + .7152 * d[i * 4 + 1] + .0722 * d[i * 4 + 2]; return L; };
+    const frame = () => { vt += dt * 1000; tick0(true); return grab(); };
+    const D = new Float32Array(W * H), med = () => { const b = Array.from(D).sort((x, y) => x - y); return b[b.length >> 1]; };
+    const seq = o.lightMoves ? o.lightMoves.map(p => p.map(v => typeof v === 'string' ? ix(v) : v)) : STOPS.map((s, i) => [i, i + 1]).filter(p => p[1] < STOPS.length).concat(STOPS.map((s, i) => [STOPS.length - 1 - i, STOPS.length - 2 - i]).filter(p => p[1] >= 0));
+    const settle = n => { for(let i = 0; i < n; i++){ vt += dt * 1000; tick0(true); } };
+    performance.now = () => vt; R37S.qaNoDraw = false;
+    try{
+      for(const [a, b] of seq){ await pause(); const id = STOPS[a].id + '>' + STOPS[b].id; tour(a); settle(o.lightSettle || 90);
+        let p = grab(), e0 = renderer.toneMappingExposure, tod0 = TOD_KEY, n = 0, after = 0, worst = 0, at = 0, wE = 0, todCh = false; const fades0 = R40X.fades;
+        showStop(b); const A = anim;
+        while(n < 1500 && ((A && anim === A) || after++ < 45)){ const c = frame(); n++; for(let i = 0; i < W * H; i++) D[i] = c[i] - p[i]; const m = Math.abs(med()), e = renderer.toneMappingExposure, es = Math.abs(Math.log2(e / e0));
+          if(TOD_KEY !== tod0) todCh = true; if(m > worst){ worst = m; at = n; } if(es > wE) wE = es; p = c; e0 = e; tod0 = TOD_KEY; }
+        const row = {id, frames: n, step: +worst.toFixed(2), at, stops: +wE.toFixed(4), fades: R40X.fades - fades0, tod: todCh}; rows.push(row);
+        if(todCh){ R.note('light', id, 'changes the time of day (not judged): largest step ' + row.step + ' / 255'); continue; }
+        if(worst > chk) R.fail('light', id, 'a one-frame lighting step of ' + row.step + ' / 255 at frame ' + at + ' (' + Math.round(1 / dt) + ' fps)');
+        if(wE > chkS) R.fail('light', id, 'the exposure moved ' + row.stops + ' stops in one frame');
+        R.note('light', id, n + ' frames, largest lighting step ' + row.step + ' / 255, exposure ' + row.stops + ' stops/frame, ' + row.fades + ' environment fades'); }
+      // the same view from two histories settles to the same exposure
+      for(const [v, f1, f2] of (o.lightSame || [['kitchen', 'living', 'great'], ['entry', 'porch', 'living'], ['great', 'kitchen', 'mainbeds'], ['lounge', 'terrace', 'office']])){ await pause(); const es = [];
+        for(const f of [f1, f2]){ tour(ix(f)); settle(90); showStop(ix(v)); for(let i = 0; i < 1500 && anim; i++) settle(1); settle(Math.round(8 / dt)); es.push(renderer.toneMappingExposure); }
+        const d = Math.abs(es[0] / es[1] - 1); R.note('light', 'same ' + v, 'exposure ' + es.map(x => x.toFixed(4)).join(' from ' + f1 + ' / ') + ' from ' + f2 + ' (' + (d * 100).toFixed(2) + ' %)');
+        if(d > .02) R.fail('light', 'same ' + v, 'settles to a different exposure from ' + f1 + ' (' + es[0].toFixed(4) + ') and ' + f2 + ' (' + es[1].toFixed(4) + ')'); } }
+    finally{ performance.now = realNow; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
+    window.__LIGHT = rows; tour(0); };
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
     const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
@@ -7435,13 +7467,13 @@ function tick(qa){
   if(mode==='walk' && !anim && !glide && nav==='look'){ navWalk(dt); updateWalkRoom(false); }
   else NAV.lastY = null;
   // at dusk, windows glow when seen from outside and stay clear from inside
-  { const inside = !isDoll() && bim2CameraIndoors();
-    const st = (DUSK ? 'd' : 'n') + (inside ? 'i' : 'o'); if(st !== tick.glow){ tick.glow = st; const glow = DUSK && !inside; ENV_INSIDE = inside; applyEnv();
-      const col = glow ? 0x2a2420 : (inside ? 0xeef2f2 : 0x14191d), op = glow ? .88 : (inside ? .06 : .58), env = inside ? .6 : (DUSK ? .35 : 2.4);
-      M.glass.emissiveIntensity = glow ? .8 : 0; M.glass.opacity = op; M.glass.color.set(col).convertSRGBToLinear(); M.glass.envMapIntensity = env; M.glass.roughness = .04;
-      for(const m of GLOW){ m.emissiveIntensity = glow ? .7 : 0; m.color.set(col).convertSRGBToLinear(); m.envMapIntensity = env; } }
-    // interiors read about 1.2 stops brighter (real-estate photo exposure); ease between them
-    EXPO_IN += ((inside ? 1 : 0) - EXPO_IN) * Math.min(1, dt * 4); const inExpo = LOOK.inExpo(DUSK, BASE_EXPOSURE); LIGHT_BASE_EXPO = BASE_EXPOSURE + (inExpo - BASE_EXPOSURE) * EXPO_IN; renderer.toneMappingExposure = LIGHT_BASE_EXPO * lightMeterMul(dt);   // indoors: a fixed real-estate exposure by day
+  { /* r40: inside/outside with hysteresis (r40Inside: a doorway no longer flips it for a few frames) and every consequence blended by
+       EXPO_IN, which now eases over R40L.inDur s (r40InK) instead of jumping a share of the gap each frame */
+    const inside = r40Inside(dt);
+    const st = (DUSK ? 'd' : 'n') + (inside ? 'i' : 'o'); if(st !== tick.glow){ tick.glow = st; ENV_INSIDE = inside; applyEnv(); R40L.glassKey = null; }
+    EXPO_IN = r40InK(dt); r40GlassLook();
+    // interiors read about 1.2 stops brighter (eye / camera adaptation); EXPO_IN eases between them
+    const inExpo = LOOK.inExpo(DUSK, BASE_EXPOSURE); LIGHT_BASE_EXPO = BASE_EXPOSURE * Math.pow(inExpo / BASE_EXPOSURE, EXPO_IN); renderer.toneMappingExposure = LIGHT_BASE_EXPO * lightMeterMul(dt);   // r40: blended in stops (log), not linearly
     fitSunShadow(); }
   // sliding doors fade open when the camera is near
   for(const s of SLIDERS){ const d=Math.hypot(camera.position.x-s.cx, camera.position.z-s.cz) + Math.abs(camera.position.y-EYE-s.y+3)*.5; const o = isDoll()? .2 : clamp((d-3)/5,0,1)*(DUSK?.6:.22); s.mesh.material.opacity=o; s.mesh.visible=o>.01; }
@@ -9563,7 +9595,7 @@ function lookFrame(){
   const G = DUSK ? Object.assign({}, LOOK.grade, LOOK.dusk.grade) : LOOK.grade;
   if(GRADE_PASS){ const u = GRADE_PASS.uniforms; u.wb.value.set(...G.wb); u.sat.value = G.sat; u.con.value = G.con; u.gam.value = G.gam; u.lift.value = G.lift; u.white.value = G.white || 1; }
   if(ssao && useAO){ const rng = camera.far - camera.near; ssao.minDistance = LOOK.aoMinFt / rng; ssao.maxDistance = LOOK.aoMaxFt / rng; ssao.kernelRadius = LOOK.aoRadius; if(ssao.ssaoMaterial.uniforms.aoStrength) ssao.ssaoMaterial.uniforms.aoStrength.value = LOOK.aoStrength; }
-  GLASS_U.gT.value = LOOK.glassT; GLASS_U.gEm.value = LOOK.dusk.glowScale; GLASS_U.gOut.value = ENV_INSIDE ? 1 : (DUSK ? LOOK.glassDusk : LOOK.glassOut);
+  GLASS_U.gT.value = LOOK.glassT; GLASS_U.gEm.value = LOOK.dusk.glowScale; GLASS_U.gOut.value = r40GlassT(DUSK ? LOOK.glassDusk : LOOK.glassOut);   // r40: blended by EXPO_IN
   if(GLOW.length !== lookFrame.n){ lookFrame.n = GLOW.length; for(const m of GLOW) glassify(m, {fromOpacity: true}); }
   for(const m of GLOW){ const l = m.userData.lookLocal; if(l) l.gMax.value = DUSK ? .6 : .22; }
 }
@@ -10143,8 +10175,7 @@ function glass20Step(){
 }
 function glass20Vis(o){ while(o){ if(o.visible === false) return false; o = o.parent; } return true; }
 function glass20Frame(){
-  const outside = !ENV_INSIDE;
-  GLASS20_U.gIn.value = outside ? (DUSK ? LOOK.glassDusk : GLASS20.outRatio) : 1;
+  GLASS20_U.gIn.value = r40GlassT(DUSK ? LOOK.glassDusk : GLASS20.outRatio, true);   // r40: blended by EXPO_IN (and the covered-porch share, eased)
   GLASS20_U.gEm.value = LOOK.dusk.glowScale;
   for(const m of [M.glass, M.glassDoor, ...GLOW]) if(m && m.userData.glass20){ m.envMapIntensity = 1; m.envMap = null; }
 }
@@ -10156,7 +10187,7 @@ const GLASS21 = {covered: .6, depth: 6, on: false};
         if(SPACES.some(s => inPoly(s.pts, x, z))) break;
         for(const pl of ROOFPLANES){ if(x < pl.bx0 || x > pl.bx1 || z < pl.bz0 || z > pl.bz1 || !pl.has(x, z)) continue; const u = pl.under2(x, z); if(u > c.y - 2 && u < c.y + GLASS21.depth){ cov = true; break; } }
         if(cov) break; } }
-    GLASS21.on = cov; if(cov) GLASS20_U.gIn.value = Math.max(GLASS20_U.gIn.value, GLASS21.covered); }; }
+    GLASS21.on = cov; r40CoverStep(cov); GLASS20_U.gIn.value = r40GlassT(DUSK ? LOOK.glassDusk : GLASS20.outRatio, true); }; }   // r40: the covered share eases in over R40L.coverDur s (was a one-frame switch)
 window.GLASS21 = GLASS21;
 { const _rf = renderFrame; renderFrame = function(){ try{ glass20Frame(); glass20Step(); }catch(e){ if(!glass20Frame.warned){ glass20Frame.warned = true; console.warn('glass20', e); } } return _rf.apply(this, arguments); }; }
 { const _anti = antiTileAll; antiTileAll = function(){ _anti.apply(this, arguments); try{ glass20Scan(); }catch(e){ console.warn('glass20 scan', e); } }; }
@@ -10233,7 +10264,7 @@ function lightRoomEnv(id){
 /* bim2: removed decl lightCamRoom */
 function lightApplyRoomEnv(){
   if(!LIGHT.room.on || DUSK || !ENV_INSIDE) { LIGHT_ENV_ID = null; return false; }
-  const id = bim2CameraZone(); const rt = id ? lightRoomEnv(id) : null; if(!rt) { LIGHT_ENV_ID = null; return false; }
+  const id = R40L.zone || bim2CameraZone(); const rt = id ? lightRoomEnv(id) : null; if(!rt) { LIGHT_ENV_ID = null; return false; }
   scene.environment = rt.texture; LIGHT_ENV_ID = id; return true;
 }
 { const _applyEnv = applyEnv; applyEnv = function(){ _applyEnv.apply(this, arguments); lightApplyRoomEnv(); }; }
@@ -10270,16 +10301,22 @@ const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScree
     gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     METER.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); METER.eAt = r.toneMappingExposure; r.setRenderTarget(prev); }};
 function lightMeterMul(dt){
-  const Mt = LIGHT.meter; dt = Math.min(.1, dt || .016);
-  let want = 1;
-  if(Mt.on && METER.ok && METER.m != null && !isDoll() && LIGHT_BASE_EXPO > 0){
-    // dusk indoors: a lamp-lit room is exposed for mid-tone walls (the lamps light it, not the dark windows); outdoors at dusk stays as authored
-    const inD = DUSK && EXPO_IN > .5, T = DUSK ? (inD ? Mt.tduskIn : Mt.tdusk) : (EXPO_IN > .5 ? Mt.tin : Mt.tout), k = inD ? Mt.kDusk : Mt.k;
-    if(T > 0){ const mBase = Math.max(.02, METER.m) * Math.pow(LIGHT_BASE_EXPO / Math.max(.05, METER.e || LIGHT_BASE_EXPO), Mt.gamma);
-      want = Math.pow(T / mBase, k / Mt.gamma) * Math.pow(2, -Mt.protect * (METER.hi || 0)); const lo = Math.pow(2, -(inD ? Mt.duskStops : Mt.maxStops)), hi = Math.pow(2, inD ? .3 : Mt.maxStops); want = Math.min(hi, Math.max(lo, want)); } }
-  else if(!METER.ok && LIGHT_ENV_ID && EXPO_IN > .5 && !DUSK) want = Mt.noMeterIn;
-  else if(!METER.ok && DUSK && EXPO_IN > .5) want = Mt.noMeterDuskIn;   // phone path: the darker per-room IBL gets the desktop meter's mean indoor gain
-  METER.want = want; METER.mul += (want - METER.mul) * Math.min(1, dt * Mt.rate); return METER.mul;
+  /* r40: one camera meter, continuous in everything it reads. The indoor and outdoor answers are both worked out and blended in stops by
+     EXPO_IN (they used to switch at EXPO_IN = .5), and the gain eases in stops with a time constant on the real elapsed time
+     (1 - exp(-t * rate), frame-rate independent; a frame the governor skipped counts its whole interval, up to .25 s). */
+  const Mt = LIGHT.meter, now = performance.now(); let el = METER.tAt != null ? (now - METER.tAt) / 1000 : (dt || .016); METER.tAt = now; el = Math.min(.25, Math.max(0, el));
+  const kIn = Math.max(0, Math.min(1, EXPO_IN));
+  const ans = inD => {   // the meter's answer for an indoor (inD) or outdoor view
+    if(Mt.on && METER.ok && METER.m != null && !isDoll() && LIGHT_BASE_EXPO > 0){
+      // dusk indoors: a lamp-lit room is exposed for mid-tone walls (the lamps light it, not the dark windows); outdoors at dusk stays as authored
+      const dIn = DUSK && inD, T = DUSK ? (dIn ? Mt.tduskIn : Mt.tdusk) : (inD ? Mt.tin : Mt.tout), k = dIn ? Mt.kDusk : Mt.k;
+      if(!(T > 0)) return 1;
+      const mBase = Math.max(.02, METER.m) * Math.pow(LIGHT_BASE_EXPO / Math.max(.05, METER.e || LIGHT_BASE_EXPO), Mt.gamma);
+      const w = Math.pow(T / mBase, k / Mt.gamma) * Math.pow(2, -Mt.protect * (METER.hi || 0)), lo = Math.pow(2, -(dIn ? Mt.duskStops : Mt.maxStops)), hi = Math.pow(2, dIn ? .3 : Mt.maxStops); return Math.min(hi, Math.max(lo, w)); }
+    if(!METER.ok && inD) return DUSK ? Mt.noMeterDuskIn : Mt.noMeterIn;   // phone path: the darker per-room IBL gets the desktop meter's mean indoor gain
+    return 1; };
+  const wOut = kIn < 1 ? ans(false) : 1, wIn = kIn > 0 ? ans(true) : 1, want = Math.pow(wOut, 1 - kIn) * Math.pow(wIn, kIn);
+  METER.want = want; const a = 1 - Math.exp(-el * Mt.rate); METER.mul = Math.exp(Math.log(Math.max(1e-3, METER.mul)) + (Math.log(want) - Math.log(Math.max(1e-3, METER.mul))) * a); return METER.mul;
 }
 { const _setupPost = setupPost; setupPost = function(){ _setupPost.apply(this, arguments);
     METER.ok = false; if(!composer) return;
@@ -10320,15 +10357,17 @@ if(GRADE_SHADER && !/uniform float olift/.test(GRADE_SHADER.fragmentShader)){
     .replace('c = lift + (1.0 - lift) * c;', 'c = lift + (1.0 - lift) * c; c = c + olift * (1.0 - c) * exp(-6.0 * c);'); }
 let LIGHT_N = 0, LIGHT_HG = null;   // indoors the hemisphere 'ground' is the room's floor bounce, white-balanced like the photos, not brown earth
 function lightFrame(){
-  if(GLASS_U && ENV_INSIDE && !DUSK) GLASS_U.gOut.value = LIGHT.glassIn;
-  if(typeof GLASS20_U !== 'undefined' && GLASS20_U.gIn && ENV_INSIDE && !DUSK) GLASS20_U.gIn.value = LIGHT.glassIn;   // v20 glass model: same HDR window pull
-  if(!DUSK){ if(!LIGHT_HG) LIGHT_HG = hemi.groundColor.clone(); if(ENV_INSIDE && LIGHT.room.on) hemi.groundColor.set(LIGHT.room.hemiGround); else hemi.groundColor.copy(LIGHT_HG); }
-  if(GRADE_PASS && GRADE_PASS.uniforms.olift) GRADE_PASS.uniforms.olift.value = ENV_INSIDE ? 0 : (DUSK ? LIGHT.duskLift : LIGHT.outLift);
-  if(DUSK) hemi.intensity = ENV_INSIDE ? .12 : LIGHT.duskHemi;   // twilight sky fill on the facades (p02/p03 are HDR twilight shots)
+  /* r40: every inside/outside value below is blended by EXPO_IN (eased), not switched on ENV_INSIDE */
+  const kIn = Math.max(0, Math.min(1, EXPO_IN));
+  if(GLASS_U) GLASS_U.gOut.value = r40GlassT(DUSK ? LOOK.glassDusk : LOOK.glassOut);
+  if(typeof GLASS20_U !== 'undefined' && GLASS20_U.gIn) GLASS20_U.gIn.value = r40GlassT(DUSK ? LOOK.glassDusk : GLASS20.outRatio, true);   // v20 glass model: same HDR window pull
+  if(!DUSK){ if(!LIGHT_HG) LIGHT_HG = hemi.groundColor.clone(); hemi.groundColor.copy(LIGHT_HG); if(LIGHT.room.on && kIn > 0) hemi.groundColor.lerp(R40L.c.set(LIGHT.room.hemiGround), kIn); }
+  if(GRADE_PASS && GRADE_PASS.uniforms.olift) GRADE_PASS.uniforms.olift.value = (DUSK ? LIGHT.duskLift : LIGHT.outLift) * (1 - kIn);
+  if(DUSK) hemi.intensity = LIGHT.duskHemi + (.12 - LIGHT.duskHemi) * kIn;   // twilight sky fill on the facades (p02/p03 are HDR twilight shots)
   LIGHT_U.grain.value = LIGHT.oakGrain;
   { const U = skyMat.uniforms; if(U.band){ U.bandAt.value = LIGHT.dusk.bandAt; if(DUSK) U.band.value.set(LIGHT.dusk.band); else U.band.value.copy(U.mid.value).lerp(U.top.value, LIGHT.dusk.bandAt); } }
   if((LIGHT_N % 120) === 0) for(const k in M) if(/^paint_/.test(k) && M[k] && !M[k].userData.lightCeil && M[k].isMeshStandardMaterial) lightPaintCeil(M[k]);
-  if((LIGHT_N++ % 10) === 0 && ENV_INSIDE && !DUSK && LIGHT.room.on){ const id = bim2CameraZone(); if(id && id !== LIGHT_ENV_ID) lightApplyRoomEnv(); }
+  LIGHT_N++; if(ENV_INSIDE && !DUSK && LIGHT.room.on){ const id = R40L.zone; if(id && id !== LIGHT_ENV_ID) lightApplyRoomEnv(); }   // r40: the debounced room (R40L.zone), checked every frame; the change itself is crossfaded (R40X)
 }
 { const prevOBR = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prevOBR) prevOBR.apply(this, arguments); try{ lightFrame(); }catch(e){} }; }
 window.__lightApply = () => { for(const rt of LIGHT_ENV.values()) if(rt) rt.dispose(); LIGHT_ENV.clear(); LIGHT_ENV_ID = null; lightMaterials(); Object.assign(LOOK.grade, {con: LIGHT.grade.con, sat: LIGHT.grade.sat, wb: LIGHT.grade.wb}); if(typeof setTOD === 'function') setTOD(TOD_KEY); tick.glow = undefined; };
@@ -12237,8 +12276,9 @@ function hwFrame(){ if(!HW.on || !HW.built) return; const t = (performance.now()
     else if(f.bubble){ const c = ((t * .6 + f.ph) % 1); f.o.position.y = f.y0 + c * .12; f.o.scale.setScalar(.4 + c * .8); }
     else if(f.o){ f.o.scale.set(1 + .15 * k, 2.1 + .5 * k, 1 + .15 * k); } }
   // point lights without shadows shine through walls: outdoor accents only while the camera is outside, candles only inside
-  const inside = HW.inside = !isDoll() && bim2CameraIndoors();
-  for(const {l, d} of HW.bind){ const on = d.out ? !inside : (inside || isDoll()); l.intensity = !on ? 0 : d.i * (d.fl != null && !still ? 1 + .22 * hwFlickN(t, d.fl * 1.9) : 1); }
+  // r40: the page's debounced inside state, and the two sets cross-fade with EXPO_IN (they switched in one frame)
+  HW.inside = !isDoll() && ENV_INSIDE; const kIn = isDoll() ? 1 : Math.max(0, Math.min(1, EXPO_IN));
+  for(const {l, d} of HW.bind){ const f = d.out ? (isDoll() ? 1 : 1 - kIn) : kIn; l.intensity = f <= 0 ? 0 : f * d.i * (d.fl != null && !still ? 1 + .22 * hwFlickN(t, d.fl * 1.9) : 1); }
   if(HW.chandL && !still) HW.chandL.intensity = HW.chandL.userData.hwBase * (1 + .25 * hwFlickN(t, 4.4));
   // sky group rides with the camera (moon + stars at infinity)
   if(HW.sky){ HW.sky.position.copy(cam); const D = 6000; HW.moon.position.copy(HW.moonDir).multiplyScalar(D); HW.moon.quaternion.copy(camera.quaternion); HW.moon.scale.setScalar(D * .16);
@@ -12302,7 +12342,7 @@ function hwNight(){
     const ri = panoToEnv(ci); if(ENV_IN) ENV_IN.dispose(); ENV_IN = ri; applyEnv(); return r; }; }   // candle-lit rooms: the bounce panorama is a dim violet room, not a lamp-lit one
 { const _s = setTOD; setTOD = function(key){ if(HW.on) key = 'dusk'; const r = _s.apply(this, [key]); if(HW.on) hwNight(); return r; }; }
 // the camera meter would lift the night back to daylight: while on, exposure is fixed (HW.expo outside / HW.expoIn inside)
-{ const _m = lightMeterMul; lightMeterMul = function(dt){ const r = _m.apply(this, arguments); return HW.on ? (HW.inside ? HW.expoIn : HW.expo) : r; }; }
+{ const _m = lightMeterMul; lightMeterMul = function(dt){ const r = _m.apply(this, arguments); return HW.on ? HW.expo * Math.pow(HW.expoIn / HW.expo, Math.max(0, Math.min(1, EXPO_IN))) : r; }; }   // r40: blended in stops by EXPO_IN
 { const _r = renderFrame; renderFrame = function(){ if(HW.on) try{ hwFrame(); }catch(e){ console.warn('[halloween] frame', e); HW.on = false; } return _r.apply(this, arguments); }; }
 function hwOn(){
   if(HW.on) return HW.report; if(!MODEL || !BIM || !FURN.items().length) { console.warn('[halloween] model not ready'); return null; }
@@ -12426,10 +12466,12 @@ function hw22Light(){ const C = HW22.candle;
 function hw22Frame(){ const t = (performance.now() - HW.t0) / 1000, still = reduceMotion, inside = HW.inside || (mode === 'design' && bim2CameraIndoors());   // Design tab walked inside: the indoor look too
   const k = still ? 0 : hwFlickN(t, 2.2); HW22.lvl = 1 + .1 * k;
   if(HW22.lamps) for(const q of HW22.lamps) q.l.intensity = q.b * (still ? 1 : 1 + .2 * hwFlickN(t, q.ph));
-  if(DUSK && !inside){ M.glass.emissiveIntensity = .16 * HW22.lvl; for(const m of GLOW) m.emissiveIntensity = .14 * HW22.lvl;
-    if(typeof GLASS20_U !== 'undefined') GLASS20_U.gIn.value = Math.max(GLASS20_U.gIn.value, .82); if(GLASS_U && GLASS_U.gOut) GLASS_U.gOut.value = Math.max(GLASS_U.gOut.value, .82); } else if(DUSK){ M.glass.emissiveIntensity = 0; for(const m of GLOW) m.emissiveIntensity = 0; }
-  if(GRADE_PASS && GRADE_PASS.uniforms.wb){ const u = GRADE_PASS.uniforms; if(inside){ u.wb.value.set(1.05, 1.0, .9); u.sat.value = 1.0; u.con.value = Math.max(u.con.value, .4); } /* amber candlelight, moody contrast */ else u.wb.value.set(1.0, 1.0, 1.01); }
-  hemi.color.copy(inside ? HW22.hemiIn : (HW22.hemiOut || hemi.color));
+  // r40: outside / inside looks blended by EXPO_IN (kO = the outside share), not switched
+  const kI = mode === 'design' && bim2CameraIndoors() ? 1 : Math.max(0, Math.min(1, EXPO_IN)), kO = 1 - kI;
+  if(DUSK){ M.glass.emissiveIntensity = .16 * HW22.lvl * kO; for(const m of GLOW) m.emissiveIntensity = .14 * HW22.lvl * kO;
+    if(typeof GLASS20_U !== 'undefined') GLASS20_U.gIn.value += (Math.max(GLASS20_U.gIn.value, .82) - GLASS20_U.gIn.value) * kO; if(GLASS_U && GLASS_U.gOut) GLASS_U.gOut.value += (Math.max(GLASS_U.gOut.value, .82) - GLASS_U.gOut.value) * kO; }
+  if(GRADE_PASS && GRADE_PASS.uniforms.wb){ const u = GRADE_PASS.uniforms; u.wb.value.set(1.0 + .05 * kI, 1.0, 1.01 - .11 * kI); u.sat.value += (1.0 - u.sat.value) * kI; u.con.value += (Math.max(u.con.value, .4) - u.con.value) * kI; }   /* amber candlelight, moody contrast */
+  { const ho = HW22.hemiOut || hemi.color; R40L.c.copy(ho).lerp(HW22.hemiIn, kI); hemi.color.copy(R40L.c); }
   if(HW.bats){ const show = !(mode === 'doll' && vis.level !== 'roof'); HW.bats.L.visible = HW.bats.R.visible = HW.bats.B.visible = show; }
   // HW12: a variant / furniture change rebuilds or swaps the set (checked twice a second, never while a camera move runs)
   try{ hw22Slots(t, still, inside); }catch(e){}
@@ -15853,7 +15895,7 @@ window.__ui27 = UI27;
 /* ---------------- v29 glass: dusk windows from outside (patch_v29_glass) ---------------- */
 const V29G = window.__V29G = Object.assign({em: .15, gIn: 1, wb: [1, .72, .43], mask: true}, window.__V29G || {});
 const v29Hw = () => typeof HW !== 'undefined' && HW.on;
-const v29On = () => DUSK && !ENV_INSIDE && !v29Hw();
+const v29On = () => DUSK && !v29Hw() && EXPO_IN < .999;   // r40: the window tint below fades with EXPO_IN (was on/off with ENV_INSIDE)
 { // W1 + W2: plain-dusk values; Halloween keeps its own (.25 transmission, .45 glow - it lifts them itself)
   const hwIn = LOOK.glassDusk, hwEm = V27D.glowScale;
   Object.defineProperty(LOOK, 'glassDusk', {configurable: true, enumerable: true, get(){ return v29Hw() ? hwIn : V29G.gIn; }, set(v){ /* v29: lives in V29G.gIn */ }});
@@ -15873,7 +15915,7 @@ function v29GlassFrame(){
   const on = v29On(), mask = on && V29G.mask, key = (mask ? 1 : 0) + ':' + GLOW.length;
   if(key !== V29_KEY){ V29_KEY = key;   // only on a state change: alpha blend factors are not part of the program key (no recompile)
     for(const m of [M.glass, M.glassDoor, ...GLOW]) if(m && m.userData.glass20){ m.blendSrcAlpha = mask ? THREE.ZeroFactor : null; m.blendDstAlpha = mask ? THREE.SrcAlphaFactor : null; } }
-  if(GRADE_PASS && GRADE_PASS.uniforms.wK){ GRADE_PASS.uniforms.wK.value = mask ? 1 : 0; const w = V29G.wb; GRADE_PASS.uniforms.wIn.value.set(w[0], w[1], w[2]); }
+  if(GRADE_PASS && GRADE_PASS.uniforms.wK){ GRADE_PASS.uniforms.wK.value = mask ? 1 - Math.max(0, Math.min(1, EXPO_IN)) : 0; const w = V29G.wb; GRADE_PASS.uniforms.wIn.value.set(w[0], w[1], w[2]); }
 }
 { const _g = glass20Frame; glass20Frame = function(){ _g.apply(this, arguments); try{ v29GlassFrame(); }catch(e){ if(!v29GlassFrame.warned){ v29GlassFrame.warned = true; console.warn('[v29 glass]', e); } } }; }
 window.__v29glass = () => ({on: v29On(), hw: v29Hw(), gIn: GLASS20_U.gIn.value, gEm: GLASS20_U.gEm.value, grade: V29_GRADE, wK: GRADE_PASS && GRADE_PASS.uniforms.wK ? GRADE_PASS.uniforms.wK.value : null,
@@ -15915,9 +15957,10 @@ function v29Bounce(){
 // R2: the panorama is 8-bit (max 1.0), too dim for lamp-lit bounce at the dusk interior exposure, so ceilings take it x ceilEnv
 // while the camera is indoors at dusk (applyEnv runs only when the inside/outside or time-of-day state changes: no per-frame cost).
 // Views from outside keep the old ceiling response (the window-glow look belongs to the glass stream).
-{ const _ae = applyEnv; applyEnv = function(){ const r = _ae.apply(this, arguments);
-    if(M.ceil){ const k = (DUSK && ENV_INSIDE && !(typeof HW !== 'undefined' && HW.on)) ? V29R.ceilEnv : 1; if(M.ceil.envMapIntensity !== k) M.ceil.envMapIntensity = k; }
-    return r; }; }
+// r40: per frame, blended by EXPO_IN (it switched with the inside state)
+{ const ceil29 = () => { if(M.ceil){ const k = (DUSK && !(typeof HW !== 'undefined' && HW.on)) ? 1 + (V29R.ceilEnv - 1) * Math.max(0, Math.min(1, EXPO_IN)) : 1; if(M.ceil.envMapIntensity !== k) M.ceil.envMapIntensity = k; } };
+  const _ae = applyEnv; applyEnv = function(){ const r = _ae.apply(this, arguments); ceil29(); return r; };
+  const prev = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prev) prev.apply(this, arguments); try{ ceil29(); }catch(e){} }; }
 // R4: the primary-bath accent wall material (bath20 'herring', tile_pb_herring: white marble, 0.99 ft lattice) -> grey, finer
 { const _bm = bath20Mats; bath20Mats = function(){ const fresh = !BATH20_M, r = _bm.apply(this, arguments);
     if(fresh && r && r.herring && r.herring.map){ const h = r.herring; h.color.setRGB(...V29R.herrLin); h.map.repeat.multiplyScalar(V29R.herrScale); if(h.normalMap) h.normalMap.repeat.copy(h.map.repeat); h.needsUpdate = true; V29R.report.herring = +h.map.repeat.x.toFixed(3); }
@@ -16549,7 +16592,7 @@ function tgFrame(){ if(!TG.light) return; const t = performance.now() / 1000, f 
 { const _rf = renderFrame; renderFrame = function(){ if(TG.on) try{ tgFrame(); }catch(e){ console.warn('[thanksgiving] frame', e); } return _rf.apply(this, arguments); }; }
 { const _s = setTOD; setTOD = function(key){ const r = _s.call(this, TG.on ? 'dusk' : key); if(TG.on){ for(const l of DUSK_LIGHTS){ l.intensity = TGDUSK.lamps; l.color.set(TGDUSK.lampCol); } TG.hemiOut = hemi.color.clone(); TG.hemiOutI = hemi.intensity; } return r; }; }
 // evening indoors: the camera meter's result x .7 (dimmer room; candles and lamps carry it); outdoors untouched
-{ const _m = lightMeterMul; lightMeterMul = function(){ const r = _m.apply(this, arguments); return TG.on && ENV_INSIDE ? r * TGDUSK.inExpo : r; }; }
+{ const _m = lightMeterMul; lightMeterMul = function(){ const r = _m.apply(this, arguments); return TG.on ? r * Math.pow(TGDUSK.inExpo, Math.max(0, Math.min(1, EXPO_IN))) : r; }; }   // r40: blended by EXPO_IN
 // indoor bounce light: a warm candle-lit room (golden walls, soft amber ceiling, dark floor), same hook Halloween uses
 { const _re = rebuildEnvironment; rebuildEnvironment = function(){ const r = _re.apply(this, arguments); if(!TG.on) return r;
     const W = 256, H = 128, ci = document.createElement('canvas'); ci.width = W; ci.height = H; const h = ci.getContext('2d'), gi = h.createLinearGradient(0, 0, 0, H);
@@ -16558,8 +16601,10 @@ function tgFrame(){ if(!TG.light) return; const t = performance.now() / 1000, f 
 // per frame while on (after lookFrame / lightFrame): indoors the grade goes 2200-2400K amber and the sky fill dims; outdoors untouched
 { const prevOBR = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prevOBR) prevOBR.apply(this, arguments); if(!TG.on) return;
     try{ const inside = ENV_INSIDE || (mode === 'design' && bim2CameraIndoors()), D = TGDUSK;
-      if(GRADE_PASS && GRADE_PASS.uniforms.wb && inside){ const u = GRADE_PASS.uniforms; u.wb.value.set(D.inWB[0], D.inWB[1], D.inWB[2]); u.sat.value = D.inSat; }
-      if(inside){ hemi.color.set(D.hemiIn); hemi.intensity = D.hemiInI; } else if(TG.hemiOut){ hemi.color.copy(TG.hemiOut); } }catch(e){} }; }   // house lit for dinner   // while on, the time of day is dinner-time dusk
+      const kI = mode === 'design' && inside ? 1 : Math.max(0, Math.min(1, EXPO_IN));   // r40: blended by EXPO_IN, not switched
+      if(GRADE_PASS && GRADE_PASS.uniforms.wb && kI > 0){ const u = GRADE_PASS.uniforms, w = u.wb.value; w.set(w.x + (D.inWB[0] - w.x) * kI, w.y + (D.inWB[1] - w.y) * kI, w.z + (D.inWB[2] - w.z) * kI); u.sat.value += (D.inSat - u.sat.value) * kI; }
+      if(TG.hemiOut){ hemi.color.copy(TG.hemiOut).lerp(R40L.c.set(D.hemiIn), kI); hemi.intensity = (TG.hemiOutI != null ? TG.hemiOutI : hemi.intensity) + (D.hemiInI - (TG.hemiOutI != null ? TG.hemiOutI : hemi.intensity)) * kI; }
+      else if(kI > .5){ hemi.color.set(D.hemiIn); hemi.intensity = D.hemiInI; } }catch(e){} }; }   // house lit for dinner   // while on, the time of day is dinner-time dusk
 const tgV27Keys = ['sky', 'env', 'sun', 'win', 'glowScale'];
 function tgDuskIn(){ const V = window.__V27D; if(!V) return; TG.savedV = {V: {}, L: {band: LIGHT.dusk.band, bandAt: LIGHT.dusk.bandAt, top: LIGHT.dusk.top, mid: LIGHT.dusk.mid, bot: LIGHT.dusk.bot}};
   for(const k of tgV27Keys){ TG.savedV.V[k] = V[k]; V[k] = TGDUSK[k]; }
@@ -20917,8 +20962,8 @@ function bim3ShingleCourses(){
 /* the glow is the lit room seen THROUGH the frosted pane, so it shows only from outside (camera not indoors, as v29's glass rule);
    from inside the pane is lit by the exterior (dusk sky) like the clear windows. Checked every frame with the page's glass state. */
 let B3OB_KEY = '';
-function bim3ObscureFrame(){ const m = M.glassObscure35; if(!m) return; const on = !!(DUSK && !ENV_INSIDE), key = on + ':' + (on ? M.glass.emissive.getHexString() : '');
-  if(key === B3OB_KEY) return; B3OB_KEY = key; if(on){ m.emissive.copy(M.glass.emissive); m.emissiveIntensity = .55; } else { m.emissive.set(0x000000); m.emissiveIntensity = 1; } }
+function bim3ObscureFrame(){ const m = M.glassObscure35; if(!m) return; const kO = DUSK ? 1 - Math.max(0, Math.min(1, EXPO_IN)) : 0, on = kO > 0, key = kO.toFixed(3) + ':' + (on ? M.glass.emissive.getHexString() : '');   // r40: blended by EXPO_IN
+  if(key === B3OB_KEY) return; B3OB_KEY = key; if(on){ m.emissive.copy(M.glass.emissive); m.emissiveIntensity = .55 * kO; } else { m.emissive.set(0x000000); m.emissiveIntensity = 1; } }
 { const _g35 = glass20Frame; glass20Frame = function(){ _g35.apply(this, arguments); try{ bim3ObscureFrame(); }catch(e){} }; }
 { const _b3ob = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3ob.apply(this, arguments); try{ B3OB_KEY = ''; bim3ObscureFrame(); }catch(e){} return r; }; }
 /* v35 B6c (page): railing cable infill is v33's satin cable and, as in v33 finish() ('cable' meshes), takes no SSAO - ambient
@@ -21656,7 +21701,7 @@ if(R10.on && typeof lightMeterInit === 'function'){
       if(k > 0 && m){ const Y = (m[0] + m[1] + m[2]) / 3, want = [Y * Math.sqrt(R10WB.rb), Y, Y / Math.sqrt(R10WB.rb)];
         tgt = [0, 1, 2].map(c => Math.max(1 - R10WB.clamp, Math.min(1 + R10WB.clamp, Math.pow(want[c] / Math.max(.02, m[c]), R10WB.strength))));
         const n = (.2126 * tgt[0] + .7152 * tgt[1] + .0722 * tgt[2]); tgt = tgt.map(v => 1 + (v / n - 1) * k); }
-      const dt = .016 * R10WB.rate; for(let c = 0; c < 3; c++) C[c] += (tgt[c] - C[c]) * Math.min(1, dt);
+      const a = R10WB.fr === R40L.frame ? 0 : 1 - Math.exp(-(R40L.dt || .016) * R10WB.rate); R10WB.fr = R40L.frame; for(let c = 0; c < 3; c++) C[c] += (tgt[c] - C[c]) * a;   // r40: once a frame, on the frame time (was a fixed step per scene render)
       const g = (LOOK.grade && LOOK.grade.wb) || [1, 1, 1]; GRADE_PASS.uniforms.wb.value.set(g[0] * C[0], g[1] * C[1], g[2] * C[2]); R10.report.awb = C.map(v => +v.toFixed(3)); }catch(e){} }; }
 BIM3.report.r10 = R10.report;
 /* ===== PHOTOREAL r11 (11/4; r11/REPORT.md) ===== */
@@ -22922,6 +22967,82 @@ const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoD
 { const _rf37 = renderFrame; renderFrame = function(){ if(R37S.qaNoDraw){ if(DOOR28.moving.size) try{ door28Step(); }catch(e){} return; } return _rf37.apply(this, arguments); }; }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 { let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)
+/* ================= r40 lighting continuity (tour/LIGHTING.md) =================
+   A video render found the lighting switching in single frames as the camera walked through the house: the room panorama (scene
+   environment) swapped when the camera entered another room, a doorway read as "outdoors" for a few frames (the BIM spaces stop at the
+   wall faces, so a door opening is in no space) and swapped the environment, glass look, grade and exposure target with it, the
+   covered-porch glass rule switched in one frame, and the meter's target jumped at EXPO_IN = .5.
+   - R40L: inside / outside and the room are debounced (a change must last R40L.hold / zoneHold s), EXPO_IN eases over inDur s
+     (smoothstep of a linear progress, so a reversal retargets without a jump), the covered-porch share eases over coverDur s.
+     A cut (the camera moves more than R40L.jump ft in a frame), a mode change, a time-of-day change or the loading screen snaps all of
+     it: the picture changes at once there anyway.
+   - R40X: the environment the page sets (applyEnv / lightApplyRoomEnv, unchanged) becomes a target; what the materials see is R40X.out,
+     a PMREM-sized texture that crossfades from the last one over envDur s (one 768x768 quad, only while a fade runs). */
+const R40L = window.R40L = {on: !/[?&]r40=0\b/.test(location.search), hold: .35, zoneHold: .3, inDur: 1.1, envDur: 1.0, coverDur: 1.0, jump: 6,
+  raw: null, state: false, acc: 0, p: 0, zone: null, zAcc: 0, covP: 0, covF: -1, dt: 1 / 60, frame: 0, last: new THREE.Vector3(1e9, 0, 0), doll: null, mode: null,
+  snap: true, snapEnv: false, glassKey: null, c: new THREE.Color(), c2: new THREE.Color(), log: [], logOn: false,
+  ev(what, zone){ if(this.logOn){ this.log.push({t: +(performance.now() / 1000).toFixed(3), f: this.frame, what, zone}); if(this.log.length > 200) this.log.shift(); } }};
+const r40S = p => p * p * (3 - 2 * p), r40C = v => Math.max(0, Math.min(1, v));
+function r40Inside(dt){
+  const L = R40L; L.dt = dt; L.frame++;
+  const P = camera.position, doll = isDoll(); let raw = false, zr = null;
+  try{ raw = !doll && bim2CameraIndoors(); zr = raw ? bim2CameraZone() : null; }catch(e){}
+  const jumped = L.last.distanceToSquared(P) > L.jump * L.jump, rev = typeof REVEAL !== 'undefined' && !REVEAL.done;
+  const snap = !L.on || L.snap || jumped || doll !== L.doll || mode !== L.mode || rev || L.raw === null;
+  L.last.copy(P); L.doll = doll; L.mode = mode; L.snap = false; L.raw = raw;
+  if(snap){ if(L.state !== raw) L.ev('snap ' + (raw ? 'in' : 'out'), zr); L.state = raw; L.acc = 0; L.p = raw ? 1 : 0; if(zr) L.zone = zr; L.zAcc = 0; L.snapEnv = true; L.covSnap = true; return raw; }
+  if(raw !== L.state){ L.acc += dt; if(L.acc >= L.hold){ L.state = raw; L.acc = 0; if(raw && zr){ L.zone = zr; L.zAcc = 0; } L.ev(raw ? 'in' : 'out', zr); } } else L.acc = 0;
+  // the room: a threshold or door opening (no room cell) keeps the room you came from; a new room must hold zoneHold s
+  if(L.state && zr && zr !== L.zone){ L.zAcc += dt; if(L.zAcc >= L.zoneHold || !L.zone){ L.zone = zr; L.zAcc = 0; L.ev('room', zr); } } else L.zAcc = 0;
+  return L.state; }
+function r40InK(dt){ const L = R40L, t = L.state ? 1 : 0; if(L.p !== t){ const s = dt / L.inDur; L.p = t > L.p ? Math.min(t, L.p + s) : Math.max(t, L.p - s); } return r40S(L.p); }
+// the covered-porch share of the outdoor glass look (GLASS21), eased; stepped once a frame from the glass20 frame hook
+function r40CoverStep(cov){ const L = R40L; if(L.covF === L.frame) return; L.covF = L.frame; const t = cov ? 1 : 0;
+  if(L.covSnap || !L.on){ L.covP = t; L.covSnap = false; return; } const s = L.dt / L.coverDur; L.covP = t > L.covP ? Math.min(t, L.covP + s) : Math.max(t, L.covP - s); }
+// the glass transmission uniform for an outdoor value outV (cov: the covered-porch rule applies), blended to the indoor value by EXPO_IN
+function r40GlassT(outV, cov){ const k = r40C(EXPO_IN); let o = outV; if(cov && !DUSK && typeof GLASS21 !== 'undefined') o += (Math.max(outV, GLASS21.covered) - outV) * r40S(R40L.covP);
+  const inV = DUSK ? 1 : LIGHT.glassIn; return o + (inV - o) * k; }
+// the per-material glass look the tick used to set on an inside / outside change (colour, opacity, environment, dusk glow), blended by EXPO_IN
+function r40GlassLook(){ const k = r40C(EXPO_IN), key = (DUSK ? 'd' : 'n') + k.toFixed(4) + ':' + GLOW.length; if(key === R40L.glassKey) return; R40L.glassKey = key;
+  const C = R40L.c.set(DUSK ? 0x2a2420 : 0x14191d).convertSRGBToLinear().lerp(R40L.c2.set(0xeef2f2).convertSRGBToLinear(), k), L = (a, b) => a + (b - a) * k;
+  const op = L(DUSK ? .88 : .58, .06), env = L(DUSK ? .35 : 2.4, .6);
+  M.glass.emissiveIntensity = (DUSK ? .8 : 0) * (1 - k); M.glass.opacity = op; M.glass.color.copy(C); M.glass.envMapIntensity = env; M.glass.roughness = .04;
+  for(const m of GLOW){ m.emissiveIntensity = (DUSK ? .7 : 0) * (1 - k); m.color.copy(C); m.envMapIntensity = env; } }
+// ---- R40X: environment crossfade
+const R40X = window.R40X = {out: null, prev: null, B: null, k: 1, mat: null, mesh: null, cam: null, snapNext: true, draws: 0, fades: 0, seen: new WeakSet()};
+function r40XMake(t){ const X = R40X, w = t.image && t.image.width, h = t.image && t.image.height; if(!(w > 0 && h > 0)) return false;
+  for(const k of ['out', 'prev']){ if(X[k]) X[k].dispose();
+    const rt = new THREE.WebGLRenderTarget(w, h, {minFilter: t.minFilter, magFilter: t.magFilter, format: t.format, type: t.type, encoding: t.encoding, depthBuffer: false, stencilBuffer: false, generateMipmaps: false});
+    rt.texture.mapping = t.mapping; rt.texture.name = 'r40env.' + k; X[k] = rt; }
+  if(!X.mat){ X.mat = new THREE.ShaderMaterial({uniforms: {tA: {value: null}, tB: {value: null}, k: {value: 0}, eA: {value: 0}, eB: {value: 0}, eO: {value: 0}}, depthTest: false, depthWrite: false, toneMapped: false,
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+      fragmentShader: `uniform sampler2D tA, tB; uniform float k; uniform int eA, eB, eO; varying vec2 vUv;
+        vec4 r40Dec(vec4 c, int e){ if(e == 1) return sRGBToLinear(c); if(e == 2) return RGBEToLinear(c); return c; }
+        vec4 r40Enc(vec4 c, int e){ if(e == 1) return LinearTosRGB(c); if(e == 2) return LinearToRGBE(c); return c; }
+        void main(){ vec4 a = r40Dec(texture2D(tA, vUv), eA), b = r40Dec(texture2D(tB, vUv), eB); gl_FragColor = r40Enc(mix(a, b, k), eO); }`});
+    X.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), X.mat); X.mesh.frustumCulled = false; X.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); }
+  X.w = w; X.h = h; X.enc = t.encoding; return true; }
+const r40Enc = e => e === THREE.sRGBEncoding ? 1 : e === THREE.RGBEEncoding ? 2 : 0;
+function r40XDraw(A, B, k, dst){ const X = R40X, U = X.mat.uniforms, prev = renderer.getRenderTarget(), ac = renderer.autoClear;
+  U.tA.value = A; U.tB.value = B; U.k.value = k; U.eA.value = r40Enc(A.encoding); U.eB.value = r40Enc(B.encoding); U.eO.value = r40Enc(dst.texture.encoding);
+  renderer.autoClear = false; renderer.setRenderTarget(dst); renderer.render(X.mesh, X.cam); renderer.setRenderTarget(prev); renderer.autoClear = ac; X.draws++; }
+function r40XTarget(t){ const X = R40X;
+  if(t === X.B || (X.out && t === X.out.texture)) return;
+  const snap = X.snapNext || R40L.snapEnv || !R40L.on || !X.out || X.w !== (t.image && t.image.width) || X.h !== (t.image && t.image.height) || X.enc !== t.encoding;
+  if((!X.out || X.w !== t.image.width || X.h !== t.image.height || X.enc !== t.encoding) && !r40XMake(t)) return;
+  if(!X.seen.has(t)){ X.seen.add(t); t.addEventListener('dispose', () => { if(X.B === t){ X.B = null; X.k = 1; } }); }   // a disposed target: hold the picture as it is until the next one
+  if(snap){ X.B = t; X.k = 1; r40XDraw(t, t, 1, X.out); X.snapNext = false; return; }
+  r40XDraw(X.out.texture, X.out.texture, 0, X.prev); X.B = t; X.k = 0; X.fades++; R40L.ev('env fade', LIGHT_ENV_ID); }
+// after anything that sets scene.environment: take what it set as the target and give the materials the crossfaded texture
+function r40EnvSync(){ if(!R40L.on) return; const e = scene.environment; if(e && e.isTexture && (!R40X.out || e !== R40X.out.texture)){ try{ r40XTarget(e); }catch(err){ console.warn('[r40] env', err); return; } }
+  if(R40X.out && scene.environment) scene.environment = R40X.out.texture; }
+function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.k = Math.min(1, X.k + R40L.dt / R40L.envDur); r40XDraw(X.prev.texture, X.B, r40S(X.k), X.out); }
+{ const _ae = applyEnv; applyEnv = function(){ const r = _ae.apply(this, arguments); r40EnvSync(); return r; }; }
+{ const _la = lightApplyRoomEnv; lightApplyRoomEnv = function(){ const r = _la.apply(this, arguments); r40EnvSync(); return r; }; }
+{ const _st = setTOD; setTOD = function(){ R40X.snapNext = true; R40L.snap = true; const r = _st.apply(this, arguments); r40EnvSync(); return r; }; }
+{ const _rf = renderFrame; renderFrame = function(){ if(!R37S.qaNoDraw) try{ r40EnvSync(); r40EnvStep(); }catch(e){ if(!renderFrame.r40w){ renderFrame.r40w = true; console.warn('[r40] frame', e); } }
+    try{ return _rf.apply(this, arguments); } finally { R40L.snapEnv = false; } }; }
+window.__LSTATE = () => ({k: +EXPO_IN.toFixed(4), state: R40L.state, raw: R40L.raw, zone: R40L.zone, room: LIGHT_ENV_ID, envK: +R40X.k.toFixed(3), cov: +R40L.covP.toFixed(3), expo: +renderer.toneMappingExposure.toFixed(4), mul: +METER.mul.toFixed(4), tod: TOD_KEY});
 boot();
 })();
 </script>
