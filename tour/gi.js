@@ -102,11 +102,14 @@ function buildRoomMask(){ const B = GI.H.BIM2S; if(!B || !B.spaces) return false
   const R = 2, d = new Float32Array(a.length), e = new Float32Array(a.length), at = (A, i, j) => i < 0 || j < 0 || i >= NX || j >= NZ ? 0 : A[j * NX + i];
   for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let v = 0; for(let dj = -R; dj <= R && !v; dj++) for(let di = -R; di <= R; di++) if(at(a, i + di, j + dj)){ v = 1; break; } d[j * NX + i] = v; }
   for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let v = 1; for(let dj = -R; dj <= R && v; dj++) for(let di = -R; di <= R; di++) if(!at(d, i + di, j + dj)){ v = 0; break; } e[j * NX + i] = v || a[j * NX + i]; }
-  // the edge: one cell out (the bounding walls' own thickness stays inside), then feathered over about 2 ft (two box blurs of 2 cells), so an
-  // opening to a room the volume does not cover is a soft hand-over to the page's light, while the rooms' own walls stay fully inside
-  let f = new Float32Array(NX * NZ); for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let v = 0; for(let dj = -1; dj <= 1 && !v; dj++) for(let di = -1; di <= 1; di++) if(at(e, i + di, j + dj)){ v = 1; break; } f[j * NX + i] = v; }
-  const FR = GI.feather != null ? GI.feather : 2; for(let pass = 0; pass < 2 && FR > 0; pass++) for(const [ax, az] of [[1, 0], [0, 1]]){ const g2 = new Float32Array(NX * NZ); for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let s = 0; for(let k = -FR; k <= FR; k++) s += at(f, i + k * ax, j + k * az); g2[j * NX + i] = s / (2 * FR + 1); } f = g2; }
-  const o = new Uint8Array(NX * NZ * 4); for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const v = Math.round(255 * Math.max(e[j * NX + i] ? Math.min(1, f[j * NX + i] * 1.0) : 0, f[j * NX + i])); o.set([v, v, v, 255], (j * NX + i) * 4); }
+  /* the edge. The weight is a 1 ft blur of the rooms' plan, sharpened so that it is 1 from about 0.7 ft inside the boundary and 0 from
+     about 0.7 ft outside it. A wall's room face is tested 0.75 ft in front of it (weight 1); the other side of that wall, tested
+     0.75 ft into the next room and a wall's thickness away, gets 0, so nothing crosses a wall (the first version reached 2-3 ft out and
+     relit the whole 3 ft hall behind the kitchen and a strip of the bedroom wall). Through an opening to a room the volume does not
+     cover, the floor and ceiling hand over to the page's light across about 1.4 ft at the threshold. */
+  let f = Float32Array.from(e); const FR = GI.feather != null ? GI.feather : 1; for(let pass = 0; pass < 2 && FR > 0; pass++) for(const [ax, az] of [[1, 0], [0, 1]]){ const g2 = new Float32Array(NX * NZ); for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let s = 0; for(let k = -FR; k <= FR; k++) s += at(f, i + k * ax, j + k * az); g2[j * NX + i] = s / (2 * FR + 1); } f = g2; }
+  for(let q = 0; q < f.length; q++){ const t = Math.max(0, Math.min(1, (f[q] - .2) / .6)); f[q] = t * t * (3 - 2 * t); }
+  const o = new Uint8Array(NX * NZ * 4); for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const v = Math.round(255 * f[j * NX + i]); o.set([v, v, v, 255], (j * NX + i) * 4); }
   const t = new THREE.DataTexture(o, NX, NZ, THREE.RGBAFormat); t.magFilter = t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true;
   GI.U.giRoom.value = t; GI.U.giRB.value.set(x0, z0, 1 / (NX * c), 1 / (NZ * c)); GI.mask = {x0, z0, c, NX, NZ, a: e, f}; return true; }
 GI.roomAt = (x, y, z) => { const M = GI.mask; if(!M || y < GI.U.giRY.value.x || y > GI.U.giRY.value.y) return 0; const i = Math.floor((x - M.x0) / M.c), j = Math.floor((z - M.z0) / M.c); return i < 0 || j < 0 || i >= M.NX || j >= M.NZ ? 0 : M.a[j * M.NX + i]; };
