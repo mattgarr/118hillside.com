@@ -10187,6 +10187,10 @@ function glass20MirrorMat(q, clone){
   let m = q.mesh.material; if(m === q.m) return;
   if(clone || !m.userData.g20own){ m = m.clone(); m.polygonOffset = q.mesh.material.polygonOffset; m.polygonOffsetFactor = q.mesh.material.polygonOffsetFactor; m.polygonOffsetUnits = q.mesh.material.polygonOffsetUnits; }
   m.userData.g20own = true; m.name = 'mirror20'; m.metalness = 1; m.roughness = .02; m.color = new THREE.Color(0xf4f4f2).convertSRGBToLinear();
+  // r41 (owner 11/12: surfaces that "appear luminescent"): the staging mirror's grey emissive (0x9aa0a4 x.25, from when the only
+  // environment was the outdoor sky) rode along into this un-tone-mapped probe mirror as a fixed glow at every light level, worst at dusk.
+  // A mirror shows only what it reflects (the room capture, with the MR-1 light floor that follows the light level): no emission.
+  if(m.emissive) m.emissive.setRGB(0, 0, 0); m.emissiveIntensity = 0; m.emissiveMap = null;
   const U = q.U;
   m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U);
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vG20W;').replace('#include <project_vertex>', '#include <project_vertex>\nvG20W = (modelMatrix * vec4(transformed, 1.0)).xyz;');
@@ -21690,7 +21694,10 @@ function r8Cooler(o){
     { const c = document.createElement('canvas'); c.width = 64; c.height = 256; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 0, 64, 256);   // the reflection streaks that make glass read as glass
       gr.addColorStop(0, 'rgba(255,255,255,.16)'); gr.addColorStop(.28, 'rgba(255,255,255,.05)'); gr.addColorStop(.42, 'rgba(255,255,255,.2)'); gr.addColorStop(.5, 'rgba(255,255,255,.04)'); gr.addColorStop(1, 'rgba(255,255,255,.1)');
       x.fillStyle = gr; x.fillRect(0, 0, 64, 256); const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding;
-      const sm = new THREE.MeshBasicMaterial({map: tx, transparent: true, depthWrite: false, toneMapped: false}); sm.name = 'coolerSheen'; b.useMaterial('r8sheen', sm);
+      // r41: the streaks were an unlit, un-tone-mapped white (MeshBasic, toneMapped false): a fixed glow on the door glass at every light
+      // level, a pale self-lit sheet at dusk. Now they are a reflection: a mirror-like film whose strength is the streak's alpha, added
+      // over the glass, reflecting the room's environment, so they are as bright as the room they reflect (and tone-mapped like it)
+      const sm = new THREE.MeshStandardMaterial({color: 0xffffff, map: tx, metalness: 1, roughness: .12, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending}); sm.name = 'coolerSheen'; b.useMaterial('r8sheen', sm);
       b.bb('r8sheen', -w / 2 + sF, y0 + sB, zf - t / 2 + 0.013, w / 2 - sF, y1 - sT, zf - t / 2 + 0.014); }
     const dx = -hx * 0.18, dy = y0 + (y1 - y0) * 0.36; for(let k = 0; k < 4; k++) b.bb('r8led', dx - 0.1 + k * 0.05 + (k > 1 ? 0.03 : 0), dy, zf - t / 2 + 0.012, dx - 0.1 + k * 0.05 + 0.032 + (k > 1 ? 0.03 : 0), dy + 0.045, zf - t / 2 + 0.016); }
   else { b.cyl('stainless', 0.03, 0.03, hl, hx, hy, zf + 0.1, 16); [hl / 2 - 0.08, -hl / 2 + 0.08].forEach(dy => b.cyl('stainless', 0.02, 0.02, 0.1, hx, hy + dy, zf + 0.05, 10, {rx: Math.PI / 2})); }
