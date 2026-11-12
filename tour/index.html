@@ -23085,17 +23085,21 @@ function r40XMake(t){ const X = R40X, w = t.image && t.image.width, h = t.image 
   for(const k of ['out', 'prev']){ if(X[k]) X[k].dispose();
     const rt = new THREE.WebGLRenderTarget(w, h, {minFilter: t.minFilter, magFilter: t.magFilter, format: t.format, type: t.type, encoding: t.encoding, depthBuffer: false, stencilBuffer: false, generateMipmaps: false});
     rt.texture.mapping = t.mapping; rt.texture.name = 'r40env.' + k; X[k] = rt; }
-  if(!X.mat){ X.mat = new THREE.ShaderMaterial({uniforms: {tA: {value: null}, tB: {value: null}, k: {value: 0}, eA: {value: 0}, eB: {value: 0}, eO: {value: 0}}, depthTest: false, depthWrite: false, toneMapped: false,
+  if(!X.mat){ X.mat = new THREE.ShaderMaterial({uniforms: {tA: {value: null}, tB: {value: null}, k: {value: 0}, eA: {value: 0}, eB: {value: 0}, eO: {value: 0}, dith: {value: 0}}, depthTest: false, depthWrite: false, toneMapped: false,
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
-      fragmentShader: `uniform sampler2D tA, tB; uniform float k; uniform int eA, eB, eO; varying vec2 vUv;
+      // while a fade runs the 8-bit result is dithered (a fixed half-step pattern): without it every texel of a smooth panorama crossed
+      // the next 8-bit level on the same frame and the light moved in small steps; the last frame of a fade is an exact copy
+      fragmentShader: `uniform sampler2D tA, tB; uniform float k, dith; uniform int eA, eB, eO; varying vec2 vUv;
         vec4 r40Dec(vec4 c, int e){ if(e == 1) return sRGBToLinear(c); if(e == 2) return RGBEToLinear(c); return c; }
         vec4 r40Enc(vec4 c, int e){ if(e == 1) return LinearTosRGB(c); if(e == 2) return LinearToRGBE(c); return c; }
-        void main(){ vec4 a = r40Dec(texture2D(tA, vUv), eA), b = r40Dec(texture2D(tB, vUv), eB); gl_FragColor = r40Enc(mix(a, b, k), eO); }`});
+        void main(){ vec4 a = r40Dec(texture2D(tA, vUv), eA), b = r40Dec(texture2D(tB, vUv), eB); vec4 o = r40Enc(mix(a, b, k), eO);
+          if(dith > 0.0 && eO != 2){ float n = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) - 0.5; o.rgb += n / 255.0; }
+          gl_FragColor = o; }`});
     X.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), X.mat); X.mesh.frustumCulled = false; X.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); }
   X.w = w; X.h = h; X.enc = t.encoding; return true; }
 const r40Enc = e => e === THREE.sRGBEncoding ? 1 : e === THREE.RGBEEncoding ? 2 : 0;
-function r40XDraw(A, B, k, dst){ const X = R40X, U = X.mat.uniforms, prev = renderer.getRenderTarget(), ac = renderer.autoClear;
-  U.tA.value = A; U.tB.value = B; U.k.value = k; U.eA.value = r40Enc(A.encoding); U.eB.value = r40Enc(B.encoding); U.eO.value = r40Enc(dst.texture.encoding);
+function r40XDraw(A, B, k, dst, dith){ const X = R40X, U = X.mat.uniforms, prev = renderer.getRenderTarget(), ac = renderer.autoClear;
+  U.tA.value = A; U.tB.value = B; U.k.value = k; U.dith.value = dith ? 1 : 0; U.eA.value = r40Enc(A.encoding); U.eB.value = r40Enc(B.encoding); U.eO.value = r40Enc(dst.texture.encoding);
   renderer.autoClear = false; renderer.setRenderTarget(dst); renderer.render(X.mesh, X.cam); renderer.setRenderTarget(prev); renderer.autoClear = ac; X.draws++; }
 function r40XTarget(t){ const X = R40X;
   if(t === X.B || (X.out && t === X.out.texture)) return;
@@ -23116,7 +23120,7 @@ function r40EnvSync(){
     if(ENV_RT && scene.environment !== ENV_RT.texture) scene.environment = ENV_RT.texture; return; }
   if(!R40L.on) return; const e = scene.environment; if(e && e.isTexture && (!R40X.out || e !== R40X.out.texture)){ try{ r40XTarget(e); }catch(err){ console.warn('[r40] env', err); return; } }
   if(R40X.out && scene.environment) scene.environment = R40X.out.texture; }
-function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.k = Math.min(1, X.k + R40L.dt / (X.dur || R40L.envDur)); r40XDraw(X.prev.texture, X.B, .5 * X.k + .5 * r40S(X.k), X.out); }   // half linear, half smoothstep: eased ends, a lower peak rate than smoothstep alone
+function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.k = Math.min(1, X.k + R40L.dt / (X.dur || R40L.envDur)); r40XDraw(X.prev.texture, X.B, .5 * X.k + .5 * r40S(X.k), X.out, X.k < 1); }   // half linear, half smoothstep: eased ends, a lower peak rate than smoothstep alone
 { const _ae = applyEnv; applyEnv = function(){ const r = _ae.apply(this, arguments); r40EnvSync(); return r; }; }
 { const _la = lightApplyRoomEnv; lightApplyRoomEnv = function(){ const r = _la.apply(this, arguments); r40EnvSync(); return r; }; }
 { const _st = setTOD; setTOD = function(){ R40X.snapNext = true; R40L.snap = true; const r = _st.apply(this, arguments);
