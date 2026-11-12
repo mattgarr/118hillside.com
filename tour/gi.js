@@ -29,14 +29,17 @@ const GI = window.GI = {mode: MODE, ver: 2, on: false, ready: false, why: 'loadi
     giA0: {value: new V3()}, giAS: {value: new V3(1, 1, 1)}, giAN: {value: new V3(1, 1, 1)}, giAT: {value: new THREE.Vector2(1, 1)}, giAOff: {value: .2}}};
 GI.log = [];
 const say = (...a) => { GI.log.push(a.join(' ')); if(GI.log.length > 60) GI.log.shift(); };
-if(MODE === 'bake') document.write('<script src="gi-bake.js?v=' + (qp('gibv', '1')) + '"><\/script>');
+// ?gi=2: tier B as well (gi-rt.js: the indirect light traced per pixel while the camera rests; it uses the bake's tracer). Not on phones yet.
+GI.tierB = MODE === '2' && (!matchMedia('(pointer:coarse)').matches || qp('girt', '') === 'force');
+if(MODE === 'bake' || GI.tierB) document.write('<script src="gi-bake.js?v=' + (qp('gibv', '2')) + '"><\/script>');
+if(GI.tierB) document.write('<script src="gi-rt.js?v=' + (qp('gibv', '2')) + '"><\/script>');
 
 /* ---------------- shader hooks (appended to the r40 chunks, so they only exist where r40's interior mask r40m does) ---------------- */
 const G = '#if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )';
 function patchChunks(){ const C = THREE.ShaderChunk; if(C.__gi) return true; C.__gi = 1;
   C.envmap_physical_pars_fragment += `
 ${G}
-uniform vec3 giGain; uniform float giOn, giK, giHemi, giSpec, giAOK, giNOff, giAOff; uniform sampler2D giT0, giT1, giAO, giRoom;
+uniform vec3 giGain; uniform float giOn, giK, giHemi, giSpec, giAOK, giNOff, giAOff; uniform highp sampler2D giT0, giT1; uniform sampler2D giAO, giRoom;
 uniform vec3 giB0, giBS, giN, giA0, giAS, giAN; uniform vec4 giRB; uniform vec2 giRY, giAT;
 float giRoomW( vec3 P ){ vec2 uv = ( P.xz - giRB.xy ) * giRB.zw; if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 || P.y < giRY.x || P.y > giRY.y ) return 0.0; return texture2D( giRoom, uv ).r; }
 vec3 giIrr( vec3 P, vec3 n ){
@@ -50,6 +53,7 @@ float giAOat( vec3 P, vec3 n ){
   vec2 s = vec2( g.x + 0.5, g.z + 0.5 ) / ( vec2( giAN.x, giAN.z ) * giAT );
   vec2 t0 = vec2( mod( y0, giAT.x ), floor( y0 / giAT.x ) ) / giAT, t1 = vec2( mod( y1, giAT.x ), floor( y1 / giAT.x ) ) / giAT;
   vec4 v = mix( texture2D( giAO, s + t0 ), texture2D( giAO, s + t1 ), f ); return clamp( v.r + dot( v.gba * 2.0 - 1.0, n ), 0.0, 1.0 ); }
+${GI.rt ? GI.rt.PARS : ''}
 #endif
 `;
   C.lights_fragment_maps += `
@@ -60,6 +64,7 @@ if( giOn > 0.5 && r40m > 0.001 ){
   if( giW > 0.001 ){
     vec3 giE = giIrr( vR40W + giNw * giNOff, giNw ) * giGain;
     float giO = mix( 1.0, giAOat( vR40W + giNw * giAOff, giNw ), giAOK );
+${GI.rt ? GI.rt.MAIN : ''}
     float giL0 = dot( iblIrradiance, vec3( 0.2126, 0.7152, 0.0722 ) ), giL1 = dot( giE, vec3( 0.2126, 0.7152, 0.0722 ) );
     radiance *= mix( 1.0, clamp( giL1 / max( giL0, 1e-4 ), 0.2, 1.25 ) * giO, giW * giSpec );
     iblIrradiance = mix( iblIrradiance, giE * giO, giW );
@@ -201,7 +206,7 @@ GI.frame = function(){ const H = GI.H; if(!H) return; GI.n++;
   let ln = 0; for(const l of H.DUSK_LIGHTS) ln += l.intensity;
   const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln, GI.evNow(), GI.wb].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0) + ':' + (isrc ? (isrc.__giId || (isrc.__giId = ++GI.srcN)) : 0) + ':' + !!GI.mask;
   if(key !== GI.last && GI.on){ GI.last = key; try{ GI.compose(); }catch(e){ console.warn('[gi] compose', e); GI.ready = false; } }
-  r13Fade(); ssaoFade(dt); };
+  r13Fade(); ssaoFade(dt); if(GI.rt) try{ GI.rt.frame(); }catch(e){ if(!GI.rt.err){ GI.rt.err = String(e && e.message || e); console.warn('[gi-rt] frame', e); } } };
 GI.srcN = 0;
 /* r13 corner bands: their multiply decals double up with baked corners; inside the rooms their vertices are lifted to white (kept, restored when GI is off) */
 function r13Fade(){ const want = GI.on && GI.k > .5; if(GI._r13 === want && (GI.n % 120) !== 7) return; let nm = 0; GI.H.scene.traverse(o => { if(o.isMesh && o.material && o.material.name === "r13Occlusion") nm++; }); if(GI._r13 === want && nm === GI._r13m) return; GI._r13m = nm;   /* the bands are built at idle after load: look again now and then */ const H = GI.H; let n = 0;
@@ -219,9 +224,9 @@ function ssaoFade(dt){ const H = GI.H, sa = H.ssao; if(!sa || !H.composer || GI.
 GI.host = function(H){ GI.H = H;
   if(!H.R40E || !H.R40E.on){ GI.why = 'needs the r40 two-environment lighting (it is off with ?r40env=0)'; return; }
   if(!H.renderer.capabilities.isWebGL2){ GI.why = 'needs WebGL2'; return; }
-  patchChunks(); Object.assign(H.R40E.U, GI.U); patchPMREM();
+  patchChunks(); Object.assign(H.R40E.U, GI.U, GI.rt ? GI.rt.U : null); patchPMREM();
   if(MODE !== 'bake' || /[?&]giload=1\b/.test(Q)) load(); else GI.why = 'bake page';
   if(GI.bake && GI.bake.host) try{ GI.bake.host(H); }catch(e){ console.warn('[gi] bake host', e); } };
-GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), ev: GI.evNow(), gain: GI.gainNow.map(v => +v.toFixed(2)), wb: (GI.wbGain || [1, 1, 1]).map(v => +v.toFixed(3)), mean: +(GI.mean || 0).toFixed(5), meanRGB: (GI.meanRGB || []).map(v => +v.toFixed(5)), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes,
+GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), ev: GI.evNow(), gain: GI.gainNow.map(v => +v.toFixed(2)), wb: (GI.wbGain || [1, 1, 1]).map(v => +v.toFixed(3)), mean: +(GI.mean || 0).toFixed(5), meanRGB: (GI.meanRGB || []).map(v => +v.toFixed(5)), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes, rt: GI.rt ? GI.rt.status() : null,
   S: GI.S ? {w: GI.S.w.map(v => +v.toFixed(3)), tint: GI.S.tint.map(v => +v.toFixed(3)), sun: GI.S.sun.map(v => +v.toFixed(3)), lamp: +GI.S.lamp.toFixed(3)} : null});
 })();
