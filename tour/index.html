@@ -20693,6 +20693,16 @@ function r36PrimaryCeiling(){
     try{ r36PrimaryCeiling(); }catch(e){ console.warn('[r36] primary ceiling', e); R36G.err.push(String(e)); }
     try{ r36GableCasing(); }catch(e){ console.warn('[r36] gable casing', e); R36G.err.push(String(e)); }
     try{ r36CarveOpenings(); }catch(e){ console.warn('[r36] openings', e); R36G.err.push(String(e)); } return r; }; }
+/* r42 owner 11/12 (office: "you do have a painted part in the office that's a little bit wrong. The accent wall should be a single colour").
+   Swept from the office with rays against the compiled model: the walls are SW 6227 Meditative on the west (accent) wall edge to edge,
+   floor to ceiling, and SW 9632 Serenely on the others, except one face the model never built: the south end of the 2 ft alcove under the
+   east soffit (x -25.27 .. -23.22, floor to the soffit at 4.44). It was open to the wall's framing core (stud material, drawn in the generic
+   grey paint), so a full-height grey band stood between the window wall and the alcove in the stop's view (photo p20: that end is the
+   same light Serenely as the window wall, with the baseboard the model does have). The face is added to the Serenely wall mesh (same
+   material and mesh: lights, repaints and sections like the rest of the room), 1/50 in proud of the wall line so it covers the core. */
+function r42OfficeAlcove(){ const z = -2.7850, x0 = -25.266, x1 = -23.2216, y0 = -4.56, y1 = 4.44;
+  return r36AddFaces(/^walls\|L0\|paint-int-flat#PAINT-SW-9632-SERENELY$/, 'R42-OFFICE-ALCOVE-S', [[[x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z], [0, 0, -1]]]); }
+{ const _bh42 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh42.apply(this, arguments); try{ BIM3.report.r42office = r42OfficeAlcove(); }catch(e){ console.warn('[r42] office alcove', e); } return r; }; }
 /* r41 owner 11/12 (Dollhouse at dusk over the garage: "geometry problem at the top of garage roof - all these roofs should hit at the same
    point"). From the model's planes (meta roofs, top = plane + th): the garage's west slope runs to the upper-storey wall (world z = -2.25)
    all the way to the ridge, but its east slope stopped 1.48 ft short of the wall (z = -0.77) between the ridge and the valley it forms with
