@@ -1559,7 +1559,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
   function obstacles(){ var out = [], L = document.querySelectorAll(SEL), i, e, r, cs, z;
     for(i = 0; i < L.length; i++){ r = box(L[i], true); if(r) out.push(r); }   // only what is on screen
     L = document.querySelectorAll('#wplabels .wpl,#labels .lbl');   // r36: room and walk-to labels, once they have stopped moving (the notice does not chase them while the view turns)
-    for(i = 0; i < L.length; i++){ e = L[i]; if(e.style.display === 'none') continue; r = box(e, true); if(!r) continue; z = Math.round(r.left) + ',' + Math.round(r.top); if(still.get(e) === z) out.push(r); still.set(e, z); }
+    for(i = 0; i < L.length; i++){ e = L[i]; if(e.style.display === 'none') continue; r = box(e, true); if(!r) continue; z = Math.round(r.left) + ',' + Math.round(r.top); if(still.get(e) === z) out.push({left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height, lbl: 1}); still.set(e, z); }
     for(e = document.body.firstElementChild; e; e = e.nextElementSibling){ if(e === b || e.id === 'intro28') continue; cs = getComputedStyle(e); if(cs.position !== 'fixed') continue;
       z = parseInt(cs.zIndex, 10); if(!(z >= 56 && z <= 79)) continue; r = box(e, true); if(r) out.push(r); }   // a game's HUD and docks (its markers sit lower, its dialogs higher)
     return out; }
@@ -1600,6 +1600,8 @@ html.hwload .loading .loadnote{color:#c9bcd8}
       if(w > sw){ b.style.setProperty('--v33w', Math.min(sw, Math.max(200, Math.ceil(w * .5 + 60))) + 'px'); b.classList.add('v33wrap'); hh = b.getBoundingClientRect().height; }
       F.style.setProperty('--v33in', Math.ceil(hh) + 'px'); sr = S.getBoundingClientRect(); tucked = true; return put(sr.left, sr.top, false); }
     function go(){ if(row(rows[0]) || tuck() || row(rows[1])) return true;
+      // only the house's room labels are in the way on both edges (a phone's floor plan view): the notice keeps to its edge over a label rather than drop over a panel
+      var all = O; O = O.filter(function(q){ return !q.lbl; }); if(O.length < all.length && (row(rows[0]) || row(rows[1]))) return true;
       // the bottom is all panel (a phone's open sheet) and a tall strip sits under the header (a phone's concept banner): right under that strip, still with the top edge's panels, never over the sheet
       x = pick(gaps(yT, yT + h, L, R, O), w, mid); if(x !== null && yT + h < H * .5) return put(x, yT, true);
       return false; }   // nowhere clear: the usual corner
