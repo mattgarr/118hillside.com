@@ -10354,8 +10354,8 @@ function lightMeterPoll(){
   const st = gl.clientWaitSync(METER.sync, 0, 0); if(st !== gl.ALREADY_SIGNALED && st !== gl.CONDITION_SATISFIED) return;
   gl.deleteSync(METER.sync); METER.sync = null;
   gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-  let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = METER.atlas ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
-  METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt;
+  let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = METER.atlas ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * (METER.atlas ? Math.min(v, METER.atlas.cap) : v); ws += w; if(v > .88) hi++; }
+  METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; if(METER.atlas){ METER.m *= METER.atlas.cal; METER.hi *= METER.atlas.hiK; }   // r41 G5: the all-round view (see GHOST r41)
 }
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
@@ -22303,9 +22303,9 @@ if(GHOST41.on){
   LOOK.aoStrength = 0;
   // G5: the camera meter reads where the camera STANDS, not where it looks
   if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
-    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0};
+    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, cap: 1, cal: 1, hiK: 1, M: METER};
     METER_PASS.render = function(r, w, read){
-      if(!LIGHT.meter.on || !METER.quad) return;
+      if(!LIGHT.meter.on || !METER.quad) return; if(G5.off){ METER.atlas = null; return orig.call(this, r, w, read); }   // G5.off: QA comparison with the screen meter
       const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
       if(!G5.rt){ G5.rt = new THREE.WebGLRenderTarget(2 * Q, 2 * Q, {minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat}); G5.rt.texture.generateMipmaps = false; }
       if(G5.k >= 4 && (cp.distanceToSquared(G5.pos) > .04 || now - G5.at > 1500 || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; }
@@ -22315,7 +22315,7 @@ if(GHOST41.on){
         r.setRenderTarget(G5.rt); r.render(scene, c); r.setRenderTarget(prev); G5.k++; if(G5.k === 4){ G5.ready = true; G5.sweeps++; } }
       if(!G5.ready || G5.k < 4) return G5.ready ? undefined : orig.call(this, r, w, read);
       lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
-      METER.atlas = true; const gl = r.getContext(), prev = r.getRenderTarget(); METER.mat.uniforms.tDiffuse.value = G5.rt.texture; r.setRenderTarget(METER.rt); METER.quad.render(r);
+      METER.atlas = G5; const gl = r.getContext(), prev = r.getRenderTarget(); METER.mat.uniforms.tDiffuse.value = G5.rt.texture; r.setRenderTarget(METER.rt); METER.quad.render(r);
       gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 16 * 16 * 4, gl.STREAM_READ);
       gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
       METER.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); METER.eAt = r.toneMappingExposure; r.setRenderTarget(prev); }; } }
