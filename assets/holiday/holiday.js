@@ -316,7 +316,8 @@
     if(row) row.querySelector('.v31val').textContent = on ? DRESS[cur].label : 'Off';
     if(bar){ const d = bar.querySelector('.dk'); d.hidden = cur !== 'winter'; d.setAttribute('aria-pressed', String(night)); d.setAttribute('aria-label', night ? 'See it by day' : 'See it at dusk'); d.innerHTML = (night ? SUN : MOON) + '<span>' + (night ? 'Day' : 'Dusk') + '</span>'; bar.querySelector('.sep').hidden = d.hidden; } }
   function open(from){ if(!panel) return; opener = from || btn; panel.hidden = false; ftRun(2000);
-    try{ const c = navigator.connection; if(!(c && c.saveData)) loadProps().catch(() => {}); }catch(e){}   // r43: the winter props' script (25 KB compressed) while the visitor reads the choices btn.setAttribute('aria-expanded', 'true'); render(); place();
+    try{ const c = navigator.connection; if(!(c && c.saveData)) loadProps().catch(() => {}); }catch(e){}   /* r43: the winter props' script (25 KB compressed) while the visitor reads the choices */
+    btn.setAttribute('aria-expanded', 'true'); render(); place();
     const f = panel.querySelector('.opt[aria-checked=true]') || panel.querySelector('.opt'); if(f) try{ f.focus({preventScroll: true}); }catch(e){}
     try{ window.__v33discPlace && __v33discPlace(); }catch(e){} ga('holiday_open'); }
   function close(refocus){ if(!panel || panel.hidden) return; panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); const o = opener; opener = null; if(refocus && o && o.isConnected && o.offsetParent) try{ o.focus({preventScroll: true}); }catch(e){}
