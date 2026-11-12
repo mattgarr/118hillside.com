@@ -6536,7 +6536,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   hallbath: {at: [31.0, 9.6], to: [25.8, 5.8], ph: [27.6, 5.2], hf: 100},   // r38: the window corner by the tub, looking back past the open door's edge to the marble-topped vanity and the hall (photo p57's spot, by the door, has the open leaf in front of the vanity)
   backbed: {at: [21.0, 3.7], to: [24.4, -6.6], hf: 100},   // r38: by the south wall, the way photo p73 faces: closet left, window, leaning mirror right, the oval desk. Two feet further from the door than this, the walk on to the stairs plans 10.1-10.5 s (here 8.2 s)
   stairs: {at: [-9.5, -3], to: [-18.5, -8], hf: 100, rise: .08},   // foyer edge, square to the stair hall -> open treads and cable rails of both flights as one sculptural run, landing bench, loft rail and window light above
-  loft: {at: [-13.5, -10.8], to: [-24.7, -2.8], rise: .2},   // stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
+  loft: {at: [-19.8, -11.7], to: [-24.0, -3.6], rise: .1},   // r41: on the loft floor two steps past the top tread, turned toward the window seat: cable rail over the stairwell left, gable clerestory with the trees, the corner windows and the window seat, the art wall's edge. Was over the stairwell itself (-13.5, -10.8, hovering 8 ft over the flight): the walk up climbed to the top and then backed 5 ft out over the stairs to reach it (owner 11/12: "a weird pull back to the camera view once you get to the top of the stairs")    // was: stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
   primary: {at: [-10.2, -27.5], to: [-24, -40]},   // loft-side corner -> bed, skylights, glazed gable, slider to the balcony
   pbath: {at: [-14.4, -23.0], to: [-7.76, -15.52], hf: 100},   // r36: photo p45's own spot and direction: window, curbless shower behind its glass. Was turned 60 degrees from the photo:     // just inside the door -> double vanity + round mirrors, window, curbless shower glass
   balcony: {at: [-14.5, -41.1], to: [-28, -54], rise: -.18, ph: [-24, -56], riseP: .08},   // balcony corner by the house wall (downspout + siding frame the left edge) -> chairs and deck, parapet, oak, the valley and hills at golden hour; the frame falls (rise) to trade sky for deck
@@ -6799,33 +6799,44 @@ function navQA(){
      after turning the other way), the top speed and acceleration (ft/s, ft/s2), the vertical acceleration, the smallest clearance (ft, horizontal
      rays to 3 ft) and the duration. A move fails over the caps (R37S.CHK) or with more than one reversal. {smoothDt: 1/30} steps at another frame
      rate; {smoothFps: true} also replays the five worst moves at 30 and 120 fps and fails if their head turns differ from the 60 fps run. The
-     table is kept in window.__SMOOTH. */
+     table is kept in window.__SMOOTH. r41: a move also fails if, over its last 40 %, the camera steps backwards or doubles back (see run); the Walk
+     part also takes 'Back to the tour' from each room it walks to ({smoothBack: false} skips that). */
   SEC.smooth = async R => { const dt0 = o.smoothDt || 1 / 60, CHK = R37S.CHK, D = 180 / Math.PI;
     const seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => STOPS.length - 1 - i)), rows = [], realNow = performance.now.bind(performance), V = new V3();
     let vt = realNow(); const yawOf = () => { camera.getWorldDirection(V); return Math.atan2(-V.x, -V.z); };
-    const run = (A, dt, keepTrace) => { const m = {dur: 0, rate: 0, acc: 0, total: 0, net: 0, rev: 0, v: 0, a: 0, ay: 0, clr: 99, trace: keepTrace ? [] : null, revAt: [], aAt: 0, clrAt: 0, clrWhat: '', arrive: null, path: o.smoothTrace ? [] : null};
+    const run = (A, dt, keepTrace) => { const m = {dur: 0, rate: 0, acc: 0, total: 0, net: 0, rev: 0, v: 0, a: 0, ay: 0, clr: 99, trace: keepTrace ? [] : null, revAt: [], aAt: 0, clrAt: 0, clrWhat: '', arrive: null, path: o.smoothTrace ? [] : null, fr: []};
       let py = yawOf(), uw = 0, pr = null, dir = 0, opp = 0, P1 = camera.position.clone(), P2 = null, t = 0, n = 0;
       while(anim === A && t < 25){ vt += dt * 1000; tick0(true); t += dt; n++; camera.updateMatrixWorld();
         const y = yawOf(), d = angDiff(py, y); py = y; uw += d; m.total += Math.abs(d); const rate = d / dt * D; m.rate = Math.max(m.rate, Math.abs(rate)); if(pr != null) m.acc = Math.max(m.acc, Math.abs(rate - pr) / dt); pr = rate;
         if(Math.abs(d) * D > 1e-4){ const sg = Math.sign(d); if(!dir){ if(Math.abs(uw) * D > 1.5) dir = Math.sign(uw); } else if(sg !== dir){ opp += Math.abs(d) * D; if(opp > 1.5){ m.rev++; m.revAt.push(+t.toFixed(2)); dir = sg; opp = 0; } } else opp = 0; }
-        const P = camera.position; m.v = Math.max(m.v, P.distanceTo(P1) / dt);
+        const P = camera.position; m.v = Math.max(m.v, P.distanceTo(P1) / dt); m.fr.push([t, (P.x - P1.x) / dt, (P.z - P1.z) / dt, V.x, V.z, P.distanceTo(A.to)]);
         if(P2){ const ax = (P.x - 2 * P1.x + P2.x) / dt / dt, ay = (P.y - 2 * P1.y + P2.y) / dt / dt, az = (P.z - 2 * P1.z + P2.z) / dt / dt; const aa = Math.hypot(ax, ay, az); if(aa > m.a){ m.a = aa; m.aAt = +t.toFixed(2); } m.ay = Math.max(m.ay, Math.abs(ay)); }
         P2 = P1.clone(); P1.copy(P);
         if(keepTrace) m.trace.push([t, uw]); if(m.path && n % 3 === 0) m.path.push([+t.toFixed(2), +(uw * D).toFixed(1), +P.x.toFixed(2), +P.z.toFixed(2), +P.y.toFixed(2)]); if(m.arrive == null && P.distanceTo(A.to) < .01) m.arrive = t;
         if(n % 6 === 0 && anim === A){ const pr2 = probe(); if(pr2.clr < m.clr){ m.clr = pr2.clr; m.clrAt = +t.toFixed(2); m.clrWhat = pr2.what + ' @' + pr2.pos; } } }
-      m.dur = t; m.net = Math.abs(uw); return m; };
+      m.dur = t; m.net = Math.abs(uw);
+      /* r41 (owner 11/12, the walk up to the loft: "a weird pull back to the camera view once you get to the top of the stairs"): over the last 40 % of
+         a move the camera never steps backwards (its level velocity along the level view under CHK.back ft/s for CHK.backHold s or more) and never
+         doubles back along the way (gets more than CHK.away ft further from where it is going than it already was) */
+      let run2 = 0, dmin = Infinity; m.back = 0; m.backAt = null; m.backV = 0; m.away = 0; m.awayAt = null; const tTail = m.dur * (1 - CHK.tail);
+      for(const [tt, vx, vz, fx, fz, d] of m.fr){ if(tt < tTail) continue; const dv = (vx * fx + vz * fz) / (Math.hypot(fx, fz) || 1); m.backV = Math.min(m.backV, dv);
+        if(dv < CHK.back){ run2 += dt; if(run2 > m.back){ m.back = run2; m.backAt = +tt.toFixed(2); } } else run2 = 0;
+        dmin = Math.min(dmin, d); if(d - dmin > m.away){ m.away = d - dmin; m.awayAt = +tt.toFixed(2); } }
+      m.fr = null; return m; };
     const rr = v => +(+v).toFixed(1), fps = [];
     R37S.qaNoDraw = true; performance.now = () => vt;
-    const record = (id, A, x) => { const L = A.path.L, m = run(A, dt0, true), row = Object.assign({id, L: rr(L), dur: +m.dur.toFixed(2), rate: rr(m.rate), acc: rr(m.acc), total: rr(m.total * D), net: rr(m.net * D), excess: rr((m.total - m.net) * D), rev: m.rev, v: rr(m.v), a: rr(m.a), ay: rr(m.ay), clr: +m.clr.toFixed(2), trace: m.trace, settle: m.arrive == null ? null : +(m.dur - m.arrive).toFixed(2), revAt: m.revAt, aAt: m.aAt, clrAt: m.clrAt, clrWhat: m.clrWhat, path: m.path, plan: A.r37k || ''}, x);
+    const record = (id, A, x) => { const L = A.path.L, m = run(A, dt0, true), row = Object.assign({id, L: rr(L), dur: +m.dur.toFixed(2), rate: rr(m.rate), acc: rr(m.acc), total: rr(m.total * D), net: rr(m.net * D), excess: rr((m.total - m.net) * D), rev: m.rev, v: rr(m.v), a: rr(m.a), ay: rr(m.ay), clr: +m.clr.toFixed(2), trace: m.trace, settle: m.arrive == null ? null : +(m.dur - m.arrive).toFixed(2), back: +m.back.toFixed(2), backV: rr(m.backV), backAt: m.backAt, away: +m.away.toFixed(2), awayAt: m.awayAt, revAt: m.revAt, aAt: m.aAt, clrAt: m.clrAt, clrWhat: m.clrWhat, path: m.path, plan: A.r37k || ''}, x);
       rows.push(row); finish();
       const bad = []; if(m.rate > CHK.rate) bad.push('yaw rate ' + row.rate + ' deg/s'); if(m.acc > CHK.acc) bad.push('yaw acceleration ' + row.acc + ' deg/s2'); if(m.rev > CHK.rev) bad.push(m.rev + ' turning reversals'); if(m.dur > CHK.dur) bad.push('takes ' + row.dur + ' s');
-      if(bad.length) R.fail('smooth', id, bad.join(', ')); R.note('smooth', id, L.toFixed(1) + ' ft ' + row.dur + ' s; yaw max ' + row.rate + ' deg/s, ' + row.acc + ' deg/s2, turned ' + row.total + ' for net ' + row.net + ' deg (' + row.rev + ' reversals); speed max ' + row.v + ' ft/s, accel ' + row.a + ' ft/s2 (vertical ' + row.ay + '); clearance ' + row.clr + ' ft'); };
+      if(m.back >= CHK.backHold - dt0 / 2) bad.push('steps backwards for ' + row.back + ' s near the end (at ' + row.backV + ' ft/s along the view, ' + row.backAt + ' s in)'); if(m.away > CHK.away) bad.push('doubles back near the end (' + row.away + ' ft further from the stop, ' + row.awayAt + ' s in)');
+      if(bad.length) R.fail('smooth', id, bad.join(', ')); R.note('smooth', id, L.toFixed(1) + ' ft ' + row.dur + ' s; yaw max ' + row.rate + ' deg/s, ' + row.acc + ' deg/s2, turned ' + row.total + ' for net ' + row.net + ' deg (' + row.rev + ' reversals); speed max ' + row.v + ' ft/s, accel ' + row.a + ' ft/s2 (vertical ' + row.ay + '); clearance ' + row.clr + ' ft; backwards ' + row.back + ' s (' + row.backV + ' ft/s), doubled back ' + row.away + ' ft'); };
     try{ tour(seq[0]);
       for(let q = 1; q < seq.length; q++){ await pause(); const a = STOPS[seq[q - 1]], b = STOPS[seq[q]], id = a.id + '>' + b.id; showStop(seq[q]); const A = anim;
         if(!A || !A.path){ finish(); continue; } record(id, A, {from: seq[q - 1], to: seq[q]}); }
       // Walk: 'Walk to' every room in turn (the same walking as a tap on the floor or a white circle)
       if(o.smoothWalk !== false){ setMode('walk'); finish(); let prev = 'start';
-        for(const r of ROOMS){ if(r.level === 'outside' && r.id !== 'street') continue; await pause(); r36GoRoom(r); const A = anim; if(A && A.path) record('walk:' + prev + '>' + r.id, A, {walk: true}); else finish(); prev = r.id; }
+        for(const r of ROOMS){ if(r.level === 'outside' && r.id !== 'street') continue; await pause(); r36GoRoom(r); const A = anim; if(A && A.path) record('walk:' + prev + '>' + r.id, A, {walk: true}); else finish(); prev = r.id;
+          if(o.smoothBack !== false && window.__back38){ await pause(); __back38.go(); const B = anim; if(B && B.path) record('back:' + r.id + '>' + STOPS[stopIdx].id, B, {walk: true}); else finish(); prev = STOPS[stopIdx].id; setMode('walk'); finish(); } }   // r41: and 'Back to the tour' from there
         setMode('tour'); finish(); }
       if(o.smoothFps){ const worst = rows.filter(r => !r.walk).sort((x, y) => y.rate + y.excess / 4 - x.rate - x.excess / 4).slice(0, 5);
         for(const w of worst){ for(const dt of [1 / 30, 1 / 120]){ await pause(); tour(w.from); showStop(w.to); const A = anim; if(!A || !A.path){ finish(); continue; } const m = run(A, dt, true); finish();
@@ -22744,7 +22755,7 @@ const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
       acceleration capped), and each frame reads the plan at its own time, so 30, 60 and 120 fps show the same motion.
    A door on the way opens a second ahead of you; if one is still swinging the walk eases to a stop before it. Free walking and drag-to-look
    are not touched. */
-Object.assign(R36N, {YAW: 50, YACC: 120, YAWL: 60, YACCL: 145, LONG: 45, PYAW: 30, PACC: 70, TUBE: 18, TUBEL: 22, LA: 4.5, ACC: 5.5, DEC: 4.5});   // deg/s, deg/s2, ft, ft/s2 (a walk over LONG ft may turn up to YAWL: a two-flight move turns about 450 deg)
+Object.assign(R36N, {YAW: 50, YACC: 120, YAWL: 60, YACCL: 145, LONG: 45, PYAW: 30, PACC: 70, TUBE: 18, TUBEL: 22, LA: 4.5, ACC: 5.5, DEC: 4.5, BACK: .12});   // deg/s, deg/s2, ft, ft/s2 (a walk over LONG ft may turn up to YAWL: a two-flight move turns about 450 deg)
 function r37Dist(g){   // clearance (ft) from each walkable cell of a level grid to the nearest cell that is not (chamfer transform), kept on the grid
   if(g.dist) return g.dist; const G = R36N.lv, NX = G.NX, NZ = G.NZ, n = NX * NZ, D = new Float32Array(n), b = Math.SQRT2;
   for(let k = 0; k < n; k++) D[k] = g.ok[k] ? 1e6 : 0;
@@ -22887,8 +22898,14 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
     const vs = new Float64Array(n1); for(let k = 0; k < n1; k++){ let acc = 0; for(let j = -R; j <= R; j++){ const q = k + j; if(q > 0 && q < n1) acc += vt[q] * ker[j + R]; } vs[k] = acc / kw; }
     let tot = 0; for(let k = 1; k < n1; k++) tot += vs[k] * dt; const sc = tot > 1e-6 ? L / tot : 1; sT[0] = 0; for(let k = 1; k < n1; k++) sT[k] = Math.min(L, sT[k - 1] + vs[k] * dt * sc); sT[n1 - 1] = L; }
   const G = (A, s) => { const f = clamp(s / L, 0, 1) * (N - 1), i = Math.min(N - 2, Math.floor(f)); return lerp(A[i], A[i + 1], f - i); };
+  /* r41 (owner 11/12: the walk to the loft had "a weird pull back to the camera view once you get to the top of the stairs"): the head never turns
+     so far from the way the walker is actually going that the walk steps backwards. tau is that way (the route's own tangent, unwrapped like psi);
+     while moving at v ft/s the head's target stays within acos(-R36N.BACK / v) of it (91 deg at a walk, opening to a full turn as you stop), so a
+     stop that faces back across the room is reached by walking in and turning as you come to a stop, not by backing into it */
+  const tau = new Float64Array(N); for(let i = 0; i < N; i++){ const s = sAt(i); r36PathPos(p, Math.max(0, Math.min(s - .3, L - .6)), V); r36PathPos(p, Math.min(L, Math.max(s + .3, .6)), W); const dx = W.x - V.x, dz = W.z - V.z, yv = Math.hypot(dx, dz) > .05 ? Math.atan2(-dx, -dz) : (i ? tau[i - 1] : psi[0]); tau[i] = i ? tau[i - 1] + angDiff(tau[i - 1], yv) : psi[0] + angDiff(psi[0], yv); }
+  const BK = S.BACK, vAt = k => k >= n1 - 1 ? 0 : (sT[k + 1] - sT[k]) / dt, hold = (tgt, s, v) => { if(v <= BK) return tgt; const m = Math.acos(-BK / v), off = tgt - G(tau, s); return Math.abs(off) > m ? tgt - Math.sign(off) * (Math.abs(off) - m) : tgt; };
   const ys = [], ps = [], ss = []; let y = g[0], w = 0, pt = gp[0], pw = 0; const wn = 9, YW = YAW * DG, YA = YACC * DG, PW = S.PYAW * DG, PA = S.PACC * DG;
-  for(let k = 0; k < n1 + 240 * 3; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], tg = G(g, sN), tr = (tg - G(g, s)) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt;
+  for(let k = 0; k < n1 + 240 * 5; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], tg = hold(G(g, sN), sN, vAt(k + 1)), tr = (tg - hold(G(g, s), s, vAt(k))) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt;
     ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - g[N - 1]) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
     let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -YA, YA); w = clamp(w + ac * dt, -YW, YW); y += w * dt;
     ac = clamp(wn * wn * (pg - pt) + 2 * wn * (prr - pw), -PA, PA); pw = clamp(pw + ac * dt, -PW, PW); pt += pw * dt; }
@@ -23033,7 +23050,7 @@ function r36WhereAt(x, z, f){
 function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golden' ? .045 : .08, g = GROUPS.terrain; if(!g) return; g.traverse(o => { if(o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(k, k, k * .96); }); }
 { const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
 /* r37 smooth walking: the caps the ?qa=1 'smooth' check holds every walked move to; qaNoDraw lets that check step frames without drawing them */
-const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false, anim: () => anim, leaves: () => r37Leaves()};
+const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05, back: -.2, backHold: .2, away: .3, tail: .4}, qaNoDraw: false, anim: () => anim, leaves: () => r37Leaves()};
 { const _rf37 = renderFrame; renderFrame = function(){ if(R37S.qaNoDraw){ if(DOOR28.moving.size) try{ door28Step(); }catch(e){} return; } return _rf37.apply(this, arguments); }; }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 { let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)
