@@ -46,12 +46,12 @@
 
   /* ---------- Winter holidays: one scheme, in the Deck the House props' own state shape ---------- */
   const WINTER = {name: '', trad: [], lights: 'warm', motion: 'steady', door: 'evergreen', win: ['candles', 'menorah'], menorahLit: 9, hang: 'none', path: ['luminarias', 'garland'], tree: 'classic', topper: 'star',
-    room: ['poinsettia'], room2: ['beams'], oak: 'both', oakFront: true, ter: ['lanterns'], ter2: ['bistro'], weather: 'clear', yard: 'none', wear: 'none'};
-  const BLANK = {name: '', trad: [], lights: 'none', motion: 'steady', door: 'none', win: [], menorahLit: 9, hang: 'none', path: [], tree: 'none', topper: 'star', room: [], room2: [], oak: 'none', oakFront: false, ter: [], ter2: [], weather: 'clear', yard: 'none', wear: 'none'};
+    room: ['poinsettia'], room2: ['beams'], oak: 'both', oakFront: true, ter: ['lanterns'], ter2: ['bistro'], wear: 'none'};
+  const BLANK = {name: '', trad: [], lights: 'none', motion: 'steady', door: 'none', win: [], menorahLit: 9, hang: 'none', path: [], tree: 'none', topper: 'star', room: [], room2: [], oak: 'none', oakFront: false, ter: [], ter2: [], wear: 'none'};
   const W = {on: false, built: false, S: null, P: null, inside: false, tod0: null, todMine: false, raf: 0, lastIn: 0, ms: 0, late: 0};
   let mine = false;   // true while this file changes the time of day (a change by the visitor is theirs to keep)
   function loadProps(){ if(window.DECKPROPS) return Promise.resolve(); if(loadProps.p) return loadProps.p;
-    return (loadProps.p = new Promise((res, rej) => { const s = document.createElement('script'); s.src = ASSET + 'deck3d/deck-props.js?v=45'; s.onload = () => res(); s.onerror = () => { loadProps.p = null; rej(new Error('deck-props.js did not load')); }; document.head.appendChild(s); })); }
+    return (loadProps.p = new Promise((res, rej) => { const s = document.createElement('script'); s.src = ASSET + 'deck3d/deck-props.js?v=46'; s.onload = () => res(); s.onerror = () => { loadProps.p = null; rej(new Error('deck-props.js did not load')); }; document.head.appendChild(s); })); }
   const ctx = () => ({inside: true});   // window candles and the menorah sit on the inside sill, where they would really be; the glass shows them from the street
   /* parts follow what the tour is showing: nothing is left on a roof or in a tree that is not drawn */
   function syncVis(){ const P = W.P; if(!P) return; const show = W.on && H.mode !== 'design'; P.root.visible = show; if(!show) return;

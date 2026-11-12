@@ -449,47 +449,8 @@
         for(let i = 0; i < 6; i++){ const s = new THREE.Sprite(sm); s.raycast = noop; s.userData.k = i / 6; g.add(s); puffs.push(s); } g.userData.tick = t => puffs.forEach(s => { const k = ((reduce ? 0 : t * .12) + s.userData.k) % 1; s.position.set(p.x + Math.sin(k * 5 + s.userData.k * 9) * .3 * k, top + .2 + k * 4.2, p.z + k * .6); s.scale.setScalar(.5 + k * 1.9); s.visible = k < .96; }); }
       return g; }
 
-    /* ---------- weather: snow that falls outdoors only, lies on roofs and ground, and can be built into something ---------- */
-    const SNOW = {u: {uCover: {value: 0}, uLight: {value: new THREE.Color(1, 1, 1)}, uSun: {value: new V3(0, 1, 0)}, uSunC: {value: new THREE.Color(0, 0, 0)}}, over: [], fall: null, found: false};
-    function snowMat(){ return SNOW.mat || (SNOW.mat = new THREE.ShaderMaterial({uniforms: SNOW.u, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
-      vertexShader: `varying vec3 vW; varying vec3 vN; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
-      fragmentShader: `uniform float uCover; uniform vec3 uLight, uSun, uSunC; varying vec3 vW; varying vec3 vN;
-        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
-        void main(){ vec3 N = normalize(vN); float up = smoothstep(.3, .62, N.y); float f = n(vW.xz * .35) * .55 + n(vW.xz * 1.3) * .3 + n(vW.xz * 5.) * .15;
-          float a = up * smoothstep(1. - uCover * 1.25, 1.12 - uCover * 1.05, f + uCover * .5) * (.5 + .46 * uCover); a *= smoothstep(150., 95., length(vW.xz));
-          if(a < .01) discard; float sh = .88 + .12 * n(vW.xz * 2.2); vec3 c = (uLight * (.72 + .28 * N.y) + uSunC * max(0., dot(N, uSun))) * sh; gl_FragColor = vec4(c, a); }`})); }
-    function snowFind(){ if(SNOW.found) return; SNOW.found = true; const seen = new Set(), pickM = [], bb = new THREE.Box3(), sz = new V3();
-      const take = o => { if(seen.has(o)) return; seen.add(o); if(o.isInstancedMesh || !o.geometry || !o.geometry.attributes.normal) return; const m = o.material; if(!m || Array.isArray(m) || m.transparent || m.alphaTest > 0) return; bb.setFromObject(o); bb.getSize(sz); if(sz.x * sz.z < 40) return; pickM.push(o); };
-      for(let x = -44; x <= 44; x += 4) for(let z = -64; z <= 76; z += 4){ rc.set(new V3(x + .37, 60, z + .41), new V3(0, -1, 0)); rc.far = 90; let hs = []; try{ hs = rc.intersectObjects(H.scene.children, true); }catch(e){} const h = hs.find(solid); if(!h) continue; let p = h.object, bad = false; for(let q = p; q; q = q.parent) if(/^furn|^deck3d$|^trees/.test(q.name)) bad = true; if(!bad && !/cushion|wicker|decor|sofa|chair|k2\d|p2\d(?!poly)|bowl|teak|contact|-ao/i.test(p.name)) take(p); }
-      H.scene.traverse(o => { if(o.isMesh && /comp-shingle-arch|modbit-torchdown|flagstone|paver-band|^site\|.*deck-composite/.test(o.name) && shown(o)) take(o); });
-      pickM.forEach(o => { o.updateWorldMatrix(true, false); const m = new THREE.Mesh(o.geometry, snowMat()); m.matrixAutoUpdate = false; m.matrix.copy(o.matrixWorld); m.matrixWorld.copy(o.matrixWorld); m.renderOrder = 1; m.raycast = noop; m.frustumCulled = false; m.name = 'deck-snow'; m.visible = false; root.add(m); SNOW.over.push(m); }); }
-    const HOUSE = [[3.2, 3.6, 33.7, 38.2], [-10.2, -11, 28.1, 6.3], [-26.7, -1.2, -10.2, 23.7], [-34.5, -51.1, -7.4, -1.1], [-10.2, -50.7, 3, -37]];
-    function snowFall(n){ const R = rng(77), pos = new Float32Array(n * 3), ph = new Float32Array(n); for(let i = 0; i < n; i++){ pos[i * 3] = R() * 70; pos[i * 3 + 1] = R() * 36; pos[i * 3 + 2] = R() * 70; ph[i] = R(); }
-      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('aPhase', new THREE.BufferAttribute(ph, 1));
-      const mat = new THREE.ShaderMaterial({uniforms: {uTime: U.time, uScale: U.scale, uCam: {value: new V3()}, uAmt: {value: 1}, uTint: SNOW.u.uLight, uR: {value: HOUSE.map(r => new THREE.Vector4(r[0], r[1], r[2], r[3]))}}, transparent: true, depthWrite: false,
-        vertexShader: `attribute float aPhase; uniform float uTime, uScale, uAmt; uniform vec3 uCam; uniform vec4 uR[5]; varying float vA;
-          void main(){ vec3 p = position; float sp = 2.2 + aPhase * 2.4; p.y = mod(p.y - uTime * sp, 36.); p.x += sin(uTime * .7 + aPhase * 30.) * .6; p.z += cos(uTime * .5 + aPhase * 17.) * .6;
-            vec3 w = vec3(mod(p.x - uCam.x, 70.) - 35. + uCam.x, p.y - 8. + uCam.y, mod(p.z - uCam.z, 70.) - 35. + uCam.z); vA = aPhase < uAmt ? 1. : 0.;
-            for(int i = 0; i < 5; i++){ if(w.x > uR[i].x && w.x < uR[i].z && w.z > uR[i].y && w.z < uR[i].w && w.y < 19.) vA = 0.; }
-            vec4 mv = viewMatrix * vec4(w, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = clamp((.11 + aPhase * .1) * uScale / max(.3, -mv.z), 1.5, 14.); if(vA < .5) gl_Position = vec4(2., 2., 2., 1.); }`,
-        fragmentShader: `uniform vec3 uTint; varying float vA; void main(){ float d = length(gl_PointCoord - .5) * 2.; if(d > 1.) discard; gl_FragColor = vec4(min(vec3(1.), uTint * 1.25 + .12), (1. - d * d) * .85 * vA); }`});
-      const P = new THREE.Points(geo, mat); P.frustumCulled = false; P.renderOrder = 7; P.raycast = noop; P.onBeforeRender = scaleHook; P.name = 'deck-snowfall'; return P; }
-    const SNOWMAN_AT = [-8.8, 26.1];
-    function buildWeather(S){ const w = S.weather, full = w === 'snowday'; if(w === 'clear' || !w){ SNOW.over.forEach(m => m.visible = false); if(SNOW.fall) SNOW.fall.visible = false; return null; }
-      snowFind(); SNOW.u.uCover.value = full ? 1 : .42; SNOW.over.forEach(m => m.visible = true); if(!SNOW.fall){ SNOW.fall = snowFall(2600); root.add(SNOW.fall); } SNOW.fall.visible = true; SNOW.fall.material.uniforms.uAmt.value = full ? 1 : .35;
-      if(!full || S.yard === 'none') return null; const g = grp('yard'), [x, z] = SNOWMAN_AT, y = floorY(x, z, 2, -3.5), snow = std('#f4f7fb', {roughness: .95}), coal = std('#15161a'), s = new THREE.Group(); s.position.set(x, y, z); s.rotation.y = .25; g.add(s);
-      if(S.yard === 'snowman'){ s.add(mesh(G.sphLo, snow, 0, .95, 0, 1.1, 1.0, 1.1)); s.add(mesh(G.sphLo, snow, 0, 2.35, 0, .82, .78, .82)); s.add(mesh(G.sphLo, snow, 0, 3.45, 0, .58));
-        [[-.2, 3.58], [.2, 3.58]].forEach(e => s.add(mesh(G.sph, coal, e[0], e[1], .52, .055))); for(let i = 0; i < 5; i++){ const a = -.5 + i * .25; s.add(mesh(G.sph, coal, Math.sin(a) * .28, 3.3 - Math.cos(a) * .1 + .02, .52, .035)); } [2.65, 2.3, 1.95].forEach(yy => s.add(mesh(G.sph, coal, 0, yy, .8 - Math.abs(yy - 2.35) * .2, .06)));
-        const nose = mesh(G.spike, std('#e8771c'), 0, 3.45, .55, .12, .48, .12); nose.rotation.x = Math.PI / 2; s.add(nose);
-        const sc = std('#2f5fb8', {roughness: .8}); const sf = mesh(new THREE.TorusGeometry(.5, .11, 6, 20), sc, 0, 3.0, 0); sf.rotation.x = Math.PI / 2; s.add(sf); const tl = mesh(G.box, sc, .34, 2.6, .5, .2, .7, .06); tl.rotation.z = -.15; s.add(tl);
-        const hat = std('#1a1b20', {roughness: .7}); s.add(mesh(G.cyl, hat, 0, 3.95, 0, .62, .05, .62)); s.add(mesh(G.cyl, hat, 0, 4.3, 0, .4, .7, .4)); s.add(mesh(G.cyl, std('#b3232c'), 0, 4.03, 0, .41, .12, .41));
-        const st = std('#4a3424'); [[-1, .9], [1, 1.1]].forEach(a => { const arm = mesh(G.cylLo, st, a[0] * 1.15, 2.7, 0, .035, 1.3, .035); arm.rotation.z = -a[0] * a[1]; s.add(arm); const tw = mesh(G.cylLo, st, a[0] * 1.55, 3.05, .02, .022, .4, .022); tw.rotation.z = -a[0] * .2; s.add(tw); }); }
-      else { s.add(mesh(G.sphLo, snow, 0, .85, 0, 1.0, .95, 1.15)); s.add(mesh(G.sphLo, snow, 0, 2.0, .15, .68, .64, .68)); [[-.36, 2.55], [.36, 2.55]].forEach(e => { const ear = mesh(G.spike4, snow, e[0], e[1], .15, .36, .5, .2); ear.rotation.z = -e[0] * .5; s.add(ear); });
-        const eye = std('#e8b93c', {roughness: .3}); [[-.24, 2.1], [.24, 2.1]].forEach(e => { s.add(mesh(G.sph, eye, e[0], e[1], .74, .085, .1, .05)); s.add(mesh(G.sph, coal, e[0], e[1], .78, .03, .08, .02)); }); s.add(mesh(G.sph, std('#d9788a'), 0, 1.93, .8, .05, .04, .04));
-        const wh = std('#4a3424'); [-1, 1].forEach(d => [-.12, 0, .12].forEach(a => { const q = mesh(G.cylLo, wh, d * .5, 1.9 + a, .72, .008, .5, .008); q.rotation.z = Math.PI / 2 + d * a * 1.6; s.add(q); }));
-        const tail = new THREE.Mesh(new THREE.TorusGeometry(.6, .15, 6, 14, Math.PI * 1.1), snow); tail.position.set(.85, .32, -.2); tail.rotation.x = Math.PI / 2; s.add(tail); [[-.4, .6], [.4, .6]].forEach(p => s.add(mesh(G.sphLo, snow, p[0], .22, p[1] + .5, .24, .2, .3))); }
-      blob(g, x, y, z, 1.6, .45); return g; }
+    /* (the retired snow weather, its snowman and its snow cover lived here: Woodside does not get snow, and nothing has asked for it since the
+       game's picture version; removed in r43) */
 
     /* ---------- Snowball himself: a billboard of the shared drawing, with whatever he is wearing ---------- */
     const CAT = {sp: {}, cur: null};
@@ -503,7 +464,7 @@
     const FEAT = {
       roof: {sig: S => S.lights, build: buildRoof}, door: {sig: S => S.door, build: buildDoor}, hang: {sig: S => S.hang, build: buildHang}, path: {sig: S => (S.path || []).slice().sort().join(), build: buildPath},
       win: {sig: (S, c) => (S.win || []).slice().sort().join() + (c.inside ? '|in' : '|out') + (S.menorahLit || ''), build: buildWin}, tree: {sig: S => S.tree + '|' + S.topper, build: buildTree}, room: {sig: S => (S.room || []).slice().sort().join(), build: buildRoom},
-      oak: {sig: S => S.oak, build: buildOak}, ter: {sig: S => (S.ter || []).slice().sort().join(), build: buildTer}, yard: {sig: S => S.weather + '|' + S.yard, build: buildWeather},
+      oak: {sig: S => S.oak, build: buildOak}, ter: {sig: S => (S.ter || []).slice().sort().join(), build: buildTer},
       /* second layers, set only by the tour's holiday dress, so it can show and hide parts on their own (the beam garland with the roof, the strings in the oak with the trees) */
       room2: {sig: S => (S.room2 || []).slice().sort().join(), build: (S, c) => S.room2 && S.room2.length ? buildRoom({room: S.room2}, c) : null}, ter2: {sig: S => (S.ter2 || []).slice().sort().join(), build: S => S.ter2 && S.ter2.length ? buildTer({ter: S.ter2}) : null},
       oakFront: {sig: S => S.oakFront ? '1' : '', build: buildOakFront}};
@@ -530,10 +491,9 @@
     function lightUp(onStep, onDone){ const sets = Array.from(SETS).sort((a, b) => a.seq - b.seq); ON = 1; let t = 250; const groups = {}; sets.forEach(s => { (groups[s.seq] = groups[s.seq] || []).push(s); }); const keys = Object.keys(groups).map(Number).sort((a, b) => a - b); let i = 0;
       keys.forEach(k => groups[k].forEach((s, j) => { const at = t; t += reduce ? 60 : (j < 3 ? 420 : 140); setTimeout(() => { const t0 = performance.now(); (function f(){ const q = Math.min(1, (performance.now() - t0) / (reduce ? 1 : 520)); applyOn(s, q * q * (3 - 2 * q)); if(q < 1 && SETS.has(s)) requestAnimationFrame(f); })(); if(onStep) onStep(i++, k); }, at); }));
       setTimeout(() => { setOn(1); if(onDone) onDone(); }, t + 600); return t + 600; }
-    const SKY = {afternoon: [[1.02, 1, .97], [.5, .46, .4]], golden: [[.95, .86, .78], [.75, .5, .3]], dusk: [[.3, .34, .46], [.1, .06, .04]], morning: [[1, 1, 1], [.5, .48, .44]], midday: [[1.05, 1.05, 1.05], [.5, .5, .48]]};
-    function tick(t, tod){ U.time.value = t; flick(t); const night = tod === 'dusk'; U.halo.value = night ? 1 : .5; porch.intensity = night ? .85 : 0; const k = SKY[tod] || SKY.afternoon; SNOW.u.uLight.value.setRGB(k[0][0], k[0][1], k[0][2]); SNOW.u.uSunC.value.setRGB(k[1][0] * .5, k[1][1] * .5, k[1][2] * .5); if(H.SUN_DIR) SNOW.u.uSun.value.copy(H.SUN_DIR);
-      if(SNOW.fall && SNOW.fall.visible) SNOW.fall.material.uniforms.uCam.value.copy(H.camera.position); for(const key in LIVE){ const g = LIVE[key].g; if(g && g.userData.tick) g.userData.tick(t); } }
+    function tick(t, tod){ U.time.value = t; flick(t); const night = tod === 'dusk'; U.halo.value = night ? 1 : .5; porch.intensity = night ? .85 : 0;
+      for(const key in LIVE){ const g = LIVE[key].g; if(g && g.userData.tick) g.userData.tick(t); } }
     function count(){ let pts = 0, meshes = 0; root.traverse(o => { if(o.isPoints) pts += o.geometry.attributes.position.count; if(o.isMesh) meshes++; }); return {points: pts, meshes, sets: SETS.size}; }
-    return {root, apply, setOn, lightUp, tick, setCat, count, oakInfo, floorY, prewarm, group: k => (LIVE[k] && LIVE[k].g) || null, BOX_AT, TREE_AT, SNOWMAN_AT, get on(){ return ON; }};
+    return {root, apply, setOn, lightUp, tick, setCat, count, oakInfo, floorY, prewarm, group: k => (LIVE[k] && LIVE[k].g) || null, BOX_AT, TREE_AT, get on(){ return ON; }};
   };
 })();

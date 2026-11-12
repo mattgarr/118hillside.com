@@ -639,7 +639,7 @@
       const open = () => { if(shared) sharedStart(); else startCard(); };
       const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); open(); } }); mo.observe(document.body, {childList: true}); } else open(); };
     let need = 0; const done = () => { if(--need <= 0) go(); }; const load = (src, has) => { if(has) return; need++; const s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = () => { console.warn('[deck3d] could not load ' + src); done(); }; document.head.appendChild(s); };
-    load('../assets/snowball.js?v=37', !!window.SNOWBALL); load('../assets/deck3d/deck-props.js?v=45', !!window.DECKPROPS); load('../assets/deck3d/deck-sfx.js?v=34', !!window.DECKSFX); if(!need) go(); }
+    load('../assets/snowball.js?v=37', !!window.SNOWBALL); load('../assets/deck3d/deck-props.js?v=46', !!window.DECKPROPS); load('../assets/deck3d/deck-sfx.js?v=34', !!window.DECKSFX); if(!need) go(); }
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
 
