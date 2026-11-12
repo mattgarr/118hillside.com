@@ -23062,8 +23062,19 @@ function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golde
 { const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
 /* r37 smooth walking: the caps the ?qa=1 'smooth' check holds every walked move to; qaNoDraw lets that check step frames without drawing them */
 const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false, anim: () => anim, leaves: () => r37Leaves()};
-/* r41: the ?qa=1 'back' check's limits (see SEC.back in navQA). known: moves that already stepped backwards near the end before r41 (filled in below) */
-const R41B = window.R41B = {dot: -.2, hold: .2, away: .3, tail: .4, known: []};
+/* r41: the ?qa=1 'back' check's limits (see SEC.back in navQA): over the last 40 % (tail) of a walked move, no velocity along the view under dot
+   ft/s for hold s or more, and no getting more than away ft further from the stop. known: the moves that already did so when the check came in
+   (r41, measured at 60 fps). In all of them but walk:mainbeds>mainbath the cause is the same: the stop looks back across the room (or back the way
+   you came), and r37's walk turns the head onto that view over the last several feet while still walking in, so the camera slides backwards as it
+   swings round (up to 8 ft/s). Removing it means making that turn standing, once the walk has stopped: tried in r41, it added 2-3 s to most of
+   these moves and turned 3 more tour moves into dissolves under the 10 s rule, so it is left for the owner to decide. walk:mainbeds>mainbath also
+   comes 0.9 ft back toward the hall near the end. A move not listed here fails. The moves into the loft (stairs>loft, pbath>loft, 'Walk to'
+   the loft) are not listed: the loft stop now stands on the loft floor and they are forward all the way in. The moves out of it, down to the
+   Stairs stop (which looks back up the stairs) and into the primary bath, are listed for the reason above. */
+const R41B = window.R41B = {dot: -.2, hold: .2, away: .3, tail: .4, known: [
+  'porch>entry', 'entry>living', 'living>kitchen', 'kitchen>great', 'great>mainbeds', 'mainbeds>middlebed', 'middlebed>hallbath', 'hallbath>backbed', 'loft>pbath', 'pbath>primary', 'lbath>lbed2', 'laundry>office', 'office>lounge', 'lounge>terrace', 'terrace>yard', 'garage>dusk', 'dusk>garage', 'garage>yard', 'lounge>office', 'office>laundry', 'laundry>lbed2', 'lbath>lower', 'balcony>primary', 'primary>pbath', 'loft>stairs', 'stairs>backbed', 'backbed>hallbath', 'hallbath>middlebed', 'middlebed>mainbeds', 'mainbeds>great', 'great>kitchen', 'living>entry', 'entry>porch', 'porch>street',
+  'walk:start>street', 'walk:frontdeck>entry', 'walk:entry>living', 'walk:great>mainbeds', 'walk:mainbeds>mainbath', 'walk:loft>pbath', 'walk:closet>primary', 'walk:lbath>lbed2', 'walk:laundry>office', 'walk:office>rec',
+  'back:street>dusk', 'back:frontdeck>porch', 'back:kitchen>kitchen', 'back:stairs>stairs', 'back:closet>pbath']};
 { const _rf37 = renderFrame; renderFrame = function(){ if(R37S.qaNoDraw){ if(DOOR28.moving.size) try{ door28Step(); }catch(e){} return; } return _rf37.apply(this, arguments); }; }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 { let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)
