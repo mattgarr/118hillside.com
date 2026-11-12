@@ -451,8 +451,8 @@ def register(hide, hide_ranges, sha):
                         'kitchen': {'pos': [22.5, 5.0, 34.2], 'look': [8.0, 4.4, 16.0]},
                         'living': {'pos': [17.5, 5.0, 26.0], 'look': [30.0, 4.4, 19.3]},
                         'deck': {'pos': [-3.4, 5.0, 25.4], 'look': [16.0, 4.4, 24.2]},
-                        'driveway': {'pos': [-14.0, 2.4, 40.0], 'look': [2.0, 2.0, 24.0]},
-                        'street': {'pos': [18.4, 2.6, 52.0], 'look': [18.4, 6.4, 30.0]},
+                        'driveway': {'pos': [-14.0, 1.0, 40.0], 'look': [2.0, 1.4, 24.0]},
+                        'street': {'pos': [18.4, 1.6, 52.0], 'look': [18.4, 6.0, 30.0]},
                         'aerial': {'pos': [-12.0, 62.0, 52.0], 'look': [18.4, 0.0, 22.0]}}})
     meta['options'] = [o for o in meta['options'] if o['id'] != OPT_ID] + [e]
     open(path, 'w').write(json.dumps(meta, separators=(',', ':'), ensure_ascii=False))

@@ -295,5 +295,9 @@ recommendation to remodel before selling.
   builds and animates its panels (block `FOLD42`, after `OPT42` in `tour/index.html`), with a walk collider across the opening
   while it is shut and one where the folded stack stands. QA: `FOLD42.items`, `fold42Toggle(FOLD42.items[0])`.
 - Viewpoints: foyer, entry, kitchen, living, deck, driveway, street, aerial (`await __IDEA42.view('deck', 'open4k')`).
+- Builder rule learned here: the page matches an option's colliders to the house's by element id and its walkable floors by id.
+  A collider or floor the option changes must carry a new id (`W-L1-K4S`, `RL-FRONT-STAIR-K4`, `SL-DK-K4`, `ST-FRONT#n-K4`);
+  reusing the as-built id keeps the as-built one (the old south wall blocked the opening, and only the old porch was walkable).
+- QA: `FOLD42.walk([25, -1], [25, 8])` is null with the wall open and stops at y ≈ 3.75 with it shut (`FOLD42.set(0)`).
 - Rebuild: `python3 tour/bim2/tools/build_open4k.py` (after `build_open4.py` if the as-built package changed).
 

@@ -20632,7 +20632,7 @@ window.__IDEA42 = {
       const ok = await bim2EnsureOption(v); if(!ok){ R.fail('ideas', v, 'option package did not load'); continue; }
       await this.set(v); setMode('walk', {keep: true}); if(ACTIVE_VAR !== v){ R.fail('ideas', v, 'walk-through shows ' + ACTIVE_VAR); continue; }
       for(const [name, w] of Object.entries(o.views)){ if(w.pos[1] > 8) continue;
-        qa.moveTo(w.pos[0], w.pos[2], 0); qa.finish(); qa.step(1); const m = qa.probe(); R.row('ideas', v + ':' + name, m);
+        qa.moveTo(w.pos[0], w.pos[2], walkSurfaceAt(w.pos[0], w.pos[2], w.pos[1] - EYE + .6));   // outdoors the ground is not at 0 qa.finish(); qa.step(1); const m = qa.probe(); R.row('ideas', v + ':' + name, m);
         if(Math.abs(m.eye - EYE) > .15) R.fail('ideas', v + ':' + name, 'eye ' + m.eye + ' ft over the floor');
         const g = qa.geo(m); if(g) R.fail('ideas', v + ':' + name, g); }
       const reg = o.clearRegion || []; let n = 0, bad = 0;
