@@ -10377,9 +10377,9 @@ function lightMeterMul(dt){
     return 1; };
   const wOut = kIn < 1 ? ans(false) : 1, wIn = kIn > 0 ? ans(true) : 1, want = Math.pow(wOut, 1 - kIn) * Math.pow(wIn, kIn);
   /* the gain follows the target in stops through a critically damped response (exact for any frame time): it starts and ends with no
-     jump in rate, so a new reading every few frames never kinks the brightness; ~1.6 s to 95 % (tau = .35 s) */
+     jump in rate, so a new reading every few frames never kinks the brightness; ~2.1 s to 95 % (tau = .45 s) */
   METER.want = want; let x = Math.log(Math.max(1e-3, METER.mul)); if(METER.lx == null || Math.abs(METER.lx - x) > 1e-6){ METER.lv = 0; }
-  const w = 1 / (Mt.tau || .35), g = Math.log(want), ex = Math.exp(-w * el), d = x - g, j = (METER.lv || 0) + w * d;
+  const w = 1 / (Mt.tau || .45), g = Math.log(want), ex = Math.exp(-w * el), d = x - g, j = (METER.lv || 0) + w * d;
   x = g + (d + j * el) * ex; METER.lv = ((METER.lv || 0) - w * j * el) * ex; METER.lx = x; METER.mul = Math.exp(x); return METER.mul;
 }
 { const _setupPost = setupPost; setupPost = function(){ _setupPost.apply(this, arguments);
@@ -23042,7 +23042,7 @@ R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids 
      it: the picture changes at once there anyway.
    - R40X: the environment the page sets (applyEnv / lightApplyRoomEnv, unchanged) becomes a target; what the materials see is R40X.out,
      a PMREM-sized texture that crossfades from the last one over envDur s (one 768x768 quad, only while a fade runs). */
-const R40L = window.R40L = {on: !/[?&]r40=0\b/.test(location.search), hold: .35, zoneHold: .3, inDur: 1.6, envDur: .8, coverDur: 1.0, jump: 6, chk: 1.5, chkStops: .045, flipF: -9,
+const R40L = window.R40L = {on: !/[?&]r40=0\b/.test(location.search), hold: .35, zoneHold: .3, inDur: 1.6, envDur: .9, coverDur: 1.0, jump: 6, chk: 1.5, chkStops: .045, flipF: -9,
   raw: null, state: false, acc: 0, p: 0, zone: null, zAcc: 0, covP: 0, covF: -1, dt: 1 / 60, frame: 0, last: new THREE.Vector3(1e9, 0, 0), doll: null, mode: null,
   snap: true, snapEnv: false, glassKey: null, c: new THREE.Color(), c2: new THREE.Color(), log: [], logOn: false,
   ev(what, zone){ if(this.logOn){ this.log.push({t: +(performance.now() / 1000).toFixed(3), f: this.frame, what, zone}); if(this.log.length > 200) this.log.shift(); } }};
@@ -23098,8 +23098,8 @@ function r40XTarget(t){ const X = R40X;
   if(!X.seen.has(t)){ X.seen.add(t); t.addEventListener('dispose', () => { if(X.B === t){ X.B = null; X.k = 1; } }); }   // a disposed target: hold the picture as it is until the next one
   if(snap){ X.B = X.B0 = t; X.k = 1; r40XDraw(t, t, 1, X.out); X.snapNext = false; return; }
   r40XDraw(X.out.texture, X.out.texture, 0, X.prev); X.B = t; X.k = 0; X.fades++; const sc = tx => { for(const rt of LIGHT_ENV.values()) if(rt && rt.texture === tx) return rt.userData.mean || null; return null; }, s0 = sc(X.B0), s1 = sc(t);
-  // stepping in or out: the same time as EXPO_IN; room to room: .8 s, longer (to 2 s) the more the two rooms' panoramas differ in brightness
-  X.dur = R40L.flipF === R40L.frame ? R40L.inDur : (s0 && s1 ? Math.min(2, R40L.envDur + 1.6 * Math.abs(Math.log2(s1 / s0))) : R40L.envDur); X.B0 = t; R40L.ev('env fade ' + X.dur.toFixed(2), LIGHT_ENV_ID); }   // stepping in or out: the same time as EXPO_IN
+  // stepping in or out: the same time as EXPO_IN; room to room: .9 s, longer (to 2.2 s) the more the two rooms' panoramas differ in brightness
+  X.dur = R40L.flipF === R40L.frame ? R40L.inDur : (s0 && s1 ? Math.min(2.2, R40L.envDur + 1.8 * Math.abs(Math.log2(s1 / s0))) : R40L.envDur); X.B0 = t; R40L.ev('env fade ' + X.dur.toFixed(2), LIGHT_ENV_ID); }   // stepping in or out: the same time as EXPO_IN
 // after anything that sets scene.environment: take what it set as the target and give the materials the crossfaded texture
 function r40InTarget(){ const r = ENV_INSIDE && LIGHT_ENV_ID ? LIGHT_ENV.get(LIGHT_ENV_ID) : null; return r ? r.texture : ENV_IN ? ENV_IN.texture : null; }
 function r40EnvSync(){
