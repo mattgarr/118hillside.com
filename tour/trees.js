@@ -865,7 +865,7 @@ function tubeMesh(m, b, sides, tile, colorFn, shapeFn, step, cap) {
   }
   var W = sides + 1;
   for (k = 0; k < idx.length - 1; k++) for (j = 0; j < sides; j++) {
-    var a0 = ring0 + k * W + j; m.quad(a0, a0 + W, a0 + W + 1, a0 + 1);
+    var a0 = ring0 + k * W + j; m.quad(a0, a0 + 1, a0 + W + 1, a0 + W);   // r40: counter-clockwise seen from outside (it was wound inward, so a FrontSide bark culled the near wall and every trunk read as a hollow half-shell)
   }
   if (cap) {   // close the open end (trunk tops that split into leaders; pruning cuts get a paler, callused face)
     var last = idx[idx.length - 1], cc = colorFn(b, last, pts[last]);
@@ -977,7 +977,7 @@ function barkColor(K, sk, G, o) {
 }
 
 function buildHero(K, sk, o, budget, mid) {
-  var L = K.leaf, bm = new Mesher(), lm = new Mesher(), R = rng(seedOf(o.seed, mid ? 'midcards' : 'hero'));
+  var L = K.leaf, bm = new Mesher(), lm = new Mesher(), R = rng(seedOf(o.seed, mid ? 'midcards' : 'hero')), trunkRings = null;
   var A = leafAnchors(sk, L, o), cl = clumpsOf(A, sk, o), G = lightGrid(sk, A, L.size * L.size * 0.45 * (L.perAnchor || 2.5));
   var bc = barkColor(K, sk, G, o), tile = BARK[K.bark(o)].tile;
   // branches: thickest first, stop adding twig tubes once over the branch budget
@@ -992,8 +992,13 @@ function buildHero(K, sk, o, budget, mid) {
     var sides = (K.sides || SIDES.hero)[Math.min(b.order, 5)];
     if (b.order >= 3 && bm.tris() > brBudget) return;
     if (b.rad[0] < 0.012) return;
-    var step = b.order >= 4 ? Math.max(1, b.pts.length - 1) : b.order === 3 ? 2 : 1;
+    var step = b.order >= 4 ? Math.max(1, b.pts.length - 1) : b.order === 3 ? 2 : 1, v0 = bm.v;
     tubeMesh(bm, b, sides, tile, bc, b.order === 0 ? K.trunkShape(sk) : null, step, (b.order === 0 && sk.capTrunk) || b.pruned);
+    if (b.order === 0 && !trunkRings) {   // r40: where the trunk's rings sit in the bark geometry, so a page can put lights on (and a collider round) the real surface
+      var cap = (sk.capTrunk || b.pruned) ? 1 : 0, split = null;
+      b.kids.forEach(function (c) { if (c.order === 1 && c.tp != null) { var y = b.at(c.tp).p[1]; if (split === null || y < split) split = y; } });
+      trunkRings = { start: v0, W: sides + 1, n: Math.round((bm.v - v0 - cap) / (sides + 1)), split: split };
+    }
   });
   // cards
   var nCards = Math.max(50, Math.floor((budget - bm.tris()) / 2)), per = nCards / Math.max(1, A.length);
@@ -1026,7 +1031,7 @@ function buildHero(K, sk, o, budget, mid) {
     }
   });
   return { bark: bm.tris() ? bm.geometry() : null, leaf: lm.tris() ? lm.geometry() : null, leafMat: 'leaf:' + L.set,
-    info: { anchors: A.length, clumps: cl.length, branches: sk.list.length, barkTris: bm.tris(), leafTris: lm.tris() } };
+    info: { anchors: A.length, clumps: cl.length, branches: sk.list.length, barkTris: bm.tris(), leafTris: lm.tris(), trunk: trunkRings } };
 }
 
 function buildMid(K, sk, o, budget) {

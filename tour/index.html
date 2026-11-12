@@ -1862,7 +1862,7 @@ var ACCEL_PHONETEX = 0;
 <script src="staging33.js?v=2"></script>
 <script src="builtins.js"></script>
 <script src="landscape.js"></script>
-<script src="trees.js"></script>
+<script src="trees.js?v=40"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/SSAOShader.js"></script>
@@ -5377,6 +5377,26 @@ function lotOakOpts(t, x, z, kind, h, dia){
 function surveyTreeOpts(q){
   return {lod: 'hero', seed: 900 + q.seed, height: q.h, spread: q.spread, trunkDia: q.dia, at: [q.x, ground(q.x, q.z) - .4, q.z], ry: q.ry || 0, avoid: treeClearance().inside, cacheKey: 'survey:' + q.id};
 }
+/* r40 (owner 11/11: "you can kind of walk into the middle of the trunk, which shouldn't be possible"): every surveyed tree on the lot has a
+   solid trunk for a walker. Walk, tap-to-walk, 'Walk to' and the r36 route planner all go through collide() and the walkable grid, which read
+   COLLIDERS: each trunk gets two crossed boxes (collide() keeps the eye 0.85 ft off a box, so the pair holds the eye on a near-circle a
+   shoulder's width off the bark, root flare included). Hero trees measure their own trunk rings (TREES info.trunk); planted instances use
+   the size the forest drew them at. */
+function treeTrunkCollider(x, z, gy, r, id){ const R = .85, A = Math.max(.12, r + .35 - R), B = Math.max(.08, (A + R) / Math.SQRT2 - R);
+  for(const [hx, hz] of [[A, B], [B, A]]) COLLIDERS.push({x0: x - hx, z0: z - hz, x1: x + hx, z1: z + hz, y0: gy - 1, y1: gy + 16, v: null, tree: id});
+  return A + R; }
+function treeTrunkColliders(g, inst, DEF){
+  for(let i = COLLIDERS.length - 1; i >= 0; i--) if(COLLIDERS[i].tree) COLLIDERS.splice(i, 1);
+  const out = [], v = new THREE.Vector3();
+  for(const t of g.children){ if(!/^tree:/.test(t.name)) continue; const b = t.children.find(c => c.name === 'bark'), I = t.userData.info && t.userData.info.trunk; if(!b) continue;
+    t.updateMatrixWorld(true); const P = b.geometry.attributes.position, gy = ground(t.position.x, t.position.z); let cx = t.position.x, cz = t.position.z, rmax = 0;
+    if(I && I.n > 1 && I.start + I.n * I.W <= P.count){ for(let k = 0; k < I.n; k++){ let mx = 0, my = 0, mz = 0; const m = I.W - 1, R = [];
+        for(let j = 0; j < m; j++){ v.fromBufferAttribute(P, I.start + k * I.W + j).applyMatrix4(b.matrixWorld); mx += v.x; my += v.y; mz += v.z; R.push([v.x, v.z]); } mx /= m; my /= m; mz /= m;
+        if(my < gy + .2 || my > gy + 5.8) continue; if(!rmax){ cx = mx; cz = mz; } for(const q of R) rmax = Math.max(rmax, Math.hypot(q[0] - cx, q[1] - cz)); } }
+    if(!rmax){ const d = parseFloat((t.userData.opts && t.userData.opts.trunkDia) || 20); rmax = d / 24 * 1.5; }
+    out.push(t.name + ' r' + rmax.toFixed(2) + ' stop ' + treeTrunkCollider(cx, cz, gy, rmax, t.name).toFixed(2)); }
+  for(const q of inst){ const D = DEF[q.kind] || {}, r = (D.trunkDia || 24) / 24 * (q.scale || 1) * 1.5; out.push(q.id + ' r' + r.toFixed(2) + ' stop ' + treeTrunkCollider(q.x, q.z, ground(q.x, q.z), r, 'tree:' + q.id).toFixed(2)); }
+  window.__treeColliders = out; return out; }
 function buildTreesLib(){
   const CLRV = treeClearance(), g = grp('trees'), DEF = Object.fromEntries(TREES.kinds.map(k => [k.kind, k.defaults || {}])), pts = [];
   // survey trees: lot oaks as individual heroes, the rest into the forest
@@ -5411,6 +5431,7 @@ function buildTreesLib(){
     tr.updateMatrixWorld(true); tr.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; o.userData.noAO = true; } }); g.add(tr);
     CLRV.notes.push(q.id + ' planted as a pruned individual ' + JSON.stringify(tr.userData.info.prune || {})); }
   FOREST.traverse(o => { if(o.isMesh){ o.userData.noAO = true; o.receiveShadow = true; } }); g.add(FOREST);
+  try{ treeTrunkColliders(g, pts.filter(q => q.survey && !(FOREST.userData.rejected || []).includes(q)), DEF); }catch(e){ console.warn('[trees] trunk colliders', e); }
   let last = camera.position.clone(); setInterval(() => { if(camera.position.distanceTo(last) > 15){ last.copy(camera.position); FOREST.userData.setCenter(camera.position); } }, 400);
   if(TREES.setWind && !reduceMotion){ TREES.setWind(.35, 1.0); const loop = t => { TREES.tick(t / 1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
 }
@@ -9454,7 +9475,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? window.__FEAST_SRC : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=10' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=49' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=42' : '../assets/escape/escape.js?v=53'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? window.__FEAST_SRC : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=10' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=50' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=42' : '../assets/escape/escape.js?v=53'; document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
@@ -22920,4 +22941,4 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=2" defer></script>
-<script src="../assets/holiday/holiday.js?v=7" defer></script>
+<script src="../assets/holiday/holiday.js?v=8" defer></script>

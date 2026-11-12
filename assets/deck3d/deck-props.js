@@ -325,25 +325,38 @@
 
     /* ---------- the heritage oak and the terrace ---------- */
     const OAKS = {};
-    function oakInfo(name){ name = name || 'tree:OAK-BACK'; let OAK = OAKS[name]; if(OAK) return OAK; let bark = null; H.scene.traverse(o => { if(o.name === name) bark = o.children.find(c => c.name === 'bark') || bark; }); if(!bark) return {trunk: [], canopy: []};   // not remembered: the trees are planted a moment after the house
+    function oakInfo(name){ name = name || 'tree:OAK-BACK'; let OAK = OAKS[name]; if(OAK) return OAK; let tree = null, bark = null; H.scene.traverse(o => { if(o.name === name){ tree = o; bark = o.children.find(c => c.name === 'bark') || bark; } }); if(!bark) return {trunk: [], canopy: []};   // not remembered: the trees are planted a moment after the house
       bark.updateWorldMatrix(true, false); const P = bark.geometry.attributes.position, v = new V3(), V = []; for(let i = 0; i < P.count; i++){ v.fromBufferAttribute(P, i).applyMatrix4(bark.matrixWorld); V.push(v.clone()); }
       const low = V.filter(q => q.y < -1.5 && q.y > -5); let cx = 8.3, cz = -27.2; if(low.length){ cx = low.reduce((s, q) => s + q.x, 0) / low.length; cz = low.reduce((s, q) => s + q.z, 0) / low.length; }
-      const g0 = floorY(cx + 2.6, cz, 6, -4.8), trunk = []; let px = cx, pz = cz;
-      for(let y = g0 + .3; y < g0 + 9.5; y += .3){ const sl = V.filter(q => Math.abs(q.y - y) < .7 && Math.hypot(q.x - px, q.z - pz) < 2.4); if(sl.length < 4) continue; const mx = sl.reduce((s, q) => s + q.x, 0) / sl.length, mz = sl.reduce((s, q) => s + q.z, 0) / sl.length, r = sl.reduce((s, q) => s + Math.hypot(q.x - mx, q.z - mz), 0) / sl.length;
-        if(r > 1.9 && y > g0 + 3) break; px = mx; pz = mz; trunk.push({y, x: mx, z: mz, r: clamp(r, .7, y < g0 + 2 ? 1.75 : 1.45)}); }
-      const top = trunk.length ? trunk[trunk.length - 1].y : g0 + 7;
+      const g0 = floorY(cx + 2.6, cz, 6, -4.8); let trunk = [], top = null;
+      /* r40: the trunk's own rings (trees.js records where they sit in the bark geometry): a radius for every 7.5 degrees round each ring, so
+         a string wrapped on it follows the root flare, the buttress lobes and the burls instead of a mean circle that dipped into the bark */
+      const TR = tree && tree.userData && tree.userData.info && tree.userData.info.trunk, NB = 48, TAU = Math.PI * 2;
+      if(TR && TR.n > 2 && TR.start + TR.n * TR.W <= P.count){
+        for(let k = 0; k < TR.n; k++){ const m = TR.W - 1, ring = []; let mx = 0, my = 0, mz = 0; for(let j = 0; j < m; j++){ const q = V[TR.start + k * TR.W + j]; ring.push(q); mx += q.x; my += q.y; mz += q.z; } mx /= m; my /= m; mz /= m;
+          const pa = ring.map(q => [Math.atan2(q.z - mz, q.x - mx), Math.hypot(q.x - mx, q.z - mz)]).sort((p, q) => p[0] - q[0]), rs = new Float32Array(NB); let rm = 0;
+          for(let bI = 0; bI < NB; bI++){ const an = -Math.PI + (bI + .5) / NB * TAU; let i1 = pa.findIndex(e => e[0] >= an); if(i1 < 0) i1 = 0; const i0 = (i1 - 1 + pa.length) % pa.length; let a0 = pa[i0][0], a1 = pa[i1][0], aa = an; if(a1 <= a0) a1 += TAU; if(aa < a0) aa += TAU;
+            rs[bI] = lerp(pa[i0][1], pa[i1][1], clamp((aa - a0) / Math.max(1e-6, a1 - a0), 0, 1)); rm += rs[bI]; }
+          trunk.push({y: my, x: mx, z: mz, r: rm / NB, rs}); }
+        trunk.sort((p, q) => p.y - q.y); const k0 = Math.max(0, trunk.findIndex(q => q.y > g0) - 1); trunk = trunk.slice(k0);
+        if(trunk.length > 2){ cx = trunk[0].x; cz = trunk[0].z; top = TR.split != null ? new V3(0, TR.split, 0).applyMatrix4(bark.matrixWorld).y - .45 : trunk[trunk.length - 1].y; top = Math.min(top, trunk[trunk.length - 1].y); }
+        else trunk = []; }
+      if(!trunk.length){ let px = cx, pz = cz;   // older trees.js: slices of the bark's vertices
+        for(let y = g0 + .3; y < g0 + 9.5; y += .3){ const sl = V.filter(q => Math.abs(q.y - y) < .7 && Math.hypot(q.x - px, q.z - pz) < 2.4); if(sl.length < 4) continue; const mx = sl.reduce((s, q) => s + q.x, 0) / sl.length, mz = sl.reduce((s, q) => s + q.z, 0) / sl.length, r = sl.reduce((s, q) => s + Math.hypot(q.x - mx, q.z - mz), 0) / sl.length;
+          if(r > 1.9 && y > g0 + 3) break; px = mx; pz = mz; trunk.push({y, x: mx, z: mz, r: clamp(r, .7, y < g0 + 2 ? 1.75 : 1.45)}); } }
+      top = top != null ? top : trunk.length ? trunk[trunk.length - 1].y : g0 + 7;
       OAK = OAKS[name] = {trunk, canopy: V.filter(q => q.y > top + 1.5 && q.y < top + 24 && Math.hypot(q.x - cx, q.z - cz) < 24), cx, cz, g0, top}; return OAK; }
-    /* a trunk wrapped in one warm string; the tour's holiday dress also wraps the leaning oak by the street */
-    function trunkWrap(g, o, seq, seed){ if(o.trunk.length < 3) return; const pts = [], T = o.trunk, y0 = T[0].y, y1 = T[T.length - 1].y; let a = 0;
-      for(let y = y0; y < y1; ){ const f = (y - y0) / .3, i = Math.min(T.length - 2, Math.floor(f)), k = clamp(f - i, 0, 1), cx = lerp(T[i].x, T[i + 1].x, k), cz = lerp(T[i].z, T[i + 1].z, k), r = lerp(T[i].r, T[i + 1].r, k) * 1.08 + .08;
-        pts.push({p: new V3(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r), c: '#ffd596', s: .62, q: pts.length * .25, r: .035}); const da = .24 / r; a += da; y += da / 6.283 * .62; }
+    /* the trunk's surface at height y and compass angle a (radians, atan2(dz, dx)) */
+    function trunkAt(o, y){ const T = o.trunk; let i = 0; while(i < T.length - 2 && T[i + 1].y < y) i++; const A = T[i], B = T[i + 1], k = clamp((y - A.y) / Math.max(.01, B.y - A.y), 0, 1); return {A, B, k, x: lerp(A.x, B.x, k), z: lerp(A.z, B.z, k)}; }
+    function trunkR(s, a){ const A = s.A, B = s.B; if(!A.rs || !B.rs) return lerp(A.r, B.r, s.k) * 1.08 + .01; const NB = A.rs.length, f = (a + Math.PI) / (Math.PI * 2) * NB - .5, fl = Math.floor(f), t = f - fl, i0 = ((fl % NB) + NB) % NB, i1 = (i0 + 1) % NB;
+      return lerp(lerp(A.rs[i0], A.rs[i1], t), lerp(B.rs[i0], B.rs[i1], t), s.k); }
+    /* a trunk wrapped in one warm string, bulbs resting on the bark all the way round; the tour's holiday dress also wraps the leaning oak by the street */
+    function trunkWrap(g, o, seq, seed){ if(o.trunk.length < 3) return; const pts = [], T = o.trunk, y0 = Math.max(T[0].y, (o.g0 != null ? o.g0 : T[0].y) + .18), y1 = Math.min(o.top != null ? o.top : 1e9, T[T.length - 1].y); let a = 0;
+      for(let y = y0; y < y1; ){ const s = trunkAt(o, y), r = trunkR(s, a) + .07; pts.push({p: new V3(s.x + Math.cos(a) * r, y, s.z + Math.sin(a) * r), c: '#ffd596', s: .62, q: pts.length * .25, r: .035}); const da = .24 / r; a += da; if(a > Math.PI) a -= Math.PI * 2; y += da / 6.283 * .62; }
       lightSet(g, pts, {mode: 1, seq, body: true, seed}); }
     function buildOakFront(S){ if(!S.oakFront) return null; const o = oakInfo('tree:OAK-FRONT'); if(o.trunk.length < 3) return null; const g = grp('oakfront'); trunkWrap(g, o, 1, 22); return g; }
     function buildOak(S){ if(S.oak === 'none') return null; const o = oakInfo(), g = grp('oak'), R = rng(9);
-      if((S.oak === 'wrap' || S.oak === 'both') && o.trunk.length > 2){ const pts = [], T = o.trunk, y0 = T[0].y, y1 = T[T.length - 1].y; let a = 0;
-        for(let y = y0; y < y1; ){ const f = (y - y0) / .3, i = Math.min(T.length - 2, Math.floor(f)), k = clamp(f - i, 0, 1), cx = lerp(T[i].x, T[i + 1].x, k), cz = lerp(T[i].z, T[i + 1].z, k), r = lerp(T[i].r, T[i + 1].r, k) * 1.08 + .08;
-          pts.push({p: new V3(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r), c: '#ffd596', s: .62, q: pts.length * .25, r: .035}); const da = .24 / r; a += da; y += da / 6.283 * .62; }
-        lightSet(g, pts, {mode: 1, seq: 1, body: true, seed: 2}); }
+      if((S.oak === 'wrap' || S.oak === 'both') && o.trunk.length > 2) trunkWrap(g, o, 1, 2);
       if((S.oak === 'branches' || S.oak === 'both') && o.canopy.length){ const pts = [], n = Math.min(900, o.canopy.length); for(let i = 0; i < n; i++){ const q = o.canopy[Math.floor(R() * o.canopy.length)]; pts.push({p: new V3(q.x + (R() - .5) * .5, q.y + (R() - .5) * .5 - .1, q.z + (R() - .5) * .5), c: R() > .25 ? '#ffe2b4' : '#ffc978', s: .7 + R() * .35}); }
         lightSet(g, pts, {mode: 1, seq: 2, seed: 6}); }
       return g; }
