@@ -152,7 +152,7 @@ RT.frame = function(){
       if(src && RT.skySrc !== src){ RT.skySrc = src; if(RT.tSky) RT.tSky.dispose(); RT.tSky = B.skyFrom(src); }
       if(RT.lightsKey !== light){ RT.lightsKey = light; setLights(); }
       G.uSky.value = RT.tSky; G.uTri.value = B.tTri; G.uNode.value = B.tNode; G.uMat.value = B.tMat; G.uG0.value = RT.g0.texture; G.uG1.value = RT.g1.texture; G.uSun.value.copy(H.SUN_DIR).normalize();
-      G.uSunC.value.set(sun[0], sun[1], sun[2]); if(!(H.SUN_DIR.y > 0)) G.uSunC.value.set(0, 0, 0); G.uLampOn.value = RT.nl > 0 ? 1 : 0; G.uLampK.value.set(1 / gn[0], 1 / gn[1], 1 / gn[2]);
+      G.uSunC.value.set(sun[0], sun[1], sun[2]); if(!(H.SUN_DIR.y > 0)) G.uSunC.value.set(0, 0, 0); G.uLampOn.value = RT.nl > 0 ? 1 : 0; { const lw = GI.lampWB || [1, 1, 1]; G.uLampK.value.set(lw[0] / gn[0], lw[1] / gn[1], lw[2] / gn[2]); }
       // samples this frame: as many as the frame time allows
       if(dtS < 19 && RT.spf < RT.spfMax) RT.spf += .25; else if(dtS > 26 && RT.spf > 1) RT.spf -= .5; const ns = RT.fixed || Math.max(1, Math.floor(RT.spf));
       const prevRT = R.getRenderTarget(), ac = R.autoClear; R.autoClear = false;

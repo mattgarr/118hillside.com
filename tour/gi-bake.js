@@ -304,9 +304,13 @@ async function joined(g, list, o = {}){ const N = g.nx * g.ny * g.nz, at = new I
 B.reach = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get(tag + ':meta'), r = await joined(meta.grid, meta.list, o);
   await B.put(tag + ':reach', r.keep); B.probes(meta.list.map(gpos)); B.st.reach = {probes: meta.list.length, kept: r.keep.length, sets: r.sets}; say('reach', JSON.stringify(B.st.reach)); return B.st.reach; };
 // the same for the AO voxels (a voxel in the roof void reads 'closed below' and banded the ceiling under it): the others are marked untraced
-B.reachAO = async function(o = {}){ const tag = o.tag || 'v1', rec = await B.get(tag + ':ao'), A = rec.grid, n = A.nx * A.ny * A.nz, list = []; for(let i = 0; i < n; i++) if(rec.ao[i * 5] >= 0 && rec.ao[i * 5] <= .25) list.push(i);
+B.reachAO = async function(o = {}){ const tag = o.tag || 'v1', rec = await B.get(tag + ':ao'), A = rec.grid, n = A.nx * A.ny * A.nz, list = [], BS = H.BIM2S; let outside = 0;
+  // only voxels inside the rooms' own spaces: one just outside a window is reached through the opening (glass is not in the BVH), reads
+  // 'closed toward the room' and was filled into the wall's thickness, which darkened the inside of the window walls
+  for(let i = 0; i < n; i++){ if(!(rec.ao[i * 5] >= 0 && rec.ao[i * 5] <= .25)) continue; const X = A.x0 + (i % A.nx) * A.d, Y = A.y0 + Math.floor(i / (A.nx * A.nz)) * A.d, Z = A.z0 + (Math.floor(i / A.nx) % A.nz) * A.d, sp = BS.spaceAt(Z, X, Y) || BS.spaceAt(Z, X, Y + .35);
+    if(sp && GI.ROOMS.includes(sp.id)) list.push(i); else { rec.ao[i * 5] = -1; outside++; } }
   const r = await joined(A, list, Object.assign({minEye: 200}, o)), keep = new Uint8Array(n); for(const i of r.keep) keep[i] = 1; let cut = 0; for(const i of list) if(!keep[i]){ rec.ao[i * 5] = -1; cut++; }
-  await B.put(tag + ':ao', rec); B.st.reachAO = {voxels: list.length, cut, sets: r.sets}; say('reachAO', JSON.stringify(B.st.reachAO)); return B.st.reachAO; };
+  await B.put(tag + ':ao', rec); B.st.reachAO = {voxels: list.length, cut, outside, sets: r.sets}; say('reachAO', JSON.stringify(B.st.reachAO)); return B.st.reachAO; };
 
 /* ---------------- the whole bake: per key the sky and the unit sun, then the lamps at dusk; every component checkpointed ---------------- */
 B.KEYS = [{h: 7.75, doy: 288}, {h: 9.25, doy: 288}, {h: 10.75, doy: 288}, {h: 12.25, doy: 288}, {h: 13.75, doy: 288}, {h: 15.25, doy: 288}, {h: 16.5, doy: 288}, {h: 17.4, doy: 288}, {h: 18.15, doy: 288}, {h: 18.75, doy: 288, dusk: true},

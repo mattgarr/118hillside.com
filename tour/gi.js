@@ -20,7 +20,7 @@ const V3 = THREE.Vector3;
 const qp = (k, d) => { const m = new RegExp('[?&]' + k + '=([^&]*)').exec(Q); return m ? decodeURIComponent(m[1]) : d; };
 const GI = window.GI = {mode: MODE, ver: 2, on: false, ready: false, why: 'loading', H: null, n: 0, composes: 0, k: 0, t: 0, ssaoK: 0,
   // tuning (also from the URL: &gigain=, &gispec=, &giao=, &gissao=keep)
-  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), wbLight: +qp('giwbl', .5), spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
+  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), wbLight: +qp('giwbl', .5), wbLampIn: +qp('giwblamp', .75), wbLampOut: .15, meterT: 1.7, meterK: +qp('gimk', .7), meterStops: 1.5, comp: 1, spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
   base: qp('gibase', 'gi/'),
   U: {giOn: {value: 0}, giK: {value: 0}, giGain: {value: new V3(1, 1, 1)}, giHemi: {value: 1}, giSpec: {value: .7}, giAOK: {value: 1},
     giT0: {value: null}, giT1: {value: null}, giAO: {value: null}, giRoom: {value: null},
@@ -185,7 +185,7 @@ GI.evNow = () => GI.ev !== '' ? +GI.ev : (GI.index && GI.index.ev != null ? GI.i
    hour stays golden (half of the illuminant's colour is followed, as a camera's auto balance does). So the reference is the rooms' mean bounce (probes below 9 ft) under the same sun and sky made white; its
    colour is taken to neutral with strength GI.wb. The lamps keep their warmth against that daylight balance. */
 GI.compose = function(){ const S = GI.state(), sc = GI.scales(S), D = GI.data, NP = D.NP, A = GI.acc; A.fill(0);
-  const add = kind => D.vols.forEach((v, i) => { if((v.kind === 'lamp') !== kind) return; const s = kind ? sc[i].map((x, c) => x / GI.gainNow[c]) : sc[i], sl = .2126 * s[0] + .7152 * s[1] + .0722 * s[2]; if(Math.abs(s[0]) + Math.abs(s[1]) + Math.abs(s[2]) < 1e-9) return; const F = v.F;
+  const add = kind => D.vols.forEach((v, i) => { if((v.kind === 'lamp') !== kind) return; const s = kind ? sc[i].map((x, c) => x * GI.lampWB[c] / GI.gainNow[c]) : sc[i], sl = .2126 * s[0] + .7152 * s[1] + .0722 * s[2]; if(Math.abs(s[0]) + Math.abs(s[1]) + Math.abs(s[2]) < 1e-9) return; const F = v.F;
     for(let o = 0; o < NP * 6; o += 6){ A[o] += F[o] * s[0]; A[o + 1] += F[o + 1] * s[1]; A[o + 2] += F[o + 2] * s[2]; A[o + 3] += F[o + 3] * sl; A[o + 4] += F[o + 4] * sl; A[o + 5] += F[o + 5] * sl; } });
   add(false);
   if(!GI.meanIdx && GI.mask){ const g = GI.index.grid; GI.meanIdx = []; for(let p = 0; p < NP; p++){ const x = p % g.nx, z = Math.floor(p / g.nx) % g.nz, y = Math.floor(p / (g.nx * g.nz)), X = g.x0 + x * g.d, Y = g.y0 + y * g.d, Z = g.z0 + z * g.d;
@@ -202,12 +202,16 @@ GI.compose = function(){ const S = GI.state(), sc = GI.scales(S), D = GI.data, N
   const act = Y > 1e-7 ? m.map(v => Math.max(1e-4, v / Y)) : [1, 1, 1];
   GI.wbGain = GI.cast.map((v, c) => v > 1e-4 ? Math.pow(1 / v, GI.wb) * Math.pow(v / act[c], GI.wbLight) : 1); { const w = GI.wbGain, y = lumC(w); GI.wbGain = w.map(v => v / y); }
   GI.gainNow = GI.wbGain.map(v => v * lift);
-  add(true);   // the lamps, divided by the daylight gain so they arrive unlifted and unbalanced
+  /* the lamps: not lifted, and balanced for the side the camera is on. Indoors a photographer balances for the lamps most of the way
+     (whites stay near white, strength GI.wbLampIn); from outside the windows keep their warm glow (GI.wbLampOut), as r40 chose. */
+  { const li = D.vols.findIndex(v => v.kind === 'lamp'), lm = li >= 0 && GI.volMean ? GI.volMean[li] : [1, 1, 1], ly = lumC(lm), kin = Math.max(0, Math.min(1, +GI.H.EXPO_IN || 0)), st = GI.wbLampOut + (GI.wbLampIn - GI.wbLampOut) * kin;
+    let w = lm.map(v => ly > 1e-9 && v > 0 ? Math.pow(ly / v, st) : 1); const wy = lumC(w); GI.lampWB = w.map(v => v / wy); }
+  add(true);
   const [h0, h1] = GI.half;
   for(let p = 0, o = 0, q = 0; p < NP; p++, o += 6, q += 4){ h0[q] = toHalf(Math.max(0, A[o])); h0[q + 1] = toHalf(Math.max(0, A[o + 1])); h0[q + 2] = toHalf(Math.max(0, A[o + 2])); h0[q + 3] = toHalf(A[o + 3]); h1[q] = toHalf(A[o + 4]); h1[q + 1] = toHalf(A[o + 5]); }
   for(const t of GI.tex) t.needsUpdate = true; GI.composes++; GI.S = S; return S; };
 // what the volume gives at a point and normal (QA), from the composed (float) data
-GI.gainNow = [1, 1, 1];
+GI.gainNow = [1, 1, 1]; GI.lampWB = [1, 1, 1];
 GI.at = function(x, y, z, n = [0, 1, 0]){ const g = GI.index.grid, A = GI.acc, dims = [g.nx, g.ny, g.nz], f = [(x - g.x0) / g.d, (y - g.y0) / g.d, (z - g.z0) / g.d].map((v, i) => Math.max(0, Math.min(dims[i] - 1, v)));
   const i0 = f.map(Math.floor), t = f.map((v, i) => v - i0[i]), a = [0, 0, 0], b = [0, 0, 0];
   for(let c = 0; c < 8; c++){ const ii = [0, 1, 2].map(k => Math.min(dims[k] - 1, i0[k] + ((c >> k) & 1))), w = [0, 1, 2].reduce((s, k) => s * (((c >> k) & 1) ? t[k] : 1 - t[k]), 1);
@@ -222,15 +226,27 @@ GI.frame = function(){ const H = GI.H; if(!H) return; GI.n++;
   const now = performance.now(), dt = Math.min(.25, Math.max(0, (now - (lastT || now)) / 1000)); lastT = now;
   // off for the design ideas (they move walls and cabinets: the bake would be wrong), and if forced off
   const want = (H.variant === 'asbuilt' && !GI.forceOff && GI.mask) ? 1 : 0;
-  GI.k = GI.snap ? want : (GI.k < want ? Math.min(want, GI.k + dt / .8) : Math.max(want, GI.k - dt / .8)); GI.snap = false;
-  const U = GI.U; U.giOn.value = GI.k > 0 ? 1 : 0; U.giK.value = GI.k * GI.k * (3 - 2 * GI.k); U.giGain.value.set(GI.gainNow[0], GI.gainNow[1], GI.gainNow[2]); U.giSpec.value = GI.spec; U.giAOK.value = GI.aoK; U.giHemi.value = GI.hemiKill;
+  if(GI.snap) GI.snapM = true; GI.k = GI.snap ? want : (GI.k < want ? Math.min(want, GI.k + dt / .8) : Math.max(want, GI.k - dt / .8)); GI.snap = false;
+  const U = GI.U; U.giOn.value = GI.k > 0 ? 1 : 0; U.giK.value = GI.k * GI.k * (3 - 2 * GI.k); U.giGain.value.set(GI.gainNow[0] * GI.comp, GI.gainNow[1] * GI.comp, GI.gainNow[2] * GI.comp); U.giSpec.value = GI.spec; U.giAOK.value = GI.aoK; U.giHemi.value = GI.hemiKill;
   GI.on = GI.k > 0;
   const s = H.SUN_DIR, c = H.sun.color, env = H.ENV_RT, src = env && env.giSrc, isrc = null;
   let ln = 0; for(const l of H.DUSK_LIGHTS) ln += l.intensity;
-  const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln, GI.evNow(), GI.wb, GI.wbLight].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0) + ':' + (isrc ? (isrc.__giId || (isrc.__giId = ++GI.srcN)) : 0) + ':' + !!GI.mask;
+  const key = [s.x, s.y, s.z, c.r, c.g, c.b, H.sun.intensity, ln, GI.evNow(), GI.wb, GI.wbLight, Math.round((+H.EXPO_IN || 0) * 16) / 16 * (ln > 0 ? 1 : 0)].map(v => v.toFixed(5)).join(',') + (src ? (src.__giId || (src.__giId = ++GI.srcN)) : 0) + ':' + (isrc ? (isrc.__giId || (isrc.__giId = ++GI.srcN)) : 0) + ':' + !!GI.mask;
   if(key !== GI.last && GI.on){ GI.last = key; try{ GI.compose(); }catch(e){ console.warn('[gi] compose', e); GI.ready = false; } }
-  r13Fade(); ssaoFade(dt); if(GI.rt) try{ GI.rt.frame(); }catch(e){ if(!GI.rt.err){ GI.rt.err = String(e && e.message || e); console.warn('[gi-rt] frame', e); } } };
+  meter(dt); r13Fade(); ssaoFade(dt); if(GI.rt) try{ GI.rt.frame(); }catch(e){ if(!GI.rt.err){ GI.rt.err = String(e && e.message || e); console.warn('[gi-rt] frame', e); } } };
 GI.srcN = 0;
+/* The camera's light meter for the rooms. GI.EV is the base exposure; the page's own meter only follows 60 % of a difference and at most
+   0.6 stops (it was tuned for painted light that hardly varies), and phones have no meter at all. With physical light a room can be
+   much brighter (low sun deep in the great room) or darker (dusk) than the midday level EV was set for, so the volume is metered as
+   a photographer meters a room: the incident light where the camera stands (the probes' mean irradiance there, lifted) against the
+   level GI.meterT, followed GI.meterK of the way (so golden hour stays brighter than noon, dusk darker), within GI.meterStops, eased
+   in stops over about a second. Outside the rooms it returns to 1. One rule for every room and time. */
+function meter(dt){ const H = GI.H, p = H.camera.position, inR = GI.on ? GI.roomAt(p.x, p.y, p.z) : 0; let want = 0;
+  if(inR > 0 && GI.acc){ const g = GI.index.grid, A = GI.acc, dims = [g.nx, g.ny, g.nz], f = [(p.x - g.x0) / g.d, (p.y - g.y0) / g.d, (p.z - g.z0) / g.d].map((v, i) => Math.max(0, Math.min(dims[i] - 1.001, v))), i0 = f.map(Math.floor), t = f.map((v, i) => v - i0[i]); let E = 0;
+    for(let c = 0; c < 8; c++){ const ii = [0, 1, 2].map(k => i0[k] + ((c >> k) & 1)), w = [0, 1, 2].reduce((s, k) => s * (((c >> k) & 1) ? t[k] : 1 - t[k]), 1), o = ((ii[1] * g.nz + ii[2]) * g.nx + ii[0]) * 6;
+      E += w * (.2126 * Math.max(0, A[o]) * GI.gainNow[0] + .7152 * Math.max(0, A[o + 1]) * GI.gainNow[1] + .0722 * Math.max(0, A[o + 2]) * GI.gainNow[2]); }
+    GI.Ecam = E; if(E > 1e-6) want = Math.max(-GI.meterStops, Math.min(GI.meterStops, GI.meterK * Math.log2(GI.meterT / E))); }
+  GI.compS = GI.snapM || GI.compS == null ? want : GI.compS + (want - GI.compS) * (1 - Math.exp(-dt / .5)); GI.snapM = false; GI.comp = Math.pow(2, GI.compS); }
 /* r13 corner bands: their multiply decals double up with baked corners; inside the rooms their vertices are lifted to white (kept, restored when GI is off) */
 function r13Fade(){ const want = GI.on && GI.k > .5; if(GI._r13 === want && (GI.n % 120) !== 7) return; let nm = 0; GI.H.scene.traverse(o => { if(o.isMesh && o.material && o.material.name === "r13Occlusion") nm++; }); if(GI._r13 === want && nm === GI._r13m) return; GI._r13m = nm;   /* the bands are built at idle after load: look again now and then */ const H = GI.H; let n = 0;
   H.scene.traverse(o => { if(!o.isMesh || !o.material || o.material.name !== 'r13Occlusion') return; const col = o.geometry.attributes.color, pos = o.geometry.attributes.position; if(!col) return;
@@ -250,6 +266,6 @@ GI.host = function(H){ GI.H = H;
   patchChunks(); Object.assign(H.R40E.U, GI.U, GI.rt ? GI.rt.U : null); patchPMREM();
   if(MODE !== 'bake' || /[?&]giload=1\b/.test(Q)) load(); else GI.why = 'bake page';
   if(GI.bake && GI.bake.host) try{ GI.bake.host(H); }catch(e){ console.warn('[gi] bake host', e); } };
-GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), ev: GI.evNow(), gain: GI.gainNow.map(v => +v.toFixed(2)), wb: (GI.wbGain || [1, 1, 1]).map(v => +v.toFixed(3)), cast: (GI.cast || [1, 1, 1]).map(v => +v.toFixed(3)), mean: +(GI.mean || 0).toFixed(5), meanRGB: (GI.meanRGB || []).map(v => +v.toFixed(5)), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes, rt: GI.rt ? GI.rt.status() : null,
+GI.status = () => ({mode: GI.mode, ready: GI.ready, on: GI.on, why: GI.why, k: +GI.k.toFixed(3), ev: GI.evNow(), comp: +GI.comp.toFixed(3), Ecam: +(GI.Ecam || 0).toFixed(3), lampWB: GI.lampWB.map(v => +v.toFixed(3)), gain: GI.gainNow.map(v => +v.toFixed(2)), wb: (GI.wbGain || [1, 1, 1]).map(v => +v.toFixed(3)), cast: (GI.cast || [1, 1, 1]).map(v => +v.toFixed(3)), mean: +(GI.mean || 0).toFixed(5), meanRGB: (GI.meanRGB || []).map(v => +v.toFixed(5)), ssaoK: +GI.ssaoK.toFixed(3), composes: GI.composes, r13n: GI.r13n, bytes: GI.bytes, rt: GI.rt ? GI.rt.status() : null,
   S: GI.S ? {w: GI.S.w.map(v => +v.toFixed(3)), tint: GI.S.tint.map(v => +v.toFixed(3)), sun: GI.S.sun.map(v => +v.toFixed(3)), lamp: +GI.S.lamp.toFixed(3)} : null});
 })();
