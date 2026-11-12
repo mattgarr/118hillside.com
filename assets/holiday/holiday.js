@@ -61,16 +61,24 @@
   /* r41: the props are built once (in steps, a frame apart, so the page keeps answering) and kept off the scene while the dress is down:
      'None' after Winter holidays has nothing of it in the scene, and the next time it goes up at once. A newer pick (stale()) stops the build between steps. */
   const oaks = () => { try{ return W.P.oakInfo().trunk.length > 2 && W.P.oakInfo('tree:OAK-FRONT').trunk.length > 2; }catch(e){ return true; } };
-  async function winterBuild(step, stale){
+  /* r43: one build at a time, shared: the season's idle preload (gated by W.gate: it waits while the visitor is busy) and a pick from the panel (which
+     lifts the gate, so the build runs at full pace, and passes its own step labels) use the same promise. A newer pick puts the gate back. */
+  async function winterBuild(){
     const P = W.P, S = W.S || (W.S = Object.assign({}, BLANK)); if(!W.steps) W.steps = 0;
     const PLAN = [['Hanging the lights…', ['lights', 'motion']], ['Hanging the wreath…', ['door', 'win']], ['Lighting the walk…', ['path']], ['Trimming the tree…', ['tree', 'topper', 'room', 'room2']], ['Stringing lights in the oak…', ['oak', 'oakFront', 'ter', 'ter2']]];
-    if(!W.steps) P.apply(S, ctx());
-    for(; W.steps < PLAN.length; W.steps++){ const [label, keys] = PLAN[W.steps]; if(stale()) return false; step(label);
-      if(keys[0] === 'path' && !W.warmed){ await new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; try{ P.prewarm(WINTER, f); }catch(e){ f(); } setTimeout(f, 6000); }); W.warmed = true; if(stale()) return false; }
+    const hold = async () => { while(W.gate && !W.gate()) await sleep(400); }, say = l => { try{ W.step && W.step(l); }catch(e){} };
+    await hold(); if(!W.steps) P.apply(S, ctx());
+    for(; W.steps < PLAN.length; W.steps++){ const [label, keys] = PLAN[W.steps]; await hold(); say(label);
+      if(keys[0] === 'path' && !W.warmed){ await new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; try{ P.prewarm(WINTER, f); }catch(e){ f(); } setTimeout(f, 6000); }); W.warmed = true; await hold(); }
       /* the two oaks are planted a moment after the house (and after the first view): wait a little for them, and if they are later still, string them when they arrive */
-      if(keys[0] === 'oak') for(let i = 0; i < 24 && !oaks(); i++){ await sleep(250); if(stale()) return false; }
+      if(keys[0] === 'oak') for(let i = 0; i < 24 && !oaks(); i++) await sleep(250);
       keys.forEach(k => { S[k] = WINTER[k]; }); P.apply(S, ctx()); syncVis(); await paint(); }
+    /* the props' programs, compiled for the tour's light set before they are first drawn (else the first frame with them compiles them all at once) */
+    if(H.compile && !W.compiled){ const objs = [], seen = new Set(); P.root.updateMatrixWorld(true);
+      P.root.traverse(o => { if(!o.material || !(o.isMesh || o.isPoints || o.isLine || o.isSprite)) return; const k = [].concat(o.material).map(m => m.uuid).join() + (o.isInstancedMesh ? 'i' : ''); if(!seen.has(k)){ seen.add(k); objs.push(o); } });
+      while(objs.length){ await hold(); let more = false; try{ more = H.compile(objs); }catch(e){ console.warn('[holiday] compile', e); break; } if(more) await sleep(16); } W.compiled = true; }
     W.built = true; W.oakMiss = !oaks(); return true; }
+  function winterReady(){ if(W.built) return Promise.resolve(true); if(!W.buildP) W.buildP = winterBuild().catch(e => { console.warn('[holiday] winter build', e); return false; }).finally(() => { W.buildP = null; }); return W.buildP; }
   function lateOaks(){ if(!W.oakMiss || W.late) return; let n = 0;
     W.late = setInterval(() => { if(!oaks() && ++n < 90) return; clearInterval(W.late); W.late = 0; W.oakMiss = false; const S = W.S; try{ W.P.apply(Object.assign({}, S, {oak: 'none', oakFront: false, ter2: []}), ctx()); W.P.apply(S, ctx()); syncVis(); }catch(e){} }, 1000); }
   function winterMake(){ if(!W.P){ W.P = window.DECKPROPS(H, {porchLight: false}); W.P.root.name = 'holiday-winter'; } if(!W.on && W.P.root.parent) W.P.root.parent.remove(W.P.root); return W.P; }
@@ -78,7 +86,7 @@
     await loadProps(); if(stale()) return false;
     const P = winterMake(); W.on = true; if(!P.root.parent) H.scene.add(P.root); P.setOn(1); P.root.visible = false;
     if(!W.raf) W.raf = requestAnimationFrame(frame);
-    if(!W.built && !(await winterBuild(step, stale))) return false;
+    if(!W.built){ W.gate = null; W.step = step; const ok = await winterReady(); W.step = null; if(stale()){ if(!W.built) W.gate = PREP.gate; return false; } if(!ok) return false; }
     syncVis(); lateOaks(); return true; }
   function winterOff(){ if(W.P && W.P.root.parent && !W.on) W.P.root.parent.remove(W.P.root); if(!W.on) return; W.on = false; if(W.raf){ cancelAnimationFrame(W.raf); W.raf = 0; } if(W.late){ clearInterval(W.late); W.late = 0; }
     if(W.P){ W.P.root.visible = false; if(W.P.root.parent) W.P.root.parent.remove(W.P.root); }
@@ -312,6 +320,34 @@
 
   build();
 
+  /* ---------- r43 the season, and getting ready for it while the visitor looks around ----------
+     Halloween in October, Thanksgiving from 1 to 27 November, the winter holidays from 28 November to 6 January (?season= sets it for QA).
+     Once the tour is up and the visitor has been idle a moment (requestIdleCallback, and the page's own idle test), and only on a connection with
+     room to spare (no data saver; 4g or unknown), the season's dress is made ready off-screen: Thanksgiving built in slices and its programs
+     compiled; the winter props fetched, built and compiled; Halloween is the page's own October warm-up (WARM24). Every slice waits while the
+     visitor moves, so it never costs a frame they would notice. Then the season's game's files are fetched ahead (games-menu.js). ?noprep=1 skips it. */
+  const SEASON = (() => { const q = /[?&]season=(halloween|thanksgiving|winter|none)\b/.exec(location.search); if(q) return q[1];
+    const d = new Date(), m = d.getMonth() + 1, day = d.getDate();
+    return m === 10 ? 'halloween' : m === 11 && day <= 27 ? 'thanksgiving' : (m === 11 || m === 12 || (m === 1 && day <= 6)) ? 'winter' : 'none'; })();
+  const roomy = () => { try{ const c = navigator.connection; return !c || (!c.saveData && (!c.effectiveType || c.effectiveType === '4g')); }catch(e){ return true; } };
+  const PREP = {season: SEASON, state: 'waiting', log: [], gate: () => !H.idle || H.idle(2500), t0: 0};
+  const note = m => { PREP.log.push([Math.round(performance.now()), m]); };
+  async function prepare(kind, o){ o = o || {}; const gate = o.idle === false ? null : PREP.gate, t0 = performance.now();
+    if(kind === 'thanksgiving'){ const T = TG(); if(!T || !T.prepare || T.isOn || T.ready) return !!(T && (T.ready || T.isOn)); await T.prepare(gate ? {idle: gate} : {}); }
+    else if(kind === 'winter'){ if(W.built) return true; await loadProps(); if(!W.on){ winterMake(); if(!W.buildP) W.gate = gate; } await winterReady(); }
+    else return false;
+    note(kind + ' ready in ' + Math.round(performance.now() - t0) + ' ms'); return true; }
+  function idlePrep(){ if(/[?&]noprep=1\b/.test(location.search)) { PREP.state = 'off'; return; }
+    if(!roomy()){ PREP.state = 'skipped: connection'; return; }
+    const ric = f => window.requestIdleCallback ? requestIdleCallback(f, {timeout: 4000}) : setTimeout(f, 300);
+    (function wait(){ const L = document.getElementById('loading'), up = (L && !L.classList.contains('done')) || !!document.getElementById('intro28');
+      if(up || !H.ready || !(PREP.gate())) return setTimeout(wait, 1500);
+      ric(async () => { PREP.state = 'running'; PREP.t0 = performance.now(); note('start: ' + SEASON);
+        try{ if(SEASON === 'thanksgiving' || SEASON === 'winter') await prepare(SEASON); }catch(e){ console.warn('[holiday] prepare', e); note('failed: ' + (e && e.message)); }
+        try{ const G = window.GAMESMENU; if(G && G.prefetch && G.order){ const id = G.order().ids[0]; if(G.prefetch(id)) note('prefetched game ' + id); } }catch(e){}
+        PREP.state = 'done'; }); })(); }
+  idlePrep();
+
   /* ---------- ?holiday=winter|thanksgiving|halloween (&dusk=1): open the tour already dressed, once the first view is up ---------- */
   { const m = /[?&]holiday=(winter|thanksgiving|halloween)\b/.exec(location.search), wantDusk = /[?&]dusk=1\b/.test(location.search);
     if(m){ const kind = m[1], t0 = performance.now(); (function wait(){ const L = document.getElementById('loading'), up = (L && (!L.classList.contains('done') || +getComputedStyle(L).opacity > .05)) || !!document.getElementById('intro28');   // the loading photo has faded out, and the loading pictures are gone (they stay up until a first-time visitor taps "Step inside")
@@ -346,7 +382,7 @@
     await go('none'); if(start !== 'none') await go(start); try{ if(H.tod !== tod0.key) H.todSet(tod0.key, tod0.manual); }catch(e){}
     res.ok = res.pairs.every(p => p.ok); res.leftovers = res.pairs.reduce((n, p) => n + p.n, 0); res.ms = Math.round(performance.now() - t0); res.sweeps = lastSweep.slice(); window.__DECORQA = res; return res; }
 
-  window.HOLIDAY = {set, dusk, qa, sweep, get current(){ return current(); }, get busy(){ return busy; }, show: o => show.start(o), stopShow: () => show.stop(), open: () => open(btn), close: () => close(false),
+  window.HOLIDAY = {set, dusk, qa, sweep, prepare, get season(){ return SEASON; }, get prep(){ return PREP; }, debug: {qa: o => qa(o), snap: () => H.snap && H.snap(), sweep: () => sweep()}, get current(){ return current(); }, get busy(){ return busy; }, show: o => show.start(o), stopShow: () => show.stop(), open: () => open(btn), close: () => close(false),
     state: () => ({current: current(), busy, mode: H.mode, tod: H.tod, winter: {on: W.on, built: W.built, count: W.P ? W.P.count() : null, visible: W.P ? W.P.root.visible : false}, ms: Object.assign({}, lastMs), show: show.on ? show.i : null, panel: panel ? !panel.hidden : false}),
     get props(){ return W.P; }, WINTER, DRESS};
 })();
