@@ -331,7 +331,7 @@
       numbers: () => [['p_biscuit', 'biscuit'], ['p_pepper', 'pepper'], ['p_admiral', 'admiral'], ['p_sunset', 'snowball']].filter(([p]) => has(p))
         .map(([p, who]) => ({icon: who === 'snowball' ? '' : ICON(who, 28), value: E.LG.parts[p].value, label: 'Read at ' + fmtH(S.read[p] != null ? S.read[p] : S.hour)})),
       bookActs: () => { const n = ['sheetUp', 'sheetMain', 'sheetLow'].filter(has).length; return n >= 2 ? [{label: n === 3 ? 'Lay the three sheets on top of each other' : 'Lay the sheets on top of each other', run: () => { SND.paper(); stackView(); }}] : []; },
-      wrongLine: n => n === 1 ? 'Wrong order. My first note had the order.' : n % 3 === 0 ? 'That’s three. The lock and I need a minute.' : null,
+      wrongLine: n => n === 1 ? 'Wrong order. My first note had the order.' : n % 3 === 0 ? 'That’s three. The lock and I need a moment.' : null,
       hintActs: {
         biscuit: [null, null, () => examine('biscuit')],
         prints: [null, () => sunKey(true), () => { const go = () => { setSlider(9.25); setTimeout(() => examine('prints'), 400); }; if(S.place === 'entry') go(); else goTo('entry', {done: go}); }],

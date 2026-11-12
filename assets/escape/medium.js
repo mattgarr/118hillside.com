@@ -310,7 +310,7 @@
       progress: () => { const n = ['p_biscuit', 'p_clover', 'p_pepper', 'p_nugget'].filter(has).length; return n ? `Numbers: ${n} of 4` : ''; },
       numbers: () => ['clover', 'pepper', 'biscuit', 'nugget'].filter(w => has('p_' + w)).map(w => ({icon: ICON(w, 28), value: DIG[w], label: w[0].toUpperCase() + w.slice(1) + '’s number'}))
         .concat(has('p_order') ? [{icon: '', value: '→', label: 'Order: Clover, Pepper, Biscuit, Nugget'}] : []),
-      wrongLine: (n) => n === 1 ? 'Not that. Nugget knows the order.' : n % 3 === 0 ? 'The keypad’s sulking. Give it a minute.' : null,
+      wrongLine: (n) => n === 1 ? 'Not that. Nugget knows the order.' : n % 3 === 0 ? 'The keypad’s sulking. Give it a moment.' : null,
       hintActs: {
         biscuit: [null, () => catAt([13.0, 0, 24.0]), () => goTo('great')],
         biscuitWake: [null, () => { sunKey(true); if(S.place !== 'great') goTo('great'); }, () => { const go = () => { if(!greatUp()){ SND.shade(); shade('WN-L1-03', false); give('greatUp'); } setTimeout(() => sweepTo(17.25, 1600, checks), 600); }; if(S.place !== 'great') goTo('great', {done: go}); else go(); }],

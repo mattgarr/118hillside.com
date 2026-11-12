@@ -814,7 +814,7 @@
     const a = PLACES[S.place], b = PLACES[k], ud = a && b && a.floor !== b.floor ? (FLOOR_Y[b.floor] > FLOOR_Y[a.floor] ? 'Up the stairs' : 'Down the stairs') : '';
     SND.steps(ud ? 6 : 4); fadeThrough(() => { rigCut(b.pos, pose.yaw, pose.pitch, pose.fov); arrive(k); if(ud) toast(ud + ' to the ' + b.name.toLowerCase(), 1800); if(opts.done) setTimeout(opts.done, 450); }, 420); return true; }
   function freeArea(){ const W = innerWidth, Hh = innerHeight, r = sheetE.getBoundingClientRect(); const topPad = phone() ? Math.max(118, goalE.getBoundingClientRect().bottom + 10) : 30;
-    if(phone()){ const sunH = document.documentElement.classList.contains('esc-exsun') ? 96 : 0, b = Math.max(topPad + 80, Hh - r.height - 16 - sunH); return {fx: .5, fy: (topPad + b) / 2 / Hh, fw: .94, fh: (b - topPad) / Hh}; }
+    if(phone()){ const sunH = document.documentElement.classList.contains('esc-exsun') ? 118 : 0, b = Math.max(topPad + 80, Hh - r.height - 16 - sunH); return {fx: .5, fy: (topPad + b) / 2 / Hh, fw: .94, fh: (b - topPad) / Hh}; }
     const l = Math.min(W - 400, W * .62); return {fx: l / 2 / W, fy: .5, fw: l / W * .92, fh: .74}; }
   function examine(id){ const sp = SPOTS[id]; if(!sp || S.busy || rig.move || S.done || S.ex) return; S.coach.tap = true; ga('esc_look', {item: id}); SND.look();
     S.ex = {id, back: {yaw: rig.yaw, pitch: rig.pitch}}; S.busy = true; setMarks(); placeE.classList.remove('on'); sayE.classList.remove('on');
@@ -857,7 +857,7 @@
     else d.innerHTML = Array.from({length: n}, (_, i) => `<i>${padCur[i] || ''}</i>`).join('') + `<button type="button" class="escBtn c2" style="display:none;min-height:48px;padding:0 14px" aria-label="Delete the last digit">⌫</button>`;
     const c2 = d.querySelector('.c2'); if(c2) c2.onclick = () => padPress('c'); if(sp.face) sp.face(padCur, cls); }
   function pauseTick(){ const p = $('#escPause'), pad = $('#escPad'); if(!p || !pad) return; const left = Math.ceil((S.pauseUntil - Date.now()) / 1000);
-    if(left > 0){ p.textContent = `The lock needs a minute. ${left} s`; pad.setAttribute('aria-disabled', 'true'); clearTimeout(UI.pauseT); UI.pauseT = setTimeout(pauseTick, 500); } else { p.textContent = ''; pad.removeAttribute('aria-disabled'); } }
+    if(left > 0){ p.textContent = `The lock is resting. Try again in ${left} s.`; pad.setAttribute('aria-disabled', 'true'); clearTimeout(UI.pauseT); UI.pauseT = setTimeout(pauseTick, 500); } else { p.textContent = ''; pad.removeAttribute('aria-disabled'); } }
   function padPress(n){ const sp = SPOTS[S.ex && S.ex.id]; if(!sp || !sp.lock || padLock || S.done || S.busy) return; SND.unlock(); if(Date.now() < S.pauseUntil){ SND.tap(); return; }
     const K = LG.locks[sp.lock], N = K.answer.length;
     if(n === 'c'){ padCur = padCur.slice(0, -1); padDraw(); SND.tap(); return; } if(padCur.length >= N) return; padCur += n; padDraw(); SND.key(Math.min(4, padCur.length));
