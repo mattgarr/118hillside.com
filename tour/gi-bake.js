@@ -196,6 +196,7 @@ void main(){
   }
   oc = vec4(L, first);
 }`;
+B.FSLIB = FS.slice(0, FS.indexOf('void main(){'));   // the tracer's library (BVH walk, sky, sampling), shared with gi-rt.js
 function mat(){ if(B.mat) return B.mat; const U = {uTri: {value: null}, uNode: {value: null}, uMat: {value: null}, uSky: {value: null}, uPrb: {value: null},
     uComp: {value: 0}, uDirs: {value: 64}, uOff: {value: 0}, uOutW: {value: 1024}, uMaxB: {value: 5}, uSeed: {value: 1}, uNL: {value: 0}, uNoGeo: {value: 0},
     uJit: {value: new THREE.Vector2()}, uSun: {value: new THREE.Vector3(0, 1, 0)}, uAOR: {value: 2.5},

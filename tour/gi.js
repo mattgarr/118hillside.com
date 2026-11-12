@@ -128,6 +128,15 @@ function decode(ix, u8){ const g = ix.grid, NP = g.nx * g.ny * g.nz, vols = []; 
   for(const v of ix.vols){ const C = v.C || 6, F = new Float32Array(6 * NP);
     for(let c = 0; c < C; c++){ const m = v.m[c]; for(let p = 0; p < NP; p++){ const t = (u8[o + c * NP + p] - 128) / 127; F[p * 6 + c] = Math.sign(t) * t * t * m; } } o += C * NP;
     vols.push(Object.assign({F}, v)); }
+  // probes the bake did not trace (in walls, above the sloped ceilings, outside) are filled outward from their traced neighbours until the
+  // grid is full: a surface between a traced probe and an empty one would otherwise fade to black across that cell (bands up the vault)
+  { const nx = g.nx, ny = g.ny, nz = g.nz, has = new Uint8Array(NP); for(const v of vols){ const F = v.F; for(let p = 0; p < NP; p++) if(!has[p] && (F[p * 6] !== 0 || F[p * 6 + 1] !== 0 || F[p * 6 + 2] !== 0)) has[p] = 1; }
+    for(let ring = 0; ring < 40; ring++){ const add = []; for(let p = 0; p < NP; p++){ if(has[p]) continue; const x = p % nx, z = Math.floor(p / nx) % nz, y = Math.floor(p / (nx * nz)), nb = [];
+        for(let dy = -1; dy <= 1; dy++) for(let dz = -1; dz <= 1; dz++) for(let dx = -1; dx <= 1; dx++){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= nx || Y >= ny || Z >= nz) continue; const j = (Y * nz + Z) * nx + X; if(has[j]) nb.push(j, 1 / (Math.abs(dx) + Math.abs(dy) + Math.abs(dz))); }
+        if(nb.length) add.push([p, nb]); }
+      if(!add.length) break;
+      for(const v of vols){ const F = v.F; for(const [p, nb] of add){ let w = 0; const s = [0, 0, 0, 0, 0, 0]; for(let k = 0; k < nb.length; k += 2){ const j = nb[k] * 6, ww = nb[k + 1]; w += ww; for(let c = 0; c < 6; c++) s[c] += ww * F[j + c]; } for(let c = 0; c < 6; c++) F[p * 6 + c] = s[c] / w; } }
+      for(const [p] of add) has[p] = 1; } }
   let ao = null; if(ix.ao && ix.ao.v === 2){ const A = ix.ao, n = A.nx * A.ny * A.nz * 4; ao = u8.subarray(o, o + n); o += n; }
   return {NP, vols, ao}; }
 function setupTextures(){ const ix = GI.index, g = ix.grid, U = GI.U, NP = g.nx * g.ny * g.nz;
