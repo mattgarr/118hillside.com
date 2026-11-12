@@ -20650,7 +20650,7 @@ function r36PrimaryCeiling(){
   const xF = -10.78, yF = gable(xF) - .005;
   r36AddFaces(/^ceilings\|L2\|gwb/, 'R36-PRIMARY-CEIL', [[[xL, gable(xL) - .005, -36.52], [xF, yF, -36.52], [xF, yF, -26.15], [xL, gable(xL) - .005, -26.15], [0, -1, 0]],
     [[xF, yF, -36.52], [-8.76, yF, -36.52], [-8.76, yF, -26.15], [xF, yF, -26.15], [0, -1, 0]],
-    [[-12.5, gable(-12.5) - .012, -37.8], [-10.78, gable(-10.78) - .012, -37.8], [-10.78, gable(-10.78) - .012, -36.5], [-12.5, gable(-12.5) - .012, -36.5], [0, -1, 0]]]);
+    [[xL, gable(xL) - .012, -37.8], [-10.78, gable(-10.78) - .012, -37.8], [-10.78, gable(-10.78) - .012, -36.5], [xL, gable(xL) - .012, -36.5], [0, -1, 0]]]);   // r41: from xL (was -12.5): the model's ceiling between the break and -12.5 beside the alcove's end is a shallower plane up to 3/4 in above the room's slope, which read as a grey bar on the ceiling
   // wall paint where the model left bare framing: the bath-side gable above 15.7 ft right of the ridge, that wall inside the bay, and the top of the short return wall at the bay's other end
   r36AddFaces(/^walls\|L2\|paint-int-flat#PAINT-SW-6241-ALEUTIAN$/, 'R37-PRIMARY-WALLS', [
     [[-17.6, 15.7, -26.17], [(7.3135 - 15.7) / .583, 15.7, -26.17], [-16, gable(-16), -26.17], [-17.6, gable(-17.6), -26.17], [0, 0, -1]],
