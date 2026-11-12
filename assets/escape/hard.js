@@ -79,17 +79,20 @@
     function tf(){ if(TF) return TF; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for(const s of H.BIM2S.meta.spaces){ if(!/^SP-L[012]-/.test(s.id)) continue; for(const q of (s.poly || s.polygon)){ const x = q[1], z = q[0]; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); } }
       const w = 900, h = 700, k = Math.min((w - 100) / (z1 - z0), (h - 120) / (x1 - x0)), ox = (w - (z1 - z0) * k) / 2, oy = 60 + (h - 120 - (x1 - x0) * k) / 2;
       return (TF = {w, h, P: (x, z) => [ox + (z - z0) * k, oy + (x1 - x) * k], k}); }
-    function sheetDraw(floor, bg){ const T = tf(); return paperCanvas(T.w, T.h, bg ? 'tracing' : 'none', (x, w, h, ink) => { if(!bg) x.clearRect(0, 0, w, h);
+    // part: 'lines' draws only the pencil, 'marks' only the red, anything else both
+    function sheetDraw(floor, bg, part){ const T = tf(); return paperCanvas(T.w, T.h, bg ? 'tracing' : 'none', (x, w, h, ink) => { if(!bg) x.clearRect(0, 0, w, h);
+      const c = T.P(HD[0], HD[1]);
+      if(part !== 'marks'){
       const re = {upper: /^SP-L2-/, main: /^SP-L1-/, lower: /^SP-L0-/}[floor];
       for(const s of H.BIM2S.meta.spaces){ if(!re.test(s.id) || /STAIRHALL/.test(s.id)) continue; const p = (s.poly || s.polygon).map(q => T.P(q[1], q[0])); ink.line(p.concat([p[0]]), s.id === 'SP-L0-LOUNGE' ? 7 : 4, s.id === 'SP-L0-LOUNGE' ? '#33415c' : 'rgba(60,70,90,.7)'); }
       // the stairs, the same on every sheet: an outline and its treads
       const st = E.spacePoly(STAIRS).map(q => T.P(q[0], q[1])); ink.line(st.concat([st[0]]), 7, '#1c2030');
       const xs = st.map(p => p[0]), ys = st.map(p => p[1]), sx0 = Math.min(...xs), sx1 = Math.max(...xs), sy0 = Math.min(...ys), sy1 = Math.max(...ys); for(let i = 1; i < 8; i++){ const xx = sx0 + (sx1 - sx0) * i / 8; ink.line([[xx, sy0 + 4], [xx, sy1 - 4]], 3, '#1c2030'); }
-      ink.text('stairs', (sx0 + sx1) / 2, sy0 - 26, 38);
-      const c = T.P(HD[0], HD[1]);
+      ink.text('stairs', (sx0 + sx1) / 2, sy0 - 26, 38); }
+      if(part !== 'lines'){
       if(floor === 'upper') ink.line([[c[0] - 44, c[1] + 44], [c[0] + 44, c[1] - 44]], 10, '#c0392b');
       if(floor === 'main') ink.line([[c[0] - 44, c[1] - 44], [c[0] + 44, c[1] + 44]], 10, '#c0392b');
-      if(floor === 'lower'){ x.strokeStyle = '#c0392b'; x.lineWidth = 8; x.beginPath(); x.arc(c[0], c[1], 66, 0, 7); x.stroke(); }
+      if(floor === 'lower'){ x.strokeStyle = '#c0392b'; x.lineWidth = 8; x.beginPath(); x.arc(c[0], c[1], 66, 0, 7); x.stroke(); } }
       if(bg) ink.text({upper: 'upstairs', main: 'main floor', lower: 'downstairs'}[floor], 130, h - 46, 46, '#5a6478'); }, floor.length); }
     // the mirror writing on the shower glass, and the same words as they show in the mirror
     function glassCanvas(mirror){ const c = document.createElement('canvas'); c.width = 1400; c.height = 520; const x = c.getContext('2d');
@@ -154,7 +157,8 @@
       W.sunsetNote = nc.mesh = prop(nc.cv, [-17.6, UY + 4.4, -39.95], [0, 0, 1], 1.4, 1.05, {group: 'upper'});
       // ---- the shower glass and the mirror
       W.glass = prop(glassCanvas(false), [-11.2, UY + 3.5, -19.40], [0, 0, -1], 3.6, 1.34, {group: 'upper', tone: 1, both: false});
-      W.mirror = prop(glassCanvas(true), [-11.4, 10.85, -25.53], [0, 0, 1], 3.0, 1.11, {group: 'upper', tone: 1}); W.mirror.visible = false;
+      // lined up with the real reflection as seen from the mirror pose, and shown only there (some phones draw the mirror without a reflection)
+      W.mirror = prop(glassCanvas(true), [-11.44, 10.16, -25.5], [0, 0, 1], 1.45, .54, {group: 'upper', tone: 1}); W.mirror.visible = false;
       // ---- the window seat cushion and the upper sheet under it
       const ks2 = keep('sheetUp', () => sheetDraw('upper', true)); W.sheetUp = ks2.mesh = prop(ks2.cv, [SEAT[0], SEAT[1] + .02, SEAT[2]], [0, 1, 0], 1.6, 1.25, {group: 'upper', spin: -Math.PI / 2}); W.sheetUp.visible = false;
       // ---- the main sheet (Clover leaves it on the closet floor) and the lower sheet (under Mabel)
@@ -192,16 +196,21 @@
       if(S.ex){ const id = S.ex.id;
         if(id === 'prints' && printsUp()) readN('p_biscuit', 'biscuit', '7', 'Paw prints in the sun', ['#fff3c9', '#f6d98a'], 'Dusty paw prints that only show in the low morning sun through the front doors. They walk a seven.', ['That’s him. That’s his feet. A seven.', 'biscuit']);
         if(id === 'desk' && deskUp()) readN('p_pepper', 'pepper', '5', 'Sun on the desk', ['#fff1c2', '#f3cf7c'], 'The skylight’s square of sun on the desk, early in the afternoon. The paper on the skylight leaves a five.', ['FIVE! FIVE! SUN ON THE DESK!', 'pepper']);
-        if(id === 'screen' && shadowUp()) readN('p_admiral', 'admiral', '3', 'Shadow on the shade', ['#fff6e0', '#f1dcb2'], 'Late in the afternoon, with the shade down, the cut-out hanging outside throws a three onto it.', ['A three. Hideous. Now leave the shade down.', 'admiral']);
+        if(id === 'kshade' && shadowUp()) readN('p_admiral', 'admiral', '3', 'Shadow on the shade', ['#fff6e0', '#f1dcb2'], 'Late in the afternoon, with the shade down, the cut-out hanging outside throws a three onto it.', ['A three. Hideous. Now leave the shade down.', 'admiral']);
         if(id === 'floorP' && sunsetUp()) readN('p_sunset', 'snowball', '8', 'The last light', ['#ffd9a8', '#f39c5a'], 'At sunset, the low sun through the balcony doors writes an eight across the bedroom floor.', ['Last job of the day. Eight. I’m very thorough.']); }
       if(has('metMabel') && !has('sheetLow') && sunIn('mabelMoves')){ give('sheetLow'); petWalk('mabel', [MABEL1[0], MABEL1[1] + .02, MABEL1[2]], 5200); setTimeout(() => say('Cold. Moving. Slowly.', 4600, false, 'mabel'), 400);
         note('sheetLow', {title: 'Tracing paper: downstairs', where: 'Under Mabel, on the terrace', img: () => KEEP.sheetLow.cv, text: 'The lower level in pencil, with the stairs, and a red circle on the lounge wall.'}); }
       if(S.place === 'kitchen' || (S.ex && S.ex.id === 'admiral')) admiralPose(); }
     function admiralPose(){ const g = PETS.admiral; if(!g) return; g.rotation.y = admiralInSun() ? yawTo(BOWL, [3, 0, 10]) + Math.PI : yawTo(BOWL, [12.4, 0, 9.6]); }
     function stackView(){ const ids = ['sheetUp', 'sheetMain', 'sheetLow'].filter(has), T = tf();
-      const imgs = ids.map(id => { const cv = sheetDraw(id === 'sheetUp' ? 'upper' : id === 'sheetMain' ? 'main' : 'lower', false); return cv.toDataURL('image/png'); });
-      const all = ids.length === 3;
-      bookRender({html: `<h2>Three floors, one map</h2><p class="sub">${all ? 'All three sheets, one on top of the other, lined up by the stairs.' : 'The sheets you have so far, lined up by the stairs. There’s one more somewhere.'}</p><div class="stackv"><img alt="" src="${paperCanvas(T.w, T.h, 'paper').toDataURL('image/png')}">${imgs.map(u => `<img alt="" src="${u}">`).join('')}</div>`});
+      const fl = id => id === 'sheetUp' ? 'upper' : id === 'sheetMain' ? 'main' : 'lower', all = ids.length === 3;
+      const cv = paperCanvas(T.w, T.h, 'paper'), x = cv.getContext('2d');
+      for(const id of ids) x.drawImage(sheetDraw(fl(id), false, 'lines'), 0, 0);
+      for(const id of ids) x.drawImage(sheetDraw(fl(id), false, 'marks'), 0, 0);
+      // the full sheet is mostly empty paper: show the part round the stairs, big
+      const c = T.P(HD[0], HD[1]), cw = 560, ch = 420, sx = clamp(c[0] - cw / 2, 0, T.w - cw), sy = clamp(c[1] - ch / 2, 0, T.h - ch);
+      const out = document.createElement('canvas'); out.width = cw; out.height = ch; out.getContext('2d').drawImage(cv, sx, sy, cw, ch, 0, 0, cw, ch);
+      bookRender({html: `<h2>Three floors, one map</h2><p class="sub">${all ? 'All three sheets, one on top of the other, lined up by the stairs.' : 'The sheets you have so far, lined up by the stairs. There’s one more somewhere.'}</p><div class="stackv"><img alt="${all ? 'The three plans stacked: two red strokes cross inside a red circle on the lower level, by the stairs' : 'The plans stacked so far'}" src="${out.toDataURL('image/png')}"></div>`});
       if(all && give('stacked')){ SND.found(); setTimeout(() => say('X marks the spot. I’m a classicist. Lounge, under the stairs.', 6000), 600); } }
 
     /* ---------------------------------------------------------------- things to look at */
@@ -217,13 +226,9 @@
         sheet: () => admiralInSun() ? {title: 'Admiral', body: `${line('admiral', 'Direct sun. On my bowl. I shan’t speak until it stops.', true)}<p>The goldfish has turned his back on you and is sulking behind his castle. The afternoon sun is pouring through the window over the sink.</p>`}
           : {title: 'Admiral', body: `${line('admiral', 'The cat hung some rubbish outside my window. On a string. He said it’s for late in the afternoon, with my shade down. I shan’t be watching.')}${line('admiral', 'He also took my castle.')}`},
         seen(){ if(!admiralInSun() && give('metAdmiral')) setTimeout(() => say('Late afternoon, shade down. Fish are very precise.', 5000), 1600); }},
-      kshade: {from: ['kitchen'], when: () => has('metAdmiral'), label: () => shadeT('WN-L1-02') > .5 ? 'Shade on the window' : 'Window over the sink', at: () => [4.9, 5.4, 9.5], pos: [9.6, 5.3, 9.5], look: [4.7, 5.0, 9.5], fit: {w: 6.4, h: 4.6},
-        sheet: () => shadeT('WN-L1-02') > .5 ? {title: 'The kitchen shade', body: '<p>A light-filtering roller shade, all the way down. When the sun is on the window, it glows.</p>', acts: [{label: 'Raise the shade', cls: '', run: () => act(() => { SND.shade(); shade('WN-L1-02', false); }, 900)}]}
+      kshade: {from: ['kitchen'], sun: true, seen(){ checks(); }, when: () => has('metAdmiral'), label: () => shadeT('WN-L1-02') > .5 ? 'Shade on the window' : 'Window over the sink', at: () => [4.9, 5.4, 9.5], pos: [9.6, 5.3, 9.5], look: [4.7, 5.0, 9.5], fit: {w: 6.4, h: 4.6},
+        sheet: () => shadeT('WN-L1-02') > .5 ? {title: shadowUp() ? 'Shadow on the shade' : 'The kitchen shade', body: shadowUp() ? '<p>The shade glows with the sun behind it, and the cut-out hanging outside throws a crisp shadow onto it.</p>' : '<p>A light-filtering roller shade, all the way down. When the sun is on the window, it glows.</p>', acts: [{label: 'Raise the shade', cls: '', run: () => act(() => { SND.shade(); shade('WN-L1-02', false); }, 900)}]}
           : {title: 'The window over the sink', body: '<p>A big window over the sink, with a roller shade rolled up at the top. Something papery is hanging outside, on a string.</p>', acts: [{label: 'Lower the shade', run: () => act(() => { SND.shade(); shade('WN-L1-02', true); give('kitchenDown'); admiralPose(); }, 900)}]}},
-      screen: {from: ['kitchen'], sun: true, when: () => has('kitchenDown') && shadeT('WN-L1-02') > .97 && W.screen.s > .05, label: () => 'Shadow on the shade', at: () => [4.95, 5.0, 9.5], pos: [9.0, 5.2, 9.5], look: [4.7, 5.1, 9.5], fit: {w: 6.2, h: 4.2},
-        sheet: () => shadowUp() ? {title: 'Shadow on the shade', body: '<p>The shade glows with the sun behind it, and the cut-out hanging outside throws a crisp shadow onto it. The tracing paper hardly shows.</p>'}
-          : {title: 'Shadow on the shade', body: '<p>The shade glows, and the shadow of the thing outside slides across it as the sun moves. It isn’t sitting square on the shade yet.</p>'},
-        seen(){ checks(); }},
       pepper: {from: ['office'], label: () => 'Pepper', at: () => [-26.8, LY + 2.2, -6.2], pos: [-28.6, LE - .6, -9.2], look: [-26.8, LY + 1.2, -6.2], fit: {w: 2.6, h: 2.6},
         sheet: () => ({title: 'Pepper', body: `${line('pepper', 'SUN ON THE DESK! SUN ON THE DESK!', true)}<p>Pepper repeats whatever she heard last. The last thing she heard was Snowball.</p>${line('pepper', 'MY FEATHER! HE TOOK MY RED FEATHER!')}`}),
         seen(){ if(give('metPepper')){ SND.chirp(); W.desk.update(); setTimeout(() => say('I may have said that out loud.', 4200), 1500); } }},
@@ -236,7 +241,7 @@
       note: {from: ['primary'], label: () => 'Note on the doors', at: () => [-17.6, UY + 4.4, -39.6], pos: [-17.6, UE - .2, -35.6], look: [-17.6, UY + 4.3, -39.95], fit: {w: 2.0, h: 1.6},
         sheet: () => ({title: 'Snowball’s note', body: `${line('snowball', 'Last job of the day. When the sun touches the hills.')}<p>Taped to the stacking doors to the balcony. Below it, strips of paper on the glass. Beyond the glass, the hills.</p>`}),
         seen(){ if(give('sunsetNote')){ note('sunsetNote', {title: 'Last job of the day', where: 'On the balcony doors', img: () => KEEP.sunsetNote.cv, text: 'Snowball’s note: the last job of the day was when the sun touched the hills.'}); sunKey(true); } }},
-      floorP: {from: ['primary'], sun: true, when: () => has('sunsetNote') && W.slider.s > .05, label: () => 'Light on the floor', at: () => [-12.8, UY + .2, -30.4], pos: [-11.6, UY + 6.4, -26.9], look: [-12.8, UY, -30.6], fit: {w: 4.0, h: 3.4},
+      floorP: {from: ['primary'], sun: true, when: () => has('sunsetNote') && W.slider.s > .05, label: () => 'Light on the floor', at: () => [-12.8, UY + .2, -30.4], pos: [-11.6, UY + 6.4, -26.9], look: [-12.9, UY, -30.4], fit: {w: 5.6, h: 4.6},
         sheet: () => sunsetUp() ? {title: 'The last light', body: '<p>Low gold light from the balcony doors, all the way across the floor. The card on the glass leaves a figure in it.</p>'}
           : {title: 'Light on the floor', body: '<p>Sun from the balcony doors on the floor. The shadows of the paper are long and out of shape. Not quite the moment.</p>'},
         seen(){ checks(); }},
@@ -245,7 +250,7 @@
         seen(){ give('sawGlass'); }},
       mirror: {from: ['pbath'], when: () => has('sawGlass'), label: () => 'Mirror', at: () => [-11.4, 10.85, -25.3], pos: [-11.6, 10.9, -21.4], look: [-11.4, 10.85, -25.56], fit: {w: 4.4, h: 4.4},
         sheet: () => ({title: 'In the mirror', body: '<p>The shower glass is behind you, and in the mirror over the sinks the soapy letters read the right way round.</p>' + line('snowball', 'There we are. Off you go.')}),
-        seen(){ W.mirror.visible = true; if(give('mirror')) note('mirror', {title: 'In the mirror', where: 'Primary bath', img: () => glassCanvas(true), text: 'The writing on the shower glass, read in the mirror: WINDOW SEAT.'}); }},
+        seen(){ if(give('mirror')) note('mirror', {title: 'In the mirror', where: 'Primary bath', img: () => glassCanvas(true), text: 'The writing on the shower glass, read in the mirror: WINDOW SEAT.'}); }},
       seat: {from: ['loft'], when: () => has('mirror'), label: () => has('sheetUp') ? 'Window seat' : 'Cushion on the window seat', at: () => [SEAT[0] + .3, SEAT[1] + .6, SEAT[2]], pos: [-20.0, UE, -6.4], look: [SEAT[0], SEAT[1], SEAT[2]], fit: {w: 3.2, h: 2.6},
         sheet: () => has('sheetUp') ? {title: 'Under the cushion', body: `<p>A sheet of tracing paper with the upstairs drawn on it in pencil, the stairs, and one red stroke.</p>${line('snowball', 'One per floor. Obviously.')}`}
           : {title: 'The window seat', body: '<p>A cushioned seat under the loft windows. The cushion sits a little high.</p>', acts: [{label: 'Lift the cushion', run: () => act(() => { SND.paper(); W.sheetUp.visible = true; give('sheetUp'); note('sheetUp', {title: 'Tracing paper: upstairs', where: 'Under the window seat cushion', img: () => KEEP.sheetUp.cv, text: 'The upper floor in pencil, with the stairs, and one red stroke.'}); }, 600)}]}},
@@ -258,7 +263,7 @@
       cshade: {from: ['middlebed'], when: () => has('metClover'), label: () => shadeT('WN-L1-08') > .5 ? 'Shade' : 'Big window', at: () => [31.9, 4.6, 19.0], pos: [26.0, 5.2, 18.6], look: [32.3, 4.4, 19.0], fit: {w: 6.6, h: 5.2},
         sheet: () => shadeT('WN-L1-08') > .5 ? {title: 'The bedroom shade', body: '<p>A blackout honeycomb shade, all the way down. The room is dim and quiet.</p>'}
           : {title: 'The big window', body: '<p>A big window with a blackout honeycomb shade drawn right up under the head.</p>', acts: [{label: 'Lower the shade', run: () => act(() => { SND.shade(); shade('WN-L1-08', true); setTimeout(cloverOut, 700); }, 1000)}]}},
-      mabel: {from: ['terrace'], label: () => 'Mabel', at: () => { const g = PETS.mabel; return g ? [g.position.x, TY + 1.2, g.position.z] : MABEL0; }, pose: () => { const g = PETS.mabel, p = g ? g.position : {x: MABEL0[0], z: MABEL0[2]}; return {pos: [p.x + .4, TY + 3.8, p.z + 3.6], look: [p.x, TY + .4, p.z], fit: {w: 3.4, h: 2.6}}; },
+      mabel: {from: ['terrace'], sun: true, label: () => 'Mabel', at: () => { const g = PETS.mabel; return g ? [g.position.x, TY + 1.2, g.position.z] : MABEL0; }, pose: () => { const g = PETS.mabel, p = g ? g.position : {x: MABEL0[0], z: MABEL0[2]}; return {pos: [p.x + .4, TY + 3.8, p.z + 3.6], look: [p.x, TY + .4, p.z], fit: {w: 3.4, h: 2.6}}; },
         sheet: () => has('sheetLow') ? {title: 'Mabel', body: `${line('mabel', 'Warm here. This spot. For now.')}<p>She left a sheet of tracing paper on the paving: the lower level in pencil, the stairs, and a red circle.</p>${line('mabel', 'He took my strawberry. I’ll get over it. Slowly.')}`}
           : {title: 'Mabel', body: `${line('mabel', 'Warm. Staying.', true)}<p>Mabel is sitting on the warm paving, on top of something papery. She isn’t going anywhere while the sun’s on her.</p>${line('mabel', 'I move when the sun moves. Not before.')}`},
         seen(){ if(give('metMabel')){ sunKey(true); setTimeout(checks, 500); } }},
@@ -269,6 +274,7 @@
         sheet: () => ({title: 'Snowball’s strongbox', body: '<p>A steel box with a lock drawn on its front: the sun’s path from sunrise to sunset, with four places for a number along it.</p>'}),
         face: (cur, cls) => boxFace(cur, cls === 'ok' ? 'open' : cls === 'bad' ? 'bad' : '')}};
     function cloverOut(){ const g = PETS.clover; if(!g || has('sheetMain')) return; g.visible = true; petWalk('clover', [CLO[0] + 3.2, 0, CLO[2] - .4], 1500); W.sheetMain.visible = true; SND.thump();
+      setTimeout(() => say('Better. Much better. That’s for you, on the floor.', 4800, false, 'clover'), 900);
       give('sheetMain'); note('sheetMain', {title: 'Tracing paper: main floor', where: 'Clover’s closet, middle bedroom', img: () => KEEP.sheetMain.cv, text: 'The main floor in pencil, with the stairs, and one red stroke.'}); }
 
     /* ---------------------------------------------------------------- the reveal: sunset on the terrace */
@@ -305,11 +311,12 @@
         if(doorT('D-L1-07') > .5) PETS.clover.visible = true;
         if(has('sheetMain')){ PETS.clover.visible = true; PETS.clover.position.set(CLO[0] + 3.2, 0, CLO[2] - .4); W.sheetMain.visible = true; }
         if(has('sheetLow')) PETS.mabel.position.set(MABEL1[0], MABEL1[1] + .02, MABEL1[2]);
-        if(has('sheetUp')) W.sheetUp.visible = true; if(has('mirror')) W.mirror.visible = true; admiralPose(); E.LIGHT.update(); },
+        if(has('sheetUp')) W.sheetUp.visible = true; admiralPose(); E.LIGHT.update(); },
       begin(resumed){ if(!S.notes.includes('first')) note('first', {title: 'Snowball’s first note', where: 'From the start', img: () => KEEP.first.cv, text: 'The longest day of the year. The sun’s path from morning to sunset, with four paw prints along it.'});
         catAt([-9.2, 0, -5.6]); if(!resumed) setTimeout(() => say('The longest day of the year. Lots of daylight to work with. Ask Biscuit.', 5200), E.phone() ? 7200 : 2600); },
       onHour(){ checks(); },
       onArrive(k){ if(k === 'kitchen') admiralPose(); if(k === 'terrace') door('D-L0-10', true); },
+      frame: () => { if(W.mirror) W.mirror.visible = !!(S.ex && S.ex.id === 'mirror' && !S.backing); },
       progress: () => { const n = ['p_biscuit', 'p_pepper', 'p_admiral', 'p_sunset'].filter(has).length, m = ['sheetUp', 'sheetMain', 'sheetLow'].filter(has).length; return (n || m) ? `Numbers ${n}/4 · Sheets ${m}/3` : ''; },
       numbers: () => [['p_biscuit', 'biscuit'], ['p_pepper', 'pepper'], ['p_admiral', 'admiral'], ['p_sunset', 'snowball']].filter(([p]) => has(p))
         .map(([p, who]) => ({icon: who === 'snowball' ? '' : ICON(who, 28), value: E.LG.parts[p].value, label: 'Read at ' + fmtH(S.read[p] != null ? S.read[p] : S.hour)})),
@@ -319,7 +326,7 @@
         biscuit: [null, null, () => examine('biscuit')],
         prints: [null, () => sunKey(true), () => { const go = () => { setSlider(9.25); setTimeout(() => examine('prints'), 400); }; if(S.place === 'entry') go(); else goTo('entry', {done: go}); }],
         admiral: [null, () => { if(admiralInSun()) sweepTo(10, 1400); }, () => { const go = () => { if(admiralInSun()) setSlider(10); setTimeout(() => examine('admiral'), 400); }; if(S.place === 'kitchen') go(); else goTo('kitchen', {done: go}); }],
-        shadow: [null, () => sunKey(true), () => { const go = () => { if(shadeT('WN-L1-02') < .5){ shade('WN-L1-02', true); give('kitchenDown'); } setTimeout(() => { setSlider(17); setTimeout(() => examine('screen'), 900); }, 900); }; if(S.place === 'kitchen') go(); else goTo('kitchen', {done: go}); }],
+        shadow: [null, () => sunKey(true), () => { const go = () => { if(shadeT('WN-L1-02') < .5){ shade('WN-L1-02', true); give('kitchenDown'); } setTimeout(() => { setSlider(17); setTimeout(() => examine('kshade'), 900); }, 900); }; if(S.place === 'kitchen') go(); else goTo('kitchen', {done: go}); }],
         pepper: [null, null, () => goTo('office')],
         desk: [null, () => sunKey(true), () => { const go = () => { setSlider(14.25); setTimeout(() => examine('desk'), 400); }; if(S.place === 'office') go(); else goTo('office', {done: go}); }],
         sunset: [null, null, () => goTo('primary')],

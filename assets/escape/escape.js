@@ -518,7 +518,7 @@
   @keyframes escShake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
   .escPad{display:grid;grid-template-columns:repeat(3,72px);gap:8px;justify-content:center;margin:10px 0 2px}
   .escPad button{height:54px;border-radius:14px;border:1px solid #d6d2c8;background:#fff;font:500 22px Jost,sans-serif;color:var(--ink)}
-  .escPad button:active{background:#eceae4;transform:scale(.97)}.escPad .z{grid-column:2}.escPad .c{grid-column:3;grid-row:4;font-size:18px}.escPad[aria-disabled=true] button{opacity:.45}
+  .escPad button:active{background:#eceae4;transform:scale(.97)}.escPad .z{grid-column:2}.escPad .c{grid-column:3;grid-row:4;font-size:18px}.escPad[aria-disabled=true] button{opacity:.45}.escDelW{display:none;justify-content:center;margin:4px 0 0}
   #escToast{position:absolute;left:50%;top:15%;transform:translate(-50%,-10px);background:rgba(22,28,48,.9);color:#fff;font:500 15.5px Jost,sans-serif;padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none;max-width:calc(100% - 40px);text-align:center}
   #escToast.on{opacity:1;transform:translate(-50%,0)}
   #escFade{position:fixed;inset:0;z-index:58;background:#0d111f;opacity:0;pointer-events:none;transition:opacity .32s ease}
@@ -588,7 +588,7 @@
     #escSheet.on{transform:none}#escSheet h3{font-size:24px}#escSheet p{font-size:15.5px}#escSheet .line{font-size:21px}
     html.esc-ex #escDock{visibility:hidden}html.esc-ex.esc-exsun #escSun{visibility:visible;position:fixed;left:10px;right:10px;bottom:calc(var(--sheet-h,180px) + 18px)}
     html.esc-ex #escBack{display:none}
-    .escPad{grid-template-columns:repeat(5,1fr);gap:7px}.escPad button{height:50px}.escPad .z{grid-column:auto}.escPad .c{display:none}.escDisp .c2{display:grid!important}
+    .escPad{grid-template-columns:repeat(5,1fr);gap:7px}.escPad button{height:50px}.escPad .z{grid-column:auto}.escPad .c{display:none}.escDisp .c2{display:grid!important}.escDelW{display:flex}
     #escCard .c{padding:20px 18px 18px}#escCard .note{font-size:21px}#escCard .lede{font-size:19px}
     #escCard .lv{gap:6px}#escCard .lv button{padding:8px 9px 8px}#escCard .lv .t{font-size:17px}#escCard .lv small{font-size:12px}
     #escCard.side{place-items:end center;padding:8px}#escCard.side .c{box-sizing:border-box;max-width:560px;max-height:calc(100% - 180px);padding:16px 16px 14px}#escCard.side h2{font-size:32px}#escCard.side .lede{font-size:18px;margin-bottom:10px}#escCard.side .stats{margin-bottom:10px}
@@ -730,7 +730,7 @@
       svg += `<path d="${d}" fill="${on ? '#e9e3d4' : '#f3f0e8'}" stroke="${on ? '#a9a08b' : '#d6d1c4'}" stroke-width="${on ? 1.2 : .8}" stroke-linejoin="round"/>`; }
     svg += `<g id="escDot"><path d="M0 0L-9 -20A22 22 0 0 1 9 -20Z" fill="rgba(201,138,18,.35)"/><circle r="5.5" fill="#c98a12" stroke="#fff" stroke-width="2"/></g></svg>`;
     plan.innerHTML = svg + ORDER.filter(key => PLACES[key].floor === f).map(key => { const P = PLACES[key], mp = P.map || [P.pos[0], P.pos[2]], m = T.pt(mp[0], mp[1]); return `<button type="button" class="pl" data-p="${key}" style="left:${(m[0] / w * 100).toFixed(1)}%;top:${(m[1] / h * 100).toFixed(1)}%">${esc(P.short || P.name)}</button>`; }).join('');
-    MAP.dot = $('#escDot'); MAP.key = ''; $$('.pl', plan).forEach(b => b.onclick = () => { SND.unlock(); if(phone()) setMap(false); if(S.ex) return; goTo(b.dataset.p); });
+    MAP.dot = $('#escDot'); MAP.key = ''; $$('.pl', plan).forEach(b => b.onclick = () => { SND.unlock(); if(phone()) setMap(false); const go = () => goTo(b.dataset.p); if(S.ex){ if(S.backing) S.after = go; else if(!S.busy) back(go); return; } go(); });
     requestAnimationFrame(() => unclash(plan));
     $$('#escFloors button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === f))); if(S.place) mapPlace(S.place, true); }
   // labels that land on each other are pushed apart, a few pixels at a time, until none overlap
@@ -824,9 +824,9 @@
     rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], po.pos], pose, {dur, done: () => { rig.lim = {yaw: pose.yaw, pitch: pose.pitch, ry: .2, rp: .14}; if(done) done(); }}); }
   function reframe(){ if(!S.ex) return; const id = S.ex.id; S.busy = true; frameExamine(.8, () => { S.busy = false; const sp = SPOTS[id]; if(!S.ex || S.ex.id !== id) return;
     try{ if(sp.seen) sp.seen(); }catch(e){ console.error('[escape] seen', e); } if(!sp.lock) sheetFor(S.ex); }); }
-  function back(then){ if(!S.ex || rig.move || S.busy) return; const ex = S.ex; SND.back(); sheetE.classList.remove('on'); S.busy = true;
+  function back(then){ if(!S.ex || rig.move || S.busy) return; const ex = S.ex; SND.back(); sheetE.classList.remove('on'); S.busy = true; S.backing = true;
     const P = PLACES[S.place], pose = {yaw: ex.back.yaw, pitch: ex.back.pitch, fov: placeFov(P.fov), off: [0, 0]};
-    rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], P.pos], pose, {dur: .85, done: () => { S.ex = null; S.busy = false; document.documentElement.classList.remove('esc-ex', 'esc-exsun'); setMarks(); if(typeof then === 'function') then(); }}); }
+    rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], P.pos], pose, {dur: .85, done: () => { S.ex = null; S.busy = false; S.backing = false; document.documentElement.classList.remove('esc-ex', 'esc-exsun'); setMarks(); const af = S.after; S.after = null; if(typeof then === 'function') then(); else if(af) af(); }}); }
   // a sheet: title, body html, and buttons ({label, run, cls}); Back is always last
   function sheet(title, body, acts){ sheetE.innerHTML = `<h3>${title}</h3>${body || ''}<div class="row"></div>`; const row = sheetE.querySelector('.row');
     for(const a of (acts || [])){ const b = el('button', {class: 'escBtn ' + (a.cls || 'dark'), type: 'button'}, a.label); b.onclick = () => { if(S.busy || rig.move) return; SND.unlock(); a.run(); }; row.appendChild(b); }
@@ -844,7 +844,7 @@
   function sheetLock(sp){ const K = LG.locks[sp.lock], n = K.answer.length, r = sp.sheet ? sp.sheet() : {};
     padCur = padCur.length > n ? '' : padCur; padLock = false;
     const disp = sp.arc ? `<div class="escArc">${arcSVG(330, 138, true)}<div class="escDisp" id="escDisp" aria-live="polite"></div></div>` : `<div class="escDisp" id="escDisp" aria-live="polite"></div>`;
-    sheet(r.title || 'The lock', (r.body || '') + disp + (sp.arc ? `<div style="display:flex;justify-content:center;margin:4px 0 0"><button type="button" class="escBtn" id="escDel" style="min-height:42px;padding:0 16px" aria-label="Delete the last digit">⌫ Delete</button></div>` : '') + `<p class="escPause" id="escPause"></p><div class="escPad" id="escPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button type="button" data-n="${k}">${k}</button>`).join('')}<button type="button" class="z" data-n="0">0</button><button type="button" class="c" data-n="c" aria-label="Delete the last digit">⌫</button></div>`, r.acts);
+    sheet(r.title || 'The lock', (r.body || '') + disp + (sp.arc ? `<div class="escDelW"><button type="button" class="escBtn" id="escDel" style="min-height:42px;padding:0 16px" aria-label="Delete the last digit">⌫ Delete</button></div>` : '') + `<p class="escPause" id="escPause"></p><div class="escPad" id="escPad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button type="button" data-n="${k}">${k}</button>`).join('')}<button type="button" class="z" data-n="0">0</button><button type="button" class="c" data-n="c" aria-label="Delete the last digit">⌫</button></div>`, r.acts);
     padDraw(); $$('.escPad button', sheetE).forEach(b => b.onclick = () => padPress(b.dataset.n)); if($('#escDel')) $('#escDel').onclick = () => padPress('c'); pauseTick(); }
   function padDraw(cls){ const d = $('#escDisp'); if(!d) return; const sp = SPOTS[S.ex && S.ex.id]; if(!sp || !sp.lock) return; const n = LG.locks[sp.lock].answer.length;
     d.className = 'escDisp ' + (cls || '');

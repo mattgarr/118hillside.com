@@ -107,9 +107,9 @@
         kShade:       {needs: ['metAdmiral'], gives: ['kitchenDown']},
         shadow:       {needs: ['kitchenDown'], gives: ['p_admiral'], sun: [16.25, 17.75]},
         meetPepper:   {needs: [], gives: ['metPepper']},
-        desk:         {needs: ['metPepper'], gives: ['p_pepper'], sun: [13.75, 15]},
+        desk:         {needs: ['metPepper'], gives: ['p_pepper'], sun: [14, 14.8]},
         sunsetNote:   {needs: [], gives: ['sunsetNote']},
-        sunsetFloor:  {needs: ['sunsetNote'], gives: ['p_sunset'], sun: [19.5, 20.25]},
+        sunsetFloor:  {needs: ['sunsetNote'], gives: ['p_sunset'], sun: [19.6, 19.9]},
         seeGlass:     {needs: [], gives: ['sawGlass']},
         readMirror:   {needs: ['sawGlass'], gives: ['mirror']},
         cushion:      {needs: ['mirror'], gives: ['sheetUp']},
@@ -122,9 +122,9 @@
         openBox:      {needs: ['p_biscuit', 'p_pepper', 'p_admiral', 'p_sunset', 'p_arc'], gives: ['opened'], lock: 'box'}},
       parts: {
         p_biscuit: {clue: 'metBiscuit', value: '7', read: [8.5, 10.25], said: 'first thing in the morning'},
-        p_pepper:  {clue: 'metPepper', value: '5', read: [13.75, 15], said: 'early afternoon'},
+        p_pepper:  {clue: 'metPepper', value: '5', read: [14, 14.8], said: 'early afternoon'},
         p_admiral: {clue: 'metAdmiral', value: '3', read: [16.25, 17.75], said: 'late afternoon'},
-        p_sunset:  {clue: 'sunsetNote', value: '8', read: [19.5, 20.25], said: 'sunset'},
+        p_sunset:  {clue: 'sunsetNote', value: '8', read: [19.6, 19.9], said: 'sunset'},
         p_arc:     {clue: 'sawBox', value: 'the order of the day'}},
       locks: {box: {answer: '7538', parts: ['p_biscuit', 'p_pepper', 'p_admiral', 'p_sunset'], order: 'p_arc', byTime: true, pause: 3}},
       goals: [
