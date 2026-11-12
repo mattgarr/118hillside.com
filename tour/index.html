@@ -6854,6 +6854,9 @@ function navQA(){
     const seq = o.lightMoves ? o.lightMoves.map(p => p.map(v => typeof v === 'string' ? ix(v) : v)) : STOPS.map((s, i) => [i, i + 1]).filter(p => p[1] < STOPS.length).concat(STOPS.map((s, i) => [STOPS.length - 1 - i, STOPS.length - 2 - i]).filter(p => p[1] >= 0));
     const settle = async n => { for(let i = 0; i < n; i++){ vt += dt * 1000; tick0(true); if(i % 3 === 2) await pause(); } };   // the pauses let the meter's GPU readback land, as it does between real frames
     performance.now = () => vt; R37S.qaNoDraw = false;
+    // the quality governor is held at its level for the run: its still-camera 'sharp' frame (a different render level, on slow GPUs) is
+    // not lighting, and switching back when a move starts would read as a step
+    const GV = window.__gov && __gov.G, gfix = GV ? GV.fix : null; if(GV && o.lightGov !== true) GV.fix = GV.lvl;
     try{
       for(const [a, b] of seq){ await pause(); const id = STOPS[a].id + '>' + STOPS[b].id; tour(a); await settle(o.lightSettle || 90);
         /* the reference view: after each frame the start view is drawn again with the frame's lighting (uniforms, environments, exposure,
@@ -6879,7 +6882,7 @@ function navQA(){
         for(const f of [f1, f2]){ tour(ix(f)); await settle(90); showStop(ix(v)); for(let i = 0; i < 1500 && anim; i++) await settle(1); await settle(Math.round(8 / dt)); es.push(renderer.toneMappingExposure); }
         const d = Math.abs(es[0] / es[1] - 1); R.note('light', 'same ' + v, 'exposure ' + es.map(x => x.toFixed(4)).join(' from ' + f1 + ' / ') + ' from ' + f2 + ' (' + (d * 100).toFixed(2) + ' %)');
         if(d > .02) R.fail('light', 'same ' + v, 'settles to a different exposure from ' + f1 + ' (' + es[0].toFixed(4) + ') and ' + f2 + ' (' + es[1].toFixed(4) + ')'); } }
-    finally{ performance.now = realNow; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
+    finally{ performance.now = realNow; if(GV) GV.fix = gfix; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
     window.__LIGHT = rows; tour(0); };
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
