@@ -1582,20 +1582,28 @@ html.hwload .loading .loadnote{color:#c9bcd8}
     for(n = 0, moved = true; moved && n++ < 8;){ moved = false; for(i = 0; i < O.length; i++){ q = O[i]; if(q.width >= W * .5 && q.top <= yT + 8 && q.bottom > yT - 8){ yT = q.bottom + 8; moved = true; } } }
     var rows = [{y: yB, top: false}, {y: yT, top: true}], mid = ph ? W / 2 : -1; if(ph) rows.reverse();
     function put(x, y, top){ b.style.setProperty('--v33l', Math.round(x) + 'px'); b.style.setProperty('--v33t', Math.round(y) + 'px'); b.classList.add('v33js'); b.classList.toggle('v33top', top); return true; }
-    var G2, g, gw, y2, h2;
-    for(i = 0; i < rows.length; i++){ q = rows[i]; if(q.top && q.y + h > H * .3) continue;   // a top row pushed far down by stacked strips is not the top any more
+    var G2, g, gw, y2, h2, F = document.getElementById('fin36'), S = F && F.querySelector('.fv33'), tucked = false;
+    function row(q){ if(q.top && q.y + h > H * .3) return false;   // a top row pushed far down by stacked strips is not the top any more
       x = pick(gaps(q.y, q.y + h, L, R, O), w, mid); if(x !== null) return put(x, q.y, q.top);
       /* r41: no room for the one line beside what is on that edge (a small computer: the stop card and the floor-plan button leave a gap
          narrower than the sentence): the same words on two lines in the widest gap of that edge row, still on the edge */
       G2 = gaps(q.top ? q.y : q.y - h * .7, q.top ? q.y + h * 1.7 : q.y + h, L, R, O); g = null;
       for(n = 0; n < G2.length; n++) if(!g || G2[n][1] - G2[n][0] > g[1] - g[0]) g = G2[n];
-      if(!g || (gw = Math.min(Math.floor(g[1] - g[0]), Math.ceil(w * .5 + 60))) < 200) continue;
+      if(!g || (gw = Math.min(Math.floor(g[1] - g[0]), Math.ceil(w * .5 + 60))) < 200) return false;
       b.style.setProperty('--v33w', gw + 'px'); b.classList.add('v33wrap'); h2 = b.getBoundingClientRect().height;
-      y2 = q.top ? q.y : q.y + h - h2; if(q.top && y2 + h2 > H * .3){ b.classList.remove('v33wrap'); continue; }
-      x = pick(gaps(y2, y2 + h2, L, R, O), gw, mid); if(x !== null) return put(x, y2, q.top); b.classList.remove('v33wrap'); }
-    // the bottom is all panel (a phone's open sheet) and a tall strip sits under the header (a phone's concept banner): right under that strip, still with the top edge's panels, never over the sheet
-    x = pick(gaps(yT, yT + h, L, R, O), w, mid); if(x !== null && yT + h < H * .5) return put(x, yT, true);
-    return false; }   // nowhere clear: the usual corner
+      y2 = q.top ? q.y : q.y + h - h2; if(q.top && y2 + h2 > H * .3){ b.classList.remove('v33wrap'); return false; }
+      x = pick(gaps(y2, y2 + h2, L, R, O), gw, mid); if(x !== null) return put(x, y2, q.top); b.classList.remove('v33wrap'); return false; }
+    /* r41: the closing card sits down on that edge and leaves no room beside it: the notice tucks into the card's footer, under its links
+       (the card makes room for it), rather than leaving for the other edge */
+    function tuck(){ if(!S || F.hidden || !F.classList.contains('on') || F.getBoundingClientRect().bottom < H * .7) return false;
+      F.classList.add('v33in'); var sr = S.getBoundingClientRect(), sw = Math.floor(sr.width), hh = h; if(sw < 200) return false;
+      if(w > sw){ b.style.setProperty('--v33w', Math.min(sw, Math.max(200, Math.ceil(w * .5 + 60))) + 'px'); b.classList.add('v33wrap'); hh = b.getBoundingClientRect().height; }
+      F.style.setProperty('--v33in', Math.ceil(hh) + 'px'); sr = S.getBoundingClientRect(); tucked = true; return put(sr.left, sr.top, false); }
+    function go(){ if(row(rows[0]) || tuck() || row(rows[1])) return true;
+      // the bottom is all panel (a phone's open sheet) and a tall strip sits under the header (a phone's concept banner): right under that strip, still with the top edge's panels, never over the sheet
+      x = pick(gaps(yT, yT + h, L, R, O), w, mid); if(x !== null && yT + h < H * .5) return put(x, yT, true);
+      return false; }   // nowhere clear: the usual corner
+    var ok = go(); if(F && !tucked) F.classList.remove('v33in'); return ok; }
   var covers = [];   // things found lying over the pill (a game's bottom sheet): it steps out from under them too
   function over(){ if(getComputedStyle(b).pointerEvents === 'none') return null; var r = b.getBoundingClientRect(), t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return (!t || t === b || b.contains(t)) ? null : t; }
   function key(O){ var s = innerWidth + 'x' + innerHeight, i; for(i = 0; i < O.length; i++) s += '|' + Math.round(O[i].left) + ',' + Math.round(O[i].top) + ',' + Math.round(O[i].right) + ',' + Math.round(O[i].bottom); return s; }
@@ -21989,6 +21997,7 @@ const SELL36 = window.SELL36 = (() => {
     '.fin36 .fn{margin:0;font-size:14px;text-align:center;color:rgba(251,250,247,.86);font-variant-numeric:lining-nums;-webkit-user-select:text;user-select:text}' +
     '.fin36 .fl{display:flex;flex-wrap:wrap;gap:2px 24px;margin-top:16px;padding-top:8px;border-top:1px solid rgba(255,255,255,.16);font-size:14.5px}' +
     '.fin36 .fl :is(a,button){display:inline-flex;align-items:center;box-sizing:border-box;min-height:36px;padding:6px 0;border:0;background:none;color:rgba(251,250,247,.88);font:400 14.5px/1.3 ' + JOST + ';text-decoration:underline;text-decoration-color:rgba(232,211,176,.6);text-underline-offset:4px;cursor:pointer}.fin36 .fl :is(a,button):hover{color:#fff;text-decoration-color:#e8d3b0}' +
+    '.fin36 .fv33{display:none}.fin36.v33in .fv33{display:block;height:var(--v33in,22px);margin-top:10px}' +
     '.fin36 .fx{position:absolute;top:6px;right:8px;width:40px;height:40px;border:0;border-radius:50%;background:none;color:rgba(251,250,247,.75);font:400 25px/1 ' + JOST + ';cursor:pointer}.fin36 .fx:hover{background:rgba(255,255,255,.12);color:#fff}' +
     '.fin36 :is(a,button):focus-visible{outline:2px solid #e8d3b0!important;outline-offset:2px}' +
     '.fin36 .fing>div>*,.fin36 .fl{opacity:0;transform:translateY(8px);transition:opacity .7s ease,transform .7s ease}.fin36.on .fing>div>*,.fin36.on .fl{opacity:1;transform:none}' +
@@ -22061,7 +22070,7 @@ const SELL36 = window.SELL36 = (() => {
     '<div><h2>' + F.addr + '</h2><p class="ft">' + F.town + '</p><p class="fp">' + F.price + '</p><p class="ff">' + F.facts + '</p></div>' +
     '<div class="fa"><button type="button" class="fb go" data-a="book">' + CAL + 'Schedule a showing</button><div class="fb2"><a class="fb" href="' + F.tel + '">Call Michael</a><a class="fb" href="' + F.sms + '">Text Michael</a></div>' +
     '<p class="fn">' + F.agent + ', Compass · ' + F.telTxt + '</p></div></div>' +
-    '<div class="fl"><button type="button" data-a="again">Start the tour again</button><button type="button" data-a="photos">See the photos</button><a href="' + up('games/') + '">Play the games</a></div>';
+    '<div class="fl"><button type="button" data-a="again">Start the tour again</button><button type="button" data-a="photos">See the photos</button><a href="' + up('games/') + '">Play the games</a></div><div class="fv33" aria-hidden="true"></div>';   // r41: room for the 'Illustrative model' notice when it tucks into the card's footer
   card.before(fin);
   let finT = 0, finClosed = false, finWait = 0, finSeen = false;
   const atEnd = () => mode === 'tour' && stopIdx === STOPS.length - 1 && gal.hidden && !inGame();
