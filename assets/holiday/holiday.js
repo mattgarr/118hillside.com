@@ -380,6 +380,8 @@
     for(const [ctx, enter] of CTX){
       if(!(await go('none'))) return {ok: false, why: 'could not take the decorations down'};
       try{ enter(); }catch(e){ console.warn('[holiday] qa ' + ctx, e); } await wait(900);
+      { const keys = () => Object.keys(S()).filter(k => /^(mat|light):/.test(k)).sort().join(); let k0 = keys(), same = 0;   // the house settles first: late planting (the hero oaks) adds materials
+        for(let i = 0; i < 40 && same < 3; i++){ await sleep(1000); const k1 = keys(); same = k1 === k0 ? same + 1 : 0; k0 = k1; } }
       ref = {none: await take()}; res.refs[ctx] = {};
       for(const k of kinds){ const up = await go(k); ref[k] = await take(); res.refs[ctx][k] = {up, objects: ref[k].s.objects, dressObjects: ref[k].s.dressObjects, volatile: ref[k].vol.size};
         await go('none'); row(ctx, k, 'none', cmp(S(), ref.none)); }

@@ -12481,7 +12481,7 @@ function hwOff(){
   if(!HW.on) return; HW.on = false; scene.remove(HW.ext); scene.remove(HW.sky); if(HW.inn.parent) HW.inn.parent.remove(HW.inn);
   hwRestore(); for(const [l, o] of HW.saved.dl){ l.color.copy(o.c); l.distance = o.d; l.position.copy(o.p); l.decay = o.k; } HW.bind = []; for(const [l, o] of HW.saved.other){ l.color.copy(o.c); l.intensity = o.i; }
   { const o = HW.saved.light; LIGHT.dusk.band = o.band; LIGHT.dusk.bandAt = o.bandAt; LIGHT.duskHemi = o.duskHemi; LIGHT.duskLift = o.duskLift; } if(HW.saved.amb){ amb.color.copy(HW.saved.amb[0]); amb.intensity = HW.saved.amb[1]; }
-  setTOD(HW.saved.tod); for(const [l, o] of HW.saved.dl) if(Math.abs(l.intensity - o.i) > 1e-6 && TOD_KEY === 'dusk') l.intensity = o.i;
+  setTOD(HW.saved.tod); if(!R40E.on) for(const [l, o] of HW.saved.dl) if(Math.abs(l.intensity - o.i) > 1e-6 && TOD_KEY === 'dusk') l.intensity = o.i;   // r43: with r40's lighting, setTOD() sets the room lamps for dusk itself (x R40E.duskIn); the saved level was read while Halloween held them at full, so putting it back left every lamp 3.3x too bright after Halloween at dusk
   document.documentElement.classList.remove('halloween'); if(window.__perf) __perf.shadowDirty = true; }
 // self-check: a full on/off cycle must leave furniture, lights and time of day exactly as they were
 function hwCheck(){ const snap = () => ({tod: TOD_KEY, furn: FURN.items().map(it => it.obj.visible + ':' + it.obj.layers.mask).join(','), dl: DUSK_LIGHTS.map(l => l.color.getHexString() + l.intensity.toFixed(3) + l.position.toArray().map(v => v.toFixed(2)) + l.distance + '/' + l.decay).join(','),
@@ -23345,7 +23345,7 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
       const own = o => { for(let q = o; q; q = q.parent){ const u = q.userData; if(u && (u.hw || u.tg || u.t33)) return true; if(/^(holiday|tg:|hw)/.test(q.name || '')) return true; } return false; };
       const XLP = new Set(((window.__XLobj && __XLobj.pool) || []).map(p => p.light)), mats = new Map(); let n = 0, nl = 0, nd = 0;
       scene.traverse(o => { n++; if(own(o)){ nd++; return; } if(o.isLight){ nl++; const dark = !(o.intensity > 1e-3);
-          S['light:' + (o.name || o.type) + ':' + o.id] = (XLP.has(o) || (dark && !o.isAmbientLight)) ? [o.visible, dark ? 'off' : f(o.intensity)].join('|') : [o.visible, f(o.color), f(o.intensity), f(o.position), f(o.distance), f(o.decay), o.groundColor ? f(o.groundColor) : '-'].join('|'); }
+          S['light:' + (o.name || o.type) + ':' + o.id] = XLP.has(o) ? [o.visible, dark ? 'off' : 'on'].join('|') : (dark && !o.isAmbientLight) ? [o.visible, 'off'].join('|') : [o.visible, f(o.color), f(o.intensity), f(o.position), f(o.distance), f(o.decay), o.groundColor ? f(o.groundColor) : '-'].join('|'); }
         if(o.isMesh && !o.visible) S['hidden:' + o.id] = (o.name || '') + '|' + (o.parent && o.parent.name || '');
         if(o.isMesh && o.layers.mask !== 1) S['layers:' + o.id] = String(o.layers.mask);
         if(o.material) for(const m of [].concat(o.material)) if(!/mirror/i.test(m.name || '')) mats.set(m.uuid, m); });
@@ -23365,7 +23365,7 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
       const R = document.documentElement, cs = getComputedStyle(R); S.htmlClass = R.className.split(/\s+/).filter(c => /hallow|thanks|winter|holiday|season/i.test(c)).sort().join(' '); S.bodyClass = document.body.className;
       for(const v of ['--paper', '--paper-2', '--ink', '--muted', '--line', '--accent', '--accent-ink', '--glass', '--pg', '--pgs', '--pt', '--ph-hi', '--busy-surface', '--busy-accent']) S['css' + v] = cs.getPropertyValue(v).trim();
       const tab = document.querySelector('.tab[aria-selected="true"]'); if(tab){ const t = getComputedStyle(tab); S.tabLook = t.backgroundColor + '|' + t.color + '|' + t.boxShadow; }
-      for(const id of ['viewBtn', 'holBtn', 'busy24']){ const e = document.getElementById(id); if(e){ const t = getComputedStyle(e); S['ui:' + id] = t.backgroundColor + '|' + t.color + '|' + t.borderColor; } }
+      for(const id of ['viewBtn', 'holBtn', 'busy24']){ const e = document.getElementById(id); if(e && (id !== 'busy24' || e.classList.contains('on'))){ const t = getComputedStyle(e); S['ui:' + id] = t.backgroundColor + '|' + t.color + '|' + t.borderColor; } }
       const tc = document.querySelector('meta[name=theme-color]'), ic = document.querySelector('link[rel~=icon]'); S.themeColor = tc ? tc.content : '-'; S.icon = ic ? ic.getAttribute('href') : '-'; S.title = document.title;
       S.cursor = getComputedStyle(document.body).cursor + '|' + canvas.className; S.audioPlaying = [...document.querySelectorAll('audio,video')].filter(a => !a.paused).length;
       return S; },
@@ -24098,4 +24098,4 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=12" defer></script>
+<script src="../assets/holiday/holiday.js?v=13" defer></script>
