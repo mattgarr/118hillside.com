@@ -287,11 +287,12 @@ def option_data(meta, elements, bounds):
     wk = [w for w in D['walkable'] if w['id'] not in ('SL-DK-FRONT',) and w.get('element') != 'ST-FRONT' and w['id'] != 'FL-SP-L1-OPEN4']
     wk.append({'id': 'FL-SP-L1-OPEN4K', 'element': 'FL-SP-L1-OPEN4K', 'kind': 'FLOOR', 'space': GREAT, 'storey': 'L1', 'poly': [list(p) for p in ROOM], 'holes': [], 'z': 0, 'exterior': False})
     wk.append({'id': 'TH-D-L1-K4F', 'element': 'D-L1-K4F', 'kind': 'THRESHOLD', 'opening': 'D-L1-K4F', 'storey': 'L1', 'poly': [[NANA['x0'], Y_SO], [NANA['x1'], Y_SO], [NANA['x1'], Y_S], [NANA['x0'], Y_S]], 'z': 0, 'exterior': False})
-    wk.append({'id': 'SL-DK-FRONT', 'element': 'SL-DK-FRONT', 'kind': 'DECK', 'poly': [[2.85, -10.087], [DECK['x0'], -10.087], [DECK['x0'], DECK['y0']], [DECK['x1'], DECK['y0']], [DECK['x1'], Y_SO], [2.85, Y_SO]], 'z': 0, 'storey': 'L1', 'exterior': True})
+    wk.append({'id': 'SL-DK-K4', 'element': 'SL-DK-K4', 'kind': 'DECK',   # a new id: the page keys walkable floors by id, so a reused id keeps only the as-built deck
+                'poly': [[2.85, -10.087], [DECK['x0'], -10.087], [DECK['x0'], DECK['y0']], [DECK['x1'], DECK['y0']], [DECK['x1'], Y_SO], [2.85, Y_SO]], 'z': 0, 'storey': 'L1', 'exterior': True})
     s0, s1 = STAIR_Y; sy = lambda y: s0 + (y - s0) * (DECK['y0'] - s0) / (s1 - s0)
     for w in meta['walkable']:
         if w.get('element') == 'ST-FRONT':
-            w = json.loads(json.dumps(w)); w['poly'] = [[p[0], round(sy(p[1]), 4)] for p in w['poly']]; wk.append(w)
+            w = json.loads(json.dumps(w)); w['poly'] = [[p[0], round(sy(p[1]), 4)] for p in w['poly']]; w['id'] = w['id'] + '-K4'; w['element'] = 'ST-FRONT-K4'; wk.append(w)
     D['walkable'] = wk
     # colliders: the south wall split around the opening (the page adds the panels' own); the porch rail moves; new rails
     # (the page keys colliders by element: a changed collider must carry a new element id, or the as-built one keeps colliding)
