@@ -1888,7 +1888,7 @@ const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: r
    spaces (R40M: per 6-in cell up to two height intervals of interior air), sampled 9 in off the surface along its normal so a wall's
    room face reads the room and its outer face the sky. Glass reflects the side the camera is on. Installed here, before any material
    is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
-const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .4, duskIn: .4,
+const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .2, duskIn: .25,
   U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
@@ -10367,7 +10367,7 @@ function lightMeterMul(dt){
       const dIn = DUSK && inD, T = DUSK ? (dIn ? Mt.tduskIn : Mt.tdusk) : (inD ? Mt.tin : Mt.tout), k = dIn ? Mt.kDusk : Mt.k;
       if(!(T > 0)) return 1;
       const mBase = Math.max(.02, METER.m) * Math.pow(LIGHT_BASE_EXPO / Math.max(.05, METER.e || LIGHT_BASE_EXPO), Mt.gamma);
-      const w = Math.pow(T / mBase, k / Mt.gamma) * Math.pow(2, -Mt.protect * (METER.hi || 0)), lo = Math.pow(2, -(dIn ? Mt.duskStops : Mt.maxStops)), hi = Math.pow(2, dIn ? .3 : Mt.maxStops); return Math.min(hi, Math.max(lo, w)); }
+      const w = Math.pow(T / mBase, k / Mt.gamma) * Math.pow(2, -Mt.protect * (METER.hi || 0)), lo = Math.pow(2, -(dIn ? Mt.duskStops : Mt.maxStops)), hi = Math.pow(2, dIn ? (R40E.on ? .8 : .3) : Mt.maxStops); return Math.min(hi, Math.max(lo, w)); }   // r40: the dusk rooms are lit at the dusk exposure now (R40E.duskIn), so the meter may lift them as far as it used to pull them down
     if(!METER.ok && inD) return DUSK ? Mt.noMeterDuskIn : Mt.noMeterIn;   // phone path: the darker per-room IBL gets the desktop meter's mean indoor gain
     return 1; };
   const wOut = kIn < 1 ? ans(false) : 1, wIn = kIn > 0 ? ans(true) : 1, want = Math.pow(wOut, 1 - kIn) * Math.pow(wIn, kIn);
