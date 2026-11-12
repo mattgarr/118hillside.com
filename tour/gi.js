@@ -20,7 +20,7 @@ const V3 = THREE.Vector3;
 const qp = (k, d) => { const m = new RegExp('[?&]' + k + '=([^&]*)').exec(Q); return m ? decodeURIComponent(m[1]) : d; };
 const GI = window.GI = {mode: MODE, ver: 2, on: false, ready: false, why: 'loading', H: null, n: 0, composes: 0, k: 0, t: 0, ssaoK: 0,
   // tuning (also from the URL: &gigain=, &gispec=, &giao=, &gissao=keep)
-  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), wbLight: +qp('giwbl', .5), wbLampIn: +qp('giwblamp', .75), wbLampOut: .15, meterT: 1.5, meterK: +qp('gimk', .85), meterR: 28, meterStops: 1.5, comp: 1, spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
+  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), wbLight: +qp('giwbl', .5), wbLampIn: +qp('giwblamp', .75), wbLampOut: .15, meterT: 1.5, meterK: +qp('gimk', .85), meterR: 28, meterStops: 1.5, meterSlew: .25, comp: 1, spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
   base: qp('gibase', 'gi/'),
   U: {giOn: {value: 0}, giK: {value: 0}, giGain: {value: new V3(1, 1, 1)}, giHemi: {value: 1}, giSpec: {value: .7}, giAOK: {value: 1},
     giT0: {value: null}, giT1: {value: null}, giAO: {value: null}, giRoom: {value: null},
@@ -115,6 +115,8 @@ function buildRoomMask(){ const B = GI.H.BIM2S; if(!B || !B.spaces) return false
   const o = new Uint8Array(NX * NZ * 4); for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const v = Math.round(255 * f[j * NX + i]); o.set([v, v, v, 255], (j * NX + i) * 4); }
   const t = new THREE.DataTexture(o, NX, NZ, THREE.RGBAFormat); t.magFilter = t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true;
   GI.U.giRoom.value = t; GI.U.giRB.value.set(x0, z0, 1 / (NX * c), 1 / (NZ * c)); GI.mask = {x0, z0, c, NX, NZ, a: e, f}; return true; }
+GI.maskAt = (x, z) => { const M = GI.mask; if(!M) return 0; const fx = (x - M.x0) / M.c - .5, fz = (z - M.z0) / M.c - .5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j, v = (a, b) => a < 0 || b < 0 || a >= M.NX || b >= M.NZ ? 0 : M.f[b * M.NX + a];
+  return (v(i, j) * (1 - tx) + v(i + 1, j) * tx) * (1 - tz) + (v(i, j + 1) * (1 - tx) + v(i + 1, j + 1) * tx) * tz; };
 GI.roomAt = (x, y, z) => { const M = GI.mask; if(!M || y < GI.U.giRY.value.x || y > GI.U.giRY.value.y) return 0; const i = Math.floor((x - M.x0) / M.c), j = Math.floor((z - M.z0) / M.c); return i < 0 || j < 0 || i >= M.NX || j >= M.NZ ? 0 : M.a[j * M.NX + i]; };
 
 /* ---------------- data ---------------- */
@@ -250,7 +252,7 @@ GI.srcN = 0;
    bay looking at a dim room) against the level GI.meterT = 1.5, followed GI.meterK = 85 % of the way (so golden hour stays a little
    brighter than noon, dusk darker), within GI.meterStops, eased in stops over about a second. Outside the rooms it returns to 1. One rule for every room and time. */
 const _fw = new V3();
-function meter(dt){ const H = GI.H, p = H.camera.position, inR = GI.on ? GI.roomAt(p.x, p.y, p.z) : 0; let want = 0;
+function meter(dt){ const H = GI.H, p = H.camera.position, inR = GI.on ? GI.maskAt(p.x, p.z) : 0; let want = 0;
   if(inR > 0 && GI.acc && GI.meanIdx){ const fw = H.camera.getWorldDirection(_fw), key = GI.composes + ':' + Math.round(p.x) + ':' + Math.round(p.z) + ':' + Math.round(Math.atan2(fw.z, fw.x) * 8);
     if(key !== GI._mKey){ GI._mKey = key; const g = GI.index.grid, A = GI.acc, gn = GI.gainNow, R2 = GI.meterR * GI.meterR, fl = Math.hypot(fw.x, fw.z) || 1, fx = fw.x / fl, fz = fw.z / fl; let E = 0, n = 0;
       for(const q of GI.meanIdx){ const dx = g.x0 + (q % g.nx) * g.d - p.x, dz = g.z0 + (Math.floor(q / g.nx) % g.nz) * g.d - p.z, d2 = dx * dx + dz * dz; if(d2 > R2) continue;
@@ -258,7 +260,10 @@ function meter(dt){ const H = GI.H, p = H.camera.position, inR = GI.on ? GI.room
         E += w * (.2126 * Math.max(0, A[o]) * gn[0] + .7152 * Math.max(0, A[o + 1]) * gn[1] + .0722 * Math.max(0, A[o + 2]) * gn[2]); n += w; }
       GI.Ecam = n > 4 ? E / n : 0; }
     if(GI.Ecam > 1e-6) want = Math.max(-GI.meterStops, Math.min(GI.meterStops, GI.meterK * Math.log2(GI.meterT / GI.Ecam))); }
-  GI.compS = GI.snapM || GI.compS == null ? want : GI.compS + (want - GI.compS) * (1 - Math.exp(-dt / .5)); GI.snapM = false; GI.comp = Math.pow(2, GI.compS); }
+  // it fades with the region's own edge weight where the camera stands, and moves like the page's meter: eased (tau 0.45 s) and never
+  // faster than GI.meterSlew stops a second (the first version jumped when the camera left the rooms: 2.7 / 255 in one frame on great > mainbeds)
+  want *= GI.maskAt(p.x, p.z);
+  GI.compS = GI.snapM || GI.compS == null ? want : GI.compS + Math.max(-GI.meterSlew * dt, Math.min(GI.meterSlew * dt, (want - GI.compS) * (1 - Math.exp(-dt / .45)))); GI.snapM = false; GI.comp = Math.pow(2, GI.compS); }
 /* r13 corner bands: their multiply decals double up with baked corners; inside the rooms their vertices are lifted to white (kept, restored when GI is off) */
 // is this band vertex on a surface of one of the rooms? The room's own space must lie 0.3 ft to one side of it (the far face of a shared
 // wall has the wall's thickness there, and stays as the page drew it: the first version lifted the hall's bands behind the kitchen)
