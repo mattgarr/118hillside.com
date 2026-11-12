@@ -5914,8 +5914,12 @@ const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last
     if(pb && Math.hypot(pb[0] - p0[0], pb[1] - p0[1]) < 1e-7){ ep = -e; pb = proj(th, ph - e); }   // at the tilt limit: measure the other way
     if(!pa || !pb) return null; return {p0, xt: (pa[0] - p0[0]) / e, yt: (pa[1] - p0[1]) / e, xp: (pb[0] - p0[0]) / ep, yp: (pb[1] - p0[1]) / ep}; },
   begin(G, proj, th, ph, h, lookOk){ const st = {G, lx: -1, ly: -1, wx: true, wy: true, lk: !!lookOk}, J = this.jac(proj, th, ph);   // -1: the ordinary (foreground) way
-    const L = lookOk ? .5 * h * (camera.zoom || 1) / (2 * Math.tan(camera.fov * Math.PI / 360)) : .12 * h;   // r41b: with a turn in place to fall back on, the orbit must have half its leverage (px per radian)
-    if(J){ if(Math.abs(J.xt) > L){ st.lx = Math.sign(J.xt); st.wx = false; } if(Math.abs(J.yp) > L && !lookOk){ st.ly = Math.sign(J.yp); st.wy = false; } }   // r41b: at an eye-level orbit stop a vertical drag always tilts in place
+    const L = lookOk ? .5 * h * (camera.zoom || 1) / (2 * Math.tan(camera.fov * Math.PI / 360)) : .06 * h, E = .01 * h;   // r41b: with a turn in place to fall back on, the orbit must have half its leverage (px per radian)
+    /* r41b: a point with little leverage (near the pivot's depth: in the Dollhouse that is the middle of the house, the commonest grab) turns at
+       the ordinary gain, but the way its own leverage says, so it always moves with the pointer, if slower; r41 turned it the foreground way,
+       which sent a point just in front of the pivot the wrong way (a real drag in Design: 300 px off) */
+    if(J){ if(Math.abs(J.xt) > L){ st.lx = Math.sign(J.xt); st.wx = false; } else if(Math.abs(J.xt) > E) st.lx = Math.sign(J.xt);
+      if(!lookOk){ if(Math.abs(J.yp) > L){ st.ly = Math.sign(J.yp); st.wy = false; } else if(Math.abs(J.yp) > E) st.ly = Math.sign(J.yp); } }   // r41b: at an eye-level orbit stop a vertical drag always tilts in place
     st.J0 = J; return st; },
   orbitDelta(st, dx, dy, proj, th, ph, h){   // [dth, dph] that move the grabbed point by (dx, dy) px
     /* r41b: a long pointer step (a fast flick, a slow frame, a synthetic drag) is solved in steps of at most 6 px, the leverage measured again
@@ -5945,7 +5949,8 @@ const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last
        that step per move: a turn's small sideways or vertical side effect (a point off the middle of the view rides a curve) settles back
        under the pointer instead of building up, and nothing jumps */
     if(x != null){ try{ const rc = canvas.getBoundingClientRect(), q = st.proj(sph.theta, sph.phi);
-      if(q){ const rx = q[0] + rc.left - (x - dx), ry = q[1] + rc.top - (y - dy), A = 2 + .5 * Math.hypot(dx, dy); dx -= clamp(rx, -A, A); dy -= clamp(ry, -A, A); } }catch(e){} }
+      if(q){ const rx = q[0] + rc.left - (x - dx), ry = q[1] + rc.top - (y - dy), A = 2 + .5 * Math.hypot(dx, dy);
+        if(Math.hypot(rx, ry) < 40){ dx -= clamp(rx, -A, A); dy -= clamp(ry, -A, A); } } }catch(e){} }   // further off (held at a tilt limit, a slow point near the pivot): plain steps, so turning back responds at once
     if(!st.lk || x == null || (!st.wx && !st.wy)){ const d = this.orbitDelta(st, dx, dy, st.proj, sph.theta, sph.phi, h); sph.theta += d[0]; sph.phi += d[1]; return; }
     // r41b: orbit the axis that has the leverage (if either), then turn in place along the other
     if(!st.wx || !st.wy){ const d = this.orbitDelta(st, st.wx ? 0 : dx, st.wy ? 0 : dy, st.proj, sph.theta, sph.phi, h); sph.theta += d[0]; sph.phi += d[1]; }
@@ -5955,7 +5960,7 @@ const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last
     let fx = x - dx, fy = y - dy;
     try{ camera.updateMatrixWorld(); const rc = canvas.getBoundingClientRect(), v = st.G.clone().applyMatrix4(camera.matrixWorldInverse);
       if(v.z < -.05){ v.applyMatrix4(camera.projectionMatrix); const sx = rc.left + (v.x + 1) / 2 * rc.width, sy = rc.top + (1 - v.y) / 2 * rc.height;
-        const A = 2 + .5 * Math.hypot(dx, dy); if(st.wx) fx += clamp(sx - fx, -A, A); if(st.wy) fy += clamp(sy - fy, -A, A); } }catch(e){}
+        const A = 2 + .5 * Math.hypot(dx, dy); if(Math.hypot(sx - fx, sy - fy) < 40){ if(st.wx) fx += clamp(sx - fx, -A, A); if(st.wy) fy += clamp(sy - fy, -A, A); } } }catch(e){}
     const g = this.lookDelta(x, y, st.wx ? x - fx : 0, st.wy ? y - fy : 0); if(!g) return; this.rep.inplace = (this.rep.inplace || 0) + 1;
     const dv = target.clone().sub(camera.position), r = Math.max(.5, dv.length()), p0 = Math.asin(clamp(dv.y / r, -1, 1));
     const ya = Math.atan2(-dv.x, -dv.z) + g[0], pi = clamp(p0 + g[1], Math.min(PITCH_DN, p0), Math.max(.8, p0));   // -80 to +46 deg (applyOrbit's limit for these stops), never further past a limit
@@ -6824,7 +6829,8 @@ function navQA(){
      the ground (a further drag no longer moves the point) must not move it the wrong way, and is noted, not failed. Also: nothing moves at
      pointer-down, and a long vertical drag stays inside the tilt limits. Views: Tour at the street, backyard (its target is far across the yard)
      and dusk stops (orbits), the street stop zoomed out (its target 45 ft away: a far pivot), the great room (standing look), Tour mid-move,
-     Walk, Dollhouse; in a game URL the game's own view. */
+     Walk, Dollhouse, Design; in a game URL the game's own view. In an orbit a third point nearest the pivot's depth is dragged too: at the
+     Tour stops it must follow like the others; in the Dollhouse and Design it must at least move the right way (an orbit has little leverage there). */
   SEC.grab = async R => { const H = window.HILLSIDE, rc = canvas.getBoundingClientRect(), W = rc.width, Hh = rc.height, D = Math.round(Math.min(100, .22 * Math.min(W, Hh)));
     const scr = P => { camera.updateMatrixWorld(); const v = P.clone().applyMatrix4(camera.matrixWorldInverse); if(v.z > -.05) return null; v.applyMatrix4(camera.projectionMatrix); return [rc.left + (v.x + 1) / 2 * W, rc.top + (1 - v.y) / 2 * Hh]; };
     const ev = (t, x, y, type, b) => canvas.dispatchEvent(new PointerEvent(t, {pointerId: type === 'touch' ? 41 : 1, pointerType: type, isPrimary: true, clientX: x, clientY: y, button: t === 'pointermove' ? -1 : 0, buttons: b, bubbles: true, cancelable: true, composed: true}));
@@ -6838,12 +6844,13 @@ function navQA(){
     const pose = () => { camera.updateMatrixWorld(); return camera.position.toArray().concat(camera.quaternion.toArray()); };
     const gname = window.FINDCAT ? 'snowball' : window.ESCAPE ? 'escape' : window.DECK3D || /[?&]deck=/.test(location.search) ? 'deck' : /[?&]room=/.test(location.search) ? 'room' : /[?&]feast=/.test(location.search) ? 'feast' : 'game';
     const views = H ? [['game ' + gname, null, false]] : [['tour street', () => tour(ix('street')), true], ['tour yard', () => tour(ix('yard')), true], ['tour dusk', () => tour(ix('dusk')), true], ['tour street zoomed out', () => { tour(ix('street')); sph.r = 45; applyOrbit(); step(1); }, true], ['tour great', () => tour(ix('great')), false],
-      ['tour mid-move', () => { tour(ix('entry')); showStop(ix('great')); mid(.5); }, false], ['walk', () => { tour(ix('great')); setMode('walk'); finish(); step(2); }, false], ['dollhouse', () => { setMode('doll'); finish(); step(2); }, true]];
+      ['tour mid-move', () => { tour(ix('entry')); showStop(ix('great')); mid(.5); }, false], ['walk', () => { tour(ix('great')); setMode('walk'); finish(); step(2); }, false], ['dollhouse', () => { setMode('doll'); finish(); step(2); }, true], ['design', () => { setMode('design'); finish(); step(2); }, true]];
     for(const [id, setup, orbit] of views){ await pause(); if(setup) setup(); step(1); camera.updateMatrixWorld();
       // the candidate points: the nearest and the farthest drawn point over a grid in the middle of the view
       const F = new V3(); camera.getWorldDirection(F); const O = camera.position.clone(), dp = target.clone().sub(O).dot(F), c = [];
       for(const fx of [.3, .42, .5, .58, .7]) for(const fy of [.3, .42, .55, .68]){ const x = rc.left + W * fx, y = rc.top + Hh * fy, P = GRAB.pickAt(x, y); c.push({x, y, d: P.clone().sub(O).dot(F)}); }
       c.sort((a, b) => a.d - b.d); const pts = [['foreground', c[0]], ['background', c[c.length - 1]]];
+      if(orbit && nav === 'orbit'){ const mq = c.slice(1, -1).sort((a, b) => Math.abs(a.d - dp) - Math.abs(b.d - dp))[0]; if(mq) pts.push(['middle', mq]); }   // r41b: the point nearest the pivot's depth (the Dollhouse's commonest grab)
       if(orbit && nav === 'orbit'){ if(!(c[0].d < .9 * dp)) R.note('grab', id, 'no point in front of the pivot (nearest ' + r2(c[0].d) + ' ft, pivot ' + r2(dp) + ' ft)'); if(!(c[c.length - 1].d > 1.1 * dp)) R.note('grab', id, 'no point behind the pivot (farthest ' + r2(c[c.length - 1].d) + ' ft, pivot ' + r2(dp) + ' ft)'); }
       if(setup && id !== 'tour mid-move'){ const a = pose(); ev('pointerdown', rc.left + W * .5, rc.top + Hh * .5, 'mouse', 1); step(2); const b = pose(); ev('pointercancel', rc.left + W * .5, rc.top + Hh * .5, 'mouse', 0); step(1);
         if(a.some((v, i) => Math.abs(v - b[i]) > 1e-4)) R.fail('grab', id + ' press', 'the view moved at pointer-down'); }
@@ -6852,6 +6859,7 @@ function navQA(){
         const m = await drag(q.x, q.y, dx, dy), tag = id + ' ' + which + ' (' + r2(q.d) + ' ft' + (orbit ? ', pivot ' + r2(dp) + ' ft' : '') + ') ' + dir;
         R.row('grab', tag, {k: r2(m.k), along: r2(m.along), D, nav, mode});
         if(m.k >= .7){ if(m.k > 2.2) R.note('grab', tag, 'overshoots: the point moved ' + r2(m.k) + 'x the drag'); continue; }
+        if(which === 'middle' && isDoll() && m.k > .05){ R.note('grab', tag, 'near the pivot: follows at ' + r2(m.k) + 'x (an orbit has little leverage there)'); continue; }   // the Dollhouse's pivot-depth point: the right way, slower
         if(dy && m.s1 && m.along > -3){ const more = await drag(m.s1[0], m.s1[1], dx / 2, dy / 2); if(Math.abs(more.along) < 3){ R.note('grab', tag, 'at the tilt limit: ' + r2(m.k) + 'x, then held'); continue; } }
         R.fail('grab', tag, 'the grabbed point moved ' + r2(m.k) + 'x the drag (' + r2(m.along) + ' of ' + D + ' px' + (m.k < 0 ? ', the wrong way' : '') + ')'); }
       // one finger (touch): the same handlers; in Walk the left part of the view is the walking stick, so the finger goes down on the right
