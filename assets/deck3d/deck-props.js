@@ -85,7 +85,12 @@
     const rc = new THREE.Raycaster();
     const shown = o => { for(let p = o; p; p = p.parent) if(!p.visible) return false; return true; };
     const solid = h => h.object.isMesh && shown(h.object) && !(h.object.parent && /^tree/.test(h.object.parent.name)) && !/leaf|^find-|^esc-/.test(h.object.name) && !(h.object.material && h.object.material.transparent && h.object.material.opacity < .5);
-    function down(x, z, y0, far){ rc.set(new V3(x, y0 == null ? 30 : y0, z), new V3(0, -1, 0)); rc.far = far || 60; let hs = []; try{ hs = rc.intersectObjects(H.scene.children, true); }catch(e){} for(const h of hs) if(solid(h)) return h; return null; }
+    /* the tour's holiday host also gives the terrain's own height (H.ground) and the scene without the terrain, hills and trees (H.rayRoots):
+       a ray then skips the terrain mesh (about 30 ms a ray in the whole scene, 2 ms without it) and the ground comes from the height field */
+    function down(x, z, y0, far){ const top = y0 == null ? 30 : y0; rc.set(new V3(x, top, z), new V3(0, -1, 0)); rc.far = far || 60; let hs = [], hit = null;
+      try{ hs = rc.intersectObjects(H.rayRoots ? H.rayRoots() : H.scene.children, true); }catch(e){} for(const h of hs) if(solid(h)){ hit = h; break; }
+      if(H.ground && H.rayRoots){ let g = null; try{ g = H.ground(x, z); }catch(e){} if(g != null && isFinite(g) && g <= top && g >= top - rc.far && (!hit || hit.point.y < g - .02)) return {point: new V3(x, g, z), distance: top - g, object: null}; }
+      return hit; }
     const FY = new Map(); let REC = null;   // ground heights worked out ahead of time by prewarm(); empty in the game, where every height is a fresh ray
     const floorY = (x, z, y0, dflt) => { const k = x.toFixed(2) + ',' + z.toFixed(2) + ',' + (y0 == null ? '' : y0); if(FY.has(k)){ const v = FY.get(k); return v == null ? dflt : v; } if(REC){ REC.push([x, z, y0, k]); return dflt; } const h = down(x, z, y0); return h ? h.point.y : dflt; };
     const blobTex = () => tex('blob', () => canvasTex(64, 64, (x, w) => { const g = x.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); g.addColorStop(0, 'rgba(0,0,0,.55)'); g.addColorStop(.6, 'rgba(0,0,0,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, w, w); }));
