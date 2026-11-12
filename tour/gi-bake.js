@@ -274,8 +274,8 @@ B.classify = async function(o = {}){ const g = B.grid, BS = H.BIM2S, N = g.nx * 
   B.cls = cls; B.valid = valid; B.list = list; B.pos = pos; B.probes(list.map(pos)); B.st.classify = {N, rooms: cand.length, valid: list.length, ms: r.ms}; say('classify', JSON.stringify(B.st.classify)); return B.st.classify; };
 
 /* ---------------- the whole bake: per key the sky and the unit sun, then the lamps at dusk; every component checkpointed ---------------- */
-B.KEYS = [{h: 7.75, doy: 288}, {h: 9.5, doy: 288}, {h: 11.25, doy: 288}, {h: 13, doy: 288}, {h: 14.75, doy: 288}, {h: 16.25, doy: 288}, {h: 17.4, doy: 288}, {h: 18.15, doy: 288}, {h: 18.75, doy: 288, dusk: true},
-  {h: 9.5, doy: 165}, {h: 13, doy: 172}, {h: 17, doy: 172}];
+B.KEYS = [{h: 7.75, doy: 288}, {h: 9.25, doy: 288}, {h: 10.75, doy: 288}, {h: 12.25, doy: 288}, {h: 13.75, doy: 288}, {h: 15.25, doy: 288}, {h: 16.5, doy: 288}, {h: 17.4, doy: 288}, {h: 18.15, doy: 288}, {h: 18.75, doy: 288, dusk: true},
+  {h: 9.5, doy: 165}, {h: 13, doy: 172}, {h: 17, doy: 172}, {h: 19.25, doy: 172}];
 B.bakeAll = async function(o = {}){ const tag = o.tag || 'v1', keys = o.keys || B.KEYS, passes = o.passes || 16, t0 = performance.now(), tod0 = H.TOD_KEY, done = [], have = new Set(await B.keys());
   if(!B.list) await B.classify();
   const meta = (await B.get(tag + ':meta')) || {tag, list: B.list, grid: B.grid, keys: [], passes, made: new Date().toISOString()};
@@ -327,14 +327,16 @@ function denoise(F, valid, g, k){ if(!(k > 0)) return; const N = g.nx * g.ny * g
     for(const [dx, dy, dz] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]){ const X = x + dx, Y = y + dy, Z = z + dz; if(X < 0 || Y < 0 || Z < 0 || X >= g.nx || Y >= g.ny || Z >= g.nz) continue; const j = (Y * g.nz + Z) * g.nx + X; if(!valid[j]) continue; n += k; for(let c = 0; c < 12; c++) s[c] += k * G[j * 12 + c]; }
     for(let c = 0; c < 12; c++) F[i * 12 + c] = s[c] / n; } }
 // low rank (no centring, so a blend of keys stays a blend of coefficients): x_k = sum_b coef[k][b] * basis_b
-function pca(vols, used, energy, maxR){ const K = vols.length, G = Array.from({length: K}, () => new Array(K).fill(0));
+function pca(vols0, used, energy, maxR){ const K = vols0.length, G = Array.from({length: K}, () => new Array(K).fill(0));
+  // each key normalised first, so a dim key (dusk) is kept as well as a bright one; its norm goes back into its coefficients
+  const nrm = vols0.map(X => { let s = 0; for(const i of used) for(let c = 0; c < 12; c++) s += X[i * 12 + c] * X[i * 12 + c]; return Math.sqrt(s) || 1; }), vols = vols0.map((X, k) => X.map(v => v / nrm[k]));
   for(let a = 0; a < K; a++) for(let b = a; b < K; b++){ let s = 0; const A = vols[a], Bv = vols[b]; for(const i of used) for(let c = 0; c < 12; c++) s += A[i * 12 + c] * Bv[i * 12 + c]; G[a][b] = G[b][a] = s; }
   const {val, vec} = jacobi(G, K), tot = val.reduce((x, y) => x + Math.max(0, y), 0); let r = 0, acc = 0; while(r < Math.min(K, maxR || K) && (acc < energy * tot || r < 1)){ acc += Math.max(0, val[r]); r++; }
   const N = vols[0].length / 12, bases = [], coef = Array.from({length: K}, () => new Array(r).fill(0));
   for(let b = 0; b < r; b++){ const sl = Math.sqrt(Math.max(1e-30, val[b])), U = new Float32Array(N * 12); for(let k = 0; k < K; k++){ const w = vec[b][k] / sl; if(!w) continue; const X = vols[k]; for(let i = 0; i < U.length; i++) U[i] += w * X[i]; }
     // sign: the first basis positive in L0
     let sg = 0; for(const i of used) sg += U[i * 12] + U[i * 12 + 1] + U[i * 12 + 2]; const f = sg < 0 ? -1 : 1; if(f < 0) for(let i = 0; i < U.length; i++) U[i] = -U[i];
-    for(let k = 0; k < K; k++) coef[k][b] = f * vec[b][k] * sl; bases.push(U); }
+    for(let k = 0; k < K; k++) coef[k][b] = f * vec[b][k] * sl * nrm[k]; bases.push(U); }
   return {bases, coef, energy: acc / tot, val}; }
 function quant(F, used, NP, bits){ const r = [], mx = bits === 16 ? 65535 : 255, out = bits === 16 ? new Uint16Array(12 * NP) : new Uint8Array(12 * NP);
   for(let c = 0; c < 12; c++){ let lo = 1e30, hi = -1e30; for(const i of used){ const v = F[i * 12 + c]; if(v < lo) lo = v; if(v > hi) hi = v; } if(!(hi > lo)){ lo = Math.min(0, lo); hi = lo + 1e-6; }
