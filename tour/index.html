@@ -22974,24 +22974,38 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
     const y = hz > .3 ? Math.atan2(-dx, -dz) : last; psi[i] = i ? psi[i - 1] + angDiff(psi[i - 1], y) : y; last = y; tp[i] = hz > .3 ? clamp(Math.atan2(W.y - V.y, hz) * .45, -.2, .2) : 0; slope[i] = hz > .3 ? Math.abs(W.y - V.y) / hz : 0; }
   sm(tp, 30, true); tp[0] = tp[N - 1] = 0;
   const y0 = a.yaw0, y1 = a.yaw1;
+  /* r41 (owner 11/12, the walk up to the loft: "a weird pull back to the camera view once you get to the top of the stairs"): no walking backwards.
+     A stop that looks back across the room (or back the way you came) used to be reached by turning the head onto its view over the last several
+     feet while still walking in, so the camera slid backwards into the stop, like a dolly pulling back (2-8 ft/s on 34 tour moves). Now, over the
+     second half of a walk, the head leads the way you are going (trv: the route's heading) by at most R36N.BACKDEG, also against the way you will be
+     going over the next 2 ft (the head follows its plan a little late, and a corner turned away from it is covered). A candidate's walk ends on the
+     nearest heading in that band to the stop's view (endW); the rest of the turn is made as you stop and standing (R36N.YAWS, YACCS), and its time
+     counts in choosing the plan. */
+  const MB = S.BACKDEG * DG, trv = new Float64Array(N), WS = S.YAWS * DG, AS = S.YACCS * DG, standT = A => A < .2 * DG ? 0 : A > WS * WS / AS ? A / WS + WS / AS : 2 * Math.sqrt(A / AS);
+  for(let i = 0; i < N; i++){ const s = sAt(i), sa = Math.max(0, Math.min(s - .5, L - 2)), sb = Math.min(L, sa + 2); r36PathPos(p, sa, V); r36PathPos(p, sb, W); const dx = W.x - V.x, dz = W.z - V.z; trv[i] = Math.hypot(dx, dz) > .3 ? psi[i] + angDiff(psi[i], Math.atan2(-dx, -dz)) : (i ? trv[i - 1] : psi[i]); }
+  sm(trv, 8, true);
+  const bLo = new Float64Array(N), bHi = new Float64Array(N), lead = L >= 6; for(let i = 0; i < N; i++){ let a0 = -Infinity, a1 = Infinity; for(let j = Math.max(0, i - 1); j <= Math.min(N - 1, i + 8); j++){ a0 = Math.max(a0, trv[j]); a1 = Math.min(a1, trv[j]); } const M = lerp(4 * Math.PI, MB, smooth(L * .25, L * .5, sAt(i))); bLo[i] = a0 - M; bHi[i] = a1 + M; }
+  const tN = trv[N - 1], endW = (x, wrap) => { if(!lead) return x; let r = x - tN; const k = wrap ? Math.round(r / (2 * Math.PI)) : 0; r -= 2 * Math.PI * k; return tN + 2 * Math.PI * k + clamp(r, -MB, MB); };
   // heading candidates: 'travel' faces the way ahead (easing out of the start view and onto the stop's); 'direct' turns once, start view to stop
   // view, leaning at most 30 deg toward the way ahead (a short move back the way you came is a step back, not a turn around and a turn back)
-  // the least-turning heading within TUBE degrees of a candidate: the taut string through that band (both ends pinned), its corners then rounded
-  const taut = (g, wide) => { const lo = new Float64Array(N), hi = new Float64Array(N); for(let i = 0; i < N; i++){ const t = TUBE * (wide || 1) * DG * Math.min(1, sAt(i) / 2, (L - sAt(i)) / 2); lo[i] = g[i] - t; hi[i] = g[i] + t; }
+  // the least-turning heading within TUBE degrees of a candidate and within the lead band: the taut string through both (both ends pinned), its corners then rounded
+  const taut = (g, wide) => { const lo = new Float64Array(N), hi = new Float64Array(N); for(let i = 0; i < N; i++){ const t = TUBE * (wide || 1) * DG * Math.min(1, sAt(i) / 2, (L - sAt(i)) / 2); lo[i] = g[i] - t; hi[i] = g[i] + t;
+      if(lead && i > 0 && i < N - 1){ const l2 = Math.max(lo[i], bLo[i]), h2 = Math.min(hi[i], bHi[i]); if(l2 <= h2){ lo[i] = l2; hi[i] = h2; } else { const e = hi[i] < bLo[i] ? bLo[i] : bHi[i]; lo[i] = hi[i] = e; } } }
     g.set(r37Taut(lo, hi)); sm(g, 60, true); };
   const turns = g => { let tv = 0, rev = 0, dir = 0, opp = 0, acc = 0; for(let i = 1; i < N; i++){ const d = g[i] - g[i - 1]; tv += Math.abs(d); if(Math.abs(d) < 1e-9) continue; const sg = Math.sign(d);
       if(!dir){ acc += d; if(Math.abs(acc) > 1.5 * DG) dir = Math.sign(acc); } else if(sg !== dir){ opp += Math.abs(d); if(opp > 1.5 * DG){ rev++; dir = sg; opp = 0; } } else opp = 0; } return {tv: tv / DG, rev}; };
   const alts = d => Math.abs(d) > 110 * DG ? [d, d - Math.sign(d) * 2 * Math.PI] : [d];   // a turn of about half a circle may go either way round: the way that keeps turning the same way
   const cands = [];
-  if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1); for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + d * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp}); }
+  if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1); for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + d * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp, gEnd: g[N - 1]}); }
   else {
-    for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1u = psi[N - 1] + d1, dd = Math.abs(d0) / DG, da = Math.abs(d1) / DG;
+    for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1v = psi[N - 1] + d1, y1u = endW(y1v), dd = Math.abs(d0) / DG, da = Math.abs(y1u - psi[N - 1]) / DG;
       const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, L * .7);
       for(let i = 0; i < N; i++){ const s = sAt(i), wd = smooth(0, Ld, s), wa = smooth(L - La, L, s); g[i] = lerp(lerp(y0u, psi[i], wd), y1u, wa); gp[i] = lerp(lerp(a.pitch0, tp[i], wd), a.pitch1, wa); }
-      g[0] = y0 + Math.round((y0u - y0) / (2 * Math.PI)) * 2 * Math.PI; const h = g.slice(), h0 = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'travel', g, gp}); taut(h, 1.6); cands.push({k: 'travel+', g: h, gp}); if(LONG){ const h2 = h0; taut(h2, 2.4); cands.push({k: 'travel++', g: h2, gp}); } }
-    if(L < 40) for(const d of alts(angDiff(y0, y1))){ const g = new Float64Array(N), gp = new Float64Array(N), M = 30 * DG;
-      for(let i = 0; i < N; i++){ const s = sAt(i), w = smooth(0, 1, s / L), base = y0 + d * w, wl = smooth(0, 4, s) * (1 - smooth(L - 5, L, s)); g[i] = base + M * Math.tanh(angDiff(base, psi[i]) / M) * wl; gp[i] = lerp(lerp(a.pitch0, tp[i], wl), a.pitch1, w * w); }
-      const h = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'direct', g, gp}); taut(h, 1.6); cands.push({k: 'direct+', g: h, gp}); } }
+      g[0] = y0 + Math.round((y0u - y0) / (2 * Math.PI)) * 2 * Math.PI; const h = g.slice(), h0 = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'travel', g, gp, gEnd: y1v}); taut(h, 1.6); cands.push({k: 'travel+', g: h, gp, gEnd: y1v}); if(LONG){ const h2 = h0; taut(h2, 2.4); cands.push({k: 'travel++', g: h2, gp, gEnd: y1v}); } }
+    if(L < 40) for(const d of alts(angDiff(y0, y1))){ const g = new Float64Array(N), gp = new Float64Array(N), M = 30 * DG, dW = endW(y0 + d, true) - y0;
+      for(let i = 0; i < N; i++){ const s = sAt(i), w = smooth(0, 1, s / L), base = y0 + dW * w, wl = smooth(0, 4, s) * (1 - smooth(L - 5, L, s)); g[i] = base + M * Math.tanh(angDiff(base, psi[i]) / M) * wl; gp[i] = lerp(lerp(a.pitch0, tp[i], wl), a.pitch1, w * w); }
+      const h = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'direct', g, gp, gEnd: y0 + d}); taut(h, 1.6); cands.push({k: 'direct+', g: h, gp, gEnd: y0 + d}); } }
+  for(const c of cands) c.stand = Math.abs(c.gEnd - c.g[N - 1]);
   // speed: cruise, slower where the head would turn faster than the cap, on stairs and in doorways; eased in and out
   const Vc = L > S.PACE * S.MAXS ? clamp(L / 5.6, S.PACE, 13) : S.PACE;
   const pace = (g, gp) => { const v = new Float64Array(N);
@@ -23000,19 +23014,6 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
       if(slope[i] > .25) m = Math.min(m, Math.min(Vc, 9.5) * .75); for(const q of p.doors) if(Math.abs(q.s - s) < 2) m = Math.min(m, Vc * .8); v[i] = Math.max(.8, m); }
     v[0] = 0; for(let i = 1; i < N; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] * v[i - 1] + 2 * S.ACC * ds)); v[N - 1] = 0; for(let i = N - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * S.DEC * ds));
     const tS = new Float64Array(N); for(let i = 1; i < N; i++) tS[i] = tS[i - 1] + 2 * ds / Math.max(.05, v[i - 1] + v[i]); return tS; };
-  /* r41 (owner 11/12, the walk up to the loft: "a weird pull back to the camera view once you get to the top of the stairs"): no walking backwards.
-     A stop that looks back across the room (or back the way you came) used to be reached by turning the head onto its view over the last several
-     feet while still walking in, so the camera slid backwards into the stop, like a dolly pulling back (2-8 ft/s on 34 tour moves). Now, over the
-     second half of a walk, the head leads the way you are going (trv: the route's heading over the next 2 ft) by at most R36N.BACKDEG; the rest of
-     the turn onto the stop's view is made as you stop and standing (R36N.YAWS, YACCS), and its time counts in choosing the plan. */
-  const MB = S.BACKDEG * DG, trv = new Float64Array(N), WS = S.YAWS * DG, AS = S.YACCS * DG, standT = A => A < .2 * DG ? 0 : A > WS * WS / AS ? A / WS + WS / AS : 2 * Math.sqrt(A / AS);
-  for(let i = 0; i < N; i++){ const s = sAt(i), sa = Math.max(0, Math.min(s - .5, L - 1)), sb = Math.min(L, sa + 1); r36PathPos(p, sa, V); r36PathPos(p, sb, W); const dx = W.x - V.x, dz = W.z - V.z; trv[i] = Math.hypot(dx, dz) > .2 ? psi[i] + angDiff(psi[i], Math.atan2(-dx, -dz)) : (i ? trv[i - 1] : psi[i]); }
-  sm(trv, 3, true);
-  // the band the head may lead in is taken over the next 2 ft as well: the head follows the plan a little late (a corner turned away from it is covered)
-  const bLo = new Float64Array(N), bHi = new Float64Array(N); for(let i = 0; i < N; i++){ let a0 = -Infinity, a1 = Infinity; for(let j = Math.max(0, i - 1); j <= Math.min(N - 1, i + 8); j++){ a0 = Math.max(a0, trv[j]); a1 = Math.min(a1, trv[j]); } bLo[i] = a0; bHi[i] = a1; }
-  const band = g => { let hit = false; for(let i = 1; i < N; i++){ const M = lerp(Math.PI, MB, smooth(L * .25, L * .5, sAt(i))), lo = bLo[i] - M, hi = bHi[i] + M, q = lo <= hi ? clamp(g[i], lo, hi) : (lo + hi) / 2; if(q !== g[i]){ g[i] = q; hit = true; } } return hit; };
-  for(const c of cands){ const g = c.g; c.gEnd = g[N - 1]; c.stand = 0; if(L < 6) continue;
-    if(band(g)){ const e = g[N - 1]; sm(g, 10, true); g[N - 1] = e; band(g); } c.stand = Math.abs(c.gEnd - g[N - 1]); }
   // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk); a turn made standing counts its time
   for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.tv = q.tv + c.stand / DG; c.rev = q.rev; c.cost = c.tS[N - 1] + standT(c.stand) + c.tv / 90 + c.rev * 3 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.gEnd - c.g[0]) / DG - 200) / 20; }   // a turn of more than 200 deg in all is never chosen when less will do
   const C = cands.reduce((x, c) => !x || c.cost < x.cost ? c : x, null), g = C.g, gp = C.gp, tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev + (c.stand > .2 * DG ? '/st' + (c.stand / DG).toFixed(0) : '')).join(',');
@@ -23026,9 +23027,9 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
   const ys = [], ps = [], ss = []; let y = g[0], w = 0, pt = gp[0], pw = 0; const wn = 9, YW = YAW * DG, YA = YACC * DG, PW = S.PYAW * DG, PA = S.PACC * DG;
   // r41: the walk itself ends on g[N - 1], within BACKDEG of the way in; the head goes on round to the stop's view (gE) as you slow to a stop (only as far
   // as keeps the step along the view over -.15 ft/s) and then standing, braking so that it never overshoots
-  const gE = C.gEnd, offE = gE - trv[N - 1], sgE = Math.sign(offE), stand = C.stand > .2 * DG;
+  const gE = C.gEnd, offE = gE - tN, sgE = Math.sign(offE), stand = C.stand > .2 * DG;
   for(let k = 0; k < n1 + 240 * 6; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], v = (sN - s) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt; let tg = G(g, sN), tr = (tg - G(g, s)) / dt, ya = YA, yw = YW, st = false;
-    if(stand && s > L - 4){ const lim = v < .15 ? Infinity : MB + Math.asin(Math.min(1, .15 / v)), e = trv[N - 1] + sgE * Math.min(Math.abs(offE), lim); if((e - tg) * sgE > 0){ tg = e; tr = 0; ya = AS; yw = WS; st = true; } }
+    if(stand && s > L - 4){ const lim = v < .15 ? Infinity : MB + Math.asin(Math.min(1, .15 / v)), e = tN + sgE * Math.min(Math.abs(offE), lim); if((e - tg) * sgE > 0){ tg = e; tr = 0; ya = AS; yw = WS; st = true; } }
     ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - gE) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
     let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -ya, ya); w = clamp(w + ac * dt, -yw, yw); if(st){ const br = Math.sqrt(1.7 * ya * Math.abs(tg - y)); if(w * (tg - y) > 0 && Math.abs(w) > br) w = Math.sign(w) * br; } y += w * dt;
     ac = clamp(wn * wn * (pg - pt) + 2 * wn * (prr - pw), -PA, PA); pw = clamp(pw + ac * dt, -PW, PW); pt += pw * dt; }
