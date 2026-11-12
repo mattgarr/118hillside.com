@@ -23032,7 +23032,7 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
       if(lead && i > 0 && i < N - 1){ const l2 = Math.max(lo[i], bLo[i]), h2 = Math.min(hi[i], bHi[i]); if(l2 <= h2){ lo[i] = l2; hi[i] = h2; } else { const e = hi[i] < bLo[i] ? bLo[i] : bHi[i]; lo[i] = hi[i] = e; } } }
     g.set(r37Taut(lo, hi)); sm(g, 60, true); };
   const turns = g => { let tv = 0, rev = 0, dir = 0, opp = 0, acc = 0; for(let i = 1; i < N; i++){ const d = g[i] - g[i - 1]; tv += Math.abs(d); if(Math.abs(d) < 1e-9) continue; const sg = Math.sign(d);
-      if(!dir){ acc += d; if(Math.abs(acc) > 1.5 * DG) dir = Math.sign(acc); } else if(sg !== dir){ opp += Math.abs(d); if(opp > 1.5 * DG){ rev++; dir = sg; opp = 0; } } else opp = 0; } return {tv: tv / DG, rev}; };
+      if(!dir){ acc += d; if(Math.abs(acc) > 1.5 * DG) dir = Math.sign(acc); } else if(sg !== dir){ opp += Math.abs(d); if(opp > 1.5 * DG){ rev++; dir = sg; opp = 0; } } else opp = 0; } return {tv: tv / DG, rev, dir}; };
   const alts = d => Math.abs(d) > 110 * DG ? [d, d - Math.sign(d) * 2 * Math.PI] : [d];   // a turn of about half a circle may go either way round: the way that keeps turning the same way
   const cands = [];
   if(L < 6){ const g = new Float64Array(N), gp = new Float64Array(N), d = angDiff(y0, y1), P0 = p.pts[0], P1 = p.pts[p.pts.length - 1], hz = Math.hypot(P1.x - P0.x, P1.z - P0.z);
@@ -23056,8 +23056,8 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
       if(slope[i] > .25) m = Math.min(m, Math.min(Vc, 9.5) * .75); for(const q of p.doors) if(Math.abs(q.s - s) < 2) m = Math.min(m, Vc * .8); v[i] = Math.max(.8, m); }
     v[0] = 0; for(let i = 1; i < N; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] * v[i - 1] + 2 * S.ACC * ds)); v[N - 1] = 0; for(let i = N - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * S.DEC * ds));
     const tS = new Float64Array(N); for(let i = 1; i < N; i++) tS[i] = tS[i - 1] + 2 * ds / Math.max(.05, v[i - 1] + v[i]); return tS; };
-  // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk); a turn made standing counts its time
-  for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.tv = q.tv + c.stand / DG; c.rev = q.rev; c.cost = c.tS[N - 1] + standT(c.stand) + c.tv / 90 + c.rev * 3 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.gEnd - c.g[0]) / DG - 200) / 20; }   // a turn of more than 200 deg in all is never chosen when less will do
+  // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk); a turn made standing counts its time, and as a reversal when it turns back on the walk's last turn
+  for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.tv = q.tv + c.stand / DG; c.rev = q.rev + (c.stand > 1.5 * DG && q.dir && Math.sign(c.gEnd - c.g[N - 1]) !== q.dir ? 1 : 0); c.cost = c.tS[N - 1] + standT(c.stand) + c.tv / 90 + c.rev * 3 + Math.max(0, c.rev - 1) * 8 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.gEnd - c.g[0]) / DG - 200) / 20; }   // a turn of more than 200 deg in all is never chosen when less will do; nor (r41) a second reversal when a plan with one will do
   const C = cands.reduce((x, c) => !x || c.cost < x.cost ? c : x, null), g = C.g, gp = C.gp, tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev + (c.stand > .2 * DG ? '/st' + (c.stand / DG).toFixed(0) : '')).join(',');
   // s(t) on a 240 Hz clock, its speed softened (no sudden change of pace), then the head integrated along it
   const dt = 1 / 240, T1 = tS[N - 1], n1 = Math.ceil(T1 / dt) + 1, sT = new Float64Array(n1);
