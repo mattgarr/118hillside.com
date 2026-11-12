@@ -18,7 +18,7 @@
     const PL = {
       kitchen:  {name: 'Coffee bar', short: 'Coffee bar', floor: 'main', pos: [15.0, EYE, 9.3], face: [20.0, 2.6, 11.6], map: [19.0, 9.6],
         note: 'The coffee bar, with its own drinks fridge, beside the kitchen. The treats live here. Lived here.'},
-      great:    {name: 'Great room', floor: 'main', pos: [17.2, EYE, 28.2], face: [11.0, 1.8, 25.4], fov: 58, map: [10.4, 28.2],
+      great:    {name: 'Great room', floor: 'main', pos: [17.2, EYE, 28.2], face: [11.4, 1.8, 24.4], fov: 58, map: [10.4, 28.2],
         note: 'The dining table and the sitting area share one long room, with large windows along one side.'},
       frontbed: {name: 'Front bedroom', short: 'Front bed', floor: 'main', pos: [19.4, EYE, 33.4], face: [29.0, 4.0, 29.0], map: [23.5, 30.5],
         note: 'The first of three bedrooms on the main level. Its door is a pocket door off the dining area.'},
@@ -160,7 +160,7 @@
       W.light = lightPlane({floor: 'SP-L1-GREAT', ppf: 26, gain: 2.3, sources: [windowSource('WN-L1-03', {room: 'SP-L1-GREAT', shade: 'WN-L1-03', bars: [[-.17, .17, 0, 9]]})]});
       // Pepper's rainbow: card and tracing paper on the film of lower-level bedroom 2's window, a 9 at half past five in July
       const src0 = windowSource('WN-L0-07', {room: 'SP-L0-BED2'}), op = src0.op, out = src0.out();
-      const strips = makeStrips('9', {o: [-22.9, LY + .05, -34.27], right: [.975, 0, -.222], up: [-.222, 0, -.975], size: 1.2, pitch: 1.5}, {p: [op.c[0], 0, op.c[1]], n: [out.x, 0, out.z]}, 17.625);   // between half past five and a quarter to six
+      const strips = makeStrips('9', {o: [-22.72, LY + .05, -33.49], right: [.975, 0, -.222], up: [-.222, 0, -.975], size: 1.2, pitch: 1.5}, {p: [op.c[0], 0, op.c[1]], n: [out.x, 0, out.z]}, 17.625);   // between half past five and a quarter to six
       W.paper = buildPaper(strips, [-out.x * .03, 0, -out.z * .03]);
       W.film = windowSource('WN-L0-07', {room: 'SP-L0-BED2', top: 1.06, film: true, strips, gate: () => has('metPepper')});
       W.rainbow = lightPlane({floor: 'SP-L0-BED2', ppf: 40, gain: 1.9, holes: [[[-30.05, -39.6], [-24.4, -39.6], [-24.4, -32.3], [-30.05, -32.3]]], sources: [W.film], after: p => paperLight(p.s)});
