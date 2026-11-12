@@ -6844,28 +6844,30 @@ function navQA(){
       if(!s1) return {k: -9, along: -9, G}; const along = ((s1[0] - s0[0]) * dx + (s1[1] - s0[1]) * dy) / n; return {G, s0, s1, along, k: along / n}; };
     const pose = () => { camera.updateMatrixWorld(); return camera.position.toArray().concat(camera.quaternion.toArray()); };
     const gname = window.FINDCAT ? 'snowball' : window.ESCAPE ? 'escape' : window.DECK3D || /[?&]deck=/.test(location.search) ? 'deck' : /[?&]room=/.test(location.search) ? 'room' : /[?&]feast=/.test(location.search) ? 'feast' : 'game';
-    const views = H ? [['game ' + gname, null, false]] : [['tour street', () => tour(ix('street')), true], ['tour yard', () => tour(ix('yard')), true], ['tour dusk', () => tour(ix('dusk')), true], ['tour street zoomed out', () => { tour(ix('street')); sph.r = 45; applyOrbit(); step(1); }, true], ['tour great', () => tour(ix('great')), false],
+    const RM = window.ROOM3D, rmOver = RM && RM.rig && RM.rig.orb && RM.S && (RM.S.view === 'over' || RM.S.view === 'win');   // Room for Everyone's overview turns the model about its middle (room.js uses GRAB.orbitDelta)
+    const rm0 = rmOver ? {th: RM.rig.orb.th, phi: RM.rig.orb.phi} : null;
+    const views = H ? (rmOver ? [['game room overview', () => { RM.rig.orb.th = rm0.th; RM.rig.orb.phi = rm0.phi; }, true, {tt: true, piv: () => { const o = RM.rig.orb; return new V3(o.T[0] + o.pan[0], o.T[1], o.T[2] + o.pan[1]); }}]] : [['game ' + gname, null, false]]) : [['tour street', () => tour(ix('street')), true], ['tour yard', () => tour(ix('yard')), true], ['tour dusk', () => tour(ix('dusk')), true], ['tour street zoomed out', () => { tour(ix('street')); sph.r = 45; applyOrbit(); step(1); }, true], ['tour great', () => tour(ix('great')), false],
       ['tour mid-move', () => { tour(ix('entry')); showStop(ix('great')); mid(.5); }, false], ['walk', () => { tour(ix('great')); setMode('walk'); finish(); step(2); }, false], ['dollhouse', () => { setMode('doll'); finish(); step(2); }, true], ['design', () => { setMode('design'); finish(); step(2); }, true]];
-    for(const [id, setup, orbit] of views){ await pause(); if(setup) setup(); step(1); camera.updateMatrixWorld();
+    for(const [id, setup0, orbit, vo = {}] of views){ const setup = setup0 && (H ? async () => { setup0(); await frames(20); } : setup0); await pause(); if(setup) await setup(); step(1); camera.updateMatrixWorld();
       // the candidate points: the nearest and the farthest drawn point over a grid in the middle of the view
-      const F = new V3(); camera.getWorldDirection(F); const O = camera.position.clone(), dp = target.clone().sub(O).dot(F), c = [];
+      const F = new V3(); camera.getWorldDirection(F); const O = camera.position.clone(), dp = (vo.piv ? vo.piv() : target).clone().sub(O).dot(F), c = [], tt = isDoll() || !!vo.tt;
       for(const fx of [.3, .42, .5, .58, .7]) for(const fy of [.3, .42, .55, .68]){ const x = rc.left + W * fx, y = rc.top + Hh * fy, P = GRAB.pickAt(x, y); c.push({x, y, d: P.clone().sub(O).dot(F)}); }
       c.sort((a, b) => a.d - b.d); const pts = [['foreground', c[0]], ['background', c[c.length - 1]]];
-      if(orbit && nav === 'orbit'){ const mq = c.slice(1, -1).sort((a, b) => Math.abs(a.d - dp) - Math.abs(b.d - dp))[0]; if(mq) pts.push(['middle', mq]); }   // r41b: the point nearest the pivot's depth (the Dollhouse's commonest grab)
+      if(orbit && (nav === 'orbit' || vo.tt)){ const mq = c.slice(1, -1).sort((a, b) => Math.abs(a.d - dp) - Math.abs(b.d - dp))[0]; if(mq) pts.push(['middle', mq]); }   // r41b: the point nearest the pivot's depth (the Dollhouse's commonest grab)
       if(orbit && nav === 'orbit'){ if(!(c[0].d < .9 * dp)) R.note('grab', id, 'no point in front of the pivot (nearest ' + r2(c[0].d) + ' ft, pivot ' + r2(dp) + ' ft)'); if(!(c[c.length - 1].d > 1.1 * dp)) R.note('grab', id, 'no point behind the pivot (farthest ' + r2(c[c.length - 1].d) + ' ft, pivot ' + r2(dp) + ' ft)'); }
       if(setup && id !== 'tour mid-move'){ const a = pose(); ev('pointerdown', rc.left + W * .5, rc.top + Hh * .5, 'mouse', 1); step(2); const b = pose(); ev('pointercancel', rc.left + W * .5, rc.top + Hh * .5, 'mouse', 0); step(1);
         if(a.some((v, i) => Math.abs(v - b[i]) > 1e-4)) R.fail('grab', id + ' press', 'the view moved at pointer-down'); }
       for(const [which, q] of pts) for(const [dir, dx, dy] of [['right', D, 0], ['left', -D, 0], ['down', 0, D], ['up', 0, -D]]){
-        if(setup){ await pause(); setup(); step(1); }
+        if(setup){ await pause(); await setup(); step(1); }
         const m = await drag(q.x, q.y, dx, dy), tag = id + ' ' + which + ' (' + r2(q.d) + ' ft' + (orbit ? ', pivot ' + r2(dp) + ' ft' : '') + ') ' + dir;
         R.row('grab', tag, {k: r2(m.k), along: r2(m.along), D, nav, mode});
         if(m.k >= .7){ if(m.k > 2.2) R.note('grab', tag, 'overshoots: the point moved ' + r2(m.k) + 'x the drag'); continue; }
-        if(orbit && isDoll() && Math.abs(q.d - dp) < .25 * dp){   // within a quarter of the pivot's depth the model's turn has little leverage on the point: it must not go the wrong way
+        if(orbit && tt && Math.abs(q.d - dp) < .25 * dp){   // within a quarter of the pivot's depth the model's turn has little leverage on the point: it must not go the wrong way
           if(m.k > -.1){ R.note('grab', tag, 'near the pivot: follows at ' + r2(m.k) + 'x (an orbit has little leverage there)'); continue; } }
         if(dy && m.s1 && m.along > -3){ const more = await drag(m.s1[0], m.s1[1], dx / 2, dy / 2); if(Math.abs(more.along) < 3){ R.note('grab', tag, 'at the tilt limit: ' + r2(m.k) + 'x, then held'); continue; } }
         R.fail('grab', tag, 'the grabbed point moved ' + r2(m.k) + 'x the drag (' + r2(m.along) + ' of ' + D + ' px' + (m.k < 0 ? ', the wrong way' : '') + ')'); }
       // one finger (touch): the same handlers; in Walk the left part of the view is the walking stick, so the finger goes down on the right
-      { if(setup){ await pause(); setup(); step(1); } const q = c.filter(p => p.x > rc.left + W * .55).sort((a, b) => b.d - a.d)[0] || c[0], m = await drag(q.x, q.y, -D, 0, 'touch'), tag = id + ' touch left (' + r2(q.d) + ' ft)';
+      { if(setup){ await pause(); await setup(); step(1); } const q = c.filter(p => p.x > rc.left + W * .55).sort((a, b) => b.d - a.d)[0] || c[0], m = await drag(q.x, q.y, -D, 0, 'touch'), tag = id + ' touch left (' + r2(q.d) + ' ft)';
         R.row('grab', tag, {k: r2(m.k), along: r2(m.along), D, nav, mode}); if(!(m.k >= .7)) R.fail('grab', tag, 'the grabbed point moved ' + r2(m.k) + 'x the drag'); }
       // a long drag keeps the tilt inside its limits
       if(setup && (id === 'walk' || id === 'dollhouse')){ for(const sg of [1, -1]){ setup(); step(1); const x = rc.left + W * .62, y = rc.top + Hh * .5; ev('pointerdown', x, y, 'mouse', 1);
