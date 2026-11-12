@@ -5876,9 +5876,26 @@ function v26Pivot(cx, cy){   // v26 O1: the point under the cursor at drag start
      orbit could not look above level at all. These stops now look from -80 to +46 degrees (applyOrbit lets their target rise above the eye).
      Dollhouse and Design keep the pure orbit: the model must turn about its pivot, not slide out of the view. */
 const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last: null},
+  /* r41b: the look is solved exactly. The camera turns by yaw then pitch, no roll (three.js order YXZ), so the yaw and pitch that put a world
+     direction D under the screen point (x, y) have a closed form: the pitch makes the pixel's ray rise as steeply as D, the yaw then lines up
+     their headings. (r41's step split the turn into the change of heading and of elevation between the two pointer rays, which is close only
+     near the middle of the view: a real drag across the floor ended 34 px off.) */
+  pinv: null,
+  camRay(x, y){   // the ray through client point (x, y) in camera space (the live projection: lens shift and zoom included)
+    const r = canvas.getBoundingClientRect(); this.pinv = this.pinv || new THREE.Matrix4(); this.pinv.copy(camera.projectionMatrix).invert();
+    return new THREE.Vector3((x - r.left) / r.width * 2 - 1, -(y - r.top) / r.height * 2 + 1, .5).applyMatrix4(this.pinv).normalize(); },
+  dirAt(yw, pt, x, y){ return this.camRay(x, y).applyEuler(new THREE.Euler(pt, yw, 0, 'YXZ')); },   // the world direction under (x, y) for a view yaw / pitch
+  solveLook(D, x, y, yw0, pt0){   // {yaw, pitch} that put world direction D under (x, y); the pitch nearest pt0, the yaw within half a turn of yw0
+    const c = this.camRay(x, y), a = c.y, b = -c.z, A = Math.hypot(a, b), d = D.clone().normalize(), ph = Math.atan2(a, b);
+    const q = Math.asin(clamp(d.y / Math.max(1e-6, A), -1, 1)), w = v => Math.atan2(Math.sin(v), Math.cos(v));
+    const p1 = w(q - ph), p2 = w(Math.PI - q - ph), pt = Math.abs(w(p1 - pt0)) <= Math.abs(w(p2 - pt0)) ? p1 : p2;
+    const z1 = c.y * Math.sin(pt) + c.z * Math.cos(pt), hy = Math.atan2(-d.x, -d.z) - Math.atan2(-c.x, -z1);
+    return {yaw: yw0 + w(hy - yw0), pitch: pt0 + w(pt - pt0)}; },
   lookDelta(x, y, dx, dy){   // [dyaw, dpitch] for a look-drag from (x - dx, y - dy) to (x, y), or null
     try{ camera.updateMatrixWorld(); const a = navRay(x - dx, y - dy), b = navRay(x, y), sg = NAV18.grab ? 1 : -1;   // ?drag=mouse: mouselook (the opposite sign)
       this.rep.look++;
+      if(sg > 0 && Math.abs(a.y) < .97){ const F = new THREE.Vector3(); camera.getWorldDirection(F); const y0 = Math.atan2(-F.x, -F.z), p0 = Math.asin(clamp(F.y, -1, 1)), S = this.solveLook(a, x, y, y0, p0);
+        return [S.yaw - y0, S.pitch - p0]; }
       if(Math.abs(a.y) > .9 || Math.abs(b.y) > .9){ const k = (camera.fov * Math.PI / 180) / (canvas.clientHeight || 1) * 1.1; return [sg * dx * k, sg * dy * k]; }   // NAV r34: looking steeply down / up the ray's heading is unstable: plain proportional turn there
       let dyaw = Math.atan2(-a.x, -a.z) - Math.atan2(-b.x, -b.z); dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
       return [sg * dyaw, sg * (Math.asin(clamp(a.y, -1, 1)) - Math.asin(clamp(b.y, -1, 1)))]; }catch(e){ return null; } },
@@ -7417,7 +7434,7 @@ canvas.addEventListener('pointermove',e=>{
   if(p && e.pointerType==='mouse' && e.buttons===0){ ptrs.delete(e.pointerId); pinch=null; canvas.className='grab'; p=null; }   // r32: the button is already up, so this is not a drag
   if(!p){ if(e.pointerType==='mouse'){ hoverAt=[e.clientX,e.clientY]; hoverXY=[e.clientX,e.clientY]; if(mode==='design') DESIGN.hover(e.clientX,e.clientY); } return; }
   const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
-  if(ptrs.size>=2){ const [a,b]=[...ptrs.values()]; const cx=(a.x+b.x)/2, cy=(a.y+b.y)/2, d=Math.max(1,Math.hypot(a.x-b.x,a.y-b.y));
+  if(ptrs.size>=2){ const [a,b]=[...ptrs.values()]; a.lookD=b.lookD=null; const cx=(a.x+b.x)/2, cy=(a.y+b.y)/2, d=Math.max(1,Math.hypot(a.x-b.x,a.y-b.y));
     if(pinch){ const f=pinch.d/d; if(nav==='orbit'){ zoomAt(f,cx,cy); pan(cx-pinch.cx,cy-pinch.cy); } else setFov(camera.fov*f); }
     pinch={cx,cy,d}; return; }
   const h=canvas.clientHeight;
@@ -7429,11 +7446,11 @@ canvas.addEventListener('pointermove',e=>{
     else { if(p.regrab && p.button===0){ p.regrab=false; try{ p.piv = GRAB.tourBegin(e.clientX, e.clientY); }catch(err){} }   // r41: the finger left after a pinch grabs what is under it now
       if(p.piv && ptrs.size===1) GRAB.tourOrbit(p.piv, dx, dy, e.clientX, e.clientY);   // r41 GRAB: the grabbed point follows the pointer (NAV r27 / r36 navGrabOrbit was Dollhouse only)
       else { sph.theta -= dx*2*Math.PI/h*.75; sph.phi -= dy*2*Math.PI/h*.75; } }
-  } else { if(typeof navGrabLook === 'function' && navGrabLook(e.clientX, e.clientY, dx, dy)) return; const k=(camera.fov*Math.PI/180)/h*1.1; yaw += dx*k; pitch=clampPitch(pitch+dy*k,pitch); navTouched(); }
+  } else { if(typeof navGrabLook === 'function' && navGrabLook(e.clientX, e.clientY, dx, dy, p)) return; const k=(camera.fov*Math.PI/180)/h*1.1; yaw += dx*k; pitch=clampPitch(pitch+dy*k,pitch); navTouched(); }
 });
 const endPtr=e=>{
   if(joy && e.pointerId===joy.id){ const tap=!joy.moved && performance.now()-joy.t<350; joy=null; $('#joy').hidden=true; if(tap && e.type==='pointerup') clickAt(e.clientX,e.clientY,false); return; }
-  const p=ptrs.get(e.pointerId); ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null; if(ptrs.size===1) for(const q of ptrs.values()){ q.piv=null; q.regrab=true; }   // r41
+  const p=ptrs.get(e.pointerId); ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null; if(ptrs.size===1) for(const q of ptrs.values()){ q.piv=null; q.regrab=true; q.lookD=null; }   // r41: the finger left after a pinch grabs afresh
   canvas.className = nav==='orbit' ? 'grab' : 'grab';
   if(p && e.type==='pointerup' && p.button===0 && Math.hypot(e.clientX-p.sx,e.clientY-p.sy)<6 && performance.now()-p.t<400){
     const now=performance.now(); const dbl=now-lastTap<330; lastTap=now; clickAt(e.clientX,e.clientY,dbl); }
@@ -23046,7 +23063,16 @@ BIM3.report.r17 = R17.report;
 const NAV18 = window.NAV18 = {on: !/[?&]nav18-off\b/.test(location.search), eye: 5.0, band: [3.5, 7.5], pinv: new THREE.Matrix4(), grab: !/[?&]drag=mouse\b/.test(location.search), report: {snapped: [], left: []}};
 function navRay(x, y){ const r = canvas.getBoundingClientRect(), v = new THREE.Vector3((x - r.left) / r.width * 2 - 1, -(y - r.top) / r.height * 2 + 1, .5);
   v.applyMatrix4(NAV18.pinv.copy(camera.projectionMatrix).invert()).normalize().applyQuaternion(camera.quaternion); return v; }   // the inverse of the live matrix: the lens code shifts projectionMatrix directly
-function navGrabLook(x, y, dx, dy){ if(!NAV18.on) return false;
+function navGrabLook(x, y, dx, dy, p){ if(!NAV18.on) return false;
+  /* r41b: with the pointer's record (p), the world direction under the pointer is fixed when the drag starts (from the view's own yaw and pitch,
+     so a second move before the next frame does not read a stale camera) and each move solves the view that puts it back under the pointer:
+     exact anywhere in the view, nothing builds up. Where the tilt limit stops the view the direction is taken again under the pointer, so
+     dragging back moves the view at once. Steeply up or down (the heading is unstable there) and ?drag=mouse use the step-by-step turn. */
+  if(p && NAV18.grab){ try{ if(!p.lookD) p.lookD = GRAB.dirAt(yaw, pitch, x - dx, y - dy);
+      if(Math.abs(p.lookD.y) < .97){ const S = GRAB.solveLook(p.lookD, x, y, yaw, pitch), pc = clampPitch(S.pitch, pitch); yaw = S.yaw; pitch = pc;
+        if(Math.abs(pc - S.pitch) > 1e-6) p.lookD = GRAB.dirAt(yaw, pitch, x, y);
+        navTouched(); NAV18.report.grab = (NAV18.report.grab || 0) + 1; GRAB.rep.look++; return true; }
+      p.lookD = null; }catch(e){ p.lookD = null; } }
   const d = GRAB.lookDelta(x, y, dx, dy); if(!d) return false;   // r41: the shared look (GRAB). NAV r27 (owner 11/10): grab-the-world is the default, ?drag=mouse = mouselook
   yaw += d[0]; pitch = clampPitch(pitch + d[1], pitch); navTouched(); NAV18.report.grab = (NAV18.report.grab || 0) + 1; return true; }
 if(NAV18.on && typeof FRAME_FOR === 'function'){ const _ff18 = FRAME_FOR; FRAME_FOR = function(st){ const f = _ff18.apply(this, arguments);
