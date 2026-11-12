@@ -6884,6 +6884,11 @@ function navQA(){
         if(d > .02) R.fail('light', 'same ' + v, 'settles to a different exposure from ' + f1 + ' (' + es[0].toFixed(4) + ') and ' + f2 + ' (' + es[1].toFixed(4) + ')'); } }
     finally{ performance.now = realNow; if(GV) GV.fix = gfix; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
     window.__LIGHT = rows; tour(0); };
+  /* r41 decor: every ordered pair of holiday dresses ends exactly as a clean switch from 'None' (assets/holiday/holiday.js, HOLIDAY.qa) */
+  SEC.decor = async R => { const Q = window.HOLIDAY; if(!Q || !Q.qa){ R.note('decor', '-', 'no holiday control on this page'); return; } setMode('tour'); finish();
+    const q = await Q.qa(); if(!q.pairs){ R.fail('decor', '-', 'qa did not run: ' + q.why); return; } R.n += q.pairs.length;
+    for(const p of q.pairs) if(!p.ok) R.fail('decor', p.from + '>' + p.to, p.n + ' leftover(s): ' + p.diff.slice(0, 4).map(d => d[0] + ' ' + d[1] + ' -> ' + d[2]).join('; '));
+    R.note('decor', '-', q.pairs.length + ' switches, ' + q.leftovers + ' leftover(s), ' + q.ms + ' ms' + (q.sweeps.length ? ', swept ' + q.sweeps.join(' ') : '')); };
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
     const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
@@ -12347,7 +12352,7 @@ function hwFrame(){ if(!HW.on || !HW.built) return; const t = (performance.now()
     else if(f.o){ f.o.scale.set(1 + .15 * k, 2.1 + .5 * k, 1 + .15 * k); } }
   // point lights without shadows shine through walls: outdoor accents only while the camera is outside, candles only inside
   // r40: the page's debounced inside state, and the two sets cross-fade with EXPO_IN (they switched in one frame)
-  HW.inside = !isDoll() && ENV_INSIDE; const kIn = isDoll() ? 1 : Math.max(0, Math.min(1, EXPO_IN));
+  const inside = HW.inside = !isDoll() && ENV_INSIDE, kIn = isDoll() ? 1 : Math.max(0, Math.min(1, EXPO_IN));   // r41: `inside` is read by the fog puffs below (r40 dropped it: every frame threw, which switched Halloween off half-way)
   for(const {l, d} of HW.bind){ const f = d.out ? (isDoll() ? 1 : 1 - kIn) : kIn; l.intensity = f <= 0 ? 0 : f * d.i * (d.fl != null && !still ? 1 + .22 * hwFlickN(t, d.fl * 1.9) : 1); }
   if(HW.chandL && !still) HW.chandL.intensity = HW.chandL.userData.hwBase * (1 + .25 * hwFlickN(t, 4.4));
   // sky group rides with the camera (moon + stars at infinity)
@@ -12413,10 +12418,11 @@ function hwNight(){
 { const _s = setTOD; setTOD = function(key){ if(HW.on) key = 'dusk'; const r = _s.apply(this, [key]); if(HW.on) hwNight(); return r; }; }
 // the camera meter would lift the night back to daylight: while on, exposure is fixed (HW.expo outside / HW.expoIn inside)
 { const _m = lightMeterMul; lightMeterMul = function(dt){ const r = _m.apply(this, arguments); return HW.on ? HW.expo * Math.pow(HW.expoIn / HW.expo, Math.max(0, Math.min(1, EXPO_IN))) : r; }; }   // r40: blended in stops by EXPO_IN
-{ const _r = renderFrame; renderFrame = function(){ if(HW.on) try{ hwFrame(); }catch(e){ console.warn('[halloween] frame', e); HW.on = false; } return _r.apply(this, arguments); }; }
+{ const _r = renderFrame; renderFrame = function(){ if(HW.on) try{ hwFrame(); HW.frameErr = 0; }catch(e){   // r41: a frame error no longer flips HW.on by hand (that left the whole dress up while the page thought it was down): it is reported, and a dress that keeps failing is taken down properly
+      if(!HW.frameErr) console.warn('[halloween] frame', e); if(++HW.frameErr > 30){ HW.frameErr = 0; setTimeout(() => { try{ window.HALLOWEEN.off(); }catch(x){} }, 0); } } return _r.apply(this, arguments); }; }
 function hwOn(){
   if(HW.on) return HW.report; if(!MODEL || !BIM || !FURN.items().length) { console.warn('[halloween] model not ready'); return null; }
-  HW.saved = {tod: TOD_KEY, dl: new Map(), other: new Map(), lights: null, light: {band: LIGHT.dusk.band, bandAt: LIGHT.dusk.bandAt, duskHemi: LIGHT.duskHemi, duskLift: LIGHT.duskLift}};
+  HW.saved = {tod: TOD_KEY, dl: new Map(), other: new Map(), lights: null, light: {band: LIGHT.dusk.band, bandAt: LIGHT.dusk.bandAt, duskHemi: LIGHT.duskHemi, duskLift: LIGHT.duskLift}, amb: [amb.color.clone(), amb.intensity]};   // r41: the ambient colour too (hwNight paints it violet; nothing else set it back)
   Object.assign(LIGHT.dusk, {band: hwLin(HW.pal.band).getHex(), bandAt: .22}); LIGHT.duskHemi = .28; LIGHT.duskLift = .015;   // lightFrame() re-applies these every frame
   HW.chandSrc = DUSK_LIGHTS.find(l => l.parent && l.parent.name === 'main' && Math.abs(l.position.x - ROOM.entry.at[0]) < 4 && Math.abs(l.position.z - ROOM.entry.at[1]) < 4) || null;
   try{ hwBuild(); }catch(e){ console.error('[halloween] build', e); }
@@ -12428,7 +12434,7 @@ function hwOn(){
 function hwOff(){
   if(!HW.on) return; HW.on = false; scene.remove(HW.ext); scene.remove(HW.sky); if(HW.inn.parent) HW.inn.parent.remove(HW.inn);
   hwRestore(); for(const [l, o] of HW.saved.dl){ l.color.copy(o.c); l.distance = o.d; l.position.copy(o.p); l.decay = o.k; } HW.bind = []; for(const [l, o] of HW.saved.other){ l.color.copy(o.c); l.intensity = o.i; }
-  { const o = HW.saved.light; LIGHT.dusk.band = o.band; LIGHT.dusk.bandAt = o.bandAt; LIGHT.duskHemi = o.duskHemi; LIGHT.duskLift = o.duskLift; }
+  { const o = HW.saved.light; LIGHT.dusk.band = o.band; LIGHT.dusk.bandAt = o.bandAt; LIGHT.duskHemi = o.duskHemi; LIGHT.duskLift = o.duskLift; } if(HW.saved.amb){ amb.color.copy(HW.saved.amb[0]); amb.intensity = HW.saved.amb[1]; }
   setTOD(HW.saved.tod); for(const [l, o] of HW.saved.dl) if(Math.abs(l.intensity - o.i) > 1e-6 && TOD_KEY === 'dusk') l.intensity = o.i;
   document.documentElement.classList.remove('halloween'); if(window.__perf) __perf.shadowDirty = true; }
 // self-check: a full on/off cycle must leave furniture, lights and time of day exactly as they were
@@ -16419,8 +16425,12 @@ function t33Merge(items, mat, name){ let nv = 0, ni = 0; for(const it of items){
   G.setAttribute('color', new THREE.BufferAttribute(C, 3)); G.setAttribute('aSSS', new THREE.BufferAttribute(S, 1)); G.setIndex(new THREE.BufferAttribute(I, 1)); G.computeBoundingSphere(); G.computeBoundingBox();
   const m = new THREE.Mesh(G, mat); m.userData.tg = true; m.userData.t33 = true; m.name = name; T33.verts += nv; T33.items += items.length; return m; }
 // ---- pieces (world ft; y from a drop onto whatever is there; skipped + reported when nothing is). Placements are v31's.
-function tgBuild(){
-  const t0 = performance.now(), K = tgGeo(), G = K.G; T33.verts = 0; T33.items = 0;
+/* r41: the build is a generator with a pause every few dozen pieces, so it can run in slices (THANKSGIVING.prepare(): ahead of time while the
+   visitor is idle in the Thanksgiving season, or a frame at a time while the loading pill shows) instead of one long freeze. tgBuild() still
+   runs it to the end in one go (and finishes a sliced build that is under way, rather than starting a second one). */
+function tgBuild(){ const it = TG.prepIt || tgBuildG(); TG.prepIt = null; const t0 = performance.now(); while(!it.next().done){} T33.syncMs = Math.round(performance.now() - t0); }
+function* tgBuildG(){
+  const t0 = performance.now(), K = tgGeo(), G = K.G; T33.verts = 0; T33.items = 0; yield;
   const R = (() => { let a = 1234567; return () => { a = (a * 1664525 + 1013904223) >>> 0; return a / 4294967296; }; })();
   const rep = TG.report; rep.placed = 0; rep.skipped = []; rep.calls = 0; rep.leaves = 0; TG_MESHES = null;
   const ext = TG.ext = new THREE.Group(); ext.name = 'tgExt'; const inn = TG.inn = new THREE.Group(); inn.name = 'tgIn'; const innU = TG.innU = new THREE.Group(); innU.name = 'tgInU';
@@ -16550,11 +16560,12 @@ function tgBuild(){
     put('ext', 'decor', G.torus, 'K12', W(b, M4(1.45, .45, 0, .9, .9, 1.2)), tn(1), 0); put('ext', 'decor', G.cyl, 'K8', W(b, M4(1.45, .45, -.08, .2, .16, .2, Math.PI / 2, 0, 0)), tn(1), 0);
     for(const sg of [-1, 1]){ between('ext', 'decor', G.cyl, 'W0', pt(b, 1.45, .45, sg * .25), pt(b, -2.4, 1.2, sg * .55), .06, tn(.9)); between('ext', 'decor', G.cyl, 'K8', pt(b, -.7, .95, sg * .5), pt(b, -.8, 0, sg * .55), .04, tn(1)); }
     for(let i = 0; i < 5; i++){ const q = pt(b, (R() - .5) * 1.1, 0, (R() - .5) * .8); pumpkin('ext', q.x, y + 1.05 + (i > 3 ? .45 : 0), q.z, .6 + R() * .15, PUMP[i % 6]); } }
+  yield;
   // leaf piles (raked under the oak and by the bales)
   for(const [cx, cz, Rr, hh, n] of [[9.5, -27, 1.7, .55, coarse ? 140 : 280], [17.6, -27.4, 1.2, .4, coarse ? 90 : 170], [6.5, -31.5, 1.1, .35, coarse ? 70 : 130]]){
     const g0 = ground(cx, cz), hit = tgHit(cx, cz, g0 + 30, 31); if(hit && hit.point.y > g0 + .1){ rep.skipped.push('leafpile'); continue; }
     for(let i = 0; i < n; i++){ const r = Rr * Math.sqrt(R()), a = R() * 6.283, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r, h = hh * Math.pow(Math.max(0, 1 - (r / Rr) * (r / Rr)), .8) * (.55 + R() * .45);
-      leaf('ext', x, ground(x, z) + .03 + h, z, .34 + R() * .14, eq((R() - .5) * 1.1, R() * 6.283, (R() - .5) * 1.1)); rep.leaves++; } }
+      leaf('ext', x, ground(x, z) + .03 + h, z, .34 + R() * .14, eq((R() - .5) * 1.1, R() * 6.283, (R() - .5) * 1.1)); rep.leaves++; } yield; }
   if((y = at(11, -36, -4.8, 'wheelbarrow-leaves', 2, 5)) != null) leafScatter('ext', 11.6, y, -35.2, 1.6, 1.2, 18);
   // balcony
   if((y = at(-18.5, -44.5, 5.57, 'balcony', 1, 2)) != null){ pumpkin('ext', -19.3, y, -44.6, .9, 0); pumpkin('ext', -18.4, y, -44.8, .7, 1); mum('ext', -17.4, y, -44.6); }
@@ -16582,6 +16593,7 @@ function tgBuild(){
   if((y = at(-24, -3.3, 7.0, 'loft-seat')) != null){ pumpkin(P(0, y), -24.2, y, -3.1, .45, 4); pumpkin(P(0, y), -23.7, y, -3.5, .35, 3); }
   if((y = at(-18.1, -34.6, 7.6, 'primary-throw')) != null) throwOn(P(0, y), -18.1, y, -33.0, 4.6, 1.4);
   if((y = at(-22.4, -27.7, 6.7, 'nightstand')) != null) gourds(P(0, y), -22.4, y, -27.7, 3, .2);
+  yield;
   // ---- THE SET TABLE (great room): glass top y 2.50 at (10.5, 21.4), 6.6 x 3.3 ft
   const TY = 2.5, TX = 10.5, TZ = 21.4;
   put('inn', 'decor', K.rb('runner', 5.8, .012, 1.15, .005), 'F4', M4(TX, TY + .007, TZ, 1, 1, 1), tn(1), .05);
@@ -16622,7 +16634,10 @@ function tgBuild(){
     [[0, 0, .5], [.2, .1, .34], [-.12, .17, .24]].forEach(([dx, dz, h]) => candle(par, x + dx, yy + .02, z + dz, .17, h, 'pillar'));
     pool(par, x, yy + .012, z, 3.2, 3.2, 0x8a4612); };
   for(const [x, z, y0, tag] of TGCANDLES) cluster(x, z, y0, tag);
-  const L = TG.light = new THREE.PointLight(0xffb060, .6, 14, 2); L.position.set(TX, 3.6, TZ); L.castShadow = false; L.userData.tg = true; inn.add(L);
+  yield;
+  /* r41: the table's candle light is a descriptor, bound at on() to the room lamp over the table (the way Halloween binds its lights): a new light
+     in the scene changed the light count, so every lit material in the house recompiled the first time Thanksgiving went up (seconds on a phone) */
+  TG.lampD = {c: new THREE.Color(0xffb060), p: new THREE.Vector3(TX, 3.6, TZ).applyMatrix4(grp('furn').matrixWorld), d: 14, k: 2}; TG.light = null;
   // ---- leaves on the ground (outdoors), only on terrain / paving / the pergola pad / the porch deck (v31 rule)
   const AREAS = [[7.5, -28, 26, 1400, 12], [-8.6, 40.9, 24, 700, 0], [-6, 30, 10, 200, 0], [-4, 12, 4, 40, 0, true], [-2.6, -40, 8, 120, 0]];
   const OK = /^(terrain|land|v27-flagstones|paver|pergola23-pad)/i; const KQ = coarse ? .5 : 1;
@@ -16632,10 +16647,10 @@ function tgBuild(){
       const g = ground(x, z), h = tgHit(x, z, deck ? 2 : g + 40, deck ? 3 : 41); let yy;
       if(h && h.point.y > g + .05){ if(!(deck || okHit(h.object)) || (h.face && h.face.normal.y < .5 && !h.object.isMesh)) continue; yy = h.point.y; }
       else if(deck) continue; else yy = g;
-      i++; leaf('ext', x, yy + .025, z, .3 + R() * .16, eq((R() - .5) * .35, R() * 6.283, (R() - .5) * .35)); rep.leaves++; } }
+      i++; leaf('ext', x, yy + .025, z, .3 + R() * .16, eq((R() - .5) * .35, R() * 6.283, (R() - .5) * .35)); rep.leaves++; if(i % 40 === 0) yield; } }
   // ---- flush: one merged mesh per (group, material), one instanced fx mesh per group
   const parents = {ext, inn, innU};
-  for(const [k, list] of B){ const [par, mk] = k.split('|'), m = t33Merge(list, K.mats[mk], 'tg:' + par + ':' + mk);
+  for(const [k, list] of B){ yield; const [par, mk] = k.split('|'), m = t33Merge(list, K.mats[mk], 'tg:' + par + ':' + mk);
     m.castShadow = mk !== 'glass'; m.receiveShadow = mk !== 'glass'; if(mk !== 'glass') m.customDepthMaterial = K.depth; if(mk === 'glass') m.renderOrder = 2; parents[par].add(m); rep.calls++; }
   const IQ = new THREE.Quaternion(), _c = new THREE.Color();
   for(const par of ['ext', 'inn', 'innU']){ const L2 = FX[par]; if(!L2.length) continue; const g = K.fxGeo.clone(), kinds = new Float32Array(L2.length), im = new THREE.InstancedMesh(g, K.mats.fx, L2.length);
@@ -16657,10 +16672,10 @@ function tgHide(){ TG.hidden = []; const seen = new Set();
     let o = h.object; if(o.parent && /decor/i.test(o.parent.name)) o = o.parent; if(seen.has(o)) continue; seen.add(o); TG.hidden.push([o, o.visible]); o.visible = false; }
   TG_MESHES = null; }
 function tgRestore(){ for(const [o, v] of TG.hidden) o.visible = v; TG.hidden = []; }
-function tgFrame(){ if(!TG.light) return; const t = performance.now() / 1000, f = .88 + .08 * Math.sin(t * 7.3) + .05 * Math.sin(t * 13.1 + 1.7); TG.light.intensity = 2.0 * f * TG.dimF;
+function tgFrame(){ if(!TG.light || !TG.on) return; const t = performance.now() / 1000, f = .88 + .08 * Math.sin(t * 7.3) + .05 * Math.sin(t * 13.1 + 1.7); TG.light.intensity = 2.0 * f * TG.dimF;
   t33Frame(t, f); }
 { const _rf = renderFrame; renderFrame = function(){ if(TG.on) try{ tgFrame(); }catch(e){ console.warn('[thanksgiving] frame', e); } return _rf.apply(this, arguments); }; }
-{ const _s = setTOD; setTOD = function(key){ const r = _s.call(this, TG.on ? 'dusk' : key); if(TG.on){ for(const l of DUSK_LIGHTS){ l.intensity = TGDUSK.lamps; l.color.set(TGDUSK.lampCol); } TG.hemiOut = hemi.color.clone(); TG.hemiOutI = hemi.intensity; } return r; }; }
+{ const _s = setTOD; setTOD = function(key){ const r = _s.call(this, TG.on ? 'dusk' : key); if(TG.on){ for(const l of DUSK_LIGHTS){ l.intensity = TGDUSK.lamps; l.color.set(TGDUSK.lampCol); } if(TG.light && TG.lampD) TG.light.color.copy(TG.lampD.c); TG.hemiOut = hemi.color.clone(); TG.hemiOutI = hemi.intensity; } return r; }; }
 // evening indoors: the camera meter's result x .7 (dimmer room; candles and lamps carry it); outdoors untouched
 { const _m = lightMeterMul; lightMeterMul = function(){ const r = _m.apply(this, arguments); return TG.on ? r * Math.pow(TGDUSK.inExpo, Math.max(0, Math.min(1, EXPO_IN))) : r; }; }   // r40: blended by EXPO_IN
 // indoor bounce light: a warm candle-lit room (golden walls, soft amber ceiling, dark floor), same hook Halloween uses
@@ -16688,15 +16703,37 @@ function tgOn(){
   tgHide();
   if(!TG.built || TG.key !== ACTIVE_VAR){ if(TG.built) tgDispose(); try{ tgBuild(); }catch(e){ console.error('[thanksgiving] build', e); } }
   scene.add(TG.ext); grp('furn').add(TG.inn); grp('furnU').add(TG.innU);
+  { const D = TG.lampD; let best = null, bd = 1e9; if(D) for(const l of DUSK_LIGHTS){ if(l.parent !== scene) continue; const d = Math.hypot(l.position.x - D.p.x, l.position.z - D.p.z); if(d < bd){ bd = d; best = l; } }   // r41: the table light borrows the nearest room lamp
+    if(best){ TG.lampSaved = {l: best, p: best.position.clone(), c: best.color.clone(), d: best.distance, k: best.decay}; best.position.copy(D.p); best.distance = D.d; best.decay = D.k; best.color.copy(D.c); TG.light = best; } }
   TG.on = true; tgDuskIn(); setTOD('dusk'); tgFrame();
   document.documentElement.classList.add('thanksgiving'); tgLoadSfx();
   if(was) applyVisibility(); if(window.__perf) __perf.shadowDirty = true; return TG.report; }
 function tgOff(){
   if(!TG.on) return; const was = DOLLCUT && DOLLCUT.state; if(was) DOLLCUT.restore();
   TG.on = false; for(const g of [TG.ext, TG.inn, TG.innU]) if(g && g.parent) g.parent.remove(g);
-  tgRestore(); tgDuskOut(); setTOD(TG.saved.tod); for(const [l, i, c] of TG.saved.dl){ l.intensity = i; l.color.copy(c); }
+  tgRestore(); tgDuskOut(); { const q = TG.lampSaved; if(q){ q.l.position.copy(q.p); q.l.color.copy(q.c); q.l.distance = q.d; q.l.decay = q.k; } TG.lampSaved = null; TG.light = null; }
+  setTOD(TG.saved.tod); for(const [l, i, c] of TG.saved.dl){ l.intensity = i; l.color.copy(c); }
   document.documentElement.classList.remove('thanksgiving'); if(was) applyVisibility(); if(window.__perf) __perf.shadowDirty = true; }
-function tgDispose(){ for(const g of [TG.ext, TG.inn, TG.innU]) if(g){ if(g.parent) g.parent.remove(g); g.traverse(o => { if(o.isInstancedMesh){ o.dispose && o.dispose(); if(o.userData.t33) o.geometry.dispose(); } else if(o.isMesh && o.userData.t33) o.geometry.dispose(); }); } TG.built = false; TG.flames = null; TG.light = null; }
+function tgDispose(){ for(const g of [TG.ext, TG.inn, TG.innU]) if(g){ if(g.parent) g.parent.remove(g); g.traverse(o => { if(o.isInstancedMesh){ o.dispose && o.dispose(); if(o.userData.t33) o.geometry.dispose(); } else if(o.isMesh && o.userData.t33) o.geometry.dispose(); }); } TG.built = false; TG.flames = null; }
+/* r41: THANKSGIVING.prepare({idle}) builds the set in slices and compiles its few materials for the dinner-time light set (lamps on), so on() only
+   has to show it. idle(): a function that says whether the visitor is idle; while it says no, the work waits (the season's idle preload). */
+function tgPrepare(o){ o = o || {}; TG.prepIdle = o.idle || null; TG.prepSlice = o.slice || (o.idle ? 10 : 40);
+  if(!MODEL || !BIM || !FURN.items().length) return Promise.resolve(false);
+  const wait = ms => new Promise(r => setTimeout(r, ms)), idleOK = () => !TG.prepIdle || TG.prepIdle();
+  const build = () => { if(TG.built && TG.key === ACTIVE_VAR) return Promise.resolve(true); if(TG.on) return Promise.resolve(false);
+    if(!TG.prepP){ if(TG.built) tgDispose(); TG.prepIt = tgBuildG(); const t0 = performance.now(); let work = 0;
+      TG.prepP = (async () => { try{ for(;;){ const it = TG.prepIt; if(!it) break;   // finished by a direct tgBuild() meanwhile
+            if(!idleOK()){ await wait(400); continue; }
+            const ts = performance.now(); let d = false; while(!(d = it.next().done) && performance.now() - ts < TG.prepSlice); work += performance.now() - ts;
+            if(d){ TG.prepIt = null; break; } await wait(TG.prepIdle ? 30 : 0); }
+          T33.prepMs = Math.round(work); T33.prepWall = Math.round(performance.now() - t0); return TG.built; }
+        catch(e){ console.warn('[thanksgiving] prepare', e); TG.prepIt = null; return false; } finally{ TG.prepP = null; } })(); }
+    return TG.prepP; };
+  const warm = async () => { if(!TG.built || TG.warmed === TG.ext) return TG.built; const objs = [], seen = new Set();
+    for(const g of [TG.ext, TG.inn, TG.innU]) if(g) g.traverse(x => { if(!x.material || !(x.isMesh || x.isPoints)) return; const k = [].concat(x.material).map(m => m.uuid).join() + (x.isInstancedMesh ? 'i' : ''); if(!seen.has(k)){ seen.add(k); objs.push(x); } });
+    const ext = TG.ext, t0 = performance.now(); while(objs.length){ if(!idleOK()){ await wait(400); continue; } let more = false; try{ more = w24Compile(objs); }catch(e){ console.warn('[thanksgiving] warm', e); break; } if(more) await wait(16); }
+    TG.warmed = ext; T33.warmMs = Math.round(performance.now() - t0); return true; };
+  return build().then(ok => ok ? warm() : false); }
 function tgLoadSfx(cb){ if(window.TGSFX || TG.sfx === 2){ cb && cb(); return; } if(TG.sfx === 1){ if(cb) (TG.sfxQ = TG.sfxQ || []).push(cb); return; } TG.sfx = 1; if(cb) TG.sfxQ = [cb];
   const sc = document.createElement('script'); sc.src = 'tgsfx.js'; sc.async = true; sc.onload = sc.onerror = () => { TG.sfx = 2; const q = TG.sfxQ || []; TG.sfxQ = null; q.forEach(f => { try{ f(); }catch(e){} }); }; document.head.appendChild(sc); }
 // self-check: an on/off cycle must leave furniture, lights, time of day, sky and scene exactly as they were
@@ -16709,7 +16746,7 @@ function tgCheck(){ const snap = () => { let lights = 0, objs = 0; scene.travers
   if(hw) window.HALLOWEEN.on(); else if(was) tgOn();
   const diff = Object.keys(a).filter(k => a[k] !== b[k]); return {ok: !diff.length && (!hwRound || (hwRound.exclusive && !hwRound.diff.length)), diff, hwRound, changedWhileOn: Object.keys(a).filter(k => a[k] !== mid[k]), report: TG.report}; }
 window.THANKSGIVING = {on: tgOn, off: tgOff, toggle: () => { TG.on ? window.THANKSGIVING.off() : window.THANKSGIVING.on(); return TG.on; }, get isOn(){ return TG.on; }, check: tgCheck, get report(){ return TG.report; },
-  loadSfx: tgLoadSfx, sfx: (name, o) => { try{ window.TGSFX && TGSFX.play(name, o); }catch(e){} },
+  loadSfx: tgLoadSfx, sfx: (name, o) => { try{ window.TGSFX && TGSFX.play(name, o); }catch(e){} }, prepare: tgPrepare, get ready(){ return TG.built && TG.key === ACTIVE_VAR && TG.warmed === TG.ext; },
   dim: (on) => { TG.dimF = on ? .4 : 1; try{ tgFrame(); }catch(e){} },   // R1: while a game runs, decor glow drops to 40 %
   decor: () => ({ext: TG.ext, inn: TG.inn, innU: TG.innU, table: {x: 10.5, y: 2.5, z: 21.4}, light: TG.light})};
 function tgSync(){ const b = document.getElementById('tgBtn'); if(b){ b.setAttribute('aria-pressed', String(TG.on)); b.classList.toggle('on', TG.on); } }
@@ -22557,8 +22594,49 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
     setMode: (m, o) => setMode(m, o), flyTo: (pos, look, dur) => flyTo(pos, look, 'look', dur),
     look(pos, at){ anim = null; glide = null; flightN++; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
     todGet: () => ({key: TOD_KEY, manual: todManual}),
+    /* r41: for the props' ground rays (assets/deck3d/deck-props.js): the terrain's height field, and the scene without terrain, hills and trees */
+    ground: (x, z) => ground(x, z), rayRoots(){ const skip = new Set(['terrain', 'hills', 'trees'].map(k => GROUPS[k]).filter(Boolean)); return scene.children.filter(o => !skip.has(o)); },
+    /* r41: the visitor has not touched anything for ms and nothing is moving (the idle warm-up's own test) */
+    idle: (ms = 2500) => { try{ return w24Idle(ms); }catch(e){ return false; } },
     /* a time of day chosen from the holiday control holds like one chosen from the Time of day button (manual), and is handed back exactly as it was found */
-    todSet(key, manual){ todManual = manual !== false; if(todManual) try{ window.__story && window.__story.apply(); }catch(e){} if(TOD_KEY !== key) setTOD(key); if(!todManual) try{ window.__story && window.__story.apply(); }catch(e){} }};
+    todSet(key, manual){ todManual = manual !== false; if(todManual) try{ window.__story && window.__story.apply(); }catch(e){} if(TOD_KEY !== key) setTOD(key); if(!todManual) try{ window.__story && window.__story.apply(); }catch(e){} },
+    /* r41 decor QA: everything a dress may touch, as flat key -> 'a|b|c' strings, so a switch can be compared with a clean load of the target dress.
+       Objects inside a dress (userData hw / tg / t33, or a holiday-* root) are only counted: their own flicker is theirs. */
+    snap(){ const S = {}, f = v => typeof v === 'number' ? (Math.abs(v) < 1e-6 ? '0' : (+v).toPrecision(4)) : v && v.isColor ? v.getHexString() : v && (v.isVector2 || v.isVector3 || v.isVector4) ? v.toArray().map(x => (+x).toPrecision(4)).join(',') : v && v.isTexture ? 'tex' : v == null ? '-' : typeof v === 'object' ? 'obj' : String(v);
+      const own = o => { for(let q = o; q; q = q.parent){ const u = q.userData; if(u && (u.hw || u.tg || u.t33)) return true; if(/^(holiday|tg:|hw)/.test(q.name || '')) return true; } return false; };
+      const XLP = new Set(((window.__XLobj && __XLobj.pool) || []).map(p => p.light)), mats = new Map(); let n = 0, nl = 0, nd = 0;
+      scene.traverse(o => { n++; if(own(o)){ nd++; return; } if(o.isLight){ nl++; const dark = !(o.intensity > 1e-3);
+          S['light:' + (o.name || o.type) + ':' + o.id] = (XLP.has(o) || (dark && !o.isAmbientLight)) ? [o.visible, dark ? 'off' : f(o.intensity)].join('|') : [o.visible, f(o.color), f(o.intensity), f(o.position), f(o.distance), f(o.decay), o.groundColor ? f(o.groundColor) : '-'].join('|'); }
+        if(o.isMesh && !o.visible) S['hidden:' + o.id] = (o.name || '') + '|' + (o.parent && o.parent.name || '');
+        if(o.isMesh && o.layers.mask !== 1) S['layers:' + o.id] = String(o.layers.mask);
+        if(o.material) for(const m of [].concat(o.material)) if(!/mirror/i.test(m.name || '')) mats.set(m.uuid, m); });
+      S.objects = n; S.lights = nl; S.dressObjects = nd;
+      for(const [u, m] of mats){ const a = []; for(const k of ['color', 'emissive', 'emissiveIntensity', 'opacity', 'envMapIntensity', 'visible', 'transparent']) if(m[k] !== undefined) a.push(f(m[k]));
+        if(m.uniforms) for(const [k, v] of Object.entries(m.uniforms)) if(v && v.value !== undefined && !/time|cam|proj|view|model|matrix/i.test(k)) a.push(k + '=' + f(v.value));
+        S['mat:' + (m.name || m.type) + ':' + u.slice(0, 8)] = a.join('|'); }
+      S.fog = scene.fog ? [f(scene.fog.color), f(scene.fog.near), f(scene.fog.far)].join('|') : '-'; S.background = scene.background ? (scene.background.isColor ? f(scene.background) : 'tex') : '-';
+      S.env = scene.environment === ((ENV_INSIDE && ENV_IN ? ENV_IN : ENV_RT) || {}).texture ? 'current' : 'stale';
+      S.exposure = f(BASE_EXPOSURE); S.sunDir = f(SUN_DIR); S.tod = TOD_KEY + '|' + (todManual ? 'manual' : 'auto') + '|' + DUSK;
+      try{ if(GRADE_PASS) for(const [k, v] of Object.entries(GRADE_PASS.uniforms)) if(v && v.value !== undefined && !v.value.isTexture) S['grade:' + k] = f(v.value); }catch(e){}
+      try{ for(const [k, v] of Object.entries(GLASS20_U)) S['glass20:' + k] = f(v.value); if(typeof GLASS_U !== 'undefined' && GLASS_U) for(const [k, v] of Object.entries(GLASS_U)) if(v && v.value !== undefined) S['glass:' + k] = f(v.value); }catch(e){}
+      try{ for(const [k, v] of Object.entries(LIGHT.dusk)) if(typeof v !== 'function') S['lightDusk:' + k] = f(v); S.duskHemi = f(LIGHT.duskHemi); S.duskLift = f(LIGHT.duskLift); }catch(e){}
+      try{ for(const k of ['sky', 'env', 'sun', 'win', 'glowScale']) S['v27:' + k] = JSON.stringify(V27D[k]); }catch(e){}
+      try{ S.hwState = [HW.on, !!(HW.ext && HW.ext.parent), !!(HW.inn && HW.inn.parent), !!(HW.sky && HW.sky.parent), HW.hidden.size, HW.bind.length, !!HW22.fix, !!HW22.lamps].join('|'); }catch(e){}
+      try{ S.tgState = [TG.on, !!(TG.ext && TG.ext.parent), !!(TG.inn && TG.inn.parent), !!(TG.innU && TG.innU.parent), TG.hidden.length, !!TG.savedV, TG.dimF].join('|'); }catch(e){}
+      const R = document.documentElement, cs = getComputedStyle(R); S.htmlClass = R.className.split(/\s+/).filter(c => /hallow|thanks|winter|holiday|season/i.test(c)).sort().join(' '); S.bodyClass = document.body.className;
+      for(const v of ['--paper', '--paper-2', '--ink', '--muted', '--line', '--accent', '--accent-ink', '--glass', '--pg', '--pgs', '--pt', '--ph-hi', '--busy-surface', '--busy-accent']) S['css' + v] = cs.getPropertyValue(v).trim();
+      const tab = document.querySelector('.tab[aria-selected="true"]'); if(tab){ const t = getComputedStyle(tab); S.tabLook = t.backgroundColor + '|' + t.color + '|' + t.boxShadow; }
+      for(const id of ['viewBtn', 'holBtn', 'busy24']){ const e = document.getElementById(id); if(e){ const t = getComputedStyle(e); S['ui:' + id] = t.backgroundColor + '|' + t.color + '|' + t.borderColor; } }
+      const tc = document.querySelector('meta[name=theme-color]'), ic = document.querySelector('link[rel~=icon]'); S.themeColor = tc ? tc.content : '-'; S.icon = ic ? ic.getAttribute('href') : '-'; S.title = document.title;
+      S.cursor = getComputedStyle(document.body).cursor + '|' + canvas.className; S.audioPlaying = [...document.querySelectorAll('audio,video')].filter(a => !a.paused).length;
+      return S; },
+    /* r41: a dress that is not on owns nothing in the scene. Anything one left behind (a frame error that flipped its flag, an off() that threw half-way)
+       is taken down through its own off(), so its saved lights, sky and furniture come back exactly as found. Returns what it had to clean. */
+    sweep(){ const out = [];
+      try{ if(!HW.on && HW.saved && ((HW.ext && HW.ext.parent) || (HW.sky && HW.sky.parent) || (HW.inn && HW.inn.parent) || HW.hidden.size || HW22.fix || document.documentElement.classList.contains('halloween'))){ out.push('halloween'); HW.on = true; try{ window.HALLOWEEN.off(); }catch(e){ console.warn('[holiday] sweep halloween', e); HW.on = false; } } }catch(e){}
+      try{ if(!TG.on && TG.saved && ((TG.ext && TG.ext.parent) || (TG.inn && TG.inn.parent) || (TG.innU && TG.innU.parent) || TG.hidden.length || TG.savedV || document.documentElement.classList.contains('thanksgiving'))){ out.push('thanksgiving'); TG.on = true; try{ window.THANKSGIVING.off(); }catch(e){ console.warn('[holiday] sweep thanksgiving', e); TG.on = false; } } }catch(e){}
+      for(const c of ['halloween', 'thanksgiving']) if(document.documentElement.classList.contains(c) && !(c === 'halloween' ? HW.on : TG.on)){ document.documentElement.classList.remove(c); out.push(c + '-class'); }
+      return out; }};
   const tell = (k, v) => { try{ HH.on[k] && HH.on[k](v); }catch(e){ console.warn('[holiday] ' + k, e); } };
   const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); tell('mode', mode); return r; };
   const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); tell('vis'); return r; };
@@ -23208,4 +23286,4 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=2" defer></script>
-<script src="../assets/holiday/holiday.js?v=8" defer></script>
+<script src="../assets/holiday/holiday.js?v=9" defer></script>
