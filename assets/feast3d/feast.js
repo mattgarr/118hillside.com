@@ -272,7 +272,7 @@
     if(e.pointerType === 'mouse' && e.buttons === 0){ endPtr(e, false); return; }
     const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; p.far = Math.max(p.far, Math.hypot(p.x - p.sx, p.y - p.sy));
     if(ptrs.size >= 2){ const [a, b] = [...ptrs.values()], d = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)); if(pinch) rig.zoom = clamp(rig.zoom * pinch / d, .5, 1); pinch = d; return; }
-    rigDrag(dx, dy); }, true);
+    rigDrag(dx, dy, e.clientX, e.clientY); }, true);
   function endPtr(e, tap){ const p = ptrs.get(e.pointerId); ptrs.delete(e.pointerId); pinch = 0; if(!ptrs.size) document.documentElement.classList.remove('fe-drag');
     try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
     if(tap && p && p.far < 7 && performance.now() - p.t < 450) tapAt(e.clientX, e.clientY); }
@@ -301,8 +301,9 @@
   function placeFov(base){ base = base || 62; const a = aspect(); if(a >= 1.25) return base; const t = Math.tan(base / 2 * Math.PI / 180) * 1.25 / a; return Math.min(86, 2 * Math.atan(t) * 180 / Math.PI); }
   function fitFov(fit, dist, free){ const a = aspect(), tv = (fit.h / 2 / dist) / free.fh, th = (fit.w / 2 / dist) / (free.fw * a); return clamp(2 * Math.atan(Math.max(tv, th) * 1.1) * 180 / Math.PI, 22, 86); }
   function wake(n){ rig.wakeN = Math.max(rig.wakeN, n || 20); }
-  function rigDrag(dx, dy){ if(rig.move || !S.started || (S.done && !S.free)) return; const k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05;
-    rigTurn(dx * k, dy * k); S.dragPx += Math.abs(dx) + Math.abs(dy); }
+  function rigDrag(dx, dy, x, y){ if(rig.move || !S.started || (S.done && !S.free)) return; const k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05;
+    const g = x != null && window.GRAB41 ? window.GRAB41.lookDelta(x, y, dx, dy) : null;   // r41: the tour's shared grab-the-world look (the scenery under the pointer stays under it)
+    if(g) rigTurn(g[0], g[1]); else rigTurn(dx * k, dy * k); S.dragPx += Math.abs(dx) + Math.abs(dy); }
   function rigTurn(dyaw, dpitch){ rig.tyaw += dyaw; rig.tpitch += dpitch;
     if(rig.lim){ const L = rig.lim; rig.tyaw = L.yaw + clamp(angDiff(L.yaw, rig.tyaw), -L.ry, L.ry); rig.tpitch = clamp(rig.tpitch, L.pitch - L.rp, L.pitch + L.rp); }
     else rig.tpitch = clamp(rig.tpitch, -1.05, 1.15); }
