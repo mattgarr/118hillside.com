@@ -149,6 +149,7 @@
       m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox();
       m.castShadow = !(mat && mat.transparent); m.receiveShadow = true;
       m.userData = {bim2: info, el: info.ranges.length === 1 ? info.ranges[0][0] : undefined}; GEO0.set(m, m.geometry);
+      triKeys(m, info);
       const g = opts.groupOf ? opts.groupOf(info.ex, info) : info.group;
       (S.byGroup[g] = S.byGroup[g] || []).push(m);
       if(opts.attach) opts.attach(g, m);
@@ -162,9 +163,24 @@
   }
 
   /* ---------- design options: hide elements of the merged meshes by their exact triangle ranges; option packages add meshes ---------- */
+  /* r42: page code may reorder a mesh's index after load (the accent-paint split groups triangles by material), which leaves the
+     positional ranges pointing at other triangles: a removed wall's studs stood in a concept's open room. Each loaded triangle is also
+     known by its three vertex indices (vertex buffers are never reordered), so the element of a triangle is looked up by those first;
+     triangles added later (appended with their own ranges) fall back to the ranges by position. */
+  function triKeys(m, info){
+    const I = m.geometry.index; if(!I || !info.ranges.length) return; const nv = m.geometry.attributes.position.count, K = new Map();
+    for(const r of info.ranges) for(let t = r[2]; t < r[2] + r[3]; t++) K.set((I.getX(3 * t) * nv + I.getX(3 * t + 1)) * nv + I.getX(3 * t + 2), r);
+    info.triKey = K; info.triNv = nv; }
+  function rangeAt(R, t){ let lo = 0, hi = R.length - 1; while(lo <= hi){ const m = (lo + hi) >> 1, r = R[m]; if(t < r[2]) hi = m - 1; else if(t >= r[2] + r[3]) lo = m + 1; else return r; } return null; }
   function hiddenIndex(m, hide, g, I){        // a copy of the mesh's index with the triangles of hidden elements collapsed (degenerate)
-    const R = m.userData.bim2.ranges; if(!I) return null; let arr = null;
-    for(const r of R){ if(!hide.has(r[0]) && !(r[1] && hide.has(r[0] + '|' + r[1]))) continue; if(!arr) arr = I.array.slice(); const a0 = r[2] * 3, a1 = (r[2] + r[3]) * 3; for(let k = a0; k < a1; k++) arr[k] = arr[a0]; }
+    const u = m.userData.bim2, R = u.ranges, K = u.triKey, nv = u.triNv; if(!I) return null; let arr = null;
+    const gone = r => !!r && (hide.has(r[0]) || !!(r[1] && hide.has(r[0] + '|' + r[1])));
+    if(K){ const src = I.array, Rs = R.slice().sort((a, b) => a[2] - b[2]);
+      for(let t = 0, n = src.length / 3; t < n; t++){ const a = src[3 * t], b = src[3 * t + 1], c = src[3 * t + 2]; if(a === b && b === c) continue;
+        const r = (a < nv && b < nv && c < nv && K.get((a * nv + b) * nv + c)) || rangeAt(Rs, t);
+        if(gone(r)){ if(!arr) arr = src.slice(); arr[3 * t + 1] = arr[3 * t + 2] = arr[3 * t]; } }
+      return arr ? new (T_ || root.THREE).BufferAttribute(arr, 1) : null; }
+    for(const r of R){ if(!gone(r)) continue; if(!arr) arr = I.array.slice(); const a0 = r[2] * 3, a1 = (r[2] + r[3]) * 3; for(let k = a0; k < a1; k++) arr[k] = arr[a0]; }
     return arr ? new (T_ || root.THREE).BufferAttribute(arr, 1) : null; }
   let T_ = null;
   const GEO0 = new WeakMap();                 // the as-loaded geometry of each package mesh (the page may swap m.geometry, e.g. the dollhouse cut)
