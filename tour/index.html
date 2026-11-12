@@ -22978,7 +22978,7 @@ R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids 
      it: the picture changes at once there anyway.
    - R40X: the environment the page sets (applyEnv / lightApplyRoomEnv, unchanged) becomes a target; what the materials see is R40X.out,
      a PMREM-sized texture that crossfades from the last one over envDur s (one 768x768 quad, only while a fade runs). */
-const R40L = window.R40L = {on: !/[?&]r40=0\b/.test(location.search), hold: .35, zoneHold: .3, inDur: 1.1, envDur: 1.0, coverDur: 1.0, jump: 6,
+const R40L = window.R40L = {on: !/[?&]r40=0\b/.test(location.search), hold: .35, zoneHold: .3, inDur: 1.6, envDur: 1.0, coverDur: 1.0, jump: 6, chk: 1.5, chkStops: .045, flipF: -9,
   raw: null, state: false, acc: 0, p: 0, zone: null, zAcc: 0, covP: 0, covF: -1, dt: 1 / 60, frame: 0, last: new THREE.Vector3(1e9, 0, 0), doll: null, mode: null,
   snap: true, snapEnv: false, glassKey: null, c: new THREE.Color(), c2: new THREE.Color(), log: [], logOn: false,
   ev(what, zone){ if(this.logOn){ this.log.push({t: +(performance.now() / 1000).toFixed(3), f: this.frame, what, zone}); if(this.log.length > 200) this.log.shift(); } }};
@@ -22991,7 +22991,7 @@ function r40Inside(dt){
   const snap = !L.on || L.snap || jumped || doll !== L.doll || mode !== L.mode || rev || L.raw === null;
   L.last.copy(P); L.doll = doll; L.mode = mode; L.snap = false; L.raw = raw;
   if(snap){ if(L.state !== raw) L.ev('snap ' + (raw ? 'in' : 'out'), zr); L.state = raw; L.acc = 0; L.p = raw ? 1 : 0; if(zr) L.zone = zr; L.zAcc = 0; L.snapEnv = true; L.covSnap = true; return raw; }
-  if(raw !== L.state){ L.acc += dt; if(L.acc >= L.hold){ L.state = raw; L.acc = 0; if(raw && zr){ L.zone = zr; L.zAcc = 0; } L.ev(raw ? 'in' : 'out', zr); } } else L.acc = 0;
+  if(raw !== L.state){ L.acc += dt; if(L.acc >= L.hold){ L.state = raw; L.acc = 0; L.flipF = L.frame; if(raw && zr){ L.zone = zr; L.zAcc = 0; } L.ev(raw ? 'in' : 'out', zr); } } else L.acc = 0;
   // the room: a threshold or door opening (no room cell) keeps the room you came from; a new room must hold zoneHold s
   if(L.state && zr && zr !== L.zone){ L.zAcc += dt; if(L.zAcc >= L.zoneHold || !L.zone){ L.zone = zr; L.zAcc = 0; L.ev('room', zr); } } else L.zAcc = 0;
   return L.state; }
@@ -23032,11 +23032,11 @@ function r40XTarget(t){ const X = R40X;
   if((!X.out || X.w !== t.image.width || X.h !== t.image.height || X.enc !== t.encoding) && !r40XMake(t)) return;
   if(!X.seen.has(t)){ X.seen.add(t); t.addEventListener('dispose', () => { if(X.B === t){ X.B = null; X.k = 1; } }); }   // a disposed target: hold the picture as it is until the next one
   if(snap){ X.B = t; X.k = 1; r40XDraw(t, t, 1, X.out); X.snapNext = false; return; }
-  r40XDraw(X.out.texture, X.out.texture, 0, X.prev); X.B = t; X.k = 0; X.fades++; R40L.ev('env fade', LIGHT_ENV_ID); }
+  r40XDraw(X.out.texture, X.out.texture, 0, X.prev); X.B = t; X.k = 0; X.fades++; X.dur = R40L.flipF === R40L.frame ? R40L.inDur : R40L.envDur;   // stepping in or out: the same time as EXPO_IN R40L.ev('env fade', LIGHT_ENV_ID); }
 // after anything that sets scene.environment: take what it set as the target and give the materials the crossfaded texture
 function r40EnvSync(){ if(!R40L.on) return; const e = scene.environment; if(e && e.isTexture && (!R40X.out || e !== R40X.out.texture)){ try{ r40XTarget(e); }catch(err){ console.warn('[r40] env', err); return; } }
   if(R40X.out && scene.environment) scene.environment = R40X.out.texture; }
-function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.k = Math.min(1, X.k + R40L.dt / R40L.envDur); r40XDraw(X.prev.texture, X.B, r40S(X.k), X.out); }
+function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.k = Math.min(1, X.k + R40L.dt / (X.dur || R40L.envDur)); r40XDraw(X.prev.texture, X.B, r40S(X.k), X.out); }
 { const _ae = applyEnv; applyEnv = function(){ const r = _ae.apply(this, arguments); r40EnvSync(); return r; }; }
 { const _la = lightApplyRoomEnv; lightApplyRoomEnv = function(){ const r = _la.apply(this, arguments); r40EnvSync(); return r; }; }
 { const _st = setTOD; setTOD = function(){ R40X.snapNext = true; R40L.snap = true; const r = _st.apply(this, arguments); r40EnvSync(); return r; }; }
