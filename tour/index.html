@@ -16068,8 +16068,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
     hideNudge();
     for(const p of plans()) load(p.id);
+    const wasMin = isPh() && $('#card').classList.contains('min');   // (Design opens the sheet itself)
     setPk(true); if(mode !== 'design') setMode('design'); else { try{ DESIGN.view(1.2); }catch(e){} }
-    try{ if(isPh() && $('#card').classList.contains('min')){ $('#collapse').click(); sheetByPk = true; } }catch(e){}
+    try{ if(wasMin) sheetByPk = true; if(isPh() && $('#card').classList.contains('min')) $('#collapse').click(); }catch(e){}
     render(); lastSig = ''; sync();
     setTimeout(() => { const c = list.querySelector('.k42c[aria-checked="true"]') || list.querySelector('.k42c'); if(c) try{ c.focus({preventScroll: true}); }catch(e){} const cd = $('#card'); if(cd) cd.scrollTop = 0; }, 60); }
 
