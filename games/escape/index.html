@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <title>Locked In at Hillside | 118 Hillside Drive, Woodside</title>
-<meta name="description" content="Snowball the cat locked the champagne in a drinks fridge in a real Woodside house. Walk through it in 3D, move the sun, read the light through the windows, and get the fridge open.">
+<meta name="description" content="An escape room in three levels, set in a real Woodside house in 3D. Pop the champagne on the main floor, solve the missing treat tin over two floors, or follow Snowball’s sunset heist through the whole house. Move the sun and read the light.">
 <link rel="canonical" href="https://118hillside.com/games/escape/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="118 Hillside Drive, Woodside">
 <meta property="og:title" content="Locked In at Hillside | 118 Hillside Drive">
-<meta property="og:description" content="Snowball the cat locked the champagne in a drinks fridge in a real Woodside house. Walk through it in 3D, move the sun, read the light through the windows, and get the fridge open.">
+<meta property="og:description" content="An escape room in three levels, set in a real Woodside house in 3D. Pop the champagne on the main floor, solve the missing treat tin over two floors, or follow Snowball’s sunset heist through the whole house. Move the sun and read the light.">
 <meta property="og:url" content="https://118hillside.com/games/escape/">
 <meta property="og:image" content="https://118hillside.com/images/escape-preview.jpg">
 <meta property="og:image:width" content="1200">
@@ -16,13 +16,14 @@
 <meta property="og:image:alt" content="A drawing taped to the kitchen pocket door: a low sun, two windows and a clock, signed with a paw print">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Locked In at Hillside | 118 Hillside Drive">
-<meta name="twitter:description" content="Snowball the cat locked the champagne in a drinks fridge in a real Woodside house. Walk through it in 3D, move the sun, read the light through the windows, and get the fridge open.">
+<meta name="twitter:description" content="An escape room in three levels, set in a real Woodside house in 3D. Pop the champagne on the main floor, solve the missing treat tin over two floors, or follow Snowball’s sunset heist through the whole house. Move the sun and read the light.">
 <meta name="twitter:image" content="https://118hillside.com/images/escape-preview.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
-<meta http-equiv="refresh" content="0; url=/tour/?escape=easy">
-<script>var b = (location.pathname.match(/^(.*)\/games\//) || [])[1] || ""; location.replace(b + "/tour/" + (b ? "index.html" : "") + "?escape=easy" + (location.search ? "&" + location.search.slice(1) : ""));</script>
+<meta http-equiv="refresh" content="0; url=/tour/?escape=1">
+<script>var b = (location.pathname.match(/^(.*)\/games\//) || [])[1] || "", q = new URLSearchParams(location.search), lv = /^(easy|medium|hard)$/.test(q.get("level") || "") ? q.get("level") : "1"; q.delete("level"); q.delete("escape"); var rest = q.toString();
+location.replace(b + "/tour/" + (b ? "index.html" : "") + "?escape=" + lv + (rest ? "&" + rest : ""));</script>
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#18213a;color:#f6f5f1;font:300 18px/1.5 "Avenir Next","Helvetica Neue",Arial,sans-serif}a{color:#e8b84a}</style>
 </head>
-<body><p>Opening the house. <a href="/tour/?escape=easy">Tap here if it does not start.</a></p></body>
+<body><p>Opening the house. <a href="/tour/?escape=1">Tap here if it doesn’t start.</a></p></body>
 </html>
