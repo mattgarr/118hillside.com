@@ -6842,7 +6842,8 @@ function navQA(){
      rooms - stepped with a fixed simulated frame time, nothing drawn (as 'smooth'). Over the last 40 % of each move the camera must not step
      backwards (its level velocity along its level view under R41B.dot ft/s for R41B.hold s or more) and must not double back along its way
      (its way of travel, taken over R41B.win s at over R41B.vmin ft/s, turning more than R41B.turn deg within R41B.turnS s: a U-turn, not a
-     corner, a switchback landing or a sub-inch wiggle in the line at a crawl). A move listed in R41B.known is noted, not failed (see there).
+     corner, a switchback landing or a sub-inch wiggle in the line at a crawl). A short step back to a spot just behind you (under R41B.step ft,
+     turning under R41B.stepTurn deg) and a move listed in R41B.known (empty) are noted, not failed (see there).
      {backDt: 1/30} steps at another frame rate. Table: window.__BACK. */
   SEC.back = async R => { const dt = o.backDt || 1 / 60, K = R41B, realNow = performance.now.bind(performance), V = new V3(), rows = []; let vt = realNow();
     const run = (A, id, x) => { const fr = [], P1 = camera.position.clone(), L0 = A.path.L; let t = 0;
