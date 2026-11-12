@@ -1554,6 +1554,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
   var SEL = '.bar,#card,#mini,#pad,#peek27,.navguide,.phlvbar,.ideas35,#realSeg,#ovtag,#bks36,#fin36,.qhint,.phtoast,#holShow,.perfpill';   // r36: + the 3D model / Photo switch (it sits outside the card on a phone), the photo tag, the booking line, the finale card, hints; r41: + the 'Refining the view' pill
   var still = new WeakMap(), G = document.getElementById('gallery'), LBX = document.getElementById('lb'), OV = document.getElementById('ov');
   function box(e, strict){ var cs = getComputedStyle(e); if(cs.display === 'none') return null; if(strict && (cs.visibility === 'hidden' || +cs.opacity < .05)) return null;
+    if(strict && e.checkVisibility && !e.checkVisibility({opacityProperty: true, visibilityProperty: true})) return null;   // r41: nor inside something faded out (the loading card, long gone, held the notice off part of the bottom edge)
     var r = e.getBoundingClientRect(); if(r.width < 6 || r.height < 6 || (r.width > innerWidth * .9 && r.height > innerHeight * .8)) return null; return r; }
   function obstacles(){ var out = [], L = document.querySelectorAll(SEL), i, e, r, cs, z;
     for(i = 0; i < L.length; i++){ r = box(L[i], true); if(r) out.push(r); }   // only what is on screen
