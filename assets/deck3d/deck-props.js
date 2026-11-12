@@ -244,11 +244,12 @@
           x.lineWidth = lw * .45; x.strokeStyle = `hsla(${hue - 6},${sat - 8}%,${li + 13}%,.55)`; x.beginPath(); x.moveTo(mx, my - lw * .2); x.lineTo(ex, ey); x.stroke(); };
         for(let s = .02; s < .985; s += .0105) [-1, 1].forEach(sd => needle(s, sd, 1, 1.0 + R() * .3, 5.2, 0));
         for(let s = .03; s < .97; s += .016) needle(s, R() > .5 ? 1 : -1, .55, .3 + R() * .35, 5, 4);
-        if(flock){ for(let i = 0; i < 1500; i++){ const s = R(), sd = R() > .5 ? 1 : -1, d = R() * .42 * w, px = cx(s) + sd * d * Math.sin(1.1), py = h * (1 - s) - d * .45, rr = 4 + R() * 8;
+        if(flock){ for(let i = 0; i < 1200; i++){ const s = R(), sd = R() > .5 ? 1 : -1, d = R() * .42 * w, px = cx(s) + sd * d * Math.sin(1.1), py = h * (1 - s) - d * .45, rr = 3.5 + R() * 7.5;
             const gr = x.createRadialGradient(px, py, 0, px, py, rr); gr.addColorStop(0, 'rgba(250,252,255,.95)'); gr.addColorStop(.7, 'rgba(240,244,248,.8)'); gr.addColorStop(1, 'rgba(240,244,248,0)'); x.fillStyle = gr; x.beginPath(); x.arc(px, py, rr, 0, 7); x.fill(); } } });
       return t; });
     const firMat = flock => tex('firMat' + (flock ? 'F' : ''), () => { const m = new THREE.MeshStandardMaterial({color: 0xffffff, map: sprayTex(flock), vertexColors: true, alphaTest: .42, side: THREE.DoubleSide, roughness: flock ? .9 : .78, metalness: 0});
       m.onBeforeCompile = s => { s.fragmentShader = s.fragmentShader.replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('normal = normal * faceDirection;', '')); };   // fronds are lit by their rounded normals from both sides
+      if(!flock) m.color.setRGB(.5, .66, .6);   // a deep blue-green: under the room's lights the painted needles alone read as lawn green
       m.customProgramCacheKey = () => 'deck-fir'; m.name = 'deck-fir'; return m; });
     const woodMat = () => std('#ffffff', {vertexColors: true, roughness: .92});
     const ORN = {classic: ['#b3141f', '#e0b33c', '#c9a24a', '#f1e3b4', '#8e1f2b', '#e0b33c'], fir: ['#c81e2b', '#e0b33c', '#1f5fbf', '#c9d0d8', '#1d8a4a', '#b8327a'], flocked: ['#d9b866', '#e9edf1', '#c9a24a', '#b8c4d0'], pencil: ['#e0b33c', '#c9a24a', '#f0d27a'], small: ['#c81e2b', '#e0b33c']};
