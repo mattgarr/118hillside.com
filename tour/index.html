@@ -16046,7 +16046,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
       b.setAttribute('aria-label', (f ? bedLine(f) + ', ' + factLine(f) + '. ' : '') + p.name + '. ' + p.line + ' ' + LAB[k]);
       b.addEventListener('click', () => choose(p.id, 'picker')); list.appendChild(b); }
     if(!list.querySelector('[tabindex="0"]') && list.firstChild) list.firstChild.tabIndex = 0;
-    list.scrollLeft = sl; if(cur !== render.cur){ render.cur = cur; const c = list.querySelector('.k42c[aria-checked="true"]'); if(c && isPh()) list.scrollLeft = Math.max(0, c.offsetLeft - list.offsetLeft - 2); }
+    list.scrollLeft = sl; if(cur !== render.cur){ render.cur = cur; const c = list.querySelector('.k42c[aria-checked="true"]'); if(c && isPh()) list.scrollLeft = Math.max(0, c.offsetLeft - list.offsetLeft - 2);
+      else if(c){ const cd = $('#card'), r = c.getBoundingClientRect(), k = cd.getBoundingClientRect(), bk = $('#bk38'), lo = bk && !bk.hidden ? bk.getBoundingClientRect().top - 8 : k.bottom - 8;   // a computer: the chosen card scrolls into the panel
+        if(r.bottom > lo) cd.scrollTop += r.bottom - lo; else if(r.top < k.top + 8) cd.scrollTop -= k.top + 8 - r.top; } }
     foot.querySelector('[data-a=asbuilt]').hidden = cur === 'asbuilt'; foot.querySelector('[data-a=walk]').hidden = cur === 'asbuilt'; }
   list.addEventListener('keydown', e => { const L = [...list.querySelectorAll('.k42c')], i = L.indexOf(document.activeElement); if(i < 0) return;
     const j = /^Arrow(Down|Right)$/.test(e.key) ? (i + 1) % L.length : /^Arrow(Up|Left)$/.test(e.key) ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
