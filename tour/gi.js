@@ -20,7 +20,7 @@ const V3 = THREE.Vector3;
 const qp = (k, d) => { const m = new RegExp('[?&]' + k + '=([^&]*)').exec(Q); return m ? decodeURIComponent(m[1]) : d; };
 const GI = window.GI = {mode: MODE, ver: 2, on: false, ready: false, why: 'loading', H: null, n: 0, composes: 0, k: 0, t: 0, ssaoK: 0,
   // tuning (also from the URL: &gigain=, &gispec=, &giao=, &gissao=keep)
-  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), wbLight: +qp('giwbl', .5), wbLampIn: +qp('giwblamp', .75), wbLampOut: .15, meterT: 1.5, meterK: +qp('gimk', .85), meterR: 12, meterStops: 1.5, comp: 1, spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
+  EV: 5.5, ev: qp('giev', ''), wb: +qp('giwb', .9), wbLight: +qp('giwbl', .5), wbLampIn: +qp('giwblamp', .75), wbLampOut: .15, meterT: 1.5, meterK: +qp('gimk', .85), meterR: 28, meterStops: 1.5, comp: 1, spec: +qp('gispec', .7), aoK: +qp('giao', 1), hemiKill: 1, sigma: +qp('gisig', .2), keepSSAO: qp('gissao', '') === 'keep',
   base: qp('gibase', 'gi/'),
   U: {giOn: {value: 0}, giK: {value: 0}, giGain: {value: new V3(1, 1, 1)}, giHemi: {value: 1}, giSpec: {value: .7}, giAOK: {value: 1},
     giT0: {value: null}, giT1: {value: null}, giAO: {value: null}, giRoom: {value: null},
@@ -28,6 +28,9 @@ const GI = window.GI = {mode: MODE, ver: 2, on: false, ready: false, why: 'loadi
     giRB: {value: new THREE.Vector4()}, giRY: {value: new THREE.Vector2(-1, 15)},
     giA0: {value: new V3()}, giAS: {value: new V3(1, 1, 1)}, giAN: {value: new V3(1, 1, 1)}, giAT: {value: new THREE.Vector2(1, 1)}, giAOff: {value: .2}}};
 GI.log = [];
+/* QA captures and bakes (&giqa=1, ?gi=bake) use the house as it loads: a visitor's saved furniture moves are not read in that tab only
+   (on the shared test origin another session's saved move had put the living-room rug in the kitchen in every capture) */
+if(qp('giqa', '') || MODE === 'bake') try{ const gi0 = Storage.prototype.getItem; Storage.prototype.getItem = function(k){ return /^hillside\.furniture/.test(String(k)) ? null : gi0.apply(this, arguments); }; }catch(e){}
 const say = (...a) => { GI.log.push(a.join(' ')); if(GI.log.length > 60) GI.log.shift(); };
 // ?gi=2: tier B as well (gi-rt.js: the indirect light traced per pixel while the camera rests; it uses the bake's tracer). Not on phones yet.
 GI.tierB = MODE === '2' && (!matchMedia('(pointer:coarse)').matches || qp('girt', '') === 'force');
@@ -241,16 +244,19 @@ GI.srcN = 0;
 /* The camera's light meter for the rooms. GI.EV is the base exposure; the page's own meter only follows 60 % of a difference and at most
    0.6 stops (it was tuned for painted light that hardly varies), and phones have no meter at all. With physical light a room can be
    much brighter (low sun deep in the great room) or darker (dusk) than the midday level EV was set for, so the volume is metered as
-   a photographer meters a room: the incident light around the camera (the probes' mean irradiance within GI.meterR = 12 ft below
-   9 ft, lifted; measured at midday: kitchen 1.86, great room 1.53, living room 0.93; at golden hour 2.85, 2.55, 1.48; at dusk
-   0.74, 0.74, 0.56) against the level GI.meterT = 1.5, followed GI.meterK = 85 % of the way (so golden hour stays a little
+   a photographer meters a room: the incident light on what the lens sees (the probes' mean irradiance below 9 ft within 28 ft in front of the camera, lifted;
+   measured within 12 ft of the three stops at midday: kitchen 1.86, great room 1.53, living room 0.93; at golden hour 2.85, 2.55,
+   1.48; at dusk 0.74, 0.74, 0.56; metering around the camera instead fought the page's image meter when the camera stood in a bright
+   bay looking at a dim room) against the level GI.meterT = 1.5, followed GI.meterK = 85 % of the way (so golden hour stays a little
    brighter than noon, dusk darker), within GI.meterStops, eased in stops over about a second. Outside the rooms it returns to 1. One rule for every room and time. */
+const _fw = new V3();
 function meter(dt){ const H = GI.H, p = H.camera.position, inR = GI.on ? GI.roomAt(p.x, p.y, p.z) : 0; let want = 0;
-  if(inR > 0 && GI.acc && GI.meanIdx){ const key = GI.composes + ':' + Math.round(p.x) + ':' + Math.round(p.z);
-    if(key !== GI._mKey){ GI._mKey = key; const g = GI.index.grid, A = GI.acc, gn = GI.gainNow, R2 = GI.meterR * GI.meterR; let E = 0, n = 0;
-      for(const q of GI.meanIdx){ const dx = g.x0 + (q % g.nx) * g.d - p.x, dz = g.z0 + (Math.floor(q / g.nx) % g.nz) * g.d - p.z; if(dx * dx + dz * dz > R2) continue; const o = q * 6;
-        E += .2126 * Math.max(0, A[o]) * gn[0] + .7152 * Math.max(0, A[o + 1]) * gn[1] + .0722 * Math.max(0, A[o + 2]) * gn[2]; n++; }
-      GI.Ecam = n ? E / n : 0; }
+  if(inR > 0 && GI.acc && GI.meanIdx){ const fw = H.camera.getWorldDirection(_fw), key = GI.composes + ':' + Math.round(p.x) + ':' + Math.round(p.z) + ':' + Math.round(Math.atan2(fw.z, fw.x) * 8);
+    if(key !== GI._mKey){ GI._mKey = key; const g = GI.index.grid, A = GI.acc, gn = GI.gainNow, R2 = GI.meterR * GI.meterR, fl = Math.hypot(fw.x, fw.z) || 1, fx = fw.x / fl, fz = fw.z / fl; let E = 0, n = 0;
+      for(const q of GI.meanIdx){ const dx = g.x0 + (q % g.nx) * g.d - p.x, dz = g.z0 + (Math.floor(q / g.nx) % g.nz) * g.d - p.z, d2 = dx * dx + dz * dz; if(d2 > R2) continue;
+        const c = d2 > 9 ? (dx * fx + dz * fz) / Math.sqrt(d2) : 1, w = c <= .35 ? 0 : c >= .7 ? 1 : (c - .35) / .35; if(!w) continue; const o = q * 6;   // what the lens sees (about 55 degrees either side), and the 3 ft around the camera
+        E += w * (.2126 * Math.max(0, A[o]) * gn[0] + .7152 * Math.max(0, A[o + 1]) * gn[1] + .0722 * Math.max(0, A[o + 2]) * gn[2]); n += w; }
+      GI.Ecam = n > 4 ? E / n : 0; }
     if(GI.Ecam > 1e-6) want = Math.max(-GI.meterStops, Math.min(GI.meterStops, GI.meterK * Math.log2(GI.meterT / GI.Ecam))); }
   GI.compS = GI.snapM || GI.compS == null ? want : GI.compS + (want - GI.compS) * (1 - Math.exp(-dt / .5)); GI.snapM = false; GI.comp = Math.pow(2, GI.compS); }
 /* r13 corner bands: their multiply decals double up with baked corners; inside the rooms their vertices are lifted to white (kept, restored when GI is off) */
