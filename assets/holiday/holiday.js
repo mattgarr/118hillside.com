@@ -108,7 +108,18 @@
   const busyText = k => k === 'none' ? 'Taking the decorations down…' : 'Dressing the house for ' + FOR[k] + '…';
   function status(label){ const B = H.busy, e = document.getElementById('busy24'); if(B && B.active && e && e.classList.contains('on')){ const s = e.querySelector('span'); if(s) s.textContent = label; } else if(B && B.start && !B.active){ try{ B.start(isPh() && row ? row : btn, label, true); }catch(x){} }
     const live = $('#holLive'); if(live) live.textContent = label; const r = busy && panel ? panel.querySelector('[data-k="' + busy + '"] .s') : null; if(r) r.textContent = label; }
-  async function settle(){ const B = H.busy; if(B && B.active){ try{ B.settle(); }catch(e){} for(let i = 0; i < 50 && B.active; i++) await sleep(100); if(B.active) try{ B.end(); }catch(e){} } }
+  /* r43: "settled" is measured against this device's own frame time. The page's busy pill settles on three frames under 50 ms in a row; a phone
+     that draws this house at 15-20 frames a second never gets one, so every switch kept its loading note up for the full 4-5 s cap after the
+     dress was already up. FT keeps the recent frame times while the panel is open or a switch runs; settled is three frames in a row within
+     1.6x the time a frame took just before the switch (at least 50 ms), capped at 2.5 s. */
+  const FT = {d: [], on: 0, last: 0, raf: 0, until: 0};
+  function ftRun(ms){ FT.until = Math.max(FT.until, performance.now() + (ms || 4000)); if(FT.raf) return; FT.last = 0;
+    const f = t => { if(FT.last) { FT.d.push(t - FT.last); if(FT.d.length > 40) FT.d.shift(); } FT.last = t; FT.raf = (panel && !panel.hidden) || busy || t < FT.until ? requestAnimationFrame(f) : 0; if(!FT.raf) FT.last = 0; };
+    FT.raf = requestAnimationFrame(f); }
+  const ftBase = () => { const a = FT.d.slice(-12).sort((x, y) => x - y); return a.length >= 3 ? a[a.length >> 1] : 16.7; };
+  async function settle(base){ const B = H.busy, lim = Math.max(50, 1.6 * (base || 16.7)), t0 = performance.now(); let ok = 0, last = 0;
+    await new Promise(res => { const f = t => { if(last){ ok = t - last < lim ? ok + 1 : 0; } last = t; if(ok >= 3 || performance.now() - t0 > 2500 || document.hidden) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); setTimeout(() => { if(document.hidden) res(); }, 3000); });
+    if(B && B.active) try{ B.end(); }catch(e){} }
   const sweep = () => { let r = []; try{ r = (H.sweep && H.sweep()) || []; }catch(e){ console.warn('[holiday] sweep', e); } if(W.P && !W.on && W.P.root.parent){ W.P.root.parent.remove(W.P.root); r.push('winter'); } if(r.length){ lastSweep = r; console.warn('[holiday] cleaned up after', r.join(', ')); } return r; };
   function downAll(keep){ if(keep !== 'winter') winterOff(); if(keep !== 'halloween' && HW() && HW().isOn) HW().off(); if(keep !== 'thanksgiving' && TG() && TG().isOn) TG().off(); }
   function set(kind, o){ o = o || {};
@@ -125,6 +136,7 @@
   const frameWatch = () => { const w = {worst: 0, on: true}; let last = performance.now(); (function f(){ if(!w.on) return; const t = performance.now(); w.worst = Math.max(w.worst, t - last); last = t; requestAnimationFrame(f); })(); return w; };
   async function drive(){ let ok = true, kind = null, t0 = 0;
     while(want !== null){ kind = want; want = null; const my = ++gen, stale = () => my !== gen; t0 = performance.now();
+      ftRun(6000); const base = ftBase();
       const mk = {from: current(), cold: kind === 'thanksgiving' ? !(TG() && TG().ready) : kind === 'winter' ? !W.built : kind === 'halloween' ? !(window.__HW && __HW.built) : false}, fw = frameWatch(), m = n => { mk[n] = Math.round(performance.now() - t0); };
       busy = kind; show.stop(); render(); status(busyText(kind)); await paint(); m('note'); if(stale()){ fw.on = false; continue; }
       ok = true;
@@ -135,7 +147,7 @@
         sweep(); if(kind !== 'none' && current() !== kind) ok = false; }
       catch(e){ ok = false; console.warn('[holiday]', kind, e); try{ downAll(null); sweep(); }catch(x){} }
       if(stale()){ fw.on = false; continue; }
-      await paint(); m('shown'); await settle(); m('settled'); fw.on = false; mk.worst = Math.round(fw.worst); if(stale()) continue;
+      await paint(); m('shown'); await settle(base); m('settled'); mk.frame = Math.round(base); fw.on = false; mk.worst = Math.round(fw.worst); if(stale()) continue;
       lastMs[kind] = Math.round(performance.now() - t0); marks[kind] = mk; }
     if(kind !== null && current() !== kind && ok){ ok = false; }   // the last pick did not hold (should not happen): say so rather than show a wrong state
     busy = null;
@@ -297,7 +309,7 @@
     btn.classList.toggle('on', on); btn.querySelector('.hl36').textContent = on ? DRESS[cur].label : 'Holiday decor'; btn.setAttribute('aria-label', on ? 'Holiday decor: ' + DRESS[cur].label : 'Holiday decor');
     if(row) row.querySelector('.v31val').textContent = on ? DRESS[cur].label : 'Off';
     if(bar){ const d = bar.querySelector('.dk'); d.hidden = cur !== 'winter'; d.setAttribute('aria-pressed', String(night)); d.setAttribute('aria-label', night ? 'See it by day' : 'See it at dusk'); d.innerHTML = (night ? SUN : MOON) + '<span>' + (night ? 'Day' : 'Dusk') + '</span>'; bar.querySelector('.sep').hidden = d.hidden; } }
-  function open(from){ if(!panel) return; opener = from || btn; panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); render(); place();
+  function open(from){ if(!panel) return; opener = from || btn; panel.hidden = false; ftRun(2000); btn.setAttribute('aria-expanded', 'true'); render(); place();
     const f = panel.querySelector('.opt[aria-checked=true]') || panel.querySelector('.opt'); if(f) try{ f.focus({preventScroll: true}); }catch(e){}
     try{ window.__v33discPlace && __v33discPlace(); }catch(e){} ga('holiday_open'); }
   function close(refocus){ if(!panel || panel.hidden) return; panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); const o = opener; opener = null; if(refocus && o && o.isConnected && o.offsetParent) try{ o.focus({preventScroll: true}); }catch(e){}
