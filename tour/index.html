@@ -15995,7 +15995,7 @@ html.ph #cb42 .b42s{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap;gap:
 html.ph #cb42 button{min-height:44px;padding:0 14px;font-size:14px}
 html.ph #cb42 button.b42alt{flex:0 1 auto}
 /* a phone in the floor plan picker: one slim line over the house (the plan's details and label are in the sheet right below) */
-html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:7px 14px;flex-wrap:nowrap;text-align:center}html.ph #cb42.b42sl .b42m span,html.ph #cb42.b42sl .b42s{display:none}
+html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:7px 16px;flex-wrap:nowrap;text-align:center}html.ph #cb42.b42sl .b42s{display:none}html.ph #cb42.b42sl .b42m b::before{display:none}
 html.ph #cb42.b42ab{width:max-content;max-width:calc(100vw - 24px);padding:6px 14px;font-size:14px}
 /* the holiday control's companion */
 html.ph #hm42{left:8px!important;right:8px;width:auto!important;padding:6px 6px 6px 14px;font-size:14px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line))}
@@ -16020,7 +16020,8 @@ html.ph .pk42p .p42fine{font-size:14px;color:var(--pm,var(--muted))}
 @media (orientation:portrait){
   html.ph.pk42 #card .body{max-height:calc(49vh - 140px);max-height:calc(49dvh - 140px)}
   html.ph .pk42p .p42list{grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
-  html.ph .pk42p .k42c{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:64px;padding:9px 12px;border-radius:12px}
+  html.ph.pk42 #pk42h .p42e{display:none}html.ph.pk42 #pk42h{padding-top:2px}
+  html.ph .pk42p .k42c{display:flex;flex-direction:column;justify-content:center;gap:1px;min-height:58px;padding:7px 12px;border-radius:12px}
   html.ph .pk42p .k42c :is(.k42s,.k42b,.k42d,.k42l){display:none}
   html.ph .pk42p .k42c .k42t{margin:0;font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   html.ph .pk42p .k42c[data-k="real"] .k42t::after{content:" · real house";opacity:.75}
@@ -16028,7 +16029,7 @@ html.ph .pk42p .p42fine{font-size:14px;color:var(--pm,var(--muted))}
   html.ph .pk42p .k42c[aria-checked="true"] :is(.k42n,.k42t){color:var(--ph-ink,#fbfaf7)}
   html.ph .pk42p .k42c[aria-checked="true"]::after,html.ph .pk42p .k42c.k42busy::after{display:none}
   html.ph .pk42p .k42c.k42busy{opacity:.7}
-  html.ph .pk42p .p42det{display:block;margin:10px 2px 0;font-family:var(--sf,inherit);font-size:14px;line-height:1.4;color:var(--pt,var(--ink))}
+  html.ph .pk42p .p42det{display:block;margin:8px 2px 0;font-family:var(--sf,inherit);font-size:14px;line-height:1.4;color:var(--pt,var(--ink))}
   html.ph .pk42p .p42det b{font-weight:600}html.ph .pk42p .p42det .k42d{display:block;margin-top:2px}html.ph .pk42p .p42det .k42l{display:block;margin-top:6px}
   html.ph .pk42p .p42det .k42l::before{content:"";display:inline-block;width:8px;height:8px;margin:0 7px 1px 0;border-radius:50%;background:#c98a2b;vertical-align:middle}
   html.ph .pk42p .p42det[data-k="real"] .k42l::before{background:var(--accent,#55633a)}
@@ -16178,8 +16179,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
     else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
       const same = f && (facts('asbuilt') || {}).beds === f.beds, nm = (plans().find(p => p.id === v) || {}).name || '';   // a concept with as many bedrooms as the house says which one it is
-      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (banner.classList.contains('b42sl') ? '' : ', ' + factLine(f)) : '') + '. Not the house as it is.';
-      s.textContent = k === 'arch' ? 'Based on earlier work with an architect. Not reviewed for permits or structure.' : 'Not designed or reviewed by an architect or engineer.';
+      const sl = banner.classList.contains('b42sl');   // the slim line on a phone: what it is, then 'Not the house as it is.' on a line of its own
+      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '') + (sl ? '' : '. Not the house as it is.');
+      s.textContent = sl ? 'Not the house as it is.' : k === 'arch' ? 'Based on earlier work with an architect. Not reviewed for permits or structure.' : 'Not designed or reviewed by an architect or engineer.';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
     banner.hidden = false;
     // under the top bar (the booking line on a phone); on a computer centred over the part of the screen the Design panel leaves free
