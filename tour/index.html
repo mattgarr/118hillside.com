@@ -22862,9 +22862,10 @@ function r41EndIn(pts){ const n = pts.length; if(n < 6) return pts; const B = pt
       const ax = B.x - A.x, az = B.z - A.z, ab = Math.hypot(ax, az), pr = ax * tx + az * tz; if(ab < .3 || pr < .25 * ab) continue;   // the stop is beside or behind: no gentle curve from here
       let kink = 0; for(let i = j + 1; i < n - 1; i++){ const ux = pts[i].x - pts[i - 1].x, uz = pts[i].z - pts[i - 1].z, vx = pts[i + 1].x - pts[i].x, vz = pts[i + 1].z - pts[i].z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); if(lu > .02 && lv > .02) kink = Math.max(kink, Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1))); }
       if(kink < .6) return pts;   // no sharp turn in the last few feet: leave the line as it is
-      const d = pr * .5, Cx = A.x + tx * d, Cz = A.z + tz * d, k = Math.max(2, Math.ceil(acc / .5)), Q = []; let ok = true;
+      const d = pr * .5, Cx = A.x + tx * d, Cz = A.z + tz * d, k = Math.max(2, Math.ceil(acc / .5)), Q = []; let ok = true, z0 = 0;
+      for(let i = j + 1; i < n - 1; i++) if(r36At(pts[i].x, pts[i].z, pts[i].y - EYE) === 0) z0++;   // the line it replaces may already pass a cell short of a shoulder's clearance: no more of those than it had
       for(let q = 1; q < k; q++){ const u = q / k, x = (1 - u) * (1 - u) * A.x + 2 * u * (1 - u) * Cx + u * u * B.x, z = (1 - u) * (1 - u) * A.z + 2 * u * (1 - u) * Cz + u * u * B.z, f = lerp(fA, fB, u), y = navSupport(x, z, f + .3);
-        if(Math.abs(y - f) > .3 || !fr(x, z, y) || (!(offB && Math.hypot(x - B.x, z - B.z) < 1.5) && r36At(x, z, y) === 0)){ ok = false; break; } Q.push(new THREE.Vector3(x, y + EYE, z)); }
+        if(Math.abs(y - f) > .3 || !fr(x, z, y)){ ok = false; break; } if(!(offB && Math.hypot(x - B.x, z - B.z) < 1.5) && r36At(x, z, y) === 0 && --z0 < 0){ ok = false; break; } Q.push(new THREE.Vector3(x, y + EYE, z)); }
       if(ok) return pts.slice(0, j + 1).concat(Q, [B]); } }
   finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); }
   return pts; }
@@ -23051,9 +23052,9 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
   const ys = [], ps = [], ss = []; let y = g[0], w = 0, pt = gp[0], pw = 0; const wn = 9, YW = YAW * DG, YA = YACC * DG, PW = S.PYAW * DG, PA = S.PACC * DG;
   // r41: the walk itself ends on g[N - 1], within BACKDEG of the way in; the head goes on round to the stop's view (gE) as you slow to a stop (only as far
   // as keeps the step along the view over -.15 ft/s) and then standing, braking so that it never overshoots
-  const gE = C.gEnd, gW = g[N - 1], rem = gE - gW, sgE = Math.sign(rem), o0 = angDiff(tN, gW), away = Math.sign(o0) === sgE, stand = C.stand > .2 * DG;
+  const gE = C.gEnd, gW = g[N - 1], rem = gE - gW, sgE = Math.sign(rem), stand = C.stand > .2 * DG;
   for(let k = 0; k < n1 + 240 * 6; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], v = (sN - s) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt; let tg = G(g, sN), tr = (tg - G(g, s)) / dt, ya = YA, yw = YW, st = false;
-    if(stand && s > L - 4){ const more = v < .15 || !away ? Infinity : Math.max(0, MB - Math.abs(o0)) + Math.asin(Math.min(1, .15 / v)), e = gW + sgE * Math.min(Math.abs(rem), more); if((e - tg) * sgE > 0){ tg = e; tr = 0; ya = AS; yw = WS; st = true; } }
+    if(stand && s > L - 4){ let e = gE; if(v >= .15){ const lim = gW + angDiff(gW, G(trv, s) + sgE * (MB + Math.asin(Math.min(1, .15 / v)))); e = gW + sgE * clamp((lim - gW) * sgE, 0, Math.abs(rem)); } if((e - tg) * sgE > 0){ tg = e; tr = 0; ya = AS; yw = WS; st = true; } }
     ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - gE) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
     let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -ya, ya); w = clamp(w + ac * dt, -yw, yw); if(st){ const br = Math.sqrt(1.7 * ya * Math.abs(tg - y)); if(w * (tg - y) > 0 && Math.abs(w) > br) w = Math.sign(w) * br; } y += w * dt;
     ac = clamp(wn * wn * (pg - pt) + 2 * wn * (prr - pw), -PA, PA); pw = clamp(pw + ac * dt, -PW, PW); pt += pw * dt; }
