@@ -12823,7 +12823,7 @@ function w24Compile(objs){ const proxy = Object.create(scene); let chunk = null;
   finally{ for(const l of flips) l.visible = false; renderer.setRenderTarget(rt0); }
   return objs.length > 0; }
 const W24_JOBS = [
-  {name: 'hwbuild', ready: () => !HW.on && !HW.built && !HW_AUTO && !!(MODEL && BIM && FURN.items().length) && (mode === 'tour' || mode === 'walk') && !!window.HOLIDAY && HOLIDAY.season === 'halloween',   // r43: only in Halloween's season, and never under a game (holiday.js is not loaded there); the holiday control makes the other seasons' dresses ready
+  {name: 'hwbuild', ready: () => !HW.on && !HW.built && !HW_AUTO && !!(MODEL && BIM && FURN.items().length) && (mode === 'tour' || mode === 'walk') && !!window.HOLIDAY && (HOLIDAY.season === 'halloween' || HOLIDAY.prep.others),   // r43: first in Halloween's season, otherwise once the holiday control has made the season's dress (and the other one) ready; never under a game (holiday.js is not loaded there)
    run: () => { HW.chandSrc = DUSK_LIGHTS.find(l => l.parent && l.parent.name === 'main' && Math.abs(l.position.x - ROOM.entry.at[0]) < 4 && Math.abs(l.position.z - ROOM.entry.at[1]) < 4) || null; hwBuild(); }},
   {name: 'hwcompile', ready: () => !HW.on && HW.built && !WARM24.hwCompiled && !DUSK,
    // the Halloween set, then everything in the scene, for the Halloween (dusk-lamps-on) light set; programs already compiled are cache hits
@@ -24098,4 +24098,4 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=14" defer></script>
+<script src="../assets/holiday/holiday.js?v=15" defer></script>

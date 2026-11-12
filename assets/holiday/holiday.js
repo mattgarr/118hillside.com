@@ -70,8 +70,8 @@
     await hold(); if(!W.steps) P.apply(S, ctx());
     for(; W.steps < PLAN.length; W.steps++){ const [label, keys] = PLAN[W.steps]; await hold(); say(label);
       if(keys[0] === 'path' && !W.warmed){ await new Promise(r => { let d = false; const f = () => { if(!d){ d = true; r(); } }; try{ P.prewarm(WINTER, f); }catch(e){ f(); } setTimeout(f, 6000); }); W.warmed = true; await hold(); }
-      /* the two oaks are planted a moment after the house (and after the first view): wait a little for them, and if they are later still, string them when they arrive */
-      if(keys[0] === 'oak') for(let i = 0; i < 24 && !oaks(); i++) await sleep(250);
+      /* the two oaks are planted a moment after the house (after the first view; on a phone, once the page is in front): r43 no longer waits for
+         them here (that wait held the whole dress up to 6 s with the loading note on); lateOaks() strings them the moment they arrive */
       keys.forEach(k => { S[k] = WINTER[k]; }); P.apply(S, ctx()); syncVis(); await paint(); if(W.on && W.onFirst){ const f = W.onFirst; W.onFirst = null; f(); } }
     /* the props' programs, compiled for the tour's light set before they are first drawn (else the first frame with them compiles them all at once) */
     if(H.compile && !W.compiled){ const objs = [], seen = new Set(); P.root.updateMatrixWorld(true);
@@ -335,7 +335,7 @@
     const d = new Date(), m = d.getMonth() + 1, day = d.getDate();
     return m === 10 ? 'halloween' : m === 11 && day <= 27 ? 'thanksgiving' : (m === 11 || m === 12 || (m === 1 && day <= 6)) ? 'winter' : 'none'; })();
   const roomy = () => { try{ const c = navigator.connection; return !c || (!c.saveData && (!c.effectiveType || c.effectiveType === '4g')); }catch(e){ return true; } };
-  const PREP = {season: SEASON, state: 'waiting', log: [], gate: () => !H.idle || H.idle(2500), t0: 0};
+  const PREP = {season: SEASON, state: 'waiting', others: false, log: [], gate: () => !H.idle || H.idle(2500), t0: 0};
   const note = m => { PREP.log.push([Math.round(performance.now()), m]); };
   async function prepare(kind, o){ o = o || {}; const gate = o.idle === false ? null : PREP.gate, t0 = performance.now();
     if(kind === 'thanksgiving'){ const T = TG(); if(!T || !T.prepare || T.isOn || T.ready) return !!(T && (T.ready || T.isOn)); await T.prepare(gate ? {idle: gate} : {}); }
@@ -348,9 +348,13 @@
     (function wait(){ const L = document.getElementById('loading'), up = (L && !L.classList.contains('done')) || !!document.getElementById('intro28');
       if(up || !H.ready || !(PREP.gate())) return setTimeout(wait, 1500);
       ric(async () => { PREP.state = 'running'; PREP.t0 = performance.now(); note('start: ' + SEASON);
-        try{ if(SEASON === 'thanksgiving' || SEASON === 'winter') await prepare(SEASON); }catch(e){ console.warn('[holiday] prepare', e); note('failed: ' + (e && e.message)); }
+        const order = [SEASON].concat(['thanksgiving', 'winter'].filter(k => k !== SEASON)).filter(k => k === 'thanksgiving' || k === 'winter');
+        try{ await prepare(order[0]); }catch(e){ console.warn('[holiday] prepare', e); note('failed: ' + (e && e.message)); }
         try{ const G = window.GAMESMENU; if(G && G.prefetch && G.order){ const id = G.order().ids[0]; if(G.prefetch(id)) note('prefetched game ' + id); } }catch(e){}
-        PREP.state = 'done'; }); })(); }
+        /* then the other dresses, one at a time, still only while the visitor is idle: Thanksgiving or Winter here; Halloween is built by the page's
+           own idle warm-up (WARM24 'hwbuild' / 'hwcompile'), which waits for PREP.others (Halloween's build is one block, so it goes last) */
+        for(const k of order.slice(1)) try{ await prepare(k); }catch(e){ console.warn('[holiday] prepare ' + k, e); }
+        PREP.others = true; PREP.state = 'done'; note('done'); }); })(); }
   idlePrep();
 
   /* ---------- ?holiday=winter|thanksgiving|halloween (&dusk=1): open the tour already dressed, once the first view is up ---------- */
