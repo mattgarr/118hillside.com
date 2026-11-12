@@ -1896,14 +1896,20 @@ if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && define
   C.envmap_physical_pars_fragment += `
 #if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
 uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K;
-float r40Interior( const in GeometricContext geometry ){
-  if( r40Mode.x < 0.5 ) return 0.0;
-  if( r40Mode.y > 0.5 || r40MB.z <= 0.0 ) return r40K;
-  vec3 P = vR40W + inverseTransformDirection( geometry.normal, viewMatrix ) * 0.75;
+float r40At( const in vec3 P ){
   vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
   if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
   vec4 t = texture2D( r40Mask, uv ) * 255.0; float y = ( P.y - r40MY.x ) / r40MY.y;
   return max( clamp( y - t.r + 0.5, 0.0, 1.0 ) * clamp( t.g - y + 0.5, 0.0, 1.0 ), clamp( y - t.b + 0.5, 0.0, 1.0 ) * clamp( t.a - y + 0.5, 0.0, 1.0 ) );
+}
+float r40Interior( const in GeometricContext geometry ){
+  if( r40Mode.x < 0.5 ) return 0.0;
+  if( r40Mode.y > 0.5 || r40MB.z <= 0.0 ) return r40K;
+  vec3 N = inverseTransformDirection( geometry.normal, viewMatrix ), P = vR40W + N * 0.75;
+  float m = r40At( P );
+  // r41 G8: a level surface (ceiling, floor, counter top) keeps its test point over the wall line: also read 3 in to each side
+  if( m < 0.999 && abs( N.y ) > 0.5 ) m = max( m, max( max( r40At( P + vec3( 0.25, 0.0, 0.0 ) ), r40At( P - vec3( 0.25, 0.0, 0.0 ) ) ), max( r40At( P + vec3( 0.0, 0.0, 0.25 ) ), r40At( P - vec3( 0.0, 0.0, 0.25 ) ) ) ) );
+  return m;
 }
 vec3 r40IrrB( const in GeometricContext geometry ){ return PI * textureCubeUV( envMapB, inverseTransformDirection( geometry.normal, viewMatrix ), 1.0 ).rgb * envMapIntensity; }
 vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughness ){ vec3 r = reflect( -viewDir, normal ); r = normalize( mix( r, normal, roughness * roughness ) );
@@ -10393,7 +10399,7 @@ function lightMeterPoll(){
   gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
   let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = METER.atlas ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
   METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt;
-  if(METER.atlas){ const A = METER.atlas; METER.m *= DUSK ? A.calDusk : A.cal * ((LIGHT_ENV_ID && A.room[LIGHT_ENV_ID]) || 1); METER.hi *= A.hiK; }   // r41 G5: the all-round view, evenly weighted; calibrated to the screen meter's mean over the 18 room stops (see GHOST r41)   // r41 G5: the all-round view (see GHOST r41)
+  if(METER.atlas && typeof ghost41MeterCal === 'function') ghost41MeterCal();   // r41 G5: the all-round view, evenly weighted, calibrated per room (see GHOST r41)
 }
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
@@ -10830,7 +10836,7 @@ GOV.apply = (k, force) => {
   if(composer && ssao){ const bt = ssao.beautyRenderTarget, n = Math.max(0, k.aa);
     if(bt && bt.isWebGLMultisampleRenderTarget && bt.samples !== n){ bt.samples = n; bt.dispose(); }
     if(composer._govFx){ const on = k.aa === 0; if(composer._govFx.enabled !== on){ composer._govFx.enabled = on; sizePost(); } } }
-  const sm = Math.min(G.sharp ? G.L[G.lvl].sm : k.sm, renderer.capabilities.maxTextureSize || 4096, coarse && !PERF.off('phone') ? (k.i === 0 ? 4096 : 2048) : 1e9);
+  const sm = Math.min(G.sharp ? G.L[G.lvl].sm : k.sm, renderer.capabilities.maxTextureSize || 4096, coarse && !PERF.off('phone') ? (G.ceil === 0 ? 4096 : 2048) : 1e9);   // r41 G6: the phone cap follows the quality button, not the level being drawn
   if(sun.shadow.mapSize.x !== sm){ sun.shadow.mapSize.set(sm, sm); if(sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map = null; } PERF.shadowDirty = true; }
   if(force || A.fol !== k.fol) GOV.foliage(k.fol);
   Object.assign(A, {ao: k.ao, fol: k.fol, i: k.i});
@@ -22431,10 +22437,12 @@ if(R10.on && typeof lightMeterInit === 'function'){
     gl.deleteSync(METER.sync); METER.sync = null;
     gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     let s = 0, ws = 0, hi = 0, cr = 0, cg = 0, cb = 0, cw = 0; const B = METER.buf;
-    for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
+    const AT = METER.atlas;   // r41 G5: the all-round atlas (GHOST r41) is weighted evenly: no centre in a ring of four views
+    for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = AT ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
       const r = B[o] / 255, g = B[o + 1] / 255, b = B[o + 2] / 255, v = .2126 * r + .7152 * g + .0722 * b; s += w * v; ws += w; if(v > .88) hi++;
       const mx = Math.max(r, g, b), mn = Math.min(r, g, b); if(v > .12 && v < .9 && (mx - mn) < .25){ cr += w * r; cg += w * g; cb += w * b; cw += w; } }   // mid-tones, not strongly coloured (paint accents, sky)
-    METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; R10WB.mean = cw > 4 ? [cr / cw, cg / cw, cb / cw] : null; };
+    METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; R10WB.mean = cw > 4 ? [cr / cw, cg / cw, cb / cw] : null;
+    if(AT && typeof ghost41MeterCal === 'function') ghost41MeterCal(); };
   const prev10 = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prev10) prev10.apply(this, arguments);
     try{ if(DUSK || (typeof HW !== 'undefined' && HW.on) || (typeof TG !== 'undefined' && TG.on) || !GRADE_PASS || !GRADE_PASS.uniforms.wb) return;
       const k = typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0, m = R10WB.mean, C = R10WB.cur;
@@ -23006,16 +23014,18 @@ if(GHOST41.on){
   LOOK.aoStrength = 0;
   // G5: the camera meter reads where the camera STANDS, not where it looks
   if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
-    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, cal: .97, calDusk: .906, hiK: 1, M: METER,
-      // per room (daylight): the screen meter's answer at the room's tour stop over the all-round one, so a stop looks as it did; the room
-      // is crossed by the meter's own ease (no pop). Measured 11/12 at midday, 18 stops.
+    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, every: 3000, M: METER,
+      // the calibration (ghost41MeterCal): per room by day, the screen meter's reading at the room's tour stop(s) over the all-round
+      // reading there, so each stop is exposed as before; out = the outdoor stops; dusk = one factor indoors. Measured with
+      // GHOST41.calibrate() (?qa=1); the room is crossed by the meter's own ease (no pop).
+      cal: 1, calDusk: .906, out: 1, hiK: 1,
       room: {stairs: .939, living: .823, great: 1.045, mainbed3: 1.046, mainbed2: 1.017, mainbath: 1.017, mainbed1: .839, entry: 1.1, pbath: .957,
         primary: 1.051, lbed1: .877, lbath: .922, lbed2: .867, laundry: .932, office: .974, rec: .966}};
     METER_PASS.render = function(r, w, read){
       if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
       const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
       if(!G5.rt){ G5.rt = new THREE.WebGLRenderTarget(2 * Q, 2 * Q, {minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat}); G5.rt.texture.generateMipmaps = false; }
-      if(G5.k >= 4 && (cp.distanceToSquared(G5.pos) > .04 || now - G5.at > 1500 || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; }
+      if(G5.k >= 4 && (cp.distanceToSquared(G5.pos) > .04 || now - G5.at > G5.every || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; }
       if(G5.k < 4){   // one of four level views (90 deg each, the full circle around the eye) per frame into a 2 x 2 atlas
         const c = G5.cam, prev = r.getRenderTarget(), q = G5.k; c.near = camera.near; c.far = camera.far; c.updateProjectionMatrix(); c.position.copy(G5.pos); c.rotation.set(0, q * Math.PI / 2, 0, 'YXZ'); c.updateMatrixWorld();
         const vp = G5.rt.viewport, sc = G5.rt.scissor; vp.set((q & 1) * Q, (q >> 1) * Q, Q, Q); sc.copy(vp); G5.rt.scissorTest = true;
@@ -23026,6 +23036,51 @@ if(GHOST41.on){
       gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 16 * 16 * 4, gl.STREAM_READ);
       gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
       METER.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); METER.eAt = r.toneMappingExposure; r.setRenderTarget(prev); }; } }
+/* GHOST r41, second pass (owner 11/12, the kitchen micro-pivot captures, the boxy ceiling, "flashes as you pivot"):
+   G5b rule:meter-calibration-applied - the page's lightMeterPoll is replaced whole by r10 (colour meter + AWB), so the all-round
+      reading was centre-weighted and never calibrated (the first pass put both in the replaced function). Both now run in the
+      poll that is in use (ghost41MeterCal, called from r10's poll and from the page's own); the factors are measured by
+      GHOST41.calibrate() (?qa=1). The atlas is redrawn when the eye moves 2.4" or every 3 s (was 1.5 s: four extra scene draws).
+   G6 rule:one-shadow-map-size - the governor's levels carried their own shadow-map size (8192 / 4096 / 2048 / 1024) and the phone
+      cap followed the level being drawn: a level change while moving, or the still frame at the top level on a phone in Ultra,
+      reallocated and redrew the sun's map at another resolution, so window-blind and rail shadows changed in one frame. One size
+      for every level now (4096; phones 2048, Ultra phones 4096), and a still frame keeps the moving level's foliage shadows.
+   G7 rule:accumulate-only-a-still-view - the still-frame supersampler (ACC) compared the camera against matrixWorld BEFORE this
+      frame's render had rebuilt it: a turn that began without an input event (a glide, a flight's last frame, a game's look) was
+      averaged into the previous view's history for a frame - a faint double of the room (books on the cabinet doors, doubled
+      wall / ceiling lines). The pose is rebuilt before the comparison now.
+   G8 rule:one-room-light-per-ceiling - the two-environment mask (R40M) is a 6-in grid read 9" off each surface along its normal:
+      on a ceiling or floor that point stays over the wall line, so a strip along every wall (1.2 % of all ceiling area, measured on
+      the as-built model: 5221 of 426602 one-inch samples) read the sky instead of the room, in 6-in cells: the boxy pattern above
+      the kitchen cabinets. A level surface now also reads the mask 3" to each side (max of five taps): 0 of 426602 ceiling samples
+      and 0.01 % of floor samples read the sky; points just outside the outer walls read the room 1.4 % more often than before. */
+function ghost41MeterCal(){ const A = GHOST41.meter; if(!A || !METER.atlas || METER.m == null) return; METER.mRaw = METER.m;
+  const inside = typeof R40L !== 'undefined' ? R40L.state : ENV_INSIDE, f = !inside ? A.out : DUSK ? A.calDusk : A.cal * ((LIGHT_ENV_ID && A.room[LIGHT_ENV_ID]) || 1);
+  METER.m *= f; METER.calF = f; GHOST41.reads = (GHOST41.reads || 0) + 1; }
+if(GHOST41.on){
+  // G6: one shadow-map size at every governor level; a still frame keeps the moving level's foliage shadows
+  if(typeof GOV !== 'undefined' && GOV.L){ for(const l of GOV.L) l.sm = 4096;
+    const ap = GOV.apply; GOV.apply = (k, force) => { if(GOV.sharp && GOV.L[GOV.lvl] && k.fol !== GOV.L[GOV.lvl].fol) k = Object.assign({}, k, {fol: GOV.L[GOV.lvl].fol});
+      return ap(k, force); }; }
+  // G7: the still-frame accumulator sees this frame's camera pose
+  { const A = window.__aa && __aa.ACC; if(A && A.frame){ const f = A.frame; A.frame = function(orig, args){ try{ camera.updateMatrixWorld(); }catch(e){} return f(orig, args); }; } }
+  // G5b: QA - measure the meter calibration at every tour stop (await GHOST41.calibrate({tod: 'midday'}))
+  GHOST41.calibrate = async function(o = {}){ const T = window.__TOUR, A = GHOST41.meter; if(!T || !A) return null;
+    const raf = () => new Promise(r => requestAnimationFrame(r)), frames = async n => { for(let i = 0; i < n; i++) await raf(); };
+    const lp = window.lightMeterPoll; let reads = 0; window.lightMeterPoll = function(){ const had = METER.sync; const r = lp.apply(this, arguments); if(had && !METER.sync) reads++; return r; };
+    const fresh = async () => { const n0 = reads; for(let i = 0; i < 240 && reads < n0 + 2; i++) await raf(); return reads >= n0 + 2; };
+    const rows = [], tod0 = TOD_KEY; try{ if(o.tod) T.dbg.setTOD(o.tod);
+      for(let i = 0; i < T.STOPS.length; i++){ const s = T.STOPS[i]; if(o.only && !o.only.includes(s.id)) continue;
+        T.showStop(i); T.finish(); await frames(o.settle || 150);
+        A.off = true; await fresh(); const ms = METER.m;
+        A.off = false; A.k = 4; A.at = -1e9; await frames(6); await fresh(); const ma = METER.mRaw;
+        rows.push({id: s.id, room: LIGHT_ENV_ID, inside: typeof R40L !== 'undefined' ? R40L.state : ENV_INSIDE, ms: +ms.toFixed(4), ma: +ma.toFixed(4), r: +(ms / ma).toFixed(3), e: +renderer.toneMappingExposure.toFixed(3)}); } }
+    finally { window.lightMeterPoll = lp; A.off = false; if(o.tod) T.dbg.setTOD(tod0); }
+    const gm = a => Math.exp(a.reduce((s, v) => s + Math.log(v), 0) / a.length), med = a => a.slice().sort((p, q) => p - q)[a.length >> 1], room = {};
+    for(const r of rows) if(r.inside && r.room) (room[r.room] = room[r.room] || []).push(r.r);
+    const out = {rows, room: Object.fromEntries(Object.entries(room).map(([k, v]) => [k, +gm(v).toFixed(3)])), out: rows.some(r => !r.inside) ? +med(rows.filter(r => !r.inside).map(r => r.r)).toFixed(3) : null,
+      inMedian: rows.some(r => r.inside) ? +med(rows.filter(r => r.inside).map(r => r.r)).toFixed(3) : null};
+    return out; }; }
 /* NAV r18 (owner 11/4) =====================================================================================================
    1 rule:eye-five-feet - walking eye = the floor under the eye (tread, deck, terrain: walkSurfaceAt) + 5.0 ft. The page's EYE is 5.0
      (patch_bim3_v33 NAV r18 callsite), so walk mode, click-to-move, waypoints and entering walk all stand at 5 ft. Tour stops: a stop
