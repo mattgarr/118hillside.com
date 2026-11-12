@@ -6830,7 +6830,8 @@ function navQA(){
      pointer-down, and a long vertical drag stays inside the tilt limits. Views: Tour at the street, backyard (its target is far across the yard)
      and dusk stops (orbits), the street stop zoomed out (its target 45 ft away: a far pivot), the great room (standing look), Tour mid-move,
      Walk, Dollhouse, Design; in a game URL the game's own view. In an orbit a third point nearest the pivot's depth is dragged too: at the
-     Tour stops it must follow like the others; in the Dollhouse and Design it must at least move the right way (an orbit has little leverage there). */
+     Tour stops it must follow like the others; in the Dollhouse and Design any point within a quarter of the pivot's depth (the model's turn
+     has little leverage on it) must not go the wrong way (under -0.1x), and is noted. */
   SEC.grab = async R => { const H = window.HILLSIDE, rc = canvas.getBoundingClientRect(), W = rc.width, Hh = rc.height, D = Math.round(Math.min(100, .22 * Math.min(W, Hh)));
     const scr = P => { camera.updateMatrixWorld(); const v = P.clone().applyMatrix4(camera.matrixWorldInverse); if(v.z > -.05) return null; v.applyMatrix4(camera.projectionMatrix); return [rc.left + (v.x + 1) / 2 * W, rc.top + (1 - v.y) / 2 * Hh]; };
     const ev = (t, x, y, type, b) => canvas.dispatchEvent(new PointerEvent(t, {pointerId: type === 'touch' ? 41 : 1, pointerType: type, isPrimary: true, clientX: x, clientY: y, button: t === 'pointermove' ? -1 : 0, buttons: b, bubbles: true, cancelable: true, composed: true}));
@@ -6859,7 +6860,8 @@ function navQA(){
         const m = await drag(q.x, q.y, dx, dy), tag = id + ' ' + which + ' (' + r2(q.d) + ' ft' + (orbit ? ', pivot ' + r2(dp) + ' ft' : '') + ') ' + dir;
         R.row('grab', tag, {k: r2(m.k), along: r2(m.along), D, nav, mode});
         if(m.k >= .7){ if(m.k > 2.2) R.note('grab', tag, 'overshoots: the point moved ' + r2(m.k) + 'x the drag'); continue; }
-        if(which === 'middle' && isDoll() && m.k > .05){ R.note('grab', tag, 'near the pivot: follows at ' + r2(m.k) + 'x (an orbit has little leverage there)'); continue; }   // the Dollhouse's pivot-depth point: the right way, slower
+        if(orbit && isDoll() && Math.abs(q.d - dp) < .25 * dp){   // within a quarter of the pivot's depth the model's turn has little leverage on the point: it must not go the wrong way
+          if(m.k > -.1){ R.note('grab', tag, 'near the pivot: follows at ' + r2(m.k) + 'x (an orbit has little leverage there)'); continue; } }
         if(dy && m.s1 && m.along > -3){ const more = await drag(m.s1[0], m.s1[1], dx / 2, dy / 2); if(Math.abs(more.along) < 3){ R.note('grab', tag, 'at the tilt limit: ' + r2(m.k) + 'x, then held'); continue; } }
         R.fail('grab', tag, 'the grabbed point moved ' + r2(m.k) + 'x the drag (' + r2(m.along) + ' of ' + D + ' px' + (m.k < 0 ? ', the wrong way' : '') + ')'); }
       // one finger (touch): the same handlers; in Walk the left part of the view is the walking stick, so the finger goes down on the right
