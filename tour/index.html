@@ -10356,7 +10356,7 @@ function lightMeterPoll(){
   gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
   let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = METER.atlas ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
   METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt;
-  if(METER.atlas){ const A = METER.atlas; METER.m *= DUSK ? A.calDusk : A.cal; METER.hi *= A.hiK; }   // r41 G5: the all-round view, evenly weighted; calibrated to the screen meter's mean over the 18 room stops (see GHOST r41)   // r41 G5: the all-round view (see GHOST r41)
+  if(METER.atlas){ const A = METER.atlas; METER.m *= DUSK ? A.calDusk : A.cal * ((LIGHT_ENV_ID && A.room[LIGHT_ENV_ID]) || 1); METER.hi *= A.hiK; }   // r41 G5: the all-round view, evenly weighted; calibrated to the screen meter's mean over the 18 room stops (see GHOST r41)   // r41 G5: the all-round view (see GHOST r41)
 }
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
@@ -22252,8 +22252,8 @@ BIM3.report.r17 = R17.report;
       the exposure by up to .1 stop (14/255 on a white wall, stairs and loft stops), so recessed cans or a window entering the frame
       brightened or darkened the whole room. The meter now reads four level 90-degree views around the eye (one 32-px view per frame
       into a 2 x 2 atlas, redrawn when the eye moves 2.4" or every 1.5 s), evenly weighted: the same for every direction you look from
-      one spot. Calibrated so the 18 room stops average what the screen meter gave (day x.97, dusk x.906 on the mean; individual stops
-      within about +/-.35 stop of before, most within .16). The eye-adaptation ease (tau .45 s, .3 stop/s) is unchanged.
+      one spot. Calibrated per room so each room's tour stop is exposed as the screen meter exposed it (daylight; dusk: one factor
+      for the house, x.906). The eye-adaptation ease (tau .45 s, .3 stop/s) is unchanged.
    ?ghost41=0 turns G1-G5 off (?ghost41m=0: G5 only). */
 const GHOST41 = window.GHOST41 = {on: !/[?&]ghost41=0\b/.test(location.search), jogs: [], shadowSkips: 0, cullShown: 0, ssao: 'off'};
 function ghostFlattenJogs(S){
@@ -22310,7 +22310,11 @@ if(GHOST41.on){
   LOOK.aoStrength = 0;
   // G5: the camera meter reads where the camera STANDS, not where it looks
   if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
-    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, cal: .97, calDusk: .906, hiK: 1, M: METER};
+    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, cal: .97, calDusk: .906, hiK: 1, M: METER,
+      // per room (daylight): the screen meter's answer at the room's tour stop over the all-round one, so a stop looks as it did; the room
+      // is crossed by the meter's own ease (no pop). Measured 11/12 at midday, 18 stops.
+      room: {stairs: .939, living: .823, great: 1.045, mainbed3: 1.046, mainbed2: 1.017, mainbath: 1.017, mainbed1: .839, entry: 1.1, pbath: .957,
+        primary: 1.051, lbed1: .877, lbath: .922, lbed2: .867, laundry: .932, office: .974, rec: .966}};
     METER_PASS.render = function(r, w, read){
       if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
       const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
