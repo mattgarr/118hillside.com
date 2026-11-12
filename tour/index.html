@@ -1888,7 +1888,7 @@ const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: r
    spaces (R40M: per 6-in cell up to two height intervals of interior air), sampled 9 in off the surface along its normal so a wall's
    room face reads the room and its outer face the sky. Glass reflects the side the camera is on. Installed here, before any material
    is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
-const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .2, duskIn: .25,
+const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .1, duskIn: .3,
   U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
