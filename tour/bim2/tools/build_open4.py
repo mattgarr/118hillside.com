@@ -469,7 +469,7 @@ def staging():
     add('books', (0, 0), 0, {'n': 3}, on='st')
     add('plantPot', (35.5, 6.0), 0)
     # north band: the house's built-in (white cabinets, quartz top, maple shelves) moved onto the hall-bath wall; a reading corner
-    add('builtinBookcase', (X_W, 28.83), 0, {'boxes': 2, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 3,
+    add('builtinBookcase', (X_W, 28.83), 0, {'boxes': 2, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 3,
         'levels': [5, 6.25, 7.5], 'lights': False, 'seed': 11, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': False, 'w': 6.0}, lib='BUILTIN')
     add('counterTop', (X_W + 0.54, 28.83), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'noSplash': True, 't': 0.104,
         'outlines': [[[X_W + 0.016, 25.83], [X_W + 1.099, 25.83], [X_W + 1.099, 31.83], [X_W + 0.016, 31.83]]]}, lib='BUILTIN')

@@ -20416,9 +20416,10 @@ function opt42Cans(o){
 function opt42Clear(v, o){
   if(OPT42.cleared[v]) return OPT42.cleared[v]; const R = o && o.clearRegion; if(!R || R.length < 3) return (OPT42.cleared[v] = []);
   const keep = new Set(((o.data || {}).furnishings || []).map(f => f.id)), fx = new Map(FIXOBJ.map(F => [F.obj, F])), B = new THREE.Box3(), out = [];
+  const only = new Set(C22_ONLY.map(e => e.o)), opId = c => { const m = c.name && /(?:^|:)((?:D|WN|OP|SK)-[A-Z0-9]+-[A-Z0-9]+)(?::|$)/.exec(c.name); return m ? m[1] : null; };   // pieces of an opening: gone35 decides
   for(const k of ['main', 'furn', 'ceil', 'trim']){ const G = GROUPS[k]; if(!G) continue;
     for(const c of G.children){ if(c.isInstancedMesh || (c.userData && (c.userData.kind === 'ceilingFan' || c.userData.bim2))) continue;
-      const F = fx.get(c); if(F && (F.v || keep.has(F.id))) continue;
+      const F = fx.get(c); if((F && (F.v || keep.has(F.id))) || only.has(c) || opId(c)) continue;
       B.setFromObject(c); if(B.isEmpty()) continue; const sx = B.max.z - B.min.z, sy = B.max.x - B.min.x;
       if(sx > 14 || sy > 14 || B.max.y < -.5 || B.min.y > 13) continue;
       if(!BIM2.inPoly(R, (B.min.z + B.max.z) / 2, (B.min.x + B.max.x) / 2)) continue;
@@ -20450,16 +20451,16 @@ function opt42Doors(o){
     try{ OPT42.doors = Object.assign(OPT42.doors || {}, {[o.legacyId || o.id]: opt42Doors(o)}); }catch(e){ console.warn('[r42] doors', e); } return r; }; }
 { const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); try{ opt42Vis(); }catch(e){ console.warn('[r42] visibility', e); } return r; }; }
 /* QA hook (?qa=1 and the page console): window.__IDEA42.plans() lists the floor plans with their facts; set(id) shows one in Design;
-   view(name) stands at one of the option's viewpoints in its walk-through (or, for 'aerial' and 'street', in Design with the
-   roof off / on); navCheck(R, qa) walks the option (called by __TOUR.navCheck's 'ideas' section). */
+   view(name, id, as) stands at one of the option's viewpoints in its walk-through (or, for 'aerial' and 'street', in Design with the
+   roof off / on), showing layout `as` (default the option itself; 'asbuilt' for the same view of the house today); navCheck(R, qa) walks the option (called by __TOUR.navCheck's 'ideas' section). */
 window.__IDEA42 = {
-  plans(){ const A = (BIM2S && BIM2S.meta.asBuilt) || {name: 'As built'}; return [Object.assign({id: 'asbuilt'}, A)].concat(bim2DesignOptions().map(d => ({id: d.id, name: DESIGN.nameOf(d.id), beds: d.beds, baths: d.baths, office: d.office, label: d.label || null, description: d.description || null}))); },
+  plans(){ const A = (BIM2S && BIM2S.meta.asBuilt) || {name: 'As built', beds: 6, baths: 3, office: true};   /* scene.meta asBuilt (the loader keeps only the keys it knows) */ return [Object.assign({id: 'asbuilt'}, A)].concat(bim2DesignOptions().map(d => ({id: d.id, name: DESIGN.nameOf(d.id), beds: d.beds, baths: d.baths, office: d.office, label: d.label || null, description: d.description || null}))); },
   async set(v){ v = v || 'asbuilt'; if(v !== 'asbuilt'){ const ok = await bim2EnsureOption(v); if(!ok) return 'not loaded'; }
     if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return ACTIVE_VAR; },
-  async view(name, v){
+  async view(name, v, as){   // as: the layout to show from that viewpoint (default v; 'asbuilt' for the before view)
     v = v || (ACTIVE_VAR !== 'asbuilt' ? ACTIVE_VAR : 'open4'); const o = BIM2.option(v), w = o && o.views && o.views[name]; if(!w) return 'no view ' + name;
-    await this.set(v);
-    if(name === 'aerial'){ DESIGN.view(.01); return 'design layout view'; }
+    await this.set(as || v);
+    if(name === 'aerial'){ try{ if(vis.level !== 'main') setLevel('main', {keepCam: true, instant: true}); }catch(e){} DESIGN.view(.01); return 'design layout view'; }
     if(name === 'street'){ try{ setLevel('roof', {keepCam: true, instant: true}); }catch(e){} flyTo(w.pos, w.look, 'orbit', .01); return 'design, roof on'; }
     setMode('walk', {keep: true}); feet = 0; anim = null; glide = null; nav = 'look'; camera.position.set(...w.pos); camera.lookAt(new THREE.Vector3(...w.look)); lookFromCamera();
     return ACTIVE_VAR; },
