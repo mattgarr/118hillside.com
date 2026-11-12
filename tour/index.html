@@ -5758,7 +5758,7 @@ function navLevelLanding(to, toT){   // a look landing at walking height (eye 3.
 function lookFromCamera(){ const d=new THREE.Vector3(); camera.getWorldDirection(d); yaw=Math.atan2(-d.x,-d.z); pitch=clamp(Math.asin(clamp(d.y,-1,1)),-1.45,1.45); }
 function orbitFromCamera(){ const d=camera.position.clone().sub(target); sph.r=Math.max(.5,d.length()); sph.theta=Math.atan2(d.x,d.z); sph.phi=Math.acos(clamp(d.y/sph.r,-1,1)); }
 function applyOrbit(){
-  sph.phi=clamp(sph.phi,.04,1.56); sph.r=clamp(sph.r,4,520);
+  sph.phi=clamp(sph.phi,.04,isDoll()?1.56:2.37); sph.r=clamp(sph.r,4,520);   // r41b: an eye-level orbit stop can look up (the target above the eye, up to ~46 deg) when a drag tilts it in place
   if(mode==='doll'){ const B=dollBox(), m=24;   // dollhouse: stay above the horizon and around the house
     sph.phi=clamp(sph.phi,.1,1.3); sph.r=clamp(sph.r,9,330);
     target.x=clamp(target.x,B.min.x-m,B.max.x+m); target.z=clamp(target.z,B.min.z-m,B.max.z+m); target.y=clamp(target.y,LV.lower-1,16); }
@@ -5870,9 +5870,11 @@ function v26Pivot(cx, cy){   // v26 O1: the point under the cursor at drag start
    - r41b, Tour's orbit stops (street, backyard, dusk: an eye-level view circling a target 10 ft ahead). There a point near the target's depth
      (a car, a fence, the near lawn) has almost no leverage on the orbit, so a spin cannot carry it with the pointer (navCheck had it at 0.3x,
      or going the wrong way). On those stops each axis is decided at pointer-down: when the orbit moves the grabbed point at least half as
-     much as turning in place would, the drag orbits as above; otherwise that axis turns the view in place (the shared look), with the stop's
-     target carried round at the same distance, so the grabbed point follows exactly. The orbit's tilt limit (eye at the target's height,
-     never below it) still holds. Dollhouse and Design keep the pure orbit: the model must turn about its pivot, not slide out of the view. */
+     much as turning in place would, the drag spins the orbit as above; otherwise it turns the view in place (the shared look), with the stop's
+     target carried round at the same distance, so the grabbed point follows exactly. A vertical drag there always tilts in place: tilting
+     the orbit swings the eye up over a target 10 ft ahead, or into the ground clamp (where it stuck: a downward drag did nothing), and the
+     orbit could not look above level at all. These stops now look from -80 to +46 degrees (applyOrbit lets their target rise above the eye).
+     Dollhouse and Design keep the pure orbit: the model must turn about its pivot, not slide out of the view. */
 const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last: null},
   lookDelta(x, y, dx, dy){   // [dyaw, dpitch] for a look-drag from (x - dx, y - dy) to (x, y), or null
     try{ camera.updateMatrixWorld(); const a = navRay(x - dx, y - dy), b = navRay(x, y), sg = NAV18.grab ? 1 : -1;   // ?drag=mouse: mouselook (the opposite sign)
@@ -5896,7 +5898,7 @@ const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last
     if(!pa || !pb) return null; return {p0, xt: (pa[0] - p0[0]) / e, yt: (pa[1] - p0[1]) / e, xp: (pb[0] - p0[0]) / ep, yp: (pb[1] - p0[1]) / ep}; },
   begin(G, proj, th, ph, h, lookOk){ const st = {G, lx: -1, ly: -1, wx: true, wy: true, lk: !!lookOk}, J = this.jac(proj, th, ph);   // -1: the ordinary (foreground) way
     const L = lookOk ? .5 * h * (camera.zoom || 1) / (2 * Math.tan(camera.fov * Math.PI / 360)) : .12 * h;   // r41b: with a turn in place to fall back on, the orbit must have half its leverage (px per radian)
-    if(J){ if(Math.abs(J.xt) > L){ st.lx = Math.sign(J.xt); st.wx = false; } if(Math.abs(J.yp) > L){ st.ly = Math.sign(J.yp); st.wy = false; } }
+    if(J){ if(Math.abs(J.xt) > L){ st.lx = Math.sign(J.xt); st.wx = false; } if(Math.abs(J.yp) > L && !lookOk){ st.ly = Math.sign(J.yp); st.wy = false; } }   // r41b: at an eye-level orbit stop a vertical drag always tilts in place
     st.J0 = J; return st; },
   orbitDelta(st, dx, dy, proj, th, ph, h){   // [dth, dph] that move the grabbed point by (dx, dy) px
     /* r41b: a long pointer step (a fast flick, a slow frame, a synthetic drag) is solved in steps of at most 6 px, the leverage measured again
@@ -5927,7 +5929,7 @@ const GRAB = window.GRAB41 = {rep: {look: 0, orbit: 0, picks: 0, pickMs: 0, last
     if(!st.wx || !st.wy){ const d = this.orbitDelta(st, st.wx ? 0 : dx, st.wy ? 0 : dy, st.proj, sph.theta, sph.phi, h); sph.theta += d[0]; sph.phi += d[1]; applyOrbit(); }
     const g = this.lookDelta(x, y, st.wx ? dx : 0, st.wy ? dy : 0); if(!g) return; this.rep.inplace = (this.rep.inplace || 0) + 1;
     const dv = target.clone().sub(camera.position), r = Math.max(.5, dv.length()), p0 = Math.asin(clamp(dv.y / r, -1, 1));
-    const ya = Math.atan2(-dv.x, -dv.z) + g[0], pi = clamp(p0 + g[1], Math.min(-1.45, p0), Math.max(-.011, p0));   // up to level (the orbit keeps the eye at or over its target), never further past a limit
+    const ya = Math.atan2(-dv.x, -dv.z) + g[0], pi = clamp(p0 + g[1], Math.min(PITCH_DN, p0), Math.max(.8, p0));   // -80 to +46 deg (applyOrbit's limit for these stops), never further past a limit
     target.set(camera.position.x - Math.sin(ya) * Math.cos(pi) * r, camera.position.y + Math.sin(pi) * r, camera.position.z - Math.cos(ya) * Math.cos(pi) * r); orbitFromCamera(); }
 };
 function v26PivotOrbit(P, yaw, pitch){   // v26 O1: rotate camera + target about the pivot P
