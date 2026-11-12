@@ -54,7 +54,7 @@
         readMap:      {needs: [], gives: ['cloverMap']},
         openCloset:   {needs: ['cloverMap'], gives: ['cloverFound', 'p_clover']},
         meetPepper:   {needs: [], gives: ['metPepper']},
-        rainbow:      {needs: ['metPepper'], gives: ['p_pepper'], sun: [17.25, 17.75]},
+        rainbow:      {needs: ['metPepper'], gives: ['p_pepper'], sun: [17.45, 17.8]},
         meetNugget:   {needs: [], gives: ['metNugget']},
         dusk:         {needs: ['metNugget'], gives: ['nuggetAwake', 'p_nugget', 'p_order'], sun: [20.75, 21]},
         openParty:    {needs: ['p_biscuit', 'p_clover', 'p_pepper', 'p_nugget', 'p_order'], gives: ['opened'], lock: 'party'}},

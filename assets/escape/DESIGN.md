@@ -316,7 +316,7 @@ The sections above are the design as it was signed off. The build moved some thi
 **Easy.** As designed. The floor light only shows the 327 once the drawing has been seen and the shades are up, and the validator proves it.
 
 **Medium (July, day 200).**
-- Pepper is in the lower-level bedroom 2 (`lbed2`), and the rainbow film is on the bottom panes of its window (`WN-L0-07`). The 9 reads from about 5:15 to 5:45 PM, not 6:30 to 7:45.
+- Pepper is in the lower-level bedroom 2 (`lbed2`), and the rainbow film is on the bottom panes of its window (`WN-L0-07`). The 9 reads at 5:30 and 5:45 PM, not 6:30 to 7:45. It is laid square to the close-up camera so it reads upright.
 - Biscuit wakes when the real sun patch reaches his bed, which with both shades up is about 5:15 to 5:45 PM.
 - Nugget sleeps in a nest on the cube shelf in the skylit office, not in a bedroom. He wakes at dusk (8:45 PM or later).
 - Clover's plan is drawn from the real floor plan polygons and hangs on the coffee bar's fridge. The other closet with three doors (middle bedroom) is the honest red herring.
