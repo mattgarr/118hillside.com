@@ -132,9 +132,13 @@ function setupTextures(){ const ix = GI.index, g = ix.grid, U = GI.U, NP = g.nx 
 
 /* ---------------- composing the volume for the light now ---------------- */
 const lum = c => .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
-GI.weights = function(dir){ const K = GI.index.keys, w = K.map(k => { const c = Math.max(-1, Math.min(1, dir.x * k.dir[0] + dir.y * k.dir[1] + dir.z * k.dir[2])), a = Math.acos(c) / GI.sigma; return Math.exp(-a * a); });
-  let s = w.reduce((x, y) => x + y, 0); if(!(s > 1e-12)){ let b = 0, bi = 0; K.forEach((k, i) => { const c = dir.x * k.dir[0] + dir.y * k.dir[1] + dir.z * k.dir[2]; if(c > b || i === 0){ b = c; bi = i; } }); w.fill(0); w[bi] = 1; s = 1; }
-  return w.map(v => v / s); };
+/* sun keys blended by angle: the two nearest keys, each weighted (d3 - d) / d, d = its angle to the sun now, d3 = the third nearest's.
+   A key's weight goes to zero exactly when it stops being one of the two nearest, and it is the only one when the sun is on it, so the
+   blend is continuous everywhere and glides between keys however far apart they are (Gaussian weights snapped across wide gaps). */
+GI.weights = function(dir){ const K = GI.index.keys, d = K.map(k => Math.acos(Math.max(-1, Math.min(1, dir.x * k.dir[0] + dir.y * k.dir[1] + dir.z * k.dir[2]))));
+  const o = d.map((v, i) => i).sort((a, b) => d[a] - d[b]), w = new Array(K.length).fill(0); if(K.length < 3){ w[o[0]] = 1; return w; }
+  const d3 = d[o[2]], a = (d3 - d[o[0]]) / (d[o[0]] + 1e-4), b = (d3 - d[o[1]]) / (d[o[1]] + 1e-4), s = a + b;
+  if(!(s > 1e-9)){ w[o[0]] = .5; w[o[1]] = .5; return w; } w[o[0]] = a / s; w[o[1]] = b / s; return w; };
 GI.state = function(){ const H = GI.H, ix = GI.index, w = GI.weights(H.SUN_DIR), K = ix.keys;
   // sky: the baked sky of each key, tinted by the sky the page draws now (its SH L0) over the keys' blended reference
   const env = H.ENV_RT, src = env && env.giSrc; let sky = GI._sky;
