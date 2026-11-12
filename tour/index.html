@@ -17220,7 +17220,7 @@ function tgOn(){
   { const D = TG.lampD; let best = null, bd = 1e9; if(D) for(const l of DUSK_LIGHTS){ if(l.parent !== scene) continue; const d = Math.hypot(l.position.x - D.p.x, l.position.z - D.p.z); if(d < bd){ bd = d; best = l; } }   // r41: the table light borrows the nearest room lamp
     if(best){ TG.lampSaved = {l: best, p: best.position.clone(), c: best.color.clone(), d: best.distance, k: best.decay}; best.position.copy(D.p); best.distance = D.d; best.decay = D.k; best.color.copy(D.c); TG.light = best; } }
   TG.on = true; tgDuskIn(); setTOD('dusk'); tgFrame();
-  document.documentElement.classList.add('thanksgiving'); tgLoadSfx();
+  document.documentElement.classList.add('thanksgiving'); setTimeout(() => { if(TG.on) (window.requestIdleCallback || setTimeout)(() => tgLoadSfx()); }, 4000);   // r43: the old in-tour games' sounds (82 KB) wait until the dress is up and the page is idle: they competed with it on a phone's connection
   if(was) applyVisibility(); if(window.__perf) __perf.shadowDirty = true; return TG.report; }
 function tgOff(){
   if(!TG.on) return; const was = DOLLCUT && DOLLCUT.state; if(was) DOLLCUT.restore();
@@ -23337,6 +23337,16 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
     idle: (ms = 2500) => { try{ return w24Idle(ms); }catch(e){ return false; } },
     /* r43: compile a list of objects' programs for the tour's light set (~12 ms a call; true while more are left): a dress made ready off-screen draws its first frame without compiling */
     compile: objs => w24Compile(objs),
+    /* r43: Halloween made ready before it is shown: its set built (one block: it is not sliced) and its programs compiled in ~12 ms slices, so the
+       first frame with it does not stall on them (170 ms on a laptop). idle(): optional, the slices wait while it says the visitor is busy. */
+    async hwPrepare(idle){ if(HW.on) return true;
+      if(!HW.built){ HW.chandSrc = DUSK_LIGHTS.find(l => l.parent && l.parent.name === 'main' && Math.abs(l.position.x - ROOM.entry.at[0]) < 4 && Math.abs(l.position.z - ROOM.entry.at[1]) < 4) || null; hwBuild(); }
+      else if(HW.builtKey !== hw22Key()) return false;   // a layout change since: hwOn() rebuilds it
+      if(WARM24.hwSetWarm === HW.ext) return true; const objs = [], seen = new Set(), ext = HW.ext;
+      for(const g of [HW.ext, HW.inn, HW.sky]) if(g) g.traverse(o => { if(!o.material || !(o.isMesh || o.isPoints || o.isLine || o.isSprite)) return; const k = [].concat(o.material).map(m => m.uuid).join() + (o.isInstancedMesh ? 'i' : ''); if(!seen.has(k)){ seen.add(k); objs.push(o); } });
+      while(objs.length){ if(idle && !idle()){ await new Promise(r => setTimeout(r, 400)); continue; } let more = false; try{ more = w24Compile(objs); }catch(e){ console.warn('[halloween] warm', e); break; } if(more) await new Promise(r => setTimeout(r, 16)); }
+      WARM24.hwSetWarm = ext; return true; },
+    get hwReady(){ try{ return HW.built && HW.builtKey === hw22Key() && WARM24.hwSetWarm === HW.ext; }catch(e){ return false; } },
     /* a time of day chosen from the holiday control holds like one chosen from the Time of day button (manual), and is handed back exactly as it was found */
     todSet(key, manual){ todManual = manual !== false; if(todManual) try{ window.__story && window.__story.apply(); }catch(e){} if(TOD_KEY !== key) setTOD(key); if(!todManual) try{ window.__story && window.__story.apply(); }catch(e){} },
     /* r41 decor QA: everything a dress may touch, as flat key -> 'a|b|c' strings, so a switch can be compared with a clean load of the target dress.
@@ -24098,7 +24108,7 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=17" defer></script>
+<script src="../assets/holiday/holiday.js?v=18" defer></script>
 <script>/* r43 service worker (../sw.js; what it does and how to turn it off are at the top of that file): registered a few seconds after the page has
    loaded, only on 118hillside.com itself (or with ?sw=1 anywhere, for testing); ?sw=0 unregisters it and clears its caches in this browser. */
 (function(){ try{ if(!('serviceWorker' in navigator)) return; var q = location.search;

@@ -141,11 +141,12 @@
   async function drive(){ let ok = true, kind = null, t0 = 0;
     while(want !== null){ kind = want; want = null; const my = ++gen, stale = () => my !== gen; t0 = performance.now();
       ftRun(6000); const base = ftBase();
-      const mk = {from: current(), cold: kind === 'thanksgiving' ? !(TG() && TG().ready) : kind === 'winter' ? !W.built : kind === 'halloween' ? !(window.__HW && __HW.built) : false}, fw = frameWatch(), m = n => { mk[n] = Math.round(performance.now() - t0); };
+      const mk = {from: current(), cold: kind === 'thanksgiving' ? !(TG() && TG().ready) : kind === 'winter' ? !W.built : kind === 'halloween' ? !H.hwReady : false}, fw = frameWatch(), m = n => { mk[n] = Math.round(performance.now() - t0); };
       busy = kind; show.stop(); render(); status(busyText(kind)); await paint(); m('note'); if(stale()){ fw.on = false; continue; }
       ok = true;
       try{ downAll(kind); sweep(); m('down'); if(stale()){ fw.on = false; continue; }
-        if(kind === 'thanksgiving' && TG().prepare && !TG().ready){ await TG().prepare(); m('built'); if(stale()){ fw.on = false; continue; } }   // built in slices and its materials compiled, then shown in one step
+        if(kind === 'thanksgiving' && TG().prepare && !TG().ready){ await TG().prepare(); m('built'); if(stale()){ fw.on = false; continue; } }
+        if(kind === 'halloween' && H.hwPrepare && !H.hwReady){ await H.hwPrepare(); m('built'); if(stale()){ fw.on = false; continue; } }   // built in slices and its materials compiled, then shown in one step
         if(kind === 'halloween') HW().on(); else if(kind === 'thanksgiving') TG().on(); else if(kind === 'winter'){ if(!(await winterOn(status, stale, m)) && !stale()) ok = false; }
         m('on'); if(stale()){ fw.on = false; continue; }
         sweep(); if(kind !== 'none' && current() !== kind) ok = false; }
@@ -313,7 +314,8 @@
     btn.classList.toggle('on', on); btn.querySelector('.hl36').textContent = on ? DRESS[cur].label : 'Holiday decor'; btn.setAttribute('aria-label', on ? 'Holiday decor: ' + DRESS[cur].label : 'Holiday decor');
     if(row) row.querySelector('.v31val').textContent = on ? DRESS[cur].label : 'Off';
     if(bar){ const d = bar.querySelector('.dk'); d.hidden = cur !== 'winter'; d.setAttribute('aria-pressed', String(night)); d.setAttribute('aria-label', night ? 'See it by day' : 'See it at dusk'); d.innerHTML = (night ? SUN : MOON) + '<span>' + (night ? 'Day' : 'Dusk') + '</span>'; bar.querySelector('.sep').hidden = d.hidden; } }
-  function open(from){ if(!panel) return; opener = from || btn; panel.hidden = false; ftRun(2000); btn.setAttribute('aria-expanded', 'true'); render(); place();
+  function open(from){ if(!panel) return; opener = from || btn; panel.hidden = false; ftRun(2000);
+    try{ const c = navigator.connection; if(!(c && c.saveData)) loadProps().catch(() => {}); }catch(e){}   // r43: the winter props' script (25 KB compressed) while the visitor reads the choices btn.setAttribute('aria-expanded', 'true'); render(); place();
     const f = panel.querySelector('.opt[aria-checked=true]') || panel.querySelector('.opt'); if(f) try{ f.focus({preventScroll: true}); }catch(e){}
     try{ window.__v33discPlace && __v33discPlace(); }catch(e){} ga('holiday_open'); }
   function close(refocus){ if(!panel || panel.hidden) return; panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); const o = opener; opener = null; if(refocus && o && o.isConnected && o.offsetParent) try{ o.focus({preventScroll: true}); }catch(e){}
@@ -356,6 +358,7 @@
   async function prepare(kind, o){ o = o || {}; const gate = o.idle === false ? null : PREP.gate, t0 = performance.now();
     if(kind === 'thanksgiving'){ const T = TG(); if(!T || !T.prepare || T.isOn || T.ready) return !!(T && (T.ready || T.isOn)); await T.prepare(gate ? {idle: gate} : {}); }
     else if(kind === 'winter'){ if(W.built) return true; await loadProps(); if(!W.on){ winterMake(); if(!W.buildP) W.gate = gate; } await winterReady(); }
+    else if(kind === 'halloween'){ if(!H.hwPrepare || H.hwReady || (HW() && HW().isOn)) return true; while(gate && !gate()) await sleep(400); await H.hwPrepare(gate); }
     else return false;
     note(kind + ' ready in ' + Math.round(performance.now() - t0) + ' ms'); return true; }
   function idlePrep(){ if(/[?&]noprep=1\b/.test(location.search)) { PREP.state = 'off'; return; }
@@ -364,8 +367,8 @@
     (function wait(){ const L = document.getElementById('loading'), up = (L && !L.classList.contains('done')) || !!document.getElementById('intro28');
       if(up || !H.ready || !(PREP.gate())) return setTimeout(wait, 1500);
       ric(async () => { PREP.state = 'running'; PREP.t0 = performance.now(); note('start: ' + SEASON);
-        const order = [SEASON].concat(['thanksgiving', 'winter'].filter(k => k !== SEASON)).filter(k => k === 'thanksgiving' || k === 'winter');
-        try{ await prepare(order[0]); }catch(e){ console.warn('[holiday] prepare', e); note('failed: ' + (e && e.message)); }
+        const order = [SEASON].concat(['thanksgiving', 'winter', 'halloween'].filter(k => k !== SEASON)).filter(k => k !== 'none');
+        try{ if(order[0] !== 'halloween') await prepare(order[0]); }catch(e){ console.warn('[holiday] prepare', e); note('failed: ' + (e && e.message)); }
         try{ const G = window.GAMESMENU; if(G && G.prefetch && G.order){ const id = G.order().ids[0]; if(G.prefetch(id)) note('prefetched game ' + id); } }catch(e){}
         /* then the other dresses, one at a time, still only while the visitor is idle: Thanksgiving or Winter here; Halloween is built by the page's
            own idle warm-up (WARM24 'hwbuild' / 'hwcompile'), which waits for PREP.others (Halloween's build is one block, so it goes last) */
