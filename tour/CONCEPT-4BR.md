@@ -183,8 +183,8 @@ middle on the north wall around a fireplace, dining at the west end along the so
   from the foyer to the living area, the deck or the bedroom hall never passes the stove or the sink. The cook faces the whole
   room. A solid street wall suits a kitchen (cabinets want wall, not glass), so the privacy refinement and the kitchen agree.
 - Against: the sink, dishwasher and range all move about 20 to 30 ft east, so new drain, vent, water and gas runs, a new hood
-  duct and new circuits. Ordinary work if there is access under the floor, but not cheap. The old kitchen is left over: it
-  becomes a scullery and coffee bar (its sink stays where its plumbing is) rather than being wasted.
+  duct and new circuits. Ordinary work if there is access under the floor, but not cheap. The old kitchen is left over; it is
+  taken out entirely and the space reused (see "The old kitchen, reused" below).
 
 **B. Kitchen enlarged in place (west end).** Keep the sink and plumbing where they are, take out the peninsula and push the
 kitchen about 8 ft east into the great room with a long island under the ridge.
@@ -209,31 +209,62 @@ wall; dining: glass and deck). B is the budget version and is not worth it here 
 ```
                  north wall (y 32.1)
   +---------+--------------------------------------------------------+
-  | hall    |  [bk] [ gas fireplace ] [bk]    [cab][ range+hood ][cab]|
-  | bath    |     sofa  rug  chairs          ________________  pantry |  east gable wall (street):
-  | (kept)  |  - - - - - fir ridge beam - - -| island 12 ft |  sink   |  kitchen window over the
-  +--D-06---+                                |  4 stools -> | window  |  sink, high gable glass
-  | hall    |   dining for six               |______________|  dw     |  above
-  | (kept)  |   (glass table)                                   fridge |
-  +---------+                                                   pantry|
-  | old kitchen = scullery + coffee bar                                |
+  | hall    |  [bk] [ gas fireplace ] [bk]   [cab][range+hood][cab][c]|
+  | bath    |     sofa  rug  chairs          ________________  fridge |  east gable wall (street):
+  | (kept)  |  - - - - - fir ridge beam - - -| island 12 ft |  drawers|  kitchen window over the
+  +--D-06---+                                |  4 stools -> |  sink   |  sink, high gable glass
+  | hall    |   dining for six               |______________|  window |  above
+  | (kept)  |   (glass table)                                   drawers|
+  +---------+                                                   pantry |
+  | old kitchen: reading nook at its window, otherwise open floor     |
   +-------------------[====== 14.4-ft folding glass wall ======]-------+
                      deck, level with the floor, 8.4 ft deep    stack folds out here
                  outdoor dining for six      lounge chairs     planters
 ```
 
-- **Kitchen** (x about 26.5 to 36.6): on the east wall, a tall pantry, a 36-in four-door fridge, base cabinets, the sink centered
-  on the ridge under a copy of today's kitchen window, dishwasher and more drawers, uppers either side of the window. On the
-  north wall, a 36-in range with a chimney hood between base cabinets and uppers. A 12 ft by 4½ ft island parallel to the east
+- **Kitchen** (x about 26.5 to 36.6): on the east wall, south to north, two tall pantry cabinets, drawers, the sink centered on
+  the ridge under a copy of today's kitchen window, the dishwasher, more drawers, and the 36-in four-door fridge at the north end
+  by the corner; uppers either side of the window and over the fridge. On the north wall, a 36-in range with a chimney hood
+  between drawers and uppers, and a corner cabinet. A 12 ft by 4½ ft island parallel to the east
   wall, with four counter stools on its west side facing down the room, and globe pendants hung from the ridge beam. White shaker
   cabinets and white quartz, as in the house's kitchen. Aisles: about 3½ ft between the island and the east run, about 4½ ft from
   the island to the range.
 - **Living** (middle, north side): a 6-ft-wide gas fireplace on the north wall where the middle bedroom's window was, with a fir
   mantel at 4¼ ft, built-in bookcases either side, a sofa facing it across a rug, an ottoman and two armchairs.
 - **Dining** (west, south side): a 7-ft glass table with six parsons chairs along the folding glass wall, under a skylight.
-- **Old kitchen**: kept as a scullery and coffee bar (its sink, cabinets and stools stay; the old range slot becomes a cabinet).
+- **Old kitchen**: taken out entirely and reused as a reading nook (below).
 - **Skylights**: four 2½ ft by 3 ft skylights in wells through the vault: two over the island, one over the dining table, one
   over the living area.
+
+### The old kitchen, reused (r43, owner: "that counter / cabinets should be removed to use for other purposes")
+Every cabinet, counter, the peninsula, the sink, the range slot, the fridge alcove's tower and all appliances come out; its walls,
+window and doors stay, and the oak floor (already one continuous floor under the cabinets) runs through. The space is about 10.8
+by 13.5 ft plus the alcove to the bedroom hall.
+
+What it became: **a reading nook at its south window, the rest left open.** A built-in window seat runs under the window
+(8.3 ft, cushion and pillows), with built-in bookcases on the south wall at the great-room end and on the west wall, a boucle
+reading chair with a drum table and lamp, a sisal rug and a basket. A sideboard with art stands on the west wall north of the
+living-room door.
+
+Why this and not the other uses:
+- The room is the crossing of three routes: the living-room pocket door (west), the great room (east, wide open) and the bedroom
+  hall (the alcove to the north). Anything in its middle sits in a walkway. The south window wall is the one place out of all
+  three paths, and it has the room's daylight.
+- **Dining for 8** here would need about 11 by 14 ft clear around the table, which is the whole room, right across the routes,
+  and it would take dining away from the folding glass wall and the deck, where indoor-outdoor dining is the point of the plan.
+- **A walk-in pantry** would close off the window and bring back a kitchen at the wrong end of the house; the new kitchen's two
+  tall pantry cabinets do that job where the cooking is.
+- **Just open floor** wastes the light; a window seat costs almost no floor and gives the plan a quiet corner, which a big open
+  room otherwise lacks.
+
+### Kitchen storage and work triangle (r43 check)
+With the old kitchen gone, all kitchen storage is at the street end: about 15 ft of base cabinets on the gable wall (with the sink
+base) besides the dishwasher, 8½ ft on the north wall including a corner cabinet, the island's 12 ft of cabinets on its working side, about 19 ft of uppers, and two
+full-height pantry cabinets (5 ft). That is more than the old kitchen had, and enough for a kitchen this size.
+
+The fridge moved from the south end of the gable wall to its north end, by the corner, next to the range. The work triangle is
+now about 4¾ ft fridge to range, 10 ft fridge to sink and 12½ ft sink to range (about 27 ft in all, with the island as the prep
+surface between sink and range), instead of a fridge about 20 ft from the range.
 
 ### Street gable (mostly solid)
 The street wall keeps its siding. It gets a window over the sink (a copy of the house's own kitchen window, about 6 ft wide) and
@@ -277,8 +308,8 @@ opening-up.
 - **Fireplace**: a direct-vent gas unit through the north wall (a vent cap is shown outside) and a gas line.
 - **Skylights**: wells need headers between the rafters, and skylight area counts against the Title 24 energy budget along with
   the folding wall.
-- **Kitchen**: the work triangle is long (the fridge, at the south end of the east run, is about 20 ft from the range around the
-  island). A refinement would move the fridge toward the north corner.
+- **Kitchen**: the fridge now sits at the north end of the gable run, by the range (r43); the sink-to-range leg (about 12½ ft) is
+  still on the long side, with the island in between as the prep surface.
 - **Bedrooms**: the same trade as the first version, 6 bedrooms become 4, and everything said above about bedroom count and value
   applies equally.
 
@@ -294,7 +325,10 @@ recommendation to remodel before selling.
 - The folding wall is an opening with `leaf: {kind: 'FOLD', panels: 6, stack: 'east', state: 'open', plane: 4.60}`. The page
   builds and animates its panels (block `FOLD42`, after `OPT42` in `tour/index.html`), with a walk collider across the opening
   while it is shut and one where the folded stack stands. QA: `FOLD42.items`, `fold42Toggle(FOLD42.items[0])`.
-- Viewpoints: foyer, entry, kitchen, living, deck, driveway, street, aerial (`await __IDEA42.view('deck', 'open4k')`).
+- Viewpoints: foyer, entry, kitchen, kitchenrun, living, nook (the old kitchen from the great room), hallside (the old kitchen from
+  the hall alcove), deck, driveway, street, aerial (`await __IDEA42.view('nook', 'open4k')`).
+- The option drops every as-built `KX-` furnishing (the old kitchen) and its `clearRegion` covers the old kitchen, so loose pieces the
+  page built there hide too; the old kitchen's space is renamed 'Reading nook'.
 - Builder rule learned here: the page matches an option's colliders to the house's by element id and its walkable floors by id.
   A collider or floor the option changes must carry a new id (`W-L1-K4S`, `RL-FRONT-STAIR-K4`, `SL-DK-K4`, `ST-FRONT#n-K4`);
   reusing the as-built id keeps the as-built one (the old south wall blocked the opening, and only the old porch was walkable).

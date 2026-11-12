@@ -11,8 +11,9 @@ the original gable with an exposed fir ridge beam), arranged the way the owner's
     level with the floor, with the same decking, skirt and cable railing as the porch; the porch steps narrow to make room;
   - living in the middle, anchored on the north wall by a gas fireplace (direct vent through that wall) between built-ins, where the
     middle bedroom's window was; dining by the folding glass wall;
-  - the old kitchen becomes a scullery and coffee bar: its sink, dishwasher and fridge stay, the range and hood come out (gas capped),
-    so nobody walks past a stove to reach the great room;
+  - the old kitchen is taken out (r43, owner): no cabinets, counters or appliances; the oak floor runs through. It becomes a reading
+    nook at its south window (window seat, bookcases, a reading chair) and stays open floor where the living-room door, the great room
+    and the bedroom hall meet, so nobody walks past a stove to reach the great room;
   - four skylight wells along the vault: two over the island, one over the dining table, one over the living area.
 
 Illustrative idea. Not designed or reviewed by an architect or engineer. See tour/CONCEPT-4BR.md.
@@ -33,6 +34,7 @@ OPT_ID, LEGACY = 'OS-REMODEL-open4k', 'open4k'
 GLB_OUT, META_OUT = 'scene.opt-%s.glb' % OPT_ID, 'scene.opt-%s.meta.json' % OPT_ID
 Y_SO = 4.404                         # south wall outer face
 DECK = dict(x0=15.675, x1=33.6, y0=-4.0, y1=Y_SO, z=0.0, skirt=-4.8)
+X_OK = 5.2775                      # the old kitchen's west wall, interior face (r43)
 NANA = dict(x0=18.0, x1=32.4, head=7.6, panels=6)
 STAIR_Y = (-9.937, 0.0)               # the porch steps today (plan y), narrowed to end at the deck's south edge
 KWIN_SRC, KWIN_CX = 'WN-L1-02', 9.486  # today's kitchen window over the sink, copied onto the street gable over the new sink
@@ -283,6 +285,7 @@ def option_data(meta, elements, bounds):
     D['source'] = {'builder': 'tour/bim2/tools/build_open4k.py', 'options': {'OS-REMODEL': LEGACY}, 'note': LABEL}
     for s in D['spaces']:
         if s['id'] == GREAT: s['name'] = 'Kitchen, living & dining'
+        if s['id'] == 'SP-L1-KITCHEN': s['name'] = 'Reading nook'   # r43: the old kitchen
     # walkable: the deck and the narrowed steps; the floor out through the folding wall
     wk = [w for w in D['walkable'] if w['id'] not in ('SL-DK-FRONT',) and w.get('element') != 'ST-FRONT' and w['id'] != 'FL-SP-L1-OPEN4']
     wk.append({'id': 'FL-SP-L1-OPEN4K', 'element': 'FL-SP-L1-OPEN4K', 'kind': 'FLOOR', 'space': GREAT, 'storey': 'L1', 'poly': [list(p) for p in ROOM], 'holes': [], 'z': 0, 'exterior': False})
@@ -326,7 +329,7 @@ def option_data(meta, elements, bounds):
         ops.append({'id': 'SK-L1-K4%d' % (i + 1), 'class': 'IfcWindow', 'type': 'SKYLIGHT (concept)', 'kind': 'SKYLIGHT', 'host': 'RF-MAIN-K4', 'storey': 'L1', 'center': [(x0 + x1) / 2, (y0 + y1) / 2],
                     'width': x1 - x0, 'sill': ceil_z(y0), 'head': ceil_z(y1), 'spaces': {'A': 'EXTERIOR', 'B': GREAT}, 'exterior': True, 'glazed': 1, 'skylight': True})
     D['openings'] = ops
-    D['furnishings'] = [f for f in meta['furnishings'] if f['id'] not in REMOVED_FURN] + kitchen() + staging()
+    D['furnishings'] = [f for f in meta['furnishings'] if f['id'] not in REMOVED_FURN and not f['id'].startswith('KX-')] + kitchen() + staging()   # r43: no old kitchen
     D['lights'] = [l for l in meta['lights'] if l['id'] not in REMOVED_LIGHTS] + new_cans(meta)
     D['boundaries'] = {b: GREAT for b in bounds}
     cut = {e: GREAT for e in elements}
@@ -351,43 +354,42 @@ def kitchen():
     F = []; CAB = {'counter': None, 'faucet': False, 'hw': 'satinNickel', 'pull': 'bar', 'sink': False, 'style': 'raised'}
     def add(kind, lib, at, rot, params):
         F.append({'id': 'KX-K4-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), 0], 'rot': rot, 'space': GREAT, 'storey': 'L1', 'params': params, 'footprint': None})
-    E = X_E
-    # street-gable run (backs on the gable, facing west): tall pantry, fridge, cabinets, sink under the window, dishwasher, cabinets
-    add('tallCabinet', 'FIX', (E, 6.2), 180, dict(CAB, d=2, h=8, w=2.5, pull='knob'))
-    add('fridge4Door', 'BUILTIN', (E, 9.0), 180, {'d': 2.5, 'dispenser': True, 'h': 5.9, 'w': 3})
-    add('upperCabinet', 'FIX', (E, 9.0), 180, dict(CAB, d=2, h=1.9, mountY=6.1, w=3, pull='knob'))
-    add('baseCabinet', 'FIX', (E, 11.95), 180, dict(CAB, w=2.9))
-    add('baseCabinet', 'FIX', (E, 14.45), 180, dict(CAB, w=2.1))
+    E = X_E; N = Y_N; NF = N - 2.08                      # NF: the north run's counter front
+    # street-gable run (backs on the gable, facing west), south to north: two tall pantry cabinets, drawers, the sink under the
+    # window, dishwasher, drawers, then the fridge at the north end, by the corner, a step from the range (r43: it was at the south end)
+    add('tallCabinet', 'FIX', (E, 6.1), 180, dict(CAB, d=2, h=8, w=2.5, pull='knob'))
+    add('tallCabinet', 'FIX', (E, 8.6), 180, dict(CAB, d=2, h=8, w=2.5, pull='knob', hinge='right'))
+    add('baseCabinet', 'FIX', (E, 11.35), 180, dict(CAB, w=3.0, doors='drawers'))
+    add('baseCabinet', 'FIX', (E, 14.15), 180, dict(CAB, w=2.6))
+    add('baseCabinet', 'FIX', (E, 16.2), 180, dict(CAB, w=1.5))
     add('baseCabinet', 'FIX', (E, RIDGE_Y), 180, dict(CAB, w=3.0, doors='sink', pull='knob'))
     add('sinkUndermount', 'FIX', (E - 0.38, RIDGE_Y), 180, {'d': 1.5, 'mountY': 2.896, 'w': 2.5})
     add('faucetKitchen', 'FIX', (E - 0.22, RIDGE_Y), 180, {'mountY': 3})
-    add('dishwasher', 'FIX', (E, 20.95), 180, {'w': 2})
-    add('baseCabinet', 'FIX', (E, 23.45), 180, dict(CAB, w=3.0))
-    add('baseCabinet', 'FIX', (E, 26.45), 180, dict(CAB, w=3.0))
-    add('baseCabinet', 'FIX', (E, 28.9), 180, dict(CAB, w=1.9))
-    add('upperCabinet', 'FIX', (E, 12.4), 180, dict(CAB, h=3.5, mountY=4.5, w=3.8, pull='knob', led=True))
-    add('upperCabinet', 'FIX', (E, 24.9), 180, dict(CAB, h=3.5, mountY=4.5, w=5.6, pull='knob', led=True))
-    # north-wall return (facing south): cabinets, the 36" range with a chimney hood, cabinets to the corner
-    N = Y_N
-    add('baseCabinet', 'FIX', (26.4, N), 270, dict(CAB, w=2.8))
-    add('baseCabinet', 'FIX', (28.75, N), 270, dict(CAB, w=1.9))
-    add('range36', 'FIX', (31.2, N), 270, {'w': 3})
-    add('hoodChimney', 'FIX', (31.2, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
-    add('baseCabinet', 'FIX', (33.6, N), 270, dict(CAB, w=1.8))
-    add('upperCabinet', 'FIX', (27.3, N), 270, dict(CAB, h=3.5, mountY=4.5, w=4.6, pull='knob', led=True))
-    # counters: one quartz top over both runs, a 4-in splash
-    out = [[E - 2.08, 7.45], [E, 7.45], [E, N], [25.0, N], [25.0, N - 2.08], [E - 2.08, N - 2.08]]
-    add('counterTop', 'BUILTIN', (33.0, 20.0), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [out], 'holes': [[[E - 1.65, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y + 1.2], [E - 1.65, RIDGE_Y + 1.2]], [[29.7, N - 2.08], [32.7, N - 2.08], [32.7, N], [29.7, N]]], 'splash': 0.33, 't': 0.104})
+    add('dishwasher', 'FIX', (E, 20.946), 180, {'w': 2})
+    add('baseCabinet', 'FIX', (E, 23.446), 180, dict(CAB, w=3.0, doors='drawers'))
+    add('baseCabinet', 'FIX', (E, 25.948), 180, dict(CAB, w=2.0))
+    add('fridge4Door', 'BUILTIN', (E, 28.45), 180, {'d': 2.5, 'dispenser': True, 'h': 5.9, 'w': 3})
+    add('upperCabinet', 'FIX', (E, 28.45), 180, dict(CAB, d=2, h=1.9, mountY=6.1, w=3, pull='knob'))
+    add('upperCabinet', 'FIX', (E, 12.35), 180, dict(CAB, h=3.5, mountY=4.5, w=5.0, pull='knob', led=True))
+    add('upperCabinet', 'FIX', (E, 24.5), 180, dict(CAB, h=3.5, mountY=4.5, w=4.8, pull='knob', led=True))
+    # north-wall return (facing south): drawers, the 36" range with a chimney hood, drawers, a corner cabinet
+    add('baseCabinet', 'FIX', (26.5, N), 270, dict(CAB, w=3.0, doors='drawers'))
+    add('range36', 'FIX', (29.5, N), 270, {'w': 3})
+    add('hoodChimney', 'FIX', (29.5, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
+    add('baseCabinet', 'FIX', (32.75, N), 270, dict(CAB, w=3.5))
+    add('baseCabinet', 'FIX', (E - 1.0425, N), 270, dict(CAB, w=2.085))
+    add('upperCabinet', 'FIX', (26.375, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.75, pull='knob', led=True))
+    add('upperCabinet', 'FIX', (32.875, N), 270, dict(CAB, h=3.5, mountY=4.5, w=3.25, pull='knob', led=True))
+    # counters: quartz on the gable run between the pantries and the fridge, and on the north run into the corner, a 4-in splash
+    sink_hole = [[E - 1.65, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y + 1.2], [E - 1.65, RIDGE_Y + 1.2]]
+    add('counterTop', 'BUILTIN', (E - 1.04, 18.4), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[E - 2.08, 9.85], [E, 9.85], [E, 26.95], [E - 2.08, 26.95]]],
+        'holes': [sink_hole], 'splash': 0.33, 't': 0.104})
+    add('counterTop', 'BUILTIN', (30.8, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[25.0, NF], [E, NF], [E, N], [25.0, N]]],
+        'holes': [[[28.0, NF], [31.0, NF], [31.0, N], [28.0, N]]], 'splash': 0.33, 't': 0.104})
     # the island: 12 ft x 4.5 ft, working side to the kitchen, four stools on the room side
     add('island', 'FIX', (31.0, 19.5), 180, dict(CAB, w=12.0, d=4.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=False))
     for y in (15.2, 18.0, 21.0, 23.8):
         add('counterStoolRope', 'BUILTIN', (25.75, y), 0, None)
-    # the old kitchen's peninsula: the range comes out (a cabinet in its place) and the counter closes over it; the glass hood goes
-    add('baseCabinet', 'FIX', (15.08, 11.81), 180, dict(CAB, w=2.5))
-    add('counterTop', 'BUILTIN', (14.5, 9.834), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'splash': 0.33, 't': 0.104,
-        'holes': [[[14.015, 7.702], [12.268, 5.955], [11.229, 6.995], [12.975, 8.741]]],
-        'outlines': [[[12.92, 9.103], [12.92, 14.39], [15.663, 14.39], [16.08, 13.973], [16.08, 4.9], [12.486, 4.904], [12.486, 4.82], [6.486, 4.82], [6.486, 4.904], [5.272, 4.904], [5.272, 11.08], [7.48, 11.08], [7.48, 7.06], [10.867, 7.06]],
-                     [[11.38, 17.238], [13.548, 17.238], [13.548, 22.05], [11.38, 22.05]]]})
     return F
 
 def staging():
@@ -418,7 +420,27 @@ def staging():
     add('bowl', (0, 0), 90, {'dia': 1.55, 'h': 1.0}, on='dt')
     for dx in (-2.4, 0.0, 2.4):
         add('parsonsChair', (22.0 + dx, 7.15), 90); add('parsonsChair', (22.0 + dx, 11.65), 270)
-    # the old kitchen: a coffee bar (its stools stay), a plant
+    # the old kitchen (r43): every cabinet, counter and appliance goes; the oak floor runs through. A reading nook at its south window:
+    # a built-in window seat under the window with bookcases on the south and west walls, a reading chair with a drum table and lamp,
+    # a sisal rug; a sideboard with art on the west wall north of the living-room door. The middle and the alcove stay open: the
+    # living-room door, the great room and the bedroom hall all cross here.
+    WS = 9.49                                                   # the old kitchen window (WN-L1-02) centre
+    add('windowSeat', (WS, Y_S), 90, {'w': 8.3, 'd': 1.9}, key='seat', back=True)
+    add('seatCushion', (0, 0), 90, {'w': 8.2, 'd': 1.85, 'fabric': 'seatGrey'}, on='seat')
+    add('pillows', (0, 0), 90, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowCream', -2.9, 1.4, 1.4, .08], ['pillowSlate', -1.7, 1.4, 1.4, -.05], ['pillowGreyLinen', 2.6, 1.4, 1.4, .1]]}, on='seat').update({'stageZ': -.45})
+    add('books', (0, 0), 90, {'n': 3}, on='seat', dx=1.2, dz=.15)
+    add('builtinBookcase', (14.85, Y_S), 90, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 2.5, 'levels': [3.9, 5.1, 6.3], 'lights': False, 'seed': 11, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 2.3}, lib='BUILTIN')
+    add('builtinBookcase', (X_OK, 8.6), 0, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 2.5, 'levels': [3.9, 5.1, 6.3], 'lights': False, 'seed': 13, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 3.4}, lib='BUILTIN')
+    add('rug2', (9.9, 8.7), 0, {'w': 6.0, 'd': 7.0, 'pattern': 'sisal'})
+    add('armchairBoucle', (12.8, 9.0), 180, {'fabric': 'fabricLight'})
+    add('drumTable', (14.6, 9.0), 0, {'dia': 1.4, 'h': 1.75}, key='dr')
+    add('lamp', (0, 0), 0, {'h': 1.9, 'shadeDia': 1.0}, on='dr')
+    add('basket', (6.6, 7.4), 0, {'dia': 1.2, 'h': 1.1}, key='bk')
+    add('throwBlanket', (0, 0), 0, {'w': 1.1, 'mountY': 1.0}, on='bk')
+    add('sideboard', (X_OK, 16.75), 0, {'w': 4.0, 'd': 1.6}, key='sb', back=True)
+    add('lamp', (0, 0), 0, {'h': 2.2}, on='sb', dx=-1.3)
+    add('vase2', (0, 0), 0, {'h': 1.0}, on='sb', dx=1.2)
+    add('art', (X_OK, 16.75), 0, {'w': 3.0, 'h': 2.4, 'mountY': 5.1, 'style': 'blots', 'seed': 7}, back=True)
     # deck: outdoor dining for six, two lounge chairs and a low table, planters at the rail for privacy from the driveway
     add('outdoorDiningTable', (21.0, -0.6), 90, {'w': 7.0, 'd': 3.4}, key='odt')
     for dx in (-2.3, 0.0, 2.3):
@@ -431,8 +453,8 @@ def staging():
     return F
 
 CARD = {'name': 'Open kitchen and great room', 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': LABEL,
-        'description': 'The two bedrooms open into one vaulted great room with the kitchen at the street end, a fireplace, skylights and a folding glass wall to a new front deck. 4 bedrooms, 3 baths, plus office.',
-        'note': 'Concept r42b (owner idea, 11/12/2026): as "Open great room", but the kitchen moves to the street end (island facing the room), the old kitchen becomes a scullery and coffee bar, the picture window becomes a folding glass wall onto an extended front deck, a gas fireplace on the north wall, four skylight wells. Status: illustrative, not designed or reviewed by an architect or engineer.',
+        'description': 'The two bedrooms open into one vaulted great room with the kitchen at the street end, a fireplace, skylights and a folding glass wall to a new front deck; the old kitchen becomes a reading nook. 4 bedrooms, 3 baths, plus office.',
+        'note': 'Concept r42b (owner idea, 11/12/2026): as "Open great room", but the kitchen moves to the street end (island facing the room), the old kitchen is taken out and becomes a reading nook with a window seat (r43), the picture window becomes a folding glass wall onto an extended front deck, a gas fireplace on the north wall, four skylight wells. Status: illustrative, not designed or reviewed by an architect or engineer.',
         'status': 'illustrative', 'source': 'concept r42b (tour/CONCEPT-4BR.md)', 'pageExtras': True}
 
 def register(hide, hide_ranges, sha):
@@ -440,15 +462,18 @@ def register(hide, hide_ranges, sha):
     e = {'id': OPT_ID, 'legacyId': LEGACY, 'set': 'OS-REMODEL'}; e.update(CARD)
     e.update({'hide': hide, 'hideRanges': hide_ranges, 'glb': GLB_OUT, 'sha256': sha, 'remap': [], 'meta': META_OUT,
               'region': [[-10.5, -1.4], [5.4, -1.4], [5.4, 4.4], [37.0, 4.4], [37.0, 32.5], [5.0, 32.5], [5.0, 27.1], [-7.0, 27.1], [-7.0, 18.85], [-9.95, 18.85]],
-              'clearRegion': [[X_KIT + 0.6, Y_S - 0.3], [37.3, Y_S - 0.3], [37.3, Y_N + 0.3], [X_W + 0.05, Y_N + 0.3], [X_W + 0.05, Y_KIT - 0.9], [X_KIT + 0.6, Y_KIT - 0.9]],
+              'clearRegion': [[X_OK + 0.05, Y_S - 0.3], [37.3, Y_S - 0.3], [37.3, Y_N + 0.3], [X_W + 0.05, Y_N + 0.3], [X_W + 0.05, Y_KIT - 0.9], [13.5, Y_KIT - 0.9], [13.5, 21.6], [X_OK + 0.05, 21.6]],   # r43: the old kitchen too (not the hall door at y 22)
               'walkStart': {'at': [8.0, 14.0], 'look': [36.0, 18.4]},
               'walkTests': [[[27.5, 6.0], [27.5, 11.0], 'open'], [[19.0, 15.0], [19.0, 21.0], 'open'], [[23.0, 21.5], [23.0, 26.0], 'open'],
                             [[25.0, 6.5], [25.0, 0.0], 'open'], [[30.0, -1.0], [35.5, -1.0], 'wall'], [[20.0, 25.0], [12.0, 25.0], 'wall']],
               'labels': [{'name': 'Kitchen', 'at': [31.5, 19.0]}, {'name': 'Living', 'at': [19.3, 25.0]}, {'name': 'Dining', 'at': [22.0, 9.4]},
-                         {'name': 'Scullery & coffee bar', 'at': [10.0, 12.0]}, {'name': 'Deck', 'at': [25.5, 0.0]}, {'name': 'Bedroom', 'at': [-0.8, 21.5]}, {'name': 'Bath', 'at': [9.4, 29.2]}],
+                         {'name': 'Reading nook', 'at': [9.5, 8.6]}, {'name': 'Deck', 'at': [25.5, 0.0]}, {'name': 'Bedroom', 'at': [-0.8, 21.5]}, {'name': 'Bath', 'at': [9.4, 29.2]}],
               'views': {'foyer': {'pos': [-4.0, 5.0, -3.0], 'look': [20.7, 4.7, 9.0]},
                         'entry': {'pos': [13.0, 5.0, 11.0], 'look': [19.5, 4.8, 36.6]},
                         'kitchen': {'pos': [22.5, 5.0, 34.2], 'look': [8.0, 4.4, 16.0]},
+                        'nook': {'pos': [14.5, 5.0, 21.5], 'look': [7.5, 4.0, 8.0]},
+                        'hallside': {'pos': [21.0, 5.0, 9.5], 'look': [6.0, 4.2, 9.6]},
+                        'kitchenrun': {'pos': [18.5, 5.0, 23.5], 'look': [30.0, 4.0, 35.5]},
                         'living': {'pos': [17.5, 5.0, 26.0], 'look': [30.0, 4.4, 19.3]},
                         'deck': {'pos': [-3.4, 5.0, 25.4], 'look': [16.0, 4.4, 24.2]},
                         'driveway': {'pos': [-14.0, 1.0, 40.0], 'look': [2.0, 1.4, 24.0]},
