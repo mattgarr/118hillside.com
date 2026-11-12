@@ -166,11 +166,14 @@ post-processing, same harness on both builds):
 | terrace > lounge | 15.93 | 0.79 |
 | garage > yard | 19.28 | 1.00 |
 
+navCheck `light` on the final build (composer, every move forward and back, 46 judged + the 2 time-of-day moves noted): largest
+lighting step 1.21 / 255, largest exposure step .0105 stops per frame; full navCheck (all 14 sections) passes.
+
 Real time (requestAnimationFrame, ~55 fps): living > kitchen > great now makes two room changes, each crossfaded; main swapped the
 lighting in single frames four times on that walk. porch > entry: one 'in' and one room change, crossfaded; main flipped in / out /
 in within 38 frames.
 
-Same view from two histories (4 views): exposure within 0.00-0.12 %.
+Same view from two histories (4 views): exposure within 0.00-0.01 %.
 
 Phone viewport (375x812 emulated, phone path), median frame time / draw calls, main -> r40: street 25.7 -> 24.7 ms (1399 calls
 both), living 25.2 -> 23.8 (1153), great 9.2 -> 10.0 (176), kitchen 27.2 -> 29.7 (1373), primary 12.4 -> 14.5 (354), terrace
