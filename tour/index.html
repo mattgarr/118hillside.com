@@ -15806,6 +15806,393 @@ const TREAT = (() => {
 })();
 window.TREAT28 = TREAT;
 
+/* ---------------- r42 cta42: remodel and redecorate, easy to find (owner 11/12: "People don't know that there's going to be a design mode ... make sure
+   that it's obvious to go redecorate and remodel ... and also to choose alternative floor plans, but making it clear that those are design concepts
+   based on prior work with an architect"). UI only: no camera pose, stop, geometry or holiday-control internals change here.
+   - a small chip above the stop card (inside the card when it is open): "Compare floor plans: 6, 5 or 4 bedrooms" on the stops the plans change
+     (living room through the main-level bedrooms), "See it decorated for the holidays" on the stops the decor dresses (street, porch, foyer, terrace, yard)
+   - a one-time nudge after five stops, with both, that can be dismissed; one line on the closing card
+   - the floor plan picker: Design opened on a short list of plans, one card each (bedroom count first, then baths, name, one line, a sketch of the
+     main level, and its label). Picking one shows it from the layout view Design already uses; "Back to as built", "More design tools" (the full
+     Design panel), and the card's own "Back to the tour". The list is read from the scene's options, so a new concept shows up on its own.
+   - a banner whenever a concept is on screen, in any mode, with the way back to the real house; "As built" in the same place once the picker was used
+   - next to the holiday control, while it is open: paint colors and furniture, for more redecorating
+   Analytics: design_cta, decor_cta, plan_pick, plan_walk, design_more, cta_nudge. */
+const CTA42 = (() => {
+  const root = document.documentElement, Q = location.search;
+  if(/[?&](escape|snowball|deck|room|feast|game)=/.test(Q) || /\/(thanksgiving|halloween)\//.test(location.pathname)) return null;   // games keep their own screen
+  const ga = (ev, p) => { try{ if(typeof window.gtag === 'function') window.gtag('event', ev, Object.assign({page: location.pathname}, p || {})); }catch(e){} };
+  const isPh = () => root.classList.contains('ph');
+  const inGame = () => /(^|\s)(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on|bk38game)(\s|$)/.test(root.className) || !!(window.HWGAMES && HWGAMES.active) || !!window.HILLSIDE;
+  const ls = (k, v) => { try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } };
+  const ss = (k, v) => { try{ if(v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); }catch(e){ return null; } };
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
+  const stopId = () => { try{ return (STOPS[stopIdx] || {}).id || ''; }catch(e){ return ''; } };
+
+  /* which stops carry which chip: the plans change the original part of the main level; the decor dresses the front, the foyer and the back yard */
+  const PLAN_STOPS = new Set(['living', 'kitchen', 'great', 'mainbeds', 'middlebed', 'hallbath', 'backbed']);
+  const DECOR_STOPS = new Set(['street', 'porch', 'entry', 'terrace', 'yard']);
+  /* the concepts that come from the owner's earlier work with an architect (the two in the scene before r42); any other concept is labelled an illustrative idea */
+  const ARCH = new Set(['jan24', 'apr24b']);
+  const LAB = {real: 'The real house',
+    arch: 'Design concept, based on earlier work with an architect. Not reviewed for permits or structure.',
+    ill: 'Illustrative idea. Not designed or reviewed by an architect or engineer.',
+    mine: 'Your own changes. Not designed or reviewed by an architect or engineer.'};
+  const LINE = {asbuilt: 'The house as it is today.',
+    apr24b: 'An open kitchen and dining room around a long island, with a family room and three bedrooms.',
+    jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.'};
+  const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
+  const FACTS = {}, SPACES = {}, FETCH = {};
+
+  /* bedrooms, baths and the office, counted from a plan's own rooms ('Bedroom hallway' and closets are not bedrooms; a bath's WC is part of that bath) */
+  function count(spaces){ let beds = 0, baths = 0, office = false;
+    for(const s of spaces || []){ const n = String(s.name || '').trim(), id = String(s.id || ''); if(/closet/i.test(n)) continue;
+      if(/bedroom$/i.test(n)) beds++; else if(/\bbath$/i.test(n) && !/-WC$/i.test(id)) baths++; if(/office/i.test(n)) office = true; }
+    return beds ? {beds, baths, office} : null; }
+  const polyOf = s => s.polygon || s.poly || null;
+  const baseSpaces = () => { try{ return (BIM2S && BIM2S.meta && BIM2S.meta.spaces) || null; }catch(e){ return null; } };
+  const optMeta = id => { try{ return (typeof BIM2 !== 'undefined' && BIM2S) ? BIM2.option(id) : null; }catch(e){ return null; } };
+  function metaUrl(o){ try{ if(BIM2S && BIM2S.metaBase) return new URL(o.meta, BIM2S.metaBase).href; return new URL(o.meta, new URL(BIM2_CFG.meta, location.href)).href; }catch(e){ return 'bim2/' + o.meta; } }
+  function load(id){
+    if(SPACES[id]) return Promise.resolve(true); if(FETCH[id]) return FETCH[id];
+    if(id === 'asbuilt'){ const s = baseSpaces(); if(s){ SPACES[id] = s; FACTS[id] = count(s) || FACTS[id]; } return Promise.resolve(!!s); }
+    const o = optMeta(id); if(!o) return Promise.resolve(false);
+    if(o.data && o.data.spaces){ SPACES[id] = o.data.spaces; FACTS[id] = count(o.data.spaces) || FACTS[id]; return Promise.resolve(true); }
+    if(!o.meta) return Promise.resolve(false);
+    return (FETCH[id] = fetch(metaUrl(o)).then(r => r.ok ? r.json() : null).then(j => { if(j && j.spaces){ SPACES[id] = j.spaces; FACTS[id] = count(j.spaces) || FACTS[id]; } FETCH[id] = null; lastSig = ''; sync(); return !!j; })
+      .catch(e => { FETCH[id] = null; console.warn('[cta42] plan file', id, e); return false; })); }
+  function facts(id){ if(FACTS[id]) return FACTS[id]; const o = optMeta(id) || {};
+    if(o.bedrooms) return {beds: +o.bedrooms, baths: +o.baths || 0, office: o.office !== false};   // a plan may state its own counts
+    return KNOWN[id] || null; }
+  const factLine = f => f ? f.baths + (f.baths === 1 ? ' bath' : ' baths') + (f.office ? ' + office' : '') : '';
+  const bedLine = f => f ? f.beds + (f.beds === 1 ? ' bedroom' : ' bedrooms') : '';
+  const kindOf = id => id === 'asbuilt' ? 'real' : id === 'custom' ? 'mine' : ARCH.has(id) ? 'arch' : 'ill';
+
+  /* the plans: as built first, then each concept in the scene, most bedrooms first */
+  function plans(){ let L = []; try{ L = (bim2DesignOptions() || []).filter(d => d && d.id && d.id !== 'custom'); }catch(e){}
+    const out = L.map(d => { const o = optMeta(d.id) || {};
+      return {id: d.id, name: DESIGN.nameOf(d.id), line: LINE[d.id] || o.description || d.description || 'Another way to lay out the main level of the original house.'}; });
+    const b = p => (facts(p.id) || {beds: 0}).beds;
+    return [{id: 'asbuilt', name: 'As built', line: LINE.asbuilt}].concat(out.sort((p, q) => b(q) - b(p))); }
+  function bedsPhrase(){ const n = [...new Set(plans().map(p => (facts(p.id) || {}).beds).filter(Boolean))].sort((a, b) => b - a);
+    if(n.length < 2) return ''; return n.slice(0, -1).join(', ') + ' or ' + n[n.length - 1] + ' bedrooms'; }
+
+  /* a sketch of the main level: bedrooms warm, baths cool, other rooms pale; the street at the bottom */
+  function sketch(id){ const S = SPACES[id], none = '<span class="k42s k42e" aria-hidden="true"></span>'; if(!S) return none;
+    const L = S.filter(s => s.storey === 'L1' && s.interior !== false && Array.isArray(polyOf(s)) && polyOf(s).length > 2); if(!L.length) return none;
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for(const s of L) for(const p of polyOf(s)){ x0 = Math.min(x0, p[1]); x1 = Math.max(x1, p[1]); y0 = Math.min(y0, p[0]); y1 = Math.max(y1, p[0]); }
+    const pad = 1.5, f = n => (+n).toFixed(1);
+    const parts = L.map(s => { const n = String(s.name || '').trim(), c = /closet|stairs|storage/i.test(n) ? 'kc' : /bedroom$/i.test(n) ? 'kb' : /\bbath$/i.test(n) ? 'kw' : 'kr';
+      return '<path class="' + c + '" d="M' + polyOf(s).map(p => f(p[1]) + ' ' + f(p[0])).join('L') + 'Z"/>'; }).join('');
+    return '<svg class="k42s" viewBox="' + f(x0 - pad) + ' ' + f(y0 - pad) + ' ' + f(x1 - x0 + 2 * pad) + ' ' + f(y1 - y0 + 2 * pad) + '" aria-hidden="true" focusable="false">' + parts + '</svg>'; }
+
+  const ICON_PLAN = '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3.5 3.5h13v13h-13zM3.5 10h5.5M9 3.5v4M9 12.5v4M12.5 10h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  const ICON_DECOR = '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 2.5l1.6 4.4 4.4 1.6-4.4 1.6L10 14.5l-1.6-4.4L4 8.5l4.4-1.6zM15.5 13.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  const ARROW = '<svg class="c42a" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M4.2 2.5 7.8 6l-3.6 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  const css = el('style'); css.id = 'cta42css'; css.textContent = `
+#cta42,#ng42,#cb42,#hm42{font-family:inherit;-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+#cta42{position:fixed;z-index:57;left:var(--c42l,24px);bottom:var(--c42b,96px);display:inline-flex;align-items:center;gap:8px;max-width:var(--c42w,460px);min-height:40px;padding:0 14px 0 12px;border:1px solid var(--line);border-radius:999px;
+  background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1);box-shadow:0 2px 10px rgba(20,24,26,.14);color:var(--ink);font-size:14px;font-weight:500;line-height:1.2;text-align:left;cursor:pointer;
+  opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease,background-color .15s ease}
+#cta42.c42on{opacity:1;transform:none}
+#cta42[hidden],#ng42[hidden],#cb42[hidden],#hm42[hidden]{display:none!important}
+#cta42 svg{flex:0 0 auto;color:var(--accent)}#cta42 .c42a{color:var(--muted)}
+#cta42 .c42x{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cta42 .c42x b{font-weight:500}#cta42 .c42x i{font-style:normal;color:var(--muted)}
+#cta42:hover{background:var(--paper)}#cta42:hover .c42a{color:var(--ink)}
+#cta42:focus-visible,#ng42 button:focus-visible,#cb42 button:focus-visible,#hm42 button:focus-visible,.pk42p button:focus-visible,.fin36 .fl .c42f:focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
+/* inside the open stop card: a quiet row under the caption */
+#cta42.c42in{position:static;display:flex;width:auto;max-width:none;margin:2px 14px 10px;opacity:1;transform:none;box-shadow:none;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
+#cta42.c42in:hover{background:var(--hov27,rgba(27,31,34,.05))}
+/* the one-time nudge */
+#ng42{position:fixed;z-index:57;left:var(--c42l,24px);bottom:var(--c42b,96px);width:min(400px,calc(100vw - 32px));padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--glass);
+  -webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);box-shadow:var(--shadow);color:var(--ink);opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+#ng42.g42on{opacity:1;transform:none}
+#ng42 .g42h{margin:0 34px 4px 0;font-family:var(--f-display);font-style:italic;font-weight:500;font-size:21px;line-height:1.15}
+#ng42 .g42t{margin:0 0 12px;font-size:14px;line-height:1.45;color:var(--ink)}
+#ng42 .g42a{display:flex;flex-wrap:wrap;gap:8px}
+#ng42 .g42a button{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px 0 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+#ng42 .g42a button svg{color:var(--accent)}#ng42 .g42a button:hover{border-color:var(--ink)}
+#ng42 .g42x{position:absolute;top:6px;right:6px;width:38px;height:38px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}#ng42 .g42x:hover{background:var(--hov27,rgba(27,31,34,.06));color:var(--ink)}
+/* the concept banner, and "As built" */
+#cb42{position:fixed;z-index:57;left:var(--cb42x,50%);top:var(--cb42t,80px);transform:translateX(-50%);display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:var(--cb42w,calc(100vw - 32px));
+  padding:8px 8px 8px 16px;border-radius:16px;background:#2b2418;color:#fbf6ec;box-shadow:0 8px 26px rgba(20,16,10,.32);border:1px solid rgba(232,211,176,.35);font-size:13.5px;line-height:1.35}
+#cb42 .b42m{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+html:not(.ph) #cb42:not(.b42ab){flex-wrap:nowrap}html:not(.ph) #cb42:not(.b42ab) .b42m{min-width:min(300px,100%)}
+#cb42 .b42m b{font-weight:600;letter-spacing:.005em}#cb42 .b42m b::before{content:"";display:inline-block;width:8px;height:8px;margin:0 8px 1px 0;border-radius:50%;background:#e2a33c;vertical-align:middle}
+#cb42 .b42m span{font-size:12.5px;color:rgba(251,246,236,.82)}
+#cb42 .b42s{display:flex;gap:6px;flex-wrap:wrap}
+#cb42 button{min-height:36px;padding:0 14px;border:0;border-radius:999px;background:#fbf6ec;color:#1f1a12;font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+#cb42 button.b42alt{background:rgba(251,246,236,.14);color:#fbf6ec}
+#cb42 button[hidden]{display:none}
+#cb42 button:hover{background:#fff}#cb42 button.b42alt:hover{background:rgba(251,246,236,.24)}
+#cb42.b42ab{padding:6px 14px;gap:8px;background:var(--glass);color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 10px rgba(20,24,26,.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:13px;flex-wrap:nowrap;pointer-events:none}
+#cb42.b42ab .b42m{flex:0 1 auto}#cb42.b42ab .b42m b{font-weight:500}#cb42.b42ab .b42m b::before{background:var(--accent)}#cb42.b42ab .b42m span,#cb42.b42ab .b42s{display:none}
+html.cb42on .ideas35{display:none!important}
+html.ph.bks36on.cb42on .perfpill{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
+html.ph.cb42on .qhint{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
+/* next to the holiday control: more ways to redecorate */
+#hm42{position:fixed;z-index:62;top:var(--hm42t,0px);left:var(--hm42l,0px);width:var(--hm42w,316px);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;padding:5px 6px 5px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);
+  box-shadow:0 6px 20px rgba(20,24,26,.16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink);font-size:13px;line-height:1.3}
+#hm42 p{margin:0 2px 0 0;color:var(--muted)}
+#hm42 button{min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}#hm42 button:hover{border-color:var(--ink)}
+/* the floor plan picker (Design opened on the plans only) */
+#pk42h{display:none}
+html.pk42 #card .tb>:not(#pk42h){display:none!important}
+html.pk42 #pk42h{display:block;padding:12px 14px 2px}
+#pk42h .p42e{margin:0;font-family:var(--f-data);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+#pk42h h2{padding:2px 0 0}
+html.pk42 #card .body>:not(#design){display:none!important}
+html.pk42 #design>:not(#pk42){display:none!important}
+html.pk42 #design{grid-template-columns:minmax(0,1fr)}
+.pk42p{display:none;min-width:0}
+html.pk42 .pk42p{display:block}
+.pk42p .p42lede{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink)}
+.pk42p .p42list{display:grid;grid-template-columns:1fr;gap:7px}
+.pk42p .k42c{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);gap:11px;align-items:start;width:100%;margin:0;padding:9px 12px 10px 9px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+.pk42p .k42c:hover{border-color:var(--ink)}
+.pk42p .k42c[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
+.pk42p .k42c[aria-checked="true"]::after{content:"Showing";position:absolute;top:10px;right:12px;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--accent)}
+.pk42p .k42c.k42busy::after{content:"Loading…";color:var(--muted)}
+.pk42p .k42s{display:block;width:64px;height:64px;border-radius:8px;background:var(--paper-2,#e4e7e1);padding:4px;box-sizing:border-box}
+.pk42p .k42s path{stroke:#4a4e50;stroke-width:.3;stroke-linejoin:round;fill:#f7f5ef}
+.pk42p .k42s path.kb{fill:#e2c79c}.pk42p .k42s path.kw{fill:#bcd0d8}.pk42p .k42s path.kc{fill:#dcdcd4}
+.pk42p .k42x{display:block;min-width:0}
+.pk42p .k42n{display:block;font-family:var(--f-display);font-weight:500;font-size:22px;line-height:1.05;letter-spacing:-.005em;padding-right:64px}
+.pk42p .k42b{display:block;margin-top:2px;font-size:13.5px;font-weight:500;color:var(--ink)}
+.pk42p .k42t{display:block;margin-top:5px;font-size:14px;font-weight:600}
+.pk42p .k42d{display:block;margin-top:1px;font-size:13px;line-height:1.4;color:var(--muted)}
+.pk42p .k42l{display:block;margin-top:5px;font-size:12px;line-height:1.4;color:#7a5520}
+.pk42p .k42c[data-k="real"] .k42l{color:var(--accent);font-weight:600}
+.pk42p .p42ft{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.pk42p .p42ft button{min-height:38px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px;font-weight:500;cursor:pointer}.pk42p .p42ft button:hover{border-color:var(--ink)}
+.pk42p .p42ft button[hidden]{display:none}
+.pk42p .p42fine{margin:8px 0 2px;font-size:12px;line-height:1.45;color:var(--muted)}
+.fin36 .fl .c42f .c42n{display:none}html.ph .fin36 .fl .c42f .c42w{display:none}html.ph .fin36 .fl .c42f .c42n{display:inline}
+/* phones: the chip is short and sits on the left above the stop sheet; the picker cards scroll sideways */
+html.ph #cta42{min-height:42px;padding:0 13px 0 11px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph #cta42 svg{color:currentColor}html.ph #cta42 .c42a{color:currentColor;opacity:.6}
+html.ph #cta42 .c42x i{display:none}
+html.ph #cta42.c42in{background:var(--pl,rgba(255,255,255,.08));margin:2px 0 8px;grid-column:1 / -1}
+html.ph #ng42{left:max(var(--gut,12px),env(safe-area-inset-left,0px));right:max(var(--gut,12px),env(safe-area-inset-right,0px));width:auto;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph #ng42 .g42h{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:17px}
+html.ph #ng42 .g42t{color:var(--pt,var(--ink));font-size:14.5px}
+html.ph #ng42 .g42a{flex-wrap:nowrap}html.ph #ng42 .g42a button{flex:1 1 0;min-width:0;padding:0 10px;justify-content:center;min-height:44px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
+html.ph #ng42 .g42a button svg{display:none}html.ph #ng42 .g42a button{white-space:nowrap;font-size:13.5px;padding:0 8px}
+html.ph #ng42 .g42x{color:var(--pm,var(--muted))}
+html.ph #cb42{font-family:var(--sf,inherit);width:calc(100vw - 2 * var(--gut,12px));max-width:none;padding:8px 8px 8px 12px;border-radius:14px;flex-wrap:wrap;gap:6px 8px;font-size:13px}
+html.ph #cb42 .b42m{flex:1 1 100%}html.ph #cb42 .b42m span{font-size:12px;line-height:1.35}
+html.ph #cb42 .b42s{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap}
+html.ph #cb42 button{min-height:36px;padding:0 12px;font-size:13px}
+/* a phone in the floor plan picker: one slim line (the chosen card right below carries the label and the way back) */
+html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:6px 12px;flex-wrap:nowrap;font-size:12.5px}html.ph #cb42.b42sl .b42m span,html.ph #cb42.b42sl .b42s{display:none}
+html.ph #cb42.b42sl .b42m b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.ph.pk42 #card .body{max-height:calc(46vh - 120px);max-height:calc(46dvh - 120px)}
+html.ph #cb42.b42ab{width:max-content;max-width:calc(100vw - 24px);padding:5px 12px}
+html.ph #hm42{left:8px!important;right:8px;width:auto!important;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line))}
+html.ph #hm42 p{color:var(--pm,var(--muted))}html.ph #hm42 button{min-height:40px;background:var(--ph-hi,var(--paper));color:var(--ph-ink,var(--ink));border:0}
+html.ph #pk42h{padding:4px 0 0}
+html.ph #pk42h .p42e{font-family:var(--sf,inherit);letter-spacing:.02em;text-transform:none;font-size:12.5px;color:var(--pm,var(--muted))}
+html.ph #pk42h h2{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:19px}
+html.ph .pk42p .p42lede{display:none}
+html.ph .pk42p .p42list{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin:4px -2px 0;padding:2px 2px 6px;scrollbar-width:none}
+html.ph .pk42p .p42list::-webkit-scrollbar{display:none}
+html.ph .pk42p .k42c{flex:0 0 min(290px,74vw);scroll-snap-align:start;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:10px;background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph .pk42p .k42c[aria-checked="true"]{border-color:var(--pt,var(--accent));box-shadow:0 0 0 1.5px var(--pt,var(--accent)) inset}
+html.ph .pk42p .k42c[aria-checked="true"]::after{color:var(--pt,var(--accent))}
+html.ph .pk42p .k42s{width:62px;height:62px}
+html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:600;font-size:20px}
+html.ph .pk42p .k42b,html.ph .pk42p .k42t{color:var(--pt,var(--ink))}
+html.ph .pk42p .k42d{color:var(--pm,var(--muted))}
+html.ph .pk42p .k42l{color:var(--pt,var(--ink));opacity:.8}html.ph .pk42p .k42c[data-k="real"] .k42l{color:var(--pt,var(--accent))}
+html.ph .pk42p .p42ft button{flex:1 1 auto;min-height:44px;background:var(--pl,var(--paper));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
+html.ph .pk42p .p42fine{color:var(--pm,var(--muted))}
+html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36on.ph :is(#cta42,#ng42){display:none!important}
+@media (prefers-reduced-motion:reduce){#cta42,#ng42{transition:none}}
+`;
+  document.head.appendChild(css);
+
+  /* ---- elements */
+  const chip = el('button'); chip.type = 'button'; chip.id = 'cta42'; chip.hidden = true;
+  const nudge = el('aside'); nudge.id = 'ng42'; nudge.hidden = true; nudge.setAttribute('aria-label', 'Ideas for this house');
+  nudge.innerHTML = '<button type="button" class="g42x" aria-label="Dismiss">×</button><p class="g42h">Ideas for this house</p><p class="g42t"></p>'
+    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>Compare floor plans</span></button><button type="button" data-a="decor">' + ICON_DECOR + '<span>Holiday decor</span></button></div>';
+  const banner = el('div'); banner.id = 'cb42'; banner.hidden = true; banner.setAttribute('role', 'status');
+  banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">Back to floor plans</button><button type="button" data-a="real">Back to the real house</button></div>';
+  const hm = el('div'); hm.id = 'hm42'; hm.hidden = true;
+  hm.innerHTML = '<p>Also try</p><button type="button" data-a="paint">Paint colors</button><button type="button" data-a="furn">Furniture</button>';
+  const head = el('div'); head.id = 'pk42h'; head.innerHTML = '<p class="p42e">Floor plans</p><h2 id="pk42H">Compare floor plans</h2>';
+  const pick = el('div', 'pk42p'); pick.id = 'pk42'; pick.setAttribute('role', 'region'); pick.setAttribute('aria-labelledby', 'pk42H');
+  pick.innerHTML = '<p class="p42lede">The main level of the original house could be laid out a few ways. Pick a plan to see it in 3D.</p>'
+    + '<div class="p42list" role="radiogroup" aria-label="Floor plans"></div>'
+    + '<div class="p42ft"><button type="button" data-a="walk" hidden>Walk through this plan</button><button type="button" data-a="asbuilt" hidden>Back to as built</button><button type="button" data-a="more">More design tools</button></div>'
+    + '<p class="p42fine">The house is offered as it is today. The other plans are ideas only.</p>';
+  const list = pick.querySelector('.p42list'), foot = pick.querySelector('.p42ft');
+
+  let sheetByPk = false, pickerUsed = ss('hillside.cta42.used') === '1', nudgeOn = false, nudgeStop = -1, placedIn = null, lastSig = '';
+  const seen = new Set();
+
+  /* ---- the picker */
+  const setPk = on => root.classList.toggle('pk42', !!on);
+  const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
+  function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {}, sl = list.scrollLeft;
+    for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
+    list.innerHTML = '';
+    for(const p of L){ const f = facts(p.id), k = kindOf(p.id), b = el('button', 'k42c' + (busy[p.id] ? ' k42busy' : '')); b.type = 'button'; b.dataset.id = p.id; b.dataset.k = k; b.setAttribute('role', 'radio');
+      const on = cur === p.id; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1;
+      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? bedLine(f) : p.name) + '</span>' + (f ? '<span class="k42b">' + factLine(f) + '</span>' : '')
+        + '<span class="k42t">' + p.name + '</span><span class="k42d">' + p.line + '</span><span class="k42l">' + LAB[k] + '</span></span>';
+      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' + factLine(f) + '. ' : '') + p.name + '. ' + p.line + ' ' + LAB[k]);
+      b.addEventListener('click', () => choose(p.id, 'picker')); list.appendChild(b); }
+    if(!list.querySelector('[tabindex="0"]') && list.firstChild) list.firstChild.tabIndex = 0;
+    list.scrollLeft = sl; if(cur !== render.cur){ render.cur = cur; const c = list.querySelector('.k42c[aria-checked="true"]'); if(c && isPh()) list.scrollLeft = Math.max(0, c.offsetLeft - list.offsetLeft - 2);
+      else if(c){ const cd = $('#card'), r = c.getBoundingClientRect(), k = cd.getBoundingClientRect(), bk = $('#bk38'), lo = bk && !bk.hidden ? bk.getBoundingClientRect().top - 8 : k.bottom - 8;   // a computer: the chosen card scrolls into the panel
+        if(r.bottom > lo) cd.scrollTop += r.bottom - lo; else if(r.top < k.top + 8) cd.scrollTop -= k.top + 8 - r.top; } }
+    foot.querySelector('[data-a=asbuilt]').hidden = cur === 'asbuilt'; foot.querySelector('[data-a=walk]').hidden = cur === 'asbuilt'; }
+  list.addEventListener('keydown', e => { const L = [...list.querySelectorAll('.k42c')], i = L.indexOf(document.activeElement); if(i < 0) return;
+    const j = /^Arrow(Down|Right)$/.test(e.key) ? (i + 1) % L.length : /^Arrow(Up|Left)$/.test(e.key) ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
+    e.preventDefault(); e.stopPropagation(); const id = L[j].dataset.id; choose(id, 'picker'); const n = list.querySelector('.k42c[data-id="' + id + '"]'); if(n) n.focus(); });
+  pick.addEventListener('keydown', e => { if(e.key !== 'Escape' && e.key !== 'Tab') e.stopPropagation(); });   // arrows and Space stay in the picker
+  foot.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; const a = b.dataset.a;
+    if(a === 'asbuilt') choose('asbuilt', 'picker');
+    else if(a === 'walk'){ ga('plan_walk', {plan: ACTIVE_VAR}); const w = $('#dWalk'); if(w) w.click(); }
+    else if(a === 'more'){ ga('design_more', {where: 'picker', plan: ACTIVE_VAR}); setPk(false); try{ DESIGN.open('design'); }catch(x){} sync(); const c = $('#card'); if(c) c.scrollTop = 0; } });
+  function choose(id, where){ if(mode !== 'design') setMode('design');
+    const f = facts(id); ga('plan_pick', {plan: id, beds: f ? f.beds : 0, concept: kindOf(id), where: where || 'picker'});
+    try{ DESIGN.choose(id, true); }catch(e){ console.warn('[cta42] choose', e); }
+    if(id !== 'asbuilt'){ let p = null; try{ p = bim2EnsureOption(id); }catch(e){}
+      if(p && p.then){ const mark = on => { const n = list.querySelector('.k42c[data-id="' + id + '"]'); if(n) n.classList.toggle('k42busy', on); }; render(); mark(true); p.then(() => mark(false), () => mark(false)); } }
+    lastSig = ''; sync(); }
+  function openPicker(where){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
+    if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
+    hideNudge();
+    for(const p of plans()) load(p.id);
+    const wasMin = isPh() && $('#card').classList.contains('min');   // (Design opens the sheet itself)
+    setPk(true); if(mode !== 'design') setMode('design'); else { try{ DESIGN.view(1.2); }catch(e){} }
+    try{ if(wasMin) sheetByPk = true; if(isPh() && $('#card').classList.contains('min')) $('#collapse').click(); }catch(e){}
+    render(); lastSig = ''; sync();
+    setTimeout(() => { const c = list.querySelector('.k42c[aria-checked="true"]') || list.querySelector('.k42c'); if(c) try{ c.focus({preventScroll: true}); }catch(e){} const cd = $('#card'); if(cd) cd.scrollTop = 0; }, 60); }
+
+  /* ---- holiday decor, and more ways to redecorate */
+  function openDecor(where){ ga('decor_cta', {where, stop: stopId()}); hideNudge();
+    try{ if(window.HOLIDAY && HOLIDAY.open){ HOLIDAY.open(); return; } }catch(e){ console.warn('[cta42] holiday', e); }
+    const b = $('#holBtn'); if(b) b.click(); }
+  function moreDecor(which){ ga('decor_cta', {where: 'holiday-panel', target: which}); try{ if(window.HOLIDAY) HOLIDAY.close(); }catch(e){}
+    hm.hidden = true; setPk(false); if(mode !== 'design') setMode('design');
+    setTimeout(() => { const s = $(which === 'paint' ? '#pSec' : '#fSec'); if(s) try{ s.scrollIntoView({block: 'start', behavior: 'smooth'}); }catch(e){}
+      if(which === 'paint'){ try{ IDEAS35.look('street'); }catch(e){} } }, 150); }
+  hm.addEventListener('click', e => { const b = e.target.closest('button'); if(b) moreDecor(b.dataset.a); });
+  let hmT = 0;
+  function hmSync(){ const P = $('#holPanel'), open = !!(P && !P.hidden && getComputedStyle(P).display !== 'none' && P.getBoundingClientRect().height > 20) && !inGame() && mode !== 'design';
+    if(!open){ if(!hm.hidden && !hmT) hmT = setTimeout(() => { hmT = 0; const P2 = $('#holPanel'); if(!P2 || P2.hidden || mode === 'design') hm.hidden = true; }, 350); return; }   // a click on these buttons closes the panel first: they stay a moment
+    clearTimeout(hmT); hmT = 0; hm.hidden = false; const r = P.getBoundingClientRect(), h = hm.offsetHeight || 52;
+    if(isPh()) hm.style.setProperty('--hm42t', Math.max(8, Math.round(r.top - h - 8)) + 'px');
+    else { hm.style.setProperty('--hm42t', Math.round(r.bottom + 6) + 'px'); hm.style.setProperty('--hm42l', Math.round(r.left) + 'px'); hm.style.setProperty('--hm42w', Math.round(r.width) + 'px'); } }
+
+  /* ---- the chip and the nudge */
+  function chipKind(){ if(inGame() || mode !== 'tour' || photoUp() || root.classList.contains('clean27') || root.classList.contains('phm')) return '';
+    const hs = $('#holShow'); if(hs && !hs.hidden) return ''; const P = $('#holPanel'); if(P && !P.hidden) return '';
+    const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
+    const id = stopId(); return PLAN_STOPS.has(id) && plans().length > 1 ? 'plans' : DECOR_STOPS.has(id) && window.HOLIDAY ? 'decor' : ''; }
+  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>Compare floor plans</b>' + (b ? '<i>: ' + b + '</i>' : '') + '</span>' + ARROW; }
+    return ICON_DECOR + '<span class="c42x"><b>' + (isPh() ? 'Holiday decor' : 'See it decorated for the holidays') + '</b></span>' + ARROW; }
+  chip.addEventListener('click', e => { e.stopPropagation(); const where = chip.classList.contains('c42in') ? 'stop-card' : 'stop-chip'; if(chip.dataset.k === 'plans') openPicker(where); else openDecor(where); });
+  for(const n of [chip, nudge, banner, hm]) for(const ev of ['pointerdown', 'wheel', 'touchstart']) n.addEventListener(ev, e => e.stopPropagation(), {passive: true});   // not the canvas: no drag or walk through them
+  nudge.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
+    if(b.classList.contains('g42x')){ ga('cta_nudge', {action: 'dismiss', stop: stopId()}); hideNudge(); return; }
+    if(b.dataset.a === 'plans') openPicker('nudge'); else openDecor('nudge'); });
+  function hideNudge(){ if(!nudgeOn) return; nudgeOn = false; nudge.classList.remove('g42on'); setTimeout(() => { if(!nudgeOn) nudge.hidden = true; }, 400); }
+  function maybeNudge(){ if(mode !== 'tour' || inGame()) return; seen.add(stopIdx);
+    if(nudgeOn || ls('hillside.cta42.nudge') === '1' || seen.size < 5 || !chipKind()) return;
+    ls('hillside.cta42.nudge', '1'); nudgeOn = true; nudgeStop = stopIdx; const b = bedsPhrase();
+    nudge.querySelector('.g42t').textContent = b ? 'See the main level laid out with ' + b + ', or see the house decorated for the holidays.' : 'See other floor plans for the main level, or see the house decorated for the holidays.';
+    nudge.hidden = false; void nudge.offsetWidth; nudge.classList.add('g42on'); ga('cta_nudge', {action: 'shown', stop: stopId()}); }
+
+  /* where the chip and the nudge sit: just above the stop card on the left, clear of the 3D model / Photo switch on a phone; inside the card when it is open */
+  function place(){ const card = $('#card'); if(!card) return;
+    const cr = card.getBoundingClientRect(), open = !card.classList.contains('min') && cr.height > 120, kind = chip.dataset.k || '';
+    const want = kind && open && !nudgeOn ? 'in' : 'out';
+    if(want !== placedIn){ placedIn = want;
+      if(want === 'in'){ const bl = $('#blurb'); chip.classList.add('c42in', 'c42on'); if(bl && bl.parentNode) bl.after(chip); else card.appendChild(chip); }
+      else { chip.classList.remove('c42in', 'c42on'); document.body.appendChild(chip); if(!chip.hidden) requestAnimationFrame(() => chip.classList.add('c42on')); } }
+    if(want === 'in') return;
+    let bottom = innerHeight - cr.top + 8, left = cr.left, maxW = Math.max(200, Math.min(520, innerWidth - left - 16));
+    const seg = $('#realSeg');
+    if(isPh() && seg && !seg.hidden && seg.offsetParent){ const r = seg.getBoundingClientRect(); if(r.height > 4 && r.bottom > cr.top - 70){ const room = r.left - 8 - left;
+        if(room >= 150) maxW = room; else bottom = innerHeight - r.top + 8; } }
+    const ng = document.querySelector('.navguide:not([hidden])'); if(ng && ng.offsetParent){ const r = ng.getBoundingClientRect(); if(r.height > 4 && r.left < left + maxW && r.bottom > innerHeight - bottom - 60) bottom = Math.max(bottom, innerHeight - r.top + 8); }
+    let nb = bottom;   // the nudge is as wide as the screen on a phone: it goes above the 3D model / Photo switch too
+    if(isPh() && seg && !seg.hidden && seg.offsetParent){ const r = seg.getBoundingClientRect(); if(r.height > 4) nb = Math.max(nb, innerHeight - r.top + 8); }
+    for(const n of [chip, nudge]){ n.style.setProperty('--c42l', Math.round(left) + 'px'); n.style.setProperty('--c42b', Math.round(n === nudge ? nb : bottom) + 'px'); n.style.setProperty('--c42w', Math.round(maxW) + 'px'); } }
+
+  /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
+  function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
+    const hp = $('#holPanel'), holOpen = !!(hp && !hp.hidden);
+    const show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || (pickerUsed && !root.classList.contains('ideas35on') && !holOpen));
+    root.classList.toggle('cb42on', show && v !== 'asbuilt');
+    if(!show){ banner.hidden = true; return; }
+    const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
+    if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
+    else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
+      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + bedLine(f) + (banner.classList.contains('b42sl') ? '' : ', ' + factLine(f)) : '') + '. Not the house as it is.';
+      s.textContent = k === 'arch' ? 'Based on earlier work with an architect. Not reviewed for permits or structure.' : 'Not designed or reviewed by an architect or engineer.';
+      banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
+    banner.hidden = false;
+    // under the top bar (the booking line on a phone); on a computer centred over the part of the screen the Design panel leaves free
+    const bar = document.querySelector('header.bar'), bk = $('#bks36'); let top = 70;
+    if(isPh()){ const r = bk && bk.offsetParent ? bk.getBoundingClientRect() : (bar ? bar.getBoundingClientRect() : null); if(r) top = r.bottom + 8; }
+    else if(bar){ let bt = 0; for(const c of bar.children){ const r = c.getBoundingClientRect(); if(r.height > 0 && r.top < 200) bt = Math.max(bt, r.bottom); } top = (bt || bar.getBoundingClientRect().bottom) + 10; }
+    let cx = innerWidth / 2, w = innerWidth - 32; const card = $('#card');
+    if(!isPh() && card){ const r = card.getBoundingClientRect(); if(!card.classList.contains('min') && r.height > 120 && r.right < innerWidth * .55){ cx = (r.right + innerWidth) / 2; w = innerWidth - r.right - 32; } }
+    banner.style.setProperty('--cb42t', Math.round(top) + 'px'); banner.style.setProperty('--cb42x', Math.round(cx) + 'px'); banner.style.setProperty('--cb42w', Math.round(Math.min(w, 860)) + 'px');
+    root.style.setProperty('--cb42t', Math.round(top) + 'px'); root.style.setProperty('--cb42h', Math.round(banner.offsetHeight || 0) + 'px'); }
+  banner.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
+    if(b.dataset.a === 'plans'){ ga('design_cta', {where: 'banner', stop: stopId(), kind: 'plans'}); setPk(true); setMode('design'); lastSig = ''; sync(); return; }
+    ga('plan_pick', {plan: 'asbuilt', concept: 'real', where: 'banner'});
+    const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); });
+
+  /* ---- the closing card: one line with both */
+  function finLinks(){ const fl = document.querySelector('#fin36 .fl'); if(!fl) return false; if(fl.querySelector('.c42f')) return true;
+    const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Compare floor plans';
+    const d = el('button', 'c42f', '<span class="c42w">See it decorated for the holidays</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
+    a.addEventListener('click', e => { e.stopPropagation(); openPicker('finale'); });
+    d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); });
+    const ph = fl.querySelector('[data-a="photos"]'); if(ph) ph.after(a, d); else fl.append(a, d); return true; }
+
+  function sync(){ try{
+    if(root.classList.contains('pk42') && mode !== 'design') setPk(false);
+    if(sheetByPk && !root.classList.contains('pk42') && mode !== 'design'){ sheetByPk = false; setTimeout(() => { try{ if(isPh() && mode !== 'design' && !root.classList.contains('pk42') && !$('#card').classList.contains('min')) $('#collapse').click(); }catch(e){} }, 450); }   // a phone sheet opened for the picker folds away again
+    if(nudgeOn && (stopIdx !== nudgeStop || mode !== 'tour' || inGame())) hideNudge();
+    const k = nudgeOn ? '' : chipKind();
+    if(k){ const sig = k + bedsPhrase() + isPh(); if(chip._s !== sig){ chip._s = sig; chip.dataset.k = k; chip.innerHTML = chipText(k);
+        chip.setAttribute('aria-label', k === 'plans' ? 'Compare floor plans' + (bedsPhrase() ? ': ' + bedsPhrase() : '') : 'See the house decorated for the holidays'); }
+      if(chip.hidden){ chip.hidden = false; requestAnimationFrame(() => chip.classList.add('c42on')); } }
+    else if(!chip.hidden){ chip.hidden = true; if(!chip.classList.contains('c42in')) chip.classList.remove('c42on'); chip.dataset.k = ''; chip._s = ''; }
+    place(); label(); hmSync();
+    if(root.classList.contains('pk42')){ const s = ACTIVE_VAR + '|' + plans().map(p => p.id + ':' + !!SPACES[p.id]).join(); if(s !== lastSig){ lastSig = s; render(); } }
+  }catch(e){ console.warn('[cta42]', e); } }
+
+  function init(){
+    document.body.append(chip, nudge, banner, hm);
+    const tb = document.querySelector('#card .tb'); if(tb) tb.appendChild(head);
+    const d = $('#design'); if(d) d.insertBefore(pick, d.firstChild);
+    { const _ss = showStop; showStop = function(){ const r = _ss.apply(this, arguments); try{ maybeNudge(); sync(); }catch(e){} return r; }; }
+    { const _sm = setMode; setMode = function(m){ const was = mode; const r = _sm.apply(this, arguments);
+        try{ if(was === 'design' && m === 'walk' && root.classList.contains('pk42') && DESIGN.walking()) root.classList.add('pk42w'); else if(m !== 'walk' && m !== 'design') root.classList.remove('pk42w');
+          if(m === 'design' && was === 'walk' && root.classList.contains('pk42w')){ root.classList.remove('pk42w'); setPk(true); } lastSig = ''; sync(); }catch(e){} return r; }; }
+    for(const p of plans()) if(!KNOWN[p.id]) load(p.id);   // a new concept's bedroom count, for the chip's wording
+    let tries = 0; const fl = setInterval(() => { if(finLinks() || ++tries > 240) clearInterval(fl); }, 500);
+    addEventListener('resize', () => requestAnimationFrame(sync));
+    setInterval(sync, 400);
+    seen.add(stopIdx); sync(); }
+  (function wait(n){ const L = $('#loading'), ok = typeof DESIGN !== 'undefined' && $('#card') && $('#design') && (!L || L.classList.contains('done'));
+    if(!ok){ if(n < 1200) setTimeout(() => wait(n + 1), 250); return; } try{ init(); }catch(e){ console.warn('[cta42] init', e); } })(0);
+  return {openPicker, openDecor, choose, plans, facts, sync, get used(){ return pickerUsed; }};
+})();
+window.CTA42 = CTA42;
+
+
 /* ---------------- v27 ui27: auto-hide, clean view, View menu, compact card, pad / plan chip (patch_v27_ui) ---------------- */
 const UI27 = (() => {
   const root = document.documentElement, card = $('#card'), col = $('#collapse'), vb = $('#viewBtn'), menu = $('#phMenu'), fsb = $('#fsBtn');
