@@ -634,8 +634,8 @@
         </div><div id="escSay" aria-live="polite"></div></div>
       </div>
       <div class="escChip" id="escMenu" role="menu"><button type="button" role="menuitem" id="escRestart">Start this level again</button><button type="button" role="menuitem" id="escLevels">Choose a different level</button><button type="button" role="menuitem" id="escAbout">About this 3D model</button><a role="menuitem" href="/tour/">Leave and explore the house</a><a role="menuitem" href="/games/">More games</a></div>
-      <div id="escMarks"></div>
       <div id="escCoach" role="status"></div>
+      <div id="escMarks"></div>
       <div id="escDock">
         <div id="escMapWrap"><button class="escChip" id="escMapBtn" type="button" aria-expanded="false">${ICO.pin}<span id="escMapNow">Entry</span><small>Map</small></button>
           <div class="escChip" id="escMap"><h4><span>You are in the <b id="escMapName">entry</b></span><span id="escFloors"></span></h4><button type="button" id="escMapX" aria-label="Close the map">×</button><div class="plan" id="escPlan"></div></div></div>
@@ -764,7 +764,12 @@
       items.push({m, x, y, edge, docked}); }
     items.sort((p, q) => (p.docked - q.docked) || ((p.m.kind === 'walk') - (q.m.kind === 'walk')));
     const obs = [], add = e => { if(!e) return; const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2) obs.push([q.left - 6, q.top - 6, q.right + 6, q.bottom + 6]); };
-    add(goalE); if(placeE.classList.contains('on')) add(placeE); add(phone() ? $('#escMapBtn') : mapE); add($('#escBtns')); if(sayE.classList.contains('on')) add(sayE); add(sunE);
+    add(goalE); add(phone() ? $('#escMapBtn') : mapE); add($('#escBtns')); add(sunE);
+    // the room card and the speech bubble come and go; the space they took stays reserved while you're in this place, so rings don't jump when they fade
+    const stick = UI.stick && UI.stick.place === S.place ? UI.stick : (UI.stick = {place: S.place, boxes: {}});
+    const keep = (k, e) => { if(e.classList.contains('on')){ const q = e.getBoundingClientRect(); if(q.width > 2 && q.height > 2){ const b = [q.left - 6, q.top - 6, q.right + 6, q.bottom + 6], o = stick.boxes[k];
+        stick.boxes[k] = o ? [Math.min(o[0], b[0]), Math.min(o[1], b[1]), Math.max(o[2], b[2]), Math.max(o[3], b[3])] : b; } } if(stick.boxes[k]) obs.push(stick.boxes[k]); };
+    keep('place', placeE); keep('say', sayE);
     // the 'drag to look around' tip comes and goes and lets taps through, so it doesn't push rings about
     const wOf = m => m.w || (m.w = Math.max(40, (m.b.querySelector('span') || {}).offsetWidth || 90));
     const box = it => { const w = wOf(it.m), hw = Math.max(34, w / 2 + 4); return it.edge === 'L' ? [it.x - 32, it.y - 32, it.x + 36 + w, it.y + 32] : it.edge === 'R' ? [it.x - 36 - w, it.y - 32, it.x + 32, it.y + 32] : [it.x - hw, it.y - 32, it.x + hw, it.y + 84]; };
