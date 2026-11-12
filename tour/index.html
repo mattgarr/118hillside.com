@@ -16091,7 +16091,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(cur !== render.cur){ render.cur = cur; const c = list.querySelector('.k42c[aria-checked="true"]');   // the chosen card scrolls into the panel
       const cd = isPh() ? $('#card .body') : $('#card');
       if(c && cd){ const r = c.getBoundingClientRect(), k = cd.getBoundingClientRect(), bk = $('#bk38'), lo = !isPh() && bk && !bk.hidden ? bk.getBoundingClientRect().top - 8 : k.bottom - 8;
-        if(r.bottom > lo) cd.scrollTop += r.bottom - lo; else if(r.top < k.top + 8) cd.scrollTop -= k.top + 8 - r.top; } }
+        if(r.bottom > lo) cd.scrollTop += Math.min(r.bottom - lo, r.top - k.top - 8); else if(r.top < k.top + 8) cd.scrollTop -= k.top + 8 - r.top; } }   // (its top stays in view)
     foot.querySelector('[data-a=asbuilt]').hidden = cur === 'asbuilt'; foot.querySelector('[data-a=walk]').hidden = cur === 'asbuilt'; }
   list.addEventListener('keydown', e => { const L = [...list.querySelectorAll('.k42c')], i = L.indexOf(document.activeElement); if(i < 0) return;
     const j = /^Arrow(Down|Right)$/.test(e.key) ? (i + 1) % L.length : /^Arrow(Up|Left)$/.test(e.key) ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
