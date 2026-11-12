@@ -23173,6 +23173,44 @@ function r40BuildMask(){
 window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.r40Mask.value; if(!t) return null; const B = U.r40MB.value, Y = U.r40MY.value, P = [x + nx * .75, y + ny * .75, z + nz * .75];
   const u = (P[0] - B.x) * B.z, v = (P[2] - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0; const i = Math.min(R40M.nx - 1, Math.floor(u * R40M.nx)), j = Math.min(R40M.nz - 1, Math.floor(v * R40M.nz)), d = t.image.data, o = (j * R40M.nx + i) * 4, yy = (P[1] - Y.x) / Y.y;
   const f = (lo, hi) => Math.max(0, Math.min(1, yy - lo + .5)) * Math.max(0, Math.min(1, hi - yy + .5)); return Math.max(f(d[o], d[o + 1]), f(d[o + 2], d[o + 3])); };
+/* r41 owner 11/12: "the light filtering shades appear to be luminous". The light-filtering fabrics (roller shades r28filter, honeycomb cells
+   r29cellFilter, skylight shades r35skyShade) and the rainbow privacy film (r28film) carried a FIXED emissive (.14 / .22 / .5 / .32) standing
+   in for daylight coming through them, at every time of day: at dusk (the tour's opening light) and in the night decor modes a lowered shade
+   read bright cream and self-lit in a dim room. Now each shade or film panel gets its own copy of its material and its transmitted light
+   follows the light actually falling on the outside of THAT window: the sky it sees (a vertical window half the sky, a skylight most of it,
+   scaled by the sky's brightness for the sun height) plus the direct sun on its outward face. The midday value is the old constant (the
+   approved daylight look); morning / afternoon / golden hour fall off with the sky and swing with the sun's side; at dusk and at night
+   there is none and the fabric is ordinary cloth lit by the room's lamps and the room environment. */
+const R41SH = window.R41SH = {items: [], n: 0, key: '', ref: null, last: null};
+function r41ShadeDir(){ const T = TOD.find(t => t.key === 'midday') || TOD[1], sp = sunPosition(T.h, T.doy), plan = sp.az - 46.14 * Math.PI / 180, alt = Math.max(sp.alt, -.02);
+  return new THREE.Vector3(Math.cos(plan) * Math.cos(alt), Math.max(.03, Math.sin(alt)), Math.sin(plan) * Math.cos(alt)).normalize(); }
+// light on a window's outer face, relative units: sky (view factor of a plane with outward normal n, times sky brightness for the sun height) + direct sun
+function r41ShadeLight(n, sd, skyK, sunRel){ return skyK * (.5 + .5 * n.y) + .9 * sunRel * Math.max(0, n.dot(sd)); }
+function r41ShadeCollect(){
+  const KIND = /^(r28filter|r29cellFilter|r28film|r35skyShade)$/, items = [], byGroup = new Map();
+  scene.traverse(o => { if(!o.isMesh || !o.material || Array.isArray(o.material)) return; const m0 = o.material.userData && o.material.userData.r41of ? o.material.userData.r41of : o.material;
+    if(!KIND.test(m0.name || '')) return;
+    let g = o.parent; while(g && !/^(r35shade:(roller|cell):|r28film:|r35sky:)/.test(g.name || '')) g = g.parent; if(!g) return;
+    let it = byGroup.get(g.name + '|' + m0.uuid);
+    if(!it){ let nOut = null; const id = g.name.split(':').pop();
+      if(/^r35sky:/.test(g.name)){ g.updateMatrixWorld(true); nOut = new THREE.Vector3().setFromMatrixColumn(g.matrixWorld, 2).normalize().negate(); }   // the group's z looks into the room
+      else { const F = r28Frame(id); if(F) nOut = new THREE.Vector3(-F.inn[0], 0, -F.inn[1]).normalize(); }
+      if(!nOut) return;
+      const m = o.material.userData && o.material.userData.r41of ? o.material : m0.clone(); m.name = m0.name; m.userData = Object.assign({}, m0.userData, {r41of: m0});
+      it = {id: g.name, mat: m, base: m0.emissiveIntensity, nOut}; byGroup.set(g.name + '|' + m0.uuid, it); items.push(it); }
+    o.material = it.mat; });
+  R41SH.items = items; R41SH.n = items.length; R41SH.key = ''; return items.length; }
+function r41ShadeFrame(){
+  if(!R41SH.items.length) return; const night = DUSK || (typeof HW !== 'undefined' && HW.on);
+  const sunRel = night ? 0 : Math.max(0, Math.min(1.2, sun.intensity / (2.6 * V26.sunK))), skyK = night ? 0 : Math.min(1, .2 + .8 * Math.min(1, SUN_DIR.y / .5));
+  const key = TOD_KEY + '|' + (night ? 1 : 0) + '|' + sunRel.toFixed(3) + '|' + SUN_DIR.x.toFixed(3) + SUN_DIR.y.toFixed(3) + SUN_DIR.z.toFixed(3); if(key === R41SH.key) return; R41SH.key = key;
+  const ref = R41SH.ref || (R41SH.ref = r41ShadeDir()); const out = [];
+  for(const it of R41SH.items){ const L = night ? 0 : r41ShadeLight(it.nOut, SUN_DIR, skyK, sunRel), L0 = r41ShadeLight(it.nOut, ref, 1, 1);
+    const k = night ? 0 : Math.min(1.5, L / Math.max(.05, L0)); it.mat.emissiveIntensity = it.base * k; it.k = k; out.push([it.id, +k.toFixed(2)]); }
+  R41SH.last = out; }
+{ const _rf41 = renderFrame; renderFrame = function(){ try{ const sig = (R28W.shades || []).length + ',' + (R28W.cells || []).length + ',' + (R28W.sky || []).length + ',' + (R28W.film || []).length + ',' + (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '');
+      if(sig !== R41SH.sig){ R41SH.sig = sig; r41ShadeCollect(); }   // shades are built as the house loads (rollers, cells, skylights): collect again whenever that changes
+      r41ShadeFrame(); }catch(e){ if(!R41SH.warn){ R41SH.warn = true; console.warn('[r41] shades', e); } } return _rf41.apply(this, arguments); }; }
 // clear glass: no glow painted on the panes and no lamp-colour grade through them at dusk (rooms are seen lit through the glass instead)
 { const _g40 = glass20Frame; glass20Frame = function(){ _g40.apply(this, arguments); if(!R40E.on) return; GLASS20_U.gEm.value = 0; if(GRADE_PASS && GRADE_PASS.uniforms.wK) GRADE_PASS.uniforms.wK.value = 0; }; }
 /* ?qa=1: a contact sheet of tour views (stops, mid-flight points or poses) drawn after the lighting settles on a simulated clock,
