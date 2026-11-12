@@ -130,16 +130,17 @@
     if(!DRESS[kind]) return Promise.resolve(false);
     if(!H.ready || (kind !== 'none' && H.mode === 'design')) return Promise.resolve(false);
     want = kind; wantFrom = o.from || 'panel';
-    if(runP){ gen++; busy = kind; status(busyText(kind)); render(); return runP; }
+    if(runP){ if(kind === doing.kind && gen === doing.gen){ want = null; return runP; }   // the same pick again while it is going up (and nothing newer is waiting): carry on
+      gen++; busy = kind; status(busyText(kind)); render(); return runP; }
     if(kind === current() && !sweep().length){ want = null; render(); return Promise.resolve(true); }
     return (runP = drive().finally(() => { runP = null; }));
   }
   /* r43: each switch keeps a timeline (HOLIDAY.state().marks[kind]): the loading note painted, the old dress down, the new one built, on, its first
      frame drawn (shown), settled; and the longest gap between frames meanwhile (worst), so a slow switch says where its time went */
-  let marks = {};
+  let marks = {}; const doing = {kind: null, gen: -1};
   const frameWatch = () => { const w = {worst: 0, on: true}; let last = performance.now(); (function f(){ if(!w.on) return; const t = performance.now(); w.worst = Math.max(w.worst, t - last); last = t; requestAnimationFrame(f); })(); return w; };
   async function drive(){ let ok = true, kind = null, t0 = 0;
-    while(want !== null){ kind = want; want = null; const my = ++gen, stale = () => my !== gen; t0 = performance.now();
+    while(want !== null){ kind = want; want = null; const my = ++gen, stale = () => my !== gen; t0 = performance.now(); doing.kind = kind; doing.gen = my;
       ftRun(6000); const base = ftBase();
       const mk = {from: current(), cold: kind === 'thanksgiving' ? !(TG() && TG().ready) : kind === 'winter' ? !W.built : kind === 'halloween' ? !H.hwReady : false}, fw = frameWatch(), m = n => { mk[n] = Math.round(performance.now() - t0); };
       busy = kind; show.stop(); render(); status(busyText(kind)); await paint(); m('note'); if(stale()){ fw.on = false; continue; }
@@ -154,7 +155,7 @@
       if(stale()){ fw.on = false; continue; }
       await paint(); m('shown'); await settle(base); m('settled'); mk.frame = Math.round(base); fw.on = false; mk.worst = Math.round(fw.worst); if(stale()) continue;
       lastMs[kind] = Math.round(performance.now() - t0); marks[kind] = mk; }
-    if(kind !== null && current() !== kind && ok){ ok = false; }   // the last pick did not hold (should not happen): say so rather than show a wrong state
+    doing.kind = null; if(kind !== null && current() !== kind && ok){ ok = false; }   // the last pick did not hold (should not happen): say so rather than show a wrong state
     busy = null;
     const live = $('#holLive'); if(live) live.textContent = !ok ? 'The decorations did not load. Try again.' : kind === 'none' ? 'The decorations are down.' : DRESS[kind].label + ' decorations are up.';
     render(); try{ window.__v33discPlace && __v33discPlace(); }catch(e){}
