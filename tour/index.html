@@ -23007,7 +23007,7 @@ if(/[?&]qa=1\b/.test(location.search)){ const SM = renderer.shadowMap, orig = SM
       const rt = renderer.getRenderTarget(); GHOST41.sm.push({f: renderer.info.render.frame, t: +performance.now().toFixed(1), casters: n, off: hidden, size: sun.shadow.mapSize.x, rt: rt ? (rt.isWebGLCubeRenderTarget ? 'cube' : 'rt' + rt.width) : 'screen', cam: cam === camera ? 'eye' : 'other'});
       if(GHOST41.sm.length > 4000) GHOST41.sm.splice(0, 1000); }
     return orig(lights, sc, cam); };
-  window.__g41 = {GOV, METER, sun, renderer, scene, camera, LOOK, PERF, R40X, R40L, ACC: window.__aa && __aa.ACC, get EXPO_IN(){ return EXPO_IN; }, get room(){ return LIGHT_ENV_ID; }, get DUSK(){ return DUSK; }, get TOD(){ return TOD_KEY; }}; }
+  window.__g41 = {GOV, METER, sun, renderer, scene, camera, LOOK, PERF, get R40X(){ return R40X; }, get R40L(){ return R40L; }, ACC: window.__aa && __aa.ACC, get EXPO_IN(){ return EXPO_IN; }, get room(){ return LIGHT_ENV_ID; }, get DUSK(){ return DUSK; }, get TOD(){ return TOD_KEY; }}; }
 if(GHOST41.on){
   // G1: the shadow map is drawn with what the scene really holds
   { const SM = renderer.shadowMap, orig = SM.render.bind(SM);
