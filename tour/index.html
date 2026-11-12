@@ -20794,6 +20794,15 @@ Object.assign(FOLD42, {toggle: (it) => fold42Toggle(it || FOLD42.items[0]), set(
   near(x, y, r){ r = r || 1; const [wx, wz] = W2(x, y); navPassTag();   // the colliders that act within r ft of a plan point (for the variant showing)
     return COLLIDERS.filter(c => !(c.v && c.v !== ACTIVE_VAR) && !c.pass && wx > c.x0 - r && wx < c.x1 + r && wz > c.z0 - r && wz < c.z1 + r)
       .map(c => ({x: [+c.z0.toFixed(2), +c.z1.toFixed(2)], y: [+c.x0.toFixed(2), +c.x1.toFixed(2)], z: [+c.y0.toFixed(1), +c.y1.toFixed(1)], v: c.v, id: c.id || c.element || c.bim2 || c.f42 || c.tree || null})); }});
+/* r43: the corner floor plan (minimap) shows the plan that is showing. A layout idea with its own plan image (drawn from its model data
+   by the same projection as floor_main.jpg) is drawn instead of the house's while it shows (Design and its walk-through); everywhere
+   else, and until that image has loaded, the house's plan. */
+const MM43 = {open4k: 'floor_main_open4k.jpg'}, MM43I = {};
+{ const _dm43 = drawMini; drawMini = function(){
+    const v = typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt', src = MM43[v]; if(!src) return _dm43.apply(this, arguments);
+    let im = MM43I[v]; if(!im){ im = MM43I[v] = new Image(); im.src = src; }
+    if(!im.complete || !im.naturalWidth) return _dm43.apply(this, arguments);
+    const keep = mmImgs.main; mmImgs.main = im; try{ return _dm43.apply(this, arguments); } finally{ mmImgs.main = keep; } }; }
 /* QA hook (?qa=1 and the page console): window.__IDEA42.plans() lists the floor plans with their facts; set(id) shows one in Design;
    view(name, id, as) stands at one of the option's viewpoints in its walk-through (outdoors too: 'street'), or for 'aerial' looks at
    it from above in Design (roof and upper level off), showing layout `as` (default the option itself; 'asbuilt' for the same view of the house today); navCheck(R, qa) walks the option (called by __TOUR.navCheck's 'ideas' section). */
