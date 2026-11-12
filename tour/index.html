@@ -10373,7 +10373,11 @@ function lightMeterMul(dt){
     if(!METER.ok && inD) return DUSK ? Mt.noMeterDuskIn : Mt.noMeterIn;   // phone path: the darker per-room IBL gets the desktop meter's mean indoor gain
     return 1; };
   const wOut = kIn < 1 ? ans(false) : 1, wIn = kIn > 0 ? ans(true) : 1, want = Math.pow(wOut, 1 - kIn) * Math.pow(wIn, kIn);
-  METER.want = want; const a = 1 - Math.exp(-el * Mt.rate); METER.mul = Math.exp(Math.log(Math.max(1e-3, METER.mul)) + (Math.log(want) - Math.log(Math.max(1e-3, METER.mul))) * a); return METER.mul;
+  /* the gain follows the target in stops through a critically damped response (exact for any frame time): it starts and ends with no
+     jump in rate, so a new reading every few frames never kinks the brightness; ~1.6 s to 95 % (tau = .35 s) */
+  METER.want = want; let x = Math.log(Math.max(1e-3, METER.mul)); if(METER.lx == null || Math.abs(METER.lx - x) > 1e-6){ METER.lv = 0; }
+  const w = 1 / (Mt.tau || .35), g = Math.log(want), ex = Math.exp(-w * el), d = x - g, j = (METER.lv || 0) + w * d;
+  x = g + (d + j * el) * ex; METER.lv = ((METER.lv || 0) - w * j * el) * ex; METER.lx = x; METER.mul = Math.exp(x); return METER.mul;
 }
 { const _setupPost = setupPost; setupPost = function(){ _setupPost.apply(this, arguments);
     METER.ok = false; if(!composer) return;
