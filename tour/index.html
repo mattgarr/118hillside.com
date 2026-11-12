@@ -22863,9 +22863,11 @@ function r41EndIn(pts){ const n = pts.length; if(n < 6) return pts; const B = pt
       let kink = 0; for(let i = j + 1; i < n - 1; i++){ const ux = pts[i].x - pts[i - 1].x, uz = pts[i].z - pts[i - 1].z, vx = pts[i + 1].x - pts[i].x, vz = pts[i + 1].z - pts[i].z, lu = Math.hypot(ux, uz), lv = Math.hypot(vx, vz); if(lu > .02 && lv > .02) kink = Math.max(kink, Math.acos(clamp((ux * vx + uz * vz) / lu / lv, -1, 1))); }
       if(kink < .6) return pts;   // no sharp turn in the last few feet: leave the line as it is
       const d = pr * .5, Cx = A.x + tx * d, Cz = A.z + tz * d, k = Math.max(2, Math.ceil(acc / .5)), Q = []; let ok = true, z0 = 0;
-      for(let i = j + 1; i < n - 1; i++) if(r36At(pts[i].x, pts[i].z, pts[i].y - EYE) === 0) z0++;   // the line it replaces may already pass a cell short of a shoulder's clearance: no more of those than it had
+      for(let i = j + 1; i < n - 1; i++) if(r36At(pts[i].x, pts[i].z, pts[i].y - EYE) === 0) z0++;
+      // a threshold or a rug edge the line it replaces crosses is no obstacle: a point within half a foot of that line is taken as clear
+      const near = (x, z) => { let b = 99; for(let i = j; i < n - 1; i++){ const P = pts[i], Q2 = pts[i + 1], dx = Q2.x - P.x, dz = Q2.z - P.z, l2 = dx * dx + dz * dz, u = l2 > 1e-9 ? clamp(((x - P.x) * dx + (z - P.z) * dz) / l2, 0, 1) : 0; b = Math.min(b, Math.hypot(x - P.x - dx * u, z - P.z - dz * u)); } return b; };   // the line it replaces may already pass a cell short of a shoulder's clearance: no more of those than it had
       for(let q = 1; q < k; q++){ const u = q / k, x = (1 - u) * (1 - u) * A.x + 2 * u * (1 - u) * Cx + u * u * B.x, z = (1 - u) * (1 - u) * A.z + 2 * u * (1 - u) * Cz + u * u * B.z, f = lerp(fA, fB, u), y = navSupport(x, z, f + .3);
-        if(Math.abs(y - f) > .3 || !fr(x, z, y)){ ok = false; break; } if(!(offB && Math.hypot(x - B.x, z - B.z) < 1.5) && r36At(x, z, y) === 0 && --z0 < 0){ ok = false; break; } Q.push(new THREE.Vector3(x, y + EYE, z)); }
+        if(Math.abs(y - f) > .3 || (!fr(x, z, y) && near(x, z) > .5)){ ok = false; break; } if(!(offB && Math.hypot(x - B.x, z - B.z) < 1.5) && r36At(x, z, y) === 0 && --z0 < 0){ ok = false; break; } Q.push(new THREE.Vector3(x, y + EYE, z)); }
       if(ok) return pts.slice(0, j + 1).concat(Q, [B]); } }
   finally { drs.forEach((it, q) => { it.coll.pass = was[q]; }); }
   return pts; }
