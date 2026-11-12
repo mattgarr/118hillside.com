@@ -15933,9 +15933,9 @@ html.cb42on .ideas35{display:none!important}
 html.ph.bks36on.cb42on .perfpill{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 html.ph.cb42on .qhint{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 /* next to the holiday control: more ways to redecorate */
-#hm42{position:fixed;z-index:62;top:var(--hm42t,0px);left:var(--hm42l,0px);width:var(--hm42w,316px);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);
+#hm42{position:fixed;z-index:62;top:var(--hm42t,0px);left:var(--hm42l,0px);width:var(--hm42w,316px);display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;padding:7px 8px 7px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);
   box-shadow:0 6px 20px rgba(20,24,26,.16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink);font-size:13px;line-height:1.3}
-#hm42 p{margin:0 4px 0 0;color:var(--muted)}
+#hm42 p{margin:0 2px 0 0;color:var(--muted)}
 #hm42 button{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}#hm42 button:hover{border-color:var(--ink)}
 /* the floor plan picker (Design opened on the plans only) */
 #pk42h{display:none}
@@ -16021,7 +16021,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   const banner = el('div'); banner.id = 'cb42'; banner.hidden = true; banner.setAttribute('role', 'status');
   banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">Back to floor plans</button><button type="button" data-a="real">Back to the real house</button></div>';
   const hm = el('div'); hm.id = 'hm42'; hm.hidden = true;
-  hm.innerHTML = '<p>More ways to redecorate</p><button type="button" data-a="paint">Paint colors</button><button type="button" data-a="furn">Furniture</button>';
+  hm.innerHTML = '<p>Also try</p><button type="button" data-a="paint">Paint colors</button><button type="button" data-a="furn">Furniture</button>';
   const head = el('div'); head.id = 'pk42h'; head.innerHTML = '<p class="p42e">Floor plans</p><h2 id="pk42H">Compare floor plans</h2>';
   const pick = el('div', 'pk42p'); pick.id = 'pk42'; pick.setAttribute('role', 'region'); pick.setAttribute('aria-labelledby', 'pk42H');
   pick.innerHTML = '<p class="p42lede">The main level of the original house could be laid out a few ways. Pick a plan to see it in 3D.</p>'
@@ -16127,7 +16127,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
 
   /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
   function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
-    const show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || (pickerUsed && !root.classList.contains('ideas35on')));
+    const hp = $('#holPanel'), holOpen = !!(hp && !hp.hidden);
+    const show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || (pickerUsed && !root.classList.contains('ideas35on') && !holOpen));
     root.classList.toggle('cb42on', show && v !== 'asbuilt');
     if(!show){ banner.hidden = true; return; }
     const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
