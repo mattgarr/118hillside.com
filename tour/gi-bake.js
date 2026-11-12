@@ -172,6 +172,7 @@ void main(){
   float z = 1.0 - 2.0 * a, rr = sqrt(max(0.0, 1.0 - z * z)), ph = 6.28318531 * b; vec3 d = vec3(rr * cos(ph), z, rr * sin(ph));
   st = hsh(uint(pr) * 9781u + uint(j) * 6271u + uint(uSeed) * 26699u + 1u);
   vec3 o = PP.xyz, L = vec3(0.0), T = vec3(1.0); float first = 1e9;
+  if(uComp == 4){ oc = vec4(0.0, 0.0, 0.0, isect(o, normalize(uSun), uAOR, true, hsh(st)) ? 1.0 : 0.0); return; }   // is the way to the next probe blocked?
   if(uComp == 3){ bool h = isect(o, d, uAOR, false, hsh(st)); float r = 1e9; if(h){ vec4 E1 = texelFetch(uTri, ix(3 * hitI + 1), 0), E2 = texelFetch(uTri, ix(3 * hitI + 2), 0);
       vec3 n = cross(E1.xyz, E2.xyz); bool front = dot(n, d) < 0.0; int side = int(E2.w + 0.5); if(side == 2) front = !front; r = (front || side == 1) ? hitT : -hitT; }
     oc = vec4(0.0, 0.0, 0.0, r); return; }
@@ -232,13 +233,13 @@ function dirOf(j, jit, sq){ const a = ((j % sq) + jit[0]) / sq, b = (Math.floor(
 // comp: 'sky' | 'sun' | 'lamp' | 'ao'; o: {sun: [x,y,z], sky: canvas, lights, passes, maxB, dirs, noGeo, R}
 B.run = async function(comp, o = {}){ const U = mat().uniforms, np = B.np, dirs = o.dirs || 64, sq = Math.round(Math.sqrt(dirs)), passes = o.passes || 16, W = 1024, rows = Math.ceil(np * dirs / W), t0 = performance.now();
   U.uTri.value = B.tTri; U.uNode.value = B.tNode; U.uMat.value = B.tMat; U.uPrb.value = B.tPrb; U.uDirs.value = dirs; U.uOutW.value = W; U.uMaxB.value = o.maxB || 5; U.uNoGeo.value = o.noGeo ? 1 : 0;
-  U.uComp.value = {sky: 0, sun: 1, lamp: 2, ao: 3}[comp]; U.uAOR.value = o.R || 2.5;
-  if(comp === 'sun') U.uSun.value.set(...o.sun).normalize();
+  U.uComp.value = {sky: 0, sun: 1, lamp: 2, ao: 3, seg: 4}[comp]; U.uAOR.value = o.R || 2.5;
+  if(comp === 'sun' || comp === 'seg') U.uSun.value.set(...o.sun).normalize();
   if(comp === 'sky'){ if(B.tSky) B.tSky.dispose(); B.tSky = B.skyFrom(o.sky || B.skyNow()); } if(!B.tSky){ B.tSky = new THREE.DataTexture(new Float32Array(4), 1, 1, THREE.RGBAFormat, THREE.FloatType); B.tSky.needsUpdate = true; } U.uSky.value = B.tSky;
   if(comp === 'lamp') setLights(o.lights || B.lights());
   const maxRows = Math.min(rows, o.rows || 4096), chunk = o.chunkRows || 64;
   if(!B.rt || B.rt.width !== W || B.rt.height < maxRows){ if(B.rt) B.rt.dispose(); B.rt = new THREE.WebGLRenderTarget(W, maxRows, {type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false}); }
-  const acc = new Float64Array(np * 12), aoS = comp === 'ao' ? new Float64Array(np * 6) : null, stat = new Float64Array(np * 3), buf = new Float32Array(W * chunk * 4);
+  const acc = new Float64Array(np * 12), aoS = comp === 'ao' ? new Float64Array(np * 6) : null, seg = comp === 'seg' ? new Float32Array(np) : null, stat = new Float64Array(np * 3), buf = new Float32Array(W * chunk * 4);
   const prevRT = R.getRenderTarget(), prevAC = R.autoClear; R.autoClear = false;
   const probesPerBatch = Math.floor(maxRows * W / dirs);
   try{ for(let pass = 0; pass < passes; pass++){ const jit = [Math.random(), Math.random()]; U.uJit.value.set(jit[0], jit[1]); const DD = Array.from({length: dirs}, (_, j) => dirOf(j, jit, sq)); U.uSeed.value = (o.seed || 1) * 1000 + pass;
@@ -246,6 +247,7 @@ B.run = async function(comp, o = {}){ const U = mat().uniforms, np = B.np, dirs 
         for(let y = 0; y < rr; y += chunk){ const h = Math.min(chunk, rr - y); B.rt.scissor.set(0, y, W, h); B.rt.scissorTest = true; B.rt.viewport.set(0, 0, W, maxRows); R.setRenderTarget(B.rt); R.render(B.qs, B.cam);
           R.readRenderTargetPixels(B.rt, 0, y, W, h, buf);
           for(let k = 0; k < W * h; k++){ const pix = (y * W) + k, pr = p0 + Math.floor(pix / dirs); if(pr >= p0 + nb) break; const j = pix % dirs, q = k * 4, dd = DD[j], f = buf[q + 3];
+            if(seg){ seg[pr] = f; continue; }
             if(aoS){ const r = o.R || 2.5, s6 = pr * 6; let V = 1; if(f < 0){ aoS[s6 + 4]++; V = 0; } else if(f < r){ V = f / r; V = V * V * (3 - 2 * V); } aoS[s6] += V; aoS[s6 + 1] += V * dd[0]; aoS[s6 + 2] += V * dd[1]; aoS[s6 + 3] += V * dd[2]; aoS[s6 + 5]++; continue; }
             const a = pr * 12; for(let c = 0; c < 3; c++){ const L = buf[q + c]; acc[a + c] += L * .282095; acc[a + 3 + c] += L * .488603 * dd[0]; acc[a + 6 + c] += L * .488603 * dd[1]; acc[a + 9 + c] += L * .488603 * dd[2]; }
             const s = pr * 3; if(f < 0) stat[s]++; else if(f < 1e8) stat[s + 1] += f; stat[s + 2]++; }
@@ -253,6 +255,7 @@ B.run = async function(comp, o = {}){ const U = mat().uniforms, np = B.np, dirs 
       if(o.onPass) o.onPass(pass); } }
   finally{ R.setRenderTarget(prevRT); R.autoClear = prevAC; }
   const ms = performance.now() - t0, N = dirs * passes;
+  if(seg) return {comp, seg};
   // ao per probe: [back share, a, bx, by, bz]: the cosine-weighted visibility of the hemisphere about n is a + b . n (1 = open)
   if(aoS){ const ao = new Float32Array(np * 2), vis = new Float32Array(np * 4); for(let p = 0; p < np; p++){ const n = Math.max(1, aoS[p * 6 + 5]); ao[p * 2] = 1 - aoS[p * 6] / n; ao[p * 2 + 1] = aoS[p * 6 + 4] / n;
       vis[p * 4] = aoS[p * 6] / n; for(let k = 1; k < 4; k++) vis[p * 4 + k] = 2 * aoS[p * 6 + k] / n; } return {comp, ms, N, ao, vis}; }
@@ -284,6 +287,18 @@ B.classify = async function(o = {}){ const g = B.grid, BS = H.BIM2S, N = g.nx * 
   B.probes(cand.map(pos)); const r = await B.run('ao', {passes: o.passes || 1, dirs: 64, R: 1e5}); const valid = new Uint8Array(N), list = [];
   cand.forEach((i, k) => { if(r.ao[k * 2 + 1] < (o.maxBack || .06)){ valid[i] = 1; list.push(i); } });
   B.cls = cls; B.valid = valid; B.list = list; B.pos = pos; B.probes(list.map(pos)); B.st.classify = {N, rooms: cand.length, valid: list.length, ms: r.ms}; say('classify', JSON.stringify(B.st.classify)); return B.st.classify; };
+
+/* which traced probes are in the rooms' own air: the BIM space reaches above the built ceiling in places (the void under the roof), and a
+   probe there is dark and would band the ceiling below it. Probes are joined to their +x, +y, +z neighbours when nothing stands between
+   them (one short ray each); the largest joined set that holds the eye-level probes is kept. Stored beside the bake's checkpoints. */
+B.reach = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get(tag + ':meta'), g = meta.grid, list = meta.list, N = g.nx * g.ny * g.nz, at = new Int32Array(N).fill(-1); list.forEach((i, k) => at[i] = k);
+  B.probes(list.map(gpos)); const blocked = []; for(const dir of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) blocked.push((await B.run('seg', {sun: dir, R: g.d, dirs: 1, passes: 1})).seg);
+  const par = new Int32Array(list.length).map((_, i) => i), find = i => { while(par[i] !== i){ par[i] = par[par[i]]; i = par[i]; } return i; }, step = [1, g.nx * g.nz, g.nx];
+  list.forEach((i, k) => { const x = i % g.nx, z = Math.floor(i / g.nx) % g.nz, y = Math.floor(i / (g.nx * g.nz)), ok = [x + 1 < g.nx, y + 1 < g.ny, z + 1 < g.nz];
+    for(let a = 0; a < 3; a++){ if(!ok[a] || blocked[a][k] > .5) continue; const j = at[i + step[a]]; if(j >= 0) par[find(k)] = find(j); } });
+  const cnt = new Map(); list.forEach((i, k) => { const y = g.y0 + Math.floor(i / (g.nx * g.nz)) * g.d; if(y > 3.5 && y < 6.5){ const r = find(k); cnt.set(r, (cnt.get(r) || 0) + 1); } });
+  const rooms = [...cnt.entries()].sort((a, b) => b[1] - a[1]), keepRoots = new Set(rooms.filter(r => r[1] >= (o.minEye || 12)).map(r => r[0])), keep = list.filter((i, k) => keepRoots.has(find(k)));
+  await B.put(tag + ':reach', keep); B.st.reach = {probes: list.length, kept: keep.length, sets: rooms.slice(0, 6).map(r => r[1])}; say('reach', JSON.stringify(B.st.reach)); return B.st.reach; };
 
 /* ---------------- the whole bake: per key the sky and the unit sun, then the lamps at dusk; every component checkpointed ---------------- */
 B.KEYS = [{h: 7.75, doy: 288}, {h: 9.25, doy: 288}, {h: 10.75, doy: 288}, {h: 12.25, doy: 288}, {h: 13.75, doy: 288}, {h: 15.25, doy: 288}, {h: 16.5, doy: 288}, {h: 17.4, doy: 288}, {h: 18.15, doy: 288}, {h: 18.75, doy: 288, dusk: true},
@@ -359,8 +374,8 @@ function quant(F, used, NP){ const C = C6, r = [], out = new Uint8Array(C * NP);
   return {q: out, r}; }
 async function deflate(u8){ const s = new Response(new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'))); return new Uint8Array(await s.arrayBuffer()); }
 B.finish = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get(tag + ':meta'), g = meta.grid, N = g.nx * g.ny * g.nz, list = meta.list, K = meta.keys.length, t0 = performance.now();
-  const valid = new Uint8Array(N); for(const i of list) valid[i] = 1;
-  const load = async nm => { const r = await B.get(nm); if(!r) throw new Error('missing ' + nm); const F = toGrid(r.sh, list, N); for(let k = 0; k < (o.blurN || 1); k++) denoise(F, valid, g, o.blur != null ? o.blur : .35); return F; };
+  const reach = o.reach === false ? null : await B.get(tag + ':reach'), valid = new Uint8Array(N); for(const i of (reach || list)) valid[i] = 1;
+  const load = async nm => { const r = await B.get(nm); if(!r) throw new Error('missing ' + nm); const F = toGrid(r.sh, list, N); for(const i of list) if(!valid[i]) F.fill(0, i * 12, i * 12 + 12); for(let k = 0; k < (o.blurN || 1); k++) denoise(F, valid, g, o.blur != null ? o.blur : .35); return F; };
   const sky = [], sun = []; for(let k = 0; k < K; k++){ sky.push(await load(tag + ':' + k + ':sky')); sun.push(await load(tag + ':' + k + ':sun')); } const lamp = await load(tag + ':lamp');
   let filled = null; for(const F of [...sky, ...sun, lamp]) filled = dilate(F, valid, g, o.rings || 1);
   for(let k = 0; k < K; k++){ sky[k] = mono(sky[k]); sun[k] = mono(sun[k]); } const lampM = mono(lamp);
@@ -392,7 +407,7 @@ B.finish = async function(o = {}){ const tag = o.tag || 'v1', meta = await B.get
   const z = await deflate(dl), ver = o.version || ('gi-' + tag);
   const index = {version: ver, made: meta.made, file: ver + '.bin', bytes: z.length, raw: tot, delta: 1, ev: o.ev != null ? o.ev : GI.EV, alb: B.ALB, grid: g, nOff: o.nOff || .45, room: {y0: -1, y1: 15},
     keys: meta.keys.map(k => ({h: k.h, doy: k.doy, dusk: k.dusk, dir: k.dir.map(v => +v.toFixed(5)), sky: k.sky.map(v => +v.toPrecision(6)), sunCol: k.sunCol.map(v => +v.toFixed(4))})),
-    lampRef: meta.lampRef, lights: meta.lights, passes: meta.passes, rays: meta.passes * 64, probes: list.length, vols, ao,
+    lampRef: meta.lampRef, lights: meta.lights, passes: meta.passes, rays: meta.passes * 64, probes: reach ? reach.length : list.length, vols, ao,
     pca: {sky: {rank: ps.bases.length, energy: +ps.energy.toFixed(6), err: err(sky, ps)}, sun: {rank: pu.bases.length, energy: +pu.energy.toFixed(6), err: err(sun, pu)}}};
   B.out = {index, z, raw: all}; say('finish', z.length, 'bytes', Math.round(performance.now() - t0), 'ms'); return {bytes: z.length, raw: tot, pca: index.pca, vols: vols.length, ms: Math.round(performance.now() - t0)}; };
 // hand the result to gi.js in this page (no reload) and switch it on
