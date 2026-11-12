@@ -15969,6 +15969,7 @@ html.pk42 .pk42p{display:block}
 .pk42p .p42ft button{min-height:38px;padding:0 13px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px;font-weight:500;cursor:pointer}.pk42p .p42ft button:hover{border-color:var(--ink)}
 .pk42p .p42ft button[hidden]{display:none}
 .pk42p .p42fine{margin:8px 0 2px;font-size:12px;line-height:1.45;color:var(--muted)}
+.fin36 .fl .c42f .c42n{display:none}html.ph .fin36 .fl .c42f .c42w{display:none}html.ph .fin36 .fl .c42f .c42n{display:inline}
 /* phones: the chip is short and sits on the left above the stop sheet; the picker cards scroll sideways */
 html.ph #cta42{min-height:42px;padding:0 13px 0 11px;background:var(--pgs,var(--glass));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
 html.ph #cta42 svg{color:currentColor}html.ph #cta42 .c42a{color:currentColor;opacity:.6}
@@ -16150,7 +16151,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   /* ---- the closing card: one line with both */
   function finLinks(){ const fl = document.querySelector('#fin36 .fl'); if(!fl) return false; if(fl.querySelector('.c42f')) return true;
     const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Compare floor plans';
-    const d = el('button', 'c42f'); d.type = 'button'; d.textContent = 'See it decorated for the holidays';
+    const d = el('button', 'c42f', '<span class="c42w">See it decorated for the holidays</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
     a.addEventListener('click', e => { e.stopPropagation(); openPicker('finale'); });
     d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); });
     const ph = fl.querySelector('[data-a="photos"]'); if(ph) ph.after(a, d); else fl.append(a, d); return true; }
