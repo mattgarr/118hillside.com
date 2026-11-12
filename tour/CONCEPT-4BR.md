@@ -153,3 +153,147 @@ the house is sold with.
   removed walls' lines free to cross, the street, north and bath walls still solid (`walkTests`).
 - To rebuild after the as-built package changes: `python3 tour/bim2/tools/build_open4.py` (needs numpy and shapely 2.1+).
 
+---
+
+# Second version: "Open kitchen and great room" (4 bedrooms)
+
+**Illustrative idea. Not designed or reviewed by an architect or engineer.**
+
+Owner's follow-up (11/12): the same 4-bedroom shell, but with the kitchen as the heart of one big vaulted room (the reference
+photo: a big island, skylights, a fireplace, indoor-outdoor living). The pattern: the kitchen at one end of the long room with the
+island parallel to the end wall and the stools on the room side; living in the middle around a fireplace on the long wall with
+built-ins either side; dining toward the other end; skylight wells along the vault; 118's own finishes. Then a refinement: keep
+the street gable mostly solid (modest windows; high gable glass is fine), which also deals with privacy, and put the big glass on
+the south (driveway) long wall instead, as a folding glass wall onto an extended deck, level with the floor, with the same
+decking, skirt and cable rail as the porch.
+
+Same shell as the first version: the front and middle bedrooms and their closets come out, the back bedroom, hall and hall bath
+stay, and the exposed fir ridge beam carries the ridge. Only what changes is listed here.
+
+## Where the kitchen goes: three options
+
+The room is about 22.7 ft east-west (x 13.9 to 36.6) by 27.3 ft north-south (y 4.8 to 32.1), entered at its west end from the old
+kitchen. The ridge runs down its middle, east-west.
+
+**A. Kitchen at the street end (east gable wall).** The east wall is the room's short end wall, so the kitchen gets a full 27-ft
+wall: pantry, fridge, sink under a window, dishwasher, then a return on the north wall with the range and a chimney hood. The
+island runs north-south, parallel to that end wall, with its stools on the west face looking down the room. Living sits in the
+middle on the north wall around a fireplace, dining at the west end along the south glass.
+- For: exactly the owner's pattern. Everyone arrives at the dining end and walks toward the kitchen, never through it: the path
+  from the foyer to the living area, the deck or the bedroom hall never passes the stove or the sink. The cook faces the whole
+  room. A solid street wall suits a kitchen (cabinets want wall, not glass), so the privacy refinement and the kitchen agree.
+- Against: the sink, dishwasher and range all move about 20 to 30 ft east, so new drain, vent, water and gas runs, a new hood
+  duct and new circuits. Ordinary work if there is access under the floor, but not cheap. The old kitchen is left over: it
+  becomes a scullery and coffee bar (its sink stays where its plumbing is) rather than being wasted.
+
+**B. Kitchen enlarged in place (west end).** Keep the sink and plumbing where they are, take out the peninsula and push the
+kitchen about 8 ft east into the great room with a long island under the ridge.
+- For: cheapest; no plumbing moves; the old kitchen's window and cabinets are reused.
+- Against: the kitchen stays at the entry end, so every trip from the foyer to the great room, the bedroom hall or the deck goes
+  through the kitchen's work aisle, which is the circulation problem the owner wanted solved. The island would sit across the
+  room's only entrance, living would end up at the street end, where the owner now wants a solid wall, and the cook would face
+  the back of the sofa. The kitchen gets bigger but the room does not get a heart.
+
+**C. Kitchen along the north long wall, in the middle.** A galley on the north wall with an island parallel to it, living at the
+street end, dining at the west end.
+- For: shorter plumbing runs (the hall bath's wet wall is at the west end of the north wall); the kitchen is central.
+- Against: it takes the only long solid wall, so the fireplace and built-ins have nowhere to go; the living area ends up at the
+  street end against a mostly solid gable; and the island sits on the main path between the entry and the living area.
+
+**Recommendation: A**, and that is what is built. It is the only one of the three that matches the owner's pattern, keeps
+circulation out of the kitchen, and puts each zone against the wall that suits it (kitchen: solid end wall; living: fireplace
+wall; dining: glass and deck). B is the budget version and is not worth it here because it leaves the main problem in place.
+
+## The layout as built in the model
+
+```
+                 north wall (y 32.1)
+  +---------+--------------------------------------------------------+
+  | hall    |  [bk] [ gas fireplace ] [bk]    [cab][ range+hood ][cab]|
+  | bath    |     sofa  rug  chairs          ________________  pantry |  east gable wall (street):
+  | (kept)  |  - - - - - fir ridge beam - - -| island 12 ft |  sink   |  kitchen window over the
+  +--D-06---+                                |  4 stools -> | window  |  sink, high gable glass
+  | hall    |   dining for six               |______________|  dw     |  above
+  | (kept)  |   (glass table)                                   fridge |
+  +---------+                                                   pantry|
+  | old kitchen = scullery + coffee bar                                |
+  +-------------------[====== 14.4-ft folding glass wall ======]-------+
+                     deck, level with the floor, 8.4 ft deep    stack folds out here
+                 outdoor dining for six      lounge chairs     planters
+```
+
+- **Kitchen** (x about 26.5 to 36.6): on the east wall, a tall pantry, a 36-in four-door fridge, base cabinets, the sink centered
+  on the ridge under a copy of today's kitchen window, dishwasher and more drawers, uppers either side of the window. On the
+  north wall, a 36-in range with a chimney hood between base cabinets and uppers. A 12 ft by 4½ ft island parallel to the east
+  wall, with four counter stools on its west side facing down the room, and globe pendants hung from the ridge beam. White shaker
+  cabinets and white quartz, as in the house's kitchen. Aisles: about 3½ ft between the island and the east run, about 4½ ft from
+  the island to the range.
+- **Living** (middle, north side): a 6-ft-wide gas fireplace on the north wall where the middle bedroom's window was, with a fir
+  mantel at 4¼ ft, built-in bookcases either side, a sofa facing it across a rug, an ottoman and two armchairs.
+- **Dining** (west, south side): a 7-ft glass table with six parsons chairs along the folding glass wall, under a skylight.
+- **Old kitchen**: kept as a scullery and coffee bar (its sink, cabinets and stools stay; the old range slot becomes a cabinet).
+- **Skylights**: four 2½ ft by 3 ft skylights in wells through the vault: two over the island, one over the dining table, one
+  over the living area.
+
+### Street gable (mostly solid)
+The street wall keeps its siding. It gets a window over the sink (a copy of the house's own kitchen window, about 6 ft wide) and
+above it the high glazed gable of the first version (four fixed panes following the roof, sill at about 8½ ft). From the street
+that is far less glass than the first version; from inside, the high glass shows sky and treetops rather than the street, and
+the room is not on display at night.
+
+### South wall: folding glass wall and deck
+- A 14.4-ft opening in the south wall (x 18.0 to 32.4, 7 ft 7 in high), in place of today's 14¼-ft picture window and the wall
+  next to it, with a six-panel folding glass wall in black frames (NanaWall-style). In the tour it is operable: click or tap a
+  panel to fold it open or shut. It starts open; the panels stack at the east jamb and swing out onto the deck, one panel
+  (2.4 ft) deep.
+- The porch deck is carried east along the great room, 8.4 ft deep (to y = −4.0) and to x = 33.6, so the folded stack lands on
+  the deck. The floor runs straight out through a flush sill. Same composite decking, skirt and cable railing as the porch; the
+  porch steps stay, shortened to start at the new deck's edge.
+- Staging on the deck: an outdoor dining table for six by the dining area, two lounge chairs with a low table, and planters along
+  the east rail.
+- Privacy: the deck faces the driveway. The planters are a start; a hedge or a row of columnar shrubs along the driveway side,
+  outside the rail, would screen the deck and the glass from the drive. Night-time privacy would want shades or a screen built
+  into the head of the folding wall.
+
+## Honest assessment of the second version
+
+**Is it better than the first?** As a room, yes. The first version is a beautiful open volume with the old kitchen kept off to one
+side; this one gives that volume a center (the island), a focal wall (the fireplace) and a reason to open up (the deck). It is
+the plan in the owner's reference photo, and it puts the glass on the long south side, in the sun, where the first version spent
+it on the street. Circulation is cleaner too: you never walk through the kitchen.
+
+**What it costs.** Much more than the first version: a relocated kitchen (plumbing, gas, venting, electrical), a gas fireplace,
+four skylights, a large structural opening, a premium folding door system and a new deck. It is a whole-floor remodel, not an
+opening-up.
+
+**What could make it implausible, and what an engineer and the county would need.**
+- **The 14.4-ft opening.** The south wall is an eave wall carrying the rafters, so it needs an engineered header (glulam, LVL or
+  steel) sized for the roof load and for very small deflection, because folding panels bind if the head sags (makers typically
+  ask for about ¼ in or less). If that wall is part of the house's lateral bracing, taking out 14 ft of it may need a steel moment
+  frame or new shear walls elsewhere. Both are routine for an engineer; neither is optional.
+- **Ridge beam and posts**, as in the first version.
+- **Deck**: a new permitted deck with footings, a flashed ledger, guards at least 36 in high and a sill that drains (a
+  floor-level threshold facing weather needs a drained track and a slight slope away).
+- **Fireplace**: a direct-vent gas unit through the north wall (a vent cap is shown outside) and a gas line.
+- **Skylights**: wells need headers between the rafters, and skylight area counts against the Title 24 energy budget along with
+  the folding wall.
+- **Kitchen**: the work triangle is long (the fridge, at the south end of the east run, is about 20 ft from the range around the
+  island). A refinement would move the fridge toward the north corner.
+- **Bedrooms**: the same trade as the first version, 6 bedrooms become 4, and everything said above about bedroom count and value
+  applies equally.
+
+**Verdict.** Of the two 4-bedroom versions, this is the stronger idea and the one to show if only one is shown. It should still be
+presented the same way: an illustration of what the house could become for a buyer who wants an entertaining house, not a
+recommendation to remodel before selling.
+
+## Model notes (second version)
+
+- `bim2/scene.opt-OS-REMODEL-open4k.glb` and `.meta.json`, built by `bim2/tools/build_open4k.py` (which imports the first
+  version's builder for the shared shell) and listed in `scene.meta.json` `options[]` as `open4k`, the fifth card in the floor
+  plan picker.
+- The folding wall is an opening with `leaf: {kind: 'FOLD', panels: 6, stack: 'east', state: 'open', plane: 4.60}`. The page
+  builds and animates its panels (block `FOLD42`, after `OPT42` in `tour/index.html`), with a walk collider across the opening
+  while it is shut and one where the folded stack stands. QA: `FOLD42.items`, `fold42Toggle(FOLD42.items[0])`.
+- Viewpoints: foyer, entry, kitchen, living, deck, driveway, street, aerial (`await __IDEA42.view('deck', 'open4k')`).
+- Rebuild: `python3 tour/bim2/tools/build_open4k.py` (after `build_open4.py` if the as-built package changed).
+
