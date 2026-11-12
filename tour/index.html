@@ -1849,7 +1849,7 @@ html.tgload .loading::after{content:"";position:absolute;left:0;right:0;top:-60p
   i.src = tg ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/tg_poster_ph.jpg' : 'thumbs/tg_poster.jpg') : hw ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/hw_poster_ph.jpg' : 'thumbs/hw_poster.jpg') : (() => { try{ const k = sessionStorage.getItem('hillside.tod.v27'); if(k && k !== 'dusk') return 'thumbs/p69.jpg'; }catch(e){} return 'thumbs/p02.jpg'; })(); })();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="house_loader.js?v=42"></script>
+<script src="house_loader.js?v=43"></script>
 <script>/* v20 reveal: count three.js loads in flight */ (function(){ var M = window.THREE && THREE.DefaultLoadingManager; if(!M) return;
   var R = window.__revealLM = {pending: 0, errors: 0, last: 0}, s = M.itemStart, e = M.itemEnd, x = M.itemError;
   M.itemStart = function(u){ R.pending++; R.last = performance.now(); return s.apply(this, arguments); };
