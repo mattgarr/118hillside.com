@@ -130,7 +130,7 @@
       const skyQuad = id => { const it = shadeItem(id), R = it.rects[0], P = (a, b) => R.c.clone().addScaledVector(R.u, a).addScaledVector(R.v, b); return {it, R, quad: [P(-R.hu * .92, -R.hv * .92), P(R.hu * .92, -R.hv * .92), P(R.hu * .92, R.hv * .92), P(-R.hu * .92, R.hv * .92)], out: R.n.clone().negate()}; };
       const s11 = skyQuad('SK-R11'), s12 = skyQuad('SK-R12'), T_DESK = 14.25, DY = -2.06;
       const dS = sunDir(T_DESK), t0 = (s12.R.c.y - DY) / dS.y, cen = [s12.R.c.x - dS.x * t0, s12.R.c.z - dS.z * t0];
-      const deskStrips = makeStrips('5', {o: [cen[0] - .55, DY + .02, cen[1] - .38], right: [0, 0, 1], up: [1, 0, 0], size: .7, pitch: 1.5}, {p: s12.R.c.toArray(), n: s12.R.n.toArray()}, T_DESK);
+      const deskStrips = makeStrips('5', {o: [cen[0] - .6, DY + .02, cen[1] - .35], right: [0, 0, 1], up: [1, 0, 0], size: .7, pitch: 1.5}, {p: s12.R.c.toArray(), n: s12.R.n.toArray()}, T_DESK);
       W.skyPaper = buildPaper(deskStrips, [0, -.01, 0]);
       const skySrc = (s, strips, gate) => ({out: () => s.out, quad: () => s.it.t > .5 ? null : s.quad, strips: strips ? () => strips : null, gate, color: 'rgba(255,250,232,1)'});
       W.officeFloor = lightPlane({floor: 'SP-L0-OFFICE', ppf: 30, gain: 1.6, sources: [skySrc(s11), skySrc(s12)], holes: [[[-25.25, -7.15], [-23.2, -7.15], [-23.2, -3.35], [-25.25, -3.35]]]});
@@ -276,14 +276,14 @@
       const R = rig, a = yp([-12.3, LE - .6, -14.4], [-12.3, LY + .8, -10.6]); rigTravel([[R.pos.x, R.pos.y, R.pos.z], [-12.3, LE - .6, -14.4]], {yaw: a[0], pitch: a[1], fov: aspect() < 1 ? 80 : 56, off: [0, 0]}, {dur: 1.0});
       setTimeout(() => { if(W.lid){ W.lid.position.z = .3; W.lid.rotation.x = -1.1; wake(10); } SND.fridge(); toast('Everyone’s favourite things.', 2600); }, 900);
       setTimeout(() => { // cut to the terrace at sunset: everyone has their thing back
-        const sh = aspect() < 1 ? {pos: [0.6, TY + 4.2, -31.6], look: [-4.6, TY + 1.2, -39.4], fov: 78} : {pos: [1.0, TY + 4.6, -31.2], look: [-4.4, TY + 1.4, -39.4], fov: 58};
+        const sh = aspect() < 1 ? {pos: [1.6, TY + 6.6, -36.2], look: [-4.6, TY + .6, -39.0], fov: 76} : {pos: [2.2, TY + 6.4, -35.6], look: [-4.4, TY + .9, -39.0], fov: 58};
         const a1 = yp(sh.pos, sh.look);
         fadeThrough(() => { door('D-L0-10', true, true); rigCut(sh.pos, a1[0], a1[1], sh.fov); setSlider(20.25);
           const P = [['biscuit', [-6.4, -4.75, -38.6]], ['mabel', [-2.4, -4.73, -38.4]], ['clover', [-4.0, -4.75, -37.8]], ['pepper', [-5.4, -4.75, -40.4]]];
           for(const [who, p] of P){ const g = petAt(who, p, yawTo(p, sh.pos)); if(who === 'clover') g.scale.setScalar(.56); if(who === 'mabel') g.scale.setScalar(.42); g.visible = true; }
           petAt('admiral', [-1.2, -4.75, -40.0], yawTo([-1.2, 0, -40.0], sh.pos));
           things(); catAt([-3.4, -4.75, -36.4]);
-          rigTravel([sh.pos, [sh.pos[0] + .6, sh.pos[1] - .2, sh.pos[2] - 1.4]], {yaw: a1[0], pitch: a1[1], fov: sh.fov, off: aspect() < 1 ? [0, -.3] : [-.16, 0]}, {dur: 9}); }, 520);
+          rigTravel([sh.pos, [sh.pos[0] - 1.2, sh.pos[1] - .3, sh.pos[2] - .4]], {yaw: a1[0], pitch: a1[1], fov: sh.fov, off: aspect() < 1 ? [0, -.28] : [-.16, 0]}, {dur: 9}); }, 520);
         setTimeout(() => say('Not a heist. A lost and found. Everything was under a sofa somewhere. You’re welcome.', 7000), 1800);
         setTimeout(() => finishCard({title: 'Sunset.', bubbles: false,
           lede: 'Snowball spent the longest day of the year finding everyone’s favourite thing: a ball, a castle, a red feather, a carrot and a strawberry. The heist was a lost and found, and the paw prints on his first note were the plan all along.',
