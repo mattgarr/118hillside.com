@@ -20787,7 +20787,7 @@ const R42D = window.R42D = {merged: 0, tris: 0, bevel: 0, ao: 0, skipped: []};
    fading to 0 R42C.width in; the bevel itself loses R42C.max at its foot and R42C.bevelTop at its top edge. The trim paint's shader multiplies only the indirect
    (ambient) light by 1 - r42occ: direct sun and lamps, colour and roughness are untouched, and every other trim mesh has no such attribute
    (WebGL reads 0: no change). */
-const R42C = {max: .42, width: 2.75 / 12, cell: .2, bevelTop: .1};
+const R42C = {max: .26, width: 1.5 / 12, cell: .2, bevelTop: .06};   // tuned on the GPU against p59 / x04: a soft line, not a pillow
 function r42DoorContact(G, na, I, nIa){
   const P0 = G.attributes.position.array, N0 = G.attributes.normal.array, U0 = G.attributes.uv ? G.attributes.uv.array : null;
   const floorT = []; for(let t = nIa; t < I.length; t += 3) floorT.push([I[t], I[t + 1], I[t + 2]]); if(!floorT.length) return null;
