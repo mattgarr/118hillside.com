@@ -266,6 +266,7 @@ B.tod = function(h, doy, dusk){ const T = H.TOD; let t = T.find(x => x.key === '
   return {dir: H.SUN_DIR.toArray(), sun: [H.sun.color.r, H.sun.color.g, H.sun.color.b, H.sun.intensity], tod: H.TOD_KEY}; };
 
 /* ---------------- which probes to trace: in the three rooms' air (BIM spaces) and not inside furniture or walls ---------------- */
+const gpos = i => { const g = B.grid, x = i % g.nx, z = Math.floor(i / g.nx) % g.nz, y = Math.floor(i / (g.nx * g.nz)); return [g.x0 + x * g.d, g.y0 + y * g.d, g.z0 + z * g.d]; };
 B.classify = async function(o = {}){ const g = B.grid, BS = H.BIM2S, N = g.nx * g.ny * g.nz, cls = new Uint8Array(N), pos = i => { const x = i % g.nx, z = Math.floor(i / g.nx) % g.nz, y = Math.floor(i / (g.nx * g.nz)); return [g.x0 + x * g.d, g.y0 + y * g.d, g.z0 + z * g.d]; };
   for(let i = 0; i < N; i++){ const [x, y, z] = pos(i), s = BS.spaceAt(z, x, y); cls[i] = s ? (GI.ROOMS.includes(s.id) ? 2 : s.interior ? 1 : 0) : 0; }
   const cand = []; for(let i = 0; i < N; i++) if(cls[i] === 2) cand.push(i);
@@ -279,7 +280,7 @@ B.KEYS = [{h: 7.75, doy: 288}, {h: 9.25, doy: 288}, {h: 10.75, doy: 288}, {h: 12
 B.bakeAll = async function(o = {}){ const tag = o.tag || 'v1', keys = o.keys || B.KEYS, passes = o.passes || 16, t0 = performance.now(), tod0 = H.TOD_KEY, done = [], have = new Set(await B.keys());
   if(!B.list) await B.classify();
   const meta = (await B.get(tag + ':meta')) || {tag, list: B.list, grid: B.grid, keys: [], passes, made: new Date().toISOString()};
-  if(meta.list.length !== B.list.length) throw new Error('probe list changed: use another tag');
+  if(meta.list.length !== B.list.length || meta.list.some((v, i) => v !== B.list[i])){ B.list = meta.list; B.probes(B.list.map(gpos)); say('probe list from the checkpoint', B.list.length); }
   const quit = () => o.budgetMs && performance.now() - t0 > o.budgetMs;
   try{
     for(let k = 0; k < keys.length; k++){ if(quit()) break; const K = keys[k], nm = tag + ':' + k;
@@ -304,7 +305,7 @@ B.bakeAO = async function(o = {}){ const A = Object.assign({}, B.aoGrid, o.grid 
   const out = new Float32Array(N * 2).fill(-1), step = o.batch || 60000, t0 = performance.now();
   for(let s = 0; s < list.length; s += step){ B.probes(P.slice(s, s + step)); const r = await B.run('ao', {passes: o.passes || 1, dirs: o.dirs || 64, R: A.R});
     for(let k = 0; k < r.ao.length / 2; k++){ out[list[s + k] * 2] = r.ao[k * 2]; out[list[s + k] * 2 + 1] = r.ao[k * 2 + 1]; } say('ao', s, '/', list.length); }
-  await B.put((o.tag || 'v1') + ':ao', {grid: A, ao: out}); B.probes(B.list ? B.list.map(B.pos) : undefined); return {voxels: list.length, ms: Math.round(performance.now() - t0)}; };
+  await B.put((o.tag || 'v1') + ':ao', {grid: A, ao: out}); B.probes(B.list ? B.list.map(gpos) : undefined); return {voxels: list.length, ms: Math.round(performance.now() - t0)}; };
 
 /* ---------------- from the checkpoints to the files ---------------- */
 function jacobi(Ain, n){ const A = Ain.map(r => r.slice()), V = Array.from({length: n}, (_, i) => Array.from({length: n}, (_, j) => i === j ? 1 : 0));
