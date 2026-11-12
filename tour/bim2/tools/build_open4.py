@@ -227,7 +227,7 @@ def build():
 
     # -- ceiling: the roof's two planes, one drywall slab (0.042 thick like the kernel's), split at the ridge
     south = room.intersection(sbox(0, 0, 60, RIDGE_Y)); north = room.intersection(sbox(0, RIDGE_Y, 60, 60))
-    for part, nrm in ((south, (0, -PITCH, -1)), (north, (0, PITCH, -1))):
+    for part, nrm in ((south, (0, PITCH, -1)), (north, (0, -PITCH, -1))):   # the downward normals of z = c + .41 y and z = c - .41 y
         plane_face(O, 'CL-SP-L1-OPEN4', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y)), nrm)
         plane_face(O, 'CL-SP-L1-OPEN4', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y) + 0.042), tuple(-a for a in nrm))
 
@@ -304,7 +304,7 @@ def build():
         if n[0] < -0.9 and c[0] < 36.7 and -0.1 < c[2] and all(p[2] <= ceil_z(p[1]) + 0.06 for p in t['v']) and Y_S - .01 < c[1] < Y_N + .01:
             inner.append(t); continue                                  # the room face: regenerated
         if n[0] > 0.9 and c[0] > 36.95 and t['material'] in ('hardie-lap#paint-ext-body', 'hardie-shingle#paint-ext-body'):
-            outer.setdefault((t['material'], round(float(c[0]), 2), t['boundary']), []).append(t); continue
+            outer.setdefault((t['material'], round(float(c[0]), 2), t['boundary']), []).append(t); continue   # grouped by plane; rebuilt on the group's exact plane
         if 36.6 < c[0] < 36.97 and any(r.contains(shapely.Point(c[1], c[2])) for r in old_rects):
             continue                                                   # an old window's reveal
         keep_t.append(t)
@@ -316,8 +316,12 @@ def build():
     plane_face(O, 'W-L1-O4E', 'B-O4-E01', 'walls', 'L1', PAINT, face, lambda y, z: (X_E, y, z), (-1, 0, 0))
     # siding: old holes filled, new holes cut (the picture window's siding hole is the copied one, the gable's is the trim outline)
     olds = [r for r in old_rects]
-    for (mat, xo, bd), ts in outer.items():
+    for (mat, xr, bd), ts in outer.items():
+        xo = float(np.mean([p[0] for t in ts for p in t['v']]))
         u = union_faces(ts, 1, 2)
+        if not any(u.intersects(g) for g in olds + [pic_out, gable_trim_out]):   # a face no window touches stays exactly as built
+            for t in ts: O.tri(t['group'], t['storey'], t['material'], 'W-L1-O4E', t['boundary'] and ('O4-' + t['boundary']), t['v'], t['n'])
+            continue
         u = fill_holes(u, only=olds).difference(pic_out).difference(gable_trim_out)
         plane_face(O, 'W-L1-O4E', bd and ('O4-' + bd), 'walls', 'L1', mat, u, lambda y, z, xo=xo: (xo, y, z), (1, 0, 0))
     # gable windows: drywall return, frame, glass, exterior return and trim (like the house's other gable windows: no inside casing)
@@ -348,8 +352,12 @@ def build():
     for t in nkeep: O.tri(t['group'], t['storey'], t['material'], 'W-L1-O4N', t['boundary'] and ('O4-' + t['boundary']), t['v'], t['n'])
     u = unary_union([union_faces(nin, 0, 2), sbox(23.95, 0, 24.35, ceil_z(Y_N))]).difference(nw_in)
     plane_face(O, 'W-L1-O4N', 'B-O4-N01', 'walls', 'L1', PAINT, u, lambda x, z: (x, Y_N, z), (0, -1, 0))
-    for (mat, yo, bd), ts in nout.items():
-        uu = union_faces(ts, 0, 2).difference(nw_out)
+    for (mat, yr, bd), ts in nout.items():
+        yo = float(np.mean([p[1] for t in ts for p in t['v']])); uu = union_faces(ts, 0, 2)
+        if not uu.intersects(nw_out):
+            for t in ts: O.tri(t['group'], t['storey'], t['material'], 'W-L1-O4N', t['boundary'] and ('O4-' + t['boundary']), t['v'], t['n'])
+            continue
+        uu = uu.difference(nw_out)
         plane_face(O, 'W-L1-O4N', bd and ('O4-' + bd), 'walls', 'L1', mat, uu, lambda x, z, yo=yo: (x, yo, z), (0, 1, 0))
     report['north_wall'] = {'inner': len(nin), 'outer_groups': len(nout), 'kept': len(nkeep)}
 

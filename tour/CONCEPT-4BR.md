@@ -141,3 +141,15 @@ the house is sold with.
   (the option's `hide` list) and writes the new floor, ceiling, wall patches, baseboards, the rebuilt street gable wall with its
   new windows (copied from the house's own window units), the ridge beam, and the option's spaces, walkable floors, colliders,
   openings, furnishings and lights.
+- The option entry sets `pageExtras: true`, which turns on the page support added for it (block `OPT42` in `tour/index.html`,
+  next to the other design-option code): its staged furniture (rows with `render.lib: 'STAGE'`, in the house's staging style),
+  its own downlight grid in place of the old rooms' (and the front bedroom's fan hidden), the removed doors' and closet doors'
+  walk colliders switched off, and loose house pieces left in its `clearRegion` hidden. Options without the flag (the two 2024
+  concepts) are untouched.
+- Viewpoints for the concept live in the option entry (`views`): foyer, kitchen, window, street, backbed, northeast, aerial.
+  QA hook (with `?qa=1` or from the console): `__IDEA42.plans()`, `await __IDEA42.set('open4')`,
+  `await __IDEA42.view('kitchen', 'open4')` (or `..., 'asbuilt'` for the same view of the house today), and
+  `__TOUR.navCheck({only: 'ideas'})`, which walks the concept: every viewpoint standable, a floor grid over the new room, the
+  removed walls' lines free to cross, the street, north and bath walls still solid (`walkTests`).
+- To rebuild after the as-built package changes: `python3 tour/bim2/tools/build_open4.py` (needs numpy and shapely 2.1+).
+
