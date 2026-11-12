@@ -20633,7 +20633,7 @@ function r36GableCasing(){ const zF = -40.358, w = .29, g = grp('upper'), mat = 
     const m = new THREE.Mesh(new THREE.BoxGeometry(L, w, .09), mat); m.name = 'r36-gable-casing'; m.position.set(xm, roof(xm) - w / 2 / cs, zF - .045); m.rotation.z = sg * ang; m.castShadow = m.receiveShadow = true; g.add(m); }
   R36G.added.push({el: 'R36-GABLE-CASING', n: 2}); }
 function r36PrimaryCeiling(){
-  const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, R2 = {x0: xB, x1: -8.6, z0: -36.52, z1: -25.55}, xc = -10.6, zc = -31;
+  const xB = -12.62, dorm = x => 11.515 - .25 * x, gable = x => 7.3135 - .583 * x, R = {x0: xB, x1: -8.6, z0: -36.52, z1: -26.0}, R2 = {x0: -12.03, x1: -8.6, z0: -36.52, z1: -25.55}, xc = -10.6, zc = -31;   // r41: the roof is cut from where the dormer roof rises out of it (main top 7.5068 - .583 x = dormer top 11.515 - .25 x at x = -12.036), not from the ceiling break: between them the main slope is still the roof (its underside clears the bay ceiling), and cutting it there left a 7 in slit over the whole bay, open to the ceiling
   // the plane through a triangle, read at the middle of the dormer bay
   const at = (a, b, c) => { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; if(Math.abs(ny) < 1e-6) return null; return a[1] - (nx * (xc - a[0]) + nz * (zc - a[2])) / ny; };
   r36CutTris(/^ceilings\|L2\|/, R, (a, b, c) => [a, b, c].every(v => Math.abs(v[1] - gable(v[0])) < .06), 'primary gable ceiling past the break');
