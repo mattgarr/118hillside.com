@@ -23098,8 +23098,8 @@ function r40XTarget(t){ const X = R40X;
   if(!X.seen.has(t)){ X.seen.add(t); t.addEventListener('dispose', () => { if(X.B === t){ X.B = null; X.k = 1; } }); }   // a disposed target: hold the picture as it is until the next one
   if(snap){ X.B = X.B0 = t; X.k = 1; r40XDraw(t, t, 1, X.out); X.snapNext = false; return; }
   r40XDraw(X.out.texture, X.out.texture, 0, X.prev); X.B = t; X.k = 0; X.fades++; const sc = tx => { for(const rt of LIGHT_ENV.values()) if(rt && rt.texture === tx) return rt.userData.mean || null; return null; }, s0 = sc(X.B0), s1 = sc(t);
-  // stepping in or out: the same time as EXPO_IN; room to room: .9 s, longer (to 2.2 s) the more the two rooms' panoramas differ in brightness
-  X.dur = R40L.flipF === R40L.frame ? R40L.inDur : (s0 && s1 ? Math.min(2.2, R40L.envDur + 1.8 * Math.abs(Math.log2(s1 / s0))) : R40L.envDur); X.B0 = t; R40L.ev('env fade ' + X.dur.toFixed(2), LIGHT_ENV_ID); }   // stepping in or out: the same time as EXPO_IN
+  // stepping in or out: the same time as EXPO_IN; room to room: .9 s, longer (to 2.6 s) the more the two rooms' panoramas differ in brightness
+  X.dur = R40L.flipF === R40L.frame ? R40L.inDur : (s0 && s1 ? Math.min(2.6, R40L.envDur + 2.5 * Math.abs(Math.log2(s1 / s0))) : R40L.envDur); X.B0 = t; R40L.ev('env fade ' + X.dur.toFixed(2), LIGHT_ENV_ID); }   // stepping in or out: the same time as EXPO_IN
 // after anything that sets scene.environment: take what it set as the target and give the materials the crossfaded texture
 function r40InTarget(){ const r = ENV_INSIDE && LIGHT_ENV_ID ? LIGHT_ENV.get(LIGHT_ENV_ID) : null; return r ? r.texture : ENV_IN ? ENV_IN.texture : null; }
 function r40EnvSync(){
