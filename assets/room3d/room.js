@@ -182,8 +182,8 @@
     if(e.pointerType === 'mouse' && e.buttons === 0){ endPtr(e, false); return; }
     const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; p.far = Math.max(p.far, Math.hypot(p.x - p.sx, p.y - p.sy));
     if(ptrs.size >= 2){ const [a, b] = [...ptrs.values()], d = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), mid = [(a.x + b.x) / 2, (a.y + b.y) / 2];
-      if(pinch) rigZoom(pinch / d); pinch = d; if(panMid && S.view === 'over') rigPan(mid[0] - panMid[0], mid[1] - panMid[1]); panMid = mid; return; }
-    if(S.view === 'over' && (p.btn === 2 || p.shift)) rigPan(dx, dy); else rigDrag(dx, dy); }, true);
+      for(const q of ptrs.values()) q.grab = null; if(pinch) rigZoom(pinch / d); pinch = d; if(panMid && S.view === 'over') rigPan(mid[0] - panMid[0], mid[1] - panMid[1]); panMid = mid; return; }
+    if(S.view === 'over' && (p.btn === 2 || p.shift)) rigPan(dx, dy); else rigDrag(dx, dy, e.clientX, e.clientY, p); }, true);
   function endPtr(e, tap){ const p = ptrs.get(e.pointerId); ptrs.delete(e.pointerId); pinch = 0; panMid = null; if(!ptrs.size) document.documentElement.classList.remove('rfe-drag');
     try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
     if(tap && p && p.far < 8 && performance.now() - p.t < 500) tapAt(e.clientX, e.clientY); }
@@ -238,9 +238,19 @@
   function orbitPose(){ const o = rig.orb, r = o.fit * o.zoom, sp = Math.sin(o.phi), T = [o.T[0] + o.pan[0], o.T[1], o.T[2] + o.pan[1]];
     return {pos: [T[0] + r * sp * Math.sin(o.th), T[1] + r * Math.cos(o.phi), T[2] + r * sp * Math.cos(o.th)], at: T, fov: o.fov, off: (o.offFit || [0, 0]).slice()}; }
   function standPose(){ const s = rig.st, cp = Math.cos(s.pitch), p = s.pos; return {pos: [p.x, p.y, p.z], at: [p.x - Math.sin(s.yaw) * cp * 10, p.y + Math.sin(s.pitch) * 10, p.z - Math.cos(s.yaw) * cp * 10], fov: clamp(s.fov * s.zoom, 20, 88), off: [s.offX || 0, s.offY || 0]}; }
-  function rigDrag(dx, dy){ if(!live()) return; S.dragPx += Math.abs(dx) + Math.abs(dy); S.lastAct = performance.now();
-    if(S.view === 'over' || S.view === 'win'){ const o = rig.orb; o.th -= dx * .0052; o.phi = clamp(o.phi - dy * .004, .12, 1.12); }
-    else if(S.view === 'room'){ const s = rig.st, k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05; s.tyaw += dx * k; s.tpitch = clamp(s.tpitch + dy * k, -1.15, 1.25); s.slow = false; S.lookBack = 0; } }
+  /* r41: the overview turns with the tour's shared grab-the-world orbit (window.GRAB41): the point grabbed at pointer-down follows the pointer,
+     on the near side of the house or the far side; the room view uses the shared look. Arrow keys keep the plain turn. */
+  function orbGrab(x, y){ const G = window.GRAB41.pickAt(x, y), o = rig.orb, cam = camera.clone(), v = new V3(), w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+    const proj = (th, ph) => { const t0 = o.th, p0 = o.phi; o.th = th; o.phi = clamp(ph, .12, 1.12); const P = orbitPose(); o.th = t0; o.phi = p0;
+      cam.position.set(P.pos[0], P.pos[1], P.pos[2]); cam.lookAt(P.at[0], P.at[1], P.at[2]); cam.updateMatrixWorld(true);
+      v.copy(G).applyMatrix4(cam.matrixWorldInverse); if(v.z > -.05) return null; v.applyMatrix4(cam.projectionMatrix); return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h]; };
+    const st = window.GRAB41.begin(G, proj, o.th, o.phi, h); st.proj = proj; return st; }
+  function rigDrag(dx, dy, x, y, p){ if(!live()) return; S.dragPx += Math.abs(dx) + Math.abs(dy); S.lastAct = performance.now();
+    if(S.view === 'over' || S.view === 'win'){ const o = rig.orb; let d = null;
+      if(p && window.GRAB41){ try{ if(!p.grab) p.grab = orbGrab(x - dx, y - dy); d = window.GRAB41.orbitDelta(p.grab, dx, dy, p.grab.proj, o.th, o.phi, canvas.clientHeight || 1); }catch(err){ d = null; } }
+      if(d){ o.th += d[0]; o.phi = clamp(o.phi + d[1], .12, 1.12); } else { o.th -= dx * .0052; o.phi = clamp(o.phi - dy * .004, .12, 1.12); } }
+    else if(S.view === 'room'){ const s = rig.st, k = (camera.fov * Math.PI / 180) / Math.max(200, canvas.clientHeight) * 1.05, g = p && window.GRAB41 ? window.GRAB41.lookDelta(x, y, dx, dy) : null;
+      s.tyaw += g ? g[0] : dx * k; s.tpitch = clamp(s.tpitch + (g ? g[1] : dy * k), -1.15, 1.25); s.slow = false; S.lookBack = 0; } }
   function rigZoom(f){ if(!live()) return; if(S.view === 'over' || S.view === 'win'){ const o = rig.orb; o.zoom = clamp(o.zoom * f, .3, 1.15); } else if(S.view === 'room'){ const s = rig.st; s.zoom = clamp(s.zoom * f, .5, 1); } }
   function rigPan(dx, dy){ if(!live() || S.view !== 'over') return; const o = rig.orb, k = o.fit * o.zoom * 2 * Math.tan(o.fov * Math.PI / 360) / Math.max(200, canvas.clientHeight);
     const rx = Math.cos(o.th), rz = -Math.sin(o.th), fx = -Math.sin(o.th), fz = -Math.cos(o.th);   // screen right and screen up, on the ground
