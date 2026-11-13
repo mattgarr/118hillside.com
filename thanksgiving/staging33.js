@@ -618,7 +618,7 @@ function rows(h) {
     ['office', 'vase2', { style: 'cylinder', h: 0.6, dia: 0.4, n: 2, gap: 0.1, mat: 'glassClear' }, 0, 'e', { on: 'oS' }],
     ['office', 'art', { w: 1.8, h: 2.3, mountY: 5.0, style: 'letters', seed: 12, frame: 'frameOak', fw: 0.05 }, [466, 1615], 'e', { back: true }],
     ['office', 'art', { w: 1.5, h: 2.0, mountY: 4.5, style: 'days', seed: 13, frame: 'frameOak', fw: 0.05 }, [466, 1672], 'e', { back: true }],
-    ['office', 'art', { w: 2.0, h: 2.0, mountY: 6.0, style: 'blank', seed: 14, frame: 'frameOak', fw: 0.05 }, [466, 1672], 'e', { back: true }]);
+    ['office', 'art', { w: 2.0, h: 2.0, mountY: 6.75, style: 'blank', seed: 14, frame: 'frameOak', fw: 0.05 }, [466, 1672], 'e', { back: true }]);   // r48 (QA 11/13): hung above the days poster (it hung 6 in lower and covered the poster's top; the wall between the window casing and the alphabet poster has no 2 ft clear beside it)
   // LOWER BATH (unchanged)
   add(['lbath', 'towelRing', { mountY: 4.0 }, [1013, 988], 'w', { back: true, fixture: true, key: 'lbR1' }],
     ['lbath', 'towelBar', { w: 1.5, mountY: 2.0, finish: 'nickel' }, 0, 'w', { bim: [-30.15, -10.74], back: true, fixture: true, key: 'lbT22' }],
