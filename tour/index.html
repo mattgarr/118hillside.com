@@ -16116,10 +16116,11 @@ const CTA42 = (() => {
   const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
   const RANK = {apr24b: 0, jan24: 1, open4: 2, open4k: 3};
   const LINE = {asbuilt: 'The house as it is today.',
-    apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
-    jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
-    open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.',
-    open4k: 'One vaulted great room from end to end under a single big ridge beam: a gas hearth and two sofas at the street end, an L-shaped kitchen and island at the other, a table for eight (ten with leaves) at 14-ft folding glass doors to a new deck, and a library and a new bath where the living room was.'};
+    /* r44f owner: the picker lighter, one short line each; the counts carry the card */
+    apr24b: 'All six bedrooms, with a more open kitchen and family room.',
+    jan24: 'Kitchen, dining and family room in one open space.',
+    open4: 'Two bedrooms become one vaulted living, dining and kitchen space.',
+    open4k: 'One vaulted great room: hearth, island kitchen, folding doors to a new deck.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
 
@@ -16230,19 +16231,20 @@ html.pk42 #design{grid-template-columns:minmax(0,1fr)}
 html.pk42 .pk42p{display:block}
 .pk42p .p42lede{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink)}
 .pk42p .p42list{display:grid;grid-template-columns:1fr;gap:7px}
-.pk42p .k42c{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);gap:11px;align-items:start;width:100%;margin:0;padding:9px 12px 10px 9px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+.pk42p .k42c{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center;width:100%;margin:0;padding:8px 12px 9px 8px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
 .pk42p .k42c:hover{border-color:var(--ink)}
 .pk42p .k42c[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
 .pk42p .k42c[aria-checked="true"]::after{content:"Showing";position:absolute;top:10px;right:12px;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--accent)}
 .pk42p .k42c.k42busy::after{content:"Loading…";color:var(--muted)}
-.pk42p .k42s{display:block;width:64px;height:64px;border-radius:8px;background:var(--paper-2,#e4e7e1);padding:4px;box-sizing:border-box}
+.pk42p .k42s{display:block;width:52px;height:52px;border-radius:8px;background:var(--paper-2,#e4e7e1);padding:4px;box-sizing:border-box}
 .pk42p .k42s path{stroke:#4a4e50;stroke-width:.3;stroke-linejoin:round;fill:#f7f5ef}
 .pk42p .k42s path.kb{fill:#e2c79c}.pk42p .k42s path.kw{fill:#bcd0d8}.pk42p .k42s path.kc{fill:#dcdcd4}
 .pk42p .k42x{display:block;min-width:0}
-.pk42p .k42n{display:block;font-family:var(--f-display);font-weight:500;font-size:22px;line-height:1.05;letter-spacing:-.005em;padding-right:64px}
-.pk42p .k42b{display:block;margin-top:2px;font-size:13.5px;font-weight:500;color:var(--ink)}
-.pk42p .k42t{display:block;margin-top:5px;font-size:14px;font-weight:600}
-.pk42p .k42d{display:block;margin-top:1px;font-size:13px;line-height:1.4;color:var(--muted)}
+.pk42p .k42n{display:block;font-family:var(--f-display);font-weight:500;font-size:21px;line-height:1.1;letter-spacing:-.005em;padding-right:64px;white-space:nowrap}
+.pk42p .k42n b{font-weight:600}.pk42p .k42n i{font-style:normal;color:var(--muted);margin:0 1px}.pk42p .k42n em{font-style:normal;font-family:var(--f-body,inherit);font-size:12.5px;font-weight:500;letter-spacing:0;color:var(--muted)}
+.pk42p .k42t{display:block;margin-top:3px;font-size:13.5px;font-weight:600}
+.pk42p .k42c[data-k="real"] .k42t::after{content:" · the real house";font-weight:600;color:var(--accent)}
+.pk42p .k42d{display:block;margin-top:1px;font-size:12.5px;line-height:1.35;color:var(--muted)}
 .pk42p .k42l{display:block;margin-top:5px;font-size:12px;line-height:1.4;color:#7a5520}
 .pk42p .k42c[data-k="real"] .k42l{color:var(--accent);font-weight:600}
 .pk42p .p42ft{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
@@ -16286,7 +16288,7 @@ html.ph #pk42h .p42e{font-family:var(--sf,inherit);letter-spacing:.02em;text-tra
 html.ph #pk42h h2{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:20px}
 html.ph .pk42p .p42lede{display:none}
 html.ph .pk42p .k42c{background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
-html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:600;font-size:19px;padding-right:0}
+html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:500;font-size:18px;padding-right:0}html.ph .pk42p .k42n em{display:none}
 html.ph .pk42p .k42b,html.ph .pk42p .k42t{color:var(--pt,var(--ink))}
 html.ph .pk42p .k42d{font-size:14px;color:var(--pm,var(--muted))}
 html.ph .pk42p .k42l{font-size:14px;color:var(--pt,var(--ink))}
@@ -16352,14 +16354,14 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     root.classList.remove('ph'); try{ DESIGN.view(1.2); }catch(e){} finally{ root.classList.add('ph'); } }
   const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
   function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {};
-    pick.querySelector('.p42lede').textContent = L.length > 1 ? ideaWords(L.length - 1) + ' for the main level, plus the house as it is. Pick one to see it in 3D.' : '';
+    pick.querySelector('.p42lede').textContent = L.length > 1 ? 'Pick a layout to see it in 3D.' : '';
     for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
     list.innerHTML = '';
     for(const p of L){ const f = facts(p.id), k = kindOf(p.id), b = el('button', 'k42c' + (busy[p.id] ? ' k42busy' : '')); b.type = 'button'; b.dataset.id = p.id; b.dataset.k = k; b.setAttribute('role', 'radio');
       const on = cur === p.id; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1;
-      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? bedLine(f) : p.name) + '</span><span class="k42t">' + p.name + '</span>' + (f ? '<span class="k42b">' + factLine(f) + '</span>' : '')
-        + '<span class="k42d">' + p.line + '</span><span class="k42l">' + LAB[k] + '</span></span>';
-      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' : '') + p.name + (f ? ', ' + factLine(f) : '') + '. ' + p.line + ' ' + LAB[k]);
+      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? '<b>' + f.beds + '</b> bed <i>·</i> <b>' + f.baths + '</b> bath' + (f.office ? '<em> + office</em>' : '') : p.name) + '</span><span class="k42t">' + p.name + '</span>'
+        + '<span class="k42d">' + p.line + '</span></span>';
+      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' + factLine(f) + ': ' : '') + p.name + (k === 'real' ? ' (the real house). ' : ' (illustrative idea). ') + p.line);
       b.addEventListener('click', () => choose(p.id, 'picker')); list.appendChild(b); }
     if(!list.querySelector('[tabindex="0"]') && list.firstChild) list.firstChild.tabIndex = 0;
     { const p = L.find(q => q.id === cur) || L[0], f = facts(p.id), k = kindOf(p.id);   // a phone held upright: the chosen plan's details under the tiles

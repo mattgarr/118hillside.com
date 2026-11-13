@@ -123,6 +123,14 @@ def build():
         ea, eb = sorted((lead, lead + d * 0.012)); ubox(el, axis, ea, eb, mid - 0.035, mid + 0.035, 2.9, 3.35, mat='nickel-brushed', grp='openings')
         fa, fb = sorted((lead - d * 0.10, lead - d * 0.26))
         for sg in (-1, 1): ubox(el, axis, fa, fb, mid + sg * (th / 2 - 0.004), mid + sg * (th / 2 + 0.008), 2.85, 3.4, mat='nickel-brushed', grp='openings')
+    def door_slab(el, axis, ua, ub, pa, pb, z0, z1):
+        """a three-panel door like the house's own: white stiles and rails, recessed fields"""
+        st, tr, br = 0.37, 0.37, 0.75; pa, pb = min(pa, pb), max(pa, pb); zs = [z0 + br, z0 + br + (z1 - tr - z0 - br - 2 * st) / 3]
+        rails = [(z0, z0 + br), (z1 - tr, z1)]; h3 = (z1 - tr - z0 - br - 2 * st) / 3
+        for k in (1, 2): rails.append((z0 + br + k * h3 + (k - 1) * st, z0 + br + k * h3 + k * st))
+        for a_, b_ in ((ua, ua + st), (ub - st, ub)): ubox(el, axis, a_, b_, pa, pb, z0, z1, mat=TRIMM, grp='openings')
+        for za, zb in rails: ubox(el, axis, ua + st, ub - st, pa, pb, za, zb, mat=TRIMM, grp='openings')
+        ubox(el, axis, ua + st, ub - st, pa + 0.02, pb - 0.02, z0 + br, z1 - tr, mat='door-panel-field', grp='openings')
     def wall_box(el, x0, y0, x1, y1, z0, top, mat=PAINT, faces='xXyY', mats=None):
         """a wall piece whose top follows the ceiling: top(x, y) -> z. mats: per-face material override"""
         mats = mats or {}
@@ -316,7 +324,7 @@ def build():
     wall_run('W-L1-B5L', 'x', 11.9, 12.2, 2.1, X_WW, lambda x, y: zl(x) + 0.03, bbf='C')
     wall_run('W-L1-B5M', 'y', 2.1, 2.25, 9.59, 11.9, lambda x, y: zl(x) + 0.03, openings=[(9.67, 11.82, DOOR_H)], collide=False, trim=False)
     casing('W-L1-B5M-T', 'y', 2.1, -1, 9.67, 11.82, DOOR_H, cw=(0.08, 0.29)); liner('W-L1-B5M-T', 'y', 2.1, 2.25, 9.67, 11.82, DOOR_H)
-    boxel('D-L1-B5L', 'openings', 'L1', 'door-panel-field', 2.14, 9.68, 0.04, 2.21, 11.81, DOOR_H - 0.03, faces='xXyYZ')
+    door_slab('D-L1-B5L', 'y', 9.72, 11.77, 2.13, 2.22, 0.04, DOOR_H - 0.06)
     boxel('D-L1-B5L', 'openings', 'L1', 'steel-black', 2.10, 9.86, 3.0, 2.14, 9.92, 3.45, faces='xyYzZ')
     colliders.append({'id': 'FX-B5-LAUNDRY#0', 'element': 'FX-B5-LAUNDRY', 'kind': 'WALL', 'poly': [[2.1, 9.59], [2.25, 9.59], [2.25, 11.9], [2.1, 11.9]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
     wall_run('W-L1-B5B', 'y', -1.29, -0.91, 9.59, 14.32, lambda x, y: zl(x) + 0.03, openings=[(BATH_DOOR[0], BATH_DOOR[1], DOOR_H)], pocket={0: 'hi'})                  # bath / hall
@@ -324,8 +332,9 @@ def build():
     liner('W-L1-004-T', 'x', 14.32, 14.70, -9.14, -6.81, DOOR_H)                                                                      # the shower's opening (the old laundry closet's), lined
     wall_run('W-L1-B5D', 'x', 16.74, 17.11, -6.41, X_WW, lambda x, y: zw(y) + 0.03, openings=[(-6.1, -0.7, DOOR_H), (0.27, 2.93, DOOR_H)])   # closet and vestibule / bedroom
     for i, (x0, x1, y) in enumerate(((-6.05, -3.35, 16.86), (-3.45, -0.75, 16.95))):          # the closet's two sliding doors
-        boxel('D-L1-B5C', 'openings', 'L1', 'door-panel-field', x0, y - 0.04, 0.04, x1, y + 0.04, DOOR_H - 0.04, faces='xXyYZ')
-    boxel('D-L1-B5B', 'openings', 'L1', 'door-panel-field', 2.80, 17.18, 0.04, 2.88, 19.76, DOOR_H - 0.06, faces='xXyYZ')            # the bedroom door, standing open
+        door_slab('D-L1-B5C', 'x', x0, x1, y - 0.04, y + 0.04, 0.04, DOOR_H - 0.06)
+    door_slab('D-L1-B5B', 'y', 17.18, 19.76, 2.78, 2.88, 0.04, DOOR_H - 0.06)
+    for xa, xb in ((2.70, 2.78), (2.88, 2.96)): ubox('D-L1-B5B', 'y', 19.50, 19.56, xa, xb, 2.95, 3.01, mat='nickel-brushed', grp='openings'); ubox('D-L1-B5B', 'y', 19.44, 19.62, xa if xa < 2.75 else xb - 0.03, xa + 0.03 if xa < 2.75 else xb, 2.92, 3.04, mat='nickel-brushed', grp='openings')            # the bedroom door, standing open
     # baseboards in the great room (square, as built height) where no cabinet or opening stands
     bb = E['TR-0201'][0]
     for i, (x0, y0, x1, y1) in enumerate(((X_LW, Y_S, FOLD['x0'] - 0.375, Y_S + 0.06), (FOLD['x1'] + 0.375, Y_S, X_E, Y_S + 0.06), (X_E - 0.06, Y_S, X_E, FP['cy'] - 3.0), (X_E - 0.06, FP['cy'] + 3.0, X_E, Y_N), (21.5, Y_N - 0.06, X_E, Y_N),
