@@ -265,7 +265,7 @@ def fixtures(D, v):
             else: poly(g.buffer(-.12).buffer(.12) if shape == 'soft' else g, '#fff', .9 if k == 'pianoUpright' else .6, '', '#222' if k == 'pianoUpright' else '#888')
             if k == 'diningTable' and pr.get('extW'):          # the table with its leaf in (dashed), and where the end chair goes then
                 ex = pr['extW'] - pr['w']; th = math.radians(f.get('rot') or 0); sd = np.array([-math.sin(th), math.cos(th)]); a0 = np.array(f['at'][:2], float)
-                for sg, e in (((-1, ex / 2), (1, ex / 2)) if pr.get('extBoth') else ((1 if abs(sd[0]) > .5 and sd[0] * -1 > 0 else -1 if abs(sd[0]) > .5 else 1, ex),)):
+                for sg, e in (((-1, ex / 2), (1, ex / 2)) if pr.get('extBoth') else ((pr.get('extSign', 1 if abs(sd[0]) > .5 and sd[0] * -1 > 0 else -1 if abs(sd[0]) > .5 else 1), ex),)):
                     u = sd * sg; n_ = np.array([-u[1], u[0]]); p0 = a0 + u * pr['w'] / 2; p1 = p0 + u * e
                     poly(Polygon([p0 - n_ * pr['d'] / 2, p1 - n_ * pr['d'] / 2, p1 + n_ * pr['d'] / 2, p0 + n_ * pr['d'] / 2]), 'none', .7, '4 3', '#555')
                     c0 = p1 + u * .9; poly(Polygon([c0 - u * .75 - n_ * .75, c0 + u * .75 - n_ * .75, c0 + u * .75 + n_ * .75, c0 - u * .75 + n_ * .75]).buffer(-.12).buffer(.12), 'none', .6, '3 2', '#777')
@@ -311,7 +311,8 @@ def fixtures(D, v):
         if f['render']['kind'] == 'counterStoolRope' and v != 'asbuilt':
             x, y = P(f['at'][0] + .0, f['at'][1]); A('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="#fff" stroke="#555" stroke-width=".6"/>' % (x, y, .6 * S))
     # fireplace (from the option's glb element: its footprint inside the room) and the ridge beam's west post
-    if v == 'open4k':
+    for fn in EXTRA: A(fn(P))                                # sketch overlays (concept studies)
+    if v == 'open4k' and SHOW_FP:
         poly(sbox(K4.POST[0], K4.POST[2], K4.POST[1], K4.POST[3]), '#111', .6); text((K4.POST[1] + 1.1, K4.RIDGE_Y - .75), 'POST', 6)
         fpx0, fpx1 = B4_FP['cx'] - B4_FP['w'] / 2, B4_FP['cx'] + B4_FP['w'] / 2
         poly(sbox(fpx0, B4.Y_N - B4_FP['d'], fpx1, B4.Y_N), '#e9e9e9', 1.0)
@@ -320,6 +321,7 @@ def fixtures(D, v):
         text((B4_FP['cx'], B4.Y_N - B4_FP['d'] - .7), 'GAS FIREPLACE &#183; HEARTH', 6.5)
     return out
 B4_FP = dict(cx=19.3, w=6.0, d=1.2)
+SHOW_FP = True; EXTRA = []
 # loose furniture shown on a concept plan: kind -> (width, depth, outline)
 LOOSE = {'rug2': (8.0, 10.0, 'rect'), 'sofa3': (7.5, 3.2, 'soft'), 'armchairBoucle': (2.8, 2.7, 'soft'), 'diningTableGlass': (7.0, 3.4, 'rect'), 'diningTable': (7.0, 3.5, 'rect'), 'sideboard': (4.0, 1.6, 'rect'), 'parsonsChair': (1.5, 1.7, 'soft'), 'ottomanRound': (2.6, 2.6, 'round'),
          'drumTable': (1.4, 1.4, 'round'), 'pianoUpright': (4.95, 2.05, 'rect'), 'pianoBench': (2.6, 1.15, 'rect'), 'outdoorDiningTable': (7.0, 3.4, 'rect'), 'outdoorChair': (1.8, 1.9, 'soft'),
