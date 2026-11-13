@@ -1476,7 +1476,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
         <button class="chip" id="tLabels" aria-pressed="true">Room labels</button>
       </div>
       <div class="design" id="design" hidden>
-        <div class="dsec"><div class="dlab">Layout of the original house</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
+        <div class="dsec"><div class="dlab">Layout</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
         <div class="dact"><button class="btn" id="dWalk">Walk through the house</button><button class="btn" id="dEdit">Edit a copy</button></div>
         <div class="dtools" id="dTools" hidden>
           <div class="trow" role="toolbar" aria-label="Edit tools">
@@ -8658,10 +8658,15 @@ const DESIGN = (() => {
   }
   function chips(){
     const box = $('#optChips'); box.innerHTML = '';
-    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today'}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea'})));
+    /* r44f owner: a lighter picker; each layout leads with its bedroom and bath count, the as-built included, most bedrooms first */
+    const cnt = id => { try{ if(id === 'asbuilt') return [6, 3]; const o = BIM2.option(id) || {}; const b = +(o.bedrooms || o.beds) || 0; return b ? [b, +o.baths || 0] : null; }catch(e){ return null; } };
+    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today', n: cnt('asbuilt')}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea', n: cnt(d.id)})).sort((a, b) => ((b.n || [0])[0]) - ((a.n || [0])[0])));
     if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base).toLowerCase() : 'From today’s layout'});
     for(const o of list){ const b = document.createElement('button'); b.type = 'button'; b.className = 'opt ' + (o.id === 'asbuilt' ? 'today' : 'idea'); b.dataset.id = o.id; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(o.id === sel)); b.tabIndex = o.id === sel ? 0 : -1;
-      const nm = document.createElement('span'); nm.textContent = o.name; b.appendChild(nm); const sm = document.createElement('small'); sm.textContent = o.sub; b.appendChild(sm); b.onclick = () => choose(o.id, true); box.appendChild(b); }
+      const nm = document.createElement('span'), sm = document.createElement('small');
+      if(o.n){ nm.className = 'obb'; nm.innerHTML = '<b>' + o.n[0] + '</b> bed <i>·</i> <b>' + o.n[1] + '</b> bath'; sm.textContent = o.id === 'asbuilt' ? 'As built today' : o.name; b.setAttribute('aria-label', o.n[0] + ' bedrooms, ' + o.n[1] + ' baths: ' + o.name + (o.id === 'asbuilt' ? ', the house today' : ', remodel idea')); }
+      else { nm.textContent = o.name; sm.textContent = o.sub; }
+      b.appendChild(nm); b.appendChild(sm); b.onclick = () => choose(o.id, true); box.appendChild(b); }
     if(!box._r35){ box._r35 = true; box.addEventListener('keydown', e => { const L = [...box.querySelectorAll('.opt')], i = L.indexOf(document.activeElement); if(i < 0) return;   // radio group: arrows move and choose
         const j = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (i + 1) % L.length : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
         e.preventDefault(); e.stopPropagation(); const id = L[j].dataset.id; choose(id, true); const n = box.querySelector('.opt[data-id="' + id + '"]'); if(n) n.focus(); }); }
@@ -8675,7 +8680,7 @@ const DESIGN = (() => {
     $('#eyebrow').textContent = 'Design'; $('#lvl').textContent = sel === 'asbuilt' ? 'As built' : 'Remodel idea';
     $('#title').textContent = sel === 'asbuilt' ? 'The house today' : sel === 'custom' ? 'My design' : nameOf(sel);   /* r20: no date */
     $('#dims').textContent = ''; $('#blurb').hidden = false; strip([], '');
-    $('#blurb').textContent = sel === 'asbuilt' ? 'This is the house as it stands. Try a remodel idea for the original part of the home, move the furniture, or see the outside in another color or with a new garden.'
+    $('#blurb').textContent = sel === 'asbuilt' ? 'The house as it stands. Pick a layout below to see an idea for the original part of the home.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
     $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'An idea only. It is not engineered, permitted or priced.'
       : (d && d.label ? d.label + ' ' : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and ') + (d && d.label ? 'The house is sold as built.' : 'the house is sold as built.');
@@ -8731,6 +8736,7 @@ const DESIGN = (() => {
     if(feet > 3 || feet < -1 || !inReg(bx, by)){ lastWalk = null; return false; }
     const L = ((defOf(ACTIVE_VAR) || {}).elements || []).filter(e => e.ifc === 'IfcAnnotation'); let best = null, bd = 1e9;
     for(const e of L){ const d = Math.hypot(e.at[0] - bx, e.at[1] - by); if(d < bd){ bd = d; best = e; } }
+    try{ for(const r of ((defOf(ACTIVE_VAR) || {}).rooms || [])) if(inPoly(r.poly, bx, by)){ best = r; break; } }catch(e){}   // r44f: an idea may give its rooms as outlines (the nearest label misnames a big room's far end)
     if(!best) return false;
     if(force || best !== lastWalk){ lastWalk = best; curRoom = null; $('#title').textContent = best.name; $('#lvl').textContent = 'Main level'; $('#dims').textContent = '';
       $('#eyebrow').textContent = 'Remodel idea · ' + nameOf(ACTIVE_VAR); $('#blurb').hidden = true; strip([], ''); }
@@ -8883,7 +8889,9 @@ html .design .dnow .tool{flex:0 0 auto;font-weight:600;background:var(--ink);col
 html .design .opt{display:grid;grid-template-columns:16px 1fr auto;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 12px;font-size:14px;font-weight:500;text-align:left;border-radius:10px;line-height:1.2}
 .design .opt::before{content:"";width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;opacity:.5;box-sizing:border-box}
 .design .opt[aria-checked="true"]::before{opacity:1;border-width:5px}
-html .design .opt small{display:block;margin:0;font-family:inherit;font-size:12px;font-weight:400;text-align:right;white-space:nowrap}
+html .design .opt small{display:block;margin:0;font-family:inherit;font-size:12.5px;font-weight:400;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+html .design .opt .obb{font-size:15.5px;font-weight:400;white-space:nowrap;letter-spacing:.005em}html .design .opt .obb b{font-weight:700}html .design .opt .obb i{font-style:normal;opacity:.55;margin:0 1px}
+html .design .opt{grid-template-columns:16px auto minmax(0,1fr)}
 .design .dact .btn{min-height:38px}
 .design .dnote[hidden]{display:none}
 html .design .tool{min-height:36px;padding:6px 11px;font-size:12.5px}
@@ -8963,7 +8971,7 @@ html.v33game .ideas35{display:none}
     const k = mode + '|' + walk + '|' + L.join(',') + '|' + lk + '|' + ACTIVE_VAR; if(k === last) return; last = k; landSync();
     try{ if(window.__v31rmPaint) window.__v31rmPaint(); }catch(e){}   // the View menu's 'Remodel ideas' row follows
     $('#dNowTxt').textContent = L.length ? 'Showing ideas: ' + L.join(', ') + '. These are ideas, not the house as it is today.' : 'You are looking at the house as it is today.';
-    now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length;
+    now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length; now.style.display = (!L.length || (mode === 'design' && L.length === 1 && / layout$/.test(L[0]))) ? 'none' : '';   // r44f: nothing to say while the house is as built (the title says so), or when a layout idea is the only one showing (its banner says so, with the way back)
     const out = mode !== 'design' && L.length > 0; chip.hidden = !out; document.documentElement.classList.toggle('ideas35on', out);
     if(out){ $('#ideas35Txt').textContent = walk ? 'Walking a remodel idea: ' + DESIGN.nameOf(DESIGN.sel()).toLowerCase() + '. Not the house as it is today.' : 'Showing ideas: ' + L.join(', ') + '. Not the house as it is today.'; $('#ideas35Back').hidden = !walk; }
     try{ if(typeof window.__v33discPlace === 'function') window.__v33discPlace(); }catch(e){} }
@@ -16116,10 +16124,11 @@ const CTA42 = (() => {
   const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
   const RANK = {apr24b: 0, jan24: 1, open4: 2, open4k: 3};
   const LINE = {asbuilt: 'The house as it is today.',
-    apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
-    jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
-    open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.',
-    open4k: 'One vaulted great room from end to end under a single big ridge beam: a gas hearth and two sofas at the street end, an L-shaped kitchen and island at the other, a table for eight (ten with leaves) at 14-ft folding glass doors to a new deck, and a library and a new bath where the living room was.'};
+    /* r44f owner: the picker lighter, one short line each; the counts carry the card */
+    apr24b: 'All six bedrooms, with a more open kitchen and family room.',
+    jan24: 'Kitchen, dining and family room in one open space.',
+    open4: 'Two bedrooms become one vaulted living, dining and kitchen space.',
+    open4k: 'One vaulted great room: hearth, island kitchen, folding doors to a new deck.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
 
@@ -16230,19 +16239,20 @@ html.pk42 #design{grid-template-columns:minmax(0,1fr)}
 html.pk42 .pk42p{display:block}
 .pk42p .p42lede{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink)}
 .pk42p .p42list{display:grid;grid-template-columns:1fr;gap:7px}
-.pk42p .k42c{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);gap:11px;align-items:start;width:100%;margin:0;padding:9px 12px 10px 9px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+.pk42p .k42c{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center;width:100%;margin:0;padding:8px 12px 9px 8px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
 .pk42p .k42c:hover{border-color:var(--ink)}
 .pk42p .k42c[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
 .pk42p .k42c[aria-checked="true"]::after{content:"Showing";position:absolute;top:10px;right:12px;font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--accent)}
 .pk42p .k42c.k42busy::after{content:"Loading…";color:var(--muted)}
-.pk42p .k42s{display:block;width:64px;height:64px;border-radius:8px;background:var(--paper-2,#e4e7e1);padding:4px;box-sizing:border-box}
+.pk42p .k42s{display:block;width:52px;height:52px;border-radius:8px;background:var(--paper-2,#e4e7e1);padding:4px;box-sizing:border-box}
 .pk42p .k42s path{stroke:#4a4e50;stroke-width:.3;stroke-linejoin:round;fill:#f7f5ef}
 .pk42p .k42s path.kb{fill:#e2c79c}.pk42p .k42s path.kw{fill:#bcd0d8}.pk42p .k42s path.kc{fill:#dcdcd4}
 .pk42p .k42x{display:block;min-width:0}
-.pk42p .k42n{display:block;font-family:var(--f-display);font-weight:500;font-size:22px;line-height:1.05;letter-spacing:-.005em;padding-right:64px}
-.pk42p .k42b{display:block;margin-top:2px;font-size:13.5px;font-weight:500;color:var(--ink)}
-.pk42p .k42t{display:block;margin-top:5px;font-size:14px;font-weight:600}
-.pk42p .k42d{display:block;margin-top:1px;font-size:13px;line-height:1.4;color:var(--muted)}
+.pk42p .k42n{display:block;font-family:var(--f-display);font-weight:500;font-size:21px;line-height:1.1;letter-spacing:-.005em;padding-right:64px;white-space:nowrap}
+.pk42p .k42n b{font-weight:600}.pk42p .k42n i{font-style:normal;color:var(--muted);margin:0 1px}.pk42p .k42n em{font-style:normal;font-family:var(--f-body,inherit);font-size:12.5px;font-weight:500;letter-spacing:0;color:var(--muted)}
+.pk42p .k42t{display:block;margin-top:3px;font-size:13.5px;font-weight:600}
+.pk42p .k42c[data-k="real"] .k42t::after{content:" · the real house";font-weight:600;color:var(--accent)}
+.pk42p .k42d{display:block;margin-top:1px;font-size:12.5px;line-height:1.35;color:var(--muted)}
 .pk42p .k42l{display:block;margin-top:5px;font-size:12px;line-height:1.4;color:#7a5520}
 .pk42p .k42c[data-k="real"] .k42l{color:var(--accent);font-weight:600}
 .pk42p .p42ft{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
@@ -16286,7 +16296,7 @@ html.ph #pk42h .p42e{font-family:var(--sf,inherit);letter-spacing:.02em;text-tra
 html.ph #pk42h h2{font-family:var(--sf,inherit);font-style:normal;font-weight:600;font-size:20px}
 html.ph .pk42p .p42lede{display:none}
 html.ph .pk42p .k42c{background:var(--pl,rgba(255,255,255,.06));color:var(--pt,var(--ink));border-color:var(--pl,var(--line));font-family:var(--sf,inherit)}
-html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:600;font-size:19px;padding-right:0}
+html.ph .pk42p .k42n{font-family:var(--sf,inherit);font-weight:500;font-size:18px;padding-right:0}html.ph .pk42p .k42n em{display:none}
 html.ph .pk42p .k42b,html.ph .pk42p .k42t{color:var(--pt,var(--ink))}
 html.ph .pk42p .k42d{font-size:14px;color:var(--pm,var(--muted))}
 html.ph .pk42p .k42l{font-size:14px;color:var(--pt,var(--ink))}
@@ -16352,14 +16362,14 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     root.classList.remove('ph'); try{ DESIGN.view(1.2); }catch(e){} finally{ root.classList.add('ph'); } }
   const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
   function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {};
-    pick.querySelector('.p42lede').textContent = L.length > 1 ? ideaWords(L.length - 1) + ' for the main level, plus the house as it is. Pick one to see it in 3D.' : '';
+    pick.querySelector('.p42lede').textContent = L.length > 1 ? 'Pick a layout to see it in 3D.' : '';
     for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
     list.innerHTML = '';
     for(const p of L){ const f = facts(p.id), k = kindOf(p.id), b = el('button', 'k42c' + (busy[p.id] ? ' k42busy' : '')); b.type = 'button'; b.dataset.id = p.id; b.dataset.k = k; b.setAttribute('role', 'radio');
       const on = cur === p.id; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1;
-      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? bedLine(f) : p.name) + '</span><span class="k42t">' + p.name + '</span>' + (f ? '<span class="k42b">' + factLine(f) + '</span>' : '')
-        + '<span class="k42d">' + p.line + '</span><span class="k42l">' + LAB[k] + '</span></span>';
-      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' : '') + p.name + (f ? ', ' + factLine(f) : '') + '. ' + p.line + ' ' + LAB[k]);
+      b.innerHTML = sketch(p.id) + '<span class="k42x"><span class="k42n">' + (f ? '<b>' + f.beds + '</b> bed <i>·</i> <b>' + f.baths + '</b> bath' + (f.office ? '<em> + office</em>' : '') : p.name) + '</span><span class="k42t">' + p.name + '</span>'
+        + '<span class="k42d">' + p.line + '</span></span>';
+      b.setAttribute('aria-label', (f ? bedLine(f) + ', ' + factLine(f) + ': ' : '') + p.name + (k === 'real' ? ' (the real house). ' : ' (illustrative idea). ') + p.line);
       b.addEventListener('click', () => choose(p.id, 'picker')); list.appendChild(b); }
     if(!list.querySelector('[tabindex="0"]') && list.firstChild) list.firstChild.tabIndex = 0;
     { const p = L.find(q => q.id === cur) || L[0], f = facts(p.id), k = kindOf(p.id);   // a phone held upright: the chosen plan's details under the tiles
@@ -20669,7 +20679,7 @@ function bim2DesignOptions(){                                         // the Des
   const leg = (BIM && BIM.options) || [], M = (BIM2S && BIM2S.meta.options) || []; if(!M.length) return leg;
   return M.map(o => { const id = o.legacyId || o.id, d = leg.find(q => q.id === id) || {};
     return Object.assign({}, d, {id, name: o.name || d.name || id, short: o.short || 'Remodel concept',   /* owner 11/7: no dates on the concepts */ region: d.region || o.region || null,
-      elements: d.elements || (o.labels || []).map((l, i) => ({id: id + '-L' + (i + 1), ifc: 'IfcAnnotation', kind: 'roomLabel', name: l.name, at: l.at})), removes: d.removes || [], bim2: o.id,
+      elements: d.elements || (o.labels || []).map((l, i) => ({id: id + '-L' + (i + 1), ifc: 'IfcAnnotation', kind: 'roomLabel', name: l.name, at: l.at})), removes: d.removes || [], bim2: o.id, rooms: d.rooms || o.rooms || null,
       description: d.description || o.description, walkStart: d.walkStart || o.walkStart,   /* r42: an option the scene meta describes itself (no legacy entry): its card text, labels and walk start come from there */
       beds: o.beds, baths: o.baths, office: o.office, label: o.label || null, views: o.views || null}); }); }
 function bim2BuildVariant(id, def){
@@ -20874,8 +20884,8 @@ function fold42Build(o){
     const box = (x0, x1, y0, y1, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, F42.T), m); b.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); b.castShadow = b.receiveShadow = true; return b; };
     for(let i = 0; i < n; i++){ const P = new THREE.Group(), a = F42.gap / 2, b = a + pw;
       P.add(box(a, a + F42.stile, 0, h, fm), box(b - F42.stile, b, 0, h, fm), box(a + F42.stile, b - F42.stile, h - F42.top, h, fm), box(a + F42.stile, b - F42.stile, 0, F42.bot, fm));
-      const gl = new THREE.Mesh(new THREE.PlaneGeometry(pw - 2 * F42.stile + .04, h - F42.top - F42.bot + .04), M.glassDoor.clone());
-      gl.material.side = THREE.DoubleSide; gl.position.set((a + b) / 2, F42.bot + (h - F42.top - F42.bot) / 2, 0); gl.renderOrder = 2; GLOW.push(gl.material); P.add(gl);
+      const gl = new THREE.Mesh(new THREE.PlaneGeometry(pw - 2 * F42.stile + .04, h - F42.top - F42.bot + .04), M.glass);   // r44f: the windows' own clear glass (the sliders' door glass glows and fades, and read frosted here)
+      gl.position.set((a + b) / 2, F42.bot + (h - F42.top - F42.bot) / 2, 0); gl.renderOrder = 2; P.add(gl);
       // a pull on the free stile of every other panel, both faces, as on the real units
       if(i % 2 === 1){ const k = new THREE.Mesh(new THREE.BoxGeometry(.06, 1.0, F42.T + .14), fm); k.position.set(b - F42.stile - .05, 3.6, 0); P.add(k); }
       P.userData.fold42 = op.id; g.add(P); it.panels.push(P); }
@@ -20928,7 +20938,7 @@ Object.assign(FOLD42, {toggle: (it) => fold42Toggle(it || FOLD42.items[0]), set(
 /* r43: the corner floor plan (minimap) shows the plan that is showing. A layout idea with its own plan image (drawn from its model data
    by the same projection as floor_main.jpg) is drawn instead of the house's while it shows (Design and its walk-through); everywhere
    else, and until that image has loaded, the house's plan. */
-const MM43 = {open4k: 'floor_main_open4k.jpg?v=5'}, MM43I = {};
+const MM43 = {open4k: 'floor_main_open4k.jpg?v=6'}, MM43I = {};
 { const _dm43 = drawMini; drawMini = function(){
     const v = typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt', src = MM43[v]; if(!src) return _dm43.apply(this, arguments);
     let im = MM43I[v]; if(!im){ im = MM43I[v] = new Image(); im.src = src; }
