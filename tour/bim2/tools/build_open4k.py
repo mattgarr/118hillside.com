@@ -42,10 +42,10 @@ FIXW = dict(x0=24.4, x1=32.4, sill=2.6, head=7.6)                  # the living 
 NWIN = [((FIXW['x0'] + FIXW['x1']) / 2, FIXW['x1'] - FIXW['x0'], FIXW['sill'], FIXW['head'])]   # north wall windows: centre x, width, sill, head
 # the two gable windows, either side of the ridge: from 0.4 ft off the chimney breast (t = 3.9 from the ridge) out to t = 11.815, four
 # mulled units; the gable glass over each has the same inner jamb, its point over the same outer jamb, its bars on the same mullions
-EWIN_T, EUNITS = (3.9, 11.815), 4
+EWIN_T, EUNITS = (3.9, 9.78125), 3            # r44c owner: three units a side (the outermost came out), solid wall from there to each corner
 EWIN_D, EWIN_W = (EWIN_T[0] + EWIN_T[1]) / 2, EWIN_T[1] - EWIN_T[0]
 EWIN = [(RIDGE_Y - EWIN_D, EWIN_W, 3.4375, 7.75), (RIDGE_Y + EWIN_D, EWIN_W, 3.4375, 7.75)]
-GG = dict(zb=8.45, margin=APEX - 8.45 - PITCH * EWIN_T[1])            # gable glass: bottom, and the drop below the rake that puts its point over the window's outer jamb         # street gable windows either side of the hearth: centre y, width, sill, head
+GG = dict(zb=8.45, margin=0.30)                                       # gable glass: bottom, and the drop of its top edge below the rake         # street gable windows either side of the hearth: centre y, width, sill, head
 FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 3.03), mantel=(3.85, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 6.45))   # mantel: bottom, height, depth, length
 PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
 DOOR_H = 6.7812
@@ -148,10 +148,10 @@ def build():
         """the clerestory over a gable window: a triangle whose top runs parallel to the rake, with the window's own inner jamb, its point
         over the window's outer jamb, and a bar over every mullion of the window (same centre, same width). (outline, panes) in (y, z)"""
         t_in, t_tip = EWIN_T; top = lambda t: APEX - PITCH * t - GG['margin']; Y = lambda t: RIDGE_Y + side * t
-        tri = Polygon([(Y(t_in), GG['zb']), (Y(t_tip), GG['zb']), (Y(t_in), top(t_in))])
+        tri = Polygon([(Y(t_in), GG['zb']), (Y(t_tip), GG['zb']), (Y(t_tip), top(t_tip)), (Y(t_in), top(t_in))])   # a trapezoid: its outer jamb stands on the window's
         edges = [t_tip] + gable_bars() + [t_in]; panes = []
         for ta, tb in zip(edges[:-1], edges[1:]):
-            a_ = ta - (MUL / 2 if ta != t_tip else 0); b_ = tb + (MUL / 2 if tb != t_in else 0.04)
+            a_ = ta - (MUL / 2 if ta != t_tip else 0.04); b_ = tb + (MUL / 2 if tb != t_in else 0.04)
             lo, hi = sorted((Y(a_), Y(b_))); bay = tri.intersection(sbox(lo, 0, hi, 30)).buffer(-STILE, join_style=2)
             if not bay.is_empty and bay.geom_type == 'Polygon' and bay.area > 0.12: panes.append(bay)
         return tri, panes

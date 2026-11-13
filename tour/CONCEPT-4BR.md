@@ -177,7 +177,7 @@ street, y north).
   stone from a raised stone hearth to the vault, a 5-ft linear firebox with a 20-in opening in a steel frame, a heavy fir mantel and a 65-in TV
   above it. Low built-ins (36 in high, wood tops) run under the two gable windows either side, wall to wall. Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
-  7 ft 11 windows (four mulled casement-style units each, in the white Andersen pattern of the new wing: 2-in sashes,
+  5 ft 11 windows (three mulled casement-style units each, with about 3 ft 10 of solid wall from each to its corner, in the white Andersen pattern of the new wing: 2-in sashes,
   a 3/4-in grille bar at mid-height, 3-5/8 in mullions), one either side of the hearth,
   with a triangle of gable glass over each that follows the rake and stops short of the stone. The living area's two side walls mirror each other: an 8-ft, three-unit window of the same pattern on each
   (sill 2 ft 7, head 7 ft 7), each 4 ft 2 from the gable corner.
