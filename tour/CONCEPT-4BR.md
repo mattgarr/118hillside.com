@@ -173,16 +173,19 @@ street, y north).
 - **One room.** The whole original gable, 31 ft 4 x 27 ft 3 inside (x 5.28 to 36.59, y 4.81 to 32.09, about 855 sq ft), is a
   single vaulted great room. Everything that stood inside it comes out: the front and middle bedrooms and their closets, the
   hall bath, the hall, and the old kitchen.
-- **Living at the street end.** A gas hearth is centred on the street gable, under the ridge (plaster breast 6 ft wide, a
-  4 ft 6 linear firebox, a fir mantel). Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
+- **Living at the street end.** A gas hearth is centred on the street gable, under the ridge: a 7-ft chimney breast clad in stacked
+  stone from a raised stone hearth to the vault, a 4 ft 6 linear firebox in a steel frame, a heavy fir mantel and a 65-in TV
+  above it. Low built-ins (30 in high, wood tops) run under the two gable windows either side, wall to wall. Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
   4 ft 2 windows, one either side of the hearth. Bookshelves stand on the north wall either side of a 5-ft window.
 - **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood) is on the north wall between two counter-height
-  windows. The west gable wall is the tall wall: pantry, wall ovens, fridge. An 8-ft x 3 ft 6 island carries the sink and
+  windows. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
+  cabinets, one crown along the top and a panelled end. (The owner asked for about 3 ft more cabinetry toward the table;
+  the tall wall took the full 3 ft, now starting at y 18.) An 8-ft x 3 ft 6 island carries the sink and
   dishwasher on its working side and four stools on the dining side. Sink to range is one step across a 4-ft aisle; the
   fridge is at the end of the same aisle, reachable from the room without crossing the cook.
 - **Dining between them.** A table for eight (8 ft x 3 ft 6; ten with its leaves) sits on the kitchen's axis, parallel to the
-  island, with an 8 ft 6 sideboard on the west wall. This is the house's only dining place, so it is sized as one.
+  island, with a 7-ft sideboard on the west wall, centred on the table. This is the house's only dining place, so it is sized as one.
 - **Folding glass doors, moved west.** A 14-ft, six-panel folding door (x 8.7 to 22.9) is centred on the table and stacks at
   its west jamb. It opens to the porch and to about 9 ft of new deck (to x 24.6, 8 ft 5 deep, cable rail). The east part of
   the old picture window stays as fixed glass (x 23.7 to 32.5) beside the sofas.
@@ -210,13 +213,14 @@ street, y north).
 | | in the model | rule of thumb |
 |---|---|---|
 | island to north counter (work aisle) | 4 ft 0 | 42 in one cook, 48 in two |
-| island to tall wall | 4 ft 5 (4 ft 0 at the fridge) | 42 in |
+| island to tall wall | 4 ft 5 (4 ft 3 at the fridge) | 42 in |
 | behind the island stools to the table chairs | 4 ft 10 | 44 in to walk behind seated diners |
 | table to the folding doors | 6 ft 5 from the table edge, 4 ft 10 behind the chairs | 36 in minimum, 48 in for a route |
 | table to the sideboard | 4 ft 11 from the table end, about 3 ft 5 behind the end chair | 36 to 48 in |
 | table end to the living rug | 5 ft 1 (about 3 ft 7 behind the end chair) | 36 in |
 | sofa to sofa (seat fronts) | about 7 ft 4, coffee table between | conversation within 10 ft |
-| sofa ends to the hearth | about 2 ft (not a route) | side clearance only |
+| sofa ends to the low built-ins | about 1 ft 8 (not a route) | side clearance only |
+| end of the tall wall to the nearest table chair | about 3 ft 6 on the diagonal; the tall wall stops 1 ft 8 short of the chairs' line | 36 in |
 | hall beside the laundry closet | 3 ft 0 | 36 in |
 
 ### Structure: a big beam and no post
@@ -232,7 +236,8 @@ exterior walls and adding a fireplace vent are all permit work.
 
 - The old living room's big west window runs past the new library/bath wall, which meets it at a mullion. A real project
   would reframe or split that window.
-- The oven column (drawer, wall oven, built-in microwave, cabinet above) is a simple stand-in drawn for this concept.
+- The oven column (drawer, wall oven, built-in microwave, cabinet above), the stone cladding, the low built-ins and the
+  crown are simple stand-ins drawn for this concept. The TV sits high (centre at 7 ft) because it is over a mantel.
 - The island sink is centred on the island (the plan has it a little west with the dishwasher beside it).
 - The closet doors, the laundry closet door (shut) and the bedroom door (standing open) are drawn fixed; the two pocket
   doors are drawn open. They do not operate in the tour.
