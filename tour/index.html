@@ -23630,13 +23630,13 @@ if(GHOST41.on){
       // reading there, so each stop is exposed as before. Measured 11/12 with GHOST41.calibrate() (?qa=1) at every stop: by day the
       // geometric mean of morning, midday and golden (they agree within 3 %), dusk on its own (lamps: the view mattered more, 0.84-1.25).
       // Out = the median over the outdoor stops. A room is crossed by the meter's own ease (no pop).
-      // 11/12 later (owner's Mac, main ee31d99 as the reference): 'stairs' is the zone of the ENTRY stop (its eye is in the open stair-hall
-      // air), and .845 put it .25 stop over main (1.37 vs 1.14): .965. Dusk: great .561 vs main .769 -> 1.024 to .875; living .909 vs .681
-      // -> .845 to .976 (exposure ~ f^-(k / gamma): -1.33 by day, -2 at dusk). The full GHOST41.calibrate() rerun needs the pane in front.
+      // 11/12 later, against main e5a6149 on the owner's Mac, both SETTLED (20 s at the stop): 'stairs' is the zone of the ENTRY stop (its eye
+      // is in the open stair-hall air); .845 put it ~.1 stop over main's 1.22 -> .881 (1.22). Dusk great room 1.024 gave ~.56 vs main .68
+      // -> .904; dusk living room .845 gives ~.61 vs main .62 (kept). Exposure ~ f^-(k / gamma): -1.33 by day, -2 at dusk.
       cal: .97, calDusk: .973, out: .941, outDusk: 1.03, hiK: 1,
-      room: {stairs: .965, living: .899, great: 1.041, mainbed3: 1.084, mainbed2: 1.033, mainbath: 1.026, mainbed1: .934, entry: 1.122, loft: .943, pbath: .977,
+      room: {stairs: .881, living: .899, great: 1.041, mainbed3: 1.084, mainbed2: 1.033, mainbath: 1.026, mainbed1: .934, entry: 1.122, loft: .943, pbath: .977,
         primary: 1.06, lbed1: .929, lbath: .947, lbed2: .946, laundry: .945, office: .981, rec: .954, garage: .975},
-      roomDusk: {stairs: .984, living: .976, great: .875, mainbed3: 1.16, mainbed2: 1.007, mainbath: 1.201, mainbed1: .964, entry: .958, loft: .924, pbath: .835,
+      roomDusk: {stairs: .984, living: .845, great: .904, mainbed3: 1.16, mainbed2: 1.007, mainbath: 1.201, mainbed1: .964, entry: .958, loft: .924, pbath: .835,
         primary: 1.143, lbed1: .973, lbath: .989, lbed2: .957, laundry: .929, office: 1.017, rec: .876, garage: .977}};
     METER_PASS.render = function(r, w, read){
       if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
