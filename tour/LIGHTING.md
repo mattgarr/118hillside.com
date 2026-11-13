@@ -262,3 +262,10 @@ are hard-edged stand-ins that only looked right from some views.
   field once per lamp room whose tile holds the fragment (the lamps of a room share the read), and fades over half a foot inside the
   floor / ceiling thickness. Layout ideas keep the mask off, as before (it is built from the as-built rooms).
   QA: `__v29leak()` lists the fields; `__rm29.reachAt(room, x, y, z)` reads one.
+
+## 9. r48: metal at dusk
+
+- Interior metals (shower rail and heads, towel bars, pulls, faucets, the dryer ring) read brass at dusk: the dusk room panorama is the lamps' own
+  colour (`R40E.lampWb` .1) over the oak floor band, and a low-roughness metal returned it as pure orange, x3 (`r40MetK`). Now, for metalness >= .5
+  on the ROOM side only, the reflection is pulled toward its own luminance first (`r40MetW` = `R40E.metWb` .8 at dusk, 0 otherwise): nickel with a
+  mild warm cast. Diffuse surfaces, glass, lamps, other times of day and the sky side (exterior metal keeps its sunset warmth) are unchanged.
