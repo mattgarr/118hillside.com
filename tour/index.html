@@ -16059,7 +16059,7 @@ const CTA42 = (() => {
     apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
     jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
     open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.',
-    open4k: 'One vaulted great room from end to end: the kitchen at the street end, a fireplace, skylights, a folding glass wall to a new deck, and a library wall with a window seat and a piano where the old kitchen and hall were.'};
+    open4k: 'One vaulted great room from end to end: the kitchen at the street end, a fireplace, skylights, a folding glass wall to a new deck, a library wall with a window seat where the old kitchen and hall were, and a dining table for eight that extends to ten.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
 
@@ -20709,7 +20709,13 @@ function opt42Vis(){
   for(const c of (GROUPS.furn ? GROUPS.furn.children : [])){ const u = c.userData; if(u.kind !== 'ceilingFan' || !u.lid) continue;
     const hide = !!(lids && !lids.has(u.lid)); if(hide && c.visible){ c.visible = false; u.r42 = true; } else if(!hide && u.r42){ c.visible = true; u.r42 = false; } }
   const clr = new Set(opt42On(o) && B2OPT.built[v] ? opt42Clear(v, o) : []);
-  for(const k in OPT42.cleared) for(const c of OPT42.cleared[k]){ const hide = clr.has(c); if(hide && c.visible){ c.visible = false; c.userData.r42c = true; } else if(!hide && c.userData.r42c){ c.visible = true; c.userData.r42c = false; } } }
+  for(const k in OPT42.cleared) for(const c of OPT42.cleared[k]){ const hide = clr.has(c); if(hide && c.visible){ c.visible = false; c.userData.r42c = true; } else if(!hide && c.userData.r42c){ c.visible = true; c.userData.r42c = false; } }
+  /* r43f: doors of the house that an idea asks to rest shut while it shows (scene.meta options[] restShut: [opening ids]): shut on
+     arriving, back as they were on leaving; a tap, or a walker reaching one, opens it as usual */
+  try{ const shut = new Set((opt42On(o) && B2OPT.built[v] && o.restShut) || []);
+    for(const it of ((window.B3D && window.B3D.items) || [])){
+      if(shut.has(it.id)){ if(!it.r43shut){ it.r43shut = {t: it.t}; it.t = 0; it.dir = 0; DOOR28.moving.delete(it); door28Pose(it); if(it.coll) it.coll.pass = false; PERF.shadowDirty = true; } }
+      else if(it.r43shut){ it.t = it.r43shut.t; it.r43shut = null; it.dir = 0; DOOR28.moving.delete(it); door28Pose(it); if(it.coll) it.coll.pass = it.t > .9; PERF.shadowDirty = true; } } }catch(e){ console.warn('[r43f] rest shut', e); } }
 /* the page's door and closet colliders (a shut door blocks a walker) are built for the as-built openings; one an option removes stops
    colliding while that option shows, so a walker crosses the floor where a removed closet or pocket door was */
 function opt42Doors(o){

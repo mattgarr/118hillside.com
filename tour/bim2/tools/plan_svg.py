@@ -154,7 +154,7 @@ def wrap(s, n):
     if cur: lines.append(cur)
     return lines
 
-LABEL_AT = {('open4k', 'SP-L1-GREAT'): (22.3, 15.4), ('open4k', 'SP-L1-KITCHEN'): (10.3, 13.2), ('asbuilt', 'SP-L1-KITCHEN'): (9.6, 11.6),
+LABEL_AT = {('open4k', 'SP-L1-GREAT'): (21.0, 16.4), ('open4k', 'SP-L1-KITCHEN'): (10.3, 13.2), ('asbuilt', 'SP-L1-KITCHEN'): (9.6, 11.6),
             ('asbuilt', 'SP-L1-GREAT'): (25.0, 11.0), ('asbuilt', 'SP-L1-BED3'): (30.0, 23.0), ('asbuilt', 'SP-L1-BED2'): (19.0, 26.5),
             ('asbuilt', 'SP-L1-HALL'): (9.4, 23.4), ('open4k', 'SP-L1-HALL'): (9.4, 23.4), ('asbuilt', 'SP-L1-BATH'): (9.4, 29.3), ('open4k', 'SP-L1-BATH'): (9.4, 29.3),
             ('asbuilt', 'SP-L1-LIVING'): (-2.3, 7.0), ('open4k', 'SP-L1-LIVING'): (-2.3, 7.0), ('asbuilt', 'SP-L1-BED1'): (-1.0, 21.5), ('open4k', 'SP-L1-BED1'): (-1.0, 21.5)}
@@ -163,7 +163,7 @@ def label_point(s, g, v):
     c = g.representative_point(); return (c.x, c.y)
 def extra_labels(v):
     if v == 'open4k':
-        return [('KITCHEN', (33.0, 27.2)), ('LIVING', (19.3, 21.2)), ('DINING', (22.0, 5.75)), ('DECK', (25.5, -3.2)), ('FOLDING GLASS WALL', (25.2, 3.6)), ('PREP SINK', (28.6, 22.9))]
+        return [('KITCHEN', (33.0, 27.2)), ('LIVING', (19.3, 21.0)), ('DINING FOR 8, EXTENDS TO 10', (21.0, 11.3)), ('DECK', (25.5, -3.2)), ('FOLDING GLASS WALL', (25.2, 3.6)), ('PREP SINK', (28.6, 22.9)), ('POCKET DOOR', (8.65, 24.55))]
     return [('FRONT PORCH', (9.0, -4.5))] if v == 'asbuilt' else []
 
 def opening_svg(o, D):
@@ -315,7 +315,7 @@ def fixtures(D, v):
     return out
 B4_FP = dict(cx=19.3, w=6.0, d=1.2)
 # loose furniture shown on a concept plan: kind -> (width, depth, outline)
-LOOSE = {'sofa3': (7.5, 3.2, 'soft'), 'armchairBoucle': (2.8, 2.7, 'soft'), 'diningTableGlass': (7.0, 3.4, 'rect'), 'parsonsChair': (1.5, 1.7, 'soft'), 'ottomanRound': (2.6, 2.6, 'round'),
+LOOSE = {'sofa3': (7.5, 3.2, 'soft'), 'armchairBoucle': (2.8, 2.7, 'soft'), 'diningTableGlass': (7.0, 3.4, 'rect'), 'diningTable': (7.0, 3.5, 'rect'), 'sideboard': (4.0, 1.6, 'rect'), 'parsonsChair': (1.5, 1.7, 'soft'), 'ottomanRound': (2.6, 2.6, 'round'),
          'drumTable': (1.4, 1.4, 'round'), 'pianoUpright': (4.95, 2.05, 'rect'), 'pianoBench': (2.6, 1.15, 'rect'), 'outdoorDiningTable': (7.0, 3.4, 'rect'), 'outdoorChair': (1.8, 1.9, 'soft'),
          'outdoorLounge': (2.6, 2.8, 'soft'), 'outdoorCoffee': (2.6, 1.6, 'rect')}
 
