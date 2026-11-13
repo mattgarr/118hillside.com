@@ -8697,7 +8697,7 @@ const DESIGN = (() => {
     /* r44f owner: a lighter picker; each layout leads with its bedroom and bath count, the as-built included, most bedrooms first */
     if(custom && custom.base && custom.base !== 'asbuilt' && !defOf(custom.base)) custom.base = 'asbuilt';   // r45: its starting layout was retired
     const cnt = id => { try{ if(id === 'asbuilt') return [6, 3]; const o = BIM2.option(id) || {}; const b = +(o.bedrooms || o.beds) || 0; return b ? [b, +o.baths || 0] : null; }catch(e){ return null; } };
-    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today', n: cnt('asbuilt')}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea', n: cnt(d.id)})))));   /* r46: in bim2DesignOptions' own order */
+    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today', n: cnt('asbuilt')}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea', n: cnt(d.id)})));   /* r46: in bim2DesignOptions' own order */
     if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base).toLowerCase() : 'From today’s layout'});
     /* r45 owner: the list is the layouts menu now (LAYOUTS45, in the Games menu's style); here one row says which layout is showing and opens it.
        A saved 'My design' keeps a row of its own. */
