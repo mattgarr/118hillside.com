@@ -1804,7 +1804,7 @@ var ACCEL_PHONETEX = 0;
 })();</script>
 <script src="fixtures.js"></script>
 <script src="staging.js"></script>
-<script src="staging33.js"></script>
+<script src="staging33.js?v=3"></script>
 <script src="builtins.js"></script>
 <script src="landscape.js"></script>
 <script src="trees.js?v=40"></script>
@@ -2624,6 +2624,9 @@ function avMats(){
     FIX.setMaterials({stoneBlack: stone, nickelBrushed: nick}); }
   return AVM;
 }
+/* r48b C (QA 11/13, bonus lounge): the three in-wall L/C/R grilles between the TV and the counter drew as pale, hard-edged rectangles that
+   read as floating panels or placeholder backsplash pieces. Not drawn (the ceiling and surround speakers stay). */
+const AV48B_SKIP = new Set(['AV-L0-SPK-L', 'AV-L0-SPK-C', 'AV-L0-SPK-R']);
 function avSnap(f, hAbs){   // wall face behind a wall-hung element: march from 6 ft inside the room back along -normal
   const r = f.rot * Math.PI / 180, nx = Math.sin(r), nz = Math.cos(r), [x0, z0] = W2(f.at[0], f.at[1]);
   if(!(f.opts && f.opts.snap) && !inWallBody(x0 - nx * .12, z0 - nz * .12, hAbs)) return null;
@@ -2633,6 +2636,7 @@ function avSnap(f, hAbs){   // wall face behind a wall-hung element: march from 
 function buildAVBIM(){
   const out = window.__AV = [], M_ = avMats();
   for(const f of B2L.av){
+    if(AV48B_SKIP.has(f.id)){ out.push({id: f.id, ok: true, skipped: 'r48b'}); continue; }
     try{
       const o = f.opts || {}, fz = f.at[2] || 0, r = f.rot * Math.PI / 180, g = new THREE.Group();
       const hc = fz + (o.mountY || 4.5), at = avSnap(f, hc);
@@ -2661,12 +2665,18 @@ async function buildAVCeiling(){   // in-ceiling speakers of a space that has a 
   let L; try{ L = await bim2Lighting(); if(!L) return; }catch(e){ return; }
   const spaces = B2L.spaces;   // qa22 Q10: every space's in-ceiling speakers get the grille
   const M_ = avMats(), gm = M_.grille.clone(); gm.map = M_.grilleTex.clone(); gm.map.needsUpdate = true; gm.map.repeat.set(7, 7);
-  const geo = new THREE.CylinderGeometry(.425, .425, .014, 40), rim = new THREE.CylinderGeometry(.44, .44, .01, 40); let n = 0;
+  /* r48b E (QA 11/13: "translucent discs" on the stairs, office, lounge and lower-bedroom ceilings). The grille and its rim were the ceiling's
+     own white, so only the rim's lit edge showed: an outline ring that read as a see-through ghost. Listing photos (p63, p65, p20, p58) show
+     a solid round grille a shade greyer than the ceiling inside a crisp white trim ring. Flush trim ring (flat, no lit side wall), a thin
+     shadow reveal, and a grey-white micro-perforated face. */
+  gm.color.setHex(0xcfcfcb); gm.roughness = .95; gm.side = THREE.DoubleSide;
+  const ring = M_.trim48 || (M_.trim48 = new THREE.MeshStandardMaterial({color: 0xfbfbf8, roughness: .55, side: THREE.DoubleSide})), rev = M_.rev48 || (M_.rev48 = new THREE.MeshStandardMaterial({color: 0x8c8c88, roughness: 1, side: THREE.DoubleSide}));
+  const geo = new THREE.CircleGeometry(.4, 40).rotateX(Math.PI / 2), rim = new THREE.RingGeometry(.415, .445, 48).rotateX(Math.PI / 2), gap = new THREE.RingGeometry(.398, .417, 48).rotateX(Math.PI / 2); let n = 0;
   for(const c of L.recessed_and_ceiling.filter(c => /SPEAKER/i.test(c.type))){
     const sp = spaces.find(S => S.storey === c.level && inPoly(S.outline, c.x, c.y)); if(!sp) continue;
     const fz = LEVEL_Z[c.level] != null ? LEVEL_Z[c.level] : 0, ce = bim2CeilingAt(c.x, c.y, fz), [wx, wz] = W2(c.x, c.y);
     const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(...ce.n).negate());
-    for(const [G, mat, dy] of [[rim, M_.trim, .006], [geo, gm, .016]]){ const m = new THREE.Mesh(G, mat); m.position.set(wx, ce.z - dy, wz); m.quaternion.copy(q); m.userData.noAO = true; grp('ceil').add(m); }
+    for(const [G, mat, dy] of [[rim, ring, .012], [gap, rev, .011], [geo, gm, .010]]){ const m = new THREE.Mesh(G, mat); m.position.set(wx, ce.z - dy, wz); m.quaternion.copy(q); m.userData.noAO = true; m.userData.spk48 = true; grp('ceil').add(m); }
     n++; }
   (window.__AV = window.__AV || []).push({id: 'ceiling-speakers', ok: true, n});
 }
@@ -5493,6 +5503,14 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
         if(best >= 0) add.push(q, best); }
       for(let n = 0; n < add.length; n += 2){ const q = add[n], p = add[n + 1]; data[q * 4] = blk[q] && !ring ? data[p * 4] : 0; data[q * 4 + 1] = data[p * 4 + 1]; data[q * 4 + 2] = data[p * 4 + 2]; data[q * 4 + 3] = 255; has[q] = 1; } }
     for(let q = 0; q < N; q++) if(!has[q]){ data[q * 4 + 1] = enc(fA); data[q * 4 + 2] = enc(fA + 9); }
+    // r48b D (QA 11/13, skylit office: "a translucent ghost-like slab, floor to ceiling, beside the chair"): the shader reads the field
+    // bilinearly and w, lo and hi each blend on their own. A cell with no reach (w 0) that kept a deep floor (lo copied two rings out from
+    // air over the loft's stair opening) sat beside the loft's own cells (w 1, lo = the loft floor): between them w blended to ~.5 while lo
+    // blended down through the storey below, so the loft lamp lit a quarter-foot strip of the office wall under it, floor to ceiling.
+    // A cell without reach now carries the floor and ceiling of its strongest reached neighbour, so nothing it blends with reaches lower.
+    { const D2 = data.slice(); for(let j = 0; j < h; j++) for(let i = 0; i < w; i++){ const q = j * w + i; if(D2[q * 4]) continue; let best = -1, bw = 0;
+        for(let b = -1; b <= 1; b++) for(let a = -1; a <= 1; a++){ const ii = i + a, jj = j + b; if((!a && !b) || ii < 0 || jj < 0 || ii >= w || jj >= h) continue; const p = jj * w + ii; if(D2[p * 4] > bw){ bw = D2[p * 4]; best = p; } }
+        if(best >= 0 && D2[best * 4 + 1] > D2[q * 4 + 1]){ data[q * 4 + 1] = D2[best * 4 + 1]; data[q * 4 + 2] = D2[best * 4 + 2]; } } }
     // the tile's outer ring is 0: the reach ends inside the tile
     for(let i = 0; i < w; i++){ data[i * 4] = 0; data[((h - 1) * w + i) * 4] = 0; } for(let j = 0; j < h; j++){ data[j * w * 4] = 0; data[(j * w + w - 1) * 4] = 0; }
     const f = {k, w, h, X0, Z0, data, ax: 0, ay: 0, ms: +(performance.now() - t0).toFixed(1)}; R.fms += f.ms; return f; };
@@ -10170,6 +10188,12 @@ function bath20NoBase(){
     }); }
   BATH20.stats.baseboardTrisDropped = dropped;
 }
+/* r48b B (QA 11/13, hall bath): the tub/shower's end wall has a 1'5" x 2'10" window (WN-L1-09, sill 3'5", head 6'3", centred on the tub)
+   and the shower trim was laid out as if the wall were blank: the valve and diverter plates sat on the glass and the slide bar ran down
+   the window's edge. Per fixture overrides of the scene meta's params (by furnishing id): one pressure-balance trim below the sill (the tub
+   spout diverts), the slide bar and hose elbow on the tiled strip beside the window, the arm raised so the head clears the window head. */
+const FX48B_OPTS = window.FX48B_OPTS = {
+  'FX-showerSys-h': {valveY: 2.62, diverter: false, barX: .98, barY0: 3.5, barY1: 6.35, elbowX: .98, elbowY: 3.28, sagY: 2.3, armY: 7.0}};
 /* ---- F1-F3 fixtures ---- */
 if(window.FIX && FIX.make && !FIX.__bath20){ FIX.__bath20 = true; const _mk = FIX.make;
   const fm = n => FIX.mat(n);
@@ -10209,17 +10233,18 @@ if(window.FIX && FIX.make && !FIX.__bath20){ FIX.__bath20 = true; const _mk = FI
     cyl(g, m, .1, .03, 0, ay, .015, Math.PI / 2); tube(g, m, [[0, ay, .02], [0, ay + .02, .25], [0, ay - .05, .5], [0, ay - .17, .62]], .028);
     const hd = cyl(g, m, .21, .12, 0, ay - .23, .66, -.75, 0, 28); cyl(g, fm('plasticGrey'), .17, .01, 0, ay - .28, .705, -.75, 0, 24);
     // slide bar + hand shower
-    const sx = .55, b0 = 3.9, b1 = 6.4; cyl(g, m, .03, b1 - b0, sx, (b0 + b1) / 2, .17, 0, 0, 14);
+    const sx = o.barX != null ? o.barX : .55, b0 = o.barY0 || 3.9, b1 = o.barY1 || 6.4; cyl(g, m, .03, b1 - b0, sx, (b0 + b1) / 2, .17, 0, 0, 14);
     for(const y of [b0, b1]){ cyl(g, m, .045, .15, sx, y, .09, Math.PI / 2, 0, 14); cyl(g, m, .045, .07, sx, y, .17, 0, 0, 14); }
     const hy = 5.5; bx(g, m, .1, .14, .14, sx, hy, .2);
     const hand = new THREE.Group(); hand.position.set(sx, hy + .02, .28); hand.rotation.x = -.45; g.add(hand);
     cyl(hand, m, .035, .62, 0, .2, 0, 0, 0, 14); cyl(hand, m, .13, .07, 0, .55, .06, -1.1, 0, 24); cyl(hand, fm('plasticGrey'), .105, .01, 0, .55, .1, -1.1, 0, 20);
     // hose from the hand-shower grip to the wall elbow, sagging (p45 / p05 / p55)
-    tube(g, m, [[sx, hy - .1, .26], [sx + .05, 3.6, .3], [sx + .02, 2.25, .28], [sx - .1, 2.4, .2], [sx - .25, 3.45, .08], [sx - .25, 3.6, .02]], .018);
-    cyl(g, m, .05, .1, sx - .25, 3.6, .05, Math.PI / 2, 0, 14);
-    // pressure valve trim + diverter (round plates, lever handles)
-    const vy = 3.95; cyl(g, m, .29, .03, 0, vy, .015, Math.PI / 2, 0, 40); cyl(g, m, .06, .14, 0, vy, .1, Math.PI / 2, 0, 18); bx(g, m, .045, .38, .04, .02, vy - .12, .18);
-    const dy = 4.75; cyl(g, m, .17, .03, 0, dy, .015, Math.PI / 2, 0, 32); cyl(g, m, .045, .1, 0, dy, .07, Math.PI / 2, 0, 16); bx(g, m, .04, .28, .035, 0, dy + .1, .13);
+    const ex = o.elbowX != null ? o.elbowX : sx - .25, ey = o.elbowY || 3.6, sg = o.sagY || 2.25;   // r48b: the hose's wall elbow can sit below a window
+    tube(g, m, [[sx, hy - .1, .26], [sx + .05, Math.max(sg + .9, Math.min(3.6, hy - .6)), .3], [sx + .02, sg, .28], [ex + .15, sg + .15, .2], [ex, ey - .15, .08], [ex, ey, .02]], .018);
+    cyl(g, m, .05, .1, ex, ey, .05, Math.PI / 2, 0, 14);
+    // pressure valve trim + diverter (round plates, lever handles); r48b: o.valveY moves the valve, o.diverter false = a single trim (the tub spout diverts)
+    const vy = o.valveY || 3.95; cyl(g, m, .29, .03, 0, vy, .015, Math.PI / 2, 0, 40); cyl(g, m, .06, .14, 0, vy, .1, Math.PI / 2, 0, 18); bx(g, m, .045, .38, .04, .02, vy - .12, .18);
+    if(o.diverter !== false){ const dy = 4.75; cyl(g, m, .17, .03, 0, dy, .015, Math.PI / 2, 0, 32); cyl(g, m, .045, .1, 0, dy, .07, Math.PI / 2, 0, 16); bx(g, m, .04, .28, .035, 0, dy + .1, .13); }
     if(o.grab){ cyl(g, m, .04, o.grab, -.8 - o.grab / 2, 3.1, .17, 0, Math.PI / 2, 16); for(const s of [0, 1]){ const x = -.8 - (s ? o.grab : 0); cyl(g, m, .025, .15, x, 3.1, .09, Math.PI / 2, 0, 12); cyl(g, m, .1, .02, x, 3.1, .01, Math.PI / 2, 0, 20); } }
     g.traverse(q => { if(q.isMesh) q.name = q.material.name || 'metal'; });
     return g;
@@ -19536,7 +19561,7 @@ function bim2BuildHouse(){
   for(const c of C.COLLIDERS) COLLIDERS.push(Object.assign({v: null}, c));
   ROOFPLANES = bim2RoofPlanes();
   // run-time fixtures: typed furnishings from the meta (FIX / BUILTIN kinds); the legacy list only when the package has none yet
-  const fx = (BIM2S.meta.furnishings || []).filter(f => f.render && f.render.kind).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
+  const fx = (BIM2S.meta.furnishings || []).filter(f => f.render && f.render.kind).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}, (window.FX48B_OPTS || {})[f.id] || {}), space: f.space}));
   // a kind no page library can make (e.g. AV 'inWallSpeaker': the page's AV builder still draws AV from the legacy list) is reported, not tried
   const PAGE_KINDS = new Set(['counterTop', 'openShelves', 'fridge4Door', 'shoeBench', 'showerSystem']), FIXK = new Set(((window.FIX && FIX.kinds) || []).map(k => k.kind));
   const can = f => PAGE_KINDS.has(f.kind) || FIXK.has(f.kind) || (window.BUILTIN && BUILTIN.has && BUILTIN.has(f.kind));
@@ -20018,6 +20043,47 @@ function bim3Glass35(){
   for(const m of BIM2S.meshes){ const nm = (m.userData.bim2 && m.userData.bim2.name) || m.name || ''; if(/^glass\|/.test(nm) || /\|glass\|/.test(nm)){ m.castShadow = false; rep.noShadow = (rep.noShadow || 0) + 1; } }
   BIM3.report.glass35 = rep; return rep; }
 { const _b3g = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b3g.apply(this, arguments); try{ bim3Glass35(); }catch(e){ console.warn('[bim3] glass35', e); } return r; }; }
+/* r48b F (QA 11/13, Stairs stop). Two model-geometry tells, fixed on the loaded meshes (found by mesh name, element range and geometry; the
+   GLB is untouched, so a new export or another patch of scene.glb takes the same fix):
+   F1 the stairwell's north wall is three walls stacked (W-L0-043 to 4.45 ft, W-L1-024/025 to the upper floor, W-L2-034/035 above). Their
+      room faces stand at z -12.197, -12.204 and -12.188: the 0.2-in step at the upper floor line (5.56 ft) showed as a dark hairline right
+      across the wall. The lower two faces are brought into the upper wall's plane.
+   F2 RL-STAIR-LO, a 2-ft length of wall rail (no brackets, no ends, set flush in a slot cut through the lower landing's wall face), read
+      from the Stairs stop as a wood bar floating by the closet door. Not drawn (its triangles are collapsed) and the slot is closed. */
+const R48G = window.R48G = {seam: 0, rail: 0, patch: 0, err: []};
+function r48bGeo(){
+  const rangesOf = o => (o.userData && o.userData.bim2 && o.userData.bim2.ranges) || [];
+  const meshes = []; scene.traverse(o => { if(o.isMesh && o.geometry && rangesOf(o).length && !(o.userData.bim2 && o.userData.bim2.var)) meshes.push(o); });
+  const triRange = (o, el) => rangesOf(o).filter(r => r[0] === el);
+  // F2: the kernel cut the rail's slot through the wall's stair face (W-L0-009), so the wall face is closed over the slot with the rail's own
+  // outline, flattened onto that face, in the wall's paint
+  const wallM = meshes.find(o => /^walls\|L0\|paint-int-flat#PAINT-BM-1472-SILVER-CHAIN$/.test(o.name) && triRange(o, 'W-L0-009').length);
+  for(const o of meshes){ if(!/^stairs\|/.test(o.name)) continue; const ix = o.geometry.index, P = o.geometry.attributes.position; if(!ix) continue;
+    for(const r of triRange(o, 'RL-STAIR-LO')){ const a = r[2] * 3, b = (r[2] + r[3]) * 3, v0 = ix.getX(a); if(ix.getX(a + 1) === v0 && ix.getX(a + 2) === v0) continue;   // done already
+      let x0 = 1e9, x1 = -1e9; for(let i = a; i < b; i++){ const x = P.getX(ix.getX(i)); x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+      if(wallM && x1 - x0 < .2 && o.matrixWorld.equals(new THREE.Matrix4())){   // a rail flush on a wall facing +x (the stair side): the plate faces +x
+        const pos = [], A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
+        for(let i = a; i < b; i += 3){ A.fromBufferAttribute(P, ix.getX(i)).setX(x0); B.fromBufferAttribute(P, ix.getX(i + 1)).setX(x0); C.fromBufferAttribute(P, ix.getX(i + 2)).setX(x0);
+          const nx = (B.y - A.y) * (C.z - A.z) - (B.z - A.z) * (C.y - A.y); if(Math.abs(nx) < 1e-6) continue; if(nx > 0) pos.push(...A.toArray(), ...B.toArray(), ...C.toArray()); else pos.push(...A.toArray(), ...C.toArray(), ...B.toArray()); }
+        if(pos.length){ const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+          const uv = new Float32Array(pos.length / 3 * 2); for(let k = 0; k < pos.length / 3; k++){ uv[2 * k] = pos[3 * k + 2]; uv[2 * k + 1] = pos[3 * k + 1]; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+          const pm = new THREE.Mesh(g, Array.isArray(wallM.material) ? wallM.material[0] : wallM.material); pm.name = 'r48b-slot-patch'; pm.receiveShadow = true; pm.userData.bim2 = {name: pm.name, group: 'walls', storey: 'L0', ranges: []}; wallM.parent.add(pm); R48G.patch = pos.length / 9; } }
+      for(let i = a; i < b; i++) ix.setX(i, v0); ix.needsUpdate = true; R48G.rail += r[3]; } }
+  // F1
+  const W2N = /^walls\|L[012]\|paint-int-flat#PAINT-BM-1472-SILVER-CHAIN$/, LOW = ['W-L0-043', 'W-L0-045', 'W-L1-024', 'W-L1-025'], TOP = ['W-L2-034', 'W-L2-035'];
+  const faceZ = (o, els, z0) => { const P = o.geometry.attributes.position, ix = o.geometry.index, out = []; if(!ix) return out;
+    for(const el of els) for(const r of triRange(o, el)) for(let t = r[2]; t < r[2] + r[3]; t++){ const a = ix.getX(3 * t), b = ix.getX(3 * t + 1), c = ix.getX(3 * t + 2);
+      const za = P.getZ(a), zb = P.getZ(b), zc = P.getZ(c); if(Math.abs(za - z0) > .03 || Math.abs(zb - z0) > .03 || Math.abs(zc - z0) > .03) continue;
+      const ux = P.getX(b) - P.getX(a), uy = P.getY(b) - P.getY(a), vx = P.getX(c) - P.getX(a), vy = P.getY(c) - P.getY(a), nz = ux * vy - uy * vx; if(Math.abs(nz) < 1e-6) continue;
+      out.push([a, b, c]); } return out; };
+  let zTop = null;
+  for(const o of meshes){ if(!W2N.test(o.name) || !o.matrixWorld.equals(new THREE.Matrix4())) continue; const f = faceZ(o, TOP, -12.19); if(f.length){ const P = o.geometry.attributes.position; zTop = P.getZ(f[0][0]); break; } }
+  if(zTop == null){ R48G.err.push('no upper face'); return R48G; }
+  for(const o of meshes){ if(!W2N.test(o.name) || !o.matrixWorld.equals(new THREE.Matrix4())) continue; const P = o.geometry.attributes.position, N = o.geometry.attributes.normal; let n = 0;
+    for(const tri of faceZ(o, LOW, -12.2)) for(const v of tri){ if(N && Math.abs(N.getZ(v)) < .99) continue; if(Math.abs(P.getZ(v) - zTop) > 1e-5){ P.setZ(v, zTop); n++; } }
+    if(n){ P.needsUpdate = true; o.geometry.computeBoundingSphere(); o.geometry.computeBoundingBox(); R48G.seam += n; } }
+  return R48G; }
+{ const _b48 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b48.apply(this, arguments); try{ r48bGeo(); }catch(e){ console.warn('[r48b] geo', e); R48G.err.push(String(e)); } return r; }; }
 /* G35-3 skylights (v33 buildSkylightsK + int21 I8 look): the unit's cladding (library 'skylight-frame') is dark aluminium (v33 'steel'),
    not the white exterior trim; its glass (kernel R4b 'skylight-glass') is v33's clear skylight pane (light, 30 %), seen from the room
    below as sky, from above as a glint. */
@@ -20240,6 +20306,15 @@ function r28Mat(kind){
   else if(kind === 'rail') m = new THREE.MeshStandardMaterial({color: lin(0xf1f0eb), roughness: .34, metalness: .3});       // r35: painted extruded aluminium (honeycomb headrail / bottom rail): off-white, a slight sheen
   else if(kind === 'railcap') m = new THREE.MeshStandardMaterial({color: lin(0xe6e5df), roughness: .55, metalness: 0});     // its moulded end caps
   else if(kind === 'reveal') m = new THREE.MeshStandardMaterial({color: lin(0x8f8d86), roughness: .95, metalness: 0});      // the shadow line under the headrail's lip
+  else if(kind === 'film' && !/[?&]film48=rainbow\b/.test(location.search)){   // r48b (QA 11/13, phone: the rainbow mosaic read as an untextured / debug
+    // material, "pastel triangulated noise" filling the glass). The cling as the listing photos show it (p63, p58): a pale frosted film with a
+    // faint fine sparkle, no colour you can name from across the room. A fine, low-contrast stipple on a near-white translucent sheet.
+    const S = 256, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'); let seed = 11;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    x.fillStyle = 'rgb(232,236,238)'; x.fillRect(0, 0, S, S);
+    for(let i = 0; i < 2600; i++){ const v = rnd() < .5 ? 250 : 214, a = .18 + rnd() * .22; x.fillStyle = `rgba(${v},${v + 1},${v + 3},${a.toFixed(2)})`; x.fillRect(Math.floor(rnd() * S), Math.floor(rnd() * S), 1 + Math.floor(rnd() * 2), 1 + Math.floor(rnd() * 2)); }
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+    m = new THREE.MeshStandardMaterial({color: 0xffffff, map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .18, transparent: true, opacity: .8, roughness: .6, metalness: 0, side: THREE.DoubleSide, depthWrite: false}); }
   else if(kind === 'film'){   // owner 11/10: rabbitgoo rainbow stained-glass cling - a faceted mosaic of prism-tinted, frosted shards with bright embossed
     // seams. Tileable: a periodic jittered lattice, each cell split into two shards, hue swept on the diagonal so the colour drifts like a prism.
     const S = 1024, N = 8, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), cs = S / N;
@@ -20314,6 +20389,7 @@ function r28Film(){
     const g = new THREE.Group(); g.name = 'r28film:' + id; grp('main').add(g);
     for(let k = 0; k < units; k++){ const a0 = -F.W / 2 + fr + k * (uw + mull), y0 = F.sill + fr, y1 = part === 'bottom' ? F.sill + (F.head - F.sill) * .5 : F.head - fr;
       const q = r28Quad(r28Mat('film'), F, a0, a0 + uw, y0, y1, dd, g); q.renderOrder = 3; q.userData.noAO = true;
+      q.castShadow = true;   // r48b H: a frosted film scatters the sun; it no longer lets sharp slivers of low sun through the deep reveal onto the far wall (two bright vertical smears in lower bedroom 1)
       { const uv = q.geometry.attributes.uv; for(let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * uw / 2.2, uv.getY(i) * (y1 - y0) / 2.2); uv.needsUpdate = true; } }   // ~3.3" shards
     R28W.film.push(id + (gh ? '' : ' (no glass hit)')); }
 }
@@ -21348,6 +21424,14 @@ function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0)
    the wall base, and up both walls of each inside corner. Merged into one mesh per house group; fades with EXPO_IN (indoors only) and
    only in Tour / Walk. */
 const R13E = {step: .75, ceilW: 1.6, wallW: 1.4, floorW: .8, vertW: 1.3, sCeil: .6, sWall: .64, sFloor: .58, sVert: .66, lift: .012};
+/* r48b F1: the ceiling + wall-top bands need a ceiling. Over an open stair well the space's ceiling record is the floor line of the storey
+   above, and the wall runs on up past it: the band's crisp top edge drew a dark hairline right across the stairwell wall at 5.6 ft. A band
+   is laid only where something closes the room within 5 in over its ceiling line, 5 in out from the wall. */
+const R48L = new Map();
+function r48Lid(x, y, c){ const k = Math.round(x * 4) + ',' + Math.round(y * 4) + ',' + Math.round(c * 4); let v = R48L.get(k); if(v !== undefined) return v; v = true;
+  try{ const w = W2(x, y), objs = ['ceil', 'upper', 'main', 'vault', 'vaultUp', 'roof', 'lowerRoof'].map(g => GROUPS[g]).filter(Boolean), rc = new THREE.Raycaster(new THREE.Vector3(w[0], c - .4, w[1]), new THREE.Vector3(0, 1, 0), 0, .82);
+    v = rc.intersectObjects(objs, true).some(h => h.object.isMesh && !/^r1[37]-/.test(h.object.name || '') && !(h.object.material && h.object.material.transparent)); }catch(e){ v = true; }
+  R48L.set(k, v); return v; }
 function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
   const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
   const bucket = k => out[k] = out[k] || {P: [], C: []};
@@ -21366,7 +21450,7 @@ function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null
       // ceiling + wall-top bands
       const NR = R13U.length, mk = () => R13U.map(() => []), cc = mk(), ww = mk(), ff = mk();
       for(let k = 0; k <= N; k++){ const q = S[k], prev = S[Math.max(0, k - 1)], next = S[Math.min(N, k + 1)];
-        const okC = q.c != null && wall(q.x, q.y, e.nx, e.ny, q.c - .3) && !opening(q.x, q.y, q.c - E.wallW, q.c) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, q.c - E.wallW, q.c) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, q.c - E.wallW, q.c);
+        const okC = q.c != null && wall(q.x, q.y, e.nx, e.ny, q.c - .3) && r48Lid(q.x + e.nx * .4, q.y + e.ny * .4, q.c) && !opening(q.x, q.y, q.c - E.wallW, q.c) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, q.c - E.wallW, q.c) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, q.c - E.wallW, q.c);
         if(okC){ const L = E.lift;
           R13U.forEach((u, r) => { const d = u * E.ceilW, x = q.x + e.nx * d, y = q.y + e.ny * d, c = ceil(x, y); cc[r].push(c == null ? null : V(x, y, c - L)); });
           R13U.forEach((u, r) => { ww[r].push(V(q.x + e.nx * L, q.y + e.ny * L, q.c - .004 - u * E.wallW)); }); }
