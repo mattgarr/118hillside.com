@@ -118,7 +118,7 @@ from the house today: brighter, taller, and much more of an entertaining house.
 **What it trades.** Two bedrooms for one large living space: 6 bedrooms become 4 (plus the lower-level office), still 3 full baths.
 At this price in Woodside, bedroom count matters a lot to value and to the pool of buyers, and a 6-bedroom house is rarer than a
 house with a big great room. So this is not a recommendation to remodel before selling. It is a way to show buyers how flexible
-the house is: a family that wants bedrooms keeps the house as it is; a buyer who wants space can see what is possible.
+the house is: a buyer who wants bedrooms keeps the layout as it is; a buyer who wants space can see what is possible.
 
 **What could make it implausible.**
 - Structure: the ridge beam, its posts and footings, and the header under the gable post need an engineer. The concept shows a
@@ -159,16 +159,125 @@ the house is sold with.
 
 **Illustrative idea. Not designed or reviewed by an architect or engineer.**
 
-Owner's follow-up (11/12): the same 4-bedroom shell, but with the kitchen as the heart of one big vaulted room (the reference
-photo: a big island, skylights, a fireplace, indoor-outdoor living). The pattern: the kitchen at one end of the long room with the
-island parallel to the end wall and the stools on the room side; living in the middle around a fireplace on the long wall with
-built-ins either side; dining toward the other end; skylight wells along the vault; 118's own finishes. Then a refinement: keep
-the street gable mostly solid (modest windows; high gable glass is fine), which also deals with privacy, and put the big glass on
-the south (driveway) long wall instead, as a folding glass wall onto an extended deck, level with the floor, with the same
-decking, skirt and cable rail as the porch.
+## The layout in the model now (r44): the owner's pick, "1-open B-flip"
 
-Same shell as the first version: the front and middle bedrooms and their closets come out, the back bedroom, hall and hall bath
-stay, and the exposed fir ridge beam carries the ridge. Only what changes is listed here.
+After some fifteen scored sketch layouts (kitchen at the street end, in the middle, with and without a fireplace, L-shaped
+kitchens), the owner picked the plan called "1-open B-flip" on 11/12/2026 and then changed three things: no post under the
+ridge ("We will do a big beam"), lighter furniture on the deck, and the deck floor left clear in front of the doors. This is
+what `bim2/tools/build_open4k.py` builds. The plan drawing it follows is the designer's `bim2/tools/freerein/open1.py`
+(`bflip()` and `wing()`, branch freerein-r44); the numbers below are in the model's plan frame (feet, x east toward the
+street, y north).
+
+### What it is
+
+- **One room.** The whole original gable, 31 ft 4 x 27 ft 3 inside (x 5.28 to 36.59, y 4.81 to 32.09, about 855 sq ft), is a
+  single vaulted great room. Everything that stood inside it comes out: the front and middle bedrooms and their closets, the
+  hall bath, the hall, and the old kitchen.
+- **Living at the street end.** A gas hearth is centred on the street gable, under the ridge: a 7-ft chimney breast clad in stacked
+  stone from a raised stone hearth to the vault, a 5-ft linear firebox with a 20-in opening in a steel frame, a heavy fir mantel and a 65-in TV
+  above it. A low console (36 in high, one wood top, cabinet doors all along) wraps the living area: the whole street wall either
+  side of the stone, round both corners and along both side walls under their windows, with door joints under the window
+  mullions. Every window round the living area has the same sill (3 ft 5) and head (7 ft 7). Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
+  to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
+  5 ft 11 windows (three mulled casement-style units each, with about 3 ft 10 of solid wall from each to its corner, in the white Andersen pattern of the new wing: 2-in sashes,
+  a 3/4-in grille bar at mid-height, and 4 in between glass at every mullion, where two sashes meet), one either side of the hearth,
+  with a triangle of gable glass over each that follows the rake and stops short of the stone. The living area's two side walls mirror each other: an 8-ft, three-unit window of the same pattern on each
+  (sill 3 ft 5, head 7 ft 7), each 3 ft from the gable corner and centred on the sofa in front of it (x 29.6).
+- **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood, pot filler) is centred on the north wall, which is now a
+  solid cabinet wall: the two small windows that flanked the range are closed up (siding outside), with wall cabinets the
+  length of the run either side of a 36-in hood, one over each base cabinet, in two tiers to the 8-ft line (a main tier
+  18 in above the counter and a short top tier), a scribe fill up to the sloping ceiling, a light rail and lights under
+  them, a panelled end, one pair of glass fronts next to the hood, and quartz up the wall to the cabinets and the hood. The run goes 2 ft further toward the living area and ends in a drinks fridge and a panelled end. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
+  cabinets, one crown along the top and a panelled end. (The owner asked for about 3 ft more cabinetry toward the table;
+  the tall wall took the full 3 ft, now starting at y 18.) An 8-ft x 3 ft 6 island carries, on its working side, a pull-out trash and recycling cabinet, the sink, the
+  dishwasher and a drawer stack, with four stools on the dining side. Deep pot drawers sit either side of the range, and the
+  tall wall has a coffee station (an open lit niche with an appliance garage over it) beside the oven column. Sink to range is one step across a 4-ft aisle; the
+  fridge is at the end of the same aisle, reachable from the room without crossing the cook.
+- **Dining between them.** A table for eight (8 ft x 3 ft 6; ten with its leaves) sits on the kitchen's axis, parallel to the
+  island, with a 7-ft sideboard on the west wall, centred on the table. This is the house's only dining place, so it is sized as one.
+- **Folding glass doors, moved west.** A 14-ft, six-panel folding door (x 8.7 to 22.9) is centred on the table and stacks at
+  its west jamb. It opens to the porch and to about 9 ft of new deck (to x 24.6, 8 ft 5 deep). The doors have the house's
+  flat white casing inside and trim outside. The deck has the house's 37-in cable guard along its whole south edge (the
+  stair falls away below it, with its own handrail beside the guard) and round the corner along the east edge to the house. The east part of
+  the old picture window stays as fixed glass (x 25.6 to 33.6, three mulled units, the mirror of the north wall's) beside the sofas.
+- **Outside the gable.** The back bedroom stays (11 ft 5 x 9 ft 7) with one closet; the other closet becomes its vestibule, so
+  the bedroom door no longer opens off the main room. A new 3/4 bath runs across the north end of the old living room, with
+  the shower in the old laundry closet. A short hall between them has a laundry closet (stacked washer and dryer behind a door) in its corner, with 36 in of hall left beside it. The rest of the old
+  living room is a 14 ft 5 x 9 ft 11 library: a wall of shelves, two reading chairs, a round table.
+- **Arrival.** From the front door you pass through the library and enter the great room at its south-west corner, through
+  a 3 ft 10 cased opening in the west gable wall, then walk along the glass past the table. The first view is the long
+  diagonal to the hearth.
+
+4 bedrooms (this one, two upstairs, one below), 3 baths, plus the office.
+
+### Why this one
+
+- The room is used along its length the way people move through it: arrive at the table, cook at one end, sit by the fire
+  at the other. Nothing has to be walked around to get anywhere.
+- The kitchen is at the quiet, inner end with two full walls for storage, so the street end, the one with the long view
+  down the room, is the sitting area and the hearth.
+- The table sits at the doors. With the panels folded, dinner is half outside.
+- Bedroom and bath traffic goes through the library and hall, not through the great room.
+
+### Clearances (checked against the NKBA guidelines and common dining rules)
+
+| | in the model | rule of thumb |
+|---|---|---|
+| island to north counter (work aisle) | 4 ft 0 | 42 in one cook, 48 in two |
+| island to tall wall | 4 ft 5 (4 ft 3 at the fridge) | 42 in |
+| behind the island stools to the table chairs | 4 ft 10 | 44 in to walk behind seated diners |
+| table to the folding doors | 6 ft 5 from the table edge, 4 ft 10 behind the chairs | 36 in minimum, 48 in for a route |
+| table to the sideboard | 4 ft 11 from the table end, about 3 ft 5 behind the end chair | 36 to 48 in |
+| table end to the living rug | 5 ft 1 (about 3 ft 7 behind the end chair) | 36 in |
+| sofa to sofa (seat fronts) | about 7 ft 4, coffee table between | conversation within 10 ft |
+| sofa ends to the low built-ins | about 1 ft 8 (not a route) | side clearance only |
+| end of the tall wall to the nearest table chair | about 3 ft 6 on the diagonal; the tall wall stops 1 ft 8 short of the chairs' line | 36 in |
+| hall beside the laundry closet | 3 ft 0 | 36 in |
+
+### Structure: a big beam and no post
+
+The ridge is carried by one clear-span beam over the full 31 ft 4, bearing on the west and street gable walls. The model
+draws it as a 6-3/4 x 24 in glulam (a steel-and-wood flitch or box beam would be the alternative). At this span the beam,
+its bearing, the posts inside the two gable walls and the footings under them are all an engineer's design; the size shown
+is a placeholder, not a calculation. Removing the bearing walls of two bedrooms and the hall, cutting a 14-ft opening in
+the south wall (it needs its own header and probably a moment or shear solution for that wall), moving windows in two
+exterior walls and adding a fireplace vent are all permit work.
+
+### Honest notes: where the model differs from the drawn plan, and what is weak
+
+- The old living room's big west window runs past the new library/bath wall, which meets it at a mullion. A real project
+  would reframe or split that window.
+- The oven column (drawer, wall oven, built-in microwave, cabinet above), the stone cladding, the low built-ins and the
+  crown are simple stand-ins drawn for this concept. The mantel top is at 4 ft 11 and the TV (centre 6 ft 5) sits 2 in above it. The north run (the one with the range) was carried 2 ft
+  further toward the living area, with an upper cabinet over that end and a panelled end.
+- The island sink is centred on the island (the plan has it a little west with the dishwasher beside it).
+- The closet doors, the laundry closet door (shut) and the bedroom door (standing open) are drawn fixed; the two pocket
+  doors are drawn open. They do not operate in the tour.
+- The plan drew the washer and dryer open to the hall with about 29 in beside them. The model moves them to a closet in
+  the hall's south-east corner and slides the library door 1 ft west, which leaves 36 in. The cost is 4 in of library
+  shelving and a 32-in door instead of a 34-in one.
+- No skylights in this version; daylight is the folding doors, the fixed window, the two gable windows with the gable glass
+  over them and the living-area window on the north wall. The stove wall has no windows.
+- The deck carries two lounge chairs and a low table off to the east; the floor in front of the open doors is clear.
+- Cost drivers, roughly in order: the beam and its supports, the folding doors and south-wall structure, the kitchen
+  (new plumbing and gas at the west end, though it is close to the existing bath's lines), the new bath, the fireplace.
+
+### How it is built in the model
+
+`python3 tour/bim2/tools/build_open4k.py` writes `bim2/scene.opt-OS-REMODEL-open4k.glb` and its meta, and registers the
+option in `bim2/scene.meta.json` (hide list, sha256, views, walk tests, labels). Changed walls, floors and colliders carry
+new element ids (`...-B5...`), because the page matches colliders by element id. The folding door is the opening
+`D-L1-B5F` (`leaf.kind: 'FOLD'`, stack west), driven by the page's FOLD42. The minimap is `floor_main_open4k.jpg`
+(`bim2/tools/minimap_option.py open4k`).
+
+---
+
+# Earlier studies of this concept (superseded by the layout above)
+
+The notes from here down record the first two passes at the same shell: the kitchen at the street end with the living area
+in the middle (r42, r43), and the "v2" library-wall version (r43f). They are kept for the reasoning; none of it is what the
+model shows now.
+
 
 ## Where the kitchen goes: three options
 
@@ -183,8 +292,8 @@ middle on the north wall around a fireplace, dining at the west end along the so
   from the foyer to the living area, the deck or the bedroom hall never passes the stove or the sink. The cook faces the whole
   room. A solid street wall suits a kitchen (cabinets want wall, not glass), so the privacy refinement and the kitchen agree.
 - Against: the sink, dishwasher and range all move about 20 to 30 ft east, so new drain, vent, water and gas runs, a new hood
-  duct and new circuits. Ordinary work if there is access under the floor, but not cheap. The old kitchen is left over: it
-  becomes a scullery and coffee bar (its sink stays where its plumbing is) rather than being wasted.
+  duct and new circuits. Ordinary work if there is access under the floor, but not cheap. The old kitchen is left over; it is
+  taken out entirely and the space reused (see "The old kitchen, reused" below).
 
 **B. Kitchen enlarged in place (west end).** Keep the sink and plumbing where they are, take out the peninsula and push the
 kitchen about 8 ft east into the great room with a long island under the ridge.
@@ -209,31 +318,62 @@ wall; dining: glass and deck). B is the budget version and is not worth it here 
 ```
                  north wall (y 32.1)
   +---------+--------------------------------------------------------+
-  | hall    |  [bk] [ gas fireplace ] [bk]    [cab][ range+hood ][cab]|
-  | bath    |     sofa  rug  chairs          ________________  pantry |  east gable wall (street):
-  | (kept)  |  - - - - - fir ridge beam - - -| island 12 ft |  sink   |  kitchen window over the
-  +--D-06---+                                |  4 stools -> | window  |  sink, high gable glass
-  | hall    |   dining for six               |______________|  dw     |  above
-  | (kept)  |   (glass table)                                   fridge |
-  +---------+                                                   pantry|
-  | old kitchen = scullery + coffee bar                                |
+  | hall    |  [bk] [ gas fireplace ] [bk]   [cab][range+hood][cab][c]|
+  | bath    |     sofa  rug  chairs          ________________  fridge |  east gable wall (street):
+  | (kept)  |  - - - - - fir ridge beam - - -| island 12 ft |  drawers|  kitchen window over the
+  +--D-06---+                                |  4 stools -> |  sink   |  sink, high gable glass
+  | hall    |   dining for six               |______________|  window |  above
+  | (kept)  |   (glass table)                                   drawers|
+  +---------+                                                   pantry |
+  | old kitchen: reading nook at its window, otherwise open floor     |
   +-------------------[====== 14.4-ft folding glass wall ======]-------+
                      deck, level with the floor, 8.4 ft deep    stack folds out here
                  outdoor dining for six      lounge chairs     planters
 ```
 
-- **Kitchen** (x about 26.5 to 36.6): on the east wall, a tall pantry, a 36-in four-door fridge, base cabinets, the sink centered
-  on the ridge under a copy of today's kitchen window, dishwasher and more drawers, uppers either side of the window. On the
-  north wall, a 36-in range with a chimney hood between base cabinets and uppers. A 12 ft by 4½ ft island parallel to the east
+- **Kitchen** (x about 26.5 to 36.6): on the east wall, south to north, two tall pantry cabinets, drawers, the sink centered on
+  the ridge under a copy of today's kitchen window, the dishwasher, more drawers, and the 36-in four-door fridge at the north end
+  by the corner; uppers either side of the window and over the fridge. On the north wall, a 36-in range with a chimney hood
+  between drawers and uppers, and a corner cabinet. A 12 ft by 4½ ft island parallel to the east
   wall, with four counter stools on its west side facing down the room, and globe pendants hung from the ridge beam. White shaker
   cabinets and white quartz, as in the house's kitchen. Aisles: about 3½ ft between the island and the east run, about 4½ ft from
   the island to the range.
 - **Living** (middle, north side): a 6-ft-wide gas fireplace on the north wall where the middle bedroom's window was, with a fir
   mantel at 4¼ ft, built-in bookcases either side, a sofa facing it across a rug, an ottoman and two armchairs.
-- **Dining** (west, south side): a 7-ft glass table with six parsons chairs along the folding glass wall, under a skylight.
-- **Old kitchen**: kept as a scullery and coffee bar (its sink, cabinets and stools stay; the old range slot becomes a cabinet).
+- **Dining** (west, south side): first a 7-ft glass table for six; in v2 an extending oak table for eight, ten with the leaf in (see above).
+- **Old kitchen**: taken out entirely and reused as a reading nook (below).
 - **Skylights**: four 2½ ft by 3 ft skylights in wells through the vault: two over the island, one over the dining table, one
   over the living area.
+
+### The old kitchen, reused: first pass, replaced by the v2 library above (r43, owner: "that counter / cabinets should be removed to use for other purposes")
+Every cabinet, counter, the peninsula, the sink, the range slot, the fridge alcove's tower and all appliances come out; its walls,
+window and doors stay, and the oak floor (already one continuous floor under the cabinets) runs through. The space is about 10.8
+by 13.5 ft plus the alcove to the bedroom hall.
+
+What it became: **a reading nook at its south window, the rest left open.** A built-in window seat runs under the window
+(8.3 ft, cushion and pillows), with built-in bookcases on the south wall at the great-room end and on the west wall, a boucle
+reading chair with a drum table and lamp, a sisal rug and a basket. A sideboard with art stands on the west wall north of the
+living-room door.
+
+Why this and not the other uses:
+- The room is the crossing of three routes: the living-room pocket door (west), the great room (east, wide open) and the bedroom
+  hall (the alcove to the north). Anything in its middle sits in a walkway. The south window wall is the one place out of all
+  three paths, and it has the room's daylight.
+- **Dining for 8** here would need about 11 by 14 ft clear around the table, which is the whole room, right across the routes,
+  and it would take dining away from the folding glass wall and the deck, where indoor-outdoor dining is the point of the plan.
+- **A walk-in pantry** would close off the window and bring back a kitchen at the wrong end of the house; the new kitchen's two
+  tall pantry cabinets do that job where the cooking is.
+- **Just open floor** wastes the light; a window seat costs almost no floor and gives the plan a quiet corner, which a big open
+  room otherwise lacks.
+
+### Kitchen storage and work triangle (r43 check)
+With the old kitchen gone, all kitchen storage is at the street end: about 15 ft of base cabinets on the gable wall (with the sink
+base) besides the dishwasher, 8½ ft on the north wall including a corner cabinet, the island's 12 ft of cabinets on its working side, about 19 ft of uppers, and two
+full-height pantry cabinets (5 ft). That is more than the old kitchen had, and enough for a kitchen this size.
+
+The fridge moved from the south end of the gable wall to its north end, by the corner, next to the range. The work triangle is
+now about 4¾ ft fridge to range, 10 ft fridge to sink and 12½ ft sink to range (about 27 ft in all, with the island as the prep
+surface between sink and range), instead of a fridge about 20 ft from the range.
 
 ### Street gable (mostly solid)
 The street wall keeps its siding. It gets a window over the sink (a copy of the house's own kitchen window, about 6 ft wide) and
@@ -277,8 +417,8 @@ opening-up.
 - **Fireplace**: a direct-vent gas unit through the north wall (a vent cap is shown outside) and a gas line.
 - **Skylights**: wells need headers between the rafters, and skylight area counts against the Title 24 energy budget along with
   the folding wall.
-- **Kitchen**: the work triangle is long (the fridge, at the south end of the east run, is about 20 ft from the range around the
-  island). A refinement would move the fridge toward the north corner.
+- **Kitchen**: the fridge now sits at the north end of the gable run, by the range (r43); the sink-to-range leg (about 12½ ft) is
+  still on the long side, with the island in between as the prep surface.
 - **Bedrooms**: the same trade as the first version, 6 bedrooms become 4, and everything said above about bedroom count and value
   applies equally.
 
@@ -294,7 +434,10 @@ recommendation to remodel before selling.
 - The folding wall is an opening with `leaf: {kind: 'FOLD', panels: 6, stack: 'east', state: 'open', plane: 4.60}`. The page
   builds and animates its panels (block `FOLD42`, after `OPT42` in `tour/index.html`), with a walk collider across the opening
   while it is shut and one where the folded stack stands. QA: `FOLD42.items`, `fold42Toggle(FOLD42.items[0])`.
-- Viewpoints: foyer, entry, kitchen, living, deck, driveway, street, aerial (`await __IDEA42.view('deck', 'open4k')`).
+- Viewpoints: foyer, entry, kitchen, kitchenrun, living, nook (the old kitchen from the great room), hallside (the old kitchen from
+  the hall alcove), deck, driveway, street, aerial (`await __IDEA42.view('nook', 'open4k')`).
+- The option drops every as-built `KX-` furnishing (the old kitchen) and its `clearRegion` covers the old kitchen, so loose pieces the
+  page built there hide too; the old kitchen's space is renamed 'Reading nook'.
 - Builder rule learned here: the page matches an option's colliders to the house's by element id and its walkable floors by id.
   A collider or floor the option changes must carry a new id (`W-L1-K4S`, `RL-FRONT-STAIR-K4`, `SL-DK-K4`, `ST-FRONT#n-K4`);
   reusing the as-built id keeps the as-built one (the old south wall blocked the opening, and only the old porch was walkable).

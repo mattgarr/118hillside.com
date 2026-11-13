@@ -78,6 +78,10 @@ function spineTex(k) {      // greyscale spine designs: 0.78 grey = the book's o
 var MATS = {
   maple: function () { return std({ color: 0xffffff, map: butcherBlock(), roughness: 0.72, metalness: 0 }); },   // matte oiled finish
   satinNickel: function () { return std({ color: 0xcfcdc8, metalness: 1, roughness: 0.32 }); },
+  ledgeA: function () { return std({ color: 0xa39c90, roughness: 0.93, metalness: 0 }); },    // r44 stacked ledgestone, four tones
+  ledgeB: function () { return std({ color: 0x8f887c, roughness: 0.95, metalness: 0 }); },
+  ledgeC: function () { return std({ color: 0xb4ad9f, roughness: 0.9, metalness: 0 }); },
+  ledgeD: function () { return std({ color: 0x7c766c, roughness: 0.95, metalness: 0 }); },
   stoneBlack: function () { return std({ color: 0x2b2826, roughness: 0.92, metalness: 0 }); },
   stoneCream: function () { return std({ color: 0xe9e3d6, roughness: 0.8, metalness: 0 }); },
   glazeSage: function () { return std({ color: 0x9aa58f, roughness: 0.35, metalness: 0 }); },
@@ -295,6 +299,87 @@ def('builtinBookcase', {
 }, function (o) { return [o.w, o.d + o.overhang, o.levels[o.levels.length - 1] + (o.crown ? 1.2 : 0)]; },
 'Wall-to-wall built-in for a recess: raised-panel base cabinets + quartz top, floating butcher-block shelves above, filled with books / decor (seeded). levels = shelf top heights (ft).');
 
+/* ------------------------------------------------------------ libraryWall (concept r43f)
+   A wall of books that follows a vaulted ceiling: painted uprights from the floor to the ceiling line, butcher-block shelves on one set
+   of levels right along the wall, base cabinets with a deeper top under the tall bays, a rolling ladder on a black rail.
+   top(x) = apex - pitch * |x - ridge| is the ceiling line along the wall (local x, feet). bays = [[x0, x1, type], ...] along the wall:
+   'base' (cabinet doors to baseH, shelves above), 'seat' (shelves from seatH: a window seat stands in front of it), 'door' (a doorway
+   passes through: shelves from doorH up, the bay split above the door), 'post' (left empty: structure stands there). */
+def('libraryWall', {
+  w: 17.33, d: 1.0, baseD: 1.33, baseH: 3.0, ridge: 4.92, apex: 13.57, pitch: 0.41, bays: null, doorH: 7.4, seatH: 1.9, step: 1.1,
+  rail: 8.45, railFrom: null, ladderX: null, ladderRun: 1.9, finish: 'cabinetWhite', shelfMat: 'maple', hw: 'satinNickel', ladderMat: 'wood',
+  fill: 'books', seed: 21, density: 0.92
+}, function (b, o, R, books, deco) {
+  var d = o.d, fin = o.finish, T = 0.085, st = 1.25 * IN, ct = 1.5 * IN, kick = 4 * IN, i;
+  var top = function (x) { return o.apex - o.pitch * Math.abs(x - o.ridge); };
+  var bays = (o.bays && o.bays.length) ? o.bays : [[-o.w / 2, o.w / 2, 'base']];
+  var snap = function (y) { return o.baseH + Math.round((y - o.baseH) / o.step) * o.step; };
+  var upright = function (x, y0, dep) { var xx = Math.max(-o.w / 2 + T / 2, Math.min(o.w / 2 - T / 2, x)); b.bb(fin, xx - T / 2, y0, 0, xx + T / 2, top(xx) - 0.012, dep || d, 0.004); };
+  var shelves = function (x0, x1, y0, floorIsShelf) {   // shelves and their contents between two uprights, from y0 up to the ceiling line
+    var lo = Math.min(top(x0), top(x1)), ys = [], y;
+    for (y = y0; y + 0.78 <= lo; y += o.step) ys.push(y);
+    ys.forEach(function (yy, k) {
+      if (k > 0 || floorIsShelf) b.bb(o.shelfMat, x0, yy - st, 0, x1, yy, d - 0.015, 0.004, { boxUV: true });
+      var clear = (k + 1 < ys.length ? ys[k + 1] - st : lo - 0.04) - yy;
+      if (o.fill === 'books' && clear > 0.5) fillBay(R, books, deco, x0 + 0.015, x1 - 0.015, yy, Math.min(clear, 1.3), d - 0.03, o.density);
+    });
+  };
+  var edges = {};
+  bays.forEach(function (B) { if (B[2] !== 'post') { edges[B[0].toFixed(3)] = B[0]; edges[B[1].toFixed(3)] = B[1]; } });
+  for (var e in edges) upright(edges[e], 0);
+  bays.forEach(function (B) {
+    var x0 = B[0] + T / 2, x1 = B[1] - T / 2, ty = B[2], w = x1 - x0, cx = (x0 + x1) / 2;
+    if (ty === 'post') return;
+    // the board under the ceiling, following the slope (a bay never straddles the ridge: the post bay does)
+    var ya = top(B[0]), yb = top(B[1]), L = Math.hypot(B[1] - B[0], yb - ya);
+    b.boxR(fin, L, 0.07, d, (B[0] + B[1]) / 2, (ya + yb) / 2 - 0.05, d / 2, 0, 0, Math.atan2(yb - ya, B[1] - B[0]));
+    if (ty === 'base') {
+      var bd = o.baseD, ctop = o.baseH - ct, fy0 = kick + GAP / 2, fy1 = ctop - 0.1, fh = fy1 - fy0, n = w > 1.3 ? 2 : 1, dw = (w - 2 * GAP - (n - 1) * GAP) / n;
+      b.bb(fin, B[0], kick, 0, B[1], ctop, bd - DOORT);
+      b.bb(fin, B[0], 0, 0, B[1], kick, bd - DOORT - 2.5 * IN);
+      b.bb('castIron', B[0] + 0.01, 0, bd - DOORT - 2.5 * IN - 0.002, B[1] - 0.01, 0.004, bd - DOORT - 2.5 * IN + 0.01);
+      b.bb(fin, B[0], fy1, bd - DOORT, B[1], ctop, bd, 0.004);
+      for (var j = 0; j < n; j++) {
+        var dcx = x0 + GAP + dw / 2 + j * (dw + GAP);
+        raisedDoor(b, fin, dw, fh, dcx, (fy0 + fy1) / 2, bd);
+        knob(b, o.hw, dcx + (n === 1 ? 1 : (j === 0 ? 1 : -1)) * (dw / 2 - 0.13), fy1 - 0.2, bd);
+      }
+      b.rbox(o.shelfMat, B[1] - B[0] + 0.002, ct, bd + 1 * IN, 0.01, (B[0] + B[1]) / 2, ctop + ct / 2, (bd + 1 * IN) / 2, { boxUV: true });
+      shelves(x0, x1, o.baseH, false);
+    } else if (ty === 'seat') {
+      var sy = snap(o.seatH);
+      b.bb(fin, x0, 0, d - DOORT, x1, sy - st, d, 0.004);
+      shelves(x0, x1, sy, true);
+    } else if (ty === 'door') {
+      var dy = snap(o.doorH), m = Math.max(1, Math.ceil((B[1] - B[0]) / 2.4)), sw = (B[1] - B[0]) / m;
+      b.bb(o.shelfMat, x0, dy - st, 0, x1, dy, d - 0.015, 0.004, { boxUV: true });                 // the shelf over the door, wall to wall
+      b.bb(fin, x0, dy - st - 0.3, d - DOORT, x1, dy - st, d, 0.004);                               // and a head board under it
+      for (i = 1; i < m; i++) upright(B[0] + i * sw, dy);
+      for (i = 0; i < m; i++) shelves(B[0] + i * sw + T / 2, B[0] + (i + 1) * sw - T / 2, dy, false);
+    }
+  });
+  // rail and rolling ladder
+  var rz = Math.max(d, 0) + 0.22, ry = o.rail, xa = o.railFrom != null ? o.railFrom : -o.w / 2 + 0.1, xb = o.w / 2 - 0.08;
+  if (ry) {
+    b.rod('blackMetal', [xa, ry, rz], [xb, ry, rz], 0.035, 12);
+    for (var e2 in edges) { var ex = edges[e2]; if (ex < xa - 0.01 || ex > xb + 0.1 || top(ex) < ry + 0.3) continue; ex = Math.min(ex, o.w / 2 - T / 2);
+      b.bb('blackMetal', ex - 0.03, ry - 0.03, d - 0.01, ex + 0.03, ry + 0.03, rz); }
+    b.sphere('blackMetal', 0.05, xa, ry, rz, 10, 8); b.sphere('blackMetal', 0.05, xb, ry, rz, 10, 8);
+    if (o.ladderX != null) {
+      var lx = o.ladderX, zf = rz + o.ladderRun, y1 = ry + 0.42, z1 = rz + 0.06 - (0.42 / ry) * o.ladderRun * 0.0, Hh = y1 - 0.14, run = zf - z1, Ll = Math.hypot(Hh, run), th = -Math.asin(run / Ll), lm = o.ladderMat, hw2 = 0.72;
+      [-1, 1].forEach(function (s) {
+        b.boxR(lm, 0.1, Ll, 0.2, lx + s * hw2, 0.14 + Hh / 2, (zf + z1) / 2, th, 0, 0);
+        b.cyl('blackMetal', 0.13, 0.13, 0.07, lx + s * (hw2 + 0.02), 0.13, zf + 0.02, 18, { rz: HALF });
+        b.rod('blackMetal', [lx + s * hw2, ry + 0.2, rz + 0.1], [lx + s * hw2, ry + 0.07, rz], 0.03, 8);
+        b.sphere('blackMetal', 0.06, lx + s * hw2, ry + 0.06, rz, 10, 8);
+      });
+      var nr = Math.floor(Hh / 0.95);
+      for (i = 1; i <= nr; i++) { var t = (i * 0.95) / Hh; b.box(lm, 2 * hw2 - 0.08, 0.075, 0.34, lx, 0.14 + Hh * t, zf - run * t); }
+    }
+  }
+}, function (o) { return [o.w, o.baseD + (o.ladderX != null ? o.ladderRun + 0.5 : 0.1), o.apex]; },
+'Library wall under a vaulted ceiling: painted uprights and butcher-block shelves to the ceiling line, base cabinets, a doorway through the books, rolling ladder on a rail. bays = [[x0, x1, base|seat|door|post]].');
+
 /* ------------------------------------------------------------ kitchen pieces the photos show that FIX lacks */
 // island glass-canopy hood (p00 / p01 / p11 / p49): slim square stainless chimney, thin stainless body with LED cans,
 // and a wider flat tempered-glass canopy around it. Origin: centre of the back edge of the canopy, bottom at mountY.
@@ -471,6 +556,131 @@ def('rangeSlideIn30', { w: 2.5, d: 2.08, h: 3.0 }, function (b, o) {
 }, function (o) { return [o.w, o.d + 0.28, o.h + 0.1]; }, '30" slide-in gas range: 5 burners, continuous grates, front controls, no backguard.');
 
 // finished back / end panel of a cabinet run (p01: the peninsula's room side under the seating overhang is white panelling)
+// r44: stacked ledgestone cladding for a chimney breast (origin at the wall, the breast w wide and d deep, faces +z). Courses of
+// split stone in four tones, each stone a little proud of the last; the top follows a gable (apex at x = 0, falling at `pitch`) when
+// apex > 0. hole = [x0, y0, x1, y1] is left open for the firebox.
+def('ledgestone', { w: 7, d: 1.25, h: 12, apex: 0, pitch: 0, course: 0.3, t: 0.16, seed: 11, hole: null }, function (b, o, R) {
+  var W = o.w / 2, d = o.d, t = o.t, tones = ['ledgeA', 'ledgeB', 'ledgeC', 'ledgeA', 'ledgeD', 'ledgeC'], H = o.hole;
+  var topAt = function (x) { return o.apex > 0 ? o.apex - o.pitch * Math.abs(x) : o.h; };
+  var hMax = o.apex > 0 ? o.apex : o.h, g = 0.012;
+  for (var y = 0, k = 0; y < hMax - 0.06; k++) {
+    var ch = o.course * (0.8 + R() * 0.45), y1 = Math.min(y + ch, hMax);
+    // the front: stones along x, clipped to the gable and split round the firebox
+    for (var x = -W - R() * 0.9; x < W;) {
+      var L = 0.7 + R() * 1.3, a = Math.max(-W, x), e = Math.min(W, x + L), pr = R() * 0.06, m = tones[(R() * tones.length) | 0]; x += L;
+      var segs = [[a, e]];
+      if (H && y1 > H[1] && y < H[3]) { segs = []; if (a < H[0]) segs.push([a, Math.min(e, H[0])]); if (e > H[2]) segs.push([Math.max(a, H[2]), e]); }
+      for (var i = 0; i < segs.length; i++) {
+        var s0 = segs[i][0], s1 = segs[i][1], yt = Math.min(y1, topAt(s0), topAt(s1), topAt((s0 + s1) / 2));
+        if (s1 - s0 < 0.12 || yt - y < 0.08) continue;
+        b.bb(m, s0 + g, y + g, d - t, s1 - g, yt - g, d + pr, 0.012);
+      }
+    }
+    // the two returns: one or two stones along the depth
+    for (var sd = -1; sd <= 1; sd += 2) {
+      var yt2 = Math.min(y1, topAt(W)); if (yt2 - y < 0.08) continue;
+      var cut = R() < 0.5 ? 0 : 0.35 + R() * (d - 0.7);
+      var zs = cut ? [[0, cut], [cut, d + 0.02]] : [[0, d + 0.02]];
+      for (var j = 0; j < zs.length; j++) { var p2 = R() * 0.05, mm = tones[(R() * tones.length) | 0];
+        b.bb(mm, sd > 0 ? W - t : -W - p2, y + g, zs[j][0] + g, sd > 0 ? W + p2 : -W + t, yt2 - g, zs[j][1] - g, 0.012); }
+    }
+    y = y1;
+  }
+}, function (o) { return [o.w, o.d + 0.1, o.apex > 0 ? o.apex : o.h]; }, 'Stacked ledgestone cladding for a chimney breast; top follows a gable when apex/pitch are given; hole leaves the firebox open.');
+
+// r44: a low built-in under a window: raised-panel doors on a plinth, a wood top (origin at the wall, faces +z)
+def('lowBuiltin', { w: 8, d: 1.33, h: 2.5, finish: 'cabinetWhite', top: 'maple', kick: 4 * IN, seams: null }, function (b, o) {
+  var w = o.w, d = o.d, fin = o.finish, tt = 0.125, n = Math.max(2, Math.round(w / 1.7)), ch = o.h - tt, dw = (w - 0.1) / n;
+  if (o.seams && o.seams.length > 1) {   // r44c: door joints at given places along the run (e.g. under the mullions of the window above)
+    b.bb(fin, -w / 2, o.kick, 0, w / 2, ch, d - DOORT); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - DOORT - 0.2);
+    for (var k = 0; k + 1 < o.seams.length; k++) { var s0 = o.seams[k], s1 = o.seams[k + 1]; raisedDoor(b, fin, s1 - s0 - 0.03, ch - o.kick - 0.08, (s0 + s1) / 2, (ch + o.kick) / 2, d - DOORT * 0.4); }
+    b.rbox(o.top, w + 0.04, tt, d + 0.1, 0.01, 0, ch + tt / 2, (d + 0.1) / 2, { boxUV: true }); return;
+  }
+  b.bb(fin, -w / 2, o.kick, 0, w / 2, ch, d - DOORT); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - DOORT - 0.2);
+  for (var i = 0; i < n; i++) raisedDoor(b, fin, dw - 0.03, ch - o.kick - 0.08, -w / 2 + 0.05 + dw * (i + 0.5), (ch + o.kick) / 2, d - DOORT * 0.4);
+  b.rbox(o.top, w + 0.04, tt, d + 0.1, 0.01, 0, ch + tt / 2, (d + 0.1) / 2, { boxUV: true });
+}, function (o) { return [o.w, o.d + 0.1, o.h]; }, 'Low built-in cabinet with a wood top, for under a window.');
+
+// r44: one continuous crown along the top of a run of tall cabinets (origin at the wall, the run w long and d deep, faces +z)
+def('cabinetCrown', { w: 8, d: 2.08, mountY: 8, finish: 'cabinetWhite', endL: true, endR: true }, function (b, o) {
+  var w = o.w, d = o.d, y = o.mountY, fin = o.finish, l = o.endL ? 1 : 0, r = o.endR ? 1 : 0;
+  b.bb(fin, -w / 2 - 0.04 * l, y, 0, w / 2 + 0.04 * r, y + 0.08, d + 0.04, 0.005);
+  b.bb(fin, -w / 2 - 0.1 * l, y + 0.08, 0, w / 2 + 0.1 * r, y + 0.3, d + 0.1, 0.01);
+  b.bb(fin, -w / 2 - 0.13 * l, y + 0.3, 0, w / 2 + 0.13 * r, y + 0.36, d + 0.13, 0.008);
+}, function (o) { return [o.w + 0.26, o.d + 0.13, o.mountY + 0.36]; }, 'Continuous crown for the top of a tall cabinet run.');
+
+// r44b: a coffee station in a tall cabinet wall: drawers below, an open quartz-lined niche at counter height with a machine and cups,
+// a lift-up appliance garage and doors above (origin at the wall, faces +z)
+def('coffeeStation', { w: 2.5, h: 8, d: 2.08, finish: 'cabinetWhite', kick: 4 * IN }, function (b, o) {
+  var w = o.w, d = o.d, fin = o.finish, zf = d, n0 = 3.0, n1 = 4.75, t = 0.07;
+  b.bb(fin, -w / 2, o.kick, 0, w / 2, n0 - 0.1, d); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - 0.25);          // base
+  raisedDoor(b, fin, w - 0.14, 0.62, 0, n0 - 0.47, zf + DOORT * 0.6); raisedDoor(b, fin, w - 0.14, 1.72, 0, o.kick + 0.92, zf + DOORT * 0.6);
+  b.bb('stainless', -0.45, n0 - 0.2, zf + DOORT, 0.45, n0 - 0.16, zf + DOORT + 0.08); b.bb('stainless', -0.45, o.kick + 1.5, zf + DOORT, 0.45, o.kick + 1.54, zf + DOORT + 0.08);
+  b.rbox('brittanicca', w, 0.1, d + 0.04, 0.008, 0, n0 - 0.05, (d + 0.04) / 2, { boxUV: true });                              // niche counter
+  b.bb(fin, -w / 2, n0, 0, -w / 2 + t, n1, d); b.bb(fin, w / 2 - t, n0, 0, w / 2, n1, d);                                    // niche sides
+  b.bb('brittanicca', -w / 2 + t, n0, 0, w / 2 - t, n1, 0.05);                                                               // quartz back
+  b.bb('ledStrip', -w / 2 + 0.3, n1 - 0.02, d - 0.5, w / 2 - 0.3, n1 - 0.008, d - 0.44);                                      // niche light
+  b.bb('stainless', -0.75, n0, 0.55, -0.05, n0 + 1.15, 1.45, 0.02); b.bb('blackMetal', -0.68, n0 + 0.78, 1.45, -0.12, n0 + 1.08, 1.47);   // espresso machine
+  b.bb('blackMetal', -0.6, n0 + 0.03, 1.45, -0.2, n0 + 0.06, 1.75); b.bb('stainless', -0.48, n0 + 0.5, 1.45, -0.32, n0 + 0.62, 1.6);
+  b.bb('blackMetal', 0.3, n0, 0.7, 0.75, n0 + 0.9, 1.2, 0.03);                                                                // grinder
+  for (var i = 0; i < 3; i++) b.bb('stoneCream', 0.2 + i * 0.28, n0, 1.45, 0.4 + i * 0.28, n0 + 0.22, 1.65, 0.02);              // cups
+  b.bb(fin, -w / 2, n1, 0, w / 2, o.h, d);
+  raisedDoor(b, fin, w - 0.14, 1.3, 0, n1 + 0.72, zf + DOORT * 0.6);                                                          // lift-up appliance garage
+  b.bb('stainless', -0.45, n1 + 0.14, zf + DOORT, 0.45, n1 + 0.18, zf + DOORT + 0.08);
+  var uh = o.h - n1 - 1.44, dw = (w - 0.14) / 2;
+  for (i = 0; i < 2; i++) raisedDoor(b, fin, dw - 0.03, uh - 0.1, (i ? 1 : -1) * dw / 2, n1 + 1.42 + uh / 2, zf + DOORT * 0.6);
+}, function (o) { return [o.w, o.d + 0.2, o.h]; }, 'Coffee station in a tall cabinet wall: drawers, an open lit niche with a machine, an appliance garage and doors above.');
+
+// r44d: cabinet finishing pieces (origin on the wall, faces +z unless noted)
+// the scribe fill between the top of a run of wall cabinets and a ceiling that rises away from the wall
+def('scribeFill', { w: 8, d: 13 * IN, mountY: 8, h: 0.47, finish: 'cabinetWhite' }, function (b, o) {
+  b.bb(o.finish, -o.w / 2, o.mountY, 0, o.w / 2, o.mountY + o.h, o.d, 0.004);
+}, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Scribe fill from the top of wall cabinets up to a sloping ceiling.');
+// the light rail under a run of wall cabinets
+def('lightRail', { w: 6, d: 13 * IN, mountY: 4.4, h: 0.1, finish: 'cabinetWhite' }, function (b, o) {
+  b.bb(o.finish, -o.w / 2, o.mountY, o.d - 0.07, o.w / 2, o.mountY + o.h, o.d + DOORT, 0.004);
+}, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Light rail under wall cabinets.');
+// a finished (raised-panel) end for a wall-cabinet run: stands square to the wall, w = the cabinets' depth
+def('endPanel', { w: 13 * IN, h: 3.5, mountY: 4.5, t: 0.06, finish: 'cabinetWhite' }, function (b, o) {
+  b.bb(o.finish, -o.w / 2, o.mountY, 0, o.w / 2, o.mountY + o.h, o.t);
+  raisedDoor(b, o.finish, o.w - 0.16, o.h - 0.2, 0, o.mountY + o.h / 2, o.t + DOORT * 0.6);
+}, function (o) { return [o.w, o.t + 0.06, o.mountY + o.h]; }, 'Finished end panel for a wall-cabinet run.');
+
+// r44b: a wall-mounted pot filler over a range (origin on the wall at the swivel, faces +z)
+def('potFiller', { mountY: 4.9, finish: 'satinNickel', reach: 1.5 }, function (b, o) {
+  var y = o.mountY, f = o.finish, r = o.reach, h = r / 2;
+  b.bb(f, -0.11, y - 0.11, 0, 0.11, y + 0.11, 0.03, 0.02); b.bb(f, -0.035, y - 0.035, 0.03, 0.035, y + 0.035, 0.2, 0.02);
+  b.bb(f, -0.03, y - 0.03, 0.17, h, y + 0.03, 0.23, 0.02); b.bb(f, h - 0.045, y - 0.07, 0.155, h + 0.045, y + 0.07, 0.245, 0.02);   // first arm and its knuckle
+  b.bb(f, h - 0.03, y - 0.03, 0.2, h + 0.03, y + 0.03, 0.2 + h, 0.02);                                                             // second arm, swung out
+  b.bb(f, h - 0.03, y - 0.32, 0.17 + h, h + 0.03, y + 0.03, 0.23 + h, 0.02);                                                       // spout down
+  b.bb(f, h - 0.09, y + 0.03, 0.13 + h, h + 0.09, y + 0.06, 0.27 + h, 0.01);                                                       // lever
+}, function (o) { return [o.reach, o.reach, o.mountY + 0.2]; }, 'Wall-mounted articulated pot filler; swivel at mountY.');
+
+// r44b: a plug strip tucked under the wall cabinets along a prep counter (origin on the wall, faces +z)
+def('outletStrip', { w: 6, mountY: 4.3 }, function (b, o) {
+  var w = o.w, y = o.mountY;
+  b.bb('stainless', -w / 2, y, 0, w / 2, y + 0.13, 0.09, 0.01);
+  for (var x = -w / 2 + 0.5; x < w / 2 - 0.3; x += 1.0) { b.bb('blackMetal', x - 0.1, y + 0.03, 0.09, x + 0.1, y + 0.1, 0.094); }
+}, function (o) { return [o.w, 0.1, o.mountY + 0.13]; }, 'Under-cabinet plug strip.');
+
+// r44: a tall oven column for a cabinet wall: drawer, a 27-in wall oven, a built-in microwave over it, a cabinet above (origin at the wall, faces +z)
+def('wallOvenStack', { w: 2.5, h: 8, d: 2.08, finish: 'cabinetWhite', kick: 4 * IN }, function (b, o) {
+  var w = o.w, d = o.d, fin = o.finish, zf = d, aw = Math.min(w - 0.26, 2.25), x0 = -aw / 2, x1 = aw / 2;
+  b.bb(fin, -w / 2, o.kick, 0, w / 2, o.h, d); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - 0.25);            // carcass, toe kick
+  raisedDoor(b, fin, w - 0.14, 1.5, 0, o.kick + 0.85, zf + DOORT * 0.6);                                                  // drawer front
+  b.bb('stainless', -0.5, o.kick + 1.36, zf + DOORT, 0.5, o.kick + 1.41, zf + DOORT + 0.09);
+  function oven(y0, y1, band) {
+    b.bb('stainless', x0, y0, zf - 0.02, x1, y1, zf + 0.05);                                                             // face
+    b.bb('darkGlass', x0 + 0.1, y0 + 0.14, zf + 0.05, x1 - 0.1, y1 - band - 0.08, zf + 0.058);                            // door glass
+    b.bb('darkGlass', x0 + 0.1, y1 - band, zf + 0.05, x1 - 0.1, y1 - 0.06, zf + 0.056);                                   // control band
+    b.bb('stainless', x0 + 0.14, y1 - band - 0.2, zf + 0.12, x1 - 0.14, y1 - band - 0.15, zf + 0.17);                     // handle bar
+    b.bb('stainless', x0 + 0.2, y1 - band - 0.2, zf + 0.05, x0 + 0.25, y1 - band - 0.15, zf + 0.14); b.bb('stainless', x1 - 0.25, y1 - band - 0.2, zf + 0.05, x1 - 0.2, y1 - band - 0.15, zf + 0.14);
+  }
+  oven(2.3, 4.7, 0.36); oven(4.85, 6.2, 0.3);                                                                             // wall oven, microwave
+  var uh = o.h - 6.45, dw = (w - 0.14) / 2;
+  if (uh > 0.6) for (var i = 0; i < 2; i++) raisedDoor(b, fin, dw - 0.03, uh - 0.12, (i ? 1 : -1) * dw / 2, 6.38 + uh / 2, zf + DOORT * 0.6);
+}, function (o) { return [o.w, o.d + 0.2, o.h]; }, 'Tall oven column: drawer, wall oven, built-in microwave, cabinet above; origin at the wall back, faces +z.');
+
 def('finishedPanel', { w: 5, h: 2.896, t: 0.06, panels: 0, kick: 4 * IN, finish: 'cabinetWhite' }, function (b, o) {
   var w = o.w, t = o.t, n = o.panels || Math.max(1, Math.round(w / 1.6)), fin = o.finish;
   b.bb(fin, -w / 2, 0, 0, w / 2, o.h, t);

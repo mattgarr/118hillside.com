@@ -1,468 +1,594 @@
 #!/usr/bin/env python3
-"""Concept r42b "Open kitchen and great room" (option OS-REMODEL-open4k, legacyId open4k): the second 4-bedroom idea.
+"""Concept r44 "Open kitchen and great room" (option OS-REMODEL-open4k, legacyId open4k): the owner's pick, "1-open B-flip".
 
-Same opening-up as "Open great room" (build_open4.py: the front and middle main-level bedrooms come out, one cathedral room under
-the original gable with an exposed fir ridge beam), arranged the way the owner's own great room works:
-  - the kitchen at the far, street end of the long room, a destination rather than a path: cabinet run on the street gable with the
-    sink under a window like today's kitchen window, a return on the north wall with the range and a chimney hood, a 12-ft island
-    facing back into the room with its stools on the room side;
-  - the street gable mostly solid (privacy): the kitchen window plus the high glazed gable of the first concept;
-  - the 14-1/4 ft picture window toward the driveway becomes a 14.4-ft folding glass wall (NanaWall-style) onto an extended front deck,
-    level with the floor, with the same decking, skirt and cable railing as the porch; the porch steps narrow to make room;
-  - living in the middle, anchored on the north wall by a gas fireplace (direct vent through that wall) between built-ins, where the
-    middle bedroom's window was; dining by the folding glass wall;
-  - the old kitchen becomes a scullery and coffee bar: its sink, dishwasher and fridge stay, the range and hood come out (gas capped),
-    so nobody walks past a stove to reach the great room;
-  - four skylight wells along the vault: two over the island, one over the dining table, one over the living area.
+The whole original gable (31 ft 4 x 27 ft 3 inside) becomes one vaulted great room under a clear-span ridge beam:
+  - living at the street end: a gas hearth centred on the street gable under the ridge, two matching windows either side of it,
+    two 8-ft sofas facing each other across a coffee table;
+  - an L-shaped kitchen at the west end: range on the north wall between two counter-height windows, a tall wall of pantry, ovens and
+    fridge on the west gable wall, an 8-ft island with the sink and four stools;
+  - dining between them: a table for eight (ten with leaves) on the kitchen's axis, a sideboard on the west wall;
+  - 14-ft folding glass doors on the south wall, centred on the table, onto the porch and about 9 ft of new deck; the east part of the
+    old picture window stays as fixed glass;
+  - outside the gable: the back bedroom keeps one closet, the other closet becomes its vestibule; a 3/4 bath across the north end of the
+    old living room with its shower in the old laundry closet; a short hall with a stacked washer and dryer; the rest of the old living
+    room is a library that you pass through on arrival, entering the great room at its south-west corner.
 
 Illustrative idea. Not designed or reviewed by an architect or engineer. See tour/CONCEPT-4BR.md.
 Run: python3 tour/bim2/tools/build_open4k.py   (needs numpy, shapely >= 2.1; reads build_open4.py's helpers)
 """
 import hashlib, json, math, os, sys
 import numpy as np
-import shapely, shapely.affinity
+import shapely
 from shapely.geometry import Polygon, box as sbox
 from shapely.ops import unary_union
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_open4 as B
-from build_open4 import (ceil_z, RIDGE_Y, APEX, PITCH, C_S, C_N, X_KIT, Y_KIT, X_W, X_E, Y_S, Y_N, X_EO, ROOM, GREAT, LABEL, PAINT, CLOSET_PAINT,
-                         TRIM_EXT, TRIM_INT, Out, read_glb, element_tris, plane_face, prism_sides, ring_center3, union_faces, fill_holes, mitre, tris2d)
+from build_open4 import (ceil_z, RIDGE_Y, APEX, PITCH, C_S, C_N, X_E, Y_S, Y_N, X_EO, GREAT, LABEL, PAINT, TRIM_EXT, Out, read_glb, element_tris, plane_face, prism_sides, union_faces, fill_holes, mitre)
 
 B2 = B.B2
 OPT_ID, LEGACY = 'OS-REMODEL-open4k', 'open4k'
 GLB_OUT, META_OUT = 'scene.opt-%s.glb' % OPT_ID, 'scene.opt-%s.meta.json' % OPT_ID
-Y_SO = 4.404                         # south wall outer face
-DECK = dict(x0=15.675, x1=33.6, y0=-4.0, y1=Y_SO, z=0.0, skirt=-4.8)
-NANA = dict(x0=18.0, x1=32.4, head=7.6, panels=6)
-STAIR_Y = (-9.937, 0.0)               # the porch steps today (plan y), narrowed to end at the deck's south edge
-KWIN_SRC, KWIN_CX = 'WN-L1-02', 9.486  # today's kitchen window over the sink, copied onto the street gable over the new sink
-KWIN_TRIMS = ['TR-0695', 'TR-0696', 'TR-0697', 'TR-0698', 'TR-0951']
-FP = dict(cx=19.3, w=6.0, d=1.2, box=(4.5, 1.5, 3.0), mantel=4.25)   # fireplace on the north wall where the middle bedroom's window was
-SKY = [(27.5, 30.0, 13.0, 16.0), (27.5, 30.0, 21.0, 24.0), (21.0, 23.5, 7.4, 10.4), (17.0, 19.5, 24.6, 27.6)]   # plan rectangles (x0, x1, y0, y1)
-ROOF_TOP = lambda y: (6.5744 + 0.41 * y) if y <= RIDGE_Y else (21.70 - 0.41 * y)   # shingle surface (fit from RF-MAIN)
-
-REMOVED_TRIMS = B.REMOVED_TRIMS + ['TR-0011', 'TR-0952', 'TR-0167', 'TR-0016', 'TR-0957'] + ['TR-%04d' % i for i in range(699, 708)] + ['TR-%04d' % i for i in range(744, 753)]
-REMOVED_OPENINGS = B.REMOVED_OPENINGS + ['WN-L1-03', 'WN-L1-08']
-REBUILT = B.REBUILT_WALLS + ['W-L1-020', 'W-L1-002', 'RF-MAIN', 'SL-DK-FRONT', 'ST-FRONT', 'RL-FRONT-STAIR', 'RL-FRONT-DECK']
-REMOVED_FURN = B.REMOVED_FURN + ['KX-09', 'KX-11', 'KX-COUNTER']
-REMOVED_LIGHTS = B.REMOVED_LIGHTS + ['LF-L1-%d' % i for i in [126, 133, 134, 135, 139, 140, 141, 142, 143, 144, 145, 146, 147]]
+X_LW, X_WW = 5.2776, 4.9024          # the west gable wall: room face, living-room / bedroom face
+Y_SO, Y_NO = 4.404, 32.487           # south and north walls, outer faces
+BOX = [(X_LW, Y_S), (X_E, Y_S), (X_E, Y_N), (X_LW, Y_N)]
+ROOM2 = BOX; SKY = []                # names the drawing tools read
+KB_W, KB_D = 0.5625, 2.0             # ridge beam as drawn: 6-3/4 x 24 in, a 31-ft clear span (an engineer sizes it); no post
+KB_Y0, KB_Y1, KB_Z0 = RIDGE_Y - KB_W / 2, RIDGE_Y + KB_W / 2, APEX - KB_D
+POST = (X_LW, X_LW, KB_Y0, KB_Y1)    # no post (kept for the drawing tools)
+DECK = dict(x0=15.675, x1=24.6, y0=-4.0, z=0.0, skirt=-4.8)
+STAIR_Y = (-9.937, 0.0)
+FOLD = dict(x0=8.7, x1=22.9, head=7.6, panels=6)                     # folding glass doors, stacking at the west jamb
+WSILL, WHEAD = 3.4375, 7.6           # one sill and one head for every window round the living area (the console top is at 3 ft)
+FIXW = dict(x0=25.6, x1=33.6, sill=WSILL, head=WHEAD)                  # the living area's side windows: the same on the south and north walls             # the east part of the old picture window, fixed glass
+NWIN = [((FIXW['x0'] + FIXW['x1']) / 2, FIXW['x1'] - FIXW['x0'], FIXW['sill'], FIXW['head'])]   # north wall windows: centre x, width, sill, head
+# the two gable windows, either side of the ridge: from 0.4 ft off the chimney breast (t = 3.9 from the ridge) out to t = 11.815, four
+# mulled units; the gable glass over each has the same inner jamb, its point over the same outer jamb, its bars on the same mullions
+EWIN_T, EUNITS = (3.9, 9.78125), 3            # r44c owner: three units a side (the outermost came out), solid wall from there to each corner
+EWIN_D, EWIN_W = (EWIN_T[0] + EWIN_T[1]) / 2, EWIN_T[1] - EWIN_T[0]
+EWIN = [(RIDGE_Y - EWIN_D, EWIN_W, WSILL, WHEAD), (RIDGE_Y + EWIN_D, EWIN_W, WSILL, WHEAD)]
+GG = dict(zb=8.3, margin=0.30)                                       # gable glass: bottom, and the drop of its top edge below the rake         # street gable windows either side of the hearth: centre y, width, sill, head
+FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 3.03), mantel=(4.35, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 6.45))   # mantel: bottom, height, depth, length
+PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
+DOOR_H = 6.7812
+REMOVED_SPACES = ['SP-L1-BED2', 'SP-L1-BED2-CLOSET', 'SP-L1-BED3', 'SP-L1-BED3-CLOSET', 'SP-L1-KITCHEN']
+REMOVED_WALLS = ['W-L1-%03d' % i for i in (5, 7, 8, 9, 10, 13, 14, 15, 16, 18, 19, 33, 34, 37, 41, 42, 43, 44, 45, 46, 47, 48)]
+REBUILT = ['W-L1-002', 'W-L1-003', 'W-L1-020', 'W-L1-021', 'W-L1-049', 'W-L1-050', 'W-L1-051', 'SL-DK-FRONT', 'ST-FRONT', 'RL-FRONT-STAIR', 'RL-FRONT-DECK']
+REMOVED_OPENINGS = ['D-L1-%02d' % i for i in range(1, 14)] + ['WN-L1-%02d' % i for i in (2, 3, 4, 5, 7, 8, 9, 11)]
+REMOVED_MISC = ['FX-JLH-L1-BED2', 'FX-JLH-L1-BED3', 'FX-JLH-L1-HALL', 'SL-L1-STORE-BED2'] + [p + s for p in ('CL-SP-L1-', 'FL-SP-L1-') for s in ('GREAT', 'BED2', 'BED2-CLOSET', 'BED3', 'BED3-CLOSET', 'KITCHEN', 'HALL', 'BATH')]
+OLD_WIN = {'WN-L1-02': (1, 9.49, 5.98, 3.32, 7.3, 4.6), 'WN-L1-03': (1, 25.36, 14.25, 1.68, 7.6, 4.6), 'WN-L1-08': (1, 18.964, 6.27, 1.65, 6.67, 32.29), 'WN-L1-09': (1, 12.25, 1.42, 3.42, 6.25, 32.29),
+           'WN-L1-11': (1, 7.9, 5.0, 5.73, 7.23, 32.29), 'WN-L1-04': (0, 13.57, 6.27, 1.48, 6.5, 36.79), 'WN-L1-05': (0, 21.02, 3.81, 2.69, 7.0, 36.79), 'WN-L1-07': (0, 26.83, 3.81, 2.69, 7.0, 36.79)}   # plane axis, centre, width, sill, head, plane
+zl = lambda x: 10.2201 + 0.2548 * x if x <= -2.28 else 9.0527 - 0.2572 * x        # old living room ceiling (ridge runs north-south)
+zw = lambda y: 6.0299 + 0.41 * y if y < 15.7375 else 18.9347 - 0.41 * y           # back-bedroom wing ceiling
+zg = lambda y: ceil_z(y) + 0.164                                                  # top of the west gable wall (under the roof deck)
 
 def build():
-    J, meshes = read_glb(os.path.join(B2, 'scene.glb'))
-    meta = json.load(open(os.path.join(B2, 'scene.meta.json')))
-    E = element_tris(meshes); O = Out(); rep = {}
-    ob = {o['id']: o for o in meta['openings']}
-    hide = sorted(set(B.REMOVED_WALLS + REBUILT + REMOVED_OPENINGS + B.REMOVED_MISC + REMOVED_TRIMS) & set(E))
-    hide_ranges = []
-    room = Polygon(ROOM)
-    # ---- floor, ceiling (with skylight holes), ridge beam, kitchen-alcove wall patch: as in the first concept
-    nana_sill = sbox(NANA['x0'], Y_SO, NANA['x1'], Y_S)            # the floor runs out through the opening to the deck
-    floor = unary_union([room, nana_sill])
-    plane_face(O, 'FL-SP-L1-OPEN4K', None, 'floors', 'L1', 'oak-red-lauzon-vela', floor, lambda x, y: (x, y, 0.0), (0, 0, 1))
-    plane_face(O, 'FL-SP-L1-OPEN4K', None, 'floors', 'L1', 'oak-red-lauzon-vela', floor, lambda x, y: (x, y, -0.062), (0, 0, -1))
-    holes = unary_union([sbox(*[s[0], s[2], s[1], s[3]]) for s in SKY])
-    south = room.intersection(sbox(0, 0, 60, RIDGE_Y)).difference(holes); north = room.intersection(sbox(0, RIDGE_Y, 60, 60)).difference(holes)
-    for part, nrm in ((south, (0, PITCH, -1)), (north, (0, -PITCH, -1))):
-        plane_face(O, 'CL-SP-L1-OPEN4K', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y)), nrm)
-        plane_face(O, 'CL-SP-L1-OPEN4K', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y) + 0.042), tuple(-a for a in nrm))
-    sec = Polygon([(B.BEAM_Y0, B.BEAM_Z0), (B.BEAM_Y1, B.BEAM_Z0), (B.BEAM_Y1, ceil_z(B.BEAM_Y1) - 0.004), (RIDGE_Y, APEX - 0.004), (B.BEAM_Y0, ceil_z(B.BEAM_Y0) - 0.004)])
-    for x, nx in ((X_W + 0.002, -1), (X_E - 0.002, 1)):
-        plane_face(O, 'BM-L1-OPEN4K', None, 'ceilings', 'L1', 'fir-beam', sec, lambda y, z, x=x: (x, y, z), (nx, 0, 0))
-    prism_sides(O, 'BM-L1-OPEN4K', None, 'ceilings', 'L1', 'fir-beam', sec.exterior, lambda y, z: (X_W + 0.002, y, z), lambda y, z: (X_E - 0.002, y, z), inward_center=(25, RIDGE_Y, 12.9))
-    patch = Polygon([(Y_KIT, 0), (21.0, 0), (21.0, ceil_z(21.0)), (RIDGE_Y, APEX), (Y_KIT, ceil_z(Y_KIT))])
-    plane_face(O, 'W-L1-042', 'B-O4K-001', 'walls', 'L1', PAINT, patch, lambda y, z: (X_W, y, z), (1, 0, 0))
-    for t in E.get('W-L1-042', []):
-        if t['material'] == CLOSET_PAINT and t['boundary'] and ['W-L1-042', t['boundary']] not in hide_ranges: hide_ranges.append(['W-L1-042', t['boundary']])
+    J, meshes = read_glb(os.path.join(B2, 'scene.glb')); meta = json.load(open(os.path.join(B2, 'scene.meta.json')))
+    E = element_tris(meshes); O = Out(); rep = {}; hide_ranges = []; colliders = []
+    bnd = meta['boundaries'] if isinstance(meta['boundaries'], dict) else {b['id']: b['space'] for b in meta['boundaries']}
+    bbox = {el: (np.concatenate([t['v'] for t in ts]).min(0), np.concatenate([t['v'] for t in ts]).max(0)) for el, ts in E.items()}
+    # ---- trims that go: everything inside the gable box, those on the removed walls outside it, those of the removed windows
+    gone_fp = unary_union([sbox(-6.65, 14.27, 4.95, 14.75), sbox(-6.47, 16.69, 4.95, 17.16), sbox(4.85, 4.35, 5.33, 14.56), sbox(4.85, 22.17, 5.33, 25.61)]).buffer(0.3)
+    trims = []
+    for el, (lo, hi) in bbox.items():
+        if not el.startswith('TR-') or hi[2] < -0.5 or lo[2] > 14: continue
+        c = (lo + hi) / 2
+        if X_LW + 0.02 < c[0] < X_E - 0.02 and Y_S + 0.02 < c[1] < Y_N - 0.02: trims.append(el); continue
+        if gone_fp.contains(shapely.Point(c[0], c[1])) and c[2] < 9: trims.append(el); continue
+        for ax, cc, w, s, h, pl in OLD_WIN.values():
+            if abs(c[ax] - pl) < 0.9 and abs(c[1 - ax] - cc) < w / 2 + 0.7 and s - 0.7 < c[2] < h + 0.7: trims.append(el); break
+    hide = sorted(set(REMOVED_WALLS + REBUILT + REMOVED_OPENINGS + REMOVED_MISC + trims) & set(E)); rep['trims_hidden'] = len(trims)
 
-    def copy_el(src, dst, fx, fn, keep=lambda t: True, scale=None):
-        n = 0
-        for t in E.get(src, []):
-            if not keep(t): continue
-            O.tri(t['group'], t['storey'], t['material'], dst, t['boundary'] and ('K4-' + t['boundary']), np.array([fx(p) for p in t['v']]), fn(t['n'])); n += 1
-        return n
-    def cut_wall(els, dst, plane_axis, inner_val, inner_sign, outer_val, outer_sign, fill_rects, cut_in, cut_out, inner_top, u_axis, extra_in=None, recolor=True):
-        """copy a wall's triangles; its room face and siding are re-made: old window holes filled, new holes cut"""
-        T = sum((E[e] for e in els), []); inner, outer, keep = [], {}, []
+    def quad(el, grp, st, mat, q, n):
+        O.tri(grp, st, mat, el, None, [q[0], q[1], q[2]], n); O.tri(grp, st, mat, el, None, [q[0], q[2], q[3]], n)
+    def boxel(el, grp, st, mat, x0, y0, z0, x1, y1, z1, faces='xXyYzZ'):
+        Q = {'x': ([(x0, y0, z0), (x0, y1, z0), (x0, y1, z1), (x0, y0, z1)], (-1, 0, 0)), 'X': ([(x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)], (1, 0, 0)),
+             'y': ([(x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1)], (0, -1, 0)), 'Y': ([(x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)], (0, 1, 0)),
+             'z': ([(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0)], (0, 0, -1)), 'Z': ([(x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)], (0, 0, 1))}
+        for f in faces: quad(el, grp, st, mat, *Q[f])
+    def wall_box(el, x0, y0, x1, y1, z0, top, mat=PAINT, faces='xXyY', mats=None):
+        """a wall piece whose top follows the ceiling: top(x, y) -> z. mats: per-face material override"""
+        mats = mats or {}
+        for f, (a, b_, fixed, nrm) in {'x': (y0, y1, x0, (-1, 0, 0)), 'X': (y0, y1, x1, (1, 0, 0)), 'y': (x0, x1, y0, (0, -1, 0)), 'Y': (x0, x1, y1, (0, 1, 0))}.items():
+            if f not in faces: continue
+            n = max(1, int(math.ceil((b_ - a) / 0.8))); us = [a + (b_ - a) * i / n for i in range(n + 1)]
+            to3 = (lambda u, z, fx=fixed: (fx, u, z)) if f in 'xX' else (lambda u, z, fy=fixed: (u, fy, z))
+            tz = [top(fixed, u) if f in 'xX' else top(u, fixed) for u in us]
+            if min(tz) <= z0 + 1e-3: continue
+            plane_face(O, el, None, 'walls', 'L1', mats.get(f, mat), Polygon([(us[0], z0), (us[-1], z0)] + [(u, z) for u, z in zip(us[::-1], tz[::-1])]), to3, nrm)
+        if z0 > 0.01: boxel(el, 'walls', 'L1', mat, x0, y0, z0, x1, y1, z0 + 0.001, faces='z')
+    def wall_run(el, axis, c0, c1, a0, a1, top, openings=(), mat=PAINT, collide=True):
+        """an axis-aligned partition: axis 'x' runs east-west from a0 to a1 with its faces at y = c0, c1; openings = [(u0, u1, head)]"""
+        cuts = sorted(openings); segs = []; u = a0
+        for (u0, u1, hd) in cuts:
+            if u0 > u + 1e-3: segs.append((u, u0, 0.0))
+            segs.append((u0, u1, hd)); u = u1
+        if a1 > u + 1e-3: segs.append((u, a1, 0.0))
+        for k, (s0, s1, z0) in enumerate(segs):
+            r = (s0, c0, s1, c1) if axis == 'x' else (c0, s0, c1, s1)
+            ends = ('xX' if axis == 'x' else 'yY'); side = ('yY' if axis == 'x' else 'xX')
+            wall_box(el, r[0], r[1], r[2], r[3], z0, top, mat, faces=side + ends)
+            if z0 == 0.0 and collide: colliders.append({'id': '%s#%d' % (el, len([c for c in colliders if c['element'] == el])), 'element': el, 'kind': 'WALL', 'poly': [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
+    MG = 1 / 3                                              # r44e owner: 4 in between glass at every mullion (two sashes meeting, no wide mull block); unit centres as before
+    MUL, STILE, RAIL = 0.30, 0.167, 0.0625                  # the new wing's white Andersen casements (ACW21050): 3-5/8 in mullion, 2 in sash, a 3/4 in grille bar at mid-height
+    def win_poly(el, axis, ro, panes, inner, outer, sign_out, stool=None):
+        """a window of any outline (ro, in (along, z)) with its glass panes: frame, glass, exterior trim, interior casing (and stool)"""
+        mid = (inner + outer) / 2; to3 = (lambda v: (lambda u, z: (u, v, z))) if axis == 1 else (lambda v: (lambda u, z: (v, u, z)))
+        nrm = (lambda s: (0, s, 0)) if axis == 1 else (lambda s: (s, 0, 0)); cu, cz = ro.centroid.x, ro.centroid.y
+        glass = unary_union(panes); ring = ro.difference(glass)
+        for pl, s_ in ((mid - 0.1 * sign_out, -sign_out), (mid + 0.1 * sign_out, sign_out)): plane_face(O, el, None, 'openings', 'L1', 'window-frame', ring, to3(pl), nrm(s_))
+        for pn in panes:
+            prism_sides(O, el, None, 'openings', 'L1', 'window-frame', pn.exterior, to3(mid - 0.1 * sign_out), to3(mid + 0.1 * sign_out), inward_center=to3(mid)(pn.centroid.x, pn.centroid.y), outward=False)
+        plane_face(O, el, None, 'glass', 'L1', 'glass', glass, to3(mid - 0.01), nrm(-sign_out)); plane_face(O, el, None, 'glass', 'L1', 'glass', glass, to3(mid + 0.01), nrm(sign_out))
+        big = ro.buffer(B.TRIM_W, join_style=2); po = outer + B.TRIM_T * sign_out
+        plane_face(O, el, None, 'trim', '-', TRIM_EXT, big.difference(ro), to3(po), nrm(sign_out))
+        prism_sides(O, el, None, 'trim', '-', TRIM_EXT, big.exterior, to3(outer), to3(po), inward_center=to3(po)(cu, cz))
+        # inside: a flat 3-1/2 in casing round the opening, like the house's own windows
+        cw, ct = 0.29, 0.06; pi = inner - ct * sign_out; cas = ro.buffer(cw, join_style=2)
+        plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', cas.difference(ro), to3(pi), nrm(-sign_out))
+        prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', cas.exterior, to3(inner), to3(pi), inward_center=to3(pi)(cu, cz), outward=True)
+        prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', ro.exterior, to3(inner), to3(pi), inward_center=to3(pi)(cu, cz), outward=False)
+        if stool is not None:
+            ps = inner - 0.2 * sign_out
+            plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool, to3(ps), nrm(-sign_out))
+            prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool.exterior, to3(inner), to3(ps), inward_center=to3(ps)(stool.centroid.x, stool.centroid.y))
+    def window(el, axis, u0, u1, z0, z1, inner, outer, sign_out, units=1):
+        """a rectangular window in a rebuilt wall. units > 1: mulled double-hung-style units like the house's own (two sashes with a
+        meeting rail, a mullion between units). axis 1: wall plane y = const; sign_out: outward normal sign"""
+        ro = sbox(u0, z0, u1, z1)
+        if units > 1:
+            bw = (u1 - u0 - 2 * 0.04 - (units - 1) * MUL) / units; zm = (z0 + z1) / 2; panes = []
+            for i in range(units):
+                a_ = u0 + 0.04 + i * (bw + MUL)
+                il = STILE if i == 0 else (MG - MUL) / 2; ir = STILE if i == units - 1 else (MG - MUL) / 2
+                panes += [sbox(a_ + il, z0 + 0.04 + STILE, a_ + bw - ir, zm - RAIL / 2), sbox(a_ + il, zm + RAIL / 2, a_ + bw - ir, z1 - 0.04 - STILE)]
+        else: panes = [mitre(ro, -0.16)]
+        win_poly(el, axis, ro, panes, inner, outer, sign_out, stool=sbox(u0 - 0.37, z0 - 0.02, u1 + 0.37, z0 + 0.07))
+    def gable_bars():
+        """distances from the ridge of the gable windows' mullion centres (outer to inner)"""
+        bw = (EWIN_W - 2 * 0.04 - (EUNITS - 1) * MUL) / EUNITS
+        return [EWIN_T[1] - 0.04 - k * bw - (k - 0.5) * MUL for k in range(1, EUNITS)]
+    def gable_glass(side):
+        """the clerestory over a gable window: a triangle whose top runs parallel to the rake, with the window's own inner jamb, its point
+        over the window's outer jamb, and a bar over every mullion of the window (same centre, same width). (outline, panes) in (y, z)"""
+        t_in, t_tip = EWIN_T; top = lambda t: APEX - PITCH * t - GG['margin']; Y = lambda t: RIDGE_Y + side * t
+        tri = Polygon([(Y(t_in), GG['zb']), (Y(t_tip), GG['zb']), (Y(t_tip), top(t_tip)), (Y(t_in), top(t_in))])   # a trapezoid: its outer jamb stands on the window's
+        edges = [t_tip] + gable_bars() + [t_in]; panes = []
+        for ta, tb in zip(edges[:-1], edges[1:]):
+            a_ = ta - (MG / 2 - STILE if ta != t_tip else 0.04); b_ = tb + (MG / 2 - STILE if tb != t_in else 0.04)
+            lo, hi = sorted((Y(a_), Y(b_))); bay = tri.intersection(sbox(lo, 0, hi, 30)).buffer(-STILE, join_style=2)
+            if not bay.is_empty and bay.geom_type == 'Polygon' and bay.area > 0.12: panes.append(bay)
+        return tri, panes
+    def ext_wall(els, dst, axis, inner, outer, sign_in, face, fills, cuts):
+        """an exterior wall re-made: its room face new (face less the cuts), its siding with the old window holes filled and the new
+        ones cut, everything else as built. axis: the plane's axis (1: y = const). fills / cuts: rectangles in (along, z)"""
+        ua = 1 - axis; T = sum((E[e] for e in els if e in E), []); lo, hi = min(inner, outer), max(inner, outer)
+        cutu = unary_union(cuts) if cuts else Polygon(); groups = {}; to3 = (lambda v: (lambda u, z: (u, v, z))) if axis == 1 else (lambda v: (lambda u, z: (v, u, z)))
+        nin = [0, 0, 0]; nin[axis] = sign_in
         for t in T:
-            c = t['v'].mean(0); n = t['n']
-            if n[plane_axis] * inner_sign > 0.9 and abs(c[plane_axis] - inner_val) < 0.06 and t['material'].startswith('paint-int') and -0.1 < c[2] <= inner_top(c) + 0.06:
-                inner.append(t); continue
-            if n[plane_axis] * outer_sign > 0.9 and abs(c[plane_axis] - outer_val) < 0.03 and t['material'] in ('hardie-lap#paint-ext-body', 'hardie-shingle#paint-ext-body'):
-                outer.setdefault((t['material'], round(float(c[plane_axis]), 2), None), []).append(t); continue   # one face per material and plane, so a hole across two walls closes
-            if any(r.contains(shapely.Point(c[u_axis], c[2])) for r in fill_rects) and min(inner_val, outer_val) + 0.03 < c[plane_axis] < max(inner_val, outer_val) - 0.03:
-                continue
-            keep.append(t)
-        for t in keep: O.tri(t['group'], t['storey'], t['material'], dst, t['boundary'] and ('K4-' + t['boundary']), t['v'], t['n'])
-        to3 = (lambda val: (lambda u, z: (u, val, z))) if plane_axis == 1 else (lambda val: (lambda u, z: (val, u, z)))
-        nin = [0, 0, 0]; nin[plane_axis] = inner_sign; nout = [0, 0, 0]; nout[plane_axis] = outer_sign
-        u = union_faces(inner, u_axis, 2)
-        if extra_in is not None: u = unary_union([u, extra_in])
-        u = fill_holes(u, only=fill_rects).difference(cut_in)
-        plane_face(O, dst, 'B-K4-' + dst[-3:] + 'I', 'walls', 'L1', PAINT, u, to3(inner_val), tuple(nin))
-        for (mat, vr, bd), ts in outer.items():
-            vo = float(np.mean([p[plane_axis] for t in ts for p in t['v']])); uu = union_faces(ts, u_axis, 2)
-            if not any(uu.intersects(g) for g in list(fill_rects) + [cut_out]):
-                for t in ts: O.tri(t['group'], t['storey'], t['material'], dst, t['boundary'] and ('K4-' + t['boundary']), t['v'], t['n'])
-                continue
-            uu = fill_holes(uu, only=fill_rects).difference(cut_out)
-            plane_face(O, dst, bd and ('K4-' + bd), 'walls', 'L1', mat, uu, to3(vo), tuple(nout))
-        return len(inner), len(outer), len(keep)
-    # ---- the street gable: kitchen window over the sink + the high glazed gable (no picture window)
-    g_x = lambda p: (41.39 - p[1], RIDGE_Y + (p[0] - KWIN_CX), p[2]); g_n = lambda n: np.array([-n[1], n[0], n[2]])
-    rep['kwin'] = copy_el(KWIN_SRC, 'WN-L1-K4A', g_x, g_n)
-    for i, tr in enumerate(KWIN_TRIMS): copy_el(tr, 'TR-K4-A%02d' % i, g_x, g_n)
-    kw = ob[KWIN_SRC]; kin = sbox(RIDGE_Y - kw['width'] / 2, kw['sill'], RIDGE_Y + kw['width'] / 2, kw['head'])
-    kb = [E[t] for t in ['TR-0695', 'TR-0696', 'TR-0697', 'TR-0698']]; vs = np.concatenate([np.array([q['v'] for q in ts]).reshape(-1, 3) for ts in kb])
-    kout = sbox(RIDGE_Y + (vs[:, 0].min() - KWIN_CX), vs[:, 2].min(), RIDGE_Y + (vs[:, 0].max() - KWIN_CX), vs[:, 2].max())
-    rep['kwin_reveal'] = copy_el('W-L1-002', 'W-L1-K4E', g_x, g_n, keep=lambda t: 4.43 < t['v'].mean(0)[1] < 4.78 and sbox(6.5, 3.3, 12.48, 7.3).contains(shapely.Point(t['v'].mean(0)[0], t['v'].mean(0)[2])))
-    gable_ro = [Polygon([(a, B.GABLE_SILL), (b, B.GABLE_SILL), (b, ceil_z(b) - B.GABLE_TOPGAP), (a, ceil_z(a) - B.GABLE_TOPGAP)]) for a, b in B.GABLE_PANES]
-    gable_trim_out = unary_union([mitre(p, B.TRIM_W) for p in gable_ro])
-    old_rects = [sbox(10.21, 1.26, 16.93, 6.72), sbox(18.89, 2.47, 23.15, 7.22), sbox(24.70, 2.47, 28.96, 7.22)]
-    EW = sum((E[w] for w in ('W-L1-049', 'W-L1-050', 'W-L1-051')), [])
-    inner, outer, keep_t = [], {}, []
-    for t in EW:
-        c = t['v'].mean(0); n = t['n']
-        if n[0] < -0.9 and c[0] < 36.7 and -0.1 < c[2] and all(p[2] <= ceil_z(p[1]) + 0.06 for p in t['v']) and Y_S - .01 < c[1] < Y_N + .01: inner.append(t); continue
-        if n[0] > 0.9 and c[0] > 36.95 and t['material'] in ('hardie-lap#paint-ext-body', 'hardie-shingle#paint-ext-body'):
-            outer.setdefault((t['material'], round(float(c[0]), 2), t['boundary']), []).append(t); continue
-        if 36.6 < c[0] < 36.97 and any(r.contains(shapely.Point(c[1], c[2])) for r in old_rects): continue
-        keep_t.append(t)
-    for t in keep_t: O.tri(t['group'], t['storey'], t['material'], 'W-L1-K4E', t['boundary'] and ('K4-' + t['boundary']), t['v'], t['n'])
-    face = Polygon([(Y_S, 0), (Y_N, 0), (Y_N, ceil_z(Y_N)), (RIDGE_Y, APEX), (Y_S, ceil_z(Y_S))]).difference(kin).difference(unary_union(gable_ro))
-    plane_face(O, 'W-L1-K4E', 'B-K4-E01', 'walls', 'L1', PAINT, face, lambda y, z: (X_E, y, z), (-1, 0, 0))
-    for (mat, xr, bd), ts in outer.items():
-        xo = float(np.mean([p[0] for t in ts for p in t['v']])); u = union_faces(ts, 1, 2)
-        if not any(u.intersects(g) for g in old_rects + [kout, gable_trim_out]):
-            for t in ts: O.tri(t['group'], t['storey'], t['material'], 'W-L1-K4E', t['boundary'] and ('K4-' + t['boundary']), t['v'], t['n'])
-            continue
-        u = fill_holes(u, only=old_rects).difference(kout).difference(gable_trim_out)
-        plane_face(O, 'W-L1-K4E', bd and ('K4-' + bd), 'walls', 'L1', mat, u, lambda y, z, xo=xo: (xo, y, z), (1, 0, 0))
-    FR_IN, FR_OUT = 36.70, 36.90
-    for i, ro in enumerate(gable_ro):
-        el = 'WN-L1-K4G%d' % (i + 1); cen = ring_center3(ro.exterior, lambda y, z: (36.8, y, z))
-        prism_sides(O, el, None, 'openings', 'L1', PAINT, ro.exterior, lambda y, z: (X_E, y, z), lambda y, z: (FR_IN, y, z), inward_center=cen, outward=False)
-        prism_sides(O, el, None, 'trim', '-', TRIM_EXT, ro.exterior, lambda y, z: (FR_OUT, y, z), lambda y, z: (X_EO + B.TRIM_T, y, z), inward_center=cen, outward=False)
-        ring = ro.difference(mitre(ro, -0.16)); glass = mitre(ro, -0.16)
-        plane_face(O, el, None, 'openings', 'L1', 'window-frame', ring, lambda y, z: (FR_IN, y, z), (-1, 0, 0))
-        plane_face(O, el, None, 'openings', 'L1', 'window-frame', ring, lambda y, z: (FR_OUT, y, z), (1, 0, 0))
-        prism_sides(O, el, None, 'openings', 'L1', 'window-frame', glass.exterior, lambda y, z: (FR_IN, y, z), lambda y, z: (FR_OUT, y, z), inward_center=cen, outward=False)
-        plane_face(O, el, None, 'glass', 'L1', 'glass', glass, lambda y, z: (36.79, y, z), (-1, 0, 0))
-        plane_face(O, el, None, 'glass', 'L1', 'glass', glass, lambda y, z: (36.81, y, z), (1, 0, 0))
-    plane_face(O, 'TR-K4-G01', None, 'trim', '-', TRIM_EXT, gable_trim_out.difference(unary_union(gable_ro)), lambda y, z: (X_EO + B.TRIM_T, y, z), (1, 0, 0))
-    for p in (gable_trim_out.geoms if hasattr(gable_trim_out, 'geoms') else [gable_trim_out]):
-        prism_sides(O, 'TR-K4-G01', None, 'trim', '-', TRIM_EXT, p.exterior, lambda y, z: (X_EO, y, z), lambda y, z: (X_EO + B.TRIM_T, y, z), inward_center=ring_center3(p.exterior, lambda y, z: (37, y, z)))
+            c = t['v'].mean(0); n = t['n']; pc = c[axis]
+            if n[axis] * sign_in > 0.9 and abs(pc - inner) < 0.07 and t['v'][:, 2].min() > -0.07 and face.buffer(0.2).contains(shapely.Point(c[ua], c[2])): continue
+            if n[axis] * sign_in < -0.9 and abs(pc - outer) < 0.25 and t['material'].startswith('hardie'): groups.setdefault((t['material'], round(float(pc), 2)), []).append(t); continue
+            if lo + 0.02 < pc < hi - 0.02 and (any(r.buffer(0.15).contains(shapely.Point(c[ua], c[2])) for r in fills) or cutu.buffer(0.15).contains(shapely.Point(c[ua], c[2]))): continue
+            O.tri(t['group'], t['storey'], t['material'], dst, t['boundary'] and ('B5-' + t['boundary']), t['v'], t['n'])
+        plane_face(O, dst, 'B-B5-' + dst[-1] + 'I', 'walls', 'L1', PAINT, face.difference(cutu), to3(inner), tuple(nin))
+        for (mat, pr), ts in groups.items():
+            po = float(np.mean([p[axis] for t in ts for p in t['v']])); uu = union_faces(ts, ua, 2)
+            uu = fill_holes(uu, only=[r.buffer(0.6) for r in fills]).difference(cutu)
+            plane_face(O, dst, None, 'walls', 'L1', mat, uu, to3(po), tuple(-a for a in nin))
+        for r in cuts:
+            cen = to3((inner + outer) / 2)(r.centroid.x, r.centroid.y)
+            prism_sides(O, dst, None, 'walls', 'L1', PAINT, r.exterior, to3(inner), to3((inner + outer) / 2), inward_center=cen, outward=False)
+            prism_sides(O, dst, None, 'trim', '-', TRIM_EXT, r.exterior, to3((inner + outer) / 2), to3(outer), inward_center=cen, outward=False)
+    rect = lambda c, w, s, h: sbox(c - w / 2, s, c + w / 2, h)
+    oldr = lambda k, pad=0.35: rect(OLD_WIN[k][1], OLD_WIN[k][2] + 2 * pad, OLD_WIN[k][3] - pad, OLD_WIN[k][4] + pad)
 
-    # ---- the north wall: the middle bedroom's window filled (the fireplace stands there), the closet paint repainted
-    w8 = ob['WN-L1-08']; w8r = sbox(w8['center'][0] - 3.4, 1.2, w8['center'][0] + 3.4, 7.2)
-    rep['north'] = cut_wall(['W-L1-021', 'W-L1-020'], 'W-L1-K4N', 1, Y_N, -1, 32.487, 1, [w8r], Polygon(), Polygon(), lambda c: 8.05, 0,
-                            extra_in=sbox(23.95, 0, 24.35, ceil_z(Y_N)))
-    # ---- the south wall: the picture window becomes a folding glass wall to the deck
-    w3 = ob['WN-L1-03']; w3r = sbox(w3['center'][0] - w3['width'] / 2 - 0.4, 1.2, w3['center'][0] + w3['width'] / 2 + 0.4, 8.0)
-    nana = sbox(NANA['x0'], 0.0, NANA['x1'], NANA['head']); nana_out = mitre(nana, B.TRIM_W).intersection(sbox(0, 0.0, 99, 99))
-    rep['south'] = cut_wall(['W-L1-002'], 'W-L1-K4S', 1, Y_S, 1, Y_SO, -1, [w3r], nana, nana_out, lambda c: 8.2, 0)
-    # returns, head and jamb trim of the big opening (the panels themselves are the page's: they fold)
-    ring = Polygon([(NANA['x0'], 0), (NANA['x1'], 0), (NANA['x1'], NANA['head']), (NANA['x0'], NANA['head'])])
-    cen = (25.0, 4.6, 3.0)
-    for a, b_, mat, grp_, st in ((Y_S, 4.62, PAINT, 'openings', 'L1'), (4.62, Y_SO - B.TRIM_T, 'steel-black', 'openings', 'L1')):
-        pts = [(NANA['x0'], 0), (NANA['x0'], NANA['head']), (NANA['x1'], NANA['head']), (NANA['x1'], 0)]
-        for (u0, v0), (u1, v1) in zip(pts[:-1], pts[1:]):
-            q = [(u0, a, v0), (u1, a, v1), (u1, b_, v1), (u0, b_, v0)]; n = np.cross(np.subtract(q[1], q[0]), np.subtract(q[3], q[0])); n = n / np.linalg.norm(n)
-            if np.dot(n, np.subtract(cen, np.mean(q, 0))) < 0: n = -n
-            O.tri(grp_, st, mat, 'D-L1-K4F', None, [q[0], q[1], q[2]], n); O.tri(grp_, st, mat, 'D-L1-K4F', None, [q[0], q[2], q[3]], n)
-    tr = nana_out.difference(nana)
-    plane_face(O, 'TR-K4-F01', None, 'trim', '-', TRIM_EXT, tr, lambda x, z: (x, Y_SO - B.TRIM_T, z), (0, -1, 0))
-    prism_sides(O, 'TR-K4-F01', None, 'trim', '-', TRIM_EXT, nana_out.exterior, lambda x, z: (x, Y_SO, z), lambda x, z: (x, Y_SO - B.TRIM_T, z), inward_center=(25, 4.4, 3.8))
-    # threshold track under the panels
-    for x0, x1, y0, y1 in ((NANA['x0'], NANA['x1'], 4.45, 4.75),):
-        plane_face(O, 'D-L1-K4F', None, 'openings', 'L1', 'steel-black', sbox(x0, y0, x1, y1), lambda x, y: (x, y, 0.012), (0, 0, 1))
+    # ---- one oak floor and one vault over the whole gable box; the ridge beam, clear span
+    room = Polygon(BOX); floor = unary_union([room, sbox(FOLD['x0'], Y_SO, FOLD['x1'], Y_S), sbox(X_WW, PASS[0], X_LW, PASS[1])])
+    plane_face(O, 'FL-SP-L1-B5', None, 'floors', 'L1', 'oak-red-lauzon-vela', floor, lambda x, y: (x, y, 0.0), (0, 0, 1))
+    plane_face(O, 'FL-SP-L1-B5', None, 'floors', 'L1', 'oak-red-lauzon-vela', floor, lambda x, y: (x, y, -0.062), (0, 0, -1))
+    strips = unary_union([sbox(-6.6, 14.32, X_WW, 14.70), sbox(-6.42, 16.74, X_WW, 17.11), sbox(X_WW, 9.0, X_LW, 14.51), sbox(X_WW, 22.22, X_LW, 25.5555), sbox(X_WW, 4.404, X_LW, PASS[0])])
+    plane_face(O, 'FL-B5-PATCH', None, 'floors', 'L1', 'oak-red-lauzon-vela', strips, lambda x, y: (x, y, 0.0), (0, 0, 1))
+    for part, nrm in ((room.intersection(sbox(0, 0, 60, RIDGE_Y)), (0, PITCH, -1)), (room.intersection(sbox(0, RIDGE_Y, 60, 60)), (0, -PITCH, -1))):
+        plane_face(O, 'CL-SP-L1-B5', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y)), nrm)
+        plane_face(O, 'CL-SP-L1-B5', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y) + 0.042), tuple(-a for a in nrm))
+    sec = Polygon([(KB_Y0, KB_Z0), (KB_Y1, KB_Z0), (KB_Y1, ceil_z(KB_Y1) - 0.004), (RIDGE_Y, APEX - 0.004), (KB_Y0, ceil_z(KB_Y0) - 0.004)])
+    prism_sides(O, 'BM-L1-B5', None, 'ceilings', 'L1', 'fir-beam', sec.exterior, lambda y, z: (X_LW + 0.002, y, z), lambda y, z: (X_E - 0.002, y, z), inward_center=(20, RIDGE_Y, APEX - KB_D / 2))
+    # bath and shower floors: tile over the old oak
+    tile = unary_union([sbox(-9.53, 9.59, -1.29, 14.32), sbox(-9.53, 14.32, -6.79, 18.42), sbox(-9.14, 14.32, -6.8, 14.70)])
+    plane_face(O, 'FL-B5-BATH', None, 'floors', 'L1', 'stone-tile-24', tile, lambda x, y: (x, y, 0.014), (0, 0, 1))
 
-    # ---- the deck: the porch deck carried along the great room, the steps narrowed, cable railing on the new edges
+    # ---- the south wall: folding glass doors centred on the table, the east part of the picture window kept as fixed glass
+    fold = sbox(FOLD['x0'], 0.0, FOLD['x1'], FOLD['head']); fixw = sbox(FIXW['x0'], FIXW['sill'], FIXW['x1'], FIXW['head'])
+    ext_wall(['W-L1-002', 'W-L1-003'], 'W-L1-B5S', 1, Y_S, Y_SO, 1, sbox(X_LW, 0, X_E, ceil_z(Y_S)), [oldr('WN-L1-02'), oldr('WN-L1-03')], [fold, fixw])
+    window('WN-L1-B5S', 1, FIXW['x0'], FIXW['x1'], FIXW['sill'], FIXW['head'], Y_S, Y_SO, -1, units=3)
+    plane_face(O, 'D-L1-B5F', None, 'openings', 'L1', 'steel-black', sbox(FOLD['x0'], 4.45, FOLD['x1'], 4.75), lambda x, y: (x, y, 0.012), (0, 0, 1))   # threshold track
+    # the folding doors' trim: the house's flat 3-1/2 in white casing up both jambs and across the head inside, the exterior trim outside, a sill nosing
+    cw = 0.29; cas = sbox(FOLD['x0'] - cw, 0, FOLD['x1'] + cw, FOLD['head'] + cw).difference(sbox(FOLD['x0'], -1, FOLD['x1'], FOLD['head']))
+    plane_face(O, 'D-L1-B5F', None, 'trim', 'L1', 'paint-trim-semigloss', cas, lambda x, z: (x, Y_S + 0.06, z), (0, 1, 0))
+    prism_sides(O, 'D-L1-B5F', None, 'trim', 'L1', 'paint-trim-semigloss', cas.exterior, lambda x, z: (x, Y_S, z), lambda x, z: (x, Y_S + 0.06, z), inward_center=((FOLD['x0'] + FOLD['x1']) / 2, Y_S + 0.03, FOLD['head'] + cw / 2))
+    ex = sbox(FOLD['x0'] - B.TRIM_W, 0, FOLD['x1'] + B.TRIM_W, FOLD['head'] + B.TRIM_W).difference(sbox(FOLD['x0'], -1, FOLD['x1'], FOLD['head']))
+    plane_face(O, 'D-L1-B5F', None, 'trim', '-', TRIM_EXT, ex, lambda x, z: (x, Y_SO - B.TRIM_T, z), (0, -1, 0))
+    prism_sides(O, 'D-L1-B5F', None, 'trim', '-', TRIM_EXT, ex.exterior, lambda x, z: (x, Y_SO, z), lambda x, z: (x, Y_SO - B.TRIM_T, z), inward_center=((FOLD['x0'] + FOLD['x1']) / 2, Y_SO - B.TRIM_T / 2, FOLD['head'] + B.TRIM_W / 2))
+    boxel('D-L1-B5F', 'openings', 'L1', 'steel-black', FOLD['x0'], Y_SO - 0.12, -0.12, FOLD['x1'], Y_SO, 0.012, faces='xXyZ')   # sill nosing over the deck
+    colliders += [{'id': 'W-L1-B5S#%d' % i, 'element': 'W-L1-B5S', 'kind': 'WALL', 'poly': [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]], 'z0': -5.2, 'z1': 8.16, 'storey': 'L1', 'exterior': True} for i, (a, b_) in enumerate(((4.9, FOLD['x0']), (FOLD['x1'], 32.49)))]
+    # ---- the north wall: the old bedroom and bath windows go; two counter-height kitchen windows and one in the living area
+    ncuts = [rect(c, w, s, h) for c, w, s, h in NWIN]
+    ext_wall(['W-L1-020', 'W-L1-021'], 'W-L1-B5N', 1, Y_N, Y_NO, -1, sbox(5.2176, 0, X_E, ceil_z(Y_N)), [oldr('WN-L1-08'), oldr('WN-L1-09'), oldr('WN-L1-11')], ncuts)
+    for i, (c, w, s, h) in enumerate(NWIN): window('WN-L1-B5N%d' % (i + 1), 1, c - w / 2, c + w / 2, s, h, Y_N, Y_NO, 1, units=3)
+    # ---- the street gable: the three low windows go; two matching windows either side of the hearth
+    GGS = [gable_glass(-1), gable_glass(1)]
+    ecuts = [rect(c, w, s, h) for c, w, s, h in EWIN] + [g[0] for g in GGS]
+    eface = Polygon([(Y_S, 0), (Y_N, 0), (Y_N, ceil_z(Y_N)), (RIDGE_Y, APEX), (Y_S, ceil_z(Y_S))])
+    ext_wall(['W-L1-049', 'W-L1-050', 'W-L1-051'], 'W-L1-B5E', 0, X_E, X_EO, -1, eface, [oldr('WN-L1-04'), oldr('WN-L1-05'), oldr('WN-L1-07')], ecuts)
+    for i, (c, w, s, h) in enumerate(EWIN): window('WN-L1-B5E%d' % (i + 1), 0, c - w / 2, c + w / 2, s, h, X_E, X_EO, 1, units=EUNITS)
+    rep['gable_align'] = {}
+    for side, (tri, panes) in zip((-1, 1), GGS):               # numerical check: window mullions against the bars of the glass above
+        c, w = EWIN[0 if side < 0 else 1][:2]; bw = (w - 0.08 - (EUNITS - 1) * MUL) / EUNITS
+        low = sorted(round(c - w / 2 + 0.04 + (k + 1) * bw + (k + 0.5) * MUL, 3) for k in range(EUNITS - 1))
+        xs = sorted(set(round(v, 3) for pn in panes for v in (pn.bounds[0], pn.bounds[2]))); gaps = [(a2, b2) for a2, b2 in zip(xs[1:-1:2], xs[2:-1:2])]
+        rep['gable_align']['south' if side < 0 else 'north'] = {'window_mullion_y': low, 'window_mullion_w': round(MG, 3), 'glass_bar_y': [round((a2 + b2) / 2, 3) for a2, b2 in gaps], 'glass_bar_w': [round(b2 - a2, 3) for a2, b2 in gaps],
+                                                              'window_jambs_y': [round(c - w / 2, 3), round(c + w / 2, 3)], 'glass_ends_y': [round(tri.bounds[0], 3), round(tri.bounds[2], 3)], 'panes': len(panes)}
+    for i, (tri, panes) in enumerate(GGS): win_poly('WN-L1-B5G%d' % (i + 1), 0, tri, panes, X_E, X_EO, 1)
+    # ---- the west side of the box north of the bedroom (the old bath's tiled walls): repainted to the vault
+    for el in ('W-L1-032', 'W-L1-038'):
+        xs = []
+        for t in E.get(el, []):
+            if t['boundary'] and bnd.get(t['boundary']) == 'SP-L1-BATH':
+                if [el, t['boundary']] not in hide_ranges: hide_ranges.append([el, t['boundary']])
+                if t['n'][0] > 0.9: xs.append(t['v'][:, 0].mean())
+        if xs:
+            lo, hi = bbox[el]; y0, y1 = max(lo[1], 25.5555), min(hi[1], Y_N); x = float(np.median(xs))
+            plane_face(O, 'W-L1-B5P', None, 'walls', 'L1', PAINT, Polygon([(y0, 0), (y1, 0), (y1, ceil_z(y1)), (y0, ceil_z(y0))]), lambda y, z, x=x: (x + 0.014, y, z), (1, 0, 0))   # a hair proud of the old wall's studs, which show above the old 8-ft ceiling
+    plane_face(O, 'W-L1-B5P', None, 'walls', 'L1', PAINT, Polygon([(22.0293, 0), (22.22, 0), (22.22, ceil_z(22.22)), (22.0293, ceil_z(22.0293))]), lambda y, z: (X_LW, y, z), (1, 0, 0))
+
+    # ---- the west gable wall: the two old doors close up; a 3 ft 10 way in from the library at its south end
+    wall_run('W-L1-B5W', 'y', X_WW, X_LW, 4.404, 14.51, lambda x, y: zg(y), openings=[(PASS[0], PASS[1], PASS[2])])
+    wall_run('W-L1-B5V', 'y', X_WW, X_LW, 22.22, 25.5555, lambda x, y: zg(y))
+    ext = Polygon([(22.4, 9.08), (25.37, 9.08), (25.37, zg(25.37) - 0.03), (22.4, zg(22.4) - 0.03)])
+    plane_face(O, 'W-L1-B5V', None, 'walls', 'L1', 'hardie-lap#paint-ext-body', ext, lambda y, z: (X_WW - 0.004, y, z), (-1, 0, 0))   # above the wing roof it is an outside wall
+    # ---- outside the gable: library, hall, bath, vestibule, bedroom
+    wall_run('W-L1-B5A', 'x', 9.21, 9.59, -9.53, X_WW, lambda x, y: zl(x) + 0.03, openings=[(-0.7, 1.95, DOOR_H)])                     # library / bath and hall
+    # the laundry closet in the hall's south-east corner: stacked washer and dryer behind a closed door, 36 in of hall left beside it
+    wall_run('W-L1-B5L', 'x', 11.9, 12.2, 2.1, X_WW, lambda x, y: zl(x) + 0.03)
+    wall_run('W-L1-B5M', 'y', 2.1, 2.25, 9.59, 11.9, lambda x, y: zl(x) + 0.03, openings=[(9.67, 11.82, DOOR_H)], collide=False)
+    boxel('D-L1-B5L', 'openings', 'L1', 'door-panel-field', 2.14, 9.68, 0.04, 2.21, 11.81, DOOR_H - 0.03, faces='xXyYZ')
+    boxel('D-L1-B5L', 'openings', 'L1', 'steel-black', 2.10, 9.86, 3.0, 2.14, 9.92, 3.45, faces='xyYzZ')
+    colliders.append({'id': 'FX-B5-LAUNDRY#0', 'element': 'FX-B5-LAUNDRY', 'kind': 'WALL', 'poly': [[2.1, 9.59], [2.25, 9.59], [2.25, 11.9], [2.1, 11.9]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
+    wall_run('W-L1-B5B', 'y', -1.29, -0.91, 9.59, 14.32, lambda x, y: zl(x) + 0.03, openings=[(9.95, 12.45, DOOR_H)])                  # bath / hall
+    wall_run('W-L1-B5C', 'x', 14.32, 14.70, -6.6, X_WW, lambda x, y: max(zl(x), zw(14.7)) + 0.03, openings=[(0.1, 2.9, DOOR_H)])      # hall / vestibule and closet
+    wall_run('W-L1-B5D', 'x', 16.78, 17.08, -6.41, X_WW, lambda x, y: zw(y) + 0.03, openings=[(-6.1, -0.7, DOOR_H), (0.27, 2.93, DOOR_H)])   # closet and vestibule / bedroom
+    for i, (x0, x1, y) in enumerate(((-6.05, -3.35, 16.86), (-3.45, -0.75, 16.95))):          # the closet's two sliding doors
+        boxel('D-L1-B5C', 'openings', 'L1', 'door-panel-field', x0, y - 0.04, 0.04, x1, y + 0.04, DOOR_H - 0.04, faces='xXyYZ')
+    boxel('D-L1-B5B', 'openings', 'L1', 'door-panel-field', 2.85, 17.08, 0.04, 2.93, 19.66, DOOR_H - 0.04, faces='xXyYZ')            # the bedroom door, standing open
+    # baseboards in the great room (square, as built height) where no cabinet or opening stands
+    bb = E['TR-0201'][0]
+    for i, (x0, y0, x1, y1) in enumerate(((X_LW, Y_S, FOLD['x0'], Y_S + 0.06), (FOLD['x1'], Y_S, X_E, Y_S + 0.06), (X_E - 0.06, Y_S, X_E, FP['cy'] - 3.0), (X_E - 0.06, FP['cy'] + 3.0, X_E, Y_N), (21.5, Y_N - 0.06, X_E, Y_N),
+                                         (X_LW, 9.0, X_LW + 0.06, 11.0), (X_LW, 19.5, X_LW + 0.06, 21.0))):
+        boxel('TR-B5-BB%d' % i, bb['group'], bb['storey'], bb['material'], x0, y0, 0.0, x1, y1, 0.44, faces='xXyYZ')
+
+    # ---- the hearth on the street gable: a stone-clad chimney breast to the vault (the stone itself is the page's 'ledgestone' builtin
+    # over this dark core), a linear gas firebox in a steel frame, a raised stone hearth, a heavy fir mantel; vent cap outside
+    fy0, fy1, fx = FP['cy'] - FP['w'] / 2, FP['cy'] + FP['w'] / 2, X_E - FP['d']; bw, bz0, bz1 = FP['box']; by0, by1 = FP['cy'] - bw / 2, FP['cy'] + bw / 2
+    cx, c0, c1 = fx + 0.10, fy0 + 0.10, fy1 - 0.10                                   # the core, a little inside the stone faces
+    n = 12; ys = [c0 + (c1 - c0) * i / n for i in range(n + 1)]
+    front = Polygon([(c0, 0), (c1, 0)] + [(y, ceil_z(y) - 0.003) for y in ys[::-1]]).difference(sbox(by0, bz0, by1, bz1))
+    plane_face(O, 'FP-L1-B5', None, 'walls', 'L1', 'concrete', front, lambda y, z: (cx, y, z), (-1, 0, 0))
+    for y, s in ((c0, -1), (c1, 1)): quad('FP-L1-B5', 'walls', 'L1', 'concrete', [(cx, y, 0), (X_E, y, 0), (X_E, y, ceil_z(y) - 0.003), (cx, y, ceil_z(y) - 0.003)], (0, s, 0))
+    back = fx + 0.95
+    plane_face(O, 'FP-L1-B5', None, 'openings', 'L1', 'steel-black', sbox(by0, bz0, by1, bz1), lambda y, z: (back, y, z), (-1, 0, 0))
+    prism_sides(O, 'FP-L1-B5', None, 'openings', 'L1', 'steel-black', sbox(by0, bz0, by1, bz1).exterior, lambda y, z: (fx - 0.05, y, z), lambda y, z: (back, y, z), inward_center=(fx + .4, FP['cy'], (bz0 + bz1) / 2), outward=False)
+    plane_face(O, 'FP-L1-B5', None, 'glass', 'L1', 'glass', sbox(by0 + .02, bz0 + .02, by1 - .02, bz1 - .02), lambda y, z: (fx + 0.2, y, z), (-1, 0, 0))
+    fr = 0.14                                                                        # the steel frame round the firebox, proud of the stone
+    for (a0, z0_, a1, z1_) in ((by0 - fr, bz0 - fr, by1 + fr, bz0), (by0 - fr, bz1, by1 + fr, bz1 + fr), (by0 - fr, bz0, by0, bz1), (by1, bz0, by1 + fr, bz1)):
+        boxel('FP-L1-B5', 'openings', 'L1', 'steel-black', fx - 0.09, a0, z0_, fx + 0.1, a1, z1_, faces='xyYzZ')
+    boxel('FP-L1-B5', 'floors', 'L1', 'flagstone-grey', fx - FP['hearth'][0], fy0 - 0.02, 0.0, fx + 0.12, fy1 + 0.02, FP['hearth'][1], faces='xyYZ')        # raised hearth
+    mz, mh, md, ml = FP['mantel']
+    boxel('FP-L1-B5', 'ceilings', 'L1', 'fir-beam', fx - md, FP['cy'] - ml / 2, mz, fx + 0.1, FP['cy'] + ml / 2, mz + mh, faces='xyYzZ')
+    boxel('FP-L1-B5', 'trim', '-', 'hardie-lap#paint-ext-body', X_EO, FP['cy'] - 0.4, 3.0, X_EO + 0.2, FP['cy'] + 0.4, 3.75, faces='XyYzZ')   # a small direct-vent cap in the siding colour
+    colliders.append({'id': 'FP-L1-B5#0', 'element': 'FP-L1-B5', 'kind': 'WALL', 'poly': [[fx - FP['hearth'][0], fy0], [X_E, fy0], [X_E, fy1], [fx - FP['hearth'][0], fy1]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
+
+    # ---- the deck: the porch deck carried about 9 ft east along the folding doors, the steps narrowed, cable rail on the new edges
     dk = E['SL-DK-FRONT']
-    for t in dk:   # the porch deck as built, its east skirt dropped where the new deck continues
+    for t in dk:
         c = t['v'].mean(0)
         if abs(c[0] - DECK['x0']) < 0.08 and abs(t['n'][0]) > 0.9 and c[1] > DECK['y0'] - 0.1: continue
-        O.tri(t['group'], t['storey'], t['material'], 'SL-DK-K4', t['boundary'] and ('K4-' + t['boundary']), t['v'], t['n'])
-    dpoly = sbox(DECK['x0'], DECK['y0'], DECK['x1'], Y_SO)
-    top = [t for t in dk if t['n'][2] > 0.9]; deck_mat = top[0]['material']; skirt_mat = 'deck-skirt'
-    plane_face(O, 'SL-DK-K4', None, 'site', 'L1', deck_mat, dpoly, lambda x, y: (x, y, DECK['z']), (0, 0, 1))
-    for (a, b_) in (((DECK['x0'], DECK['y0']), (DECK['x1'], DECK['y0'])), ((DECK['x1'], DECK['y0']), (DECK['x1'], Y_SO))):
+        O.tri(t['group'], t['storey'], t['material'], 'SL-DK-B5', None, t['v'], t['n'])
+    top = [t for t in dk if t['n'][2] > 0.9]; deck_mat = top[0]['material']
+    dpoly = unary_union([sbox(DECK['x0'], DECK['y0'], DECK['x1'], Y_SO), sbox(5.32, 3.95, DECK['x0'], Y_SO)])
+    plane_face(O, 'SL-DK-B5', None, 'site', 'L1', deck_mat, dpoly, lambda x, y: (x, y, DECK['z']), (0, 0, 1))
+    for a, b_ in (((DECK['x0'], DECK['y0']), (DECK['x1'], DECK['y0'])), ((DECK['x1'], DECK['y0']), (DECK['x1'], Y_SO))):
         q = [(a[0], a[1], DECK['z']), (b_[0], b_[1], DECK['z']), (b_[0], b_[1], DECK['skirt']), (a[0], a[1], DECK['skirt'])]
-        n = np.cross(np.subtract(q[1], q[0]), np.subtract(q[3], q[0])); n = n / np.linalg.norm(n)
-        if np.dot(n, np.subtract((24, 0, -2), np.mean(q, 0))) > 0: n = -n
-        O.tri('site', 'L1', skirt_mat, 'SL-DK-K4', None, [q[0], q[1], q[2]], n); O.tri('site', 'L1', skirt_mat, 'SL-DK-K4', None, [q[0], q[2], q[3]], n)
-    # steps: the same treads and rail, the run narrowed from 10 ft to 6 ft (they now start at the deck's south edge)
-    s0, s1 = STAIR_Y; ns0, ns1 = s0, DECK['y0']; sy = lambda y: ns0 + (y - s0) * (ns1 - ns0) / (s1 - s0)
-    rep['stairs'] = copy_el('ST-FRONT', 'ST-FRONT-K4', lambda p: (p[0], sy(p[1]), p[2]), lambda n: np.array(n))
-    copy_el('RL-FRONT-STAIR', 'RL-FRONT-STAIR-K4', lambda p: (p[0], p[1] + DECK['y0'], p[2]), lambda n: np.array(n))
-    # cable railing: the porch's own rail section, repeated along the deck's south and east edges
+        nn = np.cross(np.subtract(q[1], q[0]), np.subtract(q[3], q[0])); nn = nn / np.linalg.norm(nn)
+        if np.dot(nn, np.subtract((20, 0, -2), np.mean(q, 0))) > 0: nn = -nn
+        quad('SL-DK-B5', 'site', 'L1', 'deck-skirt', q, nn)
+    s0, s1 = STAIR_Y; sy = lambda y: s0 + (y - s0) * (DECK['y0'] - s0) / (s1 - s0)
+    for t in E['ST-FRONT']: O.tri(t['group'], t['storey'], t['material'], 'ST-FRONT-B5', None, np.array([(p[0], sy(p[1]), p[2]) for p in t['v']]), t['n'])
+    for t in E['RL-FRONT-STAIR']: O.tri(t['group'], t['storey'], t['material'], 'RL-FRONT-STAIR-B5', None, np.array([(p[0], p[1] + DECK['y0'] - 0.3, p[2]) for p in t['v']]), t['n'])   # the stair handrail, just inside the stair
     R = E['RL-FRONT-DECK']; RV = np.concatenate([t['v'] for t in R]); ry0, ry1 = RV[:, 1].min(), RV[:, 1].max(); rx = (RV[:, 0].min() + RV[:, 0].max()) / 2; L = ry1 - ry0
     def rail_run(el, a, b_):
-        dx, dy = b_[0] - a[0], b_[1] - a[1]; Ln = math.hypot(dx, dy); n = max(1, round(Ln / L)); ang = math.atan2(dy, dx) - math.pi / 2
-        ca, sa = math.cos(ang), math.sin(ang)
-        for k in range(n):
-            s = Ln / n; f = s / L; ox, oy = a[0] + dx / Ln * s * k, a[1] + dy / Ln * s * k
-            def fx(p, ox=ox, oy=oy, f=f):
-                lx, ly = p[0] - rx, (p[1] - ry0) * f; return (ox + lx * ca - ly * sa, oy + lx * sa + ly * ca, p[2])
-            fn = lambda nn: np.array([nn[0] * ca - nn[1] * sa, nn[0] * sa + nn[1] * ca, nn[2]])
-            for t in R: O.tri(t['group'], t['storey'], t['material'], el, None, np.array([fx(p) for p in t['v']]), fn(t['n']))
-    rail_run('RL-DECK-K4S', (19.88, DECK['y0']), (DECK['x1'] - 0.15, DECK['y0']))
-    rail_run('RL-DECK-K4E', (DECK['x1'] - 0.15, DECK['y0']), (DECK['x1'] - 0.15, 4.0))
-
-    # ---- fireplace: plaster surround from floor to the sloped ceiling, black firebox and glass, fir mantel beam; vent cap outside
-    fx0, fx1, fy = FP['cx'] - FP['w'] / 2, FP['cx'] + FP['w'] / 2, Y_N - FP['d']
-    bw, bz0, bz1 = FP['box']; bx0, bx1 = FP['cx'] - bw / 2, FP['cx'] + bw / 2
-    front = Polygon([(fx0, 0), (fx1, 0), (fx1, ceil_z(fy) - 0.003), (fx0, ceil_z(fy) - 0.003)]).difference(sbox(bx0, bz0, bx1, bz1))
-    plane_face(O, 'FP-L1-K4', None, 'walls', 'L1', PAINT, front, lambda x, z: (x, fy, z), (0, -1, 0))
-    for x, s in ((fx0, -1), (fx1, 1)):
-        side = Polygon([(fy, 0), (Y_N, 0), (Y_N, ceil_z(Y_N) - 0.003), (fy, ceil_z(fy) - 0.003)])
-        plane_face(O, 'FP-L1-K4', None, 'walls', 'L1', PAINT, side, lambda y, z, x=x: (x, y, z), (s, 0, 0))
-    inset = 0.9
-    for poly, to3, n in ((sbox(bx0, bz0, bx1, bz1), lambda x, z: (x, fy + inset, z), (0, -1, 0)),):
-        plane_face(O, 'FP-L1-K4', None, 'openings', 'L1', 'steel-black', poly, to3, n)
-    box_ring = Polygon([(bx0, bz0), (bx1, bz0), (bx1, bz1), (bx0, bz1)])
-    prism_sides(O, 'FP-L1-K4', None, 'openings', 'L1', 'steel-black', box_ring.exterior, lambda x, z: (x, fy, z), lambda x, z: (x, fy + inset, z), inward_center=(FP['cx'], fy + .4, (bz0 + bz1) / 2), outward=False)
-    plane_face(O, 'FP-L1-K4', None, 'glass', 'L1', 'glass', sbox(bx0 + .02, bz0 + .02, bx1 - .02, bz1 - .02), lambda x, z: (x, fy + 0.06, z), (0, -1, 0))
-    # embers / burner glow strip and a dark hearth plate
-    plane_face(O, 'FP-L1-K4', None, 'openings', 'L1', 'steel-black', sbox(fx0 - 0.25, fy - 1.2, fx1 + 0.25, fy), lambda x, y: (x, y, 0.004), (0, 0, 1))
-    mz0, mz1 = FP['mantel'], FP['mantel'] + 0.5
-    mb = [(fx0 - 0.3, fy - 0.55), (fx1 + 0.3, fy - 0.55), (fx1 + 0.3, fy), (fx0 - 0.3, fy)]
-    plane_face(O, 'FP-L1-K4', None, 'ceilings', 'L1', 'fir-beam', Polygon(mb), lambda x, y: (x, y, mz1), (0, 0, 1))
-    plane_face(O, 'FP-L1-K4', None, 'ceilings', 'L1', 'fir-beam', Polygon(mb), lambda x, y: (x, y, mz0), (0, 0, -1))
-    prism_sides(O, 'FP-L1-K4', None, 'ceilings', 'L1', 'fir-beam', Polygon(mb).exterior, lambda x, y: (x, y, mz0), lambda x, y: (x, y, mz1), inward_center=(FP['cx'], fy - .27, (mz0 + mz1) / 2))
-    vc = sbox(FP['cx'] - 0.6, 5.0, FP['cx'] + 0.6, 6.2)
-    plane_face(O, 'FP-L1-K4', None, 'trim', '-', 'steel-black', vc, lambda x, z: (x, 32.487 + 0.35, z), (0, 1, 0))
-    prism_sides(O, 'FP-L1-K4', None, 'trim', '-', 'steel-black', vc.exterior, lambda x, z: (x, 32.487, z), lambda x, z: (x, 32.487 + 0.35, z), inward_center=(FP['cx'], 32.6, 5.6))
-
-    # ---- skylight wells: the roof is re-made with the openings cut, drywall wells from the ceiling up through the roof, curbs + glass
-    RF = E['RF-MAIN']; sk_plan = unary_union([sbox(s[0], s[2], s[1], s[3]) for s in SKY]); nr = 0
-    for t in RF:
-        v = t['v']; c = v.mean(0); P = Polygon(v[:, :2])
-        if abs(t['n'][2]) > 0.5 and P.area > 1e-6 and P.intersects(sk_plan):
-            A = np.c_[np.ones(3), v[:, 0], v[:, 1]]
-            try: co = np.linalg.solve(A, v[:, 2])
-            except Exception: co = None
-            if co is not None:
-                rest = P.difference(sk_plan)
-                plane_face(O, 'RF-MAIN-K4', t['boundary'] and ('K4-' + t['boundary']), t['group'], t['storey'], t['material'], rest, lambda x, y, co=co: (x, y, co[0] + co[1] * x + co[2] * y), t['n']); nr += 1; continue
-        O.tri(t['group'], t['storey'], t['material'], 'RF-MAIN-K4', t['boundary'] and ('K4-' + t['boundary']), v, t['n'])
-    rep['roof_cut'] = nr
-    for i, (x0, x1, y0, y1) in enumerate(SKY):
-        el = 'SK-L1-K4%d' % (i + 1); curb = 0.45
-        ring = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-        for (ax, ay), (bx, by) in zip(ring, ring[1:] + ring[:1]):
-            q = [(ax, ay, ceil_z(ay)), (bx, by, ceil_z(by)), (bx, by, ROOF_TOP(by) + curb), (ax, ay, ROOF_TOP(ay) + curb)]
-            n = np.cross(np.subtract(q[1], q[0]), np.subtract(q[3], q[0])); n = n / np.linalg.norm(n)
-            if np.dot(n, np.subtract(((x0 + x1) / 2, (y0 + y1) / 2, 0), np.mean(q, 0))[:2].tolist() + [0]) < 0: n = -n
-            O.tri('ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', el, None, [q[0], q[1], q[2]], n); O.tri('ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', el, None, [q[0], q[2], q[3]], n)
-            qo = [(ax, ay, ROOF_TOP(ay)), (bx, by, ROOF_TOP(by)), (bx, by, ROOF_TOP(by) + curb), (ax, ay, ROOF_TOP(ay) + curb)]
-            O.tri('roofs', 'L1', 'skylight-frame', el, None, [qo[0], qo[1], qo[2]], -n); O.tri('roofs', 'L1', 'skylight-frame', el, None, [qo[0], qo[2], qo[3]], -n)
-        gz = lambda x, y: (x, y, ROOF_TOP(y) + curb)
-        plane_face(O, el, None, 'roofs', 'L1', 'skylight-frame', sbox(x0, y0, x1, y1).difference(sbox(x0 + .2, y0 + .2, x1 - .2, y1 - .2)), gz, (0, -PITCH if y0 < RIDGE_Y else PITCH, 1))
-        plane_face(O, el, None, 'glass', '-', 'skylight-glass', sbox(x0 + .2, y0 + .2, x1 - .2, y1 - .2), lambda x, y: (x, y, ROOF_TOP(y) + curb - 0.02), (0, -PITCH if y0 < RIDGE_Y else PITCH, 1))
-        plane_face(O, el, None, 'glass', '-', 'skylight-glass', sbox(x0 + .2, y0 + .2, x1 - .2, y1 - .2), lambda x, y: (x, y, ROOF_TOP(y) + curb - 0.04), (0, PITCH if y0 < RIDGE_Y else -PITCH, -1))
-
-    # ---- baseboards: as in the first concept, the north one stops at the fireplace, the south one at the opening
-    def stretch(src, dst, axis, a0, a1):
-        ts = E[src]; vals = np.concatenate([t['v'][:, axis] for t in ts]); lo, hi = vals.min(), vals.max()
-        for t in ts:
-            v = t['v'].copy(); v[:, axis] = np.where(np.abs(v[:, axis] - lo) < np.abs(v[:, axis] - hi), a0 + (v[:, axis] - lo), a1 - (hi - v[:, axis]))
-            O.tri(t['group'], t['storey'], t['material'], dst, None, v, t['n'])
-    stretch('TR-0250', 'TR-K4-BB1', 1, 4.852, Y_N)
-    stretch('TR-0211', 'TR-K4-BB2', 0, 15.82, fx0)
-    stretch('TR-0211', 'TR-K4-BB4', 0, fx1, X_E)
-    stretch('TR-0238', 'TR-K4-BB3', 1, 18.35, 22.20)
-    stretch('TR-0167', 'TR-K4-BB5', 0, 16.10, NANA['x0'])
+        dx, dy = b_[0] - a[0], b_[1] - a[1]; Ln = math.hypot(dx, dy); k_ = max(1, round(Ln / L)); ang = math.atan2(dy, dx) - math.pi / 2; ca, sa = math.cos(ang), math.sin(ang)
+        for k in range(k_):
+            s = Ln / k_; f = s / L; ox, oy = a[0] + dx / Ln * s * k, a[1] + dy / Ln * s * k
+            for t in R:
+                v = np.array([(ox + (p[0] - rx) * ca - (p[1] - ry0) * f * sa, oy + (p[0] - rx) * sa + (p[1] - ry0) * f * ca, p[2]) for p in t['v']])
+                O.tri(t['group'], t['storey'], t['material'], el, None, v, np.array([t['n'][0] * ca - t['n'][1] * sa, t['n'][0] * sa + t['n'][1] * ca, t['n'][2]]))
+    rail_run('RL-DECK-B5S', (DECK['x0'] + 0.06, DECK['y0']), (DECK['x1'] - 0.15, DECK['y0'])); rail_run('RL-DECK-B5E', (DECK['x1'] - 0.15, DECK['y0']), (DECK['x1'] - 0.15, 4.0))
 
     O.write(os.path.join(B2, GLB_OUT))
     rep['meshes'] = len(O.M); rep['tris'] = sum(len(m['idx']) for m in O.M.values())
     elements = sorted(set(r[0] for m in O.M.values() for r in m['ranges'])); bounds = sorted(set(r[1] for m in O.M.values() for r in m['ranges'] if r[1]))
-    return meta, hide, hide_ranges, elements, bounds, rep
+    return meta, hide, hide_ranges, elements, bounds, colliders, rep
 
-def option_data(meta, elements, bounds):
-    D = B.option_data(meta, elements, bounds)                    # the first concept's data: spaces, walkable, colliders, openings...
-    D['source'] = {'builder': 'tour/bim2/tools/build_open4k.py', 'options': {'OS-REMODEL': LEGACY}, 'note': LABEL}
-    for s in D['spaces']:
-        if s['id'] == GREAT: s['name'] = 'Kitchen, living & dining'
-    # walkable: the deck and the narrowed steps; the floor out through the folding wall
-    wk = [w for w in D['walkable'] if w['id'] not in ('SL-DK-FRONT',) and w.get('element') != 'ST-FRONT' and w['id'] != 'FL-SP-L1-OPEN4']
-    wk.append({'id': 'FL-SP-L1-OPEN4K', 'element': 'FL-SP-L1-OPEN4K', 'kind': 'FLOOR', 'space': GREAT, 'storey': 'L1', 'poly': [list(p) for p in ROOM], 'holes': [], 'z': 0, 'exterior': False})
-    wk.append({'id': 'TH-D-L1-K4F', 'element': 'D-L1-K4F', 'kind': 'THRESHOLD', 'opening': 'D-L1-K4F', 'storey': 'L1', 'poly': [[NANA['x0'], Y_SO], [NANA['x1'], Y_SO], [NANA['x1'], Y_S], [NANA['x0'], Y_S]], 'z': 0, 'exterior': False})
-    wk.append({'id': 'SL-DK-K4', 'element': 'SL-DK-K4', 'kind': 'DECK',   # a new id: the page keys walkable floors by id, so a reused id keeps only the as-built deck
-                'poly': [[2.85, -10.087], [DECK['x0'], -10.087], [DECK['x0'], DECK['y0']], [DECK['x1'], DECK['y0']], [DECK['x1'], Y_SO], [2.85, Y_SO]], 'z': 0, 'storey': 'L1', 'exterior': True})
+def option_data(meta, elements, bounds, new_col):
+    D = {'format': 'bim2-scene-meta-option', 'source': {'builder': 'tour/bim2/tools/build_open4k.py', 'options': {'OS-REMODEL': LEGACY}, 'note': LABEL}}
+    P2 = lambda pts: [list(p) for p in pts]; room = Polygon(BOX)
+    vault = lambda poly: {'form': 'VAULT_ROOF', 'height': None, 'planes': [
+        {'poly': P2(poly.intersection(sbox(-60, -60, 60, RIDGE_Y)).exterior.coords[:-1]), 'holes': [], 'P': {'c': C_S, 'gx': 0, 'gy': PITCH}},
+        {'poly': P2(poly.intersection(sbox(-60, RIDGE_Y, 60, 60)).exterior.coords[:-1]), 'holes': [], 'P': {'c': C_N, 'gx': 0, 'gy': -PITCH}}]}
+    liv = lambda poly: {'form': 'VAULT_GABLE', 'height': None, 'planes': [pl for pl in (
+        {'poly': P2(poly.intersection(sbox(-60, -60, -2.28, 60)).exterior.coords[:-1]) if poly.bounds[0] < -2.28 else None, 'holes': [], 'P': {'c': 10.2201, 'gx': 0.2548, 'gy': 0}},
+        {'poly': P2(poly.intersection(sbox(-2.28, -60, 60, 60)).exterior.coords[:-1]) if poly.bounds[2] > -2.28 else None, 'holes': [], 'P': {'c': 9.0527, 'gx': -0.2572, 'gy': 0}}) if pl['poly']]}
+    NEW = {'SP-L1-LIVING': ('Library', Polygon([(-9.5298, -0.7477), (4.7564, -0.7477), (4.7564, 4.4041), (X_WW, 4.4041), (X_WW, 9.21), (-9.5298, 9.21)]), liv),
+           'SP-L1-BATH': ('Bath', sbox(-9.5298, 9.59, -1.29, 14.3208), liv), 'SP-L1-HALL': ('Hall', sbox(-0.91, 9.59, X_WW, 14.3208), liv), GREAT: ('Kitchen, dining & living', room.buffer(0.2, join_style=2), vault)}   # 2-1/2 in into the walls: the page's interior light masks are cell grids, and a room drawn to the wall face leaves a strip of 'outside' along it
+    RENAME = {'SP-L1-LAUNDRY-CLOSET': 'Shower', 'SP-L1-HALL-CLOSET': 'Bedroom vestibule'}
+    sp = []
+    for s in meta['spaces']:
+        if s['id'] in REMOVED_SPACES: continue
+        if s['id'] in NEW:
+            nm, poly, cf = NEW[s['id']]; s = json.loads(json.dumps(s)); s['name'] = nm; s['polygon'] = P2(poly.exterior.coords[:-1]); s['ceiling'] = cf(poly)
+        elif s['id'] in RENAME: s = dict(s, name=RENAME[s['id']])
+        sp.append(s)
+    D['spaces'] = sp
+    rm_el = set(REMOVED_WALLS + REMOVED_OPENINGS + ['SL-L1-STORE-BED2']); rm_fl = set('FL-SP-L1-' + s for s in ('GREAT', 'BED2', 'BED2-CLOSET', 'BED3', 'BED3-CLOSET', 'KITCHEN', 'HALL', 'BATH'))
+    wk = [w for w in meta['walkable'] if w['id'] not in rm_fl and w['id'] != 'SL-DK-FRONT' and w.get('element') not in rm_el and w.get('opening') not in rm_el and w.get('element') != 'ST-FRONT']
+    fl = lambda i, poly, space, kind='FLOOR', ext=False: {'id': i, 'element': i, 'kind': kind, 'space': space, 'storey': 'L1', 'poly': P2(poly), 'holes': [], 'z': 0, 'exterior': ext}
+    wk += [fl('FL-SP-L1-B5', BOX, GREAT), fl('FL-B5-W1', [(X_WW - .1, 4.404), (X_LW + .1, 4.404), (X_LW + .1, 26.67), (X_WW - .1, 26.67)], GREAT), fl('FL-B5-W2', [(-6.6, 14.2), (X_WW, 14.2), (X_WW, 14.8), (-6.6, 14.8)], 'SP-L1-HALL'),
+           fl('FL-B5-W3', [(-6.42, 16.6), (X_WW, 16.6), (X_WW, 17.2), (-6.42, 17.2)], 'SP-L1-BED1'), fl('FL-B5-W4', [(-9.53, 14.2), (-6.6, 14.2), (-6.6, 14.8), (-9.53, 14.8)], 'SP-L1-BATH'),
+           {'id': 'TH-D-L1-B5F', 'element': 'D-L1-B5F', 'kind': 'THRESHOLD', 'opening': 'D-L1-B5F', 'storey': 'L1', 'poly': [[FOLD['x0'], Y_SO], [FOLD['x1'], Y_SO], [FOLD['x1'], Y_S], [FOLD['x0'], Y_S]], 'z': 0, 'exterior': False},
+           {'id': 'SL-DK-B5', 'element': 'SL-DK-B5', 'kind': 'DECK', 'poly': [[2.85, -10.087], [DECK['x0'], -10.087], [DECK['x0'], DECK['y0']], [DECK['x1'], DECK['y0']], [DECK['x1'], Y_SO], [2.85, Y_SO]], 'z': 0, 'storey': 'L1', 'exterior': True}]
     s0, s1 = STAIR_Y; sy = lambda y: s0 + (y - s0) * (DECK['y0'] - s0) / (s1 - s0)
     for w in meta['walkable']:
-        if w.get('element') == 'ST-FRONT':
-            w = json.loads(json.dumps(w)); w['poly'] = [[p[0], round(sy(p[1]), 4)] for p in w['poly']]; w['id'] = w['id'] + '-K4'; w['element'] = 'ST-FRONT-K4'; wk.append(w)
+        if w.get('element') == 'ST-FRONT': w = json.loads(json.dumps(w)); w['poly'] = [[p[0], round(sy(p[1]), 4)] for p in w['poly']]; w['id'] += '-B5'; w['element'] = 'ST-FRONT-B5'; wk.append(w)
     D['walkable'] = wk
-    # colliders: the south wall split around the opening (the page adds the panels' own); the porch rail moves; new rails
-    # (the page keys colliders by element: a changed collider must carry a new element id, or the as-built one keeps colliding)
     col = []
-    for c in D['colliders']:
-        if c.get('element') == 'RL-FRONT-DECK': continue
-        if c.get('element') == 'RL-FRONT-STAIR':
-            c = json.loads(json.dumps(c)); c['poly'] = [[p[0], p[1] + DECK['y0']] for p in c['poly']]
-            c['element'] = 'RL-FRONT-STAIR-K4'; c['id'] = c['id'].replace('RL-FRONT-STAIR', 'RL-FRONT-STAIR-K4')
-        if c.get('element') == 'W-L1-002':
-            for i, (a, b_) in enumerate(((4.91, NANA['x0']), (NANA['x1'], 32.49))):
-                d = json.loads(json.dumps(c)); d['id'] = 'W-L1-K4S#%d' % i; d['element'] = 'W-L1-K4S'; d['poly'] = [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]]; col.append(d)
-            continue
+    for c in meta['colliders']:
+        el = c.get('element')
+        if el in rm_el or el in ('RL-FRONT-DECK', 'W-L1-002'): continue
+        if el == 'RL-FRONT-STAIR': c = json.loads(json.dumps(c)); c['poly'] = [[p[0], p[1] + DECK['y0'] - 0.3] for p in c['poly']]; c['element'] = 'RL-FRONT-STAIR-B5'; c['id'] = c['id'].replace('RL-FRONT-STAIR', 'RL-FRONT-STAIR-B5')
         col.append(c)
-    for i, (a, b_) in enumerate((((19.88, DECK['y0'] - .1), (DECK['x1'], DECK['y0'] + .1)), ((DECK['x1'] - .25, DECK['y0']), (DECK['x1'] + .05, Y_SO)))):
-        col.append({'id': 'RL-DECK-K4#%d' % i, 'element': 'RL-DECK-K4', 'kind': 'RAIL', 'poly': [[a[0], a[1]], [b_[0], a[1]], [b_[0], b_[1]], [a[0], b_[1]]], 'z0': 0, 'z1': 3.1, 'storey': 'L1', 'exterior': True})
-    D['colliders'] = col
-    # openings: no picture window, no north window, the folding glass wall (leaf kind FOLD: the page builds and folds its panels), skylights
-    ops = [o for o in D['openings'] if o['id'] not in ('WN-L1-O4A', 'WN-L1-O4B', 'WN-L1-03', 'WN-L1-08') and not o['id'].startswith('WN-L1-O4G')]
-    base = {o['id']: o for o in meta['openings']}
-    kw = json.loads(json.dumps(base[KWIN_SRC])); kw.update({'id': 'WN-L1-K4A', 'host': 'W-L1-K4E', 'center': [36.7855, RIDGE_Y], 'axis': [0, -1], 'normal': [1, 0], 'spaces': {'A': 'EXTERIOR', 'B': GREAT}})
-    ops.append(kw)
-    for i, (a, b_) in enumerate(B.GABLE_PANES):
-        head = max(ceil_z(a), ceil_z(b_)) - B.GABLE_TOPGAP
-        ops.append({'id': 'WN-L1-K4G%d' % (i + 1), 'class': 'IfcWindow', 'type': 'WN-GABLE-FIXED (concept)', 'host': 'W-L1-K4E', 'storey': 'L1', 'center': [36.7855, (a + b_) / 2], 'sill': B.GABLE_SILL,
-                    'head': round(head, 4), 'width': round(b_ - a, 4), 'spaces': {'A': 'EXTERIOR', 'B': GREAT}, 'axis': [0, -1], 'normal': [1, 0], 'thickness': 0.4011, 'exterior': True, 'glazed': 1, 'leaf': None, 'leaves': [], 'shape': 'sloped-top'})
-    ops.append({'id': 'D-L1-K4F', 'class': 'IfcDoor', 'type': 'DT-EXT-FOLDING-GLASS (concept, NanaWall-style)', 'host': 'W-L1-K4S', 'storey': 'L1', 'center': [(NANA['x0'] + NANA['x1']) / 2, 4.6046],
-                'sill': 0, 'head': NANA['head'], 'width': NANA['x1'] - NANA['x0'], 'spaces': {'A': 'EXTERIOR', 'B': GREAT}, 'axis': [-1, 0], 'normal': [0, -1], 'thickness': 0.4011, 'exterior': True, 'glazed': 1,
-                'leaf': {'kind': 'FOLD', 'panels': NANA['panels'], 'stack': 'east', 'state': 'open', 'plane': 4.60, 'frame': 'steel-black'}, 'leaves': []})
-    for i, (x0, x1, y0, y1) in enumerate(SKY):
-        ops.append({'id': 'SK-L1-K4%d' % (i + 1), 'class': 'IfcWindow', 'type': 'SKYLIGHT (concept)', 'kind': 'SKYLIGHT', 'host': 'RF-MAIN-K4', 'storey': 'L1', 'center': [(x0 + x1) / 2, (y0 + y1) / 2],
-                    'width': x1 - x0, 'sill': ceil_z(y0), 'head': ceil_z(y1), 'spaces': {'A': 'EXTERIOR', 'B': GREAT}, 'exterior': True, 'glazed': 1, 'skylight': True})
+    for i, (a, b_) in enumerate((((DECK['x0'], DECK['y0'] - .1), (DECK['x1'], DECK['y0'] + .1)), ((DECK['x1'] - .25, DECK['y0']), (DECK['x1'] + .05, Y_SO)))):
+        col.append({'id': 'RL-DECK-B5#%d' % i, 'element': 'RL-DECK-B5', 'kind': 'RAIL', 'poly': [[a[0], a[1]], [b_[0], a[1]], [b_[0], b_[1]], [a[0], b_[1]]], 'z0': 0, 'z1': 3.1, 'storey': 'L1', 'exterior': True})
+    D['colliders'] = col + new_col
+    base = {o['id']: o for o in meta['openings']}; ops = []
+    for o in meta['openings']:
+        if o['id'] in REMOVED_OPENINGS: continue
+        o = json.loads(json.dumps(o))
+        for k in ('A', 'B'):
+            if (o.get('spaces') or {}).get(k) in REMOVED_SPACES: o['spaces'][k] = GREAT
+        ops.append(o)
+    def win(i, src, host, c, w, s, h, ax, nrm, space=GREAT):
+        o = json.loads(json.dumps(base[src])); o.update({'id': i, 'type': 'WN-FIXED (concept)', 'host': host, 'center': c, 'width': w, 'sill': s, 'head': h, 'centerZ': (s + h) / 2, 'axis': ax, 'normal': nrm, 'spaces': {'A': 'EXTERIOR', 'B': space}}); return o
+    for i, (c, w, s, h) in enumerate(NWIN): ops.append(win('WN-L1-B5N%d' % (i + 1), 'WN-L1-08', 'W-L1-B5N', [c, 32.2875], w, s, h, [1, 0], [0, 1]))
+    for i, (c, w, s, h) in enumerate(EWIN): ops.append(win('WN-L1-B5E%d' % (i + 1), 'WN-L1-05', 'W-L1-B5E', [36.7855, c], w, s, h, [0, -1], [1, 0]))
+    ops.append(win('WN-L1-B5S', 'WN-L1-03', 'W-L1-B5S', [(FIXW['x0'] + FIXW['x1']) / 2, 4.6046], FIXW['x1'] - FIXW['x0'], FIXW['sill'], FIXW['head'], [-1, 0], [0, -1]))
+    ops.append({'id': 'D-L1-B5F', 'class': 'IfcDoor', 'type': 'DT-EXT-FOLDING-GLASS (concept, NanaWall-style)', 'host': 'W-L1-B5S', 'storey': 'L1', 'center': [(FOLD['x0'] + FOLD['x1']) / 2, 4.6046], 'sill': 0, 'head': FOLD['head'],
+                'width': FOLD['x1'] - FOLD['x0'], 'spaces': {'A': 'EXTERIOR', 'B': GREAT}, 'axis': [-1, 0], 'normal': [0, -1], 'thickness': 0.4011, 'exterior': True, 'glazed': 1,
+                'leaf': {'kind': 'FOLD', 'panels': FOLD['panels'], 'stack': 'west', 'state': 'open', 'plane': 4.60, 'frame': 'steel-black'}, 'leaves': []})
+    def cased(i, host, c, w, ax, nrm, a, b_, head=DOOR_H, leaf=None):
+        o = json.loads(json.dumps(base['OP-L1-01'])); o.update({'id': i, 'host': host, 'center': c, 'width': w, 'head': head, 'centerZ': head / 2, 'axis': ax, 'normal': nrm, 'thickness': 0.38, 'spaces': {'A': a, 'B': b_}}); o.pop('s', None)
+        if leaf: o['leaf'] = leaf; o['leaves'] = [leaf]; o['class'] = 'IfcDoor'
+        return o
+    ops += [cased('OP-L1-B5W', 'W-L1-B5W', [5.09, (PASS[0] + PASS[1]) / 2], PASS[1] - PASS[0], [0, 1], [1, 0], 'SP-L1-LIVING', GREAT, PASS[2]),
+            cased('OP-L1-B5A', 'W-L1-B5A', [0.625, 9.4], 2.65, [1, 0], [0, 1], 'SP-L1-LIVING', 'SP-L1-HALL', leaf={'kind': 'POCKET', 'hingeEnd': 'END'}),
+            cased('OP-L1-B5B', 'W-L1-B5B', [-1.1, 11.2], 2.5, [0, 1], [1, 0], 'SP-L1-BATH', 'SP-L1-HALL', leaf={'kind': 'POCKET', 'hingeEnd': 'END'}),
+            cased('OP-L1-B5C', 'W-L1-B5C', [1.5, 14.51], 2.8, [1, 0], [0, 1], 'SP-L1-HALL', 'SP-L1-HALL-CLOSET'),
+            cased('OP-L1-B5S', 'W-L1-004', [-7.97, 14.51], 2.33, [1, 0], [0, 1], 'SP-L1-BATH', 'SP-L1-LAUNDRY-CLOSET'),
+            cased('OP-L1-B5D', 'W-L1-B5D', [1.6, 16.93], 2.66, [1, 0], [0, 1], 'SP-L1-HALL-CLOSET', 'SP-L1-BED1', leaf={'kind': 'SWING', 'hinge': [[2.93, 17.08, 0.04], [2.93, 17.08, 6.7]], 'swingSide': 'B', 'swing': 'B', 'angle': 88}),
+            cased('OP-L1-B5E', 'W-L1-B5D', [-3.4, 16.93], 5.4, [1, 0], [0, 1], 'SP-L1-BED1-CLOSET', 'SP-L1-BED1', leaf={'kind': 'BYPASS'})]
     D['openings'] = ops
-    D['furnishings'] = [f for f in meta['furnishings'] if f['id'] not in REMOVED_FURN] + kitchen() + staging()
-    D['lights'] = [l for l in meta['lights'] if l['id'] not in REMOVED_LIGHTS] + new_cans(meta)
+    gone = ('FX-grab-h', 'FX-mirror-09', 'FX-showerSys-h', 'FX-toilet-10', 'FX-tubAlcove-11', 'FX-vanity-09', 'FX-washerFront-LIV', 'FX-JLH-L1-BED2', 'FX-JLH-L1-BED3', 'FX-JLH-L1-HALL')
+    D['furnishings'] = [f for f in meta['furnishings'] if not f['id'].startswith('KX-') and f['id'] not in gone] + fixtures() + staging()
+    dead = set(REMOVED_SPACES) | {'SP-L1-GREAT', 'SP-L1-HALL', 'SP-L1-BATH'}
+    D['lights'] = [l for l in meta['lights'] if l.get('space') not in dead] + new_cans(meta)
     D['boundaries'] = {b: GREAT for b in bounds}
     cut = {e: GREAT for e in elements}
-    for e in ('BM-L1-OPEN4K', 'RF-MAIN-K4', 'SL-DK-K4', 'ST-FRONT-K4', 'RL-FRONT-STAIR-K4', 'RL-DECK-K4S', 'RL-DECK-K4E'): cut[e] = '@L1'
+    for e in elements:
+        if e in ('BM-L1-B5', 'SL-DK-B5', 'ST-FRONT-B5', 'RL-FRONT-STAIR-B5', 'RL-DECK-B5S', 'RL-DECK-B5E', 'W-L1-B5W', 'W-L1-B5V', 'FL-B5-PATCH'): cut[e] = '@L1'
+        elif e in ('W-L1-B5A', 'W-L1-B5B', 'FL-B5-BATH', 'W-L1-B5L', 'W-L1-B5M', 'D-L1-B5L'): cut[e] = 'SP-L1-BATH'
+        elif e in ('W-L1-B5C', 'W-L1-B5D', 'D-L1-B5C', 'D-L1-B5B'): cut[e] = 'SP-L1-BED1'
     for b in bounds: cut[b] = GREAT
     D['cut'] = cut
     return D
 
+PEND = [(13.8, 13.0), (15.8, 13.0), (17.8, 13.0), (13.8, 24.25), (17.8, 24.25)]
 def new_cans(meta):
     t = next(l for l in meta['lights'] if l['id'] == 'LF-L1-139'); out = []; k = 0
-    sk = [sbox(s[0] - .6, s[2] - .6, s[1] + .6, s[3] + .6) for s in SKY]
-    for x in (15.48, 20.67, 25.85, 31.04):
-        for y in (7.27, 11.16, 15.24, 21.65, 25.73, 29.62):
-            if x == 15.48 and y < Y_KIT: continue
-            if any(b.contains(shapely.Point(x, y)) for b in sk): continue
-            if 33.9 < x and 29 < y: continue
-            k += 1; out.append(dict(t, id='LF-L1-K4-%02d' % k, at=[x, y, round(ceil_z(y), 4)], ceilingZ=round(ceil_z(y), 4), space=GREAT))
+    for x in (8.4, 13.4, 18.6, 23.8, 29.0, 34.0):
+        for y in (7.3, 11.2, 15.2, 21.7, 25.7, 29.6):
+            if any(abs(x - px) < 1.2 and abs(y - py) < 2.0 for px, py in PEND) or (x > 33 and 15 < y < 22): continue
+            k += 1; out.append(dict(t, id='LF-L1-B5-%02d' % k, at=[x, y, round(ceil_z(y), 4)], ceilingZ=round(ceil_z(y), 4), space=GREAT))
     return out
 
-def kitchen():
-    """the new kitchen at the street end, in the house's own cabinetry (white raised-panel shaker, satin nickel, Brittanicca quartz)"""
-    F = []; CAB = {'counter': None, 'faucet': False, 'hw': 'satinNickel', 'pull': 'bar', 'sink': False, 'style': 'raised'}
-    def add(kind, lib, at, rot, params):
-        F.append({'id': 'KX-K4-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), 0], 'rot': rot, 'space': GREAT, 'storey': 'L1', 'params': params, 'footprint': None})
-    E = X_E
-    # street-gable run (backs on the gable, facing west): tall pantry, fridge, cabinets, sink under the window, dishwasher, cabinets
-    add('tallCabinet', 'FIX', (E, 6.2), 180, dict(CAB, d=2, h=8, w=2.5, pull='knob'))
-    add('fridge4Door', 'BUILTIN', (E, 9.0), 180, {'d': 2.5, 'dispenser': True, 'h': 5.9, 'w': 3})
-    add('upperCabinet', 'FIX', (E, 9.0), 180, dict(CAB, d=2, h=1.9, mountY=6.1, w=3, pull='knob'))
-    add('baseCabinet', 'FIX', (E, 11.95), 180, dict(CAB, w=2.9))
-    add('baseCabinet', 'FIX', (E, 14.45), 180, dict(CAB, w=2.1))
-    add('baseCabinet', 'FIX', (E, RIDGE_Y), 180, dict(CAB, w=3.0, doors='sink', pull='knob'))
-    add('sinkUndermount', 'FIX', (E - 0.38, RIDGE_Y), 180, {'d': 1.5, 'mountY': 2.896, 'w': 2.5})
-    add('faucetKitchen', 'FIX', (E - 0.22, RIDGE_Y), 180, {'mountY': 3})
-    add('dishwasher', 'FIX', (E, 20.95), 180, {'w': 2})
-    add('baseCabinet', 'FIX', (E, 23.45), 180, dict(CAB, w=3.0))
-    add('baseCabinet', 'FIX', (E, 26.45), 180, dict(CAB, w=3.0))
-    add('baseCabinet', 'FIX', (E, 28.9), 180, dict(CAB, w=1.9))
-    add('upperCabinet', 'FIX', (E, 12.4), 180, dict(CAB, h=3.5, mountY=4.5, w=3.8, pull='knob', led=True))
-    add('upperCabinet', 'FIX', (E, 24.9), 180, dict(CAB, h=3.5, mountY=4.5, w=5.6, pull='knob', led=True))
-    # north-wall return (facing south): cabinets, the 36" range with a chimney hood, cabinets to the corner
-    N = Y_N
-    add('baseCabinet', 'FIX', (26.4, N), 270, dict(CAB, w=2.8))
-    add('baseCabinet', 'FIX', (28.75, N), 270, dict(CAB, w=1.9))
-    add('range36', 'FIX', (31.2, N), 270, {'w': 3})
-    add('hoodChimney', 'FIX', (31.2, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
-    add('baseCabinet', 'FIX', (33.6, N), 270, dict(CAB, w=1.8))
-    add('upperCabinet', 'FIX', (27.3, N), 270, dict(CAB, h=3.5, mountY=4.5, w=4.6, pull='knob', led=True))
-    # counters: one quartz top over both runs, a 4-in splash
-    out = [[E - 2.08, 7.45], [E, 7.45], [E, N], [25.0, N], [25.0, N - 2.08], [E - 2.08, N - 2.08]]
-    add('counterTop', 'BUILTIN', (33.0, 20.0), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [out], 'holes': [[[E - 1.65, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y + 1.2], [E - 1.65, RIDGE_Y + 1.2]], [[29.7, N - 2.08], [32.7, N - 2.08], [32.7, N], [29.7, N]]], 'splash': 0.33, 't': 0.104})
-    # the island: 12 ft x 4.5 ft, working side to the kitchen, four stools on the room side
-    add('island', 'FIX', (31.0, 19.5), 180, dict(CAB, w=12.0, d=4.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=False))
-    for y in (15.2, 18.0, 21.0, 23.8):
-        add('counterStoolRope', 'BUILTIN', (25.75, y), 0, None)
-    # the old kitchen's peninsula: the range comes out (a cabinet in its place) and the counter closes over it; the glass hood goes
-    add('baseCabinet', 'FIX', (15.08, 11.81), 180, dict(CAB, w=2.5))
-    add('counterTop', 'BUILTIN', (14.5, 9.834), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'splash': 0.33, 't': 0.104,
-        'holes': [[[14.015, 7.702], [12.268, 5.955], [11.229, 6.995], [12.975, 8.741]]],
-        'outlines': [[[12.92, 9.103], [12.92, 14.39], [15.663, 14.39], [16.08, 13.973], [16.08, 4.9], [12.486, 4.904], [12.486, 4.82], [6.486, 4.82], [6.486, 4.904], [5.272, 4.904], [5.272, 11.08], [7.48, 11.08], [7.48, 7.06], [10.867, 7.06]],
-                     [[11.38, 17.238], [13.548, 17.238], [13.548, 22.05], [11.38, 22.05]]]})
+def fixtures():
+    """kitchen, bath and laundry fixtures, in the house's own cabinetry (white raised-panel shaker, satin nickel, Brittanicca quartz)"""
+    F = []; CAB = {'counter': None, 'faucet': False, 'hw': 'satinNickel', 'pull': 'bar', 'sink': False, 'style': 'raised'}; N = Y_N; NF = N - 2.08; W = X_LW
+    def add(kind, lib, at, rot, params, space=GREAT, z=0):
+        F.append({'id': 'KX-B5-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), z], 'rot': rot, 'space': space, 'storey': 'L1', 'params': params, 'footprint': None})
+    # the tall wall on the west gable, 14 ft from 3 ft nearer the table to the north wall, south to north: a panelled end, two pantries,
+    # the oven column, the fridge built in between tall cabinets, a tall pull-out, the blind corner; one crown along the top
+    TALL = dict(CAB, d=2.08, h=8, pull='knob')
+    add('finishedPanel', 'BUILTIN', (W + 1.04, 18.0), 270, {'w': 2.08, 'h': 8.0, 'panels': 1})
+    add('tallCabinet', 'FIX', (W, 19.25), 0, dict(TALL, w=2.5))
+    add('coffeeStation', 'BUILTIN', (W, 21.75), 0, {'w': 2.5, 'd': 2.08, 'h': 8})
+    add('wallOvenStack', 'BUILTIN', (W, 24.25), 0, {'w': 2.5, 'd': 2.08, 'h': 8})
+    add('fridge4Door', 'BUILTIN', (W, 27.0), 0, {'d': 2.3, 'dispenser': True, 'h': 5.9, 'w': 3})
+    add('upperCabinet', 'FIX', (W, 27.0), 0, dict(CAB, d=2.08, h=2.06, mountY=5.94, w=3, pull='knob', contents=False))
+    add('tallCabinet', 'FIX', (W, 29.25), 0, dict(TALL, w=1.5))
+    add('tallCabinet', 'FIX', (W, 31.045), 0, dict(TALL, w=2.09, pull='none'))
+    add('cabinetCrown', 'BUILTIN', (W, 25.045), 0, {'w': 14.09, 'd': 2.08, 'mountY': 8.0, 'endL': False, 'endR': True})
+    # the north wall from the tall wall east: drawers, the 36-in range and hood between the two windows, drawers, a panelled end
+    X0 = W + 2.08
+    add('baseCabinet', 'FIX', (X0 + 1.27, N), 270, dict(CAB, w=2.54, doors='drawers'))
+    add('baseCabinet', 'FIX', (11.0, N), 270, dict(CAB, w=2.2))
+    add('baseCabinet', 'FIX', (13.2, N), 270, dict(CAB, w=2.2, doors='drawers'))            # deep pot drawers either side of the range
+    add('range36', 'FIX', (15.8, N), 270, {'w': 3})
+    add('hoodChimney', 'FIX', (15.8, N), 270, {'mountY': 6.0, 'toCeiling': 8.45, 'w': 3.0})
+    add('potFiller', 'BUILTIN', (14.75, N - 0.06), 270, {'mountY': 4.95})
+    add('baseCabinet', 'FIX', (18.35, N), 270, dict(CAB, w=2.1, doors='drawers'))
+    add('baseCabinet', 'FIX', (20.45, N), 270, dict(CAB, w=2.1))
+    add('beverageCooler', 'FIX', (22.125, N), 270, {'w': 1.25, 'd': 2.08})                   # r44b: the run carried 2 ft toward the living area: drinks fridge, a narrow cabinet
+    add('baseCabinet', 'FIX', (23.175, N), 270, dict(CAB, w=0.85, doors='doors'))
+    add('finishedPanel', 'BUILTIN', (23.6, N - 1.04), 0, {'w': 2.08, 'h': 2.79, 'panels': 1})
+    # wall cabinets the length of the run either side of the hood, module for module over the base cabinets: an 18-in clear splash, a main
+    # tier and a short top tier to the 8-ft line, a scribe fill up to the sloping ceiling, a light rail and lights under, a panelled end
+    UP = dict(CAB, mountY=4.5, h=2.4, pull='knob', led=True); UT = dict(CAB, mountY=6.9, h=1.1, pull='knob', contents=False)
+    MODS = [(X0, 9.9, False), (9.9, 12.1, False), (12.1, 14.3, True), (17.3, 19.4, True), (19.4, 21.5, False), (21.5, 23.6, False)]
+    for a0, a1, glass in MODS:
+        add('upperCabinet', 'FIX', ((a0 + a1) / 2, N), 270, dict(UP, w=round(a1 - a0, 3), glass=glass))
+        add('upperCabinet', 'FIX', ((a0 + a1) / 2, N), 270, dict(UT, w=round(a1 - a0, 3)))
+    UD = 13 / 12
+    for a0, a1 in ((X0, 14.3), (17.3, 23.6)):
+        add('lightRail', 'BUILTIN', ((a0 + a1) / 2, N), 270, {'w': round(a1 - a0, 3), 'd': UD, 'mountY': 4.4})
+        add('scribeFill', 'BUILTIN', ((a0 + a1) / 2, N), 270, {'w': round(a1 - a0, 3), 'd': UD, 'mountY': 8.0, 'h': 0.47})
+    add('endPanel', 'BUILTIN', (23.6, N - UD / 2), 0, {'w': UD, 'h': 3.97, 'mountY': 4.5})
+    add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[X0, NF], [23.68, NF], [23.68, N], [X0, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
+    add('counterTop', 'BUILTIN', (15.8, N - 0.03), 0, {'mat': 'brittanicca', 'mountY': 3.0, 'outlines': [[[14.3, N - 0.05], [17.3, N - 0.05], [17.3, N], [14.3, N]]], 'noSplash': True, 't': 3.0})   # quartz behind the range, up to the hood
+    # the street gable: stone on the chimney breast, the TV over the mantel, low built-ins under the windows either side
+    fx = X_E - FP['d']; ch = ceil_z
+    add('ledgestone', 'BUILTIN', (X_E, FP['cy']), 180, {'w': FP['w'], 'd': FP['d'], 'apex': round(APEX - 0.03, 3), 'pitch': PITCH, 'hole': [-FP['box'][0] / 2 - 0.14, FP['box'][1] - 0.14, FP['box'][0] / 2 + 0.14, FP['box'][2] + 0.14]})
+    add('tvWall', 'FIX', (fx - 0.08, FP['cy']), 180, {'size': FP['tv'][0], 'mountY': FP['tv'][1]})
+    # the console: one low built-in, 36 in high under one wood top, round the living area: the whole street wall either side of the stone,
+    # round both corners and along both side walls under their windows, stopping with a finished end 1 ft short of the folding doors
+    # (south) and of the stove run (north). Door joints stand under the window mullions, at half a window unit.
+    CD, CH, CX0 = 1.33, 3.0, 24.6
+    def seams(lo, hi, anchor, step, minw=0.62):
+        k0 = math.ceil((lo - anchor) / step); out = [lo] + [anchor + k * step for k in range(k0, k0 + 60) if lo + minw < anchor + k * step < hi - minw] + [hi]; return out
+    def console(at, rot, lo, hi, cen, sgn, anchor, step):
+        sm = sorted(round(sgn * (v - cen), 3) for v in seams(lo, hi, anchor, step))
+        add('lowBuiltin', 'BUILTIN', at, rot, {'w': round(hi - lo, 3), 'd': CD, 'h': CH, 'seams': sm})
+    gm = [RIDGE_Y - t for t in (EWIN_T[1] - 0.04 - ((EWIN_W - 0.08 - (EUNITS - 1) * 0.30) / EUNITS) - 0.15,)][0]            # a gable-window mullion (south side), its unit pitch
+    gp = (EWIN_W - 0.08 - (EUNITS - 1) * 0.30) / EUNITS + 0.30
+    ys0, ys1 = Y_S, FP['cy'] - FP['w'] / 2; yn0, yn1 = FP['cy'] + FP['w'] / 2, Y_N
+    console((X_E, (ys0 + ys1) / 2), 180, ys0, ys1, (ys0 + ys1) / 2, -1, gm, gp / 2)
+    console((X_E, (yn0 + yn1) / 2), 180, yn0, yn1, (yn0 + yn1) / 2, -1, 2 * RIDGE_Y - gm, gp / 2)
+    sp_ = (FIXW['x1'] - FIXW['x0'] - 0.08 - 2 * 0.30) / 3 + 0.30; sm_ = FIXW['x0'] + 0.04 + (sp_ - 0.30) + 0.15                       # side-window unit pitch and its first mullion
+    cx1 = X_E - CD - 0.1
+    console(((CX0 + cx1) / 2, Y_S), 90, CX0, cx1, (CX0 + cx1) / 2, -1, sm_, sp_ / 2)
+    console(((CX0 + cx1) / 2, Y_N), 270, CX0, cx1, (CX0 + cx1) / 2, 1, sm_, sp_ / 2)
+    # the island: 8 ft x 3 ft 6, sink and dishwasher on the working (north) side, four stools on the dining side
+    add('island', 'FIX', (15.8, 26.0), 270, dict(CAB, w=8.0, d=3.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True, work=True))
+    for x in (12.9, 14.85, 16.8, 18.75): add('counterStoolRope', 'BUILTIN', (x, 21.8), 90, None)
+    # the 3/4 bath: vanity and mirror on the library wall, toilet on the north wall, shower in the old laundry closet
+    add('vanity', 'FIX', (-7.45, 9.59), 90, {'basin': 'rect', 'faucetFinish': 'nickelBrushed', 'hw': 'nickelBrushed', 'sinks': 1, 'splash': 0, 'top': 'marble', 'w': 3.7}, 'SP-L1-BATH')
+    add('mirror', 'FIX', (-7.45, 9.59), 90, {'w': 3.2, 'h': 2.75, 'mountY': 4.6}, 'SP-L1-BATH')
+    add('toilet', 'FIX', (-3.6, 14.32), 270, None, 'SP-L1-BATH')
+    add('showerSystem', 'BUILTIN', (-8.1, 18.42), 270, {'armY': 6.75, 'bar': True, 'finish': 'nickelBrushed', 'grab': 0, 'head': 'round'}, 'SP-L1-LAUNDRY-CLOSET')
+    add('showerGlass', 'FIX', (-7.97, 14.70), 270, {'w': 2.3, 'h': 6.6, 'door': True, 'doorW': 2.2, 'finish': 'chrome'}, 'SP-L1-BATH')
+    # the back bedroom: a queen bed on the north wall, as on the plan
+    add('bedQueen', 'FIX', (-1.6, 26.67), 270, None, 'SP-L1-BED1')
+    add('nightstand', 'FIX', (-5.2, 26.67), 270, None, 'SP-L1-BED1'); add('nightstand', 'FIX', (2.0, 26.67), 270, None, 'SP-L1-BED1')
+    # the hall: stacked washer and dryer
+    add('washerFront', 'FIX', (X_WW + 0.3, 10.75), 180, {'stacked': True}, 'SP-L1-HALL')
     return F
 
 def staging():
     F = []
-    def add(kind, at, rot, params=None, lib='STAGE', key=None, on=None, dx=0, dz=0, back=False, z=0):
-        f = {'id': 'FX-K4-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), z], 'rot': rot, 'space': GREAT, 'storey': 'L1', 'params': params or None, 'footprint': None}
+    def add(kind, at, rot, params=None, lib='STAGE', key=None, on=None, dx=0, dz=0, back=False, z=0, space=GREAT):
+        f = {'id': 'FX-B5-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), z], 'rot': rot, 'space': space, 'storey': 'L1', 'params': params or None, 'footprint': None}
         if key: f['stageKey'] = key
         if on: f['stageOn'] = on; f['stageDx'] = dx; f['stageDz'] = dz
         if back: f['stageBack'] = True
         F.append(f); return f
-    # island: a footed bowl, two opal globes from the ridge beam
-    for x in (27.6, 30.0):
-        add('pendantGlobe', (x, RIDGE_Y), 0, {'dia': 1.05, 'drop': 5.45, 'finish': 'blackMetal', 'cord': 'rod'}, z=B.BEAM_Z0)
-    # living, anchored on the fireplace: long cream sofa, woven ottoman, two boucle chairs, built-ins either side
-    cx = FP['cx']
-    add('rug2', (cx, 26.6), 0, {'w': 10.5, 'd': 8.6, 'pattern': 'checker'})
-    add('sofa3', (cx, 23.7), 90, {'w': 8.0, 'fabric': 'linenCream', 'pillows': False}, key='sofa')
-    add('pillows', (0, 0), 90, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowSlate', -2.4, 1.45, 1.45, .12], ['pillowCream', -1.0, 1.45, 1.45, -.05], ['pillowGreyLinen', 1.0, 1.45, 1.45, -.1], ['pillowSlate', 2.4, 1.45, 1.45, -.12]]}, on='sofa').update({'stageZ': .95})
-    add('ottomanRound', (cx, 27.3), 0, {}, key='ot')
-    add('orchid', (0, 0), 0, {'h': 1.7, 'stems': 3, 'seed': 4}, on='ot', dx=-.35)
-    add('books', (0, 0), 0, {'n': 3}, on='ot', dx=.6, dz=.3)
-    add('armchairBoucle', (15.3, 27.4), 0, {'fabric': 'fabricLight'})
-    add('armchairBoucle', (23.3, 27.4), 180, {'fabric': 'fabricLight'})
-    add('builtinBookcase', (cx - FP['w'] / 2 - 1.2, Y_N), 270, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 3, 'levels': [5, 6.25], 'lights': False, 'seed': 5, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 2.3}, lib='BUILTIN')
-    add('builtinBookcase', (cx + FP['w'] / 2 + 1.3, Y_N), 270, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 3, 'levels': [5, 6.25], 'lights': False, 'seed': 9, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 2.5}, lib='BUILTIN')
-    # dining by the folding glass wall: glass table, six parsons chairs, two globes under the dining skylight
-    add('diningTableGlass', (22.0, 9.4), 90, {'w': 7.0, 'd': 3.4}, key='dt')
+    BK = {'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 3, 'lights': False, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True}
+    # living at the street end: two 8-ft sofas facing each other across the hearth's axis, a glass coffee table, a rug
+    add('rug2', (29.7, RIDGE_Y), 0, {'w': 11.9, 'd': 9.6, 'pattern': 'checker'})
+    for y, r, k in ((23.6, 270, 'sn'), (13.3, 90, 'ss')):
+        add('sofa3', (29.6, y), r, {'w': 8.0, 'fabric': 'linenCream', 'pillows': False}, key=k)
+        add('pillows', (0, 0), r, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowSlate', -2.6, 1.45, 1.45, .12], ['pillowCream', -1.2, 1.45, 1.45, -.05], ['pillowGreyLinen', 1.2, 1.45, 1.45, -.1], ['pillowSlate', 2.6, 1.45, 1.45, -.12]]}, on=k).update({'stageZ': .95})
+    add('coffeeTableGlass', (29.6, RIDGE_Y), 90, {'w': 5.0, 'd': 3.6, 'h': 1.4}, key='ct')
+    add('orchid', (0, 0), 90, {'h': 1.9, 'potDia': 1.2, 'bowl': True, 'stems': 4, 'seed': 5}, on='ct', dx=-.8)
+    add('books', (0, 0), 90, {'n': 3}, on='ct', dx=1.3, dz=.4)
+    # two large quiet pieces on the solid ends of the street wall
+    ay = (Y_S + (RIDGE_Y - EWIN_T[1] - 0.29)) / 2
+    add('art', (X_E, ay), 180, {'w': 2.5, 'h': 3.3, 'mountY': 5.55, 'style': 'brush', 'seed': 4, 'frame': 'frameOak', 'mat': 0.22}, back=True)
+    add('art', (X_E, 2 * RIDGE_Y - ay), 180, {'w': 2.5, 'h': 3.3, 'mountY': 5.55, 'style': 'brush', 'seed': 9, 'frame': 'frameOak', 'mat': 0.22}, back=True)
+    # dining on the kitchen's axis: an oak table for eight (ten with its leaves), three globes; the sideboard on the west wall
+    add('diningTable', (15.8, 13.0), 90, {'w': 8.0, 'd': 3.5}, key='dt')
     add('bowl', (0, 0), 90, {'dia': 1.55, 'h': 1.0}, on='dt')
-    for dx in (-2.4, 0.0, 2.4):
-        add('parsonsChair', (22.0 + dx, 7.15), 90); add('parsonsChair', (22.0 + dx, 11.65), 270)
-    # the old kitchen: a coffee bar (its stools stay), a plant
-    # deck: outdoor dining for six, two lounge chairs and a low table, planters at the rail for privacy from the driveway
-    add('outdoorDiningTable', (21.0, -0.6), 90, {'w': 7.0, 'd': 3.4}, key='odt')
-    for dx in (-2.3, 0.0, 2.3):
-        add('outdoorChair', (21.0 + dx, -2.45), 90); add('outdoorChair', (21.0 + dx, 1.25), 270)
-    add('outdoorLounge', (27.6, -2.3), 90, {})
-    add('outdoorLounge', (27.6, 2.3), 270, {})
-    add('outdoorCoffee', (27.6, 0.0), 0, {'w': 2.6, 'd': 1.6})
-    for x, y in ((32.95, -3.25), (32.95, -1.3), (16.5, 3.4)):
-        add('plantPot', (x, y), 0)
+    for ox in (-2.667, 0.0, 2.667): add('parsonsChair', (15.8 + ox, 10.55), 90); add('parsonsChair', (15.8 + ox, 15.45), 270)
+    add('parsonsChair', (11.1, 13.0), 0); add('parsonsChair', (20.5, 13.0), 180)
+    for px, py in PEND: add('pendantGlobe', (px, py), 0, {'dia': 0.95, 'drop': round(ceil_z(py) - 6.9, 3), 'finish': 'blackMetal', 'cord': 'rod'}, z=round(ceil_z(py), 3))
+    add('sideboard', (X_LW, 13.0), 0, {'w': 7.0, 'd': 1.6}, key='sb', back=True)
+    add('lamp', (0, 0), 0, {'h': 2.2}, on='sb', dx=-2.5); add('vase2', (0, 0), 0, {'h': 1.0}, on='sb', dx=2.2)
+    add('art', (X_LW, 13.0), 0, {'w': 4.6, 'h': 2.6, 'mountY': 5.6, 'style': 'blots', 'seed': 7}, back=True)
+    # the library: a wall of shelves, two reading chairs, a round table, a rug
+    add('builtinBookcase', (-5.1, 9.21), 270, dict(BK, boxes=3, levels=[4.2, 5.4, 6.6], seed=21, w=8.4), lib='BUILTIN', space='SP-L1-LIVING')
+    add('rug2', (-5.3, 3.85), 0, {'w': 7.1, 'd': 6.6, 'pattern': 'sisal'}, space='SP-L1-LIVING')
+    add('armchairBoucle', (-6.6, 2.1), 0, {'fabric': 'fabricLight'}, space='SP-L1-LIVING'); add('armchairBoucle', (-6.6, 5.6), 0, {'fabric': 'fabricLight'}, space='SP-L1-LIVING')
+    add('woodSideTable', (-3.6, 3.85), 0, {'dia': 2.4, 'h': 1.85}, key='lt', space='SP-L1-LIVING'); add('books', (0, 0), 0, {'n': 3}, on='lt'); add('lamp', (0, 0), 0, {'h': 1.9, 'shadeDia': 1.0}, on='lt', dx=.5, dz=-.4)
+    # the deck: kept light, two lounge chairs and a low table off to the east side, clear floor in front of the open doors
+    add('outdoorLounge', (22.3, -2.2), 90, {}); add('outdoorLounge', (22.3, 1.9), 270, {}); add('outdoorCoffee', (22.3, -0.15), 0, {'w': 2.2, 'd': 1.5}); add('plantPot', (23.9, -3.3), 0)
     return F
 
 CARD = {'name': 'Open kitchen and great room', 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': LABEL,
-        'description': 'The two bedrooms open into one vaulted great room with the kitchen at the street end, a fireplace, skylights and a folding glass wall to a new front deck. 4 bedrooms, 3 baths, plus office.',
-        'note': 'Concept r42b (owner idea, 11/12/2026): as "Open great room", but the kitchen moves to the street end (island facing the room), the old kitchen becomes a scullery and coffee bar, the picture window becomes a folding glass wall onto an extended front deck, a gas fireplace on the north wall, four skylight wells. Status: illustrative, not designed or reviewed by an architect or engineer.',
-        'status': 'illustrative', 'source': 'concept r42b (tour/CONCEPT-4BR.md)', 'pageExtras': True}
+        'description': 'The whole original gable becomes one vaulted great room under a clear-span ridge beam: living around a gas hearth at the street end, a working L-shaped kitchen with an island at the other, a table for eight (ten with leaves) between them at 14-ft folding glass doors to the porch and a new deck. The old living room becomes a library on the way in, with a new bath beside the back bedroom. 4 bedrooms, 3 baths, plus office.',
+        'note': 'Concept r44 (owner pick "1-open B-flip", 11/12/2026): the front and middle bedrooms, the hall bath, the hall and the old kitchen all come out of the original gable; hearth on the street gable; L kitchen on the north and west walls; folding glass doors centred on the table; a 3/4 bath, hall with stacked washer and dryer and a library in the old living room; back bedroom entered through a vestibule. Status: illustrative, not designed or reviewed by an architect or engineer.',
+        'status': 'illustrative', 'source': 'concept r44 (tour/CONCEPT-4BR.md)', 'pageExtras': True}
 
 def register(hide, hide_ranges, sha):
     path = os.path.join(B2, 'scene.meta.json'); meta = json.load(open(path))
     e = {'id': OPT_ID, 'legacyId': LEGACY, 'set': 'OS-REMODEL'}; e.update(CARD)
     e.update({'hide': hide, 'hideRanges': hide_ranges, 'glb': GLB_OUT, 'sha256': sha, 'remap': [], 'meta': META_OUT,
               'region': [[-10.5, -1.4], [5.4, -1.4], [5.4, 4.4], [37.0, 4.4], [37.0, 32.5], [5.0, 32.5], [5.0, 27.1], [-7.0, 27.1], [-7.0, 18.85], [-9.95, 18.85]],
-              'clearRegion': [[X_KIT + 0.6, Y_S - 0.3], [37.3, Y_S - 0.3], [37.3, Y_N + 0.3], [X_W + 0.05, Y_N + 0.3], [X_W + 0.05, Y_KIT - 0.9], [X_KIT + 0.6, Y_KIT - 0.9]],
-              'walkStart': {'at': [8.0, 14.0], 'look': [36.0, 18.4]},
-              'walkTests': [[[27.5, 6.0], [27.5, 11.0], 'open'], [[19.0, 15.0], [19.0, 21.0], 'open'], [[23.0, 21.5], [23.0, 26.0], 'open'],
-                            [[25.0, 6.5], [25.0, 0.0], 'open'], [[30.0, -1.0], [35.5, -1.0], 'wall'], [[20.0, 25.0], [12.0, 25.0], 'wall']],
-              'labels': [{'name': 'Kitchen', 'at': [31.5, 19.0]}, {'name': 'Living', 'at': [19.3, 25.0]}, {'name': 'Dining', 'at': [22.0, 9.4]},
-                         {'name': 'Scullery & coffee bar', 'at': [10.0, 12.0]}, {'name': 'Deck', 'at': [25.5, 0.0]}, {'name': 'Bedroom', 'at': [-0.8, 21.5]}, {'name': 'Bath', 'at': [9.4, 29.2]}],
+              'clearRegion': [[-9.7, -0.9], [5.0, -0.9], [5.0, 4.3], [8.9, 4.3], [8.9, 3.9], [22.7, 3.9], [22.7, 4.3], [36.9, 4.3], [36.9, 7.0], [37.7, 7.0], [37.7, 12.5], [36.9, 12.5], [36.9, 32.3], [5.1, 32.3], [5.1, 16.9], [-6.5, 16.9], [-6.5, 18.6], [-9.7, 18.6]],
+              'walkStart': {'at': [1.0, -3.6], 'look': [20.0, 12.0]},
+              # entry -> library -> great room; round the island; out through the folding doors; hall, vestibule, bedroom, bath; walls that must still stop a walker
+              'walkTests': [[[0.0, -3.0], [2.5, 5.5], 'open'], [[2.5, 6.8], [9.0, 7.0], 'open'], [[9.0, 7.0], [26.0, 8.0], 'open'], [[10.0, 20.0], [10.0, 28.0], 'open'], [[10.5, 28.2], [21.0, 28.2], 'open'], [[21.2, 28.0], [21.2, 20.0], 'open'],
+                            [[15.8, 7.5], [15.8, 0.0], 'open'], [[23.0, 16.0], [23.0, 29.4], 'open'], [[24.0, 20.0], [34.0, 26.5], 'open'], [[20.0, 25.0], [26.0, 25.0], 'open'],
+                            [[0.6, 7.5], [0.6, 12.6], 'open'], [[0.6, 12.6], [1.5, 15.8], 'open'], [[0.6, 11.0], [4.0, 11.0], 'wall'], [[3.5, 13.2], [3.5, 10.5], 'wall'], [[1.6, 15.8], [1.6, 19.5], 'open'], [[0.5, 11.2], [-4.0, 11.2], 'open'], [[-7.97, 13.0], [-7.97, 16.5], 'open'],
+                            [[8.0, 12.0], [3.0, 12.0], 'wall'], [[8.0, 24.0], [3.0, 24.0], 'wall'], [[-4.0, 7.0], [-4.0, 11.5], 'wall'], [[21.5, -1.0], [27.0, -1.0], 'wall'], [[30.0, 8.0], [30.0, 2.0], 'wall'], [[30.0, 18.4], [38.0, 18.4], 'wall']],
+              'labels': [{'name': 'Kitchen', 'at': [15.8, 28.0]}, {'name': 'Dining', 'at': [15.8, 8.2]}, {'name': 'Living', 'at': [29.6, 27.6]}, {'name': 'Library', 'at': [-0.3, 6.6]}, {'name': 'Deck', 'at': [20.5, -2.6]},
+                         {'name': 'Bedroom', 'at': [-1.6, 21.5]}, {'name': 'Bath', 'at': [-5.2, 12.2]}],
+              # viewpoints, world frame [north, up, east]
               'views': {'foyer': {'pos': [-4.0, 5.0, -3.0], 'look': [20.7, 4.7, 9.0]},
-                        'entry': {'pos': [13.0, 5.0, 11.0], 'look': [19.5, 4.8, 36.6]},
-                        'kitchen': {'pos': [22.5, 5.0, 34.2], 'look': [8.0, 4.4, 16.0]},
-                        'living': {'pos': [17.5, 5.0, 26.0], 'look': [30.0, 4.4, 19.3]},
-                        'deck': {'pos': [-3.4, 5.0, 25.4], 'look': [16.0, 4.4, 24.2]},
-                        'driveway': {'pos': [-14.0, 1.0, 40.0], 'look': [2.0, 1.4, 24.0]},
+                        'arrival': {'pos': [6.9, 5.0, 1.9], 'look': [10.5, 4.6, 24.0]},
+                        'entry': {'pos': [7.0, 5.0, 6.6], 'look': [15.5, 4.8, 30.0]},
+                        'hearth': {'pos': [17.6, 5.0, 21.6], 'look': [18.45, 4.6, 36.0]},
+                        'fromtable': {'pos': [16.3, 5.0, 9.6], 'look': [18.45, 4.5, 36.0]},
+                        'fireplace': {'pos': [18.45, 5.3, 20.6], 'look': [18.45, 5.6, 36.0]},
+                        'fridgewall': {'pos': [28.0, 5.0, 20.6], 'look': [26.4, 4.5, 5.3]},
+                        'tallrun': {'pos': [9.6, 5.0, 17.4], 'look': [24.0, 4.4, 5.3]},
+                        'sidewall': {'pos': [19.5, 5.0, 26.0], 'look': [4.8, 4.6, 29.5]},
+                        'stovewall': {'pos': [27.6, 5.0, 21.2], 'look': [32.0, 4.4, 14.6]},
+                        'stools': {'pos': [19.6, 5.0, 15.8], 'look': [26.0, 3.4, 15.8]},
+                        'northwall': {'pos': [50.0, 5.5, 16.0], 'look': [32.5, 4.5, 15.0]},
+                        'bothsides': {'pos': [18.45, 5.3, 17.6], 'look': [18.45, 5.2, 36.0]},
+                        'frontyard': {'pos': [-13.0, 4.0, 31.0], 'look': [4.4, 5.0, 27.5]},
+                        'workside': {'pos': [29.6, 5.0, 19.6], 'look': [24.0, 2.6, 14.6]},
+                        'foldin': {'pos': [14.5, 5.0, 15.8], 'look': [4.4, 4.4, 15.8]},
+                        'foldout': {'pos': [-8.5, 4.6, 12.5], 'look': [4.4, 4.2, 16.5]},
+                        'railyard': {'pos': [-13.0, 2.5, 26.5], 'look': [-2.0, 2.0, 19.5]},
+                        'kitchen': {'pos': [18.6, 5.0, 25.2], 'look': [27.0, 4.2, 9.0]},
+                        'dining': {'pos': [19.0, 5.0, 22.4], 'look': [3.0, 3.4, 13.0]},
+                        'island': {'pos': [29.0, 5.0, 22.8], 'look': [14.0, 4.0, 13.0]},
+                        'living': {'pos': [18.45, 5.0, 22.4], 'look': [18.45, 4.4, 36.0]},
+                        'library': {'pos': [0.6, 5.0, 2.6], 'look': [8.5, 4.2, -6.0]},
+                        'bedroom': {'pos': [17.7, 5.0, 1.6], 'look': [23.5, 3.2, -2.6]},
+                        'bath': {'pos': [10.7, 5.0, -2.6], 'look': [14.4, 3.6, -8.4]},
+                        'hall': {'pos': [8.2, 5.0, 0.5], 'look': [16.5, 4.2, 1.9]},
+                        'deck': {'pos': [-2.6, 5.0, 19.0], 'look': [13.0, 4.4, 15.8]},
+                        'driveway': {'pos': [-14.0, 1.0, 34.0], 'look': [2.0, 1.4, 18.0]},
                         'street': {'pos': [18.4, 1.6, 52.0], 'look': [18.4, 6.0, 30.0]},
-                        'aerial': {'pos': [-12.0, 62.0, 52.0], 'look': [18.4, 0.0, 22.0]}}})
+                        'aerial': {'pos': [-12.0, 62.0, 52.0], 'look': [14.0, 0.0, 14.0]}}})
     meta['options'] = [o for o in meta['options'] if o['id'] != OPT_ID] + [e]
     open(path, 'w').write(json.dumps(meta, separators=(',', ':'), ensure_ascii=False))
 
 def main():
-    meta, hide, hide_ranges, elements, bounds, rep = build()
-    D = option_data(meta, elements, bounds)
+    meta, hide, hide_ranges, elements, bounds, colliders, rep = build()
+    D = option_data(meta, elements, bounds, colliders)
     json.dump(D, open(os.path.join(B2, META_OUT), 'w'), separators=(',', ':'))
     raw = open(os.path.join(B2, GLB_OUT), 'rb').read(); register(hide, hide_ranges, hashlib.sha256(raw).hexdigest())
-    print(json.dumps(rep)); print('hide', len(hide), 'bytes', len(raw))
+    print(json.dumps(rep)); print('hide', len(hide), 'bytes', len(raw), 'colliders+', len(colliders))
 
 if __name__ == '__main__':
     main()

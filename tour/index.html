@@ -1875,10 +1875,10 @@ var ACCEL_PHONETEX = 0;
       return IL.call(this, k.replace(/\.(jpe?g|png|webp)$/i, '.m.webp'), onLoad, onProgress, function(e){ ACCEL_PHONETEX--; IL.call(self, url, onLoad, onProgress, onError); }); }
     return IL.apply(this, arguments); };
 })();</script>
-<script src="fixtures.js"></script>
-<script src="staging.js"></script>
+<script src="fixtures.js?v=44c"></script>
+<script src="staging.js?v=43f"></script>
 <script src="staging33.js?v=2"></script>
-<script src="builtins.js"></script>
+<script src="builtins.js?v=44e"></script>
 <script src="landscape.js"></script>
 <script src="trees.js?v=40"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
@@ -6810,7 +6810,8 @@ function navQA(){
   const finish = () => { for(let i = 0; i < 3 && (anim || glide); i++){ if(anim) anim.t0 = -1e9; if(glide) glide.t0 = -1e9; tick0(true); } tick0(true); camera.updateMatrixWorld(); };
   const mid = f => { if(anim){ anim.t0 = performance.now() - anim.dur * 1000 * f; tick0(true); } };
   const solids = () => withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible);
-  const cast = (rc, objs) => { for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if(h.object.isSprite || !h.object.visible || (m && m.transparent && m.opacity < .5) || /^(find-|esc-)/.test(h.object.name || '')) continue; return h; } return null; };
+  const shown = o => { for(; o; o = o.parent) if(!o.visible) return false; return true; };
+  const cast = (rc, objs) => { for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if(h.object.isSprite || !shown(h.object) || (m && m.transparent && m.opacity < .5) || /^(find-|esc-)/.test(h.object.name || '')) continue; return h; } return null; };
   const nameOf = o => (o.name || (o.material && o.material.name) || (o.parent && o.parent.name) || '?').slice(0, 44);
   function probe(){ camera.updateMatrixWorld(); const P = camera.position.clone(), rc = new THREE.Raycaster(), objs = solids(); let clr = 99, what = '', ins = 0, insWhat = '';
     for(let k = 0; k < 16; k++){ const a = k * Math.PI / 8, d = new V3(Math.cos(a), 0, Math.sin(a)); rc.set(P, d); rc.far = 3; const f = cast(rc, objs); if(f && f.distance < clr){ clr = f.distance; what = nameOf(f.object); }
@@ -16107,9 +16108,9 @@ const CTA42 = (() => {
   /* the concepts that come from the owner's earlier work with an architect (the two in the scene before r42); any other concept is labelled an illustrative idea */
   const ARCH = new Set(['jan24', 'apr24b']);
   const LAB = {real: 'The real house',
-    arch: 'Design concept, based on earlier work with an architect. Not reviewed for permits or structure.',
-    ill: 'Illustrative idea. Not designed or reviewed by an architect or engineer.',
-    mine: 'Your own changes. Not designed or reviewed by an architect or engineer.'};
+    arch: 'Illustrative idea.',   /* owner 11/12: every concept is simply an illustrative idea, no longer worded disclaimers */
+    ill: 'Illustrative idea.',
+    mine: 'Your own changes.'};
   /* r43 owner 11/12: four cards, the real house plus three concepts, in this order: 6 bedrooms (as built), 6 bedrooms (alternate layout),
      5 bedrooms (open plan), 4 bedrooms (open great room). The Semi-open plan is shown as the alternate six-bedroom layout. */
   const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
@@ -16118,7 +16119,7 @@ const CTA42 = (() => {
     apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
     jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
     open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.',
-    open4k: 'One vaulted great room with the kitchen at the street end, a fireplace, skylights and a folding glass wall to a new deck.'};
+    open4k: 'One vaulted great room from end to end under a single big ridge beam: a gas hearth and two sofas at the street end, an L-shaped kitchen and island at the other, a table for eight (ten with leaves) at 14-ft folding glass doors to a new deck, and a library and a new bath where the living room was.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
 
@@ -16456,8 +16457,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
       const same = f && (facts('asbuilt') || {}).beds === f.beds, nm = (plans().find(p => p.id === v) || {}).name || '';   // a concept with as many bedrooms as the house says which one it is
       const sl = banner.classList.contains('b42sl');   // the slim line on a phone: what it is, then 'Not the house as it is.' on a line of its own
-      b.textContent = (k === 'arch' ? 'Design concept' : k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '') + (sl ? '' : '. Not the house as it is.');
-      s.textContent = sl ? 'Not the house as it is.' : k === 'arch' ? 'Based on earlier work with an architect. Not reviewed for permits or structure.' : 'Not designed or reviewed by an architect or engineer.';
+      b.textContent = (k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '') ;
+      s.textContent = '';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
     banner.hidden = false;
     // under the top bar (the booking line on a phone); on a computer centred over the part of the screen the Design panel leaves free
@@ -20817,7 +20818,8 @@ function opt42Clear(v, o){
   const only = new Set(C22_ONLY.map(e => e.o)), opId = c => { const m = c.name && /(?:^|:)((?:D|WN|OP|SK)-[A-Z0-9]+-[A-Z0-9]+)(?::|$)/.exec(c.name); return m ? m[1] : null; };   // pieces of an opening: gone35 decides
   for(const k of ['main', 'furn', 'ceil', 'trim']){ const G = GROUPS[k]; if(!G) continue;
     for(const c of G.children){ if(c.isInstancedMesh || (c.userData && (c.userData.kind === 'ceilingFan' || c.userData.bim2))) continue;
-      const F = fx.get(c); if((F && (F.v || keep.has(F.id))) || only.has(c) || opId(c)) continue;
+      const F = c.userData && c.userData.el === 'r28-attic-cabinet' ? null : fx.get(c); if((F && (F.v || keep.has(F.id))) || only.has(c) || opId(c)) continue;
+      if(c.userData && c.userData.el === 'r28-attic-cabinet'){ if(BIM2.inPoly(R, c.position.z, c.position.x)) out.push(c); continue; }   /* r44: by its position; it can be hidden (an empty box) when this first runs */
       B.setFromObject(c); if(B.isEmpty()) continue; const sx = B.max.z - B.min.z, sy = B.max.x - B.min.x;
       if(sx > 14 || sy > 14 || B.max.y < -.5 || B.min.y > 13) continue;
       if(!BIM2.inPoly(R, (B.min.z + B.max.z) / 2, (B.min.x + B.max.x) / 2)) continue;
@@ -20832,7 +20834,13 @@ function opt42Vis(){
   for(const c of (GROUPS.furn ? GROUPS.furn.children : [])){ const u = c.userData; if(u.kind !== 'ceilingFan' || !u.lid) continue;
     const hide = !!(lids && !lids.has(u.lid)); if(hide && c.visible){ c.visible = false; u.r42 = true; } else if(!hide && u.r42){ c.visible = true; u.r42 = false; } }
   const clr = new Set(opt42On(o) && B2OPT.built[v] ? opt42Clear(v, o) : []);
-  for(const k in OPT42.cleared) for(const c of OPT42.cleared[k]){ const hide = clr.has(c); if(hide && c.visible){ c.visible = false; c.userData.r42c = true; } else if(!hide && c.userData.r42c){ c.visible = true; c.userData.r42c = false; } } }
+  for(const k in OPT42.cleared) for(const c of OPT42.cleared[k]){ const hide = clr.has(c); if(hide && c.visible){ c.visible = false; c.userData.r42c = true; } else if(!hide && c.userData.r42c){ c.visible = true; c.userData.r42c = false; } }
+  /* r43f: doors of the house that an idea asks to rest shut while it shows (scene.meta options[] restShut: [opening ids]): shut on
+     arriving, back as they were on leaving; a tap, or a walker reaching one, opens it as usual */
+  try{ const shut = new Set((opt42On(o) && B2OPT.built[v] && o.restShut) || []);
+    for(const it of ((window.B3D && window.B3D.items) || [])){
+      if(shut.has(it.id)){ if(!it.r43shut){ it.r43shut = {t: it.t}; it.t = 0; it.dir = 0; DOOR28.moving.delete(it); door28Pose(it); if(it.coll) it.coll.pass = false; PERF.shadowDirty = true; } }
+      else if(it.r43shut){ it.t = it.r43shut.t; it.r43shut = null; it.dir = 0; DOOR28.moving.delete(it); door28Pose(it); if(it.coll) it.coll.pass = it.t > .9; PERF.shadowDirty = true; } } }catch(e){ console.warn('[r43f] rest shut', e); } }
 /* the page's door and closet colliders (a shut door blocks a walker) are built for the as-built openings; one an option removes stops
    colliding while that option shows, so a walker crosses the floor where a removed closet or pocket door was */
 function opt42Doors(o){
@@ -20917,6 +20925,15 @@ Object.assign(FOLD42, {toggle: (it) => fold42Toggle(it || FOLD42.items[0]), set(
   near(x, y, r){ r = r || 1; const [wx, wz] = W2(x, y); navPassTag();   // the colliders that act within r ft of a plan point (for the variant showing)
     return COLLIDERS.filter(c => !(c.v && c.v !== ACTIVE_VAR) && !c.pass && wx > c.x0 - r && wx < c.x1 + r && wz > c.z0 - r && wz < c.z1 + r)
       .map(c => ({x: [+c.z0.toFixed(2), +c.z1.toFixed(2)], y: [+c.x0.toFixed(2), +c.x1.toFixed(2)], z: [+c.y0.toFixed(1), +c.y1.toFixed(1)], v: c.v, id: c.id || c.element || c.bim2 || c.f42 || c.tree || null})); }});
+/* r43: the corner floor plan (minimap) shows the plan that is showing. A layout idea with its own plan image (drawn from its model data
+   by the same projection as floor_main.jpg) is drawn instead of the house's while it shows (Design and its walk-through); everywhere
+   else, and until that image has loaded, the house's plan. */
+const MM43 = {open4k: 'floor_main_open4k.jpg?v=5'}, MM43I = {};
+{ const _dm43 = drawMini; drawMini = function(){
+    const v = typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt', src = MM43[v]; if(!src) return _dm43.apply(this, arguments);
+    let im = MM43I[v]; if(!im){ im = MM43I[v] = new Image(); im.src = src; }
+    if(!im.complete || !im.naturalWidth) return _dm43.apply(this, arguments);
+    const keep = mmImgs.main; mmImgs.main = im; try{ return _dm43.apply(this, arguments); } finally{ mmImgs.main = keep; } }; }
 /* QA hook (?qa=1 and the page console): window.__IDEA42.plans() lists the floor plans with their facts; set(id) shows one in Design;
    view(name, id, as) stands at one of the option's viewpoints in its walk-through (outdoors too: 'street'), or for 'aerial' looks at
    it from above in Design (roof and upper level off), showing layout `as` (default the option itself; 'asbuilt' for the same view of the house today); navCheck(R, qa) walks the option (called by __TOUR.navCheck's 'ideas' section). */
@@ -24736,7 +24753,8 @@ function r40XTarget(t){ const X = R40X;
 function r40InTarget(){ const r = ENV_INSIDE && LIGHT_ENV_ID ? LIGHT_ENV.get(LIGHT_ENV_ID) : null; return r ? r.texture : ENV_IN ? ENV_IN.texture : null; }
 function r40EnvSync(){
   if(R40E.on){   // two environments: the sky stays the scene environment; the room environment (crossfaded) is envMapB
-    if(!R40M.done || (R40L.frame % 120) === 0) try{ r40BuildMask(); }catch(err){ if(!R40M.warned){ R40M.warned = true; console.warn('[r40] mask', err); } }
+    let tk44 = ''; try{ tk44 = ACTIVE_VAR + ':' + (((BIM2.option && BIM2.option(ACTIVE_VAR)) || {}).data ? 1 : 0); }catch(e){}   /* r44: rebuild at once when the layout idea (or its data) changes, not up to 120 frames later */
+    if(!R40M.done || tk44 !== R40M.tk44 || (R40L.frame % 120) === 0) try{ R40M.tk44 = tk44; r40BuildMask(); }catch(err){ if(!R40M.warned){ R40M.warned = true; console.warn('[r40] mask', err); } }
     const t = r40InTarget(); if(t) try{ r40XTarget(t); }catch(err){ console.warn('[r40] env', err); }
     if(R40X.out) R40E.U.envMapB.value = R40X.out.texture; R40E.U.r40K.value = r40C(EXPO_IN);
     if(ENV_RT && scene.environment !== ENV_RT.texture) scene.environment = ENV_RT.texture; return; }
@@ -24756,8 +24774,27 @@ function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.
 // ---- R40M: the interior mask. Per 6-in plan cell, up to two height intervals of interior air (BIM interior spaces, floor to the
 // ceiling over that cell), closed by 1 ft so interior walls and the door openings between rooms count as inside (the outer walls do not)
 const R40M = window.R40M = {c: .5, done: false, key: '', ms: 0, nx: 0, nz: 0, filled: 0};
+/* r44: the rooms the interior masks are built from. With a layout idea showing, its own rooms (scene.opt-*.meta.json spaces), not the
+   as-built ones: under the as-built rooms the vault of an opened-up great room was still cut at the removed hall's and bath's 8-ft
+   ceilings, so the ceiling above read as outside air (a grey patch over the kitchen, owner 11/12). A room the idea leaves as built
+   keeps the house's own record; a changed or new room is read from the idea's polygon and ceiling planes. */
+function r44MaskSpaces(){
+  const S = BIM2.state; let sp = S.spaces.filter(s => s.interior), contains = S.contains, topOf = S.topOf;
+  try{ const o = (typeof ACTIVE_VAR !== 'undefined' && ACTIVE_VAR !== 'asbuilt' && BIM2.option) ? BIM2.option(ACTIVE_VAR) : null, D = o && o.data;
+    if(D && Array.isArray(D.spaces) && D.spaces.length && S.spaceById){ const out = [], J = JSON.stringify;
+      for(const r of D.spaces){ if(r.interior === false) continue; const b = S.spaceById[r.id];
+        if(b && b.raw && J(b.raw.polygon) === J(r.polygon) && J(b.raw.ceiling) === J(r.ceiling)){ if(b.interior) out.push(b); continue; }
+        if(!r.polygon || r.polygon.length < 3 || (b && !b.interior)) continue; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for(const q of r.polygon){ x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0]); y1 = Math.max(y1, q[1]); }
+        out.push({id: r.id, floorZ: r.floorZ || 0, bb: [x0, y0, x1, y1], interior: true, r44: r}); }
+      if(out.length){ sp = out;
+        contains = (s, x, y) => s.r44 ? BIM2.inPoly(s.r44.polygon, x, y) : S.contains(s, x, y);
+        topOf = (s, x, y) => { if(!s.r44) return S.topOf(s, x, y); const c = s.r44.ceiling || {};
+          for(const pl of (c.planes || [])){ if(pl.poly && !BIM2.inPoly(pl.poly, x, y)) continue; const P = pl.P; if(P && P.c != null) return P.c + (P.gx || 0) * x + (P.gy || 0) * y; }
+          return s.floorZ + (c.height || 8); }; } } }catch(e){ console.warn('[r44] mask spaces', e); }
+  return {spaces: S.spaces, sp, contains, topOf}; }
 function r40BuildMask(){
-  if(typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false; const S = BIM2.state, sp = S.spaces.filter(s => s.interior); if(!sp.length) return false;
+  if(typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false; const S = r44MaskSpaces(), sp = S.sp; if(!sp.length) return false;
   const key = (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '') + ':' + S.spaces.length + ':' + sp.length; if(R40M.done && key === R40M.key) return true;
   const t0 = performance.now(), c = R40M.c; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9, zlo = 1e9, zhi = -1e9;
   for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); zlo = Math.min(zlo, s.floorZ); }
@@ -24791,7 +24828,7 @@ window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.
 // room air (0-4 ft), G / B = that room column's floor and ceiling (the R40M height scale), so a jamb in the wall reads its room's height
 function r41WBuild(){
   if(!R41W.on || !R40M.done || typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false;
-  const S = BIM2.state, sp = S.spaces.filter(s => s.interior), key = R40M.key + ':' + sp.map(s => s.bb && s.bb.map(v => v.toFixed(2)).join(',')).join(';');
+  const S = r44MaskSpaces(), sp = S.sp, key = R40M.key + ':' + sp.map(s => s.bb && s.bb.map(v => v.toFixed(2)).join(',')).join(';');
   if(R41W.built && key === R41W.key) return true; if(!sp.length) return false;
   const t0 = performance.now(), c = .25, pad = R41W.dMax + 1; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9;
   for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); }
@@ -24814,7 +24851,7 @@ function r41WBuild(){
   Object.assign(R41W, {built: true, key, ms: +(performance.now() - t0).toFixed(1), nx: NX, nz: NZ}); return true; }
 // the pull for this frame: exterior radiance x E_ext / E_now (at most 1), in stops by EXPO_IN; 0 in the uniform = no pull
 function r41WFrame(){
-  if(!R41W.on) return; if(!R41W.built || (R40L.frame % 240) === 0) try{ r41WBuild(); }catch(e){ if(!R41W.warned){ R41W.warned = true; console.warn('[r41w] envelope', e); } }
+  if(!R41W.on) return; if(!R41W.built || R41W.k44 !== R40M.key || (R40L.frame % 240) === 0) try{ R41W.k44 = R40M.key; r41WBuild(); }catch(e){ if(!R41W.warned){ R41W.warned = true; console.warn('[r41w] envelope', e); } }
   const kIn = r40C(typeof EXPO_IN === 'number' ? EXPO_IN : 0), E = renderer.toneMappingExposure, ext = (typeof BASE_EXPOSURE === 'number' ? BASE_EXPOSURE : E) * R41W.outGain * Math.pow(2, R41W.stops);
   const p = R41W.built && !isDoll() && kIn > 0 && E > 0 ? Math.pow(Math.min(1, ext / E), kIn) : 1; R41W.pull = p;
   R41W.U.r41Pull.value = R41W.hold ? 0 : 1 - p; }
