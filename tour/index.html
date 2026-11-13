@@ -2197,13 +2197,13 @@ window.__shadow22 = {on: location.href.indexOf('shadow22-off') < 0, lookSpan: 60
    rule:lamp-reach-is-a-field - each lamp's room now has a REACH FIELD (RM29.fieldOf, built once per room that holds a lamp): 1 over the
    room, falling smoothly to 0 over RM29.reach ft measured through the air round the walls that stand there (the walk colliders: through
    an open doorway or an open edge yes, through a wall no), with the floor and ceiling of the air column at each cell (a stair void under
-   a loft runs down to the treads). The shader reads it bilinearly (one read per lamp) and fades over half a foot inside the floor and
-   ceiling thickness. No cell, storey or room edge can show on a surface: the weight is continuous everywhere a wall does not stand. */
+   a loft runs down to the treads). The shader reads it bilinearly, once per lamp ROOM whose tile holds the fragment (up to 16 rooms
+   with a lit lamp; the lamps of one room share the read), and fades over half a foot inside the floor and ceiling thickness. No cell, storey or room edge can show on a surface: the weight is continuous everywhere a wall does not stand. */
 const RM29 = (() => {
   const T = THREE, C = T.ShaderChunk, R = {push: .3, cell: .25, reach: 7, yMin: -26, ySpan: 51, ok: false, on: true, pts: null, n: 0, ms: 0, fms: 0, err: null, last: []};
   R.G = [new T.Vector4(4, 1, 1, 0), new T.Vector4(R.yMin, R.ySpan, R.push, 0)];   // [1/cell, 1/atlas W, 1/atlas H, on], [y of 0, y span of 0..1, push, -]
-  R.L = []; for(let i = 0; i < 64; i++) R.L.push(new T.Vector4(0, 0, 0, 0));   // per uploaded point light, its room's field tile: [world x0, z0, cells wide, cells deep]
-  R.O = []; for(let i = 0; i < 64; i++) R.O.push(new T.Vector4(0, 0, 0, 0));   // ... [atlas x, atlas y (texels), -, on]
+  R.L = []; for(let i = 0; i < 64; i++) R.L.push(new T.Vector4(0, 0, 0, 0));   // per uploaded point light: [field slot, -, -, on]
+  R.NF = 16; R.FT = []; R.FO = []; for(let i = 0; i < R.NF; i++){ R.FT.push(new T.Vector4(0, 0, 0, 0)); R.FO.push(new T.Vector4(0, 0, 0, 0)); }   // per field slot, its tile: [world x0, z0, cells wide, cells deep], [atlas x, atlas y (texels), -, on]
   R.tex = new T.DataTexture(new Uint8Array(4), 1, 1, T.RGBAFormat); R.tex.minFilter = R.tex.magFilter = T.LinearFilter; R.tex.generateMipmaps = false; R.tex.flipY = false;
   R.tex.needsUpdate = true; R.tex.clone = function(){ return this; };   // one shared texture (the field atlas): ShaderLib uniforms are cloned per material
   const pars = `
@@ -2211,11 +2211,12 @@ uniform highp sampler2D rmTex;
 uniform vec4 rmG[ 2 ];
 #if NUM_POINT_LIGHTS > 0
 uniform vec4 rmL[ NUM_POINT_LIGHTS ];
-uniform vec4 rmO[ NUM_POINT_LIGHTS ];
+uniform vec4 rmF[ ${R.NF} ];
+uniform vec4 rmFO[ ${R.NF} ];
 #endif
-// r47: the lamp's reach at p (world, 0.3 ft off the surface): its room's field (R = reach 0..1, G / B = floor / ceiling of the air there)
+// r47: a lamp room's reach at p (world, 0.3 ft off the surface): its field (R = reach 0..1, G / B = floor / ceiling of the air there)
 float rmMask( const in vec4 L, const in vec4 O, const in vec3 p ){
-	if( O.w < 0.5 ) return 1.0;
+	if( O.w < 0.5 ) return 0.0;
 	vec2 c = ( p.xz - L.xy ) * rmG[ 0 ].x;
 	if( c.x < 0.0 || c.y < 0.0 || c.x > L.z || c.y > L.w ) return 0.0;
 	vec4 t = texture2D( rmTex, ( O.xy + clamp( c, vec2( 0.5 ), L.zw - 0.5 ) ) * rmG[ 0 ].yz );
@@ -2223,21 +2224,26 @@ float rmMask( const in vec4 L, const in vec4 O, const in vec3 p ){
 	float lo = rmG[ 1 ].x + t.g * rmG[ 1 ].y, hi = rmG[ 1 ].x + t.b * rmG[ 1 ].y;
 	return t.r * smoothstep( lo - 0.8, lo - 0.25, p.y ) * ( 1.0 - smoothstep( hi + 0.25, hi + 0.8, p.y ) );
 }
+float rmPick( const in vec4 m[ 4 ], const in float k ){
+	vec4 v = k < 3.5 ? m[ 0 ] : k < 7.5 ? m[ 1 ] : k < 11.5 ? m[ 2 ] : m[ 3 ]; float j = mod( k, 4.0 );
+	return j < 0.5 ? v.x : j < 1.5 ? v.y : j < 2.5 ? v.z : v.w;
+}
 `;
-  const head = `vec3 rmP = vec3( 0.0 );
+  const head = `vec4 rmM[ 4 ];
 #if NUM_POINT_LIGHTS > 0
 if( rmG[ 0 ].w > 0.5 ){
 	mat3 rmR = mat3( viewMatrix ); vec3 rmD = geometry.position - viewMatrix[ 3 ].xyz;
 	vec3 rmN = vec3( dot( rmR[ 0 ], geometry.normal ), dot( rmR[ 1 ], geometry.normal ), dot( rmR[ 2 ], geometry.normal ) );
-	rmP = vec3( dot( rmR[ 0 ], rmD ), dot( rmR[ 1 ], rmD ), dot( rmR[ 2 ], rmD ) ) + rmN * rmG[ 1 ].z;
+	vec3 rmP = vec3( dot( rmR[ 0 ], rmD ), dot( rmR[ 1 ], rmD ), dot( rmR[ 2 ], rmD ) ) + rmN * rmG[ 1 ].z;
+	for( int rmI = 0; rmI < 4; rmI ++ ) rmM[ rmI ] = vec4( rmMask( rmF[ rmI * 4 ], rmFO[ rmI * 4 ], rmP ), rmMask( rmF[ rmI * 4 + 1 ], rmFO[ rmI * 4 + 1 ], rmP ), rmMask( rmF[ rmI * 4 + 2 ], rmFO[ rmI * 4 + 2 ], rmP ), rmMask( rmF[ rmI * 4 + 3 ], rmFO[ rmI * 4 + 3 ], rmP ) );
 }
 #endif
 `;
   const a = 'IncidentLight directLight;\n', b = '\t\tgetPointDirectLightIrradiance( pointLight, geometry, directLight );\n';
   if(C.lights_fragment_begin.split(a).length !== 2 || C.lights_fragment_begin.split(b).length !== 2) throw new Error('v29 leak: lights chunk changed');
-  C.lights_fragment_begin = C.lights_fragment_begin.replace(a, a + head).replace(b, b + '\t\tif( rmG[ 0 ].w > 0.5 ) directLight.color *= rmMask( rmL[ i ], rmO[ i ], rmP );\n');
+  C.lights_fragment_begin = C.lights_fragment_begin.replace(a, a + head).replace(b, b + '\t\tif( rmG[ 0 ].w > 0.5 && rmL[ i ].w > 0.5 ) directLight.color *= rmPick( rmM, rmL[ i ].x );\n');
   C.lights_physical_pars_fragment = pars + C.lights_physical_pars_fragment;
-  for(const k of ['standard', 'physical']) Object.assign(T.ShaderLib[k].uniforms, {rmTex: {value: R.tex}, rmG: {value: R.G}, rmL: {value: R.L}, rmO: {value: R.O}});
+  for(const k of ['standard', 'physical']) Object.assign(T.ShaderLib[k].uniforms, {rmTex: {value: R.tex}, rmG: {value: R.G}, rmL: {value: R.L}, rmF: {value: R.FT}, rmFO: {value: R.FO}});
   return R;
 })();
 const scene = new THREE.Scene();
@@ -5763,9 +5769,12 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
     // r47: the fields are rebuilt when the room grid was edited after they were made (bim3WellTops marks the texture) or the walls / floors changed
     { let nw = 0; if(typeof COLLIDERS !== 'undefined') for(const q of COLLIDERS) if(q.kind === 'WALL' && !q.v && !q.pass) nw++; const sg = nw + ':' + FLOORS.length; if(R.F.size && (R.tex.version !== R.fv || sg !== R.sig)){ R.F.clear(); surfC.clear(); ceilC.clear(); } R.sig = sg; }
     const ks = []; for(let i = 0; i < n; i++){ v.copy(P[i].position).applyMatrix4(cam.matrixWorld); const k = R.on ? R.at(v) : null; ks.push(k); if(k) R.fieldOf(k); }   // every field first: a new one repacks the atlas
-    for(let i = 0; i < n; i++){ const f = ks[i] ? R.F.get(ks[i]) : null;
-      if(f){ R.L[i].set(f.X0, f.Z0, f.w, f.h); R.O[i].set(f.ax, f.ay, 0, 1); } else { R.L[i].set(0, 0, 0, 0); R.O[i].set(0, 0, 0, 0); } }
-    for(let i = n; i < R.n; i++){ R.L[i].set(0, 0, 0, 0); R.O[i].set(0, 0, 0, 0); }
+    const slot = new Map();   // one field slot per lamp room, in light order; a 17th room's lamps would go unmasked (noted once)
+    for(let i = 0; i < n; i++){ const f = ks[i] ? R.F.get(ks[i]) : null; let sl = -1;
+      if(f){ sl = slot.has(f) ? slot.get(f) : slot.size < R.NF ? (slot.set(f, slot.size), slot.size - 1) : -1; if(sl < 0 && !R.over){ R.over = true; console.warn('[rm29] more than ' + R.NF + ' lamp rooms: the rest unmasked'); } }
+      if(sl >= 0) R.L[i].set(sl, 0, 0, 1); else R.L[i].set(0, 0, 0, 0); }
+    for(let i = n; i < R.n; i++) R.L[i].set(0, 0, 0, 0);
+    { let sl = 0; for(const f of slot.keys()){ R.FT[sl].set(f.X0, f.Z0, f.w, f.h); R.FO[sl].set(f.ax, f.ay, 0, 1); sl++; } for(; sl < R.NF; sl++){ R.FT[sl].set(0, 0, 0, 0); R.FO[sl].set(0, 0, 0, 0); } }
     R.n = n; R.G[0].set(1 / R.cell, 1 / (R.aw || 1), 1 / (R.ah || 1), R.on ? 1 : 0); };
   R.tries = 0;
   const hook = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({colorWrite: false, depthWrite: false, depthTest: false, fog: false}));
@@ -5776,7 +5785,7 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
     scene.traverse(o => { if(!o.isPointLight) return; const p = o.getWorldPosition(new THREE.Vector3()), k = R.at(p);
       out.push({name: o.name || (o.parent && o.parent.name) || '', at: p.toArray().map(x => +x.toFixed(1)), dist: o.distance, space: k ? R.rooms[k].id + ' ' + R.rooms[k].name : null}); });
     return {ok: R.ok, on: R.on, ms: R.ms, grid: R.ok ? [R.W, R.H] : null, spaces: R.rooms ? R.rooms.slice(1).map(r => r.id + ':' + r.cells) : [], uploaded: R.n,
-      tagged: R.O.slice(0, R.n).filter(q => q.w > 0).length, fields: [...R.F.values()].filter(Boolean).map(f => R.rooms[f.k].id + ':' + f.w + 'x' + f.h + ':' + f.ms + 'ms'), atlas: [R.aw, R.ah], err: R.err, lights: out}; };
+      tagged: R.L.slice(0, R.n).filter(q => q.w > 0).length, fields: [...R.F.values()].filter(Boolean).map(f => R.rooms[f.k].id + ':' + f.w + 'x' + f.h + ':' + f.ms + 'ms'), atlas: [R.aw, R.ah], err: R.err, lights: out}; };
 }
 let DUSK = false;
 /* ---------------- time of day: real sun for Woodside (37.438 N, 122.254 W), mid-October ---------------- */
