@@ -982,7 +982,16 @@ html:not(.ph) .v31games:hover{background:#3a3a36}
 /* r45 calm pass: Floor plans beside Games (outlined, so one filled pill); Holiday decor and Full screen leave the bar for the View menu */
 html:not(.ph) .v31games.v45fp{background:transparent;color:#1f1f1d;box-shadow:inset 0 0 0 1.5px #1f1f1d}
 html:not(.ph) .v31games.v45fp:hover{background:rgba(31,31,29,.08)}
-html.ph .v31games.v45fp{display:none!important}
+/* r46 (owner, on his iPhone: "cannot see the floor plans at all"): the Floor plans pill is in the phone header too, between Tour and Games.
+   The wordmark and the pills tighten so the row fits from 360 to 430 px without wrapping. */
+html.ph .v31games.v45fp{display:inline-flex!important;background:transparent!important;color:var(--v31ink,#1f1f1d)!important;box-shadow:inset 0 0 0 1.5px var(--v31ink,#1f1f1d)}
+html.ph .tab,html.ph .v31games{padding:0 10px!important;font-size:11.5px!important;letter-spacing:.05em!important;white-space:nowrap;flex:0 0 auto}
+html.ph .bar .plate b{font-size:19px!important;letter-spacing:.02em!important;white-space:nowrap}
+html.ph .bar{gap:5px}
+@media (max-width:400px){html.ph .bar .plate b{font-size:17px!important;letter-spacing:0!important}html.ph .tab,html.ph .v31games{padding:0 8px!important;font-size:11px!important;letter-spacing:.03em!important;min-height:36px;height:36px}}
+/* r46: the holiday chip on a phone is a small quiet pill, well under the 3D model / Photo switch */
+html.ph #cta42[data-k="decor"]{min-height:30px;padding:0 10px 0 8px;font-size:12.5px;gap:5px;opacity:.86;box-shadow:none}
+html.ph #cta42[data-k="decor"] svg{width:13px;height:13px}
 html:not(.ph) #holBtn,html:not(.ph) #fsBtn{display:none!important}
 html.ph .v45fs{display:none!important}
 #b22pill{display:none!important}   /* r45 owner: no 'Refining the view' pill */
