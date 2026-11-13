@@ -18922,7 +18922,7 @@ window.CORN31 = CORNMAZE;
       /* r45 (owner: "feature the floor plans more prominently ... calm UX"): one place to choose a layout, the Floor plans menu (LAYOUTS45). The
          radio list of layouts that stood here is gone. On a phone the menu gets a Floor plans row and a plain Design row (furniture, paint,
          landscape); on a computer the top bar has the Floor plans button and the Design tab, and this menu gets Full screen (its bar button went). */
-      const fp = mk('Floor plans', '<path d="M3.5 3.5h13v13h-13zM3.5 10h5.5M9 3.5v4M9 12.5v4M12.5 10h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>', () => { try{ window.LAYOUTS45.open(null, 'menu'); }catch(e){ console.warn(e); } });
+      const fp = mk('Floor plans', '<path d="M3.5 3.5h13v13h-13zM3.5 10h5.5M9 3.5v4M9 12.5v4M12.5 10h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>', () => { try{ if(document.documentElement.classList.contains('phm')){ const m = document.getElementById('phMore'); if(m) m.click(); } window.LAYOUTS45.open(null, 'menu'); }catch(e){ console.warn(e); } });
       const ds = mk('Design', '<path d="M3 17V7l7-4 7 4v10H3zM8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>', tab('design'));
       const doll = document.getElementById('phDoll'), at = doll ? doll.nextSibling : menu.firstChild; menu.insertBefore(ds, at); menu.insertBefore(fp, ds);
       const fsb = document.getElementById('fsBtn');
