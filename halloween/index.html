@@ -5524,7 +5524,7 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
     const P = R.pts, n = Math.min(P.length, R.L.length);
     // r47: the fields are rebuilt when the room grid was edited after they were made (bim3WellTops marks the texture) or the walls / floors changed
     { let nw = 0; if(typeof COLLIDERS !== 'undefined') for(const q of COLLIDERS) if(q.kind === 'WALL' && !q.v && !q.pass) nw++; const sg = nw + ':' + FLOORS.length; if(R.F.size && (R.tex.version !== R.fv || sg !== R.sig)){ R.F.clear(); surfC.clear(); ceilC.clear(); } R.sig = sg; }
-    const ks = []; for(let i = 0; i < n; i++){ v.copy(P[i].position).applyMatrix4(cam.matrixWorld); const k = R.on ? R.at(v) : null; ks.push(k); if(k) R.fieldOf(k); }   // every field first: a new one repacks the atlas
+    const ks = []; for(let i = 0; i < n; i++){ const cl = P[i].color, lit = !cl || cl.r + cl.g + cl.b > 0; v.copy(P[i].position).applyMatrix4(cam.matrixWorld); const k = R.on && lit ? R.at(v) : null; ks.push(k); if(k) R.fieldOf(k); }   // every field first: a new one repacks the atlas; an unlit light (a lamp that is off, a padding light) needs none
     const slot = new Map();   // one field slot per lamp room, in light order; a 17th room's lamps would go unmasked (noted once)
     for(let i = 0; i < n; i++){ const f = ks[i] ? R.F.get(ks[i]) : null; let sl = -1;
       if(f){ sl = slot.has(f) ? slot.get(f) : slot.size < R.NF ? (slot.set(f, slot.size), slot.size - 1) : -1; if(sl < 0 && !R.over){ R.over = true; console.warn('[rm29] more than ' + R.NF + ' lamp rooms: the rest unmasked'); } }
