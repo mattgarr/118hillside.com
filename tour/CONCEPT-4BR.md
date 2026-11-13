@@ -180,13 +180,14 @@ street, y north).
   mullions. Every window round the living area has the same sill (3 ft 5) and head (7 ft 7). Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
   5 ft 11 windows (three mulled casement-style units each, with about 3 ft 10 of solid wall from each to its corner, in the white Andersen pattern of the new wing: 2-in sashes,
-  a 3/4-in grille bar at mid-height, 3-5/8 in mullions), one either side of the hearth,
+  a 3/4-in grille bar at mid-height, and 4 in between glass at every mullion, where two sashes meet), one either side of the hearth,
   with a triangle of gable glass over each that follows the rake and stops short of the stone. The living area's two side walls mirror each other: an 8-ft, three-unit window of the same pattern on each
   (sill 3 ft 5, head 7 ft 7), each 3 ft from the gable corner and centred on the sofa in front of it (x 29.6).
 - **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood, pot filler) is centred on the north wall, which is now a
-  solid cabinet wall: the two small windows that flanked the range are closed up (siding outside), with upper cabinets the
-  length of the run either side of the hood, glass fronts next to it, quartz up the wall to the uppers and the hood, lights
-  under them. The run goes 2 ft further toward the living area and ends in a drinks fridge and a panelled end. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
+  solid cabinet wall: the two small windows that flanked the range are closed up (siding outside), with wall cabinets the
+  length of the run either side of a 36-in hood, one over each base cabinet, in two tiers to the 8-ft line (a main tier
+  18 in above the counter and a short top tier), a scribe fill up to the sloping ceiling, a light rail and lights under
+  them, a panelled end, one pair of glass fronts next to the hood, and quartz up the wall to the cabinets and the hood. The run goes 2 ft further toward the living area and ends in a drinks fridge and a panelled end. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
   cabinets, one crown along the top and a panelled end. (The owner asked for about 3 ft more cabinetry toward the table;
   the tall wall took the full 3 ft, now starting at y 18.) An 8-ft x 3 ft 6 island carries, on its working side, a pull-out trash and recycling cabinet, the sink, the
   dishwasher and a drawer stack, with four stools on the dining side. Deep pot drawers sit either side of the range, and the
@@ -195,7 +196,9 @@ street, y north).
 - **Dining between them.** A table for eight (8 ft x 3 ft 6; ten with its leaves) sits on the kitchen's axis, parallel to the
   island, with a 7-ft sideboard on the west wall, centred on the table. This is the house's only dining place, so it is sized as one.
 - **Folding glass doors, moved west.** A 14-ft, six-panel folding door (x 8.7 to 22.9) is centred on the table and stacks at
-  its west jamb. It opens to the porch and to about 9 ft of new deck (to x 24.6, 8 ft 5 deep, cable rail). The east part of
+  its west jamb. It opens to the porch and to about 9 ft of new deck (to x 24.6, 8 ft 5 deep). The doors have the house's
+  flat white casing inside and trim outside. The deck has the house's 37-in cable guard along its whole south edge (the
+  stair falls away below it, with its own handrail beside the guard) and round the corner along the east edge to the house. The east part of
   the old picture window stays as fixed glass (x 25.6 to 33.6, three mulled units, the mirror of the north wall's) beside the sofas.
 - **Outside the gable.** The back bedroom stays (11 ft 5 x 9 ft 7) with one closet; the other closet becomes its vestibule, so
   the bedroom door no longer opens off the main room. A new 3/4 bath runs across the north end of the old living room, with

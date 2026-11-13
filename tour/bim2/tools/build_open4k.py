@@ -108,6 +108,7 @@ def build():
             ends = ('xX' if axis == 'x' else 'yY'); side = ('yY' if axis == 'x' else 'xX')
             wall_box(el, r[0], r[1], r[2], r[3], z0, top, mat, faces=side + ends)
             if z0 == 0.0 and collide: colliders.append({'id': '%s#%d' % (el, len([c for c in colliders if c['element'] == el])), 'element': el, 'kind': 'WALL', 'poly': [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
+    MG = 1 / 3                                              # r44e owner: 4 in between glass at every mullion (two sashes meeting, no wide mull block); unit centres as before
     MUL, STILE, RAIL = 0.30, 0.167, 0.0625                  # the new wing's white Andersen casements (ACW21050): 3-5/8 in mullion, 2 in sash, a 3/4 in grille bar at mid-height
     def win_poly(el, axis, ro, panes, inner, outer, sign_out, stool=None):
         """a window of any outline (ro, in (along, z)) with its glass panes: frame, glass, exterior trim, interior casing (and stool)"""
@@ -138,7 +139,8 @@ def build():
             bw = (u1 - u0 - 2 * 0.04 - (units - 1) * MUL) / units; zm = (z0 + z1) / 2; panes = []
             for i in range(units):
                 a_ = u0 + 0.04 + i * (bw + MUL)
-                panes += [sbox(a_ + STILE, z0 + 0.04 + STILE, a_ + bw - STILE, zm - RAIL / 2), sbox(a_ + STILE, zm + RAIL / 2, a_ + bw - STILE, z1 - 0.04 - STILE)]
+                il = STILE if i == 0 else (MG - MUL) / 2; ir = STILE if i == units - 1 else (MG - MUL) / 2
+                panes += [sbox(a_ + il, z0 + 0.04 + STILE, a_ + bw - ir, zm - RAIL / 2), sbox(a_ + il, zm + RAIL / 2, a_ + bw - ir, z1 - 0.04 - STILE)]
         else: panes = [mitre(ro, -0.16)]
         win_poly(el, axis, ro, panes, inner, outer, sign_out, stool=sbox(u0 - 0.37, z0 - 0.02, u1 + 0.37, z0 + 0.07))
     def gable_bars():
@@ -152,7 +154,7 @@ def build():
         tri = Polygon([(Y(t_in), GG['zb']), (Y(t_tip), GG['zb']), (Y(t_tip), top(t_tip)), (Y(t_in), top(t_in))])   # a trapezoid: its outer jamb stands on the window's
         edges = [t_tip] + gable_bars() + [t_in]; panes = []
         for ta, tb in zip(edges[:-1], edges[1:]):
-            a_ = ta - (MUL / 2 if ta != t_tip else 0.04); b_ = tb + (MUL / 2 if tb != t_in else 0.04)
+            a_ = ta - (MG / 2 - STILE if ta != t_tip else 0.04); b_ = tb + (MG / 2 - STILE if tb != t_in else 0.04)
             lo, hi = sorted((Y(a_), Y(b_))); bay = tri.intersection(sbox(lo, 0, hi, 30)).buffer(-STILE, join_style=2)
             if not bay.is_empty and bay.geom_type == 'Polygon' and bay.area > 0.12: panes.append(bay)
         return tri, panes
@@ -224,7 +226,7 @@ def build():
         c, w = EWIN[0 if side < 0 else 1][:2]; bw = (w - 0.08 - (EUNITS - 1) * MUL) / EUNITS
         low = sorted(round(c - w / 2 + 0.04 + (k + 1) * bw + (k + 0.5) * MUL, 3) for k in range(EUNITS - 1))
         xs = sorted(set(round(v, 3) for pn in panes for v in (pn.bounds[0], pn.bounds[2]))); gaps = [(a2, b2) for a2, b2 in zip(xs[1:-1:2], xs[2:-1:2])]
-        rep['gable_align']['south' if side < 0 else 'north'] = {'window_mullion_y': low, 'window_mullion_w': round(MUL + 2 * STILE, 3), 'glass_bar_y': [round((a2 + b2) / 2, 3) for a2, b2 in gaps], 'glass_bar_w': [round(b2 - a2, 3) for a2, b2 in gaps],
+        rep['gable_align']['south' if side < 0 else 'north'] = {'window_mullion_y': low, 'window_mullion_w': round(MG, 3), 'glass_bar_y': [round((a2 + b2) / 2, 3) for a2, b2 in gaps], 'glass_bar_w': [round(b2 - a2, 3) for a2, b2 in gaps],
                                                               'window_jambs_y': [round(c - w / 2, 3), round(c + w / 2, 3)], 'glass_ends_y': [round(tri.bounds[0], 3), round(tri.bounds[2], 3)], 'panes': len(panes)}
     for i, (tri, panes) in enumerate(GGS): win_poly('WN-L1-B5G%d' % (i + 1), 0, tri, panes, X_E, X_EO, 1)
     # ---- the west side of the box north of the bedroom (the old bath's tiled walls): repainted to the vault
