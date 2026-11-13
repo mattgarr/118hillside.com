@@ -8962,10 +8962,10 @@ html.v33game .ideas35{display:none}
   function sync(){ landChips(); const L = list(), walk = DESIGN.walking(); let lk = ''; try{ lk = LS.front + '/' + LS.back; }catch(e){}
     const k = mode + '|' + walk + '|' + L.join(',') + '|' + lk + '|' + ACTIVE_VAR; if(k === last) return; last = k; landSync();
     try{ if(window.__v31rmPaint) window.__v31rmPaint(); }catch(e){}   // the View menu's 'Remodel ideas' row follows
-    $('#dNowTxt').textContent = L.length ? 'Showing ideas: ' + L.join(', ') + '. These are ideas, not the house as sold.' : 'You are looking at the house as it is today.';
+    $('#dNowTxt').textContent = L.length ? 'Showing ideas: ' + L.join(', ') + '. These are ideas, not the house as it is today.' : 'You are looking at the house as it is today.';
     now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length;
     const out = mode !== 'design' && L.length > 0; chip.hidden = !out; document.documentElement.classList.toggle('ideas35on', out);
-    if(out){ $('#ideas35Txt').textContent = walk ? 'Walking a remodel idea: ' + DESIGN.nameOf(DESIGN.sel()).toLowerCase() + '. Not the house as sold.' : 'Showing ideas: ' + L.join(', ') + '. Not the house as sold.'; $('#ideas35Back').hidden = !walk; }
+    if(out){ $('#ideas35Txt').textContent = walk ? 'Walking a remodel idea: ' + DESIGN.nameOf(DESIGN.sel()).toLowerCase() + '. Not the house as it is today.' : 'Showing ideas: ' + L.join(', ') + '. Not the house as it is today.'; $('#ideas35Back').hidden = !walk; }
     try{ if(typeof window.__v33discPlace === 'function') window.__v33discPlace(); }catch(e){} }
   let quiet = false;                                    // true while the reset below presses the as-built buttons itself
   function today(){ quiet = true;
