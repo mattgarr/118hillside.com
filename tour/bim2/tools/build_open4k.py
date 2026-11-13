@@ -310,7 +310,7 @@ def option_data(meta, elements, bounds, new_col):
         {'poly': P2(poly.intersection(sbox(-60, -60, -2.28, 60)).exterior.coords[:-1]) if poly.bounds[0] < -2.28 else None, 'holes': [], 'P': {'c': 10.2201, 'gx': 0.2548, 'gy': 0}},
         {'poly': P2(poly.intersection(sbox(-2.28, -60, 60, 60)).exterior.coords[:-1]) if poly.bounds[2] > -2.28 else None, 'holes': [], 'P': {'c': 9.0527, 'gx': -0.2572, 'gy': 0}}) if pl['poly']]}
     NEW = {'SP-L1-LIVING': ('Library', Polygon([(-9.5298, -0.7477), (4.7564, -0.7477), (4.7564, 4.4041), (X_WW, 4.4041), (X_WW, 9.21), (-9.5298, 9.21)]), liv),
-           'SP-L1-BATH': ('Bath', sbox(-9.5298, 9.59, -1.29, 14.3208), liv), 'SP-L1-HALL': ('Hall', sbox(-0.91, 9.59, X_WW, 14.3208), liv), GREAT: ('Kitchen, dining & living', room, vault)}
+           'SP-L1-BATH': ('Bath', sbox(-9.5298, 9.59, -1.29, 14.3208), liv), 'SP-L1-HALL': ('Hall', sbox(-0.91, 9.59, X_WW, 14.3208), liv), GREAT: ('Kitchen, dining & living', room.buffer(0.2, join_style=2), vault)}   # 2-1/2 in into the walls: the page's interior light masks are cell grids, and a room drawn to the wall face leaves a strip of 'outside' along it
     RENAME = {'SP-L1-LAUNDRY-CLOSET': 'Shower', 'SP-L1-HALL-CLOSET': 'Bedroom vestibule'}
     sp = []
     for s in meta['spaces']:

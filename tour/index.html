@@ -24753,7 +24753,8 @@ function r40XTarget(t){ const X = R40X;
 function r40InTarget(){ const r = ENV_INSIDE && LIGHT_ENV_ID ? LIGHT_ENV.get(LIGHT_ENV_ID) : null; return r ? r.texture : ENV_IN ? ENV_IN.texture : null; }
 function r40EnvSync(){
   if(R40E.on){   // two environments: the sky stays the scene environment; the room environment (crossfaded) is envMapB
-    if(!R40M.done || (R40L.frame % 120) === 0) try{ r40BuildMask(); }catch(err){ if(!R40M.warned){ R40M.warned = true; console.warn('[r40] mask', err); } }
+    let tk44 = ''; try{ tk44 = ACTIVE_VAR + ':' + (((BIM2.option && BIM2.option(ACTIVE_VAR)) || {}).data ? 1 : 0); }catch(e){}   /* r44: rebuild at once when the layout idea (or its data) changes, not up to 120 frames later */
+    if(!R40M.done || tk44 !== R40M.tk44 || (R40L.frame % 120) === 0) try{ R40M.tk44 = tk44; r40BuildMask(); }catch(err){ if(!R40M.warned){ R40M.warned = true; console.warn('[r40] mask', err); } }
     const t = r40InTarget(); if(t) try{ r40XTarget(t); }catch(err){ console.warn('[r40] env', err); }
     if(R40X.out) R40E.U.envMapB.value = R40X.out.texture; R40E.U.r40K.value = r40C(EXPO_IN);
     if(ENV_RT && scene.environment !== ENV_RT.texture) scene.environment = ENV_RT.texture; return; }
@@ -24850,7 +24851,7 @@ function r41WBuild(){
   Object.assign(R41W, {built: true, key, ms: +(performance.now() - t0).toFixed(1), nx: NX, nz: NZ}); return true; }
 // the pull for this frame: exterior radiance x E_ext / E_now (at most 1), in stops by EXPO_IN; 0 in the uniform = no pull
 function r41WFrame(){
-  if(!R41W.on) return; if(!R41W.built || (R40L.frame % 240) === 0) try{ r41WBuild(); }catch(e){ if(!R41W.warned){ R41W.warned = true; console.warn('[r41w] envelope', e); } }
+  if(!R41W.on) return; if(!R41W.built || R41W.k44 !== R40M.key || (R40L.frame % 240) === 0) try{ R41W.k44 = R40M.key; r41WBuild(); }catch(e){ if(!R41W.warned){ R41W.warned = true; console.warn('[r41w] envelope', e); } }
   const kIn = r40C(typeof EXPO_IN === 'number' ? EXPO_IN : 0), E = renderer.toneMappingExposure, ext = (typeof BASE_EXPOSURE === 'number' ? BASE_EXPOSURE : E) * R41W.outGain * Math.pow(2, R41W.stops);
   const p = R41W.built && !isDoll() && kIn > 0 && E > 0 ? Math.pow(Math.min(1, ext / E), kIn) : 1; R41W.pull = p;
   R41W.U.r41Pull.value = R41W.hold ? 0 : 1 - p; }
