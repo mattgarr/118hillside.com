@@ -20874,8 +20874,8 @@ function fold42Build(o){
     const box = (x0, x1, y0, y1, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, F42.T), m); b.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); b.castShadow = b.receiveShadow = true; return b; };
     for(let i = 0; i < n; i++){ const P = new THREE.Group(), a = F42.gap / 2, b = a + pw;
       P.add(box(a, a + F42.stile, 0, h, fm), box(b - F42.stile, b, 0, h, fm), box(a + F42.stile, b - F42.stile, h - F42.top, h, fm), box(a + F42.stile, b - F42.stile, 0, F42.bot, fm));
-      const gl = new THREE.Mesh(new THREE.PlaneGeometry(pw - 2 * F42.stile + .04, h - F42.top - F42.bot + .04), M.glassDoor.clone());
-      gl.material.side = THREE.DoubleSide; gl.position.set((a + b) / 2, F42.bot + (h - F42.top - F42.bot) / 2, 0); gl.renderOrder = 2; GLOW.push(gl.material); P.add(gl);
+      const gl = new THREE.Mesh(new THREE.PlaneGeometry(pw - 2 * F42.stile + .04, h - F42.top - F42.bot + .04), M.glass);   // r44f: the windows' own clear glass (the sliders' door glass glows and fades, and read frosted here)
+      gl.position.set((a + b) / 2, F42.bot + (h - F42.top - F42.bot) / 2, 0); gl.renderOrder = 2; P.add(gl);
       // a pull on the free stile of every other panel, both faces, as on the real units
       if(i % 2 === 1){ const k = new THREE.Mesh(new THREE.BoxGeometry(.06, 1.0, F42.T + .14), fm); k.position.set(b - F42.stile - .05, 3.6, 0); P.add(k); }
       P.userData.fold42 = op.id; g.add(P); it.panels.push(P); }
