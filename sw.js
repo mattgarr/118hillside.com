@@ -3,16 +3,19 @@
    - Pages (HTML) always go to the network first. The tour page is 2.7 MB (0.9 MB compressed) and every game opens it again under a new address
      (tour/?deck=1 ...), which the browser's own cache treats as a different page: here, a page already held under any query is revalidated with
      its ETag, and a 304 answer serves the held copy, so starting a game on a phone does not download the tour again. Offline, the held copy.
-   - Versioned static files (same site, ?v= in the address: scripts, styles, data) are served from this cache and refreshed behind the scenes
-     (stale-while-revalidate). A new ?v= is a new address, so an edit is picked up as soon as the page that asks for it is.
-   - Nothing else is touched: other sites (the three.js CDN, fonts, analytics), unversioned files (the model, textures) and non-GET requests
-     go straight to the network and the browser's own cache.
+   - Versioned scripts and styles (same site, a .js/.mjs/.css file with ?v= in the address) are served from this cache and refreshed behind the
+     scenes (stale-while-revalidate). A new ?v= is a new address, so an edit is picked up as soon as the page that asks for it is.
+   - Nothing else is touched: other sites (the three.js CDN, fonts, analytics), data files (.json, even with ?v=), the model and its fingerprint
+     file (bim2/scene.glb and bim2/scene.meta.json, which the model loader checks against each other by sha256: they must always come from the
+     same deploy, so neither is ever held here), textures and non-GET requests go straight to the network and the browser's own cache.
    - Old caches are deleted when a new version of this file activates.
-   Turning it off: set ENABLED = false below and publish; every visitor's copy then clears its caches and unregisters itself on its next check
-   (browsers check this file at least once a day, and on every page load the tour does). ?sw=0 on any tour address does the same for one browser.
+   Turning it off, for every visitor: set SW_ON = false in tour/index.html ("r43 service worker" script, near the end) and ENABLED = false below,
+   and publish both. The tour page then unregisters the worker and deletes its caches on its next load; this file, when a browser next checks
+   it (at least once a day, and on every page load of a page it controls), deletes its caches, unregisters itself and stops answering requests.
+   For one browser only: open any tour address with ?sw=0.
    It is registered only on 118hillside.com itself (not on raw.githack.com previews or local servers) unless the address has ?sw=1. */
 const ENABLED = true;
-const VERSION = 'hillside-r43-1';
+const VERSION = 'hillside-r43-2';
 const PAGES = VERSION + '-pages', FILES = VERSION + '-files';
 
 self.addEventListener('install', e => { self.skipWaiting(); });
@@ -25,7 +28,8 @@ self.addEventListener('activate', e => {
 });
 
 const sameSite = u => u.origin === self.location.origin;
-const versioned = u => /[?&]v=[^&]+/.test(u.search) && /\.(js|mjs|css|json|wasm|txt)$/i.test(u.pathname);
+const versioned = u => /[?&]v=[^&]+/.test(u.search) && /\.(js|mjs|css)$/i.test(u.pathname);
+const never = u => /\.(glb|gltf|bin|ktx2|json)$/i.test(u.pathname) || /\/bim2?\//.test(u.pathname);   // the model, its fingerprint file and all data: never held here
 const pageKey = u => u.origin + u.pathname;   // one held copy per page, whatever its query
 
 const bare = r => new Response(r.body, {status: r.status, statusText: r.statusText, headers: r.headers});   // no response URL of its own: the page keeps the address it was opened with (its ?game=1)
@@ -64,7 +68,7 @@ self.addEventListener('fetch', e => {
   if(!ENABLED) return;
   const req = e.request; if(req.method !== 'GET') return;
   let u; try{ u = new URL(req.url); }catch(x){ return; }
-  if(!sameSite(u)) return;
+  if(!sameSite(u) || never(u)) return;
   if(req.mode === 'navigate'){ if(/\/$|\.html$/.test(u.pathname)) e.respondWith(page(e)); return; }
   if(versioned(u)) e.respondWith(file(e));
 });
