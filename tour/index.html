@@ -19096,14 +19096,13 @@ if(typeof stagedShadows === 'function'){ const _ss = stagedShadows; stagedShadow
 else console.warn('[v33] S8: stagedShadows not in scope');
 window.__V33 = V33;
 
-/* ================= v33staging: New (10/31/2026) and Original (Dec 2025) staging, switchable (patch_v33_staging.py) ================= */
+/* ================= v33staging: the staging set (r45: one set, the 10/31/2026 photos; the older table is only a fallback) ================= */
 const STG33 = {cur: null, want: 'new', idp: 'st:', sets: {}, report: null, busy: false, LS: 'hillside.staging.v1',
-  names: {new: 'New (Oct 2026)', orig: 'Original (Dec 2025)'}, short: {new: 'New', orig: 'Original'}, extra: null, din: null, ms: {}};
+  names: {new: 'Staged', orig: 'Fallback'}, short: {new: 'Staged', orig: 'Fallback'}, extra: null, din: null, ms: {}};
 window.__STG33 = STG33;
-(() => { let w = null; const q = (location.search + location.hash).match(/[?&#]staging=(original|orig|new|2025|2026)\b/i);
-  if(q) w = /orig|2025/i.test(q[1]) ? 'orig' : 'new';
-  if(!w) try{ const v = localStorage.getItem(STG33.LS); if(v === 'orig' || v === 'new') w = v; }catch(e){}
-  STG33.want = (window.STAGING33 && STAGING33.rows) ? (w || 'new') : 'orig'; })();
+/* r45 owner: one staging only (the October 2026 set). A saved 'orig' choice or a ?staging=original link opens it too;
+   the Original set is kept only as the fallback when staging33.js is missing. */
+(() => { STG33.want = (window.STAGING33 && STAGING33.rows) ? 'new' : 'orig'; try{ if(localStorage.getItem(STG33.LS) === 'orig') localStorage.removeItem(STG33.LS); }catch(e){} })();
 const STG33_ORIG = STAGING.slice();
 function stg33FireBowls(){ try{ const D = YARD_SPEC.dining; return [[D.x + D.w / 2 + 2.6, D.y - D.len / 2 + .6], [D.x - D.w / 2 - 2.2, D.y - D.len / 2 - 1.6]]; }catch(e){ return []; } }
 function stg33Rows(id){ return id === 'new' ? STAGING33.rows({p23At, p23Yaw, LOUNGE_SPEC, fireBowls: stg33FireBowls()}) : STG33_ORIG; }
@@ -19150,7 +19149,7 @@ buildStaging = function(){ const id = STG33.want; const set = stg33Build(id); ST
 { const _k = hw22Key; hw22Key = function(){ return _k.apply(this, arguments) + '|stg:' + STG33.cur; }; }
 // ---- the switch
 STG33.set = function(id, opts = {}){
-  if(id !== 'new' && id !== 'orig') return false; if(id === 'new' && !(window.STAGING33 && STAGING33.rows)) return false;
+  if(id !== 'new') return false;   // r45: one staging only if(id === 'new' && !(window.STAGING33 && STAGING33.rows)) return false;
   if(id === STG33.cur || STG33.busy || !STG33.cur) return false; STG33.busy = true; const t0 = performance.now();
   const H = window.HALLOWEEN, TGM = window.THANKSGIVING, hw = !!(H && H.isOn), tg = !!(TGM && TGM.isOn);
   try{
@@ -19210,17 +19209,7 @@ function stg33Check(){
 let stg33Row = null, stg33Sub = null;
 function stg33Paint(){ if(!stg33Row) return; const c = STG33.cur || STG33.want; stg33Row.querySelector('.v31val').textContent = STG33.short[c] || '';
   stg33Sub.querySelectorAll('button').forEach(x => { x.setAttribute('aria-checked', x.dataset.v === c ? 'true' : 'false'); x.disabled = !!STG33.busy; }); }
-(() => { const menu = document.getElementById('phMenu'), furn = document.getElementById('furnBtn'); if(!menu || !furn || !(window.STAGING33 && STAGING33.rows)) return;
-  const row = document.createElement('button'); row.type = 'button'; row.className = 'tod v33stg'; row.id = 'stgBtn'; row.setAttribute('aria-expanded', 'false'); row.setAttribute('aria-controls', 'stgSub'); row.title = 'Staging: the furniture the house was photographed with';
-  row.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 9.5V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1.5M2.5 15v-3.5a1.5 1.5 0 0 1 3 0V12h9v-.5a1.5 1.5 0 0 1 3 0V15h-15zM4 15v2M16 15v2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Staging</span><em class="v31val"></em>';
-  const sub = document.createElement('div'); sub.className = 'v33sub'; sub.id = 'stgSub'; sub.setAttribute('role', 'radiogroup'); sub.setAttribute('aria-label', 'Staging');
-  for(const id of ['new', 'orig']){ const x = document.createElement('button'); x.type = 'button'; x.setAttribute('role', 'radio'); x.dataset.v = id; x.textContent = STG33.names[id];
-    x.addEventListener('click', e => { e.stopPropagation(); if(id === STG33.cur || STG33.busy) return;
-      const go = () => { STG33.set(id); stg33Paint(); };
-      if(!STG33.sets[id] && typeof BUSY24 !== 'undefined' && BUSY24.defer && !BUSY24.off && !BUSY24.active) BUSY24.defer(row, 'Restaging the house…', go); else go(); });
-    sub.appendChild(x); }
-  row.addEventListener('click', e => { e.stopPropagation(); const o = !sub.classList.contains('open'); sub.classList.toggle('open', o); row.setAttribute('aria-expanded', o ? 'true' : 'false'); stg33Paint(); });
-  furn.parentNode.insertBefore(sub, furn.nextSibling); furn.parentNode.insertBefore(row, sub); stg33Row = row; stg33Sub = sub; stg33Paint(); })();
+/* r45 owner: the Staging row (New / Original) is gone from the menu: there is one staging now */
 // boot self-check of the set on screen -> model checks (S4)
 (() => { const ld = document.querySelector('#loading'); const run = () => { try{ const r = stg33Check(); if(STG33.cur !== 'new') return;   // Original = the shipped v32 positions (unchanged); its findings stay in STG33.report only
     if(r.length) window.__CHECKS = (window.__CHECKS || []).concat(r); if(r.length) console.warn('[staging33] check', r); }catch(e){ console.warn('[staging33] check', e); } };
