@@ -289,7 +289,7 @@ def fixtures(D, v):
         if k == 'island':
             poly(g, '#f4f4f4', 1.0); text((c.x, c.y), 'ISLAND', 7.5)
             if pr.get('sink') and pr.get('sinkEnd'):             # the prep sink in its end cabinet (rot 180: the -x end is north)
-                sy = f['at'][1] - pr['sinkEnd'] * (pr['w'] / 2 - 1.27) * (-1 if (f.get('rot') or 0) == 180 else 1); poly(sbox(f['at'][0] - 1.78, sy - .8, f['at'][0] - .48, sy + .8).buffer(-.1, join_style=1), '#fff', .8)
+                sy = f['at'][1] - pr['sinkEnd'] * (pr['w'] / 2 - 1.27) * (1 if (f.get('rot') or 0) == 180 else -1); poly(sbox(f['at'][0] - 1.78, sy - .8, f['at'][0] - .48, sy + .8).buffer(-.1, join_style=1), '#fff', .8)
             continue
         if k == 'builtinBookcase': poly(g, '#fff', .8); g2 = g.buffer(-.15); poly(g2, 'none', .4, '', '#777'); continue
         if k == 'windowSeat': poly(g, '#fff', .9); text((c.x, c.y), 'WINDOW SEAT', 7); continue
