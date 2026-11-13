@@ -377,7 +377,7 @@ def fixtures():
     add('bedQueen', 'FIX', (-1.6, 26.67), 270, None, 'SP-L1-BED1')
     add('nightstand', 'FIX', (-5.2, 26.67), 270, None, 'SP-L1-BED1'); add('nightstand', 'FIX', (2.0, 26.67), 270, None, 'SP-L1-BED1')
     # the hall: stacked washer and dryer
-    add('washerFront', 'FIX', (X_WW, 10.75), 180, {'stacked': True}, 'SP-L1-HALL')
+    add('washerFront', 'FIX', (X_WW + 0.3, 10.75), 180, {'stacked': True}, 'SP-L1-HALL')
     return F
 
 def staging():
