@@ -939,6 +939,8 @@ def('island', 'kitchen', opt(CAB_DEF, { w: 7, d: 3.5, h: 3, seatingSide: 'front'
   var inner = x1 - x0 - 2 * DOORT;
   var segs = inner >= 5.5 ? [1.5, inner - 3, 1.5] : inner >= 3.5 ? [1.5, inner - 1.5] : [inner];
   var types = segs.length === 3 ? ['drawers', o.sink ? 'sink' : 'doors', 'drawers'] : segs.length === 2 ? ['drawers', o.sink ? 'sink' : 'doors'] : [o.sink ? 'sink' : 'doors'];
+  var prep = !!(o.sink && o.sinkEnd && inner >= 6.5);   // sinkEnd -1 | 1: a small prep sink in an end cabinet (the -x or +x end) instead of the middle
+  if (prep) { segs = o.sinkEnd > 0 ? [2.25, inner - 3.75, 1.5] : [1.5, inner - 3.75, 2.25]; types = o.sinkEnd > 0 ? ['sink', 'doors', 'drawers'] : ['drawers', 'doors', 'sink']; }
   var xc = x0 + DOORT, sinkX = null;
   segs.forEach(function (sw, i) {
     var cx = xc + sw / 2;
@@ -958,7 +960,7 @@ def('island', 'kitchen', opt(CAB_DEF, { w: 7, d: 3.5, h: 3, seatingSide: 'front'
   } else {
     sub(b, 'baseCabinet', { w: x1 - x0 - 2 * DOORT, d: zBack - ov - cd, h: o.h, doors: 'doors', counter: null, finish: fin, hw: o.hw, pull: o.pull }, M(0, 0, ov + cd));
   }
-  var holes = [], sw = 2.5, sd = 1.5, cz = ov + cd / 2 + 0.05;
+  var holes = [], sw = prep ? 1.6 : 2.5, sd = prep ? 1.3 : 1.5, cz = ov + cd / 2 + 0.05;
   if (o.sink && sinkX !== null) holes.push({ x: sinkX, z: cz, w: sw - 0.025, d: sd - 0.025, r: 0.06 });
   counterSlab(b, o.counter || 'quartz', -w / 2, w / 2, 0, d, top, holes);
   if (o.waterfall) {

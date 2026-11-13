@@ -295,6 +295,87 @@ def('builtinBookcase', {
 }, function (o) { return [o.w, o.d + o.overhang, o.levels[o.levels.length - 1] + (o.crown ? 1.2 : 0)]; },
 'Wall-to-wall built-in for a recess: raised-panel base cabinets + quartz top, floating butcher-block shelves above, filled with books / decor (seeded). levels = shelf top heights (ft).');
 
+/* ------------------------------------------------------------ libraryWall (concept r43f)
+   A wall of books that follows a vaulted ceiling: painted uprights from the floor to the ceiling line, butcher-block shelves on one set
+   of levels right along the wall, base cabinets with a deeper top under the tall bays, a rolling ladder on a black rail.
+   top(x) = apex - pitch * |x - ridge| is the ceiling line along the wall (local x, feet). bays = [[x0, x1, type], ...] along the wall:
+   'base' (cabinet doors to baseH, shelves above), 'seat' (shelves from seatH: a window seat stands in front of it), 'door' (a doorway
+   passes through: shelves from doorH up, the bay split above the door), 'post' (left empty: structure stands there). */
+def('libraryWall', {
+  w: 17.33, d: 1.0, baseD: 1.33, baseH: 3.0, ridge: 4.92, apex: 13.57, pitch: 0.41, bays: null, doorH: 7.4, seatH: 1.9, step: 1.1,
+  rail: 8.45, railFrom: null, ladderX: null, ladderRun: 1.9, finish: 'cabinetWhite', shelfMat: 'maple', hw: 'satinNickel', ladderMat: 'wood',
+  fill: 'books', seed: 21, density: 0.92
+}, function (b, o, R, books, deco) {
+  var d = o.d, fin = o.finish, T = 0.085, st = 1.25 * IN, ct = 1.5 * IN, kick = 4 * IN, i;
+  var top = function (x) { return o.apex - o.pitch * Math.abs(x - o.ridge); };
+  var bays = (o.bays && o.bays.length) ? o.bays : [[-o.w / 2, o.w / 2, 'base']];
+  var snap = function (y) { return o.baseH + Math.round((y - o.baseH) / o.step) * o.step; };
+  var upright = function (x, y0, dep) { var xx = Math.max(-o.w / 2 + T / 2, Math.min(o.w / 2 - T / 2, x)); b.bb(fin, xx - T / 2, y0, 0, xx + T / 2, top(xx) - 0.012, dep || d, 0.004); };
+  var shelves = function (x0, x1, y0, floorIsShelf) {   // shelves and their contents between two uprights, from y0 up to the ceiling line
+    var lo = Math.min(top(x0), top(x1)), ys = [], y;
+    for (y = y0; y + 0.78 <= lo; y += o.step) ys.push(y);
+    ys.forEach(function (yy, k) {
+      if (k > 0 || floorIsShelf) b.bb(o.shelfMat, x0, yy - st, 0, x1, yy, d - 0.015, 0.004, { boxUV: true });
+      var clear = (k + 1 < ys.length ? ys[k + 1] - st : lo - 0.04) - yy;
+      if (o.fill === 'books' && clear > 0.5) fillBay(R, books, deco, x0 + 0.015, x1 - 0.015, yy, Math.min(clear, 1.3), d - 0.03, o.density);
+    });
+  };
+  var edges = {};
+  bays.forEach(function (B) { if (B[2] !== 'post') { edges[B[0].toFixed(3)] = B[0]; edges[B[1].toFixed(3)] = B[1]; } });
+  for (var e in edges) upright(edges[e], 0);
+  bays.forEach(function (B) {
+    var x0 = B[0] + T / 2, x1 = B[1] - T / 2, ty = B[2], w = x1 - x0, cx = (x0 + x1) / 2;
+    if (ty === 'post') return;
+    // the board under the ceiling, following the slope (a bay never straddles the ridge: the post bay does)
+    var ya = top(B[0]), yb = top(B[1]), L = Math.hypot(B[1] - B[0], yb - ya);
+    b.boxR(fin, L, 0.07, d, (B[0] + B[1]) / 2, (ya + yb) / 2 - 0.05, d / 2, 0, 0, Math.atan2(yb - ya, B[1] - B[0]));
+    if (ty === 'base') {
+      var bd = o.baseD, ctop = o.baseH - ct, fy0 = kick + GAP / 2, fy1 = ctop - 0.1, fh = fy1 - fy0, n = w > 1.3 ? 2 : 1, dw = (w - 2 * GAP - (n - 1) * GAP) / n;
+      b.bb(fin, B[0], kick, 0, B[1], ctop, bd - DOORT);
+      b.bb(fin, B[0], 0, 0, B[1], kick, bd - DOORT - 2.5 * IN);
+      b.bb('castIron', B[0] + 0.01, 0, bd - DOORT - 2.5 * IN - 0.002, B[1] - 0.01, 0.004, bd - DOORT - 2.5 * IN + 0.01);
+      b.bb(fin, B[0], fy1, bd - DOORT, B[1], ctop, bd, 0.004);
+      for (var j = 0; j < n; j++) {
+        var dcx = x0 + GAP + dw / 2 + j * (dw + GAP);
+        raisedDoor(b, fin, dw, fh, dcx, (fy0 + fy1) / 2, bd);
+        knob(b, o.hw, dcx + (n === 1 ? 1 : (j === 0 ? 1 : -1)) * (dw / 2 - 0.13), fy1 - 0.2, bd);
+      }
+      b.rbox(o.shelfMat, B[1] - B[0] + 0.002, ct, bd + 1 * IN, 0.01, (B[0] + B[1]) / 2, ctop + ct / 2, (bd + 1 * IN) / 2, { boxUV: true });
+      shelves(x0, x1, o.baseH, false);
+    } else if (ty === 'seat') {
+      var sy = snap(o.seatH);
+      b.bb(fin, x0, 0, d - DOORT, x1, sy - st, d, 0.004);
+      shelves(x0, x1, sy, true);
+    } else if (ty === 'door') {
+      var dy = snap(o.doorH), m = Math.max(1, Math.ceil((B[1] - B[0]) / 2.4)), sw = (B[1] - B[0]) / m;
+      b.bb(o.shelfMat, x0, dy - st, 0, x1, dy, d - 0.015, 0.004, { boxUV: true });                 // the shelf over the door, wall to wall
+      b.bb(fin, x0, dy - st - 0.3, d - DOORT, x1, dy - st, d, 0.004);                               // and a head board under it
+      for (i = 1; i < m; i++) upright(B[0] + i * sw, dy);
+      for (i = 0; i < m; i++) shelves(B[0] + i * sw + T / 2, B[0] + (i + 1) * sw - T / 2, dy, false);
+    }
+  });
+  // rail and rolling ladder
+  var rz = Math.max(d, 0) + 0.22, ry = o.rail, xa = o.railFrom != null ? o.railFrom : -o.w / 2 + 0.1, xb = o.w / 2 - 0.08;
+  if (ry) {
+    b.rod('blackMetal', [xa, ry, rz], [xb, ry, rz], 0.035, 12);
+    for (var e2 in edges) { var ex = edges[e2]; if (ex < xa - 0.01 || ex > xb + 0.1 || top(ex) < ry + 0.3) continue; ex = Math.min(ex, o.w / 2 - T / 2);
+      b.bb('blackMetal', ex - 0.03, ry - 0.03, d - 0.01, ex + 0.03, ry + 0.03, rz); }
+    b.sphere('blackMetal', 0.05, xa, ry, rz, 10, 8); b.sphere('blackMetal', 0.05, xb, ry, rz, 10, 8);
+    if (o.ladderX != null) {
+      var lx = o.ladderX, zf = rz + o.ladderRun, y1 = ry + 0.42, z1 = rz + 0.06 - (0.42 / ry) * o.ladderRun * 0.0, Hh = y1 - 0.14, run = zf - z1, Ll = Math.hypot(Hh, run), th = -Math.asin(run / Ll), lm = o.ladderMat, hw2 = 0.72;
+      [-1, 1].forEach(function (s) {
+        b.boxR(lm, 0.1, Ll, 0.2, lx + s * hw2, 0.14 + Hh / 2, (zf + z1) / 2, th, 0, 0);
+        b.cyl('blackMetal', 0.13, 0.13, 0.07, lx + s * (hw2 + 0.02), 0.13, zf + 0.02, 18, { rz: HALF });
+        b.rod('blackMetal', [lx + s * hw2, ry + 0.2, rz + 0.1], [lx + s * hw2, ry + 0.07, rz], 0.03, 8);
+        b.sphere('blackMetal', 0.06, lx + s * hw2, ry + 0.06, rz, 10, 8);
+      });
+      var nr = Math.floor(Hh / 0.95);
+      for (i = 1; i <= nr; i++) { var t = (i * 0.95) / Hh; b.box(lm, 2 * hw2 - 0.08, 0.075, 0.34, lx, 0.14 + Hh * t, zf - run * t); }
+    }
+  }
+}, function (o) { return [o.w, o.baseD + (o.ladderX != null ? o.ladderRun + 0.5 : 0.1), o.apex]; },
+'Library wall under a vaulted ceiling: painted uprights and butcher-block shelves to the ceiling line, base cabinets, a doorway through the books, rolling ladder on a rail. bays = [[x0, x1, base|seat|door|post]].');
+
 /* ------------------------------------------------------------ kitchen pieces the photos show that FIX lacks */
 // island glass-canopy hood (p00 / p01 / p11 / p49): slim square stainless chimney, thin stainless body with LED cans,
 // and a wider flat tempered-glass canopy around it. Origin: centre of the back edge of the canopy, bottom at mountY.

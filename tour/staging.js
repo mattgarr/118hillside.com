@@ -118,6 +118,8 @@ var MATS = {
   satinBrass: function () { return std({ color: 0xb79a63, roughness: 0.35, metalness: 0.9 }); },
   petal: function () { return std({ color: 0xfbfaf6, roughness: 0.6, side: THREE.DoubleSide }); },
   frameBlack: function () { return std({ color: 0x151515, roughness: 0.5 }); },
+  pianoBlack: function () { return std({ color: 0x0d0d0e, roughness: 0.16, metalness: 0.05 }); },
+  pianoIvory: function () { return std({ color: 0xf5f2e9, roughness: 0.38 }); },
   frameWhite: function () { return std({ color: 0xf3f2ee, roughness: 0.6 }); },
   matBoard: function () { return std({ color: 0xf7f6f2, roughness: 0.9 }); },
   rubberBall: function () { return std({ color: 0x8a8d90, roughness: 0.35 }); },
@@ -720,6 +722,37 @@ def('windowSeat', { w: 5.9, d: 1.9, h: 1.05, mat: 'cabinetWhite' }, function (b,
 def('seatCushion', { w: 5.9, d: 1.9, t: 0.38, mountY: 1.05, fabric: 'seatGrey' }, function (b, o) {
   b.rbox(o.fabric, o.w - 0.04, o.t, o.d - 0.04, 0.09, 0, o.mountY + o.t / 2, o.d / 2, { seg: 3, bulge: [0, 0.03, 0], flat: 4 });
 }, function (o) { return [o.w, o.d, o.mountY + o.t]; }, 'Box seat cushion.');
+
+// upright piano and its bench (concept r43f: the library's piano spot). Polished black case, 88 keys, three brass pedals, a music desk.
+def('pianoUpright', { w: 4.95, d: 2.05, h: 3.95, finish: 'pianoBlack' }, function (b, o) {
+  var w = o.w, d = o.d, h = o.h, f = o.finish, bz = 1.12, ky = 2.3, i;
+  b.bb(f, -w / 2, 0.02, 0.02, w / 2, h, bz, 0.02);                                   // case
+  b.bb(f, -w / 2 - 0.03, h, 0, w / 2 + 0.03, h + 0.06, bz + 0.05, 0.015);           // lid
+  b.bb(f, -w / 2, 1.95, bz - 0.02, w / 2, ky, d - 0.04, 0.012);                       // key bed
+  b.bb(f, -w / 2 + 0.16, ky - 0.12, d - 0.07, w / 2 - 0.16, ky + 0.02, d, 0.01);      // key slip
+  [-1, 1].forEach(function (s) {
+    b.bb(f, s * (w / 2 - 0.16), ky, bz - 0.02, s * w / 2, 2.78, d - 0.02, 0.015);     // cheeks
+    b.bb(f, s * (w / 2 - 0.2), 0, d - 0.3, s * (w / 2 - 0.04), 1.95, d - 0.12, 0.012); // legs
+    b.bb(f, s * (w / 2 - 0.2), 0, bz - 0.05, s * (w / 2 - 0.04), 0.3, d - 0.1, 0.01);  // toe blocks
+  });
+  var k0 = -w / 2 + 0.17, kw = (w - 0.34) / 52;
+  b.bb('pianoIvory', k0, ky, bz + 0.14, k0 + 52 * kw, ky + 0.07, d - 0.08, 0.004);    // white keys (one slab, grooves below)
+  for (i = 1; i < 52; i++) b.bb(f, k0 + i * kw - 0.003, ky + 0.02, bz + 0.15, k0 + i * kw + 0.003, ky + 0.071, d - 0.079);
+  for (i = 0; i < 51; i++) { var m = i % 7; if (m === 1 || m === 4) continue;        // black keys (from A0: none after B and E)
+    b.bb(f, k0 + (i + 1) * kw - 0.026, ky + 0.07, bz + 0.14, k0 + (i + 1) * kw + 0.026, ky + 0.12, bz + 0.6, 0.004); }
+  b.boxR(f, w - 0.36, 0.5, 0.04, 0, ky + 0.3, bz + 0.11, -0.12, 0, 0);               // fallboard
+  b.boxR(f, w * 0.52, 0.72, 0.03, 0, 3.22, bz + 0.05, -0.16, 0, 0);                  // music desk
+  b.bb(f, -w * 0.26, 2.84, bz, w * 0.26, 2.89, bz + 0.16, 0.006);                     // its ledge
+  b.boxR('pianoIvory', 1.35, 0.92, 0.012, 0, 3.33, bz + 0.1, -0.16, 0, 0);            // open score
+  b.bb(f, -0.005, 2.88, bz + 0.17, 0.005, 3.78, bz + 0.03);                           // its gutter
+  [-0.3, 0, 0.3].forEach(function (x) { b.bb('satinBrass', x - 0.045, 0.12, bz - 0.02, x + 0.045, 0.16, bz + 0.34, 0.012); });
+  b.bb(f, -w / 2 + 0.02, 0.02, bz - 0.02, w / 2 - 0.02, 1.9, bz + 0.02, 0.006);       // lower panel
+}, function (o) { return [o.w, o.d, o.h + 0.06]; }, 'Upright piano, polished black (88 keys, three pedals, music desk with an open score).');
+def('pianoBench', { w: 2.6, d: 1.15, h: 1.62, finish: 'pianoBlack', top: 'velvetCharcoal' }, function (b, o) {
+  var w = o.w, d = o.d, h = o.h, f = o.finish;
+  b.bb(o.top, -w / 2, h - 0.17, 0, w / 2, h, d, 0.05); b.bb(f, -w / 2 + 0.04, h - 0.42, 0.04, w / 2 - 0.04, h - 0.17, d - 0.04, 0.01);
+  [[-1, 0.1], [1, 0.1], [-1, d - 0.1], [1, d - 0.1]].forEach(function (p) { b.bb(f, p[0] * (w / 2 - 0.1) - 0.055, 0, p[1] - 0.055, p[0] * (w / 2 - 0.1) + 0.055, h - 0.42, p[1] + 0.055, 0.008); });
+}, function (o) { return [o.w, o.d, o.h]; }, 'Piano bench, black with a charcoal top.');
 
 /* ------------------------------------------------------------ API */
 STAGE.has = function (kind) { return !!KINDS[kind] || (FIX.kinds || []).some(function (k) { return k.kind === kind; }); };

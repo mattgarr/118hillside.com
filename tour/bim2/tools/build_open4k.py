@@ -11,10 +11,19 @@ the original gable with an exposed fir ridge beam), arranged the way the owner's
     level with the floor, with the same decking, skirt and cable railing as the porch; the porch steps narrow to make room;
   - living in the middle, anchored on the north wall by a gas fireplace (direct vent through that wall) between built-ins, where the
     middle bedroom's window was; dining by the folding glass wall;
-  - the old kitchen is taken out (r43, owner): no cabinets, counters or appliances; the oak floor runs through. It becomes a reading
-    nook at its south window (window seat, bookcases, a reading chair) and stays open floor where the living-room door, the great room
-    and the bedroom hall meet, so nobody walks past a stove to reach the great room;
-  - four skylight wells along the vault: two over the island, one over the dining table, one over the living area.
+  - the old kitchen is taken out (r43, owner): no cabinets, counters or appliances; the oak floor runs through;
+  - v2 (r43f, owner: "a random bit of wall and a vestigial door ... extend that beam a little bit longer and open all of that up"):
+    every wall that only served the removed rooms goes too: the wall between the old kitchen / bedroom hall and the middle bedroom
+    (W-L1-041/042/043) with its door (D-L1-06), and the two pieces of wall between the old kitchen and the hall (W-L1-014/015).
+    The hall's flat ceiling comes out, so the vault runs from the street gable to the original west gable wall, and the ridge beam
+    runs the whole 31 ft with it, onto a post against that wall. The hall bath and the west bedroom open straight off the room;
+  - that west end becomes the library: the west gable wall is shelved floor to vault (the living-room door passes through the
+    books), with a rolling ladder, a deep window seat at the south window, two reading chairs and an upright piano between the
+    window seat and the folding glass wall;
+  - the kitchen's work triangle (v2): the fridge stands at the room end of the range wall, the range 5 ft from it, and the island
+    has a prep sink at that end; the sink under the window and the dishwasher are the clean-up side;
+  - five skylight wells along the vault: two over the island, one over the dining table, one over the living area, one over the
+    library where the hall was.
 
 Illustrative idea. Not designed or reviewed by an architect or engineer. See tour/CONCEPT-4BR.md.
 Run: python3 tour/bim2/tools/build_open4k.py   (needs numpy, shapely >= 2.1; reads build_open4.py's helpers)
@@ -40,23 +49,43 @@ STAIR_Y = (-9.937, 0.0)               # the porch steps today (plan y), narrowed
 KWIN_SRC, KWIN_CX = 'WN-L1-02', 9.486  # today's kitchen window over the sink, copied onto the street gable over the new sink
 KWIN_TRIMS = ['TR-0695', 'TR-0696', 'TR-0697', 'TR-0698', 'TR-0951']
 FP = dict(cx=19.3, w=6.0, d=1.2, box=(4.5, 1.5, 3.0), mantel=4.25)   # fireplace on the north wall where the middle bedroom's window was
-SKY = [(27.5, 30.0, 13.0, 16.0), (27.5, 30.0, 21.0, 24.0), (21.0, 23.5, 7.4, 10.4), (17.0, 19.5, 24.6, 27.6)]   # plan rectangles (x0, x1, y0, y1)
+SKY = [(27.5, 30.0, 13.0, 16.0), (27.5, 30.0, 21.0, 24.0), (21.0, 23.5, 7.4, 10.4), (17.0, 19.5, 24.6, 27.6), (8.9, 11.4, 20.3, 23.3)]   # plan rectangles (x0, x1, y0, y1); the fifth is over the library, where the hall was (v2)
+# v2: the library end. The room now runs west to the original west gable wall and north to the hall bath's wall.
+X_LW = 5.2776                        # the west gable wall (W-L1-033 to 037), room face
+Y_HB = 25.3679                       # the hall bath's south wall (W-L1-016), room face
+X_BW = 13.5479                       # west face of the removed hall / bedroom wall = west face of the bath's east wall
+Y_BC = 25.5555                       # where the bath's east wall (W-L1-044) starts
+LIB = 'SP-L1-KITCHEN'                # the old kitchen's space id is kept (the page's tour room), renamed 'Library'
+ROOM2 = [(X_LW, Y_S), (X_E, Y_S), (X_E, Y_N), (X_W, Y_N), (X_W, Y_HB), (X_LW, Y_HB)]
+LIBPOLY = [(X_LW, Y_S), (X_KIT, Y_S), (X_KIT, Y_KIT), (X_W, Y_KIT), (X_W, Y_HB), (X_LW, Y_HB)]
+KB_W, KB_D = 0.5625, 2.0             # ridge beam as drawn: 6-3/4 in x 24 in (a 31-ft clear span; an engineer sizes it)
+KB_Y0, KB_Y1, KB_Z0 = RIDGE_Y - KB_W / 2, RIDGE_Y + KB_W / 2, APEX - KB_D
+POST = (X_LW, X_LW + 1.04, KB_Y0, KB_Y1)   # the beam's west post, against the west gable wall (x0, x1, y0, y1)
+REMOVED_WALLS2 = ['W-L1-014', 'W-L1-015', 'W-L1-041', 'W-L1-042', 'W-L1-043']
+REMOVED_MISC2 = ['CL-SP-L1-HALL', 'CL-SP-L1-KITCHEN', 'FL-SP-L1-HALL', 'FL-SP-L1-KITCHEN']
+REMOVED_SPACES2 = ['SP-L1-HALL']
+# the library wall's bays along the west wall, south to north (plan y): the bay beside the window seat, two with cabinets, the
+# living-room door, two more, the ridge post, two more (the last stops short of the bedroom door's casing)
+LIB_Y0, LIB_Y1 = 4.86, 22.19
+LIB_BAYS = [(4.86, 7.36, 'seat'), (7.36, 9.03, 'base'), (9.03, 10.70, 'base'), (10.70, 14.70, 'door'), (14.70, 16.423, 'base'), (16.423, 18.146, 'base'),
+            (18.146, 18.746, 'post'), (18.746, 20.468, 'base'), (20.468, 22.19, 'base')]
 ROOF_TOP = lambda y: (6.5744 + 0.41 * y) if y <= RIDGE_Y else (21.70 - 0.41 * y)   # shingle surface (fit from RF-MAIN)
 
-REMOVED_TRIMS = B.REMOVED_TRIMS + ['TR-0011', 'TR-0952', 'TR-0167', 'TR-0016', 'TR-0957'] + ['TR-%04d' % i for i in range(699, 708)] + ['TR-%04d' % i for i in range(744, 753)]
-REMOVED_OPENINGS = B.REMOVED_OPENINGS + ['WN-L1-03', 'WN-L1-08']
+REMOVED_TRIMS = (B.REMOVED_TRIMS + ['TR-0011', 'TR-0952', 'TR-0167', 'TR-0016', 'TR-0957'] + ['TR-%04d' % i for i in range(699, 708)] + ['TR-%04d' % i for i in range(744, 753)]
+                 + ['TR-%04d' % i for i in list(range(192, 200)) + [225, 232, 233, 234, 236, 237] + list(range(475, 484))])   # v2: the removed hall walls' baseboards, D-L1-06's casings
+REMOVED_OPENINGS = B.REMOVED_OPENINGS + ['WN-L1-03', 'WN-L1-08', 'D-L1-06']
 REBUILT = B.REBUILT_WALLS + ['W-L1-020', 'W-L1-002', 'RF-MAIN', 'SL-DK-FRONT', 'ST-FRONT', 'RL-FRONT-STAIR', 'RL-FRONT-DECK']
 REMOVED_FURN = B.REMOVED_FURN + ['KX-09', 'KX-11', 'KX-COUNTER']
-REMOVED_LIGHTS = B.REMOVED_LIGHTS + ['LF-L1-%d' % i for i in [126, 133, 134, 135, 139, 140, 141, 142, 143, 144, 145, 146, 147]]
+REMOVED_LIGHTS = B.REMOVED_LIGHTS + ['LF-L1-%d' % i for i in [126, 133, 134, 135, 139, 140, 141, 142, 143, 144, 145, 146, 147, 176, 177]]   # 176, 177: the hall's (its flat ceiling goes)
 
 def build():
     J, meshes = read_glb(os.path.join(B2, 'scene.glb'))
     meta = json.load(open(os.path.join(B2, 'scene.meta.json')))
     E = element_tris(meshes); O = Out(); rep = {}
     ob = {o['id']: o for o in meta['openings']}
-    hide = sorted(set(B.REMOVED_WALLS + REBUILT + REMOVED_OPENINGS + B.REMOVED_MISC + REMOVED_TRIMS) & set(E))
+    hide = sorted(set(B.REMOVED_WALLS + REMOVED_WALLS2 + REBUILT + REMOVED_OPENINGS + B.REMOVED_MISC + REMOVED_MISC2 + REMOVED_TRIMS) & set(E))
     hide_ranges = []
-    room = Polygon(ROOM)
+    room = Polygon(ROOM2)   # v2: one floor and one vault from the west gable wall to the street gable
     # ---- floor, ceiling (with skylight holes), ridge beam, kitchen-alcove wall patch: as in the first concept
     nana_sill = sbox(NANA['x0'], Y_SO, NANA['x1'], Y_S)            # the floor runs out through the opening to the deck
     floor = unary_union([room, nana_sill])
@@ -67,14 +96,25 @@ def build():
     for part, nrm in ((south, (0, PITCH, -1)), (north, (0, -PITCH, -1))):
         plane_face(O, 'CL-SP-L1-OPEN4K', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y)), nrm)
         plane_face(O, 'CL-SP-L1-OPEN4K', None, 'ceilings', 'L1', 'gwb-l5#paint-ceiling-flat', part, lambda x, y: (x, y, ceil_z(y) + 0.042), tuple(-a for a in nrm))
-    sec = Polygon([(B.BEAM_Y0, B.BEAM_Z0), (B.BEAM_Y1, B.BEAM_Z0), (B.BEAM_Y1, ceil_z(B.BEAM_Y1) - 0.004), (RIDGE_Y, APEX - 0.004), (B.BEAM_Y0, ceil_z(B.BEAM_Y0) - 0.004)])
-    for x, nx in ((X_W + 0.002, -1), (X_E - 0.002, 1)):
+    # the ridge beam, west gable wall to street gable, and its west post (v2)
+    sec = Polygon([(KB_Y0, KB_Z0), (KB_Y1, KB_Z0), (KB_Y1, ceil_z(KB_Y1) - 0.004), (RIDGE_Y, APEX - 0.004), (KB_Y0, ceil_z(KB_Y0) - 0.004)])
+    for x, nx in ((X_LW + 0.002, -1), (X_E - 0.002, 1)):
         plane_face(O, 'BM-L1-OPEN4K', None, 'ceilings', 'L1', 'fir-beam', sec, lambda y, z, x=x: (x, y, z), (nx, 0, 0))
-    prism_sides(O, 'BM-L1-OPEN4K', None, 'ceilings', 'L1', 'fir-beam', sec.exterior, lambda y, z: (X_W + 0.002, y, z), lambda y, z: (X_E - 0.002, y, z), inward_center=(25, RIDGE_Y, 12.9))
-    patch = Polygon([(Y_KIT, 0), (21.0, 0), (21.0, ceil_z(21.0)), (RIDGE_Y, APEX), (Y_KIT, ceil_z(Y_KIT))])
-    plane_face(O, 'W-L1-042', 'B-O4K-001', 'walls', 'L1', PAINT, patch, lambda y, z: (X_W, y, z), (1, 0, 0))
-    for t in E.get('W-L1-042', []):
-        if t['material'] == CLOSET_PAINT and t['boundary'] and ['W-L1-042', t['boundary']] not in hide_ranges: hide_ranges.append(['W-L1-042', t['boundary']])
+    prism_sides(O, 'BM-L1-OPEN4K', None, 'ceilings', 'L1', 'fir-beam', sec.exterior, lambda y, z: (X_LW + 0.002, y, z), lambda y, z: (X_E - 0.002, y, z), inward_center=(25, RIDGE_Y, APEX - KB_D / 2))
+    def boxel(el, group, storey, mat, x0, y0, z0, x1, y1, z1, faces='xXyYzZ'):
+        """an axis-aligned box; faces: which of its six sides to make (x = the face at x0 looking -x, X = at x1 looking +x, ...)"""
+        Q = {'x': ([(x0, y0, z0), (x0, y1, z0), (x0, y1, z1), (x0, y0, z1)], (-1, 0, 0)), 'X': ([(x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)], (1, 0, 0)),
+             'y': ([(x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1)], (0, -1, 0)), 'Y': ([(x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)], (0, 1, 0)),
+             'z': ([(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0)], (0, 0, -1)), 'Z': ([(x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)], (0, 0, 1))}
+        for f in faces:
+            q, n = Q[f]; O.tri(group, storey, mat, el, None, [q[0], q[1], q[2]], n); O.tri(group, storey, mat, el, None, [q[0], q[2], q[3]], n)
+    boxel('PT-L1-K5W', 'walls', 'L1', 'fir-beam', POST[0], POST[2], 0.0, POST[1], POST[3], KB_Z0, faces='XyY')
+    # wall faces the removed walls leave bare (v2). West gable wall: the strip where the hall's south wall met it, and its face above
+    # the old 8-ft hall ceiling. Bath south wall: its face above that ceiling. The bath's south-east corner: the end of the removed wall.
+    plane_face(O, 'W-L1-K5P', 'B-K5-W01', 'walls', 'L1', PAINT, Polygon([(22.0293, 0), (22.4046, 0), (22.4046, ceil_z(22.4046)), (22.0293, ceil_z(22.0293))]), lambda y, z: (X_LW, y, z), (1, 0, 0))
+    plane_face(O, 'W-L1-K5P', 'B-K5-W02', 'walls', 'L1', PAINT, Polygon([(22.4046, 8.0), (Y_HB, 8.0), (Y_HB, ceil_z(Y_HB)), (22.4046, ceil_z(22.4046))]), lambda y, z: (X_LW, y, z), (1, 0, 0))
+    plane_face(O, 'W-L1-K5P', 'B-K5-N01', 'walls', 'L1', PAINT, unary_union([sbox(X_LW, 8.0, X_BW, ceil_z(Y_HB)), sbox(X_BW, 0.0, X_W, ceil_z(Y_HB))]), lambda x, z: (x, Y_HB, z), (0, -1, 0))
+    plane_face(O, 'W-L1-K5P', 'B-K5-E01', 'walls', 'L1', PAINT, Polygon([(Y_HB, 0), (Y_BC, 0), (Y_BC, ceil_z(Y_BC)), (Y_HB, ceil_z(Y_HB))]), lambda y, z: (X_W, y, z), (1, 0, 0))
 
     def copy_el(src, dst, fx, fn, keep=lambda t: True, scale=None):
         n = 0
@@ -272,8 +312,11 @@ def build():
     stretch('TR-0250', 'TR-K4-BB1', 1, 4.852, Y_N)
     stretch('TR-0211', 'TR-K4-BB2', 0, 15.82, fx0)
     stretch('TR-0211', 'TR-K4-BB4', 0, fx1, X_E)
-    stretch('TR-0238', 'TR-K4-BB3', 1, 18.35, 22.20)
     stretch('TR-0167', 'TR-K4-BB5', 0, 16.10, NANA['x0'])
+    stretch('TR-0167', 'TR-K5-BB6', 0, 13.05, 16.12)       # v2: the south wall behind the piano
+    bb = E['TR-0201'][0]                                    # v2: square baseboard pieces at the new wall faces
+    for i, (x0, y0, x1, y1) in enumerate(((X_LW, 22.0, X_LW + 0.07, 22.41), (X_BW, Y_HB - 0.07, X_W + 0.07, Y_HB), (X_W, Y_HB - 0.07, X_W + 0.07, 25.58))):
+        boxel('TR-K5-BB%d' % (i + 7), bb['group'], bb['storey'], bb['material'], x0, y0, 0.0, x1, y1, 0.44, faces='xXyYZ')
 
     O.write(os.path.join(B2, GLB_OUT))
     rep['meshes'] = len(O.M); rep['tris'] = sum(len(m['idx']) for m in O.M.values())
@@ -283,12 +326,20 @@ def build():
 def option_data(meta, elements, bounds):
     D = B.option_data(meta, elements, bounds)                    # the first concept's data: spaces, walkable, colliders, openings...
     D['source'] = {'builder': 'tour/bim2/tools/build_open4k.py', 'options': {'OS-REMODEL': LEGACY}, 'note': LABEL}
+    sp = []
     for s in D['spaces']:
+        if s['id'] in REMOVED_SPACES2: continue                    # v2: the bedroom hall is part of the library now
         if s['id'] == GREAT: s['name'] = 'Kitchen, living & dining'
-        if s['id'] == 'SP-L1-KITCHEN': s['name'] = 'Reading nook'   # r43: the old kitchen
+        if s['id'] == LIB:                                         # r43: the old kitchen; v2: with the hall, vaulted through
+            s = json.loads(json.dumps(s)); s['name'] = 'Library'; s['polygon'] = [list(q) for q in LIBPOLY]; lp = Polygon(LIBPOLY)
+            s['ceiling'] = {'form': 'VAULT_ROOF', 'height': None, 'planes': [
+                {'poly': [list(q) for q in lp.intersection(sbox(0, 0, 60, RIDGE_Y)).exterior.coords[:-1]], 'holes': [], 'P': {'c': C_S, 'gx': 0, 'gy': PITCH}},
+                {'poly': [list(q) for q in lp.intersection(sbox(0, RIDGE_Y, 60, 60)).exterior.coords[:-1]], 'holes': [], 'P': {'c': C_N, 'gx': 0, 'gy': -PITCH}}]}
+        sp.append(s)
+    D['spaces'] = sp
     # walkable: the deck and the narrowed steps; the floor out through the folding wall
-    wk = [w for w in D['walkable'] if w['id'] not in ('SL-DK-FRONT',) and w.get('element') != 'ST-FRONT' and w['id'] != 'FL-SP-L1-OPEN4']
-    wk.append({'id': 'FL-SP-L1-OPEN4K', 'element': 'FL-SP-L1-OPEN4K', 'kind': 'FLOOR', 'space': GREAT, 'storey': 'L1', 'poly': [list(p) for p in ROOM], 'holes': [], 'z': 0, 'exterior': False})
+    wk = [w for w in D['walkable'] if w['id'] not in ('SL-DK-FRONT', 'FL-SP-L1-OPEN4', 'FL-SP-L1-KITCHEN', 'FL-SP-L1-HALL') and w.get('element') != 'ST-FRONT' and w.get('opening') not in REMOVED_OPENINGS]
+    wk.append({'id': 'FL-SP-L1-OPEN4K', 'element': 'FL-SP-L1-OPEN4K', 'kind': 'FLOOR', 'space': GREAT, 'storey': 'L1', 'poly': [list(p) for p in ROOM2], 'holes': [], 'z': 0, 'exterior': False})
     wk.append({'id': 'TH-D-L1-K4F', 'element': 'D-L1-K4F', 'kind': 'THRESHOLD', 'opening': 'D-L1-K4F', 'storey': 'L1', 'poly': [[NANA['x0'], Y_SO], [NANA['x1'], Y_SO], [NANA['x1'], Y_S], [NANA['x0'], Y_S]], 'z': 0, 'exterior': False})
     wk.append({'id': 'SL-DK-K4', 'element': 'SL-DK-K4', 'kind': 'DECK',   # a new id: the page keys walkable floors by id, so a reused id keeps only the as-built deck
                 'poly': [[2.85, -10.087], [DECK['x0'], -10.087], [DECK['x0'], DECK['y0']], [DECK['x1'], DECK['y0']], [DECK['x1'], Y_SO], [2.85, Y_SO]], 'z': 0, 'storey': 'L1', 'exterior': True})
@@ -302,6 +353,7 @@ def option_data(meta, elements, bounds):
     col = []
     for c in D['colliders']:
         if c.get('element') == 'RL-FRONT-DECK': continue
+        if c.get('element') in REMOVED_WALLS2: continue             # v2: the hall walls (their door's own collider is the page's: REMOVED_OPENINGS)
         if c.get('element') == 'RL-FRONT-STAIR':
             c = json.loads(json.dumps(c)); c['poly'] = [[p[0], p[1] + DECK['y0']] for p in c['poly']]
             c['element'] = 'RL-FRONT-STAIR-K4'; c['id'] = c['id'].replace('RL-FRONT-STAIR', 'RL-FRONT-STAIR-K4')
@@ -312,9 +364,15 @@ def option_data(meta, elements, bounds):
         col.append(c)
     for i, (a, b_) in enumerate((((19.88, DECK['y0'] - .1), (DECK['x1'], DECK['y0'] + .1)), ((DECK['x1'] - .25, DECK['y0']), (DECK['x1'] + .05, Y_SO)))):
         col.append({'id': 'RL-DECK-K4#%d' % i, 'element': 'RL-DECK-K4', 'kind': 'RAIL', 'poly': [[a[0], a[1]], [b_[0], a[1]], [b_[0], b_[1]], [a[0], b_[1]]], 'z0': 0, 'z1': 3.1, 'storey': 'L1', 'exterior': True})
+    # v2: the bath's south-east corner (the end of the removed wall, rebuilt as part of the bath's walls) and the beam's west post
+    col.append({'id': 'W-L1-K5C#0', 'element': 'W-L1-K5C', 'kind': 'WALL', 'poly': [[X_BW, Y_HB], [X_W, Y_HB], [X_W, Y_BC], [X_BW, Y_BC]], 'z0': 0, 'z1': round(ceil_z(Y_HB), 4), 'storey': 'L1', 'exterior': False})
+    col.append({'id': 'PT-L1-K5W#0', 'element': 'PT-L1-K5W', 'kind': 'WALL', 'poly': [[POST[0], POST[2]], [POST[1], POST[2]], [POST[1], POST[3]], [POST[0], POST[3]]], 'z0': 0, 'z1': round(KB_Z0, 4), 'storey': 'L1', 'exterior': False})
     D['colliders'] = col
     # openings: no picture window, no north window, the folding glass wall (leaf kind FOLD: the page builds and folds its panels), skylights
-    ops = [o for o in D['openings'] if o['id'] not in ('WN-L1-O4A', 'WN-L1-O4B', 'WN-L1-03', 'WN-L1-08') and not o['id'].startswith('WN-L1-O4G')]
+    ops = [o for o in D['openings'] if o['id'] not in ('WN-L1-O4A', 'WN-L1-O4B', 'WN-L1-03', 'WN-L1-08', 'D-L1-06') and not o['id'].startswith('WN-L1-O4G')]
+    for o in ops:                                                   # v2: the bedroom's and the bath's doors open onto the library
+        for k in ('A', 'B'):
+            if (o.get('spaces') or {}).get(k) in REMOVED_SPACES2: o['spaces'][k] = LIB
     base = {o['id']: o for o in meta['openings']}
     kw = json.loads(json.dumps(base[KWIN_SRC])); kw.update({'id': 'WN-L1-K4A', 'host': 'W-L1-K4E', 'center': [36.7855, RIDGE_Y], 'axis': [0, -1], 'normal': [1, 0], 'spaces': {'A': 'EXTERIOR', 'B': GREAT}})
     ops.append(kw)
@@ -327,14 +385,16 @@ def option_data(meta, elements, bounds):
                 'leaf': {'kind': 'FOLD', 'panels': NANA['panels'], 'stack': 'east', 'state': 'open', 'plane': 4.60, 'frame': 'steel-black'}, 'leaves': []})
     for i, (x0, x1, y0, y1) in enumerate(SKY):
         ops.append({'id': 'SK-L1-K4%d' % (i + 1), 'class': 'IfcWindow', 'type': 'SKYLIGHT (concept)', 'kind': 'SKYLIGHT', 'host': 'RF-MAIN-K4', 'storey': 'L1', 'center': [(x0 + x1) / 2, (y0 + y1) / 2],
-                    'width': x1 - x0, 'sill': ceil_z(y0), 'head': ceil_z(y1), 'spaces': {'A': 'EXTERIOR', 'B': GREAT}, 'exterior': True, 'glazed': 1, 'skylight': True})
+                    'width': x1 - x0, 'sill': ceil_z(y0), 'head': ceil_z(y1), 'spaces': {'A': 'EXTERIOR', 'B': LIB if x1 < X_W else GREAT}, 'exterior': True, 'glazed': 1, 'skylight': True})
     D['openings'] = ops
     D['furnishings'] = [f for f in meta['furnishings'] if f['id'] not in REMOVED_FURN and not f['id'].startswith('KX-')] + kitchen() + staging()   # r43: no old kitchen
     D['lights'] = [l for l in meta['lights'] if l['id'] not in REMOVED_LIGHTS] + new_cans(meta)
-    D['boundaries'] = {b: GREAT for b in bounds}
+    D['boundaries'] = {b: (LIB if b.startswith('B-K5-') else GREAT) for b in bounds}
     cut = {e: GREAT for e in elements}
+    for e in elements:
+        if e in ('W-L1-K5P', 'PT-L1-K5W') or e.startswith('TR-K5-'): cut[e] = LIB
     for e in ('BM-L1-OPEN4K', 'RF-MAIN-K4', 'SL-DK-K4', 'ST-FRONT-K4', 'RL-FRONT-STAIR-K4', 'RL-DECK-K4S', 'RL-DECK-K4E'): cut[e] = '@L1'
-    for b in bounds: cut[b] = GREAT
+    for b in bounds: cut[b] = D['boundaries'][b]
     D['cut'] = cut
     return D
 
@@ -347,6 +407,8 @@ def new_cans(meta):
             if any(b.contains(shapely.Point(x, y)) for b in sk): continue
             if 33.9 < x and 29 < y: continue
             k += 1; out.append(dict(t, id='LF-L1-K4-%02d' % k, at=[x, y, round(ceil_z(y), 4)], ceilingZ=round(ceil_z(y), 4), space=GREAT))
+    for x in (6.9, 12.9):                                           # v2: over the old hall, by the bedroom and bath doors
+        k += 1; out.append(dict(t, id='LF-L1-K4-%02d' % k, at=[x, 24.2, round(ceil_z(24.2), 4)], ceilingZ=round(ceil_z(24.2), 4), space=LIB))
     return out
 
 def kitchen():
@@ -355,8 +417,11 @@ def kitchen():
     def add(kind, lib, at, rot, params):
         F.append({'id': 'KX-K4-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), 0], 'rot': rot, 'space': GREAT, 'storey': 'L1', 'params': params, 'footprint': None})
     E = X_E; N = Y_N; NF = N - 2.08                      # NF: the north run's counter front
+    # v2 work triangle: the fridge stands at the room end of the range wall (a drink is fetched without crossing the cook), the range
+    # 5 ft from it, and the island has a prep sink at that end: fridge, prep sink and range are each 5 to 6-1/2 ft apart. The sink
+    # under the window and the dishwasher on the gable wall are the clean-up side.
     # street-gable run (backs on the gable, facing west), south to north: two tall pantry cabinets, drawers, the sink under the
-    # window, dishwasher, drawers, then the fridge at the north end, by the corner, a step from the range (r43: it was at the south end)
+    # window, dishwasher, drawers, cabinets into the corner
     add('tallCabinet', 'FIX', (E, 6.1), 180, dict(CAB, d=2, h=8, w=2.5, pull='knob'))
     add('tallCabinet', 'FIX', (E, 8.6), 180, dict(CAB, d=2, h=8, w=2.5, pull='knob', hinge='right'))
     add('baseCabinet', 'FIX', (E, 11.35), 180, dict(CAB, w=3.0, doors='drawers'))
@@ -368,26 +433,29 @@ def kitchen():
     add('dishwasher', 'FIX', (E, 20.946), 180, {'w': 2})
     add('baseCabinet', 'FIX', (E, 23.446), 180, dict(CAB, w=3.0, doors='drawers'))
     add('baseCabinet', 'FIX', (E, 25.948), 180, dict(CAB, w=2.0))
-    add('fridge4Door', 'BUILTIN', (E, 28.45), 180, {'d': 2.5, 'dispenser': True, 'h': 5.9, 'w': 3})
-    add('upperCabinet', 'FIX', (E, 28.45), 180, dict(CAB, d=2, h=1.9, mountY=6.1, w=3, pull='knob'))
+    add('baseCabinet', 'FIX', (E, 28.475), 180, dict(CAB, w=3.05))
     add('upperCabinet', 'FIX', (E, 12.35), 180, dict(CAB, h=3.5, mountY=4.5, w=5.0, pull='knob', led=True))
     add('upperCabinet', 'FIX', (E, 24.5), 180, dict(CAB, h=3.5, mountY=4.5, w=4.8, pull='knob', led=True))
-    # north-wall return (facing south): drawers, the 36" range with a chimney hood, drawers, a corner cabinet
-    add('baseCabinet', 'FIX', (26.5, N), 270, dict(CAB, w=3.0, doors='drawers'))
-    add('range36', 'FIX', (29.5, N), 270, {'w': 3})
-    add('hoodChimney', 'FIX', (29.5, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
-    add('baseCabinet', 'FIX', (32.75, N), 270, dict(CAB, w=3.5))
+    add('upperCabinet', 'FIX', (E, 28.45), 180, dict(CAB, h=3.5, mountY=4.5, w=3.1, pull='knob', led=True))
+    # north wall (facing south), west to east: the 36-in fridge at the room end, drawers, the 36-in range with a chimney hood,
+    # a cabinet, the corner cabinet
+    add('fridge4Door', 'BUILTIN', (26.5, N), 270, {'d': 2.5, 'dispenser': True, 'h': 5.9, 'w': 3})
+    add('upperCabinet', 'FIX', (26.5, N), 270, dict(CAB, d=2, h=1.9, mountY=6.1, w=3, pull='knob'))
+    add('baseCabinet', 'FIX', (29.0, N), 270, dict(CAB, w=2.0, doors='drawers'))
+    add('range36', 'FIX', (31.5, N), 270, {'w': 3})
+    add('hoodChimney', 'FIX', (31.5, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
+    add('baseCabinet', 'FIX', (33.75, N), 270, dict(CAB, w=1.5))
     add('baseCabinet', 'FIX', (E - 1.0425, N), 270, dict(CAB, w=2.085))
-    add('upperCabinet', 'FIX', (26.375, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.75, pull='knob', led=True))
-    add('upperCabinet', 'FIX', (32.875, N), 270, dict(CAB, h=3.5, mountY=4.5, w=3.25, pull='knob', led=True))
-    # counters: quartz on the gable run between the pantries and the fridge, and on the north run into the corner, a 4-in splash
+    add('upperCabinet', 'FIX', (28.875, N), 270, dict(CAB, h=3.5, mountY=4.5, w=1.75, pull='knob', led=True))
+    add('upperCabinet', 'FIX', (34.9, N), 270, dict(CAB, h=3.5, mountY=4.5, w=3.3, pull='knob', led=True))
+    # counters: quartz on the gable run from the pantries into the corner, and on the north run from the fridge to the corner
     sink_hole = [[E - 1.65, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y - 1.2], [E - 0.35, RIDGE_Y + 1.2], [E - 1.65, RIDGE_Y + 1.2]]
-    add('counterTop', 'BUILTIN', (E - 1.04, 18.4), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[E - 2.08, 9.85], [E, 9.85], [E, 26.95], [E - 2.08, 26.95]]],
+    add('counterTop', 'BUILTIN', (E - 1.04, 18.4), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[E - 2.08, 9.85], [E, 9.85], [E, NF], [E - 2.08, NF]]],
         'holes': [sink_hole], 'splash': 0.33, 't': 0.104})
-    add('counterTop', 'BUILTIN', (30.8, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[25.0, NF], [E, NF], [E, N], [25.0, N]]],
-        'holes': [[[28.0, NF], [31.0, NF], [31.0, N], [28.0, N]]], 'splash': 0.33, 't': 0.104})
+    add('counterTop', 'BUILTIN', (32.3, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[28.0, NF], [E, NF], [E, N], [28.0, N]]],
+        'holes': [[[30.0, NF], [33.0, NF], [33.0, N], [30.0, N]]], 'splash': 0.33, 't': 0.104})
     # the island: 12 ft x 4.5 ft, working side to the kitchen, four stools on the room side
-    add('island', 'FIX', (31.0, 19.5), 180, dict(CAB, w=12.0, d=4.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=False))
+    add('island', 'FIX', (31.0, 19.5), 180, dict(CAB, w=12.0, d=4.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True, sinkEnd=-1))   # v2: a prep sink at the north end, by the range and the fridge
     for y in (15.2, 18.0, 21.0, 23.8):
         add('counterStoolRope', 'BUILTIN', (25.75, y), 0, None)
     return F
@@ -402,11 +470,11 @@ def staging():
         F.append(f); return f
     # island: a footed bowl, two opal globes from the ridge beam
     for x in (27.6, 30.0):
-        add('pendantGlobe', (x, RIDGE_Y), 0, {'dia': 1.05, 'drop': 5.45, 'finish': 'blackMetal', 'cord': 'rod'}, z=B.BEAM_Z0)
+        add('pendantGlobe', (x, RIDGE_Y), 0, {'dia': 1.05, 'drop': round(KB_Z0 - 6.95, 3), 'finish': 'blackMetal', 'cord': 'rod'}, z=KB_Z0)
     # living, anchored on the fireplace: long cream sofa, woven ottoman, two boucle chairs, built-ins either side
     cx = FP['cx']
     add('rug2', (cx, 26.6), 0, {'w': 10.5, 'd': 8.6, 'pattern': 'checker'})
-    add('sofa3', (cx, 23.7), 90, {'w': 8.0, 'fabric': 'linenCream', 'pillows': False}, key='sofa')
+    add('sofa3', (cx + 0.2, 23.7), 90, {'w': 7.6, 'fabric': 'linenCream', 'pillows': False}, key='sofa')   # v2: clear of the path from the bedroom and bath
     add('pillows', (0, 0), 90, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowSlate', -2.4, 1.45, 1.45, .12], ['pillowCream', -1.0, 1.45, 1.45, -.05], ['pillowGreyLinen', 1.0, 1.45, 1.45, -.1], ['pillowSlate', 2.4, 1.45, 1.45, -.12]]}, on='sofa').update({'stageZ': .95})
     add('ottomanRound', (cx, 27.3), 0, {}, key='ot')
     add('orchid', (0, 0), 0, {'h': 1.7, 'stems': 3, 'seed': 4}, on='ot', dx=-.35)
@@ -420,27 +488,28 @@ def staging():
     add('bowl', (0, 0), 90, {'dia': 1.55, 'h': 1.0}, on='dt')
     for dx in (-2.4, 0.0, 2.4):
         add('parsonsChair', (22.0 + dx, 7.15), 90); add('parsonsChair', (22.0 + dx, 11.65), 270)
-    # the old kitchen (r43): every cabinet, counter and appliance goes; the oak floor runs through. A reading nook at its south window:
-    # a built-in window seat under the window with bookcases on the south and west walls, a reading chair with a drum table and lamp,
-    # a sisal rug; a sideboard with art on the west wall north of the living-room door. The middle and the alcove stay open: the
-    # living-room door, the great room and the bedroom hall all cross here.
-    WS = 9.49                                                   # the old kitchen window (WN-L1-02) centre
-    add('windowSeat', (WS, Y_S), 90, {'w': 8.3, 'd': 1.9}, key='seat', back=True)
-    add('seatCushion', (0, 0), 90, {'w': 8.2, 'd': 1.85, 'fabric': 'seatGrey'}, on='seat')
-    add('pillows', (0, 0), 90, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowCream', -2.9, 1.4, 1.4, .08], ['pillowSlate', -1.7, 1.4, 1.4, -.05], ['pillowGreyLinen', 2.6, 1.4, 1.4, .1]]}, on='seat').update({'stageZ': .05})
-    add('books', (0, 0), 90, {'n': 3}, on='seat', dx=1.2, dz=.15)
-    add('builtinBookcase', (14.85, Y_S), 90, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 2.5, 'levels': [3.9, 5.1, 6.3], 'lights': False, 'seed': 11, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 2.3}, lib='BUILTIN')
-    add('builtinBookcase', (X_OK, 8.6), 0, {'boxes': 1, 'counter': None, 'crown': False, 'd': 1, 'density': 0.85, 'doorsPerBox': 2, 'fill': 'books', 'h': 2.5, 'levels': [3.9, 5.1, 6.3], 'lights': False, 'seed': 13, 'shelfD': 1, 'shelfMat': 'maple', 'shelfT': 0.125, 'sidePanels': True, 'w': 3.4}, lib='BUILTIN')
-    add('rug2', (9.9, 8.7), 0, {'w': 6.0, 'd': 7.0, 'pattern': 'sisal'})
-    add('armchairBoucle', (12.8, 9.0), 180, {'fabric': 'fabricLight'})
-    add('drumTable', (14.6, 9.0), 0, {'dia': 1.4, 'h': 1.75}, key='dr')
+    # the library (v2): the old kitchen and the bedroom hall, open to the great room under the vault. The west gable wall is shelved
+    # floor to vault, the living-room door passing through the books, with a rolling ladder; the ridge beam lands on a post in the
+    # middle of it. A deep window seat fills the south window; an upright piano stands between the window seat and the folding glass
+    # wall; two reading chairs sit in front of the tall bays, under the new skylight, looking down the room at the fire.
+    lc = (LIB_Y0 + LIB_Y1) / 2
+    add('libraryWall', (X_OK, lc), 0, {'w': round(LIB_Y1 - LIB_Y0, 3), 'd': 1.0, 'baseD': 1.33, 'baseH': 3.0, 'ridge': round(RIDGE_Y - lc, 3), 'apex': round(APEX - 0.02, 3), 'pitch': PITCH,
+        'bays': [[round(a - lc, 3), round(b_ - lc, 3), t] for a, b_, t in LIB_BAYS], 'doorH': 7.3, 'seatH': 1.95, 'rail': 8.0, 'railFrom': round(7.36 - lc, 3), 'ladderX': round(20.75 - lc, 3), 'seed': 21}, lib='BUILTIN')
+    WS = 9.55                                                   # the window seat: from the library wall to the window's east casing
+    add('windowSeat', (WS, Y_S), 90, {'w': 6.5, 'd': 2.5}, key='seat', back=True)
+    add('seatCushion', (0, 0), 90, {'w': 6.4, 'd': 2.45, 'fabric': 'seatGrey'}, on='seat')
+    add('pillows', (0, 0), 90, {'mountY': 1.42, 'lean': -.3, 'items': [['pillowCream', -2.4, 1.4, 1.4, .08], ['pillowSlate', -1.2, 1.4, 1.4, -.05], ['pillowGreyLinen', 2.3, 1.4, 1.4, .1]]}, on='seat').update({'stageZ': .05})
+    add('books', (0, 0), 90, {'n': 3}, on='seat', dx=1.0, dz=.3)
+    add('throwBlanket', (0, 0), 90, {'w': 1.1}, on='seat', dx=-0.4, dz=.7)
+    add('pianoUpright', (15.4, Y_S), 90, {}, back=True)
+    add('pianoBench', (15.4, Y_S + 3.35), 90, {})
+    add('art', (15.4, Y_S), 90, {'w': 3.4, 'h': 2.2, 'mountY': 6.5, 'style': 'brush', 'seed': 4}, back=True)
+    add('rug2', (11.0, RIDGE_Y), 0, {'w': 7.0, 'd': 4.8, 'pattern': 'sisal'})
+    add('armchairBoucle', (11.0, 16.25), 20, {'fabric': 'fabricLight'})
+    add('armchairBoucle', (11.0, 20.65), 340, {'fabric': 'fabricLight'})
+    add('drumTable', (10.5, RIDGE_Y), 0, {'dia': 1.4, 'h': 1.75}, key='dr')
     add('lamp', (0, 0), 0, {'h': 1.9, 'shadeDia': 1.0}, on='dr')
-    add('basket', (7.7, 7.7), 0, {'dia': 1.2, 'h': 1.1}, key='bk')
-    add('throwBlanket', (0, 0), 0, {'w': 1.1, 'mountY': 1.0}, on='bk')
-    add('sideboard', (X_OK, 16.75), 0, {'w': 4.0, 'd': 1.6}, key='sb', back=True)
-    add('lamp', (0, 0), 0, {'h': 2.2}, on='sb', dx=-1.3)
-    add('vase2', (0, 0), 0, {'h': 1.0}, on='sb', dx=1.2)
-    add('art', (X_OK, 16.75), 0, {'w': 3.0, 'h': 2.4, 'mountY': 5.1, 'style': 'blots', 'seed': 7}, back=True)
+    add('art', (12.1, Y_HB), 270, {'w': 2.2, 'h': 2.8, 'mountY': 5.0, 'style': 'blots', 'seed': 7}, back=True)
     # deck: outdoor dining for six, two lounge chairs and a low table, planters at the rail for privacy from the driveway
     add('outdoorDiningTable', (21.0, -0.6), 90, {'w': 7.0, 'd': 3.4}, key='odt')
     for dx in (-2.3, 0.0, 2.3):
@@ -453,8 +522,8 @@ def staging():
     return F
 
 CARD = {'name': 'Open kitchen and great room', 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': LABEL,
-        'description': 'The two bedrooms open into one vaulted great room with the kitchen at the street end, a fireplace, skylights and a folding glass wall to a new front deck; the old kitchen becomes a reading nook. 4 bedrooms, 3 baths, plus office.',
-        'note': 'Concept r42b (owner idea, 11/12/2026): as "Open great room", but the kitchen moves to the street end (island facing the room), the old kitchen is taken out and becomes a reading nook with a window seat (r43), the picture window becomes a folding glass wall onto an extended front deck, a gas fireplace on the north wall, four skylight wells. Status: illustrative, not designed or reviewed by an architect or engineer.',
+        'description': 'The two bedrooms, the old kitchen and the hall open into one vaulted great room: the kitchen at the street end, a fireplace, skylights, a folding glass wall to a new front deck, and a library wall with a window seat and a piano at the other end. 4 bedrooms, 3 baths, plus office.',
+        'note': 'Concept r42b (owner idea, 11/12/2026): as "Open great room", but the kitchen moves to the street end (island facing the room), the old kitchen is taken out (r43); the walls and the door that only served the removed rooms come out too, the ridge beam runs on to the west gable wall, and that end becomes a library: shelves floor to vault with a rolling ladder, a window seat, reading chairs, a piano (r43f), the picture window becomes a folding glass wall onto an extended front deck, a gas fireplace on the north wall, five skylight wells. Status: illustrative, not designed or reviewed by an architect or engineer.',
         'status': 'illustrative', 'source': 'concept r42b (tour/CONCEPT-4BR.md)', 'pageExtras': True}
 
 def register(hide, hide_ranges, sha):
@@ -462,17 +531,24 @@ def register(hide, hide_ranges, sha):
     e = {'id': OPT_ID, 'legacyId': LEGACY, 'set': 'OS-REMODEL'}; e.update(CARD)
     e.update({'hide': hide, 'hideRanges': hide_ranges, 'glb': GLB_OUT, 'sha256': sha, 'remap': [], 'meta': META_OUT,
               'region': [[-10.5, -1.4], [5.4, -1.4], [5.4, 4.4], [37.0, 4.4], [37.0, 32.5], [5.0, 32.5], [5.0, 27.1], [-7.0, 27.1], [-7.0, 18.85], [-9.95, 18.85]],
-              'clearRegion': [[X_OK + 0.05, Y_S - 0.3], [37.3, Y_S - 0.3], [37.3, Y_N + 0.3], [X_W + 0.05, Y_N + 0.3], [X_W + 0.05, Y_KIT - 0.9], [13.5, Y_KIT - 0.9], [13.5, 21.6], [X_OK + 0.05, 21.6]],   # r43: the old kitchen too (not the hall door at y 22)
-              'walkStart': {'at': [8.0, 14.0], 'look': [36.0, 18.4]},
+              'clearRegion': [[X_OK + 0.05, Y_S - 0.3], [37.3, Y_S - 0.3], [37.3, Y_N + 0.3], [X_W + 0.05, Y_N + 0.3], [X_W + 0.05, Y_HB - 0.1], [X_OK + 0.05, Y_HB - 0.1]],   # v2: the old kitchen and the hall too
+              'walkStart': {'at': [8.0, 12.7], 'look': [36.0, 18.4]},
+              # v2: the removed hall walls' lines are free to cross (the stub, the old door's wall, the two pieces by the hall);
+              # the bath's walls, the street side of the deck and the west gable wall still stop a walker
               'walkTests': [[[27.5, 6.0], [27.5, 11.0], 'open'], [[19.0, 15.0], [19.0, 21.0], 'open'], [[23.0, 21.5], [23.0, 26.0], 'open'],
-                            [[25.0, 6.5], [25.0, 0.0], 'open'], [[30.0, -1.0], [35.5, -1.0], 'wall'], [[20.0, 25.0], [12.0, 25.0], 'wall']],
-              'labels': [{'name': 'Kitchen', 'at': [31.5, 19.0]}, {'name': 'Living', 'at': [19.3, 25.0]}, {'name': 'Dining', 'at': [22.0, 9.4]},
-                         {'name': 'Reading nook', 'at': [9.5, 8.6]}, {'name': 'Deck', 'at': [25.5, 0.0]}, {'name': 'Bedroom', 'at': [-0.8, 21.5]}, {'name': 'Bath', 'at': [9.4, 29.2]}],
+                            [[25.0, 6.5], [25.0, 0.0], 'open'], [[30.0, -1.0], [35.5, -1.0], 'wall'],
+                            [[16.5, 19.6], [11.5, 19.6], 'open'], [[16.5, 21.6], [11.5, 21.6], 'open'], [[16.5, 24.0], [11.5, 24.0], 'open'], [[14.6, 17.9], [12.6, 17.9], 'open'],
+                            [[7.2, 20.5], [7.2, 24.3], 'open'], [[12.3, 20.5], [12.3, 24.3], 'open'], [[9.5, 20.5], [9.5, 24.3], 'open'], [[6.2, 23.9], [16.0, 23.0], 'open'],
+                            [[20.0, 28.0], [12.0, 28.0], 'wall'], [[11.8, 23.5], [11.8, 27.5], 'wall'], [[13.2, 24.2], [14.2, 26.2], 'wall'], [[8.0, 18.0], [3.5, 18.0], 'wall']],
+              'labels': [{'name': 'Kitchen', 'at': [31.5, 19.0]}, {'name': 'Living', 'at': [19.3, 26.0]}, {'name': 'Dining', 'at': [22.0, 9.4]},
+                         {'name': 'Library', 'at': [9.8, 16.0]}, {'name': 'Deck', 'at': [25.5, 0.0]}, {'name': 'Bedroom', 'at': [-0.8, 21.5]}, {'name': 'Bath', 'at': [9.4, 29.2]}],
+              # viewpoints, world frame [north, up, east]
               'views': {'foyer': {'pos': [-4.0, 5.0, -3.0], 'look': [20.7, 4.7, 9.0]},
-                        'entry': {'pos': [13.0, 5.0, 11.0], 'look': [19.5, 4.8, 36.6]},
-                        'kitchen': {'pos': [22.5, 5.0, 34.2], 'look': [8.0, 4.4, 16.0]},
-                        'nook': {'pos': [14.5, 5.0, 21.5], 'look': [7.5, 4.0, 8.0]},
-                        'hallside': {'pos': [21.0, 5.0, 9.5], 'look': [6.0, 4.2, 9.6]},
+                        'entry': {'pos': [12.7, 5.0, 7.4], 'look': [18.6, 5.0, 36.6]},
+                        'library': {'pos': [15.6, 5.0, 18.2], 'look': [17.6, 5.4, 5.3]},
+                        'windowseat': {'pos': [15.2, 5.0, 14.2], 'look': [4.8, 3.4, 10.6]},
+                        'hall': {'pos': [23.9, 5.0, 6.7], 'look': [15.5, 4.6, 26.0]},
+                        'kitchen': {'pos': [18.45, 5.0, 32.8], 'look': [18.45, 5.6, 5.3]},
                         'kitchenrun': {'pos': [14.5, 5.0, 22.5], 'look': [30.5, 4.0, 35.5]},
                         'living': {'pos': [17.5, 5.0, 26.0], 'look': [30.0, 4.4, 19.3]},
                         'deck': {'pos': [-3.4, 5.0, 25.4], 'look': [16.0, 4.4, 24.2]},

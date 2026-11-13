@@ -1,11 +1,12 @@
 """Architect-style main-level plans of 118 Hillside, drawn from the model's own data (scene.meta.json and an option's meta / glb).
-usage: python3 tour/bim2/tools/plan_svg.py <out-dir>  ->  plan-asbuilt.svg, plan-open4k.svg (PNGs: rsvg-convert -z 2)"""
+usage: python3 tour/bim2/tools/plan_svg.py <out-dir>  ->  plan-asbuilt.svg, plan-open4k-v2.svg (PNGs: rsvg-convert -z 2)"""
 import json, math, sys, os
 import numpy as np
 from shapely.geometry import Polygon, LineString, Point, box as sbox
 from shapely.ops import unary_union
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_open4 as B4
+import build_open4k as K4
 B2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..') + '/'
 OUT = (sys.argv[1] if len(sys.argv) > 1 else '.') + '/'
 BASE = json.load(open(B2 + 'scene.meta.json'))
@@ -96,10 +97,10 @@ def plan(v, title, subtitle):
     # ---- vault, ridge beam, skylights (above the cut: dashed)
     if v == 'open4k':
         room = Polygon(B4.ROOM)
-        for yy in (B4.RIDGE_Y - .23, B4.RIDGE_Y + .23):
-            A('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#444" stroke-width=".8" stroke-dasharray="10 4 2 4"/>' % (*P(B4.X_W, yy), *P(B4.X_E, yy)))
-        x, y = P(14.4, B4.RIDGE_Y + .55); A('<text x="%.1f" y="%.1f" font-size="8" fill="#444" letter-spacing=".4">RIDGE BEAM ABOVE &#183; VAULTED CEILING</text>' % (x, y))
-        for (a, b, c0, c1) in [(27.5, 30.0, 13.0, 16.0), (27.5, 30.0, 21.0, 24.0), (21.0, 23.5, 7.4, 10.4), (17.0, 19.5, 24.6, 27.6)]:
+        for yy in (K4.KB_Y0, K4.KB_Y1):
+            A('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#444" stroke-width=".8" stroke-dasharray="10 4 2 4"/>' % (*P(K4.POST[1], yy), *P(B4.X_E, yy)))
+        x, y = P(14.3, B4.RIDGE_Y - .75); A('<text x="%.1f" y="%.1f" font-size="8" fill="#444" letter-spacing=".4">RIDGE BEAM ABOVE, 31 FT &#183; VAULTED CEILING</text>' % (x, y))
+        for (a, b, c0, c1) in K4.SKY:
             A('<polygon points="%s" fill="none" stroke="#444" stroke-width=".8" stroke-dasharray="5 3"/>' % pts([(a, c0), (b, c0), (b, c1), (a, c1)]))
             x, y = P((a + b) / 2, (c0 + c1) / 2); A('<text x="%.1f" y="%.1f" font-size="7" fill="#555" text-anchor="middle">SKY</text>' % (x, y + 2.5))
     # ---- fixtures
@@ -130,7 +131,7 @@ def plan(v, title, subtitle):
     dim_h(A, bx0, bx1, by1 + 2.4, ftin(bx1 - bx0))
     dim_v(A, by0, by1, bx1 + 2.4, ftin(by1 - by0))
     if v == 'open4k':
-        dim_h(A, B4.X_W, B4.X_E, by1 + 1.2, ftin(B4.X_E - B4.X_W) + ' great room (interior)', small=True)
+        dim_h(A, K4.X_LW, B4.X_E, by1 + 1.2, ftin(B4.X_E - K4.X_LW) + ' library wall to street gable (interior)', small=True)
         dim_v(A, B4.Y_S, B4.Y_N, bx1 + 1.2, ftin(B4.Y_N - B4.Y_S), small=True)
     # ---- title, north arrow, scale bar, label
     A('<text x="%d" y="44" font-size="22" font-weight="700" fill="#111">%s</text>' % (M_L, esc(title)))
@@ -153,7 +154,7 @@ def wrap(s, n):
     if cur: lines.append(cur)
     return lines
 
-LABEL_AT = {('open4k', 'SP-L1-GREAT'): (21.0, 15.2), ('open4k', 'SP-L1-KITCHEN'): (10.6, 13.6), ('asbuilt', 'SP-L1-KITCHEN'): (9.6, 11.6),
+LABEL_AT = {('open4k', 'SP-L1-GREAT'): (22.3, 15.4), ('open4k', 'SP-L1-KITCHEN'): (10.3, 13.2), ('asbuilt', 'SP-L1-KITCHEN'): (9.6, 11.6),
             ('asbuilt', 'SP-L1-GREAT'): (25.0, 11.0), ('asbuilt', 'SP-L1-BED3'): (30.0, 23.0), ('asbuilt', 'SP-L1-BED2'): (19.0, 26.5),
             ('asbuilt', 'SP-L1-HALL'): (9.4, 23.4), ('open4k', 'SP-L1-HALL'): (9.4, 23.4), ('asbuilt', 'SP-L1-BATH'): (9.4, 29.3), ('open4k', 'SP-L1-BATH'): (9.4, 29.3),
             ('asbuilt', 'SP-L1-LIVING'): (-2.3, 7.0), ('open4k', 'SP-L1-LIVING'): (-2.3, 7.0), ('asbuilt', 'SP-L1-BED1'): (-1.0, 21.5), ('open4k', 'SP-L1-BED1'): (-1.0, 21.5)}
@@ -162,7 +163,7 @@ def label_point(s, g, v):
     c = g.representative_point(); return (c.x, c.y)
 def extra_labels(v):
     if v == 'open4k':
-        return [('KITCHEN', (31.0, 27.0)), ('LIVING', (19.3, 22.4)), ('DINING', (22.0, 6.4)), ('DECK', (25.5, -1.5)), ('FOLDING GLASS WALL', (25.2, 3.0))]
+        return [('KITCHEN', (33.0, 27.2)), ('LIVING', (19.3, 21.2)), ('DINING', (22.0, 5.75)), ('DECK', (25.5, -3.2)), ('FOLDING GLASS WALL', (25.2, 3.6)), ('PREP SINK', (28.6, 22.9))]
     return [('FRONT PORCH', (9.0, -4.5))] if v == 'asbuilt' else []
 
 def opening_svg(o, D):
@@ -246,6 +247,27 @@ def fixtures(D, v):
     for f in F:
         k = f['render']['kind']; pr = f.get('params') or {}
         if k in ('counterTop', 'faucetKitchen', 'finishedPanel', 'mirror', 'showerSystem', 'downspout', 'hoodGlassCanopy', 'upperMicrowave', 'closetSystem', 'counterStoolRope'): continue
+        if k == 'libraryWall':                                   # the wall of books: each bay, the doorway through it, the rail and the ladder
+            x0 = f['at'][0]; yc = f['at'][1]; d = pr.get('d', 1); bd = pr.get('baseD', d)
+            for a, b, ty in pr.get('bays', []):
+                if ty == 'post': continue
+                if ty == 'door': poly(sbox(x0, yc + a, x0 + d, yc + b), 'none', .6, '4 2', '#555'); continue
+                dd = bd if ty == 'base' else d; g = sbox(x0, yc + a, x0 + dd, yc + b); poly(g, '#fff', .8)
+                A('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#777" stroke-width=".4"/>' % (*P(x0, yc + a), *P(x0 + dd, yc + b)))
+            if pr.get('ladderX') is not None:
+                ly = yc + pr['ladderX']; lz = x0 + d + .22; poly(sbox(lz, ly - .75, lz + pr.get('ladderRun', 1.9), ly + .75), 'none', .6, '2 2', '#555')
+                text((lz + .95, ly - 1.05), 'LADDER', 6)
+            A('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#555" stroke-width=".7"/>' % (*P(x0 + d + .22, yc + pr.get('railFrom', -pr['w'] / 2)), *P(x0 + d + .22, yc + pr['w'] / 2 - .08)))
+            continue
+        if k in LOOSE:                                           # loose furniture, drawn light
+            w_, d_, shape = LOOSE[k]; f2 = dict(f); f2['params'] = dict({'w': w_, 'd': d_}, **{kk: vv for kk, vv in pr.items() if kk in ('w', 'd')}); g = foot(f2)
+            if shape == 'round': x, y = P(g.centroid.x, g.centroid.y); A('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="#fff" stroke="#888" stroke-width=".6"/>' % (x, y, (pr.get('dia') or w_) / 2 * S))
+            else: poly(g.buffer(-.12).buffer(.12) if shape == 'soft' else g, '#fff', .9 if k == 'pianoUpright' else .6, '', '#222' if k == 'pianoUpright' else '#888')
+            if k == 'pianoUpright':
+                th = math.radians(f.get('rot') or 0); fwd = np.array([math.cos(th), math.sin(th)]); side = np.array([-fwd[1], fwd[0]]); a0 = np.array(f['at'][:2], float)
+                poly(Polygon([a0 - side * (w_ / 2 - .2) + fwd * 1.3, a0 + side * (w_ / 2 - .2) + fwd * 1.3, a0 + side * (w_ / 2 - .2) + fwd * (d_ - .08), a0 - side * (w_ / 2 - .2) + fwd * (d_ - .08)]), '#fff', .5, '', '#444')
+                text(tuple(a0 + fwd * .65), 'PIANO', 6.5)
+            continue
         if f['render'].get('lib') == 'STAGE' and k not in ('windowSeat',): continue
         g = foot(f); c = g.centroid
         if k == 'upperCabinet': poly(g, 'none', .6, '4 2', '#555'); continue
@@ -265,7 +287,10 @@ def fixtures(D, v):
                     x, y = P(minx + (maxx - minx) * fx_, miny + (maxy - miny) * fy_); A('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="none" stroke="#333" stroke-width=".6"/>' % (x, y, .28 * S))
             continue
         if k == 'island':
-            poly(g, '#f4f4f4', 1.0); text((c.x, c.y), 'ISLAND', 7.5); continue
+            poly(g, '#f4f4f4', 1.0); text((c.x, c.y), 'ISLAND', 7.5)
+            if pr.get('sink') and pr.get('sinkEnd'):             # the prep sink in its end cabinet (rot 180: the -x end is north)
+                sy = f['at'][1] - pr['sinkEnd'] * (pr['w'] / 2 - 1.27) * (-1 if (f.get('rot') or 0) == 180 else 1); poly(sbox(f['at'][0] - 1.78, sy - .8, f['at'][0] - .48, sy + .8).buffer(-.1, join_style=1), '#fff', .8)
+            continue
         if k == 'builtinBookcase': poly(g, '#fff', .8); g2 = g.buffer(-.15); poly(g2, 'none', .4, '', '#777'); continue
         if k == 'windowSeat': poly(g, '#fff', .9); text((c.x, c.y), 'WINDOW SEAT', 7); continue
         if k == 'vanity': poly(g, '#fff', .8); x, y = P(c.x + .1, c.y); A('<ellipse cx="%.1f" cy="%.1f" rx="%.1f" ry="%.1f" fill="none" stroke="#333" stroke-width=".6"/>' % (x, y, .45 * S, .6 * S)); continue
@@ -279,8 +304,9 @@ def fixtures(D, v):
     for f in F:
         if f['render']['kind'] == 'counterStoolRope' and v != 'asbuilt':
             x, y = P(f['at'][0] + .0, f['at'][1]); A('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="#fff" stroke="#555" stroke-width=".6"/>' % (x, y, .6 * S))
-    # fireplace (from the option's glb element: its footprint inside the room)
+    # fireplace (from the option's glb element: its footprint inside the room) and the ridge beam's west post
     if v == 'open4k':
+        poly(sbox(K4.POST[0], K4.POST[2], K4.POST[1], K4.POST[3]), '#111', .6); text((K4.POST[1] + 1.1, K4.RIDGE_Y - .75), 'POST', 6)
         fpx0, fpx1 = B4_FP['cx'] - B4_FP['w'] / 2, B4_FP['cx'] + B4_FP['w'] / 2
         poly(sbox(fpx0, B4.Y_N - B4_FP['d'], fpx1, B4.Y_N), '#e9e9e9', 1.0)
         poly(sbox(B4_FP['cx'] - 2.25, B4.Y_N - .55, B4_FP['cx'] + 2.25, B4.Y_N - .15), '#555', .6)
@@ -288,6 +314,10 @@ def fixtures(D, v):
         text((B4_FP['cx'], B4.Y_N - B4_FP['d'] - .7), 'GAS FIREPLACE &#183; HEARTH', 6.5)
     return out
 B4_FP = dict(cx=19.3, w=6.0, d=1.2)
+# loose furniture shown on a concept plan: kind -> (width, depth, outline)
+LOOSE = {'sofa3': (7.5, 3.2, 'soft'), 'armchairBoucle': (2.8, 2.7, 'soft'), 'diningTableGlass': (7.0, 3.4, 'rect'), 'parsonsChair': (1.5, 1.7, 'soft'), 'ottomanRound': (2.6, 2.6, 'round'),
+         'drumTable': (1.4, 1.4, 'round'), 'pianoUpright': (4.95, 2.05, 'rect'), 'pianoBench': (2.6, 1.15, 'rect'), 'outdoorDiningTable': (7.0, 3.4, 'rect'), 'outdoorChair': (1.8, 1.9, 'soft'),
+         'outdoorLounge': (2.6, 2.8, 'soft'), 'outdoorCoffee': (2.6, 1.6, 'rect')}
 
 def dim_h(A, x0, x1, y, txt, small=False):
     a, b = P(x0, y), P(x1, y); sw = .6
@@ -312,6 +342,7 @@ def scale_bar(A, x, y):
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     jobs = [('asbuilt', 'Main level, as built', 'The house: 6 bedrooms, 3 baths, plus office · main level shown, as it is today'),
-            ('open4k', 'Main level, "Open kitchen and great room"', 'The house: 4 bedrooms, 3 baths, plus office · main level shown: kitchen at the street end, reading nook in the old kitchen')]
+            ('open4k', 'Main level, "Open kitchen and great room"', 'The house: 4 bedrooms, 3 baths, plus office · main level shown: kitchen at the street end, library at the west end, one vault between')]
     for v, t, st in jobs:
-        s = plan(v, t, st.replace('&#183;', '·')); open(OUT + 'plan-%s.svg' % v, 'w').write(s); print('wrote', OUT + 'plan-%s.svg' % v, len(s))
+        name = 'plan-%s.svg' % ('open4k-v2' if v == 'open4k' else v)
+        s = plan(v, t, st.replace('&#183;', '·')); open(OUT + name, 'w').write(s); print('wrote', OUT + name, len(s))
