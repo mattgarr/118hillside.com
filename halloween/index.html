@@ -6469,7 +6469,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   }};
 function frame22Lens(cam){                                  // R3: one lens rule for every aspect
   const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight, a = w / h, R = Math.PI / 360;
-  const tD = Math.tan(FRAME22.DIAG * Math.PI / 180), hf = Math.min(FRAME22.HFMAX, (a < 1 && cam.hfP) || cam.hf22 || FRAME22.HF);
+  const tD = Math.tan((cam.diag22 || FRAME22.DIAG) * Math.PI / 180), hf = Math.min(cam.hfMax22 || FRAME22.HFMAX, (a < 1 && cam.hfP) || cam.hf22 || FRAME22.HF);   // r48: a stop may widen its own lens (diag, hfMax: the 6 ft laundry)
   const tH = Math.min(Math.tan(hf * R), tD * a / Math.sqrt(1 + a * a)), tV = tH / a;
   const sy = a < 1 ? (cam.riseP != null ? cam.riseP : (cam.rise || 0) + FRAME22.RISE_P) : (cam.rise || 0);
   return {fov: 2 * Math.atan(tV) * 180 / Math.PI, sy, cam};
@@ -6487,7 +6487,7 @@ function frame22Apply(id, sp){                              // spec -> STOP_CAMS
   const pos = [sp.at[0], y, sp.at[1]], posPh = sp.atP ? [sp.atP[0], sp.yP != null ? sp.yP : y, sp.atP[1]] : null;
   const c = Object.assign({}, old, {pos, dir: dirTo(sp.to, pos, sp.toY), dirPh: sp.ph ? dirTo(sp.ph, posPh || pos, sp.phY != null ? sp.phY : sp.toY) : null, posPh,
     look22: sp.toY != null ? [sp.to[0], sp.toY, sp.to[1]] : null, lookPh22: sp.ph && (sp.phY != null || sp.toY != null) ? [sp.ph[0], sp.phY != null ? sp.phY : sp.toY, sp.ph[1]] : null,
-    hf22: sp.hf || FRAME22.HF, hfP: sp.hfP || null, rise: sp.rise || 0, riseP: sp.riseP != null ? sp.riseP : null,
+    hf22: sp.hf || FRAME22.HF, hfP: sp.hfP || null, diag22: sp.diag || null, hfMax22: sp.hfMax || null, rise: sp.rise || 0, riseP: sp.riseP != null ? sp.riseP : null,
     tilt: 0, pan: 0, f22: true, photoPos: old.photoPos || old.pos, photoDir: old.photoDir || old.dir});
   if(st.photo != null && old.photo && old.photo !== pid(st.photo)) c.ar = null;   // overlay shows the stop's own listing photo at its own aspect
   if(!c.hfov) c.hfov = 90; STOP_CAMS[key] = c; return c;

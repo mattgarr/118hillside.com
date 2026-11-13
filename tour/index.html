@@ -1937,8 +1937,8 @@ const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: r
    spaces (R40M: per 6-in cell up to two height intervals of interior air), sampled 9 in off the surface along its normal so a wall's
    room face reads the room and its outer face the sky. Glass reflects the side the camera is on. Installed here, before any material
    is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
-const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .1, duskIn: .3,
-  U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}, r40MetK: {value: 1}}};
+const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .1, duskIn: .3, metWb: .8,
+  U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}, r40MetK: {value: 1}, r40MetW: {value: 0}}};
 /* r41 W (owner 11/12, launch-blocking: from inside the big-glass rooms at midday the sunlit yard read near-white, "like snow").
    rule:window-pull - with two environments the glass is clear (r40), so the garden seen from a room was drawn at the ROOM's exposure,
    1.2-2 stops over what the same garden gets outdoors, and ACES clipped lawn, paving and leaves to white. A real-estate photographer
@@ -1965,7 +1965,7 @@ if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && define
   C.envmap_physical_pars_fragment += `
 #if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
 #define R41G8 ${/[?&]ghost41=0\b/.test(location.search) ? 'false' : 'true'}
-uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K, r40MetK;
+uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K, r40MetK, r40MetW;
 float r40MaskAt( vec3 P ){
   vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
   if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
@@ -1994,7 +1994,7 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
   if(M0.includes(I0) && M0.includes(R0)){
     C.lights_fragment_maps = `#if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tfloat r40m = r40Interior( geometry );\n#endif\n` + M0
       .replace(I0, `if( r40m < 0.999 ) iblIrradiance += ( 1.0 - r40m ) * getLightProbeIndirectIrradiance( geometry, maxMipLevel );\n\t\tif( r40m > 0.001 ) iblIrradiance += r40m * r40IrrB( geometry );`)
-      .replace(R0, `#if defined( STANDARD ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tif( r40m < 0.999 ) radiance += ( 1.0 - r40m ) * getLightProbeIndirectRadiance( geometry.viewDir, geometry.normal, material.specularRoughness, maxMipLevel );\n\tif( r40m > 0.001 ) radiance += r40m * r40RadB( geometry.viewDir, geometry.normal, material.specularRoughness ) * mix( 1.0, r40MetK, step( 0.5, metalnessFactor ) );\n\t#else\n\t${R0}\n\t#endif`);
+      .replace(R0, `#if defined( STANDARD ) && defined( ENVMAP_TYPE_CUBE_UV )\n\tif( r40m < 0.999 ) radiance += ( 1.0 - r40m ) * getLightProbeIndirectRadiance( geometry.viewDir, geometry.normal, material.specularRoughness, maxMipLevel );\n\tif( r40m > 0.001 ){ vec3 r40b = r40RadB( geometry.viewDir, geometry.normal, material.specularRoughness ); if( metalnessFactor >= 0.5 ) r40b = mix( r40b, vec3( dot( r40b, vec3( 0.2126, 0.7152, 0.0722 ) ) ), r40MetW ) * r40MetK; radiance += r40m * r40b; }\n\t#else\n\t${R0}\n\t#endif`);
     // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
     // (an accessor: page hooks keep the previous hook and call it as a plain function, so the default returns one bound to its material)
     Object.defineProperty(THREE.Material.prototype, 'onBeforeCompile', {configurable: true,
@@ -2089,7 +2089,7 @@ const STOPS = [
   p:'The porch is at the top of the front steps. From here you can see through the iron-and-glass front doors, across the foyer, to the heritage oak in the backyard.'},
  {id:'entry', t:'Entry foyer', photo:59, level:'main', rooms:['entry'], pos:S(990,1832,EYE), look:S(1650,1832,6.4),
   p:'The foyer stands between two pairs of iron-and-glass doors, under a cathedral ceiling with a starburst light fixture. It is part of the 2024 addition. The living room is straight ahead.'},
- {id:'living', t:'Living room', photo:44, level:'main', rooms:['living'], pos:S(1330,1995,EYE), look:S(1640,1660,5.4),
+ {id:'living', t:'Living room', photo:44, level:'main', rooms:['living'], easeIn: .75, pos:S(1330,1995,EYE), look:S(1640,1660,5.4),   // r48c easeIn: see r37Plan
   p:'Exposed wood beams cross the vaulted ceiling, and large windows look out to the trees. The living room is in the original part of the house.'},
  {id:'kitchen', t:'Kitchen', photo:1, level:'main', rooms:['kitchen'], pos:S(1590,2520,EYE), look:S(1610,2130,4.4),
   p:'The kitchen is all white, with Cambria Brittanicca quartz counters, a large peninsula, and a Bosch gas range and dishwasher.'},
@@ -2119,7 +2119,8 @@ const STOPS = [
   p:'The full bath on the lower hall has a dual-sink vanity and heated floors.'},
  {id:'lbed2', t:'Lower-level bedroom 2', photo:58, level:'lower', rooms:['lbed2'], pos:[-24.6,LV.lower+EYE,-27.2], look:[-28.0,LV.lower+EYE,-39.5],
   p:'The second bedroom on the lower level is across the hall from the bath, with skylights overhead.'},
- {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], pos:[-23.85,LV.lower+EYE,-17.75], look:[-28.8,LV.lower+EYE,-22.5],   // r48 laundry: just inside the door, where photo p04 was taken: window and open shelves left, corner sink and cabinets ahead, the stacked pair right (r48b G stood in the far corner, now the washer and dryer's place)
+ {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], pos:[-25.2,LV.lower+EYE,-16.6], look:[-27.3,LV.lower+EYE,-26.5],   // r48c: in the doorway (FRAME22.SPEC.laundry)
+    // r48 laundry: just inside the door, where photo p04 was taken: window and open shelves left, corner sink and cabinets ahead, the stacked pair right (r48b G stood in the far corner, now the washer and dryer's place)
   p:'The main laundry room, with the washer and dryer, is off the lower level’s own entrance.'},
  {id:'office', t:'Skylit office', photo:20, level:'lower', rooms:['office'], pos:[-28.1,LV.lower+EYE,-10.1], look:[-26.0,LV.lower+EYE,-2.7],
   p:'The skylit office is across the entrance from the laundry room, with windows on two walls.'},
@@ -6833,7 +6834,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   lower: {at: [-18.75, -38.5], to: [-12.65, -47.0], hf: 100, rise: -.14},   // r36: in the doorway, wider and with the frame lowered so the whole bed, the floor and both windows show (photo p63's direction):     // doorway corner -> bed, both windows
   lbath: {at: [-14.2, -32.65], to: [-10.6, -35.6], hf: 100},   // r38: past the open door's edge (it stands in front of the vanity's west end): mirror, blue tile and sink left, window and towel rings ahead (photo p60)
   lbed2: {at: [-24.6, -27.2], to: [-28.0, -39.5], hf: 100},   // r38: closet end, beside the open door: art wall left, bed under the window, a skylight overhead (photo p58)
-  laundry: {at: [-23.85, -17.75], to: [-28.8, -22.5], hf: 100, rise: -.2, riseP: 0},   // r48 laundry: just inside the door, the way photo p04 faces (the stack now stands where r48b G's far-corner camera stood)   // r48b G (QA 11/13: just inside the door the camera stood almost inside the washer and dryer, their tops and a door ring filling the bottom of the frame): from the room's far corner, the window ahead and the machines under it.   // r38: just inside the door, the frame lowered: the window, and the washer and dryer under it. Square on from the doorway (photo p04's direction) the frame was a blank wall: the model has no cabinets or sink there
+  laundry: {at: [-25.2, -16.6], to: [-27.3, -26.5], ph: [-25.6, -26.5], hf: 108, hfMax: 108, diag: 58, hfP: 72, rise: -.22, riseP: 0},   // r48c (QA 11/13: the dryer door filled the right 40 % of the desktop frame, the stack the right third on a phone): in the doorway, 1.2 ft clear of the hinge jamb and the open leaf, the one place in the 6 ft room more than 4 ft from the stack's face; a wider lens for this stop only (108 deg across on a desktop, 72 on a phone): window and open base left, the corner sink, counter and wall cabinets ahead, the stack right from its top to the washer door   // was   // r48 laundry: just inside the door, the way photo p04 faces (the stack now stands where r48b G's far-corner camera stood)   // r48b G (QA 11/13: just inside the door the camera stood almost inside the washer and dryer, their tops and a door ring filling the bottom of the frame): from the room's far corner, the window ahead and the machines under it.   // r38: just inside the door, the frame lowered: the window, and the washer and dryer under it. Square on from the doorway (photo p04's direction) the frame was a blank wall: the model has no cabinets or sink there
   office: {at: [-28.1, -10.1], to: [-26.0, -2.7], hf: 100, rise: .12},   // r38: by the cube shelf, past the open door: desk wall left, corner windows ahead, the frame risen for the skylit ceiling (photo p20)
   lounge: {at: [-14.4, -15.4], to: [-23.5, -21.0], hf: 100},   // r36: three feet further in than photo p65, same direction, so the cafe table is no longer in the foreground: the glass door, TV, refreshment counter and beverage cooler:     // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
   terrace: {at: [8, -20], to: [-8, -36]},   // out on the gravel under the oak -> rear facade, lounge set, outdoor kitchen + pergola, hills
@@ -6842,7 +6843,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   }};
 function frame22Lens(cam){                                  // R3: one lens rule for every aspect
   const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight, a = w / h, R = Math.PI / 360;
-  const tD = Math.tan(FRAME22.DIAG * Math.PI / 180), hf = Math.min(FRAME22.HFMAX, (a < 1 && cam.hfP) || cam.hf22 || FRAME22.HF);
+  const tD = Math.tan((cam.diag22 || FRAME22.DIAG) * Math.PI / 180), hf = Math.min(cam.hfMax22 || FRAME22.HFMAX, (a < 1 && cam.hfP) || cam.hf22 || FRAME22.HF);   // r48: a stop may widen its own lens (diag, hfMax: the 6 ft laundry)
   const tH = Math.min(Math.tan(hf * R), tD * a / Math.sqrt(1 + a * a)), tV = tH / a;
   const sy = a < 1 ? (cam.riseP != null ? cam.riseP : (cam.rise || 0) + FRAME22.RISE_P) : (cam.rise || 0);
   return {fov: 2 * Math.atan(tV) * 180 / Math.PI, sy, cam};
@@ -6860,7 +6861,7 @@ function frame22Apply(id, sp){                              // spec -> STOP_CAMS
   const pos = [sp.at[0], y, sp.at[1]], posPh = sp.atP ? [sp.atP[0], sp.yP != null ? sp.yP : y, sp.atP[1]] : null;
   const c = Object.assign({}, old, {pos, dir: dirTo(sp.to, pos, sp.toY), dirPh: sp.ph ? dirTo(sp.ph, posPh || pos, sp.phY != null ? sp.phY : sp.toY) : null, posPh,
     look22: sp.toY != null ? [sp.to[0], sp.toY, sp.to[1]] : null, lookPh22: sp.ph && (sp.phY != null || sp.toY != null) ? [sp.ph[0], sp.phY != null ? sp.phY : sp.toY, sp.ph[1]] : null,
-    hf22: sp.hf || FRAME22.HF, hfP: sp.hfP || null, rise: sp.rise || 0, riseP: sp.riseP != null ? sp.riseP : null,
+    hf22: sp.hf || FRAME22.HF, hfP: sp.hfP || null, diag22: sp.diag || null, hfMax22: sp.hfMax || null, rise: sp.rise || 0, riseP: sp.riseP != null ? sp.riseP : null,
     tilt: 0, pan: 0, f22: true, photoPos: old.photoPos || old.pos, photoDir: old.photoDir || old.dir});
   if(st.photo != null && old.photo && old.photo !== pid(st.photo)) c.ar = null;   // overlay shows the stop's own listing photo at its own aspect
   if(!c.hfov) c.hfov = 90; STOP_CAMS[key] = c; return c;
@@ -19544,7 +19545,13 @@ function v33Env(){
      the room around them. With two environments the x k (the lamp-lit panorama is too dim for the lamps' real bounce) now applies in
      the shader to the ROOM environment only, for metals (metalness >= .5) lit by it: r40MetK. Mirrors (their own capture) and the sky
      side are left at x1, and materials made after the first dusk are covered too (the old list was collected once). */
-  if(R40E.on){ R40E.U.r40MetK.value = k; for(const m of (V33.metals || [])) if(V33.metBase.has(m)) m.envMapIntensity = V33.metBase.get(m); V33.metals = []; V33.report.metals = 'shader:' + k; return; }
+  /* r48 metal (QA 11/13: at dusk the primary-bath shower rail and heads, the laundry and lounge pulls, faucets and the dryer ring read brass /
+     copper; satin nickel, chrome and stainless by day): the dusk room panorama is the lamps' own colour (R40E.lampWb .1) over an oak floor band,
+     and a low-roughness metal returns that reflection as pure orange, x k. The walls take the same light diffusely, under the camera's warm
+     white balance, and read acceptably warm. A camera balanced for 2700K lamps would show the nickel near neutral: for metals reading the ROOM
+     environment, r40MetW (R40E.metWb at dusk, 0 otherwise) pulls that reflection toward its own luminance before the x k, leaving a mild warm
+     cast. Diffuse surfaces, glass, the sky side (exterior metal keeps its sunset warmth) and the lamps are untouched. */
+  if(R40E.on){ R40E.U.r40MetK.value = k; R40E.U.r40MetW.value = k > 1 ? R40E.metWb : 0; for(const m of (V33.metals || [])) if(V33.metBase.has(m)) m.envMapIntensity = V33.metBase.get(m); V33.metals = []; V33.report.metals = 'shader:' + k; return; }
   if(k > 1 && !V33.metals){ const set = new Set(); scene.traverse(o => { if(!o.isMesh) return; for(const m of (Array.isArray(o.material) ? o.material : [o.material])) if(m && m.isMeshStandardMaterial && m.metalness >= .5 && m.envMapIntensity > 0) set.add(m); }); V33.metals = [...set]; }
   let nm = 0; for(const m of (V33.metals || [])){ if(!V33.metBase.has(m)) V33.metBase.set(m, m.envMapIntensity); const v = V33.metBase.get(m) * k; if(m.envMapIntensity !== v){ m.envMapIntensity = v; } nm++; }
   V33.report.metals = nm;
@@ -25181,7 +25188,7 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
     for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + dW * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp, gEnd: y0 + d}); }
   else {
     for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1v = psi[N - 1] + d1, y1u = endW(y1v), dd = Math.abs(d0) / DG, da = Math.abs(y1u - psi[N - 1]) / DG;
-      const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, Math.max(4, L * (MB > 3.2 ? .45 : .7)));
+      const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, Math.max(4, L * (a.easeIn || (MB > 3.2 ? .45 : .7))));   /* r48c (QA 11/13, entry > living, the second move every visitor sees): the living stop looks back across the room from beside its far wall; easing onto it over the last 45 % of the 30 ft walk, the head faced that wall (the art and the closet door) until a few feet from it and then swung round. A stop may start the ease earlier (STOPS easeIn, a share of the walk) */
       for(let i = 0; i < N; i++){ const s = sAt(i), wd = smooth(0, Ld, s), wa = smooth(L - La, L, s); g[i] = lerp(lerp(y0u, psi[i], wd), y1u, wa); gp[i] = lerp(lerp(a.pitch0, tp[i], wd), a.pitch1, wa); }
       g[0] = y0 + Math.round((y0u - y0) / (2 * Math.PI)) * 2 * Math.PI; const h = g.slice(), h0 = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'travel', g, gp, gEnd: y1v}); taut(h, 1.6); cands.push({k: 'travel+', g: h, gp, gEnd: y1v}); if(LONG || L > 30){ const h2 = h0; taut(h2, 2.4); cands.push({k: 'travel++', g: h2, gp, gEnd: y1v}); } }   // (r41: and over 30 ft, where a wider band can take the wiggle of a hall out of the head)
     if(L < 40) for(const d of alts(angDiff(y0, y1))){ const g = new Float64Array(N), gp = new Float64Array(N), M = 30 * DG, dW = endW(y0 + d, true) - y0;
@@ -25285,7 +25292,7 @@ function r36Pathify(a, o){ o = o || {};
   let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return 0;
   if(reduceMotion) return 0;
   const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > (o.cap || R36N.CAP)) return 0;
-  a.path = R; a.lift = 0; a.dur = R.L > R36N.PACE * R36N.MAXS ? clamp(R.L / 12.2, R36N.MAXS, 8) : clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS);   /* r37: a tour move of two stair flights is walked a little faster (up to 11.5 ft/s, 8 s) rather than cut */ a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null;
+  a.path = R; a.lift = 0; a.dur = R.L > R36N.PACE * R36N.MAXS ? clamp(R.L / 12.2, R36N.MAXS, 8) : clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS);   /* r37: a tour move of two stair flights is walked a little faster (up to 11.5 ft/s, 8 s) rather than cut */ a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null; a.easeIn = o.easeIn || null;
   { const dir = new THREE.Vector3(); camera.getWorldDirection(dir); a.yaw0 = Math.atan2(-dir.x, -dir.z); a.pitch0 = Math.asin(clamp(dir.y, -1, 1)); }
   if(o.faceTravel && R.pts.length > 3){ const n = R.pts.length, e = R.pts[n - 1], b = R.pts[Math.max(0, n - 6)]; let dx = e.x - b.x, dz = e.z - b.z; const L = Math.hypot(dx, dz);
     if(L > .5){ dx /= L; dz /= L;
@@ -25307,7 +25314,7 @@ const R38 = window.R38 = {MAXD: 10.0};
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
-        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 100};
+        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 100, easeIn: s.easeIn};
         if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
         else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
         else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
