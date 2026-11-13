@@ -41,7 +41,7 @@ FOLD = dict(x0=8.7, x1=22.9, head=7.6, panels=6)                     # folding g
 FIXW = dict(x0=23.7, x1=32.4895, sill=1.6833, head=7.6)             # the east part of the old picture window, fixed glass
 NWIN = [(11.2, 2.6, 3.5, 6.9), (19.6, 2.6, 3.5, 6.9), (30.5, 5.0, 2.7, 7.0)]   # north wall windows: centre x, width, sill, head
 EWIN = [(12.5, 4.2, 2.6875, 7.0), (24.4, 4.2, 2.6875, 7.0)]         # street gable windows either side of the hearth: centre y, width, sill, head
-FP = dict(cy=RIDGE_Y, w=6.0, d=1.0, box=(4.5, 1.5, 3.0), mantel=4.25)
+FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(4.5, 1.45, 2.95), mantel=(4.55, 0.7, 0.85, 6.2), hearth=(1.5, 0.33), tv=(65, 7.0))   # mantel: bottom, height, depth, length
 PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
 DOOR_H = 6.7812
 REMOVED_SPACES = ['SP-L1-BED2', 'SP-L1-BED2-CLOSET', 'SP-L1-BED3', 'SP-L1-BED3-CLOSET', 'SP-L1-KITCHEN']
@@ -205,20 +205,26 @@ def build():
                                          (X_LW, 9.0, X_LW + 0.06, 11.0), (X_LW, 19.5, X_LW + 0.06, 21.0))):
         boxel('TR-B5-BB%d' % i, bb['group'], bb['storey'], bb['material'], x0, y0, 0.0, x1, y1, 0.44, faces='xXyYZ')
 
-    # ---- the hearth on the street gable: plaster breast floor to vault, black firebox behind glass, fir mantel; vent cap outside
+    # ---- the hearth on the street gable: a stone-clad chimney breast to the vault (the stone itself is the page's 'ledgestone' builtin
+    # over this dark core), a linear gas firebox in a steel frame, a raised stone hearth, a heavy fir mantel; vent cap outside
     fy0, fy1, fx = FP['cy'] - FP['w'] / 2, FP['cy'] + FP['w'] / 2, X_E - FP['d']; bw, bz0, bz1 = FP['box']; by0, by1 = FP['cy'] - bw / 2, FP['cy'] + bw / 2
-    n = 12; ys = [fy0 + (fy1 - fy0) * i / n for i in range(n + 1)]
-    front = Polygon([(fy0, 0), (fy1, 0)] + [(y, ceil_z(y) - 0.003) for y in ys[::-1]]).difference(sbox(by0, bz0, by1, bz1))
-    plane_face(O, 'FP-L1-B5', None, 'walls', 'L1', PAINT, front, lambda y, z: (fx, y, z), (-1, 0, 0))
-    for y, s in ((fy0, -1), (fy1, 1)): quad('FP-L1-B5', 'walls', 'L1', PAINT, [(fx, y, 0), (X_E, y, 0), (X_E, y, ceil_z(y) - 0.003), (fx, y, ceil_z(y) - 0.003)], (0, s, 0))
-    inset = 0.75
-    plane_face(O, 'FP-L1-B5', None, 'openings', 'L1', 'steel-black', sbox(by0, bz0, by1, bz1), lambda y, z: (fx + inset, y, z), (-1, 0, 0))
-    prism_sides(O, 'FP-L1-B5', None, 'openings', 'L1', 'steel-black', sbox(by0, bz0, by1, bz1).exterior, lambda y, z: (fx, y, z), lambda y, z: (fx + inset, y, z), inward_center=(fx + .4, FP['cy'], (bz0 + bz1) / 2), outward=False)
-    plane_face(O, 'FP-L1-B5', None, 'glass', 'L1', 'glass', sbox(by0 + .02, bz0 + .02, by1 - .02, bz1 - .02), lambda y, z: (fx + 0.06, y, z), (-1, 0, 0))
-    plane_face(O, 'FP-L1-B5', None, 'openings', 'L1', 'steel-black', sbox(fx - 1.2, fy0 - 0.25, fx, fy1 + 0.25), lambda x, y: (x, y, 0.004), (0, 0, 1))   # hearth plate
-    boxel('FP-L1-B5', 'ceilings', 'L1', 'fir-beam', fx - 0.55, fy0 - 0.3, FP['mantel'], fx, fy1 + 0.3, FP['mantel'] + 0.5, faces='xyYzZ')
+    cx, c0, c1 = fx + 0.10, fy0 + 0.10, fy1 - 0.10                                   # the core, a little inside the stone faces
+    n = 12; ys = [c0 + (c1 - c0) * i / n for i in range(n + 1)]
+    front = Polygon([(c0, 0), (c1, 0)] + [(y, ceil_z(y) - 0.003) for y in ys[::-1]]).difference(sbox(by0, bz0, by1, bz1))
+    plane_face(O, 'FP-L1-B5', None, 'walls', 'L1', 'concrete', front, lambda y, z: (cx, y, z), (-1, 0, 0))
+    for y, s in ((c0, -1), (c1, 1)): quad('FP-L1-B5', 'walls', 'L1', 'concrete', [(cx, y, 0), (X_E, y, 0), (X_E, y, ceil_z(y) - 0.003), (cx, y, ceil_z(y) - 0.003)], (0, s, 0))
+    back = fx + 0.95
+    plane_face(O, 'FP-L1-B5', None, 'openings', 'L1', 'steel-black', sbox(by0, bz0, by1, bz1), lambda y, z: (back, y, z), (-1, 0, 0))
+    prism_sides(O, 'FP-L1-B5', None, 'openings', 'L1', 'steel-black', sbox(by0, bz0, by1, bz1).exterior, lambda y, z: (fx - 0.05, y, z), lambda y, z: (back, y, z), inward_center=(fx + .4, FP['cy'], (bz0 + bz1) / 2), outward=False)
+    plane_face(O, 'FP-L1-B5', None, 'glass', 'L1', 'glass', sbox(by0 + .02, bz0 + .02, by1 - .02, bz1 - .02), lambda y, z: (fx + 0.2, y, z), (-1, 0, 0))
+    fr = 0.14                                                                        # the steel frame round the firebox, proud of the stone
+    for (a0, z0_, a1, z1_) in ((by0 - fr, bz0 - fr, by1 + fr, bz0), (by0 - fr, bz1, by1 + fr, bz1 + fr), (by0 - fr, bz0, by0, bz1), (by1, bz0, by1 + fr, bz1)):
+        boxel('FP-L1-B5', 'openings', 'L1', 'steel-black', fx - 0.09, a0, z0_, fx + 0.1, a1, z1_, faces='xyYzZ')
+    boxel('FP-L1-B5', 'floors', 'L1', 'flagstone-grey', fx - FP['hearth'][0], fy0 - 0.02, 0.0, fx + 0.12, fy1 + 0.02, FP['hearth'][1], faces='xyYZ')        # raised hearth
+    mz, mh, md, ml = FP['mantel']
+    boxel('FP-L1-B5', 'ceilings', 'L1', 'fir-beam', fx - md, FP['cy'] - ml / 2, mz, fx + 0.1, FP['cy'] + ml / 2, mz + mh, faces='xyYzZ')
     boxel('FP-L1-B5', 'trim', '-', 'steel-black', X_EO, FP['cy'] - 0.6, 5.0, X_EO + 0.35, FP['cy'] + 0.6, 6.2, faces='XyYzZ')
-    colliders.append({'id': 'FP-L1-B5#0', 'element': 'FP-L1-B5', 'kind': 'WALL', 'poly': [[fx, fy0], [X_E, fy0], [X_E, fy1], [fx, fy1]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
+    colliders.append({'id': 'FP-L1-B5#0', 'element': 'FP-L1-B5', 'kind': 'WALL', 'poly': [[fx - FP['hearth'][0], fy0], [X_E, fy0], [X_E, fy1], [fx - FP['hearth'][0], fy1]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
 
     # ---- the deck: the porch deck carried about 9 ft east along the folding doors, the steps narrowed, cable rail on the new edges
     dk = E['SL-DK-FRONT']
@@ -347,23 +353,37 @@ def fixtures():
     F = []; CAB = {'counter': None, 'faucet': False, 'hw': 'satinNickel', 'pull': 'bar', 'sink': False, 'style': 'raised'}; N = Y_N; NF = N - 2.08; W = X_LW
     def add(kind, lib, at, rot, params, space=GREAT, z=0):
         F.append({'id': 'KX-B5-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), z], 'rot': rot, 'space': space, 'storey': 'L1', 'params': params, 'footprint': None})
-    # the tall wall on the west gable, south to north: pantry, wall ovens (shown as a tall cabinet), fridge, then counter into the corner
-    add('tallCabinet', 'FIX', (W, 22.25), 0, dict(CAB, d=2.08, h=8, w=2.5, pull='knob'))
-    add('wallOvenStack', 'BUILTIN', (W, 24.75), 0, {'w': 2.5, 'd': 2.08, 'h': 8})
-    add('fridge4Door', 'BUILTIN', (W, 27.5), 0, {'d': 2.5, 'dispenser': True, 'h': 5.9, 'w': 3})
-    add('upperCabinet', 'FIX', (W, 27.5), 0, dict(CAB, d=2, h=1.9, mountY=6.1, w=3, pull='knob'))
-    add('baseCabinet', 'FIX', (W, 29.96), 0, dict(CAB, w=1.92))
-    # the north wall, west to east: corner, drawers, the 36-in range and hood between the two windows, drawers
-    add('baseCabinet', 'FIX', (W + 1.04, N), 270, dict(CAB, w=2.08))
-    add('baseCabinet', 'FIX', (8.52, N), 270, dict(CAB, w=2.32, doors='drawers'))
-    add('baseCabinet', 'FIX', (10.84, N), 270, dict(CAB, w=2.32))
-    add('baseCabinet', 'FIX', (13.15, N), 270, dict(CAB, w=2.3, doors='drawers'))
+    # the tall wall on the west gable, 14 ft from 3 ft nearer the table to the north wall, south to north: a panelled end, two pantries,
+    # the oven column, the fridge built in between tall cabinets, a tall pull-out, the blind corner; one crown along the top
+    TALL = dict(CAB, d=2.08, h=8, pull='knob')
+    add('finishedPanel', 'BUILTIN', (W + 1.04, 18.0), 270, {'w': 2.08, 'h': 8.0, 'panels': 1})
+    add('tallCabinet', 'FIX', (W, 19.25), 0, dict(TALL, w=2.5))
+    add('tallCabinet', 'FIX', (W, 21.75), 0, dict(TALL, w=2.5, hinge='right'))
+    add('wallOvenStack', 'BUILTIN', (W, 24.25), 0, {'w': 2.5, 'd': 2.08, 'h': 8})
+    add('fridge4Door', 'BUILTIN', (W, 27.0), 0, {'d': 2.3, 'dispenser': True, 'h': 5.9, 'w': 3})
+    add('upperCabinet', 'FIX', (W, 27.0), 0, dict(CAB, d=2.08, h=2.06, mountY=5.94, w=3, pull='knob', contents=False))
+    add('tallCabinet', 'FIX', (W, 29.25), 0, dict(TALL, w=1.5))
+    add('tallCabinet', 'FIX', (W, 31.045), 0, dict(TALL, w=2.09, pull='none'))
+    add('cabinetCrown', 'BUILTIN', (W, 25.045), 0, {'w': 14.09, 'd': 2.08, 'mountY': 8.0, 'endL': False, 'endR': True})
+    # the north wall from the tall wall east: drawers, the 36-in range and hood between the two windows, drawers, a panelled end
+    X0 = W + 2.08
+    add('baseCabinet', 'FIX', (X0 + 1.27, N), 270, dict(CAB, w=2.54, doors='drawers'))
+    add('baseCabinet', 'FIX', (11.0, N), 270, dict(CAB, w=2.2))
+    add('baseCabinet', 'FIX', (13.2, N), 270, dict(CAB, w=2.2, doors='drawers'))
     add('range36', 'FIX', (15.8, N), 270, {'w': 3})
     add('hoodChimney', 'FIX', (15.8, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
     add('baseCabinet', 'FIX', (18.35, N), 270, dict(CAB, w=2.1, doors='drawers'))
     add('baseCabinet', 'FIX', (20.45, N), 270, dict(CAB, w=2.1))
-    add('upperCabinet', 'FIX', (8.6, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.4, pull='knob', led=True))
-    add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[W, 29.0], [W + 2.08, 29.0], [W + 2.08, NF], [21.5, NF], [21.5, N], [W, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
+    add('finishedPanel', 'BUILTIN', (21.5, N - 1.04), 0, {'w': 2.08, 'h': 2.79, 'panels': 1})
+    add('upperCabinet', 'FIX', (X0 + 1.22, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.44, pull='knob', led=True))
+    add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[X0, NF], [21.58, NF], [21.58, N], [X0, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
+    # the street gable: stone on the chimney breast, the TV over the mantel, low built-ins under the windows either side
+    fx = X_E - FP['d']; ch = ceil_z
+    add('ledgestone', 'BUILTIN', (X_E, FP['cy']), 180, {'w': FP['w'], 'd': FP['d'], 'apex': round(APEX - 0.03, 3), 'pitch': PITCH, 'hole': [-FP['box'][0] / 2 - 0.14, FP['box'][1] - 0.14, FP['box'][0] / 2 + 0.14, FP['box'][2] + 0.14]})
+    add('tvWall', 'FIX', (fx - 0.08, FP['cy']), 180, {'size': FP['tv'][0], 'mountY': FP['tv'][1]})
+    ys0, ys1 = Y_S, FP['cy'] - FP['w'] / 2; yn0, yn1 = FP['cy'] + FP['w'] / 2, Y_N - 1.0
+    add('lowBuiltin', 'BUILTIN', (X_E, (ys0 + ys1) / 2), 180, {'w': round(ys1 - ys0, 3), 'd': 1.33, 'h': 2.5})
+    add('lowBuiltin', 'BUILTIN', (X_E, (yn0 + yn1) / 2), 180, {'w': round(yn1 - yn0, 3), 'd': 1.33, 'h': 2.5})
     # the island: 8 ft x 3 ft 6, sink and dishwasher on the working (north) side, four stools on the dining side
     add('island', 'FIX', (15.8, 26.0), 270, dict(CAB, w=8.0, d=3.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True))
     for x in (12.9, 14.85, 16.8, 18.75): add('counterStoolRope', 'BUILTIN', (x, 21.8), 90, None)
@@ -405,9 +425,9 @@ def staging():
     for ox in (-2.667, 0.0, 2.667): add('parsonsChair', (15.8 + ox, 10.55), 90); add('parsonsChair', (15.8 + ox, 15.45), 270)
     add('parsonsChair', (11.1, 13.0), 0); add('parsonsChair', (20.5, 13.0), 180)
     for px, py in PEND: add('pendantGlobe', (px, py), 0, {'dia': 0.95, 'drop': round(ceil_z(py) - 6.9, 3), 'finish': 'blackMetal', 'cord': 'rod'}, z=round(ceil_z(py), 3))
-    add('sideboard', (X_LW, 15.25), 0, {'w': 8.5, 'd': 1.6}, key='sb', back=True)
-    add('lamp', (0, 0), 0, {'h': 2.2}, on='sb', dx=-3.0); add('vase2', (0, 0), 0, {'h': 1.0}, on='sb', dx=2.6)
-    add('art', (X_LW, 15.25), 0, {'w': 4.6, 'h': 2.6, 'mountY': 5.6, 'style': 'blots', 'seed': 7}, back=True)
+    add('sideboard', (X_LW, 13.0), 0, {'w': 7.0, 'd': 1.6}, key='sb', back=True)
+    add('lamp', (0, 0), 0, {'h': 2.2}, on='sb', dx=-2.5); add('vase2', (0, 0), 0, {'h': 1.0}, on='sb', dx=2.2)
+    add('art', (X_LW, 13.0), 0, {'w': 4.6, 'h': 2.6, 'mountY': 5.6, 'style': 'blots', 'seed': 7}, back=True)
     # the library: a wall of shelves, two reading chairs, a round table, a rug
     add('builtinBookcase', (-5.1, 9.21), 270, dict(BK, boxes=3, levels=[4.2, 5.4, 6.6], seed=21, w=8.4), lib='BUILTIN', space='SP-L1-LIVING')
     add('rug2', (-5.3, 3.85), 0, {'w': 7.1, 'd': 6.6, 'pattern': 'sisal'}, space='SP-L1-LIVING')
@@ -442,6 +462,9 @@ def register(hide, hide_ranges, sha):
                         'entry': {'pos': [7.0, 5.0, 6.6], 'look': [15.5, 4.8, 30.0]},
                         'hearth': {'pos': [17.6, 5.0, 21.6], 'look': [18.45, 4.6, 36.0]},
                         'fromtable': {'pos': [16.3, 5.0, 9.6], 'look': [18.45, 4.5, 36.0]},
+                        'fireplace': {'pos': [18.45, 5.2, 24.2], 'look': [18.45, 5.4, 36.0]},
+                        'fridgewall': {'pos': [28.0, 5.0, 20.6], 'look': [26.4, 4.5, 5.3]},
+                        'tallrun': {'pos': [9.6, 5.0, 17.4], 'look': [24.0, 4.4, 5.3]},
                         'kitchen': {'pos': [18.6, 5.0, 25.2], 'look': [27.0, 4.2, 9.0]},
                         'dining': {'pos': [19.0, 5.0, 22.4], 'look': [3.0, 3.4, 13.0]},
                         'island': {'pos': [29.0, 5.0, 22.8], 'look': [14.0, 4.0, 13.0]},

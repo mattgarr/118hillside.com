@@ -78,6 +78,10 @@ function spineTex(k) {      // greyscale spine designs: 0.78 grey = the book's o
 var MATS = {
   maple: function () { return std({ color: 0xffffff, map: butcherBlock(), roughness: 0.72, metalness: 0 }); },   // matte oiled finish
   satinNickel: function () { return std({ color: 0xcfcdc8, metalness: 1, roughness: 0.32 }); },
+  ledgeA: function () { return std({ color: 0xa39c90, roughness: 0.93, metalness: 0 }); },    // r44 stacked ledgestone, four tones
+  ledgeB: function () { return std({ color: 0x8f887c, roughness: 0.95, metalness: 0 }); },
+  ledgeC: function () { return std({ color: 0xb4ad9f, roughness: 0.9, metalness: 0 }); },
+  ledgeD: function () { return std({ color: 0x7c766c, roughness: 0.95, metalness: 0 }); },
   stoneBlack: function () { return std({ color: 0x2b2826, roughness: 0.92, metalness: 0 }); },
   stoneCream: function () { return std({ color: 0xe9e3d6, roughness: 0.8, metalness: 0 }); },
   glazeSage: function () { return std({ color: 0x9aa58f, roughness: 0.35, metalness: 0 }); },
@@ -552,6 +556,54 @@ def('rangeSlideIn30', { w: 2.5, d: 2.08, h: 3.0 }, function (b, o) {
 }, function (o) { return [o.w, o.d + 0.28, o.h + 0.1]; }, '30" slide-in gas range: 5 burners, continuous grates, front controls, no backguard.');
 
 // finished back / end panel of a cabinet run (p01: the peninsula's room side under the seating overhang is white panelling)
+// r44: stacked ledgestone cladding for a chimney breast (origin at the wall, the breast w wide and d deep, faces +z). Courses of
+// split stone in four tones, each stone a little proud of the last; the top follows a gable (apex at x = 0, falling at `pitch`) when
+// apex > 0. hole = [x0, y0, x1, y1] is left open for the firebox.
+def('ledgestone', { w: 7, d: 1.25, h: 12, apex: 0, pitch: 0, course: 0.3, t: 0.16, seed: 11, hole: null }, function (b, o, R) {
+  var W = o.w / 2, d = o.d, t = o.t, tones = ['ledgeA', 'ledgeB', 'ledgeC', 'ledgeA', 'ledgeD', 'ledgeC'], H = o.hole;
+  var topAt = function (x) { return o.apex > 0 ? o.apex - o.pitch * Math.abs(x) : o.h; };
+  var hMax = o.apex > 0 ? o.apex : o.h, g = 0.012;
+  for (var y = 0, k = 0; y < hMax - 0.06; k++) {
+    var ch = o.course * (0.8 + R() * 0.45), y1 = Math.min(y + ch, hMax);
+    // the front: stones along x, clipped to the gable and split round the firebox
+    for (var x = -W - R() * 0.9; x < W;) {
+      var L = 0.7 + R() * 1.3, a = Math.max(-W, x), e = Math.min(W, x + L), pr = R() * 0.06, m = tones[(R() * tones.length) | 0]; x += L;
+      var segs = [[a, e]];
+      if (H && y1 > H[1] && y < H[3]) { segs = []; if (a < H[0]) segs.push([a, Math.min(e, H[0])]); if (e > H[2]) segs.push([Math.max(a, H[2]), e]); }
+      for (var i = 0; i < segs.length; i++) {
+        var s0 = segs[i][0], s1 = segs[i][1], yt = Math.min(y1, topAt(s0), topAt(s1), topAt((s0 + s1) / 2));
+        if (s1 - s0 < 0.12 || yt - y < 0.08) continue;
+        b.bb(m, s0 + g, y + g, d - t, s1 - g, yt - g, d + pr, 0.012);
+      }
+    }
+    // the two returns: one or two stones along the depth
+    for (var sd = -1; sd <= 1; sd += 2) {
+      var yt2 = Math.min(y1, topAt(W)); if (yt2 - y < 0.08) continue;
+      var cut = R() < 0.5 ? 0 : 0.35 + R() * (d - 0.7);
+      var zs = cut ? [[0, cut], [cut, d + 0.02]] : [[0, d + 0.02]];
+      for (var j = 0; j < zs.length; j++) { var p2 = R() * 0.05, mm = tones[(R() * tones.length) | 0];
+        b.bb(mm, sd > 0 ? W - t : -W - p2, y + g, zs[j][0] + g, sd > 0 ? W + p2 : -W + t, yt2 - g, zs[j][1] - g, 0.012); }
+    }
+    y = y1;
+  }
+}, function (o) { return [o.w, o.d + 0.1, o.apex > 0 ? o.apex : o.h]; }, 'Stacked ledgestone cladding for a chimney breast; top follows a gable when apex/pitch are given; hole leaves the firebox open.');
+
+// r44: a low built-in under a window: raised-panel doors on a plinth, a wood top (origin at the wall, faces +z)
+def('lowBuiltin', { w: 8, d: 1.33, h: 2.5, finish: 'cabinetWhite', top: 'maple', kick: 4 * IN }, function (b, o) {
+  var w = o.w, d = o.d, fin = o.finish, tt = 0.125, n = Math.max(2, Math.round(w / 1.7)), ch = o.h - tt, dw = (w - 0.1) / n;
+  b.bb(fin, -w / 2, o.kick, 0, w / 2, ch, d - DOORT); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - DOORT - 0.2);
+  for (var i = 0; i < n; i++) raisedDoor(b, fin, dw - 0.03, ch - o.kick - 0.08, -w / 2 + 0.05 + dw * (i + 0.5), (ch + o.kick) / 2, d - DOORT * 0.4);
+  b.rbox(o.top, w + 0.04, tt, d + 0.1, 0.01, 0, ch + tt / 2, (d + 0.1) / 2, { boxUV: true });
+}, function (o) { return [o.w, o.d + 0.1, o.h]; }, 'Low built-in cabinet with a wood top, for under a window.');
+
+// r44: one continuous crown along the top of a run of tall cabinets (origin at the wall, the run w long and d deep, faces +z)
+def('cabinetCrown', { w: 8, d: 2.08, mountY: 8, finish: 'cabinetWhite', endL: true, endR: true }, function (b, o) {
+  var w = o.w, d = o.d, y = o.mountY, fin = o.finish, l = o.endL ? 1 : 0, r = o.endR ? 1 : 0;
+  b.bb(fin, -w / 2 - 0.04 * l, y, 0, w / 2 + 0.04 * r, y + 0.08, d + 0.04, 0.005);
+  b.bb(fin, -w / 2 - 0.1 * l, y + 0.08, 0, w / 2 + 0.1 * r, y + 0.3, d + 0.1, 0.01);
+  b.bb(fin, -w / 2 - 0.13 * l, y + 0.3, 0, w / 2 + 0.13 * r, y + 0.36, d + 0.13, 0.008);
+}, function (o) { return [o.w + 0.26, o.d + 0.13, o.mountY + 0.36]; }, 'Continuous crown for the top of a tall cabinet run.');
+
 // r44: a tall oven column for a cabinet wall: drawer, a 27-in wall oven, a built-in microwave over it, a cabinet above (origin at the wall, faces +z)
 def('wallOvenStack', { w: 2.5, h: 8, d: 2.08, finish: 'cabinetWhite', kick: 4 * IN }, function (b, o) {
   var w = o.w, d = o.d, fin = o.finish, zf = d, aw = Math.min(w - 0.26, 2.25), x0 = -aw / 2, x1 = aw / 2;

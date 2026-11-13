@@ -65,7 +65,7 @@ def make_b5(v):
            'parsonsChair': (244, 242, 236), 'outdoorLounge': (70, 72, 76), 'outdoorCoffee': (120, 120, 120), 'counterStoolRope': (186, 160, 126)}
     for f in F:
         k = f['render']['kind']; pr = f.get('params') or {}
-        if k in ('baseCabinet', 'tallCabinet', 'wallOvenStack', 'island', 'builtinBookcase', 'fridge4Door', 'range36', 'washerFront', 'vanity', 'toilet', 'bedQueen', 'nightstand'):
+        if k in ('baseCabinet', 'tallCabinet', 'lowBuiltin', 'wallOvenStack', 'island', 'builtinBookcase', 'fridge4Door', 'range36', 'washerFront', 'vanity', 'toilet', 'bedQueen', 'nightstand'):
             f2 = dict(f)
             if k in SZ: f2['params'] = dict({'w': SZ[k][0], 'd': SZ[k][1]}, **{kk: vv for kk, vv in pr.items() if kk in ('w', 'd')})
             g = RP.foot(f2)
