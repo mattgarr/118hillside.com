@@ -10185,7 +10185,7 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   col.addEventListener('keydown', e => { if(e.key === ' ' || e.key === 'Enter') e.stopPropagation(); });
   // setMode / focusRoom re-open the card on desktop; on the phone the sheet keeps the viewer's choice
   const _setMode = setMode;
-  setMode = function(m, o){ const r = _setMode(m, o); if(isPh()){ if(m === 'design') sheetOpen = true; applySheet(); setMenu(false); gestureHint(); } return r; };
+  setMode = function(m, o){ const r = _setMode(m, o); if(isPh()){ if(m === 'design') sheetOpen = false;   /* r46 owner: Design opens with the small card on a phone too; the chevron opens its tools */ applySheet(); setMenu(false); gestureHint(); } return r; };
   // a tap on the clamped description shows all of it
   $('#blurb').addEventListener('click', e => { if(isPh() && !e.target.closest('a')) e.currentTarget.classList.toggle('phall'); });
   const _showStop = showStop;
@@ -16710,7 +16710,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     seen.add(stopIdx); sync(); }
   (function wait(n){ const L = $('#loading'), ok = typeof DESIGN !== 'undefined' && $('#card') && $('#design') && (!L || L.classList.contains('done'));
     if(!ok){ if(n < 1200) setTimeout(() => wait(n + 1), 250); return; } try{ init(); }catch(e){ console.warn('[cta42] init', e); } })(0);
-  return {openPicker, openDecor, choose, plans, facts, sync, get used(){ return pickerUsed; }};
+  return {openPicker, openDecor, choose, plans, facts, sync, real: goReal, get used(){ return pickerUsed; }};
 })();
 window.CTA42 = CTA42;
 
@@ -16859,6 +16859,58 @@ const IT46 = window.IT46 = (() => {
 })();
 
 
+
+/* ---------------- r46 ph46: a lighter phone screen (owner 11/13, from his iPhone: "Way too much crap with UX on phone ... remove the offered-at and
+   schedule links and the illustrative box ... Lower box needs to be smaller too. Lighten!"). On a phone, in every mode, the screen is the header,
+   one small card and one quiet line:
+   - no booking row (SELL36's chrome()); Schedule a showing is the first row of the menu
+   - no dark idea banner: the card's second line says "Illustrative idea" with a small "Real house" text button
+   - "Back to the tour" is a small chevron at the left of the card (it was a full-width black button); Design opens with the card small
+   - the model note is one small line of text, no pill, with shorter wording
+   - Next is a light button like Back; the Dollhouse level bar shows only while the card is open; room labels that are cut off by the
+     screen edge are hidden and at most seven show at once */
+(() => {
+  const root = document.documentElement, isPh = () => root.classList.contains('ph');
+  const st = document.createElement('style'); st.textContent = `
+html.ph #cb42{display:none!important}
+#id46{display:none}
+html.ph #id46:not([hidden]){display:inline-flex;align-items:center;gap:8px;position:relative;z-index:2;min-width:0;font-family:var(--sf);font-size:12.5px;line-height:1.3;color:var(--pm);white-space:nowrap}
+html.ph #id46 button{margin:-12px -4px;padding:12px 4px;border:0;background:none;font:inherit;font-weight:600;color:var(--pt);text-decoration:underline;text-underline-offset:2px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html.ph.id46 #card .lvl{display:none}
+html.ph.id46:not(.m27-tour) #card .eyebrow{display:none}
+html.ph.id46.m27-tour #card .eyebrow::after{content:"\\00a0\\00b7"}
+html.ph.id46 #card .tb{padding-right:26px}
+html.ph #card.bk38on{grid-template-areas:"bk38 head next" "body body body" "act act act"}
+html.ph #bk38{grid-area:bk38;position:relative;z-index:2;display:flex;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;min-height:44px;margin:0!important;padding:0;border-radius:12px;background:var(--pl);color:var(--pt);box-shadow:none}
+html.ph #bk38[hidden]{display:none}
+html.ph #bk38 .bk38t,html.ph #bk38 .bk38s{display:none}
+html.ph #next{background:var(--pl);color:var(--pt)}
+html.ph:has(#card.min) .phlvbar{display:none}
+html.ph #v33disc{background:none!important;padding:0 2px;border-radius:0;font-size:10px;font-weight:500;letter-spacing:.01em;color:rgba(255,255,255,.96);text-shadow:0 0 3px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.7)}
+html.ph #labels .lbl.lb46off{visibility:hidden!important;pointer-events:none!important}
+`; document.head.appendChild(st);
+  const tb = document.querySelector('#card .tb'), note = document.getElementById('v33disc'), note0 = note ? note.innerHTML : '';
+  const tag = document.createElement('span'); tag.id = 'id46'; tag.hidden = true; tag.innerHTML = '<span></span><button type="button">Real house</button>'; if(tb) tb.appendChild(tag);
+  const rb = tag.querySelector('button');
+  for(const ev of ['pointerdown', 'touchstart']) rb.addEventListener(ev, e => e.stopPropagation(), {passive: true});
+  rb.addEventListener('click', e => { e.stopPropagation(); try{ if(typeof CTA42 !== 'undefined' && CTA42 && CTA42.real) CTA42.real('card'); else DESIGN.choose('asbuilt', mode === 'design'); }catch(x){ console.warn('[ph46] real', x); } sync(); });
+  let lblN = 0;
+  function labels(){ const L = document.querySelectorAll('#labels .lbl'); if(!L.length) return;
+    const on = isPh() && (mode === 'doll' || mode === 'design'); if(!on){ if(lblN){ for(const e of L) e.classList.remove('lb46off'); lblN = 0; } return; }
+    const W = innerWidth, cx = W / 2, cy = innerHeight * .45, vis = [];
+    for(const e of L){ if(e.style.display === 'none'){ e.classList.remove('lb46off'); continue; } const off = e.classList.contains('lb46off'); if(off) e.classList.remove('lb46off'); const r = e.getBoundingClientRect(); if(off) e.classList.add('lb46off');
+      if(r.width < 2) continue; vis.push({e, cut: r.left < 4 || r.right > W - 4, d: Math.hypot((r.left + r.right) / 2 - cx, (r.top + r.bottom) / 2 - cy)}); }
+    vis.sort((a, b) => a.d - b.d); let n = 0; lblN = 0;
+    for(const v of vis){ const hide = v.cut || n >= 7; if(!hide) n++; else lblN++; v.e.classList.toggle('lb46off', hide); } }
+  function sync(){ try{
+      const ph = isPh(), idea = ph && typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt';
+      root.classList.toggle('id46', idea); if(tag.hidden === idea) tag.hidden = !idea;
+      const t = ACTIVE_VAR === 'custom' ? 'Your design' : 'Illustrative idea', sp = tag.firstChild; if(idea && sp.textContent !== t) sp.textContent = t;
+      if(note){ const want = ph ? 'short' : 'full'; if(note.dataset.t46 !== want){ note.dataset.t46 = want; if(ph) note.textContent = 'ⓘ Illustrative model · AI-generated furnishings'; else note.innerHTML = note0; try{ if(window.__v33discPlace) window.__v33discPlace(); }catch(e){} } }
+      labels(); }catch(e){} }
+  { const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); sync(); return r; }; }
+  setInterval(sync, 350); addEventListener('resize', () => requestAnimationFrame(sync)); sync();
+})();
 
 /* ---------------- v27 ui27: auto-hide, clean view, View menu, compact card, pad / plan chip (patch_v27_ui) ---------------- */
 const UI27 = (() => {
@@ -22955,7 +23007,7 @@ const SELL36 = window.SELL36 = (() => {
   { const cx = document.getElementById('cvX'); if(cx){ const cb = el('button', 'cvb36', CAL + '<em>Schedule a showing</em>'); cb.type = 'button'; cb.id = 'cvBook'; cb.setAttribute('aria-label', 'Schedule a showing'); cx.before(cb);
       cb.addEventListener('click', e => { e.stopPropagation(); open('full-screen'); }); } }
   const inGame = () => /(^|\s)(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)(\s|$)/.test(root.className) || !!(window.HWGAMES && HWGAMES.active) || !!window.HILLSIDE;
-  function chrome(){ const on = root.classList.contains('ph') && !inGame() && !root.classList.contains('clean27'); if(on !== root.classList.contains('bks36on')) root.classList.toggle('bks36on', on);
+  function chrome(){ const on = false;   /* r46 owner: no booking row under the phone header (it is the first row of the menu, and on the last stop) */ if(on !== root.classList.contains('bks36on')) root.classList.toggle('bks36on', on);
     const h = Math.round(bar.getBoundingClientRect().height); if(h > 0 && h + 'px' !== root.style.getPropertyValue('--bar36')) root.style.setProperty('--bar36', h + 'px'); }
   try{ new MutationObserver(chrome).observe(root, {attributes: true, attributeFilter: ['class']}); }catch(e){}
   if(window.ResizeObserver) new ResizeObserver(chrome).observe(bar); addEventListener('resize', chrome); chrome();
@@ -25302,6 +25354,14 @@ html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:cent
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
 <script src="../assets/holiday/holiday.js?v=27" defer></script>
+<script>(function(){ /* r46 phone: no 'Offered at / Schedule a showing' row under the header. Schedule a showing is the first row of the menu, with the price as a quiet word beside it (it still opens the same sheet) */
+  var n = 0; (function w(){ var m = document.getElementById('phMenu'), s = document.querySelector('#bks36 button'), p = document.querySelector('#bks36 .bkp36');
+    if(!m || !s){ if(n++ < 240) setTimeout(w, 500); return; } if(document.getElementById('phBook46')) return;
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'phBook46'; b.className = 'tod phonly phit'; b.setAttribute('aria-haspopup', 'dialog');
+    b.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 5.5h12v10.5H4zM4 8.5h12M7 3.5v3M13 3.5v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Schedule a showing</span><i style="margin-left:auto;font-style:normal;opacity:.6;font-size:12.5px;white-space:nowrap">' + (p ? p.textContent.replace(/^\s*Offered at\s*/i, '') : '') + '</i>';
+    b.addEventListener('click', function(e){ e.stopPropagation(); try{ if(window.__phone && window.__phone.setMenu) window.__phone.setMenu(false); }catch(x){} s.click(); });
+    var f = m.querySelector('.phonly'); if(f && f.parentNode) f.parentNode.insertBefore(b, f); else m.insertBefore(b, m.firstChild); })();
+})();</script>
 <script>/* r43 service worker (../sw.js; what it does and how to turn it off are at the top of that file): registered a few seconds after the page has
    loaded, only on 118hillside.com itself (or with ?sw=1 anywhere, for testing); ?sw=0 unregisters it and clears its caches in this browser.
    SW_ON = false turns it off for everyone: this page then unregisters it and clears its caches on each visitor's next load (also set ENABLED = false in sw.js). */
