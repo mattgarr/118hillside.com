@@ -174,10 +174,11 @@ street, y north).
   single vaulted great room. Everything that stood inside it comes out: the front and middle bedrooms and their closets, the
   hall bath, the hall, and the old kitchen.
 - **Living at the street end.** A gas hearth is centred on the street gable, under the ridge: a 7-ft chimney breast clad in stacked
-  stone from a raised stone hearth to the vault, a low 5-ft linear firebox in a steel frame, a heavy fir mantel and a 65-in TV
-  above it. Low built-ins (30 in high, wood tops) run under the two gable windows either side, wall to wall. Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
+  stone from a raised stone hearth to the vault, a 5-ft linear firebox with a 20-in opening in a steel frame, a heavy fir mantel and a 65-in TV
+  above it. Low built-ins (36 in high, wood tops) run under the two gable windows either side, wall to wall. Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
-  6 ft 6 windows (three mulled double-hung-style units each, like the rest of the house), one either side of the hearth. Bookshelves stand on the north wall either side of a 5-ft window.
+  6 ft 6 windows (three mulled double-hung-style units each, like the rest of the house), one either side of the hearth,
+  with a triangle of gable glass over each that follows the rake and stops short of the stone. Bookshelves stand on the north wall either side of a 5-ft window.
 - **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood) is on the north wall between two counter-height
   windows. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
   cabinets, one crown along the top and a panelled end. (The owner asked for about 3 ft more cabinetry toward the table;
@@ -237,7 +238,8 @@ exterior walls and adding a fireplace vent are all permit work.
 - The old living room's big west window runs past the new library/bath wall, which meets it at a mullion. A real project
   would reframe or split that window.
 - The oven column (drawer, wall oven, built-in microwave, cabinet above), the stone cladding, the low built-ins and the
-  crown are simple stand-ins drawn for this concept. The mantel top is at 4 ft 1 and the TV centre at 5 ft 9.
+  crown are simple stand-ins drawn for this concept. The mantel top is at 4 ft 2 and the TV sits 3 in above it. The north run (the one with the range) was carried 2 ft
+  further toward the living area, with an upper cabinet over that end and a panelled end.
 - The island sink is centred on the island (the plan has it a little west with the dishwasher beside it).
 - The closet doors, the laundry closet door (shut) and the bedroom door (standing open) are drawn fixed; the two pocket
   doors are drawn open. They do not operate in the tour.

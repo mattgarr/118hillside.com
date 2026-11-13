@@ -40,8 +40,10 @@ STAIR_Y = (-9.937, 0.0)
 FOLD = dict(x0=8.7, x1=22.9, head=7.6, panels=6)                     # folding glass doors, stacking at the west jamb
 FIXW = dict(x0=23.9, x1=32.0, sill=1.6833, head=7.6)             # the east part of the old picture window, fixed glass
 NWIN = [(11.2, 2.6, 3.5, 6.9), (19.6, 2.6, 3.5, 6.9), (30.5, 5.0, 2.7, 7.0)]   # north wall windows: centre x, width, sill, head
-EWIN = [(RIDGE_Y - 8.565, 6.5, 2.6875, 7.0), (RIDGE_Y + 8.565, 6.5, 2.6875, 7.0)]         # street gable windows either side of the hearth: centre y, width, sill, head
-FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 2.05), mantel=(3.45, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 5.75))   # mantel: bottom, height, depth, length
+EWIN_D = 8.565                       # the two gable windows' centres, either side of the ridge
+EWIN = [(RIDGE_Y - EWIN_D, 6.5, 3.4375, 7.75), (RIDGE_Y + EWIN_D, 6.5, 3.4375, 7.75)]
+GG = dict(zb=8.4, margin=0.45, gap=0.4)                              # gable glass over them: bottom, drop below the rake, gap to the breast         # street gable windows either side of the hearth: centre y, width, sill, head
+FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 2.62), mantel=(3.55, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 5.72))   # mantel: bottom, height, depth, length
 PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
 DOOR_H = 6.7812
 REMOVED_SPACES = ['SP-L1-BED2', 'SP-L1-BED2-CLOSET', 'SP-L1-BED3', 'SP-L1-BED3-CLOSET', 'SP-L1-KITCHEN']
@@ -102,35 +104,52 @@ def build():
             ends = ('xX' if axis == 'x' else 'yY'); side = ('yY' if axis == 'x' else 'xX')
             wall_box(el, r[0], r[1], r[2], r[3], z0, top, mat, faces=side + ends)
             if z0 == 0.0 and collide: colliders.append({'id': '%s#%d' % (el, len([c for c in colliders if c['element'] == el])), 'element': el, 'kind': 'WALL', 'poly': [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
-    def window(el, axis, u0, u1, z0, z1, inner, outer, sign_out, units=1):
-        """a window in a rebuilt wall: frame, glass, exterior trim, interior casing and stool. units > 1: mulled double-hung-style units
-        like the house's own (two sashes with a meeting rail, a mullion between units). axis 1: wall plane y = const; sign_out: outward normal sign"""
+    MUL, STILE, RAIL = 0.31, 0.166, 0.167                   # mullion, sash stile and meeting rail of the house's own double-hungs
+    def win_poly(el, axis, ro, panes, inner, outer, sign_out, stool=None):
+        """a window of any outline (ro, in (along, z)) with its glass panes: frame, glass, exterior trim, interior casing (and stool)"""
         mid = (inner + outer) / 2; to3 = (lambda v: (lambda u, z: (u, v, z))) if axis == 1 else (lambda v: (lambda u, z: (v, u, z)))
-        nrm = (lambda s: (0, s, 0)) if axis == 1 else (lambda s: (s, 0, 0))
-        ro = sbox(u0, z0, u1, z1); f = 0.16
-        if units > 1:
-            mul, st, rail = 0.31, 0.166, 0.167; bw = (u1 - u0 - 2 * 0.04 - (units - 1) * mul) / units; zm = (z0 + z1) / 2; panes = []
-            for i in range(units):
-                a_ = u0 + 0.04 + i * (bw + mul)
-                panes += [sbox(a_ + st, z0 + 0.04 + st, a_ + bw - st, zm - rail / 2), sbox(a_ + st, zm + rail / 2, a_ + bw - st, z1 - 0.04 - st)]
-        else: panes = [mitre(ro, -f)]
+        nrm = (lambda s: (0, s, 0)) if axis == 1 else (lambda s: (s, 0, 0)); cu, cz = ro.centroid.x, ro.centroid.y
         glass = unary_union(panes); ring = ro.difference(glass)
         for pl, s_ in ((mid - 0.1 * sign_out, -sign_out), (mid + 0.1 * sign_out, sign_out)): plane_face(O, el, None, 'openings', 'L1', 'window-frame', ring, to3(pl), nrm(s_))
         for pn in panes:
-            cen = to3(mid)(pn.centroid.x, pn.centroid.y)
-            prism_sides(O, el, None, 'openings', 'L1', 'window-frame', pn.exterior, to3(mid - 0.1 * sign_out), to3(mid + 0.1 * sign_out), inward_center=cen, outward=False)
+            prism_sides(O, el, None, 'openings', 'L1', 'window-frame', pn.exterior, to3(mid - 0.1 * sign_out), to3(mid + 0.1 * sign_out), inward_center=to3(mid)(pn.centroid.x, pn.centroid.y), outward=False)
         plane_face(O, el, None, 'glass', 'L1', 'glass', glass, to3(mid - 0.01), nrm(-sign_out)); plane_face(O, el, None, 'glass', 'L1', 'glass', glass, to3(mid + 0.01), nrm(sign_out))
-        tr = mitre(ro, B.TRIM_W).difference(ro); po = outer + B.TRIM_T * sign_out
-        plane_face(O, el, None, 'trim', '-', TRIM_EXT, tr, to3(po), nrm(sign_out))
-        prism_sides(O, el, None, 'trim', '-', TRIM_EXT, mitre(ro, B.TRIM_W).exterior, to3(outer), to3(po), inward_center=to3(po)((u0 + u1) / 2, (z0 + z1) / 2))
-        # inside: a flat 3-1/2 in casing round the opening and a stool, like the house's own windows
-        cw, ct = 0.29, 0.06; pi = inner - ct * sign_out; cas = sbox(u0 - cw, z0 - cw, u1 + cw, z1 + cw).difference(ro)
-        plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', cas, to3(pi), nrm(-sign_out))
-        for ring_ in (sbox(u0 - cw, z0 - cw, u1 + cw, z1 + cw).exterior, ro.exterior):
-            prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', ring_, to3(inner), to3(pi), inward_center=to3(pi)((u0 + u1) / 2, (z0 + z1) / 2), outward=(ring_ is not ro.exterior))
-        ps = inner - 0.2 * sign_out; stool = sbox(u0 - cw - 0.08, z0 - 0.02, u1 + cw + 0.08, z0 + 0.07)
-        plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool, to3(ps), nrm(-sign_out))
-        prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool.exterior, to3(inner), to3(ps), inward_center=to3(ps)((u0 + u1) / 2, z0 + 0.02))
+        big = ro.buffer(B.TRIM_W, join_style=2); po = outer + B.TRIM_T * sign_out
+        plane_face(O, el, None, 'trim', '-', TRIM_EXT, big.difference(ro), to3(po), nrm(sign_out))
+        prism_sides(O, el, None, 'trim', '-', TRIM_EXT, big.exterior, to3(outer), to3(po), inward_center=to3(po)(cu, cz))
+        # inside: a flat 3-1/2 in casing round the opening, like the house's own windows
+        cw, ct = 0.29, 0.06; pi = inner - ct * sign_out; cas = ro.buffer(cw, join_style=2)
+        plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', cas.difference(ro), to3(pi), nrm(-sign_out))
+        prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', cas.exterior, to3(inner), to3(pi), inward_center=to3(pi)(cu, cz), outward=True)
+        prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', ro.exterior, to3(inner), to3(pi), inward_center=to3(pi)(cu, cz), outward=False)
+        if stool is not None:
+            ps = inner - 0.2 * sign_out
+            plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool, to3(ps), nrm(-sign_out))
+            prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool.exterior, to3(inner), to3(ps), inward_center=to3(ps)(stool.centroid.x, stool.centroid.y))
+    def window(el, axis, u0, u1, z0, z1, inner, outer, sign_out, units=1):
+        """a rectangular window in a rebuilt wall. units > 1: mulled double-hung-style units like the house's own (two sashes with a
+        meeting rail, a mullion between units). axis 1: wall plane y = const; sign_out: outward normal sign"""
+        ro = sbox(u0, z0, u1, z1)
+        if units > 1:
+            bw = (u1 - u0 - 2 * 0.04 - (units - 1) * MUL) / units; zm = (z0 + z1) / 2; panes = []
+            for i in range(units):
+                a_ = u0 + 0.04 + i * (bw + MUL)
+                panes += [sbox(a_ + STILE, z0 + 0.04 + STILE, a_ + bw - STILE, zm - RAIL / 2), sbox(a_ + STILE, zm + RAIL / 2, a_ + bw - STILE, z1 - 0.04 - STILE)]
+        else: panes = [mitre(ro, -0.16)]
+        win_poly(el, axis, ro, panes, inner, outer, sign_out, stool=sbox(u0 - 0.37, z0 - 0.02, u1 + 0.37, z0 + 0.07))
+    def gable_glass(side):
+        """the clerestory over a gable window: a triangle whose top runs parallel to the rake, its inner edge near the chimney breast, its
+        bars in line with the mullions of the window below. Returns (outline, panes) in (y, z); side -1: south of the ridge, +1: north"""
+        cw, ww = EWIN_D, EWIN[0][1]; top = lambda t: APEX - PITCH * t - GG['margin']; t_in = FP['w'] / 2 + GG['gap']; t_tip = (APEX - GG['margin'] - GG['zb']) / PITCH
+        Y = lambda t: RIDGE_Y + side * t
+        tri = Polygon([(Y(t_in), GG['zb']), (Y(t_tip), GG['zb']), (Y(t_in), top(t_in))])
+        bw = (ww - 2 * 0.04 - 2 * MUL) / 3; t1 = cw + ww / 2                      # the window's outer edge, then its two mullions and its inner edge
+        bars = [t1 - 0.04 - bw - MUL / 2, t1 - 0.04 - 2 * bw - 1.5 * MUL, cw - ww / 2]
+        edges = [t_tip] + [b for b in bars if t_in + 0.8 < b < t_tip - 0.5] + [t_in]; panes = []
+        for ta, tb in zip(edges[:-1], edges[1:]):
+            lo, hi = sorted((Y(ta), Y(tb))); bay = tri.intersection(sbox(lo + (MUL / 2 if ta != t_tip else 0), 0, hi - (MUL / 2 if tb != t_in else 0), 30)).buffer(-(STILE + 0.04), join_style=2)
+            if not bay.is_empty and bay.geom_type == 'Polygon' and bay.area > 0.12: panes.append(bay)
+        return tri, panes
     def ext_wall(els, dst, axis, inner, outer, sign_in, face, fills, cuts):
         """an exterior wall re-made: its room face new (face less the cuts), its siding with the old window holes filled and the new
         ones cut, everything else as built. axis: the plane's axis (1: y = const). fills / cuts: rectangles in (along, z)"""
@@ -185,10 +204,12 @@ def build():
     ext_wall(['W-L1-020', 'W-L1-021'], 'W-L1-B5N', 1, Y_N, Y_NO, -1, sbox(5.2176, 0, X_E, ceil_z(Y_N)), [oldr('WN-L1-08'), oldr('WN-L1-09'), oldr('WN-L1-11')], ncuts)
     for i, (c, w, s, h) in enumerate(NWIN): window('WN-L1-B5N%d' % (i + 1), 1, c - w / 2, c + w / 2, s, h, Y_N, Y_NO, 1)
     # ---- the street gable: the three low windows go; two matching windows either side of the hearth
-    ecuts = [rect(c, w, s, h) for c, w, s, h in EWIN]
+    GGS = [gable_glass(-1), gable_glass(1)]
+    ecuts = [rect(c, w, s, h) for c, w, s, h in EWIN] + [g[0] for g in GGS]
     eface = Polygon([(Y_S, 0), (Y_N, 0), (Y_N, ceil_z(Y_N)), (RIDGE_Y, APEX), (Y_S, ceil_z(Y_S))])
     ext_wall(['W-L1-049', 'W-L1-050', 'W-L1-051'], 'W-L1-B5E', 0, X_E, X_EO, -1, eface, [oldr('WN-L1-04'), oldr('WN-L1-05'), oldr('WN-L1-07')], ecuts)
     for i, (c, w, s, h) in enumerate(EWIN): window('WN-L1-B5E%d' % (i + 1), 0, c - w / 2, c + w / 2, s, h, X_E, X_EO, 1, units=3)
+    for i, (tri, panes) in enumerate(GGS): win_poly('WN-L1-B5G%d' % (i + 1), 0, tri, panes, X_E, X_EO, 1)
     # ---- the west side of the box north of the bedroom (the old bath's tiled walls): repainted to the vault
     for el in ('W-L1-032', 'W-L1-038'):
         xs = []
@@ -395,16 +416,18 @@ def fixtures():
     add('hoodChimney', 'FIX', (15.8, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
     add('baseCabinet', 'FIX', (18.35, N), 270, dict(CAB, w=2.1, doors='drawers'))
     add('baseCabinet', 'FIX', (20.45, N), 270, dict(CAB, w=2.1))
-    add('finishedPanel', 'BUILTIN', (21.5, N - 1.04), 0, {'w': 2.08, 'h': 2.79, 'panels': 1})
+    add('baseCabinet', 'FIX', (22.55, N), 270, dict(CAB, w=2.1, doors='drawers'))          # r44b: the run carried 2 ft further toward the living area, with uppers
+    add('upperCabinet', 'FIX', (22.4, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.4, pull='knob', led=True))
+    add('finishedPanel', 'BUILTIN', (23.6, N - 1.04), 0, {'w': 2.08, 'h': 2.79, 'panels': 1})
     add('upperCabinet', 'FIX', (X0 + 1.22, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.44, pull='knob', led=True))
-    add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[X0, NF], [21.58, NF], [21.58, N], [X0, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
+    add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[X0, NF], [23.68, NF], [23.68, N], [X0, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
     # the street gable: stone on the chimney breast, the TV over the mantel, low built-ins under the windows either side
     fx = X_E - FP['d']; ch = ceil_z
     add('ledgestone', 'BUILTIN', (X_E, FP['cy']), 180, {'w': FP['w'], 'd': FP['d'], 'apex': round(APEX - 0.03, 3), 'pitch': PITCH, 'hole': [-FP['box'][0] / 2 - 0.14, FP['box'][1] - 0.14, FP['box'][0] / 2 + 0.14, FP['box'][2] + 0.14]})
     add('tvWall', 'FIX', (fx - 0.08, FP['cy']), 180, {'size': FP['tv'][0], 'mountY': FP['tv'][1]})
     ys0, ys1 = Y_S, FP['cy'] - FP['w'] / 2; yn0, yn1 = FP['cy'] + FP['w'] / 2, Y_N - 1.0
-    add('lowBuiltin', 'BUILTIN', (X_E, (ys0 + ys1) / 2), 180, {'w': round(ys1 - ys0, 3), 'd': 1.33, 'h': 2.5})
-    add('lowBuiltin', 'BUILTIN', (X_E, (yn0 + yn1) / 2), 180, {'w': round(yn1 - yn0, 3), 'd': 1.33, 'h': 2.5})
+    add('lowBuiltin', 'BUILTIN', (X_E, (ys0 + ys1) / 2), 180, {'w': round(ys1 - ys0, 3), 'd': 1.33, 'h': 3.0})
+    add('lowBuiltin', 'BUILTIN', (X_E, (yn0 + yn1) / 2), 180, {'w': round(yn1 - yn0, 3), 'd': 1.33, 'h': 3.0})
     # the island: 8 ft x 3 ft 6, sink and dishwasher on the working (north) side, four stools on the dining side
     add('island', 'FIX', (15.8, 26.0), 270, dict(CAB, w=8.0, d=3.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True))
     for x in (12.9, 14.85, 16.8, 18.75): add('counterStoolRope', 'BUILTIN', (x, 21.8), 90, None)
@@ -472,7 +495,7 @@ def register(hide, hide_ranges, sha):
               'walkStart': {'at': [1.0, -3.6], 'look': [20.0, 12.0]},
               # entry -> library -> great room; round the island; out through the folding doors; hall, vestibule, bedroom, bath; walls that must still stop a walker
               'walkTests': [[[0.0, -3.0], [2.5, 5.5], 'open'], [[2.5, 6.8], [9.0, 7.0], 'open'], [[9.0, 7.0], [26.0, 8.0], 'open'], [[10.0, 20.0], [10.0, 28.0], 'open'], [[10.5, 28.2], [21.0, 28.2], 'open'], [[21.2, 28.0], [21.2, 20.0], 'open'],
-                            [[15.8, 7.5], [15.8, 0.0], 'open'], [[23.0, 16.0], [23.0, 30.0], 'open'], [[24.0, 20.0], [34.0, 26.5], 'open'], [[20.0, 25.0], [26.0, 25.0], 'open'],
+                            [[15.8, 7.5], [15.8, 0.0], 'open'], [[23.0, 16.0], [23.0, 29.4], 'open'], [[24.0, 20.0], [34.0, 26.5], 'open'], [[20.0, 25.0], [26.0, 25.0], 'open'],
                             [[0.6, 7.5], [0.6, 12.6], 'open'], [[0.6, 12.6], [1.5, 15.8], 'open'], [[0.6, 11.0], [4.0, 11.0], 'wall'], [[3.5, 13.2], [3.5, 10.5], 'wall'], [[1.6, 15.8], [1.6, 19.5], 'open'], [[0.5, 11.2], [-4.0, 11.2], 'open'], [[-7.97, 13.0], [-7.97, 16.5], 'open'],
                             [[8.0, 12.0], [3.0, 12.0], 'wall'], [[8.0, 24.0], [3.0, 24.0], 'wall'], [[-4.0, 7.0], [-4.0, 11.5], 'wall'], [[21.5, -1.0], [27.0, -1.0], 'wall'], [[30.0, 8.0], [30.0, 2.0], 'wall'], [[30.0, 18.4], [38.0, 18.4], 'wall']],
               'labels': [{'name': 'Kitchen', 'at': [15.8, 28.0]}, {'name': 'Dining', 'at': [15.8, 8.2]}, {'name': 'Living', 'at': [29.6, 27.6]}, {'name': 'Library', 'at': [-0.3, 6.6]}, {'name': 'Deck', 'at': [20.5, -2.6]},
