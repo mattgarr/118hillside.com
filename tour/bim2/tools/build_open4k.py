@@ -38,20 +38,21 @@ POST = (X_LW, X_LW, KB_Y0, KB_Y1)    # no post (kept for the drawing tools)
 DECK = dict(x0=15.675, x1=24.6, y0=-4.0, z=0.0, skirt=-4.8)
 STAIR_Y = (-9.937, 0.0)
 FOLD = dict(x0=8.7, x1=22.9, head=7.6, panels=6)                     # folding glass doors, stacking at the west jamb
-FIXW = dict(x0=24.4, x1=32.4, sill=2.6, head=7.6)                  # the living area's side windows: the same on the south and north walls             # the east part of the old picture window, fixed glass
+WSILL, WHEAD = 3.4375, 7.6           # one sill and one head for every window round the living area (the console top is at 3 ft)
+FIXW = dict(x0=25.6, x1=33.6, sill=WSILL, head=WHEAD)                  # the living area's side windows: the same on the south and north walls             # the east part of the old picture window, fixed glass
 NWIN = [((FIXW['x0'] + FIXW['x1']) / 2, FIXW['x1'] - FIXW['x0'], FIXW['sill'], FIXW['head'])]   # north wall windows: centre x, width, sill, head
 # the two gable windows, either side of the ridge: from 0.4 ft off the chimney breast (t = 3.9 from the ridge) out to t = 11.815, four
 # mulled units; the gable glass over each has the same inner jamb, its point over the same outer jamb, its bars on the same mullions
 EWIN_T, EUNITS = (3.9, 9.78125), 3            # r44c owner: three units a side (the outermost came out), solid wall from there to each corner
 EWIN_D, EWIN_W = (EWIN_T[0] + EWIN_T[1]) / 2, EWIN_T[1] - EWIN_T[0]
-EWIN = [(RIDGE_Y - EWIN_D, EWIN_W, 3.4375, 7.75), (RIDGE_Y + EWIN_D, EWIN_W, 3.4375, 7.75)]
-GG = dict(zb=8.45, margin=0.30)                                       # gable glass: bottom, and the drop of its top edge below the rake         # street gable windows either side of the hearth: centre y, width, sill, head
+EWIN = [(RIDGE_Y - EWIN_D, EWIN_W, WSILL, WHEAD), (RIDGE_Y + EWIN_D, EWIN_W, WSILL, WHEAD)]
+GG = dict(zb=8.3, margin=0.30)                                       # gable glass: bottom, and the drop of its top edge below the rake         # street gable windows either side of the hearth: centre y, width, sill, head
 FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 3.03), mantel=(4.35, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 6.45))   # mantel: bottom, height, depth, length
 PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
 DOOR_H = 6.7812
 REMOVED_SPACES = ['SP-L1-BED2', 'SP-L1-BED2-CLOSET', 'SP-L1-BED3', 'SP-L1-BED3-CLOSET', 'SP-L1-KITCHEN']
 REMOVED_WALLS = ['W-L1-%03d' % i for i in (5, 7, 8, 9, 10, 13, 14, 15, 16, 18, 19, 33, 34, 37, 41, 42, 43, 44, 45, 46, 47, 48)]
-REBUILT = ['W-L1-002', 'W-L1-020', 'W-L1-021', 'W-L1-049', 'W-L1-050', 'W-L1-051', 'SL-DK-FRONT', 'ST-FRONT', 'RL-FRONT-STAIR', 'RL-FRONT-DECK']
+REBUILT = ['W-L1-002', 'W-L1-003', 'W-L1-020', 'W-L1-021', 'W-L1-049', 'W-L1-050', 'W-L1-051', 'SL-DK-FRONT', 'ST-FRONT', 'RL-FRONT-STAIR', 'RL-FRONT-DECK']
 REMOVED_OPENINGS = ['D-L1-%02d' % i for i in range(1, 14)] + ['WN-L1-%02d' % i for i in (2, 3, 4, 5, 7, 8, 9, 11)]
 REMOVED_MISC = ['FX-JLH-L1-BED2', 'FX-JLH-L1-BED3', 'FX-JLH-L1-HALL', 'SL-L1-STORE-BED2'] + [p + s for p in ('CL-SP-L1-', 'FL-SP-L1-') for s in ('GREAT', 'BED2', 'BED2-CLOSET', 'BED3', 'BED3-CLOSET', 'KITCHEN', 'HALL', 'BATH')]
 OLD_WIN = {'WN-L1-02': (1, 9.49, 5.98, 3.32, 7.3, 4.6), 'WN-L1-03': (1, 25.36, 14.25, 1.68, 7.6, 4.6), 'WN-L1-08': (1, 18.964, 6.27, 1.65, 6.67, 32.29), 'WN-L1-09': (1, 12.25, 1.42, 3.42, 6.25, 32.29),
@@ -196,12 +197,8 @@ def build():
 
     # ---- the south wall: folding glass doors centred on the table, the east part of the picture window kept as fixed glass
     fold = sbox(FOLD['x0'], 0.0, FOLD['x1'], FOLD['head']); fixw = sbox(FIXW['x0'], FIXW['sill'], FIXW['x1'], FIXW['head'])
-    ext_wall(['W-L1-002'], 'W-L1-B5S', 1, Y_S, Y_SO, 1, sbox(X_LW, 0, 32.4895, ceil_z(Y_S)), [oldr('WN-L1-02'), oldr('WN-L1-03')], [fold, fixw])
+    ext_wall(['W-L1-002', 'W-L1-003'], 'W-L1-B5S', 1, Y_S, Y_SO, 1, sbox(X_LW, 0, X_E, ceil_z(Y_S)), [oldr('WN-L1-02'), oldr('WN-L1-03')], [fold, fixw])
     window('WN-L1-B5S', 1, FIXW['x0'], FIXW['x1'], FIXW['sill'], FIXW['head'], Y_S, Y_SO, -1, units=3)
-    # the old picture window ran 4 in past this wall piece into the next one: close that slot, inside and out
-    slot = sbox(32.42, 1.25, 33.0, 8.05); sy_ = float(min(t['v'][:, 1].min() for t in E['W-L1-002'] if t['material'].startswith('hardie')))
-    plane_face(O, 'W-L1-B5S', None, 'walls', 'L1', PAINT, sbox(32.42, 0.0, X_E, ceil_z(Y_S) - 0.004), lambda x, z: (x, Y_S + 0.03, z), (0, 1, 0))   # the whole inside face east of the window, over the old room's corner shading too
-    plane_face(O, 'W-L1-B5S', None, 'walls', 'L1', 'hardie-lap#paint-ext-body', slot, lambda x, z: (x, sy_ - 0.006, z), (0, -1, 0))
     plane_face(O, 'D-L1-B5F', None, 'openings', 'L1', 'steel-black', sbox(FOLD['x0'], 4.45, FOLD['x1'], 4.75), lambda x, y: (x, y, 0.012), (0, 0, 1))   # threshold track
     colliders += [{'id': 'W-L1-B5S#%d' % i, 'element': 'W-L1-B5S', 'kind': 'WALL', 'poly': [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]], 'z0': -5.2, 'z1': 8.16, 'storey': 'L1', 'exterior': True} for i, (a, b_) in enumerate(((4.9, FOLD['x0']), (FOLD['x1'], 32.49)))]
     # ---- the north wall: the old bedroom and bath windows go; two counter-height kitchen windows and one in the living area
@@ -442,9 +439,24 @@ def fixtures():
     fx = X_E - FP['d']; ch = ceil_z
     add('ledgestone', 'BUILTIN', (X_E, FP['cy']), 180, {'w': FP['w'], 'd': FP['d'], 'apex': round(APEX - 0.03, 3), 'pitch': PITCH, 'hole': [-FP['box'][0] / 2 - 0.14, FP['box'][1] - 0.14, FP['box'][0] / 2 + 0.14, FP['box'][2] + 0.14]})
     add('tvWall', 'FIX', (fx - 0.08, FP['cy']), 180, {'size': FP['tv'][0], 'mountY': FP['tv'][1]})
+    # the console: one low built-in, 36 in high under one wood top, round the living area: the whole street wall either side of the stone,
+    # round both corners and along both side walls under their windows, stopping with a finished end 1 ft short of the folding doors
+    # (south) and of the stove run (north). Door joints stand under the window mullions, at half a window unit.
+    CD, CH, CX0 = 1.33, 3.0, 24.6
+    def seams(lo, hi, anchor, step, minw=0.62):
+        k0 = math.ceil((lo - anchor) / step); out = [lo] + [anchor + k * step for k in range(k0, k0 + 60) if lo + minw < anchor + k * step < hi - minw] + [hi]; return out
+    def console(at, rot, lo, hi, cen, sgn, anchor, step):
+        sm = sorted(round(sgn * (v - cen), 3) for v in seams(lo, hi, anchor, step))
+        add('lowBuiltin', 'BUILTIN', at, rot, {'w': round(hi - lo, 3), 'd': CD, 'h': CH, 'seams': sm})
+    gm = [RIDGE_Y - t for t in (EWIN_T[1] - 0.04 - ((EWIN_W - 0.08 - (EUNITS - 1) * 0.30) / EUNITS) - 0.15,)][0]            # a gable-window mullion (south side), its unit pitch
+    gp = (EWIN_W - 0.08 - (EUNITS - 1) * 0.30) / EUNITS + 0.30
     ys0, ys1 = Y_S, FP['cy'] - FP['w'] / 2; yn0, yn1 = FP['cy'] + FP['w'] / 2, Y_N
-    add('lowBuiltin', 'BUILTIN', (X_E, (ys0 + ys1) / 2), 180, {'w': round(ys1 - ys0, 3), 'd': 1.33, 'h': 3.0})
-    add('lowBuiltin', 'BUILTIN', (X_E, (yn0 + yn1) / 2), 180, {'w': round(yn1 - yn0, 3), 'd': 1.33, 'h': 3.0})
+    console((X_E, (ys0 + ys1) / 2), 180, ys0, ys1, (ys0 + ys1) / 2, -1, gm, gp / 2)
+    console((X_E, (yn0 + yn1) / 2), 180, yn0, yn1, (yn0 + yn1) / 2, -1, 2 * RIDGE_Y - gm, gp / 2)
+    sp_ = (FIXW['x1'] - FIXW['x0'] - 0.08 - 2 * 0.30) / 3 + 0.30; sm_ = FIXW['x0'] + 0.04 + (sp_ - 0.30) + 0.15                       # side-window unit pitch and its first mullion
+    cx1 = X_E - CD - 0.1
+    console(((CX0 + cx1) / 2, Y_S), 90, CX0, cx1, (CX0 + cx1) / 2, -1, sm_, sp_ / 2)
+    console(((CX0 + cx1) / 2, Y_N), 270, CX0, cx1, (CX0 + cx1) / 2, 1, sm_, sp_ / 2)
     # the island: 8 ft x 3 ft 6, sink and dishwasher on the working (north) side, four stools on the dining side
     add('island', 'FIX', (15.8, 26.0), 270, dict(CAB, w=8.0, d=3.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True, work=True))
     for x in (12.9, 14.85, 16.8, 18.75): add('counterStoolRope', 'BUILTIN', (x, 21.8), 90, None)
@@ -478,6 +490,10 @@ def staging():
     add('coffeeTableGlass', (29.6, RIDGE_Y), 90, {'w': 5.0, 'd': 3.6, 'h': 1.4}, key='ct')
     add('orchid', (0, 0), 90, {'h': 1.9, 'potDia': 1.2, 'bowl': True, 'stems': 4, 'seed': 5}, on='ct', dx=-.8)
     add('books', (0, 0), 90, {'n': 3}, on='ct', dx=1.3, dz=.4)
+    # two large quiet pieces on the solid ends of the street wall
+    ay = (Y_S + (RIDGE_Y - EWIN_T[1] - 0.29)) / 2
+    add('art', (X_E, ay), 180, {'w': 2.5, 'h': 3.3, 'mountY': 5.55, 'style': 'brush', 'seed': 4, 'frame': 'frameOak', 'mat': 0.22}, back=True)
+    add('art', (X_E, 2 * RIDGE_Y - ay), 180, {'w': 2.5, 'h': 3.3, 'mountY': 5.55, 'style': 'brush', 'seed': 9, 'frame': 'frameOak', 'mat': 0.22}, back=True)
     # dining on the kitchen's axis: an oak table for eight (ten with its leaves), three globes; the sideboard on the west wall
     add('diningTable', (15.8, 13.0), 90, {'w': 8.0, 'd': 3.5}, key='dt')
     add('bowl', (0, 0), 90, {'dia': 1.55, 'h': 1.0}, on='dt')

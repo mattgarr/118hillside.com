@@ -589,8 +589,13 @@ def('ledgestone', { w: 7, d: 1.25, h: 12, apex: 0, pitch: 0, course: 0.3, t: 0.1
 }, function (o) { return [o.w, o.d + 0.1, o.apex > 0 ? o.apex : o.h]; }, 'Stacked ledgestone cladding for a chimney breast; top follows a gable when apex/pitch are given; hole leaves the firebox open.');
 
 // r44: a low built-in under a window: raised-panel doors on a plinth, a wood top (origin at the wall, faces +z)
-def('lowBuiltin', { w: 8, d: 1.33, h: 2.5, finish: 'cabinetWhite', top: 'maple', kick: 4 * IN }, function (b, o) {
+def('lowBuiltin', { w: 8, d: 1.33, h: 2.5, finish: 'cabinetWhite', top: 'maple', kick: 4 * IN, seams: null }, function (b, o) {
   var w = o.w, d = o.d, fin = o.finish, tt = 0.125, n = Math.max(2, Math.round(w / 1.7)), ch = o.h - tt, dw = (w - 0.1) / n;
+  if (o.seams && o.seams.length > 1) {   // r44c: door joints at given places along the run (e.g. under the mullions of the window above)
+    b.bb(fin, -w / 2, o.kick, 0, w / 2, ch, d - DOORT); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - DOORT - 0.2);
+    for (var k = 0; k + 1 < o.seams.length; k++) { var s0 = o.seams[k], s1 = o.seams[k + 1]; raisedDoor(b, fin, s1 - s0 - 0.03, ch - o.kick - 0.08, (s0 + s1) / 2, (ch + o.kick) / 2, d - DOORT * 0.4); }
+    b.rbox(o.top, w + 0.04, tt, d + 0.1, 0.01, 0, ch + tt / 2, (d + 0.1) / 2, { boxUV: true }); return;
+  }
   b.bb(fin, -w / 2, o.kick, 0, w / 2, ch, d - DOORT); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - DOORT - 0.2);
   for (var i = 0; i < n; i++) raisedDoor(b, fin, dw - 0.03, ch - o.kick - 0.08, -w / 2 + 0.05 + dw * (i + 0.5), (ch + o.kick) / 2, d - DOORT * 0.4);
   b.rbox(o.top, w + 0.04, tt, d + 0.1, 0.01, 0, ch + tt / 2, (d + 0.1) / 2, { boxUV: true });
