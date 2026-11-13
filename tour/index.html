@@ -1899,6 +1899,20 @@ const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: r
    is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
 const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .1, duskIn: .3,
   U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}, r40MetK: {value: 1}}};
+/* r41 W (owner 11/12, launch-blocking: from inside the big-glass rooms at midday the sunlit yard read near-white, "like snow").
+   rule:window-pull - with two environments the glass is clear (r40), so the garden seen from a room was drawn at the ROOM's exposure,
+   1.2-2 stops over what the same garden gets outdoors, and ACES clipped lawn, paving and leaves to white. A real-estate photographer
+   exposes the window for the outside (a second, darker frame blended into the glass: the "window pull"). Here every lit surface
+   OUTSIDE the house envelope is drawn, before tone mapping, at the exterior exposure plus R41W.stops (windows a little brighter than
+   a straight outdoor frame, as in the listing photos): its radiance is scaled by E_ext / E_now. E_ext = the time of day's outdoor
+   exposure x the outdoor meter's typical gain; E_now = the exposure in use. The factor follows EXPO_IN (eased, so a doorway crossing
+   blends) and is never above 1 (dusk: the garden is darker than the room, nothing is pulled). It depends on where the camera
+   stands, never where it looks. The envelope is a plan distance field from the BIM interior spaces (R41W.tex, 3-in cells, linear
+   filtered: no cells), with the height range of the nearest room: a window reveal, a sill or a jamb inside the wall thickness is the
+   room's, ground below the floor and a roof above the ceiling are outside. The meter's all-round view is drawn without the pull, so
+   every room keeps its calibrated exposure. ?r41w=0 turns it off. */
+const R41W = window.R41W = {on: R40E.on && !/[?&]r41w=0\b/.test(location.search), d0: .7, d1: 1.2, dMax: 4, stops: .6, outGain: 1, pull: 1, built: false,
+  U: {r41Dist: {value: null}, r41DB: {value: new THREE.Vector4(0, 0, 0, 0)}, r41DY: {value: new THREE.Vector2(0, 1)}, r41Pull: {value: 0}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
   C.worldpos_vertex += `\n${G}\nvR40W = worldPosition.xyz;\n#endif\n`;
@@ -1938,10 +1952,30 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
     // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
     // (an accessor: page hooks keep the previous hook and call it as a plain function, so the default returns one bound to its material)
     Object.defineProperty(THREE.Material.prototype, 'onBeforeCompile', {configurable: true,
-      get(){ const m = this; return function r40DefaultHook(sh){ if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
+      get(){ const m = this; return function r40DefaultHook(sh){ if(sh && sh.uniforms && R41W.on) Object.assign(sh.uniforms, R41W.U); if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
       set(v){ Object.defineProperty(this, 'onBeforeCompile', {value: v, writable: true, configurable: true, enumerable: true}); }});
   } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
-function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
+if(!R40E.on) R41W.on = false;
+if(R41W.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) || defined( PHONG ) || defined( LAMBERT ) || defined( TOON )', TM = '#if defined( TONE_MAPPING )';
+  if(C.tonemapping_fragment.indexOf(TM) === 0 && C.project_vertex.includes('gl_Position')){
+    C.common += `\n${G}\nvarying vec3 vR41P;\n#endif\n`;
+    C.project_vertex += `\n${G}\n{ vec4 r41w = vec4( transformed, 1.0 );\n#ifdef USE_INSTANCING\nr41w = instanceMatrix * r41w;\n#endif\nvR41P = ( modelMatrix * r41w ).xyz; }\n#endif\n`;
+    C.tonemapping_pars_fragment += `
+${G}
+uniform sampler2D r41Dist; uniform vec4 r41DB; uniform vec2 r41DY; uniform float r41Pull;
+// 1 inside the house envelope (rooms, their walls, reveals and sills), 0 outside it; soft over R41W.d0-d1 ft beyond the room air
+float r41Envelope( vec3 P ){
+  vec2 uv = ( P.xz - r41DB.xy ) * r41DB.zw;
+  if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
+  vec4 t = texture2D( r41Dist, uv ); float y = ( P.y - r41DY.x ) / r41DY.y;
+  float v = clamp( y - t.g * 255.0 + 0.5, 0.0, 1.0 ) * clamp( t.b * 255.0 - y + 0.5, 0.0, 1.0 );
+  return v * ( 1.0 - smoothstep( ${R41W.d0.toFixed(3)}, ${R41W.d1.toFixed(3)}, t.r * ${R41W.dMax.toFixed(3)} ) );
+}
+#endif
+`;
+    C.tonemapping_fragment = `${G}\n\tif( r41Pull > 0.0 ) gl_FragColor.rgb *= 1.0 - r41Pull * ( 1.0 - r41Envelope( vR41P ) );\n#endif\n` + C.tonemapping_fragment;
+  } else { R41W.on = false; console.warn('[r41w] tone-mapping anchors missing: no window pull'); } }
+function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); if(R41W.on) Object.assign(sh.uniforms, R41W.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
 const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawing registered to the A2.2 walls
@@ -23527,7 +23561,7 @@ if(GHOST41.on){
       if(G5.k < 4){   // one of four level views (90 deg each, the full circle around the eye) per frame into a 2 x 2 atlas
         const c = G5.cam, prev = r.getRenderTarget(), q = G5.k; c.near = camera.near; c.far = camera.far; c.updateProjectionMatrix(); c.position.copy(G5.pos); c.rotation.set(0, q * Math.PI / 2, 0, 'YXZ'); c.updateMatrixWorld();
         const vp = G5.rt.viewport, sc = G5.rt.scissor; vp.set((q & 1) * Q, (q >> 1) * Q, Q, Q); sc.copy(vp); G5.rt.scissorTest = true;
-        r.setRenderTarget(G5.rt); r.render(scene, c); r.setRenderTarget(prev); G5.k++; if(G5.k === 4){ G5.ready = true; G5.sweeps++; } }
+        r.setRenderTarget(G5.rt); R41W.hold = true; try{ r.render(scene, c); } finally { R41W.hold = false; } r.setRenderTarget(prev); G5.k++;   /* r41 W: the meter sees the room without the window pull (its calibration) */ if(G5.k === 4){ G5.ready = true; G5.sweeps++; } }
       if(!G5.ready || G5.k < 4) return G5.ready ? undefined : orig.call(this, r, w, read);
       lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
       METER.atlas = G5; const gl = r.getContext(), prev = r.getRenderTarget(); METER.mat.uniforms.tDiffuse.value = G5.rt.texture; r.setRenderTarget(METER.rt); METER.quad.render(r);
@@ -24606,6 +24640,42 @@ function r40BuildMask(){
 window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.r40Mask.value; if(!t) return null; const B = U.r40MB.value, Y = U.r40MY.value, P = [x + nx * .75, y + ny * .75, z + nz * .75];
   const u = (P[0] - B.x) * B.z, v = (P[2] - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0; const i = Math.min(R40M.nx - 1, Math.floor(u * R40M.nx)), j = Math.min(R40M.nz - 1, Math.floor(v * R40M.nz)), d = t.image.data, o = (j * R40M.nx + i) * 4, yy = (P[1] - Y.x) / Y.y;
   const f = (lo, hi) => Math.max(0, Math.min(1, yy - lo + .5)) * Math.max(0, Math.min(1, hi - yy + .5)); return Math.max(f(d[o], d[o + 1]), f(d[o + 2], d[o + 3])); };
+// ---- R41W: the house envelope for the window pull (see R41W at the top). Per 3-in plan cell: R = distance to the nearest interior
+// room air (0-4 ft), G / B = that room column's floor and ceiling (the R40M height scale), so a jamb in the wall reads its room's height
+function r41WBuild(){
+  if(!R41W.on || !R40M.done || typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false;
+  const S = BIM2.state, sp = S.spaces.filter(s => s.interior), key = R40M.key + ':' + sp.map(s => s.bb && s.bb.map(v => v.toFixed(2)).join(',')).join(';');
+  if(R41W.built && key === R41W.key) return true; if(!sp.length) return false;
+  const t0 = performance.now(), c = .25, pad = R41W.dMax + 1; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9;
+  for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); }
+  const X0 = py0 - pad, Z0 = px0 - pad, NX = Math.ceil((py1 - py0 + 2 * pad) / c), NZ = Math.ceil((px1 - px0 + 2 * pad) / c), N = NX * NZ;   // world X = plan y, world Z = plan x
+  const lo = new Float32Array(N).fill(1e9), hi = new Float32Array(N).fill(-1e9), src = new Int32Array(N).fill(-1), dd = new Float32Array(N).fill(1e9);
+  for(const s of sp){ const i0 = Math.max(0, Math.floor((s.bb[1] - X0) / c)), i1 = Math.min(NX - 1, Math.ceil((s.bb[3] - X0) / c)), j0 = Math.max(0, Math.floor((s.bb[0] - Z0) / c)), j1 = Math.min(NZ - 1, Math.ceil((s.bb[2] - Z0) / c));
+    for(let j = j0; j <= j1; j++) for(let i = i0; i <= i1; i++){ const X = X0 + (i + .5) * c, Z = Z0 + (j + .5) * c; if(!S.contains(s, Z, X)) continue; const top = S.topOf(s, Z, X); if(!(top > s.floorZ)) continue;
+      const q = j * NX + i; lo[q] = Math.min(lo[q], s.floorZ); hi[q] = Math.max(hi[q], top); src[q] = q; dd[q] = 0; } }
+  // two-pass nearest-source propagation (8 neighbours), Euclidean distance to the source cell
+  const pass = (j0, j1, dj, i0, i1, di, nb) => { for(let j = j0; j !== j1; j += dj) for(let i = i0; i !== i1; i += di){ const q = j * NX + i;
+    for(const [a, b] of nb){ const ii = i + a, jj = j + b; if(ii < 0 || jj < 0 || ii >= NX || jj >= NZ) continue; const s0 = src[jj * NX + ii]; if(s0 < 0) continue;
+      const sx = s0 % NX, sz = (s0 / NX) | 0, d = Math.hypot(sx - i, sz - j); if(d < dd[q]){ dd[q] = d; src[q] = s0; } } } };
+  pass(0, NZ, 1, 0, NX, 1, [[-1, -1], [0, -1], [1, -1], [-1, 0]]); pass(NZ - 1, -1, -1, NX - 1, -1, -1, [[1, 1], [0, 1], [-1, 1], [1, 0]]);
+  pass(0, NZ, 1, 0, NX, 1, [[-1, -1], [0, -1], [1, -1], [-1, 0]]);
+  const Y0 = R40M.y0, sc = R40M.sc, lv = y => Math.max(0, Math.min(255, y)), data = new Uint8Array(N * 4);
+  for(let q = 0; q < N; q++){ const s0 = src[q]; if(s0 < 0){ data.set([255, 255, 0, 0], q * 4); continue; }
+    data.set([lv(Math.round(dd[q] * c / R41W.dMax * 255)), lv(Math.floor((lo[s0] - .3 - Y0) / sc)), lv(Math.ceil((hi[s0] + .3 - Y0) / sc)), 255], q * 4); }
+  const tex = new THREE.DataTexture(data, NX, NZ, THREE.RGBAFormat, THREE.UnsignedByteType); tex.magFilter = tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.flipY = false; tex.needsUpdate = true;
+  if(R41W.U.r41Dist.value) R41W.U.r41Dist.value.dispose(); R41W.U.r41Dist.value = tex; R41W.U.r41DB.value.set(X0, Z0, 1 / (NX * c), 1 / (NZ * c)); R41W.U.r41DY.value.set(Y0, sc);
+  Object.assign(R41W, {built: true, key, ms: +(performance.now() - t0).toFixed(1), nx: NX, nz: NZ}); return true; }
+// the pull for this frame: exterior radiance x E_ext / E_now (at most 1), in stops by EXPO_IN; 0 in the uniform = no pull
+function r41WFrame(){
+  if(!R41W.on) return; if(!R41W.built || (R40L.frame % 240) === 0) try{ r41WBuild(); }catch(e){ if(!R41W.warned){ R41W.warned = true; console.warn('[r41w] envelope', e); } }
+  const kIn = r40C(typeof EXPO_IN === 'number' ? EXPO_IN : 0), E = renderer.toneMappingExposure, ext = (typeof BASE_EXPOSURE === 'number' ? BASE_EXPOSURE : E) * R41W.outGain * Math.pow(2, R41W.stops);
+  const p = R41W.built && !isDoll() && kIn > 0 && E > 0 ? Math.pow(Math.min(1, ext / E), kIn) : 1; R41W.pull = p;
+  R41W.U.r41Pull.value = R41W.hold ? 0 : 1 - p; }
+if(R41W.on){ const prevOBR = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prevOBR) prevOBR.apply(this, arguments); try{ r41WFrame(); }catch(e){} }; }
+// QA: the envelope as the shader reads it at a world point (1 room / wall, 0 outside)
+window.__r41env = (x, y, z) => { const t = R41W.U.r41Dist.value; if(!t) return null; const B = R41W.U.r41DB.value, Y = R41W.U.r41DY.value, u = (x - B.x) * B.z, v = (z - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0;
+  const i = Math.min(R41W.nx - 1, Math.floor(u * R41W.nx)), j = Math.min(R41W.nz - 1, Math.floor(v * R41W.nz)), d = t.image.data, o = (j * R41W.nx + i) * 4, yy = (y - Y.x) / Y.y, cl = a => Math.max(0, Math.min(1, a));
+  const dist = d[o] / 255 * R41W.dMax, s = cl((dist - R41W.d0) / (R41W.d1 - R41W.d0)); return {dist: +dist.toFixed(2), env: +(cl(yy - d[o + 1] + .5) * cl(d[o + 2] - yy + .5) * (1 - s * s * (3 - 2 * s))).toFixed(3)}; };
 /* r41 owner 11/12: "the light filtering shades appear to be luminous". The light-filtering fabrics (roller shades r28filter, honeycomb cells
    r29cellFilter, skylight shades r35skyShade) and the rainbow privacy film (r28film) carried a FIXED emissive (.14 / .22 / .5 / .32) standing
    in for daylight coming through them, at every time of day: at dusk (the tour's opening light) and in the night decor modes a lowered shade
