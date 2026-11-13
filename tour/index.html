@@ -10453,7 +10453,7 @@ function glass20MirrorMat(q, clone){
   // A mirror shows only what it reflects (the room capture, with the MR-1 light floor that follows the light level): no emission.
   if(m.emissive) m.emissive.setRGB(0, 0, 0); m.emissiveIntensity = 0; m.emissiveMap = null;
   const U = q.U;
-  m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U);
+  m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U); if(typeof R41W !== 'undefined' && R41W.on) Object.assign(sh.uniforms, R41W.U);   /* r41 W2: the window pull's sampler must be bound (left on unit 0 with this cube envMap, the draw failed: black mirror) */
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vG20W;').replace('#include <project_vertex>', '#include <project_vertex>\nvG20W = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vG20W; uniform vec3 gBoxMin, gBoxMax, gProbe;')
       .replace('reflectVec = inverseTransformDirection( reflectVec, viewMatrix );', `reflectVec = inverseTransformDirection( reflectVec, viewMatrix );
