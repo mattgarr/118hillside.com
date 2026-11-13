@@ -1908,7 +1908,7 @@ var ACCEL_PHONETEX = 0;
 })();</script>
 <script src="fixtures.js?v=44d"></script>
 <script src="staging.js?v=43f"></script>
-<script src="staging33.js?v=4"></script>
+<script src="staging33.js?v=4r48"></script>
 <script src="builtins.js?v=44e"></script>
 <script src="landscape.js"></script>
 <script src="trees.js?v=40"></script>
@@ -2119,7 +2119,7 @@ const STOPS = [
   p:'The full bath on the lower hall has a dual-sink vanity and heated floors.'},
  {id:'lbed2', t:'Lower-level bedroom 2', photo:58, level:'lower', rooms:['lbed2'], pos:[-24.6,LV.lower+EYE,-27.2], look:[-28.0,LV.lower+EYE,-39.5],
   p:'The second bedroom on the lower level is across the hall from the bath, with skylights overhead.'},
- {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], pos:[-24.0,LV.lower+EYE,-22.4], look:[-30.0,LV.lower+EYE,-19.0],   // r48b G: from the far corner (was just inside the door, the washer and dryer filling the bottom of the frame)
+ {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], pos:[-23.7,LV.lower+EYE,-17.5], look:[-28.6,LV.lower+EYE,-22.75],   // r48 laundry: just inside the door, where photo p04 was taken: window and open shelves left, corner sink and cabinets ahead, the stacked pair right (r48b G stood in the far corner, now the washer and dryer's place)
   p:'The main laundry room, with the washer and dryer, is off the lower level’s own entrance.'},
  {id:'office', t:'Skylit office', photo:20, level:'lower', rooms:['office'], pos:[-28.1,LV.lower+EYE,-10.1], look:[-26.0,LV.lower+EYE,-2.7],
   p:'The skylit office is across the entrance from the laundry room, with windows on two walls.'},
@@ -6736,7 +6736,7 @@ const STOP_CAMS = window.STOP_CAMS = {
   backbed:  {photo:'p73', pos:[21.00, 5.00, 3.70], dir:[0.3135, 0, -0.9496], hfov:100, sy:0, err:null},   // r38: south wall of the back bedroom: closet left, window, leaning mirror right (the gym in p73)
   lbath:    {photo:'p60', pos:[-14.20, 0.44, -32.65], dir:[0.7735, 0, -0.6338], hfov:98, sy:0, err:null},   // r38: past the open door: vanity, mirror and blue tile left, window and towel rings ahead
   lbed2:    {photo:'p58', pos:[-24.60, 0.44, -27.20], dir:[-0.2664, 0, -0.9639], hfov:100, sy:0, err:null},   // r38: closet end: art wall left, bed under the window
-  laundry:  {photo:'p04', pos:[-24.00, 0.64, -22.40], dir:[-0.8340, -0.2060, 0.5120], hfov:77, sy:0, ar:0.667, err:null},   // r48b G (QA 11/13: the camera stood almost inside the washer and dryer): the room's far corner, window and machines ahead   // r38: just inside the door: the window and the washer and dryer (portrait photo; its cabinets and sink are not in the model)
+  laundry:  {photo:'p04', pos:[-23.70, 0.44, -17.50], dir:[-0.6777, -0.1162, -0.7261], hfov:77, sy:0, ar:0.667, err:null},   // r48 laundry: just inside the door (photo p04's spot and direction): window, corner sink, wall cabinets, the stacked washer and dryer on the right   // r48b G (QA 11/13: the camera stood almost inside the washer and dryer): the room's far corner, window and machines ahead   // r38: just inside the door: the window and the washer and dryer (portrait photo; its cabinets and sink are not in the model)
   office:   {photo:'p20', pos:[-28.10, 0.44, -10.10], dir:[0.2730, 0, 0.9620], hfov:77, sy:0, ar:0.667, err:null},   // r38: beside the cube shelf: desk wall left, corner windows ahead-right (portrait photo)
   lower:    {photo:'p63', pos:[-19.03, 0.82, -38.79], dir:[0.5848, 0, -0.8112], hfov:111.8, sy:-0.160, err:21},        // lower bedroom corner, both windows
   lounge:   {photo:'p65', pos:[-12.07, -0.49, -15.78], dir:[-0.8506, 0, -0.5258], hfov:97.0, sy:0.005, err:11},        // refreshment wall + glass door
@@ -6833,7 +6833,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   lower: {at: [-18.75, -38.5], to: [-12.65, -47.0], hf: 100, rise: -.14},   // r36: in the doorway, wider and with the frame lowered so the whole bed, the floor and both windows show (photo p63's direction):     // doorway corner -> bed, both windows
   lbath: {at: [-14.2, -32.65], to: [-10.6, -35.6], hf: 100},   // r38: past the open door's edge (it stands in front of the vanity's west end): mirror, blue tile and sink left, window and towel rings ahead (photo p60)
   lbed2: {at: [-24.6, -27.2], to: [-28.0, -39.5], hf: 100},   // r38: closet end, beside the open door: art wall left, bed under the window, a skylight overhead (photo p58)
-  laundry: {at: [-24.0, -22.4], to: [-30.0, -19.0], hf: 100, rise: -.2, riseP: 0},   // r48b G (QA 11/13: just inside the door the camera stood almost inside the washer and dryer, their tops and a door ring filling the bottom of the frame): from the room's far corner, the window ahead and the machines under it.   // r38: just inside the door, the frame lowered: the window, and the washer and dryer under it. Square on from the doorway (photo p04's direction) the frame was a blank wall: the model has no cabinets or sink there
+  laundry: {at: [-23.7, -17.5], to: [-28.6, -22.75], hf: 100, rise: -.2, riseP: 0},   // r48 laundry: just inside the door, the way photo p04 faces (the stack now stands where r48b G's far-corner camera stood)   // r48b G (QA 11/13: just inside the door the camera stood almost inside the washer and dryer, their tops and a door ring filling the bottom of the frame): from the room's far corner, the window ahead and the machines under it.   // r38: just inside the door, the frame lowered: the window, and the washer and dryer under it. Square on from the doorway (photo p04's direction) the frame was a blank wall: the model has no cabinets or sink there
   office: {at: [-28.1, -10.1], to: [-26.0, -2.7], hf: 100, rise: .12},   // r38: by the cube shelf, past the open door: desk wall left, corner windows ahead, the frame risen for the skylit ceiling (photo p20)
   lounge: {at: [-14.4, -15.4], to: [-23.5, -21.0], hf: 100},   // r36: three feet further in than photo p65, same direction, so the cafe table is no longer in the foreground: the glass door, TV, refreshment counter and beverage cooler:     // stacking-door corner -> refreshment counter, TV, glass door, bedroom door
   terrace: {at: [8, -20], to: [-8, -36]},   // out on the gravel under the oak -> rear facade, lounge set, outdoor kitchen + pergola, hills
@@ -10995,7 +10995,7 @@ function bath20NoBase(){
 const LAUNDRY48 = window.LAUNDRY48 = {drop: ['FX-washerFront-07', 'FX-dryerFront-08'], by: 'v26-laundry', dx: -0.0294,
   shiftX: ['LX-SINKBASE', 'LX-TRASH', 'LX-SINK', 'LX-FAUCET', 'LX-UC-CORNER', 'LX-UC-W30', 'LX-SPLASH-M'],
   set: {'LX-OPENBASE': {at: [-18.5843, -29.9777], opts: {w: 3.1448}}, 'LX-SPLASH-W': {at: [-20.1364, -29.9777], opts: {w: 6.249}},
-    'LX-UC-W12': {at: [-17.382, -29.9777]},
+    'LX-UC-W12': {at: [-17.2834, -29.9777], opts: {w: 0.543}},   // 6.5in: the window's side casing stands to x -17.600 and its head cap to -17.564 (the v26 8.9in box covered the casing)
     'LX-COUNTER': {opts: {outlines: [[[-23.3234, -29.9159], [-22.7609, -29.9159], [-22.7609, -29.9777], [-17.0119, -29.9777], [-17.0119, -27.8327], [-20.1222, -27.8327],
       [-21.2401, -26.7148], [-21.2401, -25.4993], [-23.3234, -25.4993]]], holes: [[[-21.182, -28.6408], [-22.0482, -27.7746], [-21.2999, -27.0263], [-20.4337, -27.8925]]]}}},
   built: 0};
