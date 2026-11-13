@@ -2187,45 +2187,57 @@ window.__shadow22 = {on: location.href.indexOf('shadow22-off') < 0, lookSpan: 60
   f = f.slice(0, k) + '#if defined( SHADOWMAP_TYPE_PCF )\n' + body + '\n#elif defined( SHADOWMAP_TYPE_PCF_UNUSED )' + f.slice(k + '#if defined( SHADOWMAP_TYPE_PCF )'.length);
   C.shadowmap_pars_fragment = f;
 })();
-/* v29 leak (bimtools/patch_v29_leak.py): interior point lights reach only surfaces that face into their own IfcSpace */
+/* v29 leak (bimtools/patch_v29_leak.py): interior point lights reach only surfaces that face into their own IfcSpace.
+   r47 (owner 11/13, entry foyer, golden hour: "some kind of weird light clipping plane that seems to be a crutch used for lighting" - a
+   lighter rectangle with crisp vertical and horizontal borders on the plain wall beside the stairs, a darker band under a straight line
+   at handrail height). That was this mask: a fragment took a lamp's light only if its 3-in plan cell carried the lamp's room number and
+   its height lay between that room's floor - 0.4 ft and ceiling + 0.4 ft, all or nothing. A wall that runs on from one room record into
+   the next (the foyer wall into the stair hall, the stair wall below the loft floor) was lit up to the cell and the height where the
+   record ended and unlit beyond. The room lamps are on from golden hour (.32) to dusk, so it showed at those hours and not at midday.
+   rule:lamp-reach-is-a-field - each lamp's room now has a REACH FIELD (RM29.fieldOf, built once per room that holds a lamp): 1 over the
+   room, falling smoothly to 0 over RM29.reach ft measured through the air round the walls that stand there (the walk colliders: through
+   an open doorway or an open edge yes, through a wall no), with the floor and ceiling of the air column at each cell (a stair void under
+   a loft runs down to the treads). The shader reads it bilinearly (one read per lamp) and fades over half a foot inside the floor and
+   ceiling thickness. No cell, storey or room edge can show on a surface: the weight is continuous everywhere a wall does not stand. */
 const RM29 = (() => {
-  const T = THREE, C = T.ShaderChunk, R = {push: .3, margin: .4, cell: .25, ok: false, on: true, pts: null, n: 0, ms: 0, err: null, last: []};
-  R.G = [new T.Vector4(0, 0, 1, 0), new T.Vector4(1, 1, R.push, 0)];   // [x0, z0, 1/cell, on], [W, H, push, -]
-  R.L = []; for(let i = 0; i < 64; i++) R.L.push(new T.Vector4(0, 0, 0, 0));   // per uploaded point light: [space, storey, floor, on]
-  R.tex = new T.DataTexture(new Uint8Array(4), 1, 1, T.RGBAFormat); R.tex.minFilter = R.tex.magFilter = T.NearestFilter; R.tex.generateMipmaps = false;
-  R.tex.needsUpdate = true; R.tex.clone = function(){ return this; };   // one shared texture: ShaderLib uniforms are cloned per material
+  const T = THREE, C = T.ShaderChunk, R = {push: .3, cell: .25, reach: 7, yMin: -26, ySpan: 51, ok: false, on: true, pts: null, n: 0, ms: 0, fms: 0, err: null, last: []};
+  R.G = [new T.Vector4(4, 1, 1, 0), new T.Vector4(R.yMin, R.ySpan, R.push, 0)];   // [1/cell, 1/atlas W, 1/atlas H, on], [y of 0, y span of 0..1, push, -]
+  R.L = []; for(let i = 0; i < 64; i++) R.L.push(new T.Vector4(0, 0, 0, 0));   // per uploaded point light, its room's field tile: [world x0, z0, cells wide, cells deep]
+  R.O = []; for(let i = 0; i < 64; i++) R.O.push(new T.Vector4(0, 0, 0, 0));   // ... [atlas x, atlas y (texels), -, on]
+  R.tex = new T.DataTexture(new Uint8Array(4), 1, 1, T.RGBAFormat); R.tex.minFilter = R.tex.magFilter = T.LinearFilter; R.tex.generateMipmaps = false; R.tex.flipY = false;
+  R.tex.needsUpdate = true; R.tex.clone = function(){ return this; };   // one shared texture (the field atlas): ShaderLib uniforms are cloned per material
   const pars = `
 uniform highp sampler2D rmTex;
 uniform vec4 rmG[ 2 ];
 #if NUM_POINT_LIGHTS > 0
 uniform vec4 rmL[ NUM_POINT_LIGHTS ];
+uniform vec4 rmO[ NUM_POINT_LIGHTS ];
 #endif
-float rmMask( const in vec4 L, const in vec4 ids, const in vec4 ce, const in vec3 p ){
-	if( L.w < 0.5 ) return 1.0;
-	vec4 oh = vec4( equal( vec4( L.y ), vec4( 0.0, 1.0, 2.0, 3.0 ) ) );
-	float id = dot( ids, oh ), top = L.z + dot( ce, oh ) * 25.5;
-	return ( abs( id - L.x ) < 0.5 && p.y > L.z - ${R.margin.toFixed(2)} && p.y < top + ${R.margin.toFixed(2)} ) ? 1.0 : 0.0;
+// r47: the lamp's reach at p (world, 0.3 ft off the surface): its room's field (R = reach 0..1, G / B = floor / ceiling of the air there)
+float rmMask( const in vec4 L, const in vec4 O, const in vec3 p ){
+	if( O.w < 0.5 ) return 1.0;
+	vec2 c = ( p.xz - L.xy ) * rmG[ 0 ].x;
+	if( c.x < 0.0 || c.y < 0.0 || c.x > L.z || c.y > L.w ) return 0.0;
+	vec4 t = texture2D( rmTex, ( O.xy + clamp( c, vec2( 0.5 ), L.zw - 0.5 ) ) * rmG[ 0 ].yz );
+	if( t.r <= 0.0 ) return 0.0;
+	float lo = rmG[ 1 ].x + t.g * rmG[ 1 ].y, hi = rmG[ 1 ].x + t.b * rmG[ 1 ].y;
+	return t.r * smoothstep( lo - 0.8, lo - 0.25, p.y ) * ( 1.0 - smoothstep( hi + 0.25, hi + 0.8, p.y ) );
 }
 `;
-  const head = `vec4 rmIds = vec4( 0.0 ), rmCe = vec4( 0.0 ); vec3 rmP = vec3( 0.0 );
+  const head = `vec3 rmP = vec3( 0.0 );
 #if NUM_POINT_LIGHTS > 0
 if( rmG[ 0 ].w > 0.5 ){
 	mat3 rmR = mat3( viewMatrix ); vec3 rmD = geometry.position - viewMatrix[ 3 ].xyz;
 	vec3 rmN = vec3( dot( rmR[ 0 ], geometry.normal ), dot( rmR[ 1 ], geometry.normal ), dot( rmR[ 2 ], geometry.normal ) );
 	rmP = vec3( dot( rmR[ 0 ], rmD ), dot( rmR[ 1 ], rmD ), dot( rmR[ 2 ], rmD ) ) + rmN * rmG[ 1 ].z;
-	vec2 rmC = floor( ( rmP.xz - rmG[ 0 ].xy ) * rmG[ 0 ].z );
-	if( all( greaterThanEqual( rmC, vec2( 0.0 ) ) ) && all( lessThan( rmC, rmG[ 1 ].xy ) ) ){
-		vec2 rmUV = ( rmC + 0.5 ) / vec2( rmG[ 1 ].x, 2.0 * rmG[ 1 ].y );
-		rmIds = texture2D( rmTex, rmUV ) * 255.0; rmCe = texture2D( rmTex, rmUV + vec2( 0.0, 0.5 ) );
-	}
 }
 #endif
 `;
   const a = 'IncidentLight directLight;\n', b = '\t\tgetPointDirectLightIrradiance( pointLight, geometry, directLight );\n';
   if(C.lights_fragment_begin.split(a).length !== 2 || C.lights_fragment_begin.split(b).length !== 2) throw new Error('v29 leak: lights chunk changed');
-  C.lights_fragment_begin = C.lights_fragment_begin.replace(a, a + head).replace(b, b + '\t\tdirectLight.color *= rmMask( rmL[ i ], rmIds, rmCe, rmP );\n');
+  C.lights_fragment_begin = C.lights_fragment_begin.replace(a, a + head).replace(b, b + '\t\tif( rmG[ 0 ].w > 0.5 ) directLight.color *= rmMask( rmL[ i ], rmO[ i ], rmP );\n');
   C.lights_physical_pars_fragment = pars + C.lights_physical_pars_fragment;
-  for(const k of ['standard', 'physical']) Object.assign(T.ShaderLib[k].uniforms, {rmTex: {value: R.tex}, rmG: {value: R.G}, rmL: {value: R.L}});
+  for(const k of ['standard', 'physical']) Object.assign(T.ShaderLib[k].uniforms, {rmTex: {value: R.tex}, rmG: {value: R.G}, rmL: {value: R.L}, rmO: {value: R.O}});
   return R;
 })();
 const scene = new THREE.Scene();
@@ -5677,10 +5689,62 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
             const xc = x0 + (i + .5) * c, key = k * 1e6 + Math.floor(xc) * 1000 + Math.floor(zc);   // ceiling sampled on a 1 ft grid
             let ce = ceil.get(key); if(ce == null){ try{ ce = bim2CeilingAt(Math.floor(zc) + .5, Math.floor(xc) + .5, s.floor).z; }catch(e){ ce = s.floor + 9; } ceil.set(key, ce); }
             const o = (j * W + i) * 4 + ch; D[o] = k; D[o + W * H * 4] = Math.max(1, Math.min(255, Math.round((ce - s.floor) * 10))); R.rooms[k].cells++; } } }
-    R.D = D; R.W = W; R.H = H; R.x0 = x0; R.z0 = z0;
-    R.tex.image = {data: D, width: W, height: 2 * H}; R.tex.needsUpdate = true;
-    R.G[0].set(x0, z0, 1 / c, 1); R.G[1].set(W, H, R.push, 0);
+    R.D = D; R.W = W; R.H = H; R.x0 = x0; R.z0 = z0; R.F.clear();   // r47: the room grid stays on the CPU (R.at, the fields); the shader reads the field atlas
     R.ms = +(performance.now() - t0).toFixed(1); R.ok = true; return true; };
+  /* r47 rule:lamp-reach-is-a-field (see RM29 at the top). The reach field of room k, a tile of 3-in cells round the room:
+     w = 1 in the room, 1 - smootherstep(distance through the air / R.reach) outside it (walls that stand 2 to 5 ft over the room's floor
+     block; a wall cell takes its nearest air cell's values, so the change from one side of a wall to the other happens inside the wall);
+     lo / hi = the floor and ceiling of the air at the cell (lo follows the walking surface down where the room's outline lies over a void). */
+  R.F = new Map(); R.fv = -1; R.sig = '';
+  const surfC = new Map(), ceilC = new Map();
+  const surfAt = (x, z, f) => { const key = Math.round(x * 2) + ',' + Math.round(z * 2) + ',' + f; let v = surfC.get(key); if(v === undefined){ v = f; try{ const sy = walkSurfaceAt(Math.round(x * 2) / 2, Math.round(z * 2) / 2, f + .6); if(isFinite(sy) && sy < f - .3) v = Math.max(f - 14, sy); }catch(e){} surfC.set(key, v); } return v; };
+  const ceilAt = (x, z, f) => { const key = Math.floor(x) + ',' + Math.floor(z) + ',' + f; let v = ceilC.get(key); if(v === undefined){ v = f + 9; try{ const cz = bim2CeilingAt(Math.floor(z) + .5, Math.floor(x) + .5, f).z; if(isFinite(cz) && cz > f + 6 && cz < f + 30) v = cz; }catch(e){} ceilC.set(key, v); } return v; };
+  R.buildField = k => { const r = R.rooms[k]; if(!r) return null; const t0 = performance.now(), c = R.cell, W = R.W, H = R.H, D = R.D, ch = r.ch, fA = r.floor, nr = Math.ceil(R.reach / c) + 2;
+    let i0 = 1e9, i1 = -1, j0 = 1e9, j1 = -1; for(let j = 0; j < H; j++) for(let i = 0; i < W; i++) if(D[(j * W + i) * 4 + ch] === k){ if(i < i0) i0 = i; if(i > i1) i1 = i; if(j < j0) j0 = j; if(j > j1) j1 = j; }
+    if(i1 < 0) return null; i0 -= nr; j0 -= nr; i1 += nr; j1 += nr;   // the tile may run past the room grid: out there is open air
+    const w = i1 - i0 + 1, h = j1 - j0 + 1, N = w * h, X0 = R.x0 + i0 * c, Z0 = R.z0 + j0 * c, own = new Uint8Array(N), blk = new Uint8Array(N), wl = new Uint8Array(N), dist = new Float32Array(N).fill(1e9);
+    for(let j = 0; j < h; j++){ const gj = j + j0; if(gj < 0 || gj >= H) continue; for(let i = 0; i < w; i++){ const gi = i + i0; if(gi >= 0 && gi < W && D[(gj * W + gi) * 4 + ch] === k){ own[j * w + i] = 1; dist[j * w + i] = 0; } } }
+    // walls standing in the band 2..5 ft over this room's floor (plan polygons of the walk colliders, as built)
+    try{ for(const q of COLLIDERS){ if(q.kind !== 'WALL' || !q.poly || q.v || q.pass || q.y0 > fA + 2 || q.y1 < fA + 5) continue;
+        const a0 = Math.max(0, Math.floor((q.x0 - X0) / c)), a1 = Math.min(w - 1, Math.ceil((q.x1 - X0) / c)), b0 = Math.max(0, Math.floor((q.z0 - Z0) / c)), b1 = Math.min(h - 1, Math.ceil((q.z1 - Z0) / c)), P = q.poly;
+        for(let j = b0; j <= b1; j++) for(let i = a0; i <= a1; i++){ const x = X0 + (i + .5) * c, z = Z0 + (j + .5) * c; let ins = false;
+          for(let a = 0, b = P.length - 1; a < P.length; b = a++) if((P[a][1] > z) !== (P[b][1] > z) && x < P[b][0] + (z - P[b][1]) / (P[a][1] - P[b][1]) * (P[a][0] - P[b][0])) ins = !ins;
+          if(ins){ wl[j * w + i] = 1; if(!own[j * w + i]) blk[j * w + i] = 1; } } } }catch(e){}
+    // distance through the air (cells; chamfer sweeps until settled)
+    const S2 = Math.SQRT2, lim = R.reach / c; for(let it = 0, ch2 = true; it < 12 && ch2; it++){ ch2 = false;
+      for(let pass = 0; pass < 2; pass++) for(let jj = 0; jj < h; jj++){ const j = pass ? h - 1 - jj : jj; for(let ii = 0; ii < w; ii++){ const i = pass ? w - 1 - ii : ii, q = j * w + i; if(blk[q] || own[q]) continue; let d = dist[q];
+          const s = pass ? 1 : -1, jn = j + s, im = i - 1, ip = i + 1, is = i + s;
+          if(is >= 0 && is < w && dist[j * w + is] + 1 < d) d = dist[j * w + is] + 1;
+          if(jn >= 0 && jn < h){ if(dist[jn * w + i] + 1 < d) d = dist[jn * w + i] + 1;
+            if(im >= 0 && dist[jn * w + im] + S2 < d && !(blk[jn * w + i] && blk[j * w + im])) d = dist[jn * w + im] + S2;
+            if(ip < w && dist[jn * w + ip] + S2 < d && !(blk[jn * w + i] && blk[j * w + ip])) d = dist[jn * w + ip] + S2; }
+          if(d < dist[q] - 1e-4 && d <= lim){ dist[q] = d; ch2 = true; } } } }
+    const data = new Uint8Array(N * 4), has = new Uint8Array(N), enc = y => Math.max(0, Math.min(255, Math.round((y - R.yMin) / R.ySpan * 255)));
+    for(let j = 0; j < h; j++) for(let i = 0; i < w; i++){ const q = j * w + i, d = dist[q]; if(blk[q] || d > lim) continue; const x = X0 + (i + .5) * c, z = Z0 + (j + .5) * c, gi = i + i0, gj = j + j0, t = d / lim, wgt = 1 - t * t * t * (t * (t * 6 - 15) + 10);
+      let hi = -1e9; if(gi >= 0 && gj >= 0 && gi < W && gj < H){ const b0 = (gj * W + gi) * 4, t0b = ((gj + H) * W + gi) * 4;
+        if(own[q]) hi = fA + D[t0b + ch] / 10; else for(let a = 0; a < 4; a++){ const ka = D[b0 + a]; if(!ka) continue; const fa = R.rooms[ka].floor; if(Math.abs(fa - fA) < 3) hi = Math.max(hi, fa + D[t0b + a] / 10); } }
+      if(hi < -1e8) hi = ceilAt(x, z, fA);
+      data[q * 4] = Math.round(255 * wgt); data[q * 4 + 1] = enc(wl[q] ? fA : surfAt(x, z, fA)); data[q * 4 + 2] = enc(hi); data[q * 4 + 3] = 255; has[q] = 1; }
+    // a wall cell beside lit air takes that air's reach (one ring: the far half of the wall stays 0, so the step is inside the wall); floor and ceiling spread two rings
+    for(let ring = 0; ring < 2; ring++){ const add = []; for(let j = 0; j < h; j++) for(let i = 0; i < w; i++){ const q = j * w + i; if(has[q]) continue; let best = -1, bd = 9, bw = -1;
+        for(let b = -1; b <= 1; b++) for(let a = -1; a <= 1; a++){ if(!a && !b) continue; const ii = i + a, jj = j + b; if(ii < 0 || jj < 0 || ii >= w || jj >= h) continue; const p = jj * w + ii; if(!has[p]) continue; const dd = a * a + b * b; if(dd < bd || (dd === bd && data[p * 4] > bw)){ bd = dd; bw = data[p * 4]; best = p; } }
+        if(best >= 0) add.push(q, best); }
+      for(let n = 0; n < add.length; n += 2){ const q = add[n], p = add[n + 1]; data[q * 4] = blk[q] && !ring ? data[p * 4] : 0; data[q * 4 + 1] = data[p * 4 + 1]; data[q * 4 + 2] = data[p * 4 + 2]; data[q * 4 + 3] = 255; has[q] = 1; } }
+    for(let q = 0; q < N; q++) if(!has[q]){ data[q * 4 + 1] = enc(fA); data[q * 4 + 2] = enc(fA + 9); }
+    // the tile's outer ring is 0: the reach ends inside the tile
+    for(let i = 0; i < w; i++){ data[i * 4] = 0; data[((h - 1) * w + i) * 4] = 0; } for(let j = 0; j < h; j++){ data[j * w * 4] = 0; data[(j * w + w - 1) * 4] = 0; }
+    const f = {k, w, h, X0, Z0, data, ax: 0, ay: 0, ms: +(performance.now() - t0).toFixed(1)}; R.fms += f.ms; return f; };
+  // all fields in one texture, shelf-packed with a 1-texel gutter
+  R.pack = () => { const fs = [...R.F.values()].filter(Boolean).sort((a, b) => b.h - a.h), AW = Math.max(512, ...fs.map(f => f.w + 2)); let x = 1, y = 1, rowH = 0;
+    for(const f of fs){ if(x + f.w + 1 > AW){ x = 1; y += rowH + 1; rowH = 0; } f.ax = x; f.ay = y; x += f.w + 1; rowH = Math.max(rowH, f.h); }
+    const AH = Math.max(4, y + rowH + 1), A = new Uint8Array(AW * AH * 4);
+    for(const f of fs) for(let j = 0; j < f.h; j++) A.set(f.data.subarray(j * f.w * 4, (j + 1) * f.w * 4), ((f.ay + j) * AW + f.ax) * 4);
+    R.tex.image = {data: A, width: AW, height: AH}; R.tex.needsUpdate = true; R.fv = R.tex.version; R.aw = AW; R.ah = AH; };
+  R.fieldOf = k => { let f = R.F.get(k); if(f !== undefined) return f; f = null; try{ f = R.buildField(k); }catch(e){ R.err = 'field ' + k + ': ' + e; } R.F.set(k, f); if(f) R.pack(); return f; };
+  // QA: a lamp room's reach at a world point as the shader reads it (nearest cell): window.__rm29.reachAt(k, x, y, z)
+  R.reachAt = (k, x, y, z) => { const f = R.fieldOf(k); if(!f) return null; const i = Math.floor((x - f.X0) / R.cell), j = Math.floor((z - f.Z0) / R.cell); if(i < 0 || j < 0 || i >= f.w || j >= f.h) return 0;
+    const o = (j * f.w + i) * 4, lo = R.yMin + f.data[o + 1] / 255 * R.ySpan, hi = R.yMin + f.data[o + 2] / 255 * R.ySpan, ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+    return {w: +(f.data[o] / 255).toFixed(3), lo: +lo.toFixed(2), hi: +hi.toFixed(2), m: +(f.data[o] / 255 * ss(lo - .8, lo - .25, y) * (1 - ss(hi + .25, hi + .8, y))).toFixed(3)}; };
   // the space a world point is in (R1): plan cell + floor .. ceiling + 1 ft on that storey; null outside every space
   R.at = (p) => { if(!R.ok) return null; const i = Math.floor((p.x - R.x0) / R.cell), j = Math.floor((p.z - R.z0) / R.cell);
     if(i < 0 || j < 0 || i >= R.W || j >= R.H) return null;
@@ -5696,11 +5760,13 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
     if(!R.ok && !(R.tries++ % 30 === 0 && R.build())) return;
     if(!R.pts && !(R.pts = findPts(rend))) return;
     const P = R.pts, n = Math.min(P.length, R.L.length);
-    for(let i = 0; i < n; i++){ const e = P[i], q = R.L[i];
-      v.copy(e.position).applyMatrix4(cam.matrixWorld); const k = R.on ? R.at(v) : null;
-      if(k) q.set(k, R.rooms[k].ch, R.rooms[k].floor, 1); else q.set(0, 0, 0, 0); }
-    for(let i = n; i < R.n; i++) R.L[i].set(0, 0, 0, 0);
-    R.n = n; R.G[0].w = R.on ? 1 : 0; };
+    // r47: the fields are rebuilt when the room grid was edited after they were made (bim3WellTops marks the texture) or the walls / floors changed
+    { const sg = (typeof COLLIDERS !== 'undefined' ? COLLIDERS.length : 0) + ':' + FLOORS.length; if(R.F.size && (R.tex.version !== R.fv || sg !== R.sig)){ R.F.clear(); surfC.clear(); ceilC.clear(); } R.sig = sg; }
+    const ks = []; for(let i = 0; i < n; i++){ v.copy(P[i].position).applyMatrix4(cam.matrixWorld); const k = R.on ? R.at(v) : null; ks.push(k); if(k) R.fieldOf(k); }   // every field first: a new one repacks the atlas
+    for(let i = 0; i < n; i++){ const f = ks[i] ? R.F.get(ks[i]) : null;
+      if(f){ R.L[i].set(f.X0, f.Z0, f.w, f.h); R.O[i].set(f.ax, f.ay, 0, 1); } else { R.L[i].set(0, 0, 0, 0); R.O[i].set(0, 0, 0, 0); } }
+    for(let i = n; i < R.n; i++){ R.L[i].set(0, 0, 0, 0); R.O[i].set(0, 0, 0, 0); }
+    R.n = n; R.G[0].set(1 / R.cell, 1 / (R.aw || 1), 1 / (R.ah || 1), R.on ? 1 : 0); };
   R.tries = 0;
   const hook = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({colorWrite: false, depthWrite: false, depthTest: false, fog: false}));
   hook.name = 'v29leak-hook'; hook.frustumCulled = false; hook.renderOrder = -1e9; hook.userData.noCull = true;
@@ -5710,7 +5776,7 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
     scene.traverse(o => { if(!o.isPointLight) return; const p = o.getWorldPosition(new THREE.Vector3()), k = R.at(p);
       out.push({name: o.name || (o.parent && o.parent.name) || '', at: p.toArray().map(x => +x.toFixed(1)), dist: o.distance, space: k ? R.rooms[k].id + ' ' + R.rooms[k].name : null}); });
     return {ok: R.ok, on: R.on, ms: R.ms, grid: R.ok ? [R.W, R.H] : null, spaces: R.rooms ? R.rooms.slice(1).map(r => r.id + ':' + r.cells) : [], uploaded: R.n,
-      tagged: R.L.slice(0, R.n).filter(q => q.w > 0).length, err: R.err, lights: out}; };
+      tagged: R.O.slice(0, R.n).filter(q => q.w > 0).length, fields: [...R.F.values()].filter(Boolean).map(f => R.rooms[f.k].id + ':' + f.w + 'x' + f.h + ':' + f.ms + 'ms'), atlas: [R.aw, R.ah], err: R.err, lights: out}; };
 }
 let DUSK = false;
 /* ---------------- time of day: real sun for Woodside (37.438 N, 122.254 W), mid-October ---------------- */
@@ -19454,26 +19520,81 @@ function v33Accent(){
   }
 }
 { const _fin = finish; finish = function(){ const r = _fin.apply(this, arguments); V33.metals = null; try{ v33Accent(); }catch(e){ console.warn('[v33] accent', e); V33.report.accErr = String(e); } return r; }; }
-// S8: ground-contact decals under free-standing staged furniture (child of the piece: follows design edits / restaging)
-const V33C = {skip: /^(rug2?|tvWall|art|wallMirror|towel\w*|pillows|bedRunner|throwBlanket|throwDrape|seatCushion|windowSeat)$/, m: .45, mb: .12, y: .045, n: 0, mats: {}};
-function v33ContactMat(op){ if(V33C.mats[op]) return V33C.mats[op];
-  if(!V33C.tex){ const W = 64, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), d = g.createImageData(W, W);
-    for(let y = 0; y < W; y++) for(let x = 0; x < W; x++){ const u = (x + .5) / W, v = (y + .5) / W, dx = Math.max(0, .25 - u, u - .75) * 4, dy = Math.max(0, .25 - v, v - .75) * 4, t = Math.min(1, Math.hypot(dx, dy)), a = (1 - t) * (1 - t);
-      d.data[(y * W + x) * 4 + 3] = Math.round(255 * .78 * a); }
-    g.putImageData(d, 0, 0); V33C.tex = new THREE.CanvasTexture(c); }
-  const m = new THREE.MeshBasicMaterial({map: V33C.tex, color: 0x000000, transparent: true, opacity: op, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8});
-  m.toneMapped = false; m.name = 'v33contact'; return V33C.mats[op] = m; }
+/* S8: ground-contact shadows under free-standing staged furniture (child of the piece: follows design edits / restaging).
+   r47 (owner 11/13, phone, living room: "each piece of furniture throws a hard, pure-black, sharp-edged skewed rectangle on the rug"):
+   the decal was the piece's bounding RECTANGLE at 78 % black with a 5-in soft rim. Under a pedestal table or a round swivel chair the eye
+   sees under the top, so the whole black rectangle showed, far larger and darker than the foot. rule:contact-shadow-from-the-piece - the
+   decal is now the piece's own ambient shadow on the floor: its meshes are sampled into a small height map over the footprint (lowest and
+   highest solid per cell), and each floor texel gets the share of the sky dome the piece hides within V33C.pad ft (16 directions, the
+   blocked elevation band along each, nearer solids count more), at most V33C.k dark. A table top a foot up gives a faint wide shade, a
+   foot on the floor a tight dark one, a round piece a round one. One texture per kind and size. Its quad stops at a wall and at a floor
+   edge (v33Fit), so nothing is drawn through a wall or over a drop. It does not depend on the quality level, the device or the view. */
+const V33C = {skip: /^(rug2?|tvWall|art|wallMirror|towel\w*|pillows|bedRunner|throwBlanket|throwDrape|seatCushion|windowSeat)$/, pad: 1.2, G: 40, k: .8, hClip: 2.2, y: .045, n: 0, fields: 0, ms: 0, mats: {}};
+function v33Field(o, w, dd){
+  const t0 = performance.now(), P = V33C.pad, ex = w + 2 * P, ez = dd + 2 * P, s = Math.max(ex, ez) / V33C.G, NX = Math.max(8, Math.ceil(ex / s)), NZ = Math.max(8, Math.ceil(ez / s)), N = NX * NZ;
+  const X0 = -w / 2 - P, Z0 = -P, LO = new Float32Array(N).fill(1e9), HI = new Float32Array(N).fill(-1e9), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), M = new THREE.Matrix4();
+  o.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(o.matrixWorld).invert();
+  const put = (x, z, y) => { const i = Math.floor((x - X0) / s), j = Math.floor((z - Z0) / s); if(i < 0 || j < 0 || i >= NX || j >= NZ) return; const q = j * NX + i; if(y < LO[q]) LO[q] = y; if(y > HI[q]) HI[q] = y; };
+  o.traverse(m => { if(!m.isMesh || m.isInstancedMesh || m.userData.v33contact || m.castShadow === false || !m.geometry || !m.geometry.attributes.position) return;
+    const mt = Array.isArray(m.material) ? m.material[0] : m.material; if(!mt || mt.visible === false || (mt.transparent && mt.opacity < .6)) return;   // clear glass hides no light
+    M.multiplyMatrices(inv, m.matrixWorld); const Pp = m.geometry.attributes.position, I = m.geometry.index, n = I ? I.count : Pp.count;
+    for(let t = 0; t + 2 < n; t += 3){ A.fromBufferAttribute(Pp, I ? I.getX(t) : t).applyMatrix4(M); B.fromBufferAttribute(Pp, I ? I.getX(t + 1) : t + 1).applyMatrix4(M); C.fromBufferAttribute(Pp, I ? I.getX(t + 2) : t + 2).applyMatrix4(M);
+      if(Math.min(A.y, B.y, C.y) > V33C.hClip + 2) continue;
+      const L = Math.max(Math.hypot(B.x - A.x, B.z - A.z), Math.hypot(C.x - A.x, C.z - A.z), Math.hypot(C.x - B.x, C.z - B.z)), k = Math.max(1, Math.min(16, Math.ceil(L / (s * .6))));
+      for(let a = 0; a <= k; a++) for(let b = 0; b <= k - a; b++){ const u = a / k, v = b / k, c = 1 - u - v; put(A.x * c + B.x * u + C.x * v, A.z * c + B.z * u + C.z * v, A.y * c + B.y * u + C.y * v); } } });
+  // the share of the dome hidden at each floor texel: 16 directions x 16 bands of sin^2(elevation) (equal shares of a level surface's light)
+  const F = new Float32Array(N), NA = 16, NB = 16, bins = new Float32Array(NB), R2 = P * P, hc = V33C.hClip; let any = false;
+  const add = (q, d) => { const lo = LO[q]; if(lo > hc) return; const hb = Math.max(0, lo) * .5, ht = Math.min(hc, Math.max(HI[q], lo + .05)), fo = 1 - d * d / R2; if(fo <= 0) return; const wgt = fo * fo;
+    const u1 = hb * hb / (hb * hb + d * d) * NB, u2 = ht * ht / (ht * ht + d * d) * NB;
+    for(let b = Math.floor(u1); b < NB && b < u2; b++){ const cov = Math.min(b + 1, u2) - Math.max(b, u1), v = wgt * Math.max(0, Math.min(1, cov)); if(v > bins[b]) bins[b] = v; } };
+  for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let sum = 0;
+    for(let a = 0; a < NA; a++){ const an = (a + .5) / NA * 2 * Math.PI, dx = Math.cos(an), dz = Math.sin(an); bins.fill(0);
+      if(LO[j * NX + i] < 1e8) add(j * NX + i, .35 * s);
+      for(let d = s; d < P; d += s){ const ii = Math.round(i + dx * d / s), jj = Math.round(j + dz * d / s); if(ii < 0 || jj < 0 || ii >= NX || jj >= NZ) break; if(LO[jj * NX + ii] < 1e8) add(jj * NX + ii, d); }
+      for(let b = 0; b < NB; b++) sum += bins[b]; }
+    F[j * NX + i] = sum / (NA * NB); if(sum > 0) any = true; }
+  if(!any) return null;
+  // a 3x3 blur (the 16 directions leave spokes round a thin leg), a clear outer ring, then alpha = k x hidden share
+  const data = new Uint8Array(N * 4);
+  for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let v = 0; if(i > 0 && j > 0 && i < NX - 1 && j < NZ - 1){ let sum = 0, n = 0; for(let b = -1; b <= 1; b++) for(let a = -1; a <= 1; a++){ const wg = (a ? 1 : 2) * (b ? 1 : 2); sum += wg * F[(j + b) * NX + i + a]; n += wg; } v = sum / n; }
+    data[(j * NX + i) * 4 + 3] = Math.round(255 * V33C.k * Math.min(1, v)); }
+  const tex = new THREE.DataTexture(data, NX, NZ, THREE.RGBAFormat, THREE.UnsignedByteType); tex.magFilter = tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.flipY = false; tex.needsUpdate = true;
+  V33C.fields++; V33C.ms += performance.now() - t0; return {tex, X0, Z0, ex: NX * s, ez: NZ * s}; }
+function v33ContactMat(key, o, w, dd){ if(key && V33C.mats[key] !== undefined) return V33C.mats[key];
+  const f = v33Field(o, w, dd); let m = null;
+  if(f){ m = new THREE.MeshBasicMaterial({map: f.tex, color: 0x000000, transparent: true, opacity: 1, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8});
+    m.toneMapped = false; m.name = 'v33contact'; m.userData.v33f = f; }
+  if(key) V33C.mats[key] = m; return m; }
+// how far (0..1 of the way from a to b, plan) the floor runs on at height y before a wall or a drop
+function v33Reach(x0, z0, x1, z1, y, floorOK){ let t = 1; const dx = x1 - x0, dz = z1 - z0;
+  try{ for(const c of COLLIDERS){ if(c.kind !== 'WALL' || !c.poly || (c.v && c.v !== ACTIVE_VAR) || c.y1 < y + .5 || c.y0 > y + 2) continue;
+      if(Math.max(x0, x1) < c.x0 || Math.min(x0, x1) > c.x1 || Math.max(z0, z1) < c.z0 || Math.min(z0, z1) > c.z1) continue;
+      const p = c.poly; for(let i = 0, j = p.length - 1; i < p.length; j = i++){ const ex = p[i][0] - p[j][0], ez = p[i][1] - p[j][1], den = dx * ez - dz * ex; if(Math.abs(den) < 1e-9) continue;
+        const a = ((p[j][0] - x0) * ez - (p[j][1] - z0) * ex) / den, b = ((p[j][0] - x0) * dz - (p[j][1] - z0) * dx) / den; if(a >= 0 && a < t && b >= 0 && b <= 1) t = a; } } }catch(e){}
+  if(floorOK) try{ for(let k = 1; k <= 4; k++){ const f = k / 4; if(f > t + 1e-6) break; if(Math.abs(walkSurfaceAt(x0 + dx * f, z0 + dz * f, y + .6) - y) > .3){ t = Math.min(t, (k - 1) / 4); break; } } }catch(e){}
+  return t; }
+// the decal's quad: the shadow map's extent, cut back on each side to the wall or floor edge there (redone when the piece moves or the layout changes)
+function v33Fit(mesh){ const o = mesh.parent, u = o && o.userData, f = mesh.material && mesh.material.userData.v33f; if(!u || !u.size || !f) return;
+  const e = o.matrixWorld.elements, key = [e[0], e[2], e[8], e[10], e[12], e[13], e[14]].map(v => v.toFixed(3)).join(',') + '|' + (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '') + '|' + (typeof COLLIDERS !== 'undefined' ? COLLIDERS.length : 0);
+  if(mesh.userData.v33k === key) return; mesh.userData.v33k = key;
+  const w = u.size[0], dd = u.size[1], P = V33C.pad, y = e[13], Wd = (x, z) => [e[0] * x + e[8] * z + e[12], e[2] * x + e[10] * z + e[14]];
+  let floorOK = false; try{ const c = Wd(0, dd / 2); floorOK = Math.abs(walkSurfaceAt(c[0], c[1], y + .6) - y) < .3; }catch(err){}
+  const side = (ax, az, bx, bz, nx, nz) => { let r = 1; for(const t of [.08, .5, .92]){ const lx = ax + (bx - ax) * t, lz = az + (bz - az) * t, a = Wd(lx - nx * .05, lz - nz * .05), b = Wd(lx + nx * P, lz + nz * P); r = Math.min(r, v33Reach(a[0], a[1], b[0], b[1], y, floorOK)); } return Math.max(.04, r * P - .04); };
+  const pl = side(-w / 2, 0, -w / 2, dd, -1, 0), pr = side(w / 2, 0, w / 2, dd, 1, 0), pb = side(-w / 2, 0, w / 2, 0, 0, -1), pf = side(-w / 2, dd, w / 2, dd, 0, 1);
+  const xs = [-w / 2 - pl, w / 2 + pr], zs = [-pb, dd + pf], g = mesh.geometry, Pp = g.attributes.position, T = g.attributes.uv; let n = 0;
+  for(const z of zs) for(const x of xs){ Pp.setXYZ(n, x, V33C.y, z); T.setXY(n, (x - f.X0) / f.ex, (z - f.Z0) / f.ez); n++; }
+  Pp.needsUpdate = true; T.needsUpdate = true; g.computeBoundingSphere(); mesh.userData.v33pads = [pl, pr, pb, pf]; }
 function v33Contact(o){
   const u = o && o.userData; if(!u || u.category !== 'furniture' || !u.size || u.v33c || V33C.skip.test(u.kind || '')) return; if(u.opts && u.opts.mountY !== undefined) return;
-  const w = u.size[0], dd = u.size[1]; if(!(w > .3 && dd > .3)) return; u.v33c = 1;
-  const xs = [-w / 2 - V33C.m, -w / 2, w / 2, w / 2 + V33C.m], zs = [-V33C.mb, 0, dd, dd + V33C.m], uv = [0, .25, .75, 1], P = [], T = [], I = [];
-  for(let j = 0; j < 4; j++) for(let i = 0; i < 4; i++){ P.push(xs[i], V33C.y, zs[j]); T.push(uv[i], 1 - uv[j]); }
-  for(let j = 0; j < 3; j++) for(let i = 0; i < 3; i++){ const a = j * 4 + i; I.push(a, a + 4, a + 1, a + 1, a + 4, a + 5); }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(T, 2)); g.setIndex(I);
-  g.computeBoundingSphere(); g.boundingBox = new THREE.Box3(new THREE.Vector3(0, V33C.y, dd / 2), new THREE.Vector3(0, V33C.y, dd / 2));
-  const mesh = new THREE.Mesh(g, v33ContactMat(/glass/i.test((u.kind || '') + ' ' + JSON.stringify(u.opts || {})) ? .4 : 1));
-  mesh.name = 'v33contact'; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 1; mesh.raycast = () => {}; mesh.userData.noAO = true; mesh.userData.v33contact = true;
-  o.add(mesh); V33C.n++; V33.report.contact = V33C.n;
+  const w = u.size[0], dd = u.size[1]; if(!(w > .3 && dd > .3)) return;
+  let key = null; try{ key = (u.kind || '') + '|' + u.size.map(v => (+v).toFixed(3)).join(',') + '|' + JSON.stringify(u.opts || {}); }catch(e){}
+  const mat = v33ContactMat(key, o, w, dd); if(!mat) return; u.v33c = 1;
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(12, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(8, 2)); g.setIndex([0, 2, 1, 1, 2, 3]);
+  g.boundingBox = new THREE.Box3(new THREE.Vector3(0, V33C.y, dd / 2), new THREE.Vector3(0, V33C.y, dd / 2));   // a point: the decal does not widen the piece's own box
+  const mesh = new THREE.Mesh(g, mat);
+  mesh.name = 'v33contact'; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 1; mesh.raycast = () => {}; mesh.userData.noAO = true; mesh.userData.v33contact = true; mesh.frustumCulled = false;
+  mesh.onBeforeRender = function(){ try{ v33Fit(this); }catch(e){} };
+  o.add(mesh); try{ v33Fit(mesh); }catch(e){} V33C.n++; V33.report.contact = V33C.n;
 }
 if(typeof stagedShadows === 'function'){ const _ss = stagedShadows; stagedShadows = function(o){ const r = _ss.apply(this, arguments); try{ v33Contact(o); }catch(e){ console.warn('[v33] contact', e); } return r; }; }
 else console.warn('[v33] S8: stagedShadows not in scope');
@@ -23620,7 +23741,7 @@ function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].concat(w
     it.world = new THREE.Box3().setFromObject(o);
     if(/^rug/.test(kind)) rugs.push(it); items.push(it); }
   const P = {}, C = {};
-  for(const it of items){ if(R13C.skip.test(it.kind) || it.w * it.d > 90 || Math.max(it.w, it.d) < .15 || it.y1 - it.y0 < .08){ rep.skipped++; continue; }
+  for(const it of items){ if(R13C.skip.test(it.kind) || it.o.userData.v33c /* r47: a staged piece with its own shaped contact shadow (v33Contact) gets no second, rectangular one */ || it.w * it.d > 90 || Math.max(it.w, it.d) < .15 || it.y1 - it.y0 < .08){ rep.skipped++; continue; }
     const sp = BIM2S && BIM2S.spaceUnderFeet(it.wz, it.wx, it.y0 + .3);   // BIM plan (x, y) = world (z, x)
     let y = null, k = R13C.kFloor;
     let ws = null; if(!sp && window.R17 && R17.on && typeof walkSurfaceAt === 'function'){ try{ ws = walkSurfaceAt(it.wx, it.wz, it.y0 + .3); }catch(e){} }   // r17 R17-3: outdoors the support is the walking surface (pavers, deck, ground)
