@@ -357,7 +357,7 @@ def option_data(meta, elements, bounds, new_col):
         if el == 'RL-FRONT-STAIR': c = json.loads(json.dumps(c)); c['poly'] = [[p[0], p[1] + DECK['y0'] - 0.3] for p in c['poly']]; c['element'] = 'RL-FRONT-STAIR-B5'; c['id'] = c['id'].replace('RL-FRONT-STAIR', 'RL-FRONT-STAIR-B5')
         col.append(c)
     for i, (a, b_) in enumerate((((DECK['x0'], DECK['y0'] - .1), (DECK['x1'], DECK['y0'] + .1)), ((DECK['x1'] - .25, DECK['y0']), (DECK['x1'] + .05, Y_SO)))):
-        col.append({'id': 'RL-DECK-B5#%d' % i, 'element': 'RL-DECK-B5', 'kind': 'RAIL', 'poly': [[a[0], a[1]], [b_[0], a[1]], [b_[0], b_[1]], [a[0], b_[1]]], 'z0': 0, 'z1': 3.1, 'storey': 'L1', 'exterior': True})
+        col.append({'id': 'RL-DECK-B5#%d' % i, 'element': 'RL-DECK-B5', 'kind': 'RAIL', 'poly': [[a[0], a[1]], [b_[0], a[1]], [b_[0], b_[1]], [a[0], b_[1]]], 'z0': 0, 'z1': 3.5, 'storey': 'L1', 'exterior': True})
     D['colliders'] = col + new_col
     base = {o['id']: o for o in meta['openings']}; ops = []
     for o in meta['openings']:

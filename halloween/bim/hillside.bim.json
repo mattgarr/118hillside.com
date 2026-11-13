@@ -13307,7 +13307,7 @@
     ]
    ],
    "z": 0.0,
-   "height": 3.1,
+   "height": 3.5,
    "style": "ext"
   },
   {
@@ -13326,7 +13326,7 @@
     ]
    ],
    "z": 0.0,
-   "height": 3.1,
+   "height": 3.5,
    "style": "ext"
   },
   {
@@ -13334,7 +13334,7 @@
    "ifc": "IfcRailing",
    "predefined": "GUARDRAIL",
    "type": "cable",
-   "height": 3.0,
+   "height": 3.5,
    "style": "int",
    "path": [
     [
@@ -15219,7 +15219,7 @@
     ]
    ],
    "z": 0.0,
-   "height": 3.0,
+   "height": 3.5,
    "style": "int"
   },
   {
