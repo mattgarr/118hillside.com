@@ -982,16 +982,12 @@ html:not(.ph) .v31games:hover{background:#3a3a36}
 /* r45 calm pass: Floor plans beside Games (outlined, so one filled pill); Holiday decor and Full screen leave the bar for the View menu */
 html:not(.ph) .v31games.v45fp{background:transparent;color:#1f1f1d;box-shadow:inset 0 0 0 1.5px #1f1f1d}
 html:not(.ph) .v31games.v45fp:hover{background:rgba(31,31,29,.08)}
-/* r46 (owner, on his iPhone: "cannot see the floor plans at all"): the Floor plans pill is in the phone header too, between Tour and Games.
-   The wordmark and the pills tighten so the row fits from 360 to 430 px without wrapping. */
-html.ph .v31games.v45fp{display:inline-flex!important;background:transparent!important;color:var(--v31ink,#1f1f1d)!important;box-shadow:inset 0 0 0 1.5px var(--v31ink,#1f1f1d)}
-html.ph .tab,html.ph .v31games{padding:0 10px!important;font-size:11.5px!important;letter-spacing:.05em!important;white-space:nowrap;flex:0 0 auto}
-html.ph .bar .plate b{font-size:19px!important;letter-spacing:.02em!important;white-space:nowrap}
-html.ph .bar{gap:5px}
-@media (max-width:400px){html.ph .bar .plate b{font-size:17px!important;letter-spacing:0!important}html.ph .tab,html.ph .v31games{padding:0 8px!important;font-size:11px!important;letter-spacing:.03em!important;min-height:36px;height:36px}}
-/* r46: the holiday chip on a phone is a small quiet pill, well under the 3D model / Photo switch */
-html.ph #cta42[data-k="decor"]{min-height:30px;padding:0 10px 0 8px;font-size:12.5px;gap:5px;opacity:.86;box-shadow:none}
-html.ph #cta42[data-k="decor"] svg{width:13px;height:13px}
+/* r46 (owner, on his iPhone: "cannot see the floor plans at all"; then: the Holiday decor chip "doesn't earn its real estate"): no holiday chip at any
+   width; on a phone the slot above the stop card holds one compact Floor plans pill on every stop (no header pill there: one entry in plain sight,
+   plus the menu row). Holiday decor lives in the View menu and the phone's menu. */
+html.ph .v31games.v45fp{display:none!important}
+html.ph #cta42{min-height:34px;padding:0 11px 0 9px;font-size:13px;gap:6px;box-shadow:none}
+html.ph #cta42 svg{width:14px;height:14px}
 html:not(.ph) #holBtn,html:not(.ph) #fsBtn{display:none!important}
 html.ph .v45fs{display:none!important}
 #b22pill{display:none!important}   /* r45 owner: no 'Refining the view' pill */
@@ -16383,7 +16379,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   const chip = el('button'); chip.type = 'button'; chip.id = 'cta42'; chip.hidden = true;
   const nudge = el('aside'); nudge.id = 'ng42'; nudge.hidden = true; nudge.setAttribute('aria-label', 'Ideas for this house');
   nudge.innerHTML = '<button type="button" class="g42x" aria-label="Dismiss">×</button><p class="g42h">Ideas for this house</p><p class="g42t"></p>'
-    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>Floor plans</span></button><button type="button" data-a="decor">' + ICON_DECOR + '<span>Holiday decor</span></button></div>';
+    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>Floor plans</span></button></div>';   /* r46: no holiday prompt in the nudge */
   const banner = el('div'); banner.id = 'cb42'; banner.hidden = true; banner.setAttribute('role', 'status');
   banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">Floor plans</button><button type="button" data-a="real">Real house</button></div>';
   const hm = el('div'); hm.id = 'hm42'; hm.hidden = true;
@@ -16585,8 +16581,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   function chipKind(){ if(inGame() || mode !== 'tour' || photoUp() || root.classList.contains('clean27') || root.classList.contains('phm')) return '';
     const hs = $('#holShow'); if(hs && !hs.hidden) return ''; const P = $('#holPanel'); if(P && !P.hidden) return '';
     const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
-    const id = stopId(); return PLAN_STOPS.has(id) && plans().length > 1 ? 'plans' : DECOR_STOPS.has(id) && window.HOLIDAY ? 'decor' : ''; }
-  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>See the floor plans</b></span>' + ARROW; }   /* r45 calm pass: short (was 'Compare floor plans: 6, 5 or 4 bedrooms') */
+    const id = stopId(); return plans().length > 1 && (isPh() || PLAN_STOPS.has(id)) ? 'plans' : ''; }   /* r46: never 'decor'; on a phone the Floor plans pill stands on every stop */
+  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>' + (isPh() ? 'Floor plans' : 'See the floor plans') + '</b></span>' + ARROW; }   /* r45 calm pass: short (was 'Compare floor plans: 6, 5 or 4 bedrooms') */
     return ICON_DECOR + '<span class="c42x"><b>' + 'Holiday decor' + '</b></span>' + ARROW; }
   chip.addEventListener('click', e => { e.stopPropagation(); const where = chip.classList.contains('c42in') ? 'stop-card' : 'stop-chip'; if(chip.dataset.k === 'plans') openPicker(where); else openDecor(where); });
   for(const n of [chip, nudge, banner, hm]) for(const ev of ['pointerdown', 'wheel', 'touchstart']) n.addEventListener(ev, e => e.stopPropagation(), {passive: true});   // not the canvas: no drag or walk through them
@@ -16597,7 +16593,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   function maybeNudge(){ if(mode !== 'tour' || inGame()) return; seen.add(stopIdx);
     if(nudgeOn || ls('hillside.cta42.nudge') === '1' || seen.size < 5 || !chipKind()) return;
     ls('hillside.cta42.nudge', '1'); nudgeOn = true; nudgeStop = stopIdx; const b = bedsPhrase();
-    nudge.querySelector('.g42t').textContent = b ? 'See the main level laid out with ' + b + ', or see the house decorated for the holidays.' : 'See other floor plans for the main level, or see the house decorated for the holidays.';
+    nudge.querySelector('.g42t').textContent = b ? 'See the main level laid out with ' + b + '.' : 'See other floor plans for the main level.';
     nudge.hidden = false; void nudge.offsetWidth; nudge.classList.add('g42on'); ga('cta_nudge', {action: 'shown', stop: stopId()}); }
 
   /* where the chip and the nudge sit: just above the stop card on the left, clear of the 3D model / Photo switch on a phone; inside the card when it is open */
@@ -16652,7 +16648,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Floor plans';
     const d = el('button', 'c42f', '<span class="c42w">Holiday decor</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
     a.addEventListener('click', e => { e.stopPropagation(); openPicker('finale'); });
-    d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); });
+    d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); }); d.hidden = true; d.style.display = 'none';   /* r46: no holiday prompt on the last stop either */
     const ph = fl.querySelector('[data-a="photos"]'); if(ph) ph.after(a, d); else fl.append(a, d); return true; }
 
   function sync(){ try{
