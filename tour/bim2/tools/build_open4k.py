@@ -38,10 +38,10 @@ POST = (X_LW, X_LW, KB_Y0, KB_Y1)    # no post (kept for the drawing tools)
 DECK = dict(x0=15.675, x1=24.6, y0=-4.0, z=0.0, skirt=-4.8)
 STAIR_Y = (-9.937, 0.0)
 FOLD = dict(x0=8.7, x1=22.9, head=7.6, panels=6)                     # folding glass doors, stacking at the west jamb
-FIXW = dict(x0=23.7, x1=32.4895, sill=1.6833, head=7.6)             # the east part of the old picture window, fixed glass
+FIXW = dict(x0=23.9, x1=32.0, sill=1.6833, head=7.6)             # the east part of the old picture window, fixed glass
 NWIN = [(11.2, 2.6, 3.5, 6.9), (19.6, 2.6, 3.5, 6.9), (30.5, 5.0, 2.7, 7.0)]   # north wall windows: centre x, width, sill, head
-EWIN = [(12.5, 4.2, 2.6875, 7.0), (24.4, 4.2, 2.6875, 7.0)]         # street gable windows either side of the hearth: centre y, width, sill, head
-FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(4.5, 1.45, 2.95), mantel=(4.55, 0.7, 0.85, 6.2), hearth=(1.5, 0.33), tv=(65, 7.0))   # mantel: bottom, height, depth, length
+EWIN = [(RIDGE_Y - 8.565, 6.5, 2.6875, 7.0), (RIDGE_Y + 8.565, 6.5, 2.6875, 7.0)]         # street gable windows either side of the hearth: centre y, width, sill, head
+FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 2.05), mantel=(3.45, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 5.75))   # mantel: bottom, height, depth, length
 PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
 DOOR_H = 6.7812
 REMOVED_SPACES = ['SP-L1-BED2', 'SP-L1-BED2-CLOSET', 'SP-L1-BED3', 'SP-L1-BED3-CLOSET', 'SP-L1-KITCHEN']
@@ -102,18 +102,35 @@ def build():
             ends = ('xX' if axis == 'x' else 'yY'); side = ('yY' if axis == 'x' else 'xX')
             wall_box(el, r[0], r[1], r[2], r[3], z0, top, mat, faces=side + ends)
             if z0 == 0.0 and collide: colliders.append({'id': '%s#%d' % (el, len([c for c in colliders if c['element'] == el])), 'element': el, 'kind': 'WALL', 'poly': [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
-    def window(el, axis, u0, u1, z0, z1, inner, outer, sign_out):
-        """a fixed window in a rebuilt wall: black frame, glass, exterior trim. axis 1: wall plane y = const; sign_out: outward normal sign"""
+    def window(el, axis, u0, u1, z0, z1, inner, outer, sign_out, units=1):
+        """a window in a rebuilt wall: frame, glass, exterior trim, interior casing and stool. units > 1: mulled double-hung-style units
+        like the house's own (two sashes with a meeting rail, a mullion between units). axis 1: wall plane y = const; sign_out: outward normal sign"""
         mid = (inner + outer) / 2; to3 = (lambda v: (lambda u, z: (u, v, z))) if axis == 1 else (lambda v: (lambda u, z: (v, u, z)))
         nrm = (lambda s: (0, s, 0)) if axis == 1 else (lambda s: (s, 0, 0))
-        ro = sbox(u0, z0, u1, z1); ring = ro.difference(mitre(ro, -0.16)); glass = mitre(ro, -0.16)
-        cen = to3(mid)((u0 + u1) / 2, (z0 + z1) / 2)
-        for pl, s in ((mid - 0.1 * sign_out, -sign_out), (mid + 0.1 * sign_out, sign_out)): plane_face(O, el, None, 'openings', 'L1', 'window-frame', ring, to3(pl), nrm(s))
-        prism_sides(O, el, None, 'openings', 'L1', 'window-frame', glass.exterior, to3(mid - 0.1 * sign_out), to3(mid + 0.1 * sign_out), inward_center=cen, outward=False)
+        ro = sbox(u0, z0, u1, z1); f = 0.16
+        if units > 1:
+            mul, st, rail = 0.31, 0.166, 0.167; bw = (u1 - u0 - 2 * 0.04 - (units - 1) * mul) / units; zm = (z0 + z1) / 2; panes = []
+            for i in range(units):
+                a_ = u0 + 0.04 + i * (bw + mul)
+                panes += [sbox(a_ + st, z0 + 0.04 + st, a_ + bw - st, zm - rail / 2), sbox(a_ + st, zm + rail / 2, a_ + bw - st, z1 - 0.04 - st)]
+        else: panes = [mitre(ro, -f)]
+        glass = unary_union(panes); ring = ro.difference(glass)
+        for pl, s_ in ((mid - 0.1 * sign_out, -sign_out), (mid + 0.1 * sign_out, sign_out)): plane_face(O, el, None, 'openings', 'L1', 'window-frame', ring, to3(pl), nrm(s_))
+        for pn in panes:
+            cen = to3(mid)(pn.centroid.x, pn.centroid.y)
+            prism_sides(O, el, None, 'openings', 'L1', 'window-frame', pn.exterior, to3(mid - 0.1 * sign_out), to3(mid + 0.1 * sign_out), inward_center=cen, outward=False)
         plane_face(O, el, None, 'glass', 'L1', 'glass', glass, to3(mid - 0.01), nrm(-sign_out)); plane_face(O, el, None, 'glass', 'L1', 'glass', glass, to3(mid + 0.01), nrm(sign_out))
         tr = mitre(ro, B.TRIM_W).difference(ro); po = outer + B.TRIM_T * sign_out
         plane_face(O, el, None, 'trim', '-', TRIM_EXT, tr, to3(po), nrm(sign_out))
         prism_sides(O, el, None, 'trim', '-', TRIM_EXT, mitre(ro, B.TRIM_W).exterior, to3(outer), to3(po), inward_center=to3(po)((u0 + u1) / 2, (z0 + z1) / 2))
+        # inside: a flat 3-1/2 in casing round the opening and a stool, like the house's own windows
+        cw, ct = 0.29, 0.06; pi = inner - ct * sign_out; cas = sbox(u0 - cw, z0 - cw, u1 + cw, z1 + cw).difference(ro)
+        plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', cas, to3(pi), nrm(-sign_out))
+        for ring_ in (sbox(u0 - cw, z0 - cw, u1 + cw, z1 + cw).exterior, ro.exterior):
+            prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', ring_, to3(inner), to3(pi), inward_center=to3(pi)((u0 + u1) / 2, (z0 + z1) / 2), outward=(ring_ is not ro.exterior))
+        ps = inner - 0.2 * sign_out; stool = sbox(u0 - cw - 0.08, z0 - 0.02, u1 + cw + 0.08, z0 + 0.07)
+        plane_face(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool, to3(ps), nrm(-sign_out))
+        prism_sides(O, el, None, 'trim', 'L1', 'paint-trim-semigloss', stool.exterior, to3(inner), to3(ps), inward_center=to3(ps)((u0 + u1) / 2, z0 + 0.02))
     def ext_wall(els, dst, axis, inner, outer, sign_in, face, fills, cuts):
         """an exterior wall re-made: its room face new (face less the cuts), its siding with the old window holes filled and the new
         ones cut, everything else as built. axis: the plane's axis (1: y = const). fills / cuts: rectangles in (along, z)"""
@@ -156,7 +173,11 @@ def build():
     # ---- the south wall: folding glass doors centred on the table, the east part of the picture window kept as fixed glass
     fold = sbox(FOLD['x0'], 0.0, FOLD['x1'], FOLD['head']); fixw = sbox(FIXW['x0'], FIXW['sill'], FIXW['x1'], FIXW['head'])
     ext_wall(['W-L1-002'], 'W-L1-B5S', 1, Y_S, Y_SO, 1, sbox(X_LW, 0, 32.4895, ceil_z(Y_S)), [oldr('WN-L1-02'), oldr('WN-L1-03')], [fold, fixw])
-    window('WN-L1-B5S', 1, FIXW['x0'], FIXW['x1'], FIXW['sill'], FIXW['head'], Y_S, Y_SO, -1)
+    window('WN-L1-B5S', 1, FIXW['x0'], FIXW['x1'], FIXW['sill'], FIXW['head'], Y_S, Y_SO, -1, units=3)
+    # the old picture window ran 4 in past this wall piece into the next one: close that slot, inside and out
+    slot = sbox(32.3, 1.25, 33.0, 8.05); sy_ = float(min(t['v'][:, 1].min() for t in E['W-L1-002'] if t['material'].startswith('hardie')))
+    plane_face(O, 'W-L1-B5S', None, 'walls', 'L1', PAINT, slot, lambda x, z: (x, Y_S + 0.006, z), (0, 1, 0))
+    plane_face(O, 'W-L1-B5S', None, 'walls', 'L1', 'hardie-lap#paint-ext-body', slot, lambda x, z: (x, sy_ - 0.006, z), (0, -1, 0))
     plane_face(O, 'D-L1-B5F', None, 'openings', 'L1', 'steel-black', sbox(FOLD['x0'], 4.45, FOLD['x1'], 4.75), lambda x, y: (x, y, 0.012), (0, 0, 1))   # threshold track
     colliders += [{'id': 'W-L1-B5S#%d' % i, 'element': 'W-L1-B5S', 'kind': 'WALL', 'poly': [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]], 'z0': -5.2, 'z1': 8.16, 'storey': 'L1', 'exterior': True} for i, (a, b_) in enumerate(((4.9, FOLD['x0']), (FOLD['x1'], 32.49)))]
     # ---- the north wall: the old bedroom and bath windows go; two counter-height kitchen windows and one in the living area
@@ -167,7 +188,7 @@ def build():
     ecuts = [rect(c, w, s, h) for c, w, s, h in EWIN]
     eface = Polygon([(Y_S, 0), (Y_N, 0), (Y_N, ceil_z(Y_N)), (RIDGE_Y, APEX), (Y_S, ceil_z(Y_S))])
     ext_wall(['W-L1-049', 'W-L1-050', 'W-L1-051'], 'W-L1-B5E', 0, X_E, X_EO, -1, eface, [oldr('WN-L1-04'), oldr('WN-L1-05'), oldr('WN-L1-07')], ecuts)
-    for i, (c, w, s, h) in enumerate(EWIN): window('WN-L1-B5E%d' % (i + 1), 0, c - w / 2, c + w / 2, s, h, X_E, X_EO, 1)
+    for i, (c, w, s, h) in enumerate(EWIN): window('WN-L1-B5E%d' % (i + 1), 0, c - w / 2, c + w / 2, s, h, X_E, X_EO, 1, units=3)
     # ---- the west side of the box north of the bedroom (the old bath's tiled walls): repainted to the vault
     for el in ('W-L1-032', 'W-L1-038'):
         xs = []
@@ -465,6 +486,7 @@ def register(hide, hide_ranges, sha):
                         'fireplace': {'pos': [18.45, 5.3, 20.6], 'look': [18.45, 5.6, 36.0]},
                         'fridgewall': {'pos': [28.0, 5.0, 20.6], 'look': [26.4, 4.5, 5.3]},
                         'tallrun': {'pos': [9.6, 5.0, 17.4], 'look': [24.0, 4.4, 5.3]},
+                        'sidewall': {'pos': [19.5, 5.0, 26.0], 'look': [4.8, 4.6, 29.5]},
                         'kitchen': {'pos': [18.6, 5.0, 25.2], 'look': [27.0, 4.2, 9.0]},
                         'dining': {'pos': [19.0, 5.0, 22.4], 'look': [3.0, 3.4, 13.0]},
                         'island': {'pos': [29.0, 5.0, 22.8], 'look': [14.0, 4.0, 13.0]},

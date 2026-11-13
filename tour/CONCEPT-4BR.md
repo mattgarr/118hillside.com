@@ -174,10 +174,10 @@ street, y north).
   single vaulted great room. Everything that stood inside it comes out: the front and middle bedrooms and their closets, the
   hall bath, the hall, and the old kitchen.
 - **Living at the street end.** A gas hearth is centred on the street gable, under the ridge: a 7-ft chimney breast clad in stacked
-  stone from a raised stone hearth to the vault, a 4 ft 6 linear firebox in a steel frame, a heavy fir mantel and a 65-in TV
+  stone from a raised stone hearth to the vault, a low 5-ft linear firebox in a steel frame, a heavy fir mantel and a 65-in TV
   above it. Low built-ins (30 in high, wood tops) run under the two gable windows either side, wall to wall. Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
-  4 ft 2 windows, one either side of the hearth. Bookshelves stand on the north wall either side of a 5-ft window.
+  6 ft 6 windows (three mulled double-hung-style units each, like the rest of the house), one either side of the hearth. Bookshelves stand on the north wall either side of a 5-ft window.
 - **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood) is on the north wall between two counter-height
   windows. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
   cabinets, one crown along the top and a panelled end. (The owner asked for about 3 ft more cabinetry toward the table;
@@ -188,7 +188,7 @@ street, y north).
   island, with a 7-ft sideboard on the west wall, centred on the table. This is the house's only dining place, so it is sized as one.
 - **Folding glass doors, moved west.** A 14-ft, six-panel folding door (x 8.7 to 22.9) is centred on the table and stacks at
   its west jamb. It opens to the porch and to about 9 ft of new deck (to x 24.6, 8 ft 5 deep, cable rail). The east part of
-  the old picture window stays as fixed glass (x 23.7 to 32.5) beside the sofas.
+  the old picture window stays as fixed glass (x 23.9 to 32.0, three mulled units) beside the sofas.
 - **Outside the gable.** The back bedroom stays (11 ft 5 x 9 ft 7) with one closet; the other closet becomes its vestibule, so
   the bedroom door no longer opens off the main room. A new 3/4 bath runs across the north end of the old living room, with
   the shower in the old laundry closet. A short hall between them has a laundry closet (stacked washer and dryer behind a door) in its corner, with 36 in of hall left beside it. The rest of the old
@@ -237,7 +237,7 @@ exterior walls and adding a fireplace vent are all permit work.
 - The old living room's big west window runs past the new library/bath wall, which meets it at a mullion. A real project
   would reframe or split that window.
 - The oven column (drawer, wall oven, built-in microwave, cabinet above), the stone cladding, the low built-ins and the
-  crown are simple stand-ins drawn for this concept. The TV sits high (centre at 7 ft) because it is over a mantel.
+  crown are simple stand-ins drawn for this concept. The mantel top is at 4 ft 1 and the TV centre at 5 ft 9.
 - The island sink is centred on the island (the plan has it a little west with the dishwasher beside it).
 - The closet doors, the laundry closet door (shut) and the bedroom door (standing open) are drawn fixed; the two pocket
   doors are drawn open. They do not operate in the tour.
