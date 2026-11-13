@@ -979,6 +979,19 @@ html.ph .tab,html.ph .v31games{min-height:40px;height:40px;padding:0 13px!import
 html.ph .v31games{display:inline-flex;align-items:center}
 html:not(.ph) .v31games{display:inline-flex;align-items:center;margin-left:6px;height:32px;padding:0 14px;border:0;border-radius:999px;background:#1f1f1d;color:#fbfaf7;font:500 12px/1 "Jost","Avenir Next",Arial,sans-serif;letter-spacing:.07em;text-transform:uppercase;cursor:pointer}
 html:not(.ph) .v31games:hover{background:#3a3a36}
+/* r45 calm pass: Floor plans beside Games (outlined, so one filled pill); Holiday decor and Full screen leave the bar for the View menu */
+html:not(.ph) .v31games.v45fp{background:transparent;color:#1f1f1d;box-shadow:inset 0 0 0 1.5px #1f1f1d}
+html:not(.ph) .v31games.v45fp:hover{background:rgba(31,31,29,.08)}
+html.ph .v31games.v45fp{display:none!important}
+html:not(.ph) #holBtn,html:not(.ph) #fsBtn{display:none!important}
+html.ph .v45fs{display:none!important}
+#b22pill{display:none!important}   /* r45 owner: no 'Refining the view' pill */
+/* r45 phone Design sheet: the level chips and Room labels on one row (it scrolls sideways if it must), and the description in full */
+html.ph.m27-design #card .toggles{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px}
+html.ph.m27-design #card .toggles::-webkit-scrollbar{display:none}
+html.ph.m27-design #card .toggles>*{flex:0 0 auto}
+html.ph.m27-design #card .toggles .lvseg button{padding:0 10px}
+html.ph.m27-design .card p#blurb:not(.phall){display:block;-webkit-line-clamp:unset;overflow:visible;cursor:default}
 html:not(.ph) #hwGamesPill{display:none!important}
 html.ph .phmore{background:var(--v31ink)!important;color:#fbfaf7!important;width:40px!important;height:40px!important;flex:0 0 40px!important}
 html.ph #hwGamesPill{display:none!important}
@@ -1451,7 +1464,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
     <button class="tod" id="tod" data-dusk="1" aria-label="Change the time of day" title="Time of day: morning, midday, afternoon, golden hour, dusk"><i></i><span id="todtxt">Dusk</span></button><button class="tod" id="hwBtn" aria-pressed="false" aria-label="Halloween decorations on or off" title="Halloween: decorate the house for the Deja Boo party"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 5.6c-1-.1-1.4-1.3-1-2.6M10 5.6c3.4-1.4 7 .6 7 5.2S13.6 17 10 16.2C6.4 17 3 15.4 3 10.8s3.6-6.6 7-5.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.6 9.4l1.4 1.2-1.6.4zM13.4 9.4l-1.4 1.2 1.6.4zM7 13c1.8 1.2 4.2 1.2 6 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg><span>Halloween</span></button><button class="tod" id="tgBtn" aria-pressed="false" aria-label="Thanksgiving decorations on or off" title="Thanksgiving: set the table and dress the house for fall"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 2.5l1.6 3.4 2.6-1.6-.4 3.4 3.4-.2-2 2.8 2.6 1.6-3.4 1-.2 3.2-2.8-2-1.4 3.4-1.4-3.4-2.8 2-.2-3.2-3.4-1 2.6-1.6-2-2.8 3.4.2-.4-3.4 2.6 1.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M10 11v7" stroke="currentColor" stroke-width="1.3"/></svg><span>Thanksgiving</span></button>
     <button type="button" class="tod phonly phit phsep" id="phClean"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Full screen</span></button><button type="button" class="tod phonly phit" id="phGest"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M7 11V4.8a1.3 1.3 0 0 1 2.6 0V10m0-1.2V3.6a1.3 1.3 0 0 1 2.6 0V10m0-4.4a1.3 1.3 0 0 1 2.6 0V12c0 3.3-2 5.5-5 5.5-2.3 0-3.4-1.2-4.6-3.2L3.6 11.6a1.3 1.3 0 0 1 2.1-1.5L7 11.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Touch gestures</span></button>
     <button type="button" class="tod phonly phit" id="phAbout"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5M10 6.2v.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>About this tour</span></button>
-    <p class="phonly phnote">Pick a layout under Design to open the design tools: layouts, furniture, paint and landscape.</p>
+    <p class="phonly phnote">Design has furniture, paint and landscape ideas.</p>
     </div>
   </header>
 
@@ -1476,8 +1489,8 @@ html.hwload .loading .loadnote{color:#c9bcd8}
         <button class="chip" id="tLabels" aria-pressed="true">Room labels</button>
       </div>
       <div class="design" id="design" hidden>
-        <div class="dsec"><div class="dlab">Layout</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
-        <div class="dact"><button class="btn" id="dWalk">Walk through the house</button><button class="btn" id="dEdit">Edit a copy</button></div>
+        <div class="dsec"><div class="dlab">Floor plan</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
+        <div class="dact"><button class="btn" id="dWalk">Walk through</button><button class="btn" id="dEdit">Edit a copy</button></div>
         <div class="dtools" id="dTools" hidden>
           <div class="trow" role="toolbar" aria-label="Edit tools">
             <button class="tool" data-tool="select" aria-pressed="true">Select</button>
@@ -1499,7 +1512,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
         <p class="dnote" id="dNote"></p>
         <div class="dsec" id="fSec"><div class="dlab">Furniture</div>
           <div class="frow"><div class="seg" role="group" aria-label="Furniture"><button id="fOn" aria-pressed="true">On</button><button id="fOff" aria-pressed="false">Off</button></div>
-            <button class="tool" id="fRot" disabled>Rotate</button><button class="tool danger" id="fDel" disabled>Remove</button><button class="tool" id="fUndo" disabled>Undo</button><button class="tool" id="fReset" disabled>Put it all back</button></div>
+            <button class="tool" id="fRot" disabled>Rotate</button><button class="tool danger" id="fDel" disabled>Remove</button><button class="tool" id="fUndo" disabled>Undo</button><button class="tool" id="fReset" disabled aria-label="Put all the furniture back">Reset</button></div>
           <div class="dstat" id="fStat"></div></div>
         <div class="dsec" id="pSec"><div class="dlab">Exterior paint</div>
           <div class="pals" id="pPal" role="radiogroup" aria-label="Exterior paint colors"></div>
@@ -1691,6 +1704,7 @@ html:not(.ph) .qrow{display:none;position:fixed;z-index:31;top:var(--vtop27,62px
 html:not(.ph) .qrow::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--glass-hi);-webkit-backdrop-filter:var(--bf27);backdrop-filter:var(--bf27);pointer-events:none}
 html.halloween:not(.ph) .qrow{box-shadow:0 16px 40px rgba(0,0,0,.55),0 0 0 1px rgba(255,122,26,.12)}
 html.vmo27:not(.ph) .qrow{display:flex}
+html.vmo27:not(.ph) #v33disc.v33top{visibility:hidden}   /* r45: the model note, when it sits at the top right, lay over the open View menu's first row */
 html:not(.ph) .qrow::before{content:"View";display:block;padding:5px 10px 6px;font-family:var(--f-data);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 html:not(.ph) .qrow .qm{display:flex;width:100%}
 html:not(.ph) .qrow .tod{width:100%;min-height:38px;margin:0;padding:0 10px;gap:10px;justify-content:flex-start;border:0;border-radius:9px;background:none;box-shadow:none;
@@ -7257,7 +7271,7 @@ function focusRoom(r){
 /* gallery */
 function openGallery(){
   const w=$('#gwrap'); if(!w.dataset.built){ w.dataset.built='1';
-    const head=document.createElement('header'); head.innerHTML='<button type="button" class="btn gx36">Back to the 3D tour</button><h1>Photos by room</h1><p>Browse the home room by room. Tap “Show in 3D” to see where each room is.</p><p>The 3D model is an illustrative visual aid; sizes are approximate. <a href="#" onclick="document.getElementById(\'aboutDlg\').showModal();return false">About this tour</a></p>'; w.appendChild(head); head.querySelector('.gx36').onclick=()=>closeGallery();   /* r36 */
+    const head=document.createElement('header'); head.innerHTML='<button type="button" class="btn gx36">Back to the 3D tour</button><h1>Photos by room</h1><p>Browse room by room; “Show in 3D” takes you there. Model sizes are approximate. <a href="#" onclick="document.getElementById(\'aboutDlg\').showModal();return false">About this tour</a></p>'; w.appendChild(head); head.querySelector('.gx36').onclick=()=>closeGallery();   /* r36 */
     const order=ROOMS.map(r=>r.id);
     for(const id of order){ const r=ROOM[id]; const sec=document.createElement('section'); sec.className='gsec';
       sec.innerHTML=`<div class="gh"><h3></h3><span class="gm"></span><button class="btn go">Show in 3D</button></div><div class="grid"></div>`;
@@ -8659,20 +8673,27 @@ const DESIGN = (() => {
   function chips(){
     const box = $('#optChips'); box.innerHTML = '';
     /* r44f owner: a lighter picker; each layout leads with its bedroom and bath count, the as-built included, most bedrooms first */
+    if(custom && custom.base && custom.base !== 'asbuilt' && !defOf(custom.base)) custom.base = 'asbuilt';   // r45: its starting layout was retired
     const cnt = id => { try{ if(id === 'asbuilt') return [6, 3]; const o = BIM2.option(id) || {}; const b = +(o.bedrooms || o.beds) || 0; return b ? [b, +o.baths || 0] : null; }catch(e){ return null; } };
     const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today', n: cnt('asbuilt')}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea', n: cnt(d.id)})).sort((a, b) => ((b.n || [0])[0]) - ((a.n || [0])[0])));
     if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base).toLowerCase() : 'From today’s layout'});
-    for(const o of list){ const b = document.createElement('button'); b.type = 'button'; b.className = 'opt ' + (o.id === 'asbuilt' ? 'today' : 'idea'); b.dataset.id = o.id; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(o.id === sel)); b.tabIndex = o.id === sel ? 0 : -1;
+    /* r45 owner: the list is the layouts menu now (LAYOUTS45, in the Games menu's style); here one row says which layout is showing and opens it.
+       A saved 'My design' keeps a row of its own. */
+    box.removeAttribute('role'); const shown = list.filter(o => o.id === sel || o.id === 'custom');
+    for(const o of shown){ const b = document.createElement('button'); b.type = 'button'; b.className = 'opt ' + (o.id === 'asbuilt' ? 'today' : 'idea') + (o.id === sel ? ' lay45' : ''); b.dataset.id = o.id; if(o.id === sel) b.setAttribute('aria-haspopup', 'dialog');
       const nm = document.createElement('span'), sm = document.createElement('small');
       if(o.n){ nm.className = 'obb'; nm.innerHTML = '<b>' + o.n[0] + '</b> bed <i>·</i> <b>' + o.n[1] + '</b> bath'; sm.textContent = o.id === 'asbuilt' ? 'As built today' : o.name; b.setAttribute('aria-label', o.n[0] + ' bedrooms, ' + o.n[1] + ' baths: ' + o.name + (o.id === 'asbuilt' ? ', the house today' : ', remodel idea')); }
       else { nm.textContent = o.name; sm.textContent = o.sub; }
-      b.appendChild(nm); b.appendChild(sm); b.onclick = () => choose(o.id, true); box.appendChild(b); }
-    if(!box._r35){ box._r35 = true; box.addEventListener('keydown', e => { const L = [...box.querySelectorAll('.opt')], i = L.indexOf(document.activeElement); if(i < 0) return;   // radio group: arrows move and choose
+      b.appendChild(nm); b.appendChild(sm);
+      if(o.id === sel){ const ch = document.createElement('em'); ch.textContent = 'Change'; b.appendChild(ch); b.setAttribute('aria-label', (b.getAttribute('aria-label') || o.name) + '. Change the floor plan'); b.onclick = () => { try{ window.LAYOUTS45.open(b, 'design-panel'); }catch(e){ console.warn(e); } }; }
+      else b.onclick = () => choose(o.id, true);
+      box.appendChild(b); }
+    if(!box._r35){ box._r35 = true; box.addEventListener('keydown', e => { if(box.querySelector('.lay45')) return; const L = [...box.querySelectorAll('.opt')], i = L.indexOf(document.activeElement); if(i < 0) return;   // radio group: arrows move and choose
         const j = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (i + 1) % L.length : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
         e.preventDefault(); e.stopPropagation(); const id = L[j].dataset.id; choose(id, true); const n = box.querySelector('.opt[data-id="' + id + '"]'); if(n) n.focus(); }); }
     $('#dTools').hidden = sel !== 'custom'; $('#dEdit').hidden = sel === 'custom';
-    $('#dEdit').textContent = sel === 'asbuilt' ? 'Edit a copy' : 'Edit a copy of this';
-    $('#dWalk').textContent = sel === 'asbuilt' ? 'Walk through the house' : 'Walk through this idea';
+    $('#dEdit').textContent = 'Edit a copy';
+    $('#dWalk').textContent = 'Walk through'; $('#dWalk').setAttribute('aria-label', sel === 'asbuilt' ? 'Walk through the house' : 'Walk through this idea');
   }
   function card(){
     if(mode !== 'design') return;
@@ -8683,8 +8704,8 @@ const DESIGN = (() => {
     $('#blurb').textContent = sel === 'asbuilt' ? 'The house as it stands. Pick a layout below to see an idea for the original part of the home.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
     $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'An idea only. It is not engineered, permitted or priced.'
-      : (d && d.label ? d.label + ' ' : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and ') + (d && d.label ? 'The house is sold as built.' : 'the house is sold as built.');
-    $('#dNote').hidden = sel === 'asbuilt';
+      : '';   /* r45 owner: an idea's whole label is 'Illustrative idea' (the banner and the Floor plans menu say it); no further wording */
+    $('#dNote').hidden = sel !== 'custom';
     try{ IDEAS35.sync(); }catch(e){}
   }
   function choose(id, fly){ sel = id; selId = null; wallStart = null; pre.visible = false; tool = 'select'; setToolUI(); setActive(id); card(); chips(); status(); save();
@@ -8918,6 +8939,18 @@ html .design .lsopt{border:1px solid var(--line);border-radius:10px;background:v
 html .design .lsopt[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
 html.ph .design .lsopt{min-height:44px}
 .design :is(button,select,input,summary):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* r45 owner: "the pills and buttons are mixed heights and lengths: make them all the short kind" - one height (36 px; 44 px on a phone), one radius, in the Design panel */
+html .design :is(.tool,.pal,.lsopt,.opt),html .design .dact .btn,html .design .seg button,html .design .lrow select,html .design .dnow .tool{min-height:36px;padding-top:0;padding-bottom:0;border-radius:999px;font-size:13px;line-height:1.2}
+html .design :is(.tool,.lsopt),html .design .dact .btn{padding-left:14px;padding-right:14px}
+html .design .seg{border-radius:999px}
+html .design .lrow select{padding-left:12px}
+html.ph .design :is(.tool,.pal,.lsopt,.opt),html.ph .design .dact .btn,html.ph .design .seg button,html.ph .design .lrow select{min-height:44px;font-size:14.5px}
+html .design .opt.lay45{grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding-left:14px;padding-right:6px;background:var(--btn27,var(--paper));color:var(--ink);border:1px solid var(--line)}
+html .design .opt.lay45::before{display:none}
+html .design .opt.lay45 small{text-align:left;color:var(--muted)}
+html .design .opt.lay45 em{font-style:normal;font-size:12.5px;font-weight:600;padding:0 11px;min-height:26px;display:inline-flex;align-items:center;border-radius:999px;background:var(--ink);color:var(--paper)}
+html.ph .design .opt.lay45 em{min-height:32px;font-size:13.5px}
+html .design .opt.lay45:hover{border-color:var(--ink)}
 html.ph .design .opt{min-height:48px}
 html.ph .design .tool,html.ph .design .seg button,html.ph .design .dact .btn{min-height:42px}
 html.ph .design .pal{min-height:44px}
@@ -8941,7 +8974,7 @@ html.v33game .ideas35{display:none}
 `; document.head.appendChild(css);
   // in Design: one line at the top of the panel that says what is on screen, and the way back
   const now = document.createElement('div'); now.className = 'dnow'; now.id = 'dNow';
-  now.innerHTML = '<p id="dNowTxt" role="status"></p><button type="button" class="tool" id="dToday" hidden>Show the house as it is today</button>';
+  now.innerHTML = '<p id="dNowTxt" role="status"></p><button type="button" class="tool" id="dToday" hidden>Real house</button>';
   $('#design').insertBefore(now, $('#design').firstChild);
   // outside Design: the same, as a small strip under the top bar, only while an idea is showing
   const chip = document.createElement('div'); chip.className = 'ideas35'; chip.id = 'ideas35'; chip.hidden = true; chip.setAttribute('role', 'status');
@@ -10285,6 +10318,8 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   // Walk: the stop nearest the walker. A stop on another level counts 30 ft further; a stop that shows the room you are in counts 12 ft nearer.
   function nearest(){
     const P = camera.position, cr = curRoom && curRoom.id; let best = -1, bs = 1e9, cur = 1e9;
+    try{ if(ACTIVE_VAR !== 'asbuilt' && DESIGN.walking()){ const d = (bim2DesignOptions() || []).find(q => q.id === ACTIVE_VAR);   // r45: walking an idea, the stop its room gives (the nearest as-built stop can be through a wall)
+        for(const r of ((d && d.rooms) || [])) if(r.stop && inPoly(r.poly, P.z, P.x)){ const i = STOPS.findIndex(q => q && q.id === r.stop); if(i >= 0) return i; } } }catch(e){}
     for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; if(!s || s.aerial || !s.pos) continue;
       const L = s.level === 'outside' ? LV.outside : LV[s.level]; let d = Math.hypot(s.pos[0] - P.x, s.pos[2] - P.z);
       if(L != null && Math.abs(L - feet) > 2.5) d += 30; if(cr && s.rooms && s.rooms.includes(cr)) d -= 12;
@@ -12002,7 +12037,7 @@ const BOOT22 = (() => {
     if(B.refining || B.done) return; B.refining = true; B.log.reveal = now(); step('revealed');
     if(B.prog){ document.documentElement.classList.add('b22ref');
       const host = (typeof canvas !== 'undefined' && canvas.parentElement) || document.body, pill = document.createElement('div');
-      pill.id = 'b22pill'; pill.className = 'perfpill'; pill.setAttribute('role', 'status'); pill.innerHTML = '<i></i>Refining the view…'; host.appendChild(pill); B.pill = pill;
+      pill.id = 'b22pill'; pill.className = 'perfpill'; pill.setAttribute('role', 'status'); pill.innerHTML = '<i></i>Refining the view…'; pill.style.display = 'none'; host.appendChild(pill); B.pill = pill;   /* r45 owner: the pill is not shown (the element stays for the code that toggles it) */
       FX.start(); }
     B.poll = setInterval(B.check, 250); B.check(); };
   B.check = () => {
@@ -16120,14 +16155,13 @@ const CTA42 = (() => {
     ill: 'Illustrative idea.',
     mine: 'Your own changes.'};
   /* r43 owner 11/12: four cards, the real house plus three concepts, in this order: 6 bedrooms (as built), 6 bedrooms (alternate layout),
-     5 bedrooms (open plan), 4 bedrooms (open great room). The Semi-open plan is shown as the alternate six-bedroom layout. */
-  const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
-  const RANK = {apr24b: 0, jan24: 1, open4: 2, open4k: 3};
+     5 bedrooms (open plan), 4 bedrooms (open kitchen and great room; r45: the earlier "Open great room" idea was retired). */
+  const NAME = {asbuilt: 'As built', apr24b: 'Semi-open plan', jan24: 'Open plan'};   /* r45: one name per idea everywhere (Design calls it Semi-open plan) */
+  const RANK = {apr24b: 0, jan24: 1, open4k: 2};
   const LINE = {asbuilt: 'The house as it is today.',
     /* r44f owner: the picker lighter, one short line each; the counts carry the card */
     apr24b: 'All six bedrooms, with a more open kitchen and family room.',
     jan24: 'Kitchen, dining and family room in one open space.',
-    open4: 'Two bedrooms become one vaulted living, dining and kitchen space.',
     open4k: 'One vaulted great room: hearth, island kitchen, folding doors to a new deck.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
@@ -16147,7 +16181,7 @@ const CTA42 = (() => {
     const o = optMeta(id); if(!o) return Promise.resolve(false);
     if(o.data && o.data.spaces){ SPACES[id] = o.data.spaces; FACTS[id] = count(o.data.spaces) || FACTS[id]; return Promise.resolve(true); }
     if(!o.meta) return Promise.resolve(false);
-    return (FETCH[id] = fetch(metaUrl(o)).then(r => r.ok ? r.json() : null).then(j => { if(j && j.spaces){ SPACES[id] = j.spaces; FACTS[id] = count(j.spaces) || FACTS[id]; } FETCH[id] = null; lastSig = ''; sync(); return !!j; })
+    return (FETCH[id] = fetch(metaUrl(o)).then(r => r.ok ? r.json() : null).then(j => { if(j && j.spaces){ SPACES[id] = j.spaces; FACTS[id] = count(j.spaces) || FACTS[id]; } FETCH[id] = null; lastSig = ''; sync(); try{ DM.refresh(); }catch(e){} return !!j; })
       .catch(e => { FETCH[id] = null; console.warn('[cta42] plan file', id, e); return false; })); }
   function facts(id){ if(FACTS[id]) return FACTS[id]; const o = optMeta(id) || {};
     if(o.bedrooms) return {beds: +o.bedrooms, baths: +o.baths || 0, office: o.office !== false};   // a plan may state its own counts
@@ -16219,6 +16253,8 @@ html:not(.ph) #cb42:not(.b42ab){flex-wrap:nowrap}html:not(.ph) #cb42:not(.b42ab)
 #cb42.b42ab{padding:6px 14px;gap:8px;background:var(--glass);color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 10px rgba(20,24,26,.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:13px;flex-wrap:nowrap;pointer-events:none}
 #cb42.b42ab .b42m{flex:0 1 auto}#cb42.b42ab .b42m b{font-weight:500}#cb42.b42ab .b42m b::before{background:var(--accent)}#cb42.b42ab .b42m span,#cb42.b42ab .b42s{display:none}
 html.cb42on .ideas35{display:none!important}
+#bkH:focus{outline:none}   /* r45 calm pass: the booking dialog's heading takes focus for screen readers; no ring round it */
+html.vmo27:not(.ph) #cb42:not(.b42ab),html.ph.phm #cb42{visibility:hidden}   /* r45: out of the way while the View menu (the phone's menu) is open; it keeps its place */
 html.ph.bks36on.cb42on .perfpill{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 html.ph.cb42on .qhint{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 /* next to the holiday control: more ways to redecorate */
@@ -16338,9 +16374,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   const chip = el('button'); chip.type = 'button'; chip.id = 'cta42'; chip.hidden = true;
   const nudge = el('aside'); nudge.id = 'ng42'; nudge.hidden = true; nudge.setAttribute('aria-label', 'Ideas for this house');
   nudge.innerHTML = '<button type="button" class="g42x" aria-label="Dismiss">×</button><p class="g42h">Ideas for this house</p><p class="g42t"></p>'
-    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>Compare floor plans</span></button><button type="button" data-a="decor">' + ICON_DECOR + '<span>Holiday decor</span></button></div>';
+    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>Floor plans</span></button><button type="button" data-a="decor">' + ICON_DECOR + '<span>Holiday decor</span></button></div>';
   const banner = el('div'); banner.id = 'cb42'; banner.hidden = true; banner.setAttribute('role', 'status');
-  banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">Back to floor plans</button><button type="button" data-a="real">Back to the real house</button></div>';
+  banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">Floor plans</button><button type="button" data-a="real">Real house</button></div>';
   const hm = el('div'); hm.id = 'hm42'; hm.hidden = true;
   hm.innerHTML = '<p>Also try</p><button type="button" data-a="paint">Paint colors</button><button type="button" data-a="furn">Furniture</button>';
   const head = el('div'); head.id = 'pk42h'; head.innerHTML = '<p class="p42e">Floor plans</p><h2 id="pk42H">Compare floor plans</h2>';
@@ -16361,7 +16397,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   function sideFit(){ if(!(isPh() && innerWidth > innerHeight && innerWidth >= 600 && mode === 'design')) return;
     root.classList.remove('ph'); try{ DESIGN.view(1.2); }catch(e){} finally{ root.classList.add('ph'); } }
   const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
+  const TRIED = {};
   function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {};
+    for(const p of L) if(!SPACES[p.id] && !TRIED[p.id]){ const r = load(p.id); if(SPACES[p.id] || FETCH[p.id]) TRIED[p.id] = true; }   // r45: the sketches of the plans whose counts were already known were never read when the picker opened from the banner
     pick.querySelector('.p42lede').textContent = L.length > 1 ? 'Pick a layout to see it in 3D.' : '';
     for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
     list.innerHTML = '';
@@ -16393,15 +16431,130 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(id !== 'asbuilt'){ let p = null; try{ p = bim2EnsureOption(id); }catch(e){}
       if(p && p.then){ const mark = on => { const n = list.querySelector('.k42c[data-id="' + id + '"]'); if(n) n.classList.toggle('k42busy', on); }; render(); mark(true); p.then(() => mark(false), () => mark(false)); } }
     lastSig = ''; sync(); }
-  function openPicker(where){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
+  { const dt = document.querySelector('.tab[data-mode="design"]');   // r45: from the plans-only picker, the Design tab opens the whole Design panel
+    if(dt) dt.addEventListener('click', () => { if(!root.classList.contains('pk42') || mode !== 'design') return; setPk(false); try{ DESIGN.open('design'); }catch(x){} sync(); const c = $('#card'); if(c) c.scrollTop = 0; }); }
+  /* ---- r45 the layouts menu (owner 11/12: "a really nice calm layout where you just click on it", like the Games menu): one dialog in the
+     Games menu's own visual language (assets/games-menu.js, #gm36): the four layouts as rows; a row opens one calm detail view with a
+     short description, a few facts the model knows, and two or three short buttons. It replaces the "Compare floor plans" picker and the
+     layout list in the Design panel; every entry point (the stop chip, the nudge, the banner, the finale, Design's Layout row) opens it.
+     Opening it does not touch the house. window.LAYOUTS45 = {open(from, where), close(), isOpen, show(id)}. */
+  const DM = (() => {
+    let dlg = null, opener = null, cur = null;
+    const DESC = {asbuilt: 'The house as it is today, and as it is offered. The living room, the kitchen and the dining area are separate rooms on the main level.',
+      apr24b: 'Keeps all six bedrooms. The kitchen opens to the dining room around a long island, with a family room beside it.',
+      jan24: 'Kitchen, dining and family room become one open space, with a pantry and a new bath.'};
+    const CH = '<span class="ch" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>';
+    const XB = '<button type="button" class="x" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>';
+    const cssT = `
+#dm45{box-sizing:border-box;width:min(452px,calc(100vw - 20px));max-width:none;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);margin:auto;padding:0;border:0;border-radius:20px;background:#fbfaf7;color:#1f1f1d;
+  font:400 15px/1.4 Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;box-shadow:0 30px 90px rgba(10,10,8,.45);overflow:hidden;-webkit-font-smoothing:antialiased;color-scheme:light}
+#dm45::backdrop{background:rgba(18,18,16,.5)}
+#dm45[open]{display:flex;flex-direction:column;animation:dm45in .18s ease-out}
+@keyframes dm45in{from{opacity:0;transform:translateY(8px) scale(.985)}}
+#dm45 *{box-sizing:border-box}
+#dm45 .hd{flex:none;padding:20px 60px 10px 22px}
+#dm45 h2{margin:0;font:600 30px/1.05 "Cormorant Garamond",Georgia,serif;letter-spacing:-.005em;color:#1f1f1d}
+#dm45 .hd p{margin:5px 0 0;font-size:14.5px;line-height:1.4;color:#67665f}
+#dm45 .ls{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;margin:0;padding:2px 10px 4px;list-style:none}
+#dm45 .ls li{margin:0;padding:0}
+#dm45 .ls li + li{border-top:1px solid #e9e5dc}
+#dm45 button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+#dm45 .row{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr) 22px;column-gap:13px;align-items:center;width:100%;min-height:76px;margin:0;padding:10px 12px;border:0;border-radius:13px;background:none;text-align:left;cursor:pointer;transition:background-color .12s}
+#dm45 .row:hover{background:#f1eee6}
+#dm45 .row:active{background:#e9e4d8}
+#dm45 :is(.row,.x,.bk,.pb):focus-visible{outline:2px solid #4b5f68;outline-offset:1px}
+#dm45 .t{display:block;font:600 23px/1.1 "Cormorant Garamond",Georgia,serif;color:#1f1f1d;white-space:nowrap}
+#dm45 .t i{font-style:normal;color:#b9b2a2;margin:0 2px}
+#dm45 .s{display:block;margin-top:2px;font-size:14.5px;line-height:1.35;color:#55534c}
+#dm45 .m{display:block;margin:5px 0 0;font-size:12px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:#7a6a4f}
+#dm45 .m i{font-style:normal;color:#55633a}
+#dm45 .m i::after{content:"\\00b7";margin:0 6px;color:#b9b2a2}
+#dm45 .ch{width:22px;height:22px;display:grid;place-items:center;color:#8d897f}
+#dm45 .ch svg{width:16px;height:16px}
+#dm45 .k42s{display:block;width:56px;height:56px;border-radius:10px;background:#efece4;padding:5px}
+#dm45 img.k42s,#dm45 .top img.k42s{padding:0;object-fit:cover}
+#dm45 .k42s path{stroke:#4a4e50;stroke-width:.3;stroke-linejoin:round;fill:#fbfaf7}
+#dm45 .k42s path.kb{fill:#e2c79c}#dm45 .k42s path.kw{fill:#bcd0d8}#dm45 .k42s path.kc{fill:#dcdcd4}
+#dm45 .ft{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 22px 16px;border-top:1px solid #e9e5dc;font-size:13.5px;color:#67665f}
+#dm45 .x{position:absolute;right:12px;top:12px;width:40px;height:40px;border:0;border-radius:50%;background:#efece4;color:#1f1f1d;cursor:pointer;display:grid;place-items:center;padding:0}
+#dm45 .x:hover{background:#e4dfd3}#dm45 .x svg{width:16px;height:16px}
+/* the detail view */
+#dm45 .bk{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin:0 0 0 -8px;padding:0 12px 0 8px;border:0;border-radius:999px;background:none;font-size:14px;font-weight:500;color:#55534c;cursor:pointer}
+#dm45 .bk:hover{background:#f1eee6;color:#1f1f1d}#dm45 .bk svg{width:14px;height:14px}
+#dm45 .hd.dh{padding:14px 60px 0 22px}
+#dm45 .bd{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:8px 22px 16px}
+#dm45 .top{display:grid;grid-template-columns:112px minmax(0,1fr);gap:16px;align-items:center}
+#dm45 .top .k42s{width:112px;height:112px;border-radius:14px;padding:8px}
+#dm45 .top .m{margin:0 0 5px}
+#dm45 .cnt{margin:6px 0 0;font:600 23px/1.1 "Cormorant Garamond",Georgia,serif;color:#1f1f1d}#dm45 .cnt i{font-style:normal;color:#b9b2a2;margin:0 2px}
+#dm45 .ds{margin:14px 0 0;font-size:15px;line-height:1.5;color:#3d3c37}
+#dm45 .st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 0;padding:0}
+#dm45 .st div{margin:0;padding:10px 6px 9px;border-radius:12px;background:#f4f1ea;text-align:center}
+#dm45 .st dd{margin:0;font:600 22px/1.1 "Cormorant Garamond",Georgia,serif;color:#1f1f1d;white-space:nowrap}
+#dm45 .st dt{margin:3px 0 0;font-size:11.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#7a6a4f}
+#dm45 .nt{margin:12px 0 0;font-size:12.5px;line-height:1.45;color:#67665f}
+#dm45 .ft.ac{justify-content:flex-start;flex-wrap:wrap}
+#dm45 .pb{flex:0 1 auto;min-height:40px;padding:0 16px;border:1px solid #d9d4c8;border-radius:999px;background:#fbfaf7;font-size:14.5px;font-weight:500;color:#1f1f1d;white-space:nowrap;cursor:pointer;transition:background-color .12s,border-color .12s}
+#dm45 .pb:hover{border-color:#1f1f1d}
+#dm45 .pb.pri{background:#1f1f1d;border-color:#1f1f1d;color:#fbfaf7}#dm45 .pb.pri:hover{background:#34332f}
+#dm45 .pb[hidden]{display:none}
+@media (max-width:480px){#dm45 .hd{padding:18px 58px 8px 18px}#dm45 .hd.dh{padding:12px 58px 0 18px}#dm45 h2{font-size:27px}#dm45 .ls{padding:2px 6px 4px}#dm45 .t{font-size:22px}#dm45 .bd{padding:8px 18px 14px}#dm45 .ft{padding:10px 18px 14px}
+  #dm45 .top{grid-template-columns:92px minmax(0,1fr);gap:14px}#dm45 .top .k42s{width:92px;height:92px}#dm45 .pb{flex:1 1 auto;min-height:44px;padding:0 12px}}
+@media (max-height:560px){#dm45 .hd p{display:none}#dm45 .row{min-height:60px;padding:6px 12px}#dm45 .row .m{display:none}#dm45 .top{grid-template-columns:72px minmax(0,1fr)}#dm45 .top .k42s{width:72px;height:72px}#dm45 .st div{padding:6px 6px 5px}#dm45 .ds{margin-top:10px}}
+@media (prefers-reduced-motion:reduce){#dm45[open]{animation:none}#dm45 .row,#dm45 .pb{transition:none}}`;
+    const PLANIMG = {asbuilt: 1, apr24b: 1, jan24: 1, open4k: 1};   // tour/plan_<id>.jpg, drawn by tour/bim2/tools/plan_thumbs.py from each layout's own rooms and walls
+    const thumb = id => PLANIMG[id] ? '<img class="k42s" src="plan_' + id + '.jpg?v=1" alt="" width="56" height="56" decoding="async">' : sketch(id);
+    const cnt = f => f ? '<b>' + f.beds + '</b> bed <i>·</i> <b>' + f.baths + '</b> bath' : '';
+    const tag = k => k === 'real' ? 'The real house' : k === 'mine' ? 'Your design' : 'Illustrative idea';
+    function build(){ if(dlg) return dlg;
+      const st = el('style'); st.id = 'dm45css'; st.textContent = cssT; document.head.appendChild(st);
+      dlg = el('dialog'); dlg.id = 'dm45'; dlg.setAttribute('aria-labelledby', 'dm45h'); document.body.appendChild(dlg);
+      dlg.addEventListener('click', e => { if(e.target === dlg){ close(); return; }
+        const x = e.target.closest('.x'); if(x){ close(); return; }
+        const r = e.target.closest('.row'); if(r){ detail(r.dataset.id); return; }
+        if(e.target.closest('.bk')){ const id = cur; listView(); const b = dlg.querySelector('.row[data-id="' + id + '"]'); if(b) try{ b.focus({preventScroll: true}); }catch(x){} return; }
+        const a = e.target.closest('.pb'); if(a) act(a.dataset.a, cur); });
+      dlg.addEventListener('close', () => { const o = opener; opener = null; cur = null; if(o && o.isConnected) try{ o.focus({preventScroll: true}); }catch(e){} });
+      dlg.addEventListener('keydown', e => e.stopPropagation()); dlg.addEventListener('keyup', e => e.stopPropagation());   // arrows and Space must not walk the tour behind it
+      return dlg; }
+    function listView(){ cur = null; const L = plans(), n = L.length - 1;
+      let h = '<div class="hd"><h2 id="dm45h">Floor plans</h2><p>The house as it is, and ' + ideaWords(n).toLowerCase() + ' for its main level.</p></div><ul class="ls">';
+      for(const p of L){ const f = facts(p.id), k = kindOf(p.id), on = ACTIVE_VAR === p.id;
+        h += '<li><button type="button" class="row" data-id="' + p.id + '"' + (on ? ' aria-current="true"' : '') + '>' + thumb(p.id) + '<span class="tx"><span class="t">' + (cnt(f) || p.name) + '</span><span class="s">' + p.name + '</span>'
+          + '<span class="m">' + (on ? '<i>Showing now</i>' : '') + tag(k) + '</span></span>' + CH + '</button></li>'; }
+      h += '</ul><div class="ft"><span>Pick one to read about it and see it in 3D.</span></div>' + XB;
+      dlg.innerHTML = h; }
+    function detail(id){ const p = plans().find(q => q.id === id); if(!p) return; cur = id; ga('plan_detail', {plan: id});
+      const f = facts(id), k = kindOf(id), o = optMeta(id) || {}, idea = id !== 'asbuilt';
+      const S = []; if(f){ S.push(['Bedrooms', f.beds], ['Baths', f.baths], ['Office', f.office ? 'Yes' : 'No']); }
+      for(const q of (o.stats || [])) if(Array.isArray(q) && q.length === 2) S.push(q);
+      const desc = DESC[id] || o.description || p.line || '';
+      dlg.innerHTML = '<div class="hd dh"><button type="button" class="bk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5"/></svg>All floor plans</button></div>'
+        + '<div class="bd"><div class="top">' + thumb(id) + '<div><p class="m">' + (ACTIVE_VAR === id ? '<i>Showing now</i>' : '') + tag(k) + '</p><h2 id="dm45h">' + p.name + '</h2><p class="cnt">' + cnt(f) + '</p></div></div>'
+        + '<p class="ds">' + desc + '</p>'
+        + (S.length ? '<dl class="st">' + S.map(q => '<div><dd>' + q[1] + '</dd><dt>' + q[0] + '</dt></div>').join('') + '</dl>' : '')
+        + '</div>'
+        + '<div class="ft ac"><button type="button" class="pb pri" data-a="see">See it in 3D</button><button type="button" class="pb" data-a="walk">Walk through</button>'
+        + '<button type="button" class="pb" data-a="real"' + (idea && ACTIVE_VAR !== 'asbuilt' ? '' : ' hidden') + '>Real house</button></div>' + XB;
+      const b = dlg.querySelector('.pb.pri'); if(b) try{ b.focus({preventScroll: true}); }catch(e){} const bd = dlg.querySelector('.bd'); if(bd) bd.scrollTop = 0; }
+    function act(a, id){ if(!id) return; opener = null; close(); setPk(false);
+      if(a === 'real'){ choose('asbuilt', 'menu'); return; }
+      choose(id, a === 'walk' ? 'menu-walk' : 'menu');
+      if(a === 'walk'){ let pr = null; try{ pr = id === 'asbuilt' ? null : bim2EnsureOption(id); }catch(e){}
+        Promise.resolve(pr).then(() => setTimeout(() => { if(mode !== 'design' || ACTIVE_VAR !== id) return; ga('plan_walk', {plan: id}); const w = $('#dWalk'); if(w) w.click(); }, 80), () => {}); }
+      else { const c = $('#card'); if(c) c.scrollTop = 0; } }
+    function open(from, id){ build(); for(const p of plans()) load(p.id);
+      if(!dlg.open){ opener = from && from.focus ? from : null; try{ dlg.showModal(); }catch(e){ return false; } }
+      if(id) detail(id); else { listView(); const b = dlg.querySelector('.row[aria-current]') || dlg.querySelector('.row'); if(b) try{ b.focus({preventScroll: true}); }catch(e){} }
+      return true; }
+    function close(){ if(dlg && dlg.open) dlg.close(); }
+    const refresh = () => { if(dlg && dlg.open){ if(cur) detail(cur); else listView(); } };   // a plan file arrived: its sketch and counts
+    return {open, close, refresh, show: id => open(null, id), get isOpen(){ return !!(dlg && dlg.open); }};
+  })();
+  window.LAYOUTS45 = {open: (from, where) => openPicker(where || 'design-panel', from), close: DM.close, show: DM.show, get isOpen(){ return DM.isOpen; }};
+  function openPicker(where, from){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
     if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
-    hideNudge();
-    for(const p of plans()) load(p.id);
-    const wasMin = isPh() && $('#card').classList.contains('min');   // (Design opens the sheet itself)
-    setPk(true); if(mode !== 'design') setMode('design'); else { try{ DESIGN.view(1.2); }catch(e){} }
-    try{ if(wasMin) sheetByPk = true; if(isPh() && $('#card').classList.contains('min')) $('#collapse').click(); }catch(e){}
-    sideFit(); render(); lastSig = ''; sync();
-    setTimeout(() => { const c = list.querySelector('.k42c[aria-checked="true"]') || list.querySelector('.k42c'); if(c) try{ c.focus({preventScroll: true}); }catch(e){} const cd = $('#card'); if(cd) cd.scrollTop = 0; }, 60); }
+    hideNudge(); setPk(false); DM.open(from || document.activeElement); lastSig = ''; sync(); return; }
 
   /* ---- holiday decor, and more ways to redecorate */
   function openDecor(where){ ga('decor_cta', {where, stop: stopId()}); hideNudge();
@@ -16424,8 +16577,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     const hs = $('#holShow'); if(hs && !hs.hidden) return ''; const P = $('#holPanel'); if(P && !P.hidden) return '';
     const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
     const id = stopId(); return PLAN_STOPS.has(id) && plans().length > 1 ? 'plans' : DECOR_STOPS.has(id) && window.HOLIDAY ? 'decor' : ''; }
-  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>Compare floor plans</b>' + (b ? '<i>: ' + b + '</i>' : '') + '</span>' + ARROW; }
-    return ICON_DECOR + '<span class="c42x"><b>' + (isPh() ? 'Holiday decor' : 'See it decorated for the holidays') + '</b></span>' + ARROW; }
+  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>See the floor plans</b></span>' + ARROW; }   /* r45 calm pass: short (was 'Compare floor plans: 6, 5 or 4 bedrooms') */
+    return ICON_DECOR + '<span class="c42x"><b>' + 'Holiday decor' + '</b></span>' + ARROW; }
   chip.addEventListener('click', e => { e.stopPropagation(); const where = chip.classList.contains('c42in') ? 'stop-card' : 'stop-chip'; if(chip.dataset.k === 'plans') openPicker(where); else openDecor(where); });
   for(const n of [chip, nudge, banner, hm]) for(const ev of ['pointerdown', 'wheel', 'touchstart']) n.addEventListener(ev, e => e.stopPropagation(), {passive: true});   // not the canvas: no drag or walk through them
   nudge.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
@@ -16459,7 +16612,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
   function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
     const hp = $('#holPanel'), holOpen = !!(hp && !hp.hidden);
-    const show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || (pickerUsed && !root.classList.contains('ideas35on') && !holOpen));
+    const show = !g && !gal && mode !== 'photos' && v !== 'asbuilt';   /* r45 calm pass: no 'As built: the house as it is' pill once the layouts have been looked at; the house needs no label, only an idea does */
     root.classList.toggle('cb42on', show && v !== 'asbuilt');
     if(!show){ banner.hidden = true; return; }
     const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
@@ -16474,21 +16627,21 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     // under the top bar (the booking line on a phone); on a computer centred over the part of the screen the Design panel leaves free
     const bar = document.querySelector('header.bar'), bk = $('#bks36'); let top = 70;
     if(isPh()){ const r = bk && bk.offsetParent ? bk.getBoundingClientRect() : (bar ? bar.getBoundingClientRect() : null); if(r) top = r.bottom + 8; }
-    else if(bar){ let bt = 0; for(const c of bar.children){ const r = c.getBoundingClientRect(); if(r.height > 0 && r.top < 200) bt = Math.max(bt, r.bottom); } top = (bt || bar.getBoundingClientRect().bottom) + 10; }
+    else if(bar){ let bt = 0; for(const c of bar.children){ if(c.id === 'phMenu' || c.classList.contains('qrow')) continue; const r = c.getBoundingClientRect();   /* r45: the open View menu is not part of the bar's height (the banner dropped below it, onto the stop card) */ if(r.height > 0 && r.top < 200) bt = Math.max(bt, r.bottom); } top = (bt || bar.getBoundingClientRect().bottom) + 10; }
     let cx = innerWidth / 2, w = innerWidth - 32; const card = $('#card');
     const side = !isPh() || innerWidth > innerHeight;   // a computer, or a phone held sideways: the open card is a column on the left
     if(side && card){ const r = card.getBoundingClientRect(); if(!card.classList.contains('min') && r.height > 120 && r.right < innerWidth * .55){ cx = (r.right + innerWidth) / 2; w = innerWidth - r.right - 32; } }
     banner.style.setProperty('--cb42t', Math.round(top) + 'px'); banner.style.setProperty('--cb42x', Math.round(cx) + 'px'); banner.style.setProperty('--cb42w', Math.round(Math.min(w, 860)) + 'px');
     root.style.setProperty('--cb42t', Math.round(top) + 'px'); root.style.setProperty('--cb42h', Math.round(banner.offsetHeight || 0) + 'px'); }
   banner.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
-    if(b.dataset.a === 'plans'){ ga('design_cta', {where: 'banner', stop: stopId(), kind: 'plans'}); setPk(true); setMode('design'); lastSig = ''; sync(); return; }
+    if(b.dataset.a === 'plans'){ openPicker('banner', b); return; }   /* r45: the layouts menu */
     ga('plan_pick', {plan: 'asbuilt', concept: 'real', where: 'banner'});
     const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); });
 
   /* ---- the closing card: one line with both */
   function finLinks(){ const fl = document.querySelector('#fin36 .fl'); if(!fl) return false; if(fl.querySelector('.c42f')) return true;
-    const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Compare floor plans';
-    const d = el('button', 'c42f', '<span class="c42w">See it decorated for the holidays</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
+    const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Floor plans';
+    const d = el('button', 'c42f', '<span class="c42w">Holiday decor</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
     a.addEventListener('click', e => { e.stopPropagation(); openPicker('finale'); });
     d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); });
     const ph = fl.querySelector('[data-a="photos"]'); if(ph) ph.after(a, d); else fl.append(a, d); return true; }
@@ -16499,7 +16652,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(nudgeOn && (stopIdx !== nudgeStop || mode !== 'tour' || inGame())) hideNudge();
     const k = nudgeOn ? '' : chipKind();
     if(k){ const sig = k + bedsPhrase() + isPh(); if(chip._s !== sig){ chip._s = sig; chip.dataset.k = k; chip.innerHTML = chipText(k);
-        chip.setAttribute('aria-label', k === 'plans' ? 'Compare floor plans' + (bedsPhrase() ? ': ' + bedsPhrase() : '') : 'See the house decorated for the holidays'); }
+        chip.setAttribute('aria-label', k === 'plans' ? 'See the floor plans' + (bedsPhrase() ? ': ' + bedsPhrase() : '') : 'See the house decorated for the holidays'); }
       if(chip.hidden){ chip.hidden = false; requestAnimationFrame(() => chip.classList.add('c42on')); } }
     else if(!chip.hidden){ chip.hidden = true; if(!chip.classList.contains('c42in')) chip.classList.remove('c42on'); chip.dataset.k = ''; chip._s = ''; }
     place(); label(); hmSync();
@@ -18750,6 +18903,8 @@ window.CORN31 = CORNMAZE;
   if(!/[?&]nogame=1\b/.test(location.search)){
     const g = document.createElement('button'); g.type = 'button'; g.className = 'v31games'; g.textContent = 'Games'; g.setAttribute('aria-label', 'Games'); g.setAttribute('aria-haspopup', 'dialog'); g.setAttribute('aria-expanded', 'false');
     tabs.appendChild(g);
+    { const f = document.createElement('button'); f.type = 'button'; f.className = 'v31games v45fp'; f.textContent = 'Floor plans'; f.setAttribute('aria-haspopup', 'dialog');   // r45: the layouts menu, beside Games
+      tabs.insertBefore(f, g); f.addEventListener('click', e => { e.stopPropagation(); try{ window.LAYOUTS45.open(f, 'top-bar'); }catch(x){ console.warn('[plans]', x); } }); }
     g.addEventListener('click', e => { e.stopPropagation();
       try{ if(window.GAMESMENU && GAMESMENU.open(g)) return; }catch(x){ console.warn('[games]', x); }
       const p = location.pathname; location.href = p.replace(/[^\/]*$/, '').replace(/[^\/]+\/$/, '') + 'games/' + (/index\.html$/.test(p) ? 'index.html' : ''); });
@@ -18764,23 +18919,16 @@ window.CORN31 = CORNMAZE;
     // Remodel ideas: As built / the two 2024 concepts (names from the BIM), on phone and desktop
     let v31rmDone = false;
     const v31remodel = () => { if(v31rmDone) return; try {
-      if(typeof BIM === 'undefined' || !BIM || !(BIM.options || []).length) return;
-      const opts = [['asbuilt', 'As built']].concat((BIM.options || []).map(o => [o.id, DESIGN.nameOf ? DESIGN.nameOf(o.id) : o.name]));
-      if(opts.length > 1 && typeof DESIGN !== 'undefined'){
-        const row = document.createElement('button'); row.type = 'button'; row.className = 'tod v31rm'; row.setAttribute('aria-expanded', 'false');
-        row.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 17V7l7-4 7 4v10H3zM8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Design</span><em class="v31val"></em>';   /* r36: one name, the tab's (was 'Remodel ideas' here and 'Design' on the tab) */
-        const sub = document.createElement('div'); sub.className = 'v31sub'; sub.setAttribute('role', 'radiogroup'); sub.setAttribute('aria-label', 'Design: layout of the original house');
-        const val = row.querySelector('.v31val'), cur = () => (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt');
-        const paint = () => { const c = cur(); val.textContent = (opts.find(o => o[0] === c) || opts[0])[1]; sub.querySelectorAll('button').forEach(x => x.setAttribute('aria-checked', x.dataset.v === c ? 'true' : 'false')); };
-        for(const [id, label] of opts){ const x = document.createElement('button'); x.type = 'button'; x.setAttribute('role', 'radio'); x.dataset.v = id; x.textContent = label;
-          x.addEventListener('click', e => { e.stopPropagation(); try {   // r35 rule:design-opens-as-built - an idea opens in Design, where it is labelled; it never shows in Tour, Walk or Dollhouse
-              if(id === 'asbuilt'){ const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); }
-              else { if(mode !== 'design') setMode('design'); DESIGN.choose(id, true); } } catch(err) { console.warn(err); } paint(); });
-          sub.appendChild(x); }
-        row.addEventListener('click', e => { e.stopPropagation(); const o = !sub.classList.contains('open'); sub.classList.toggle('open', o); row.setAttribute('aria-expanded', o ? 'true' : 'false'); paint(); });
-        const doll = document.getElementById('phDoll'), at = doll ? doll.nextSibling : menu.firstChild;
-        menu.insertBefore(sub, at); menu.insertBefore(row, sub); paint(); v31rmDone = true; window.__v31rmPaint = paint;   // r35: repainted whenever the layout on screen changes
-      }
+      /* r45 (owner: "feature the floor plans more prominently ... calm UX"): one place to choose a layout, the Floor plans menu (LAYOUTS45). The
+         radio list of layouts that stood here is gone. On a phone the menu gets a Floor plans row and a plain Design row (furniture, paint,
+         landscape); on a computer the top bar has the Floor plans button and the Design tab, and this menu gets Full screen (its bar button went). */
+      const fp = mk('Floor plans', '<path d="M3.5 3.5h13v13h-13zM3.5 10h5.5M9 3.5v4M9 12.5v4M12.5 10h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>', () => { try{ if(document.documentElement.classList.contains('phm')){ const m = document.getElementById('phMore'); if(m) m.click(); } window.LAYOUTS45.open(null, 'menu'); }catch(e){ console.warn(e); } });
+      const ds = mk('Design', '<path d="M3 17V7l7-4 7 4v10H3zM8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>', tab('design'));
+      const doll = document.getElementById('phDoll'), at = doll ? doll.nextSibling : menu.firstChild; menu.insertBefore(ds, at); menu.insertBefore(fp, ds);
+      const fsb = document.getElementById('fsBtn');
+      if(fsb){ const fs = document.createElement('button'); fs.type = 'button'; fs.className = 'tod v45fs'; fs.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Full screen</span>';
+        fs.addEventListener('click', () => fsb.click()); menu.appendChild(fs); }
+      v31rmDone = true; window.__v31rmPaint = () => {};
     } catch(e) { console.warn('remodel menu', e); } };
     const ld = document.querySelector('#loading');
     if(!ld || ld.classList.contains('done')) v31remodel(); else { const mo = new MutationObserver(() => { if(ld.classList.contains('done')){ mo.disconnect(); v31remodel(); } }); mo.observe(ld, {attributes: true}); }
@@ -20759,8 +20907,8 @@ function bim2TrimOut(){ if(!M.trimOut) M.trimOut = M.trimExt; }                 
         for(const e of B2OPT.hideFx){ const h = e.vars.has(ACTIVE_VAR); if(h && e.o.visible){ e.o.visible = false; e.hid = true; } else if(!h && e.hid){ e.o.visible = true; e.hid = false; } } } }catch(e){ console.warn('[bim2] variant', e); }
     return _av.apply(this, arguments); }; }
 /* concept r42 (tour/CONCEPT-4BR.md; package built by tour/bim2/tools/build_open4.py): what an option package can carry beyond walls and
-   floors, read from its own data. Only an option that says so (scene.meta options[] pageExtras: true) gets any of it: "Open great room"
-   (open4) does; the two 2024 concepts do not, so they show exactly as before.
+   floors, read from its own data. Only an option that says so (scene.meta options[] pageExtras: true) gets any of it: "Open kitchen and great room"
+   (open4k; the first such idea, open4, was retired in r45) does; the two 2024 concepts do not, so they show exactly as before.
    - furnishings with render.lib 'STAGE': staged like the house's own STAGING rows (staging.js, falling back to fixtures.js). at = the
      centre of the piece on the floor (at[2] = height of a hung piece's canopy), rot 0 / 90 / 180 / 270 = facing east / north / west / south,
      stageBack = the point is on the wall behind it, stageKey / stageOn / stageDx / stageDz / stageZ = decor sitting on a piece. They live
@@ -20941,7 +21089,7 @@ window.__IDEA42 = {
   async set(v){ v = v || 'asbuilt'; if(v !== 'asbuilt'){ const ok = await bim2EnsureOption(v); if(!ok) return 'not loaded'; }
     if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return ACTIVE_VAR; },
   async view(name, v, as){   // as: the layout to show from that viewpoint (default v; 'asbuilt' for the before view)
-    v = v || (ACTIVE_VAR !== 'asbuilt' ? ACTIVE_VAR : 'open4'); const o = BIM2.option(v), w = o && o.views && o.views[name]; if(!w) return 'no view ' + name;
+    v = v || (ACTIVE_VAR !== 'asbuilt' ? ACTIVE_VAR : 'open4k'); const o = BIM2.option(v), w = o && o.views && o.views[name]; if(!w) return 'no view ' + name;
     await this.set(as || v);
     if(name === 'aerial'){ try{ if(vis.level !== 'main') setLevel('main', {keepCam: true, instant: true}); }catch(e){} DESIGN.view(.01); return 'design layout view'; }
     setMode('walk', {keep: true}); feet = walkSurfaceAt(w.pos[0], w.pos[2], w.pos[1] - EYE + .6); anim = null; glide = null; nav = 'look'; camera.position.set(...w.pos); camera.lookAt(new THREE.Vector3(...w.look)); lookFromCamera();
@@ -21448,7 +21596,7 @@ function bim3StageSettle(){
 }
 { const _sc3 = stg33Check; stg33Check = function(){ try{ bim3StageSettle(); }catch(e){ console.warn('[bim3] stage settle', e); } return _sc3.apply(this, arguments); }; }
 /* Design tab order (owner/OPTIONS 11/3): jan24 "Open Plan" first, then apr24b "Semi-Open Plan" */
-{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1, open4: 2, open4k: 3}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
+{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({apr24b: 0, jan24: 1, open4k: 2}[id] ?? 9);   /* r45: most bedrooms first, the same order in Design, the picker and the View menu */ return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
 /* rack wire deck: library-less render material 'wire-deck' (kernel BI3) = white 2" x 4" wire grid, alpha-tested (UV = feet) */
 BIM2_MATKEY['wire-deck'] = 'bim3WireDeck';
 { const _bl3 = bim2Load; bim2Load = async function(){

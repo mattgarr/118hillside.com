@@ -626,9 +626,9 @@ def staging():
     add('outdoorLounge', (22.3, -2.2), 90, {}); add('outdoorLounge', (22.3, 1.9), 270, {}); add('outdoorCoffee', (22.3, -0.15), 0, {'w': 2.2, 'd': 1.5}); add('plantPot', (23.9, -3.3), 0)
     return F
 
-CARD = {'name': 'Open kitchen and great room', 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': LABEL,
+CARD = {'name': 'Open kitchen and great room', 'stats': [['Great room', '31 × 27 ft'], ['Dining table', 'Seats 8'], ['Glass doors', '14 ft']], 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': 'Illustrative idea.',
         'description': 'One vaulted great room from end to end: a gas hearth at the street end, an island kitchen at the other, a table for eight at folding glass doors to a new deck. The old living room becomes a library and a bath.',
-        'note': 'Concept r44 (owner pick "1-open B-flip", 11/12/2026): the front and middle bedrooms, the hall bath, the hall and the old kitchen all come out of the original gable; hearth on the street gable; L kitchen on the north and west walls; folding glass doors centred on the table; a 3/4 bath, hall with stacked washer and dryer and a library in the old living room; back bedroom entered through a vestibule. Status: illustrative, not designed or reviewed by an architect or engineer.',
+        'note': 'Concept r44 (owner pick "1-open B-flip", 11/12/2026): the front and middle bedrooms, the hall bath, the hall and the old kitchen all come out of the original gable; hearth on the street gable; L kitchen on the north and west walls; folding glass doors centred on the table; a 3/4 bath, hall with stacked washer and dryer and a library in the old living room; back bedroom entered through a vestibule. Status: illustrative idea.',
         'status': 'illustrative', 'source': 'concept r44 (tour/CONCEPT-4BR.md)', 'pageExtras': True}
 
 def register(hide, hide_ranges, sha):
@@ -643,11 +643,11 @@ def register(hide, hide_ranges, sha):
                             [[15.8, 7.5], [15.8, 0.0], 'open'], [[23.0, 16.0], [23.0, 29.4], 'open'], [[24.0, 20.0], [34.0, 26.5], 'open'], [[20.0, 25.0], [26.0, 25.0], 'open'],
                             [[0.6, 7.5], [0.6, 12.6], 'open'], [[0.6, 12.6], [1.5, 15.8], 'open'], [[0.6, 11.0], [4.0, 11.0], 'wall'], [[3.5, 13.2], [3.5, 10.5], 'wall'], [[1.6, 15.8], [1.6, 19.5], 'open'], [[0.5, 11.2], [-4.0, 11.2], 'open'], [[-7.97, 13.0], [-7.97, 16.5], 'open'],
                             [[8.0, 12.0], [3.0, 12.0], 'wall'], [[8.0, 24.0], [3.0, 24.0], 'wall'], [[-4.0, 7.0], [-4.0, 11.5], 'wall'], [[21.5, -1.0], [27.0, -1.0], 'wall'], [[30.0, 8.0], [30.0, 2.0], 'wall'], [[30.0, 18.4], [38.0, 18.4], 'wall']],
-              'rooms': [{'name': 'Living', 'poly': [[24.2, Y_SO], [X_EO, Y_SO], [X_EO, Y_NO], [24.2, Y_NO]]}, {'name': 'Kitchen', 'poly': [[X_LW, 19.6], [24.2, 19.6], [24.2, Y_NO], [X_LW, Y_NO]]},
-                        {'name': 'Dining', 'poly': [[X_LW, Y_SO], [24.2, Y_SO], [24.2, 19.6], [X_LW, 19.6]]},
-                        {'name': 'Library', 'poly': [[-9.6, -0.8], [4.8, -0.8], [4.8, 4.4], [X_LW, 4.4], [X_LW, 9.21], [-9.6, 9.21]]}, {'name': 'Hall', 'poly': [[-0.91, 9.21], [X_LW, 9.21], [X_LW, 14.5], [-0.91, 14.5]]},
-                        {'name': 'Bath', 'poly': [[-9.6, 9.4], [-0.91, 9.4], [-0.91, 14.5], [-6.6, 14.5], [-6.6, 18.5], [-9.6, 18.5]]}, {'name': 'Bedroom', 'poly': [[-6.6, 14.5], [X_LW, 14.5], [X_LW, 26.8], [-6.6, 26.8]]},
-                        {'name': 'Deck', 'poly': [[2.8, -10.2], [24.7, -10.2], [24.7, Y_SO], [2.8, Y_SO]]}],
+              'rooms': [{'name': 'Living', 'stop': 'great', 'poly': [[24.2, Y_SO], [X_EO, Y_SO], [X_EO, Y_NO], [24.2, Y_NO]]}, {'name': 'Kitchen', 'stop': 'great', 'poly': [[X_LW, 19.6], [24.2, 19.6], [24.2, Y_NO], [X_LW, Y_NO]]},
+                        {'name': 'Dining', 'stop': 'great', 'poly': [[X_LW, Y_SO], [24.2, Y_SO], [24.2, 19.6], [X_LW, 19.6]]},
+                        {'name': 'Library', 'stop': 'living', 'poly': [[-9.6, -0.8], [4.8, -0.8], [4.8, 4.4], [X_LW, 4.4], [X_LW, 9.21], [-9.6, 9.21]]}, {'name': 'Hall', 'stop': 'living', 'poly': [[-0.91, 9.21], [X_LW, 9.21], [X_LW, 14.5], [-0.91, 14.5]]},
+                        {'name': 'Bath', 'stop': 'living', 'poly': [[-9.6, 9.4], [-0.91, 9.4], [-0.91, 14.5], [-6.6, 14.5], [-6.6, 18.5], [-9.6, 18.5]]}, {'name': 'Bedroom', 'stop': 'backbed', 'poly': [[-6.6, 14.5], [X_LW, 14.5], [X_LW, 26.8], [-6.6, 26.8]]},
+                        {'name': 'Deck', 'stop': 'porch', 'poly': [[2.8, -10.2], [24.7, -10.2], [24.7, Y_SO], [2.8, Y_SO]]}],
               'labels': [{'name': 'Kitchen', 'at': [15.8, 28.0]}, {'name': 'Dining', 'at': [15.8, 8.2]}, {'name': 'Living', 'at': [29.6, 27.6]}, {'name': 'Library', 'at': [-0.3, 6.6]}, {'name': 'Deck', 'at': [20.5, -2.6]},
                          {'name': 'Bedroom', 'at': [-1.6, 21.5]}, {'name': 'Bath', 'at': [-5.2, 12.2]}],
               # viewpoints, world frame [north, up, east]
