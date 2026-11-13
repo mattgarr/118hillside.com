@@ -16336,6 +16336,10 @@ html.ph #cb42 .b42m{flex:1 1 100%}html.ph #cb42 .b42m span{font-size:14px;line-h
 html.ph #cb42 .b42s{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap;gap:8px}
 html.ph #cb42 button{min-height:44px;padding:0 14px;font-size:14px}
 html.ph #cb42 button.b42alt{flex:0 1 auto}
+html.ph #cb42:not(.b42sl):not(.b42ab){flex-wrap:nowrap;align-items:center;padding:6px 6px 6px 14px;gap:8px}   /* r46 calm phone pass: one row, one pill height (36px, the Floor plans pill's) */
+html.ph #cb42:not(.b42sl):not(.b42ab) .b42m{flex:1 1 auto}html.ph #cb42:not(.b42sl):not(.b42ab) .b42s{flex:0 0 auto;gap:6px}
+html.ph #cb42:not(.b42sl):not(.b42ab) button{min-height:36px;padding:0 13px;font-size:13.5px}
+html.ph.bk38card .phlvbar .phdx{display:none}   /* r46 calm phone pass: the Dollhouse's own close pill goes; 'Back to the tour' is the button right under it */
 /* a phone in the floor plan picker: one slim line over the house (the plan's details and label are in the sheet right below) */
 html.ph #cb42.b42sl{width:max-content;max-width:calc(100vw - 24px);padding:7px 16px;flex-wrap:nowrap;text-align:center}html.ph #cb42.b42sl .b42s{display:none}html.ph #cb42.b42sl .b42m b::before{display:none}
 html.ph #cb42.b42ab{width:max-content;max-width:calc(100vw - 24px);padding:6px 14px;font-size:14px}
@@ -16592,7 +16596,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
       if(which === 'paint'){ try{ IDEAS35.look('street'); }catch(e){} } }, 150); }
   hm.addEventListener('click', e => { const b = e.target.closest('button'); if(b) moreDecor(b.dataset.a); });
   let hmT = 0;
-  function hmSync(){ const P = $('#holPanel'), open = !!(P && !P.hidden && getComputedStyle(P).display !== 'none' && P.getBoundingClientRect().height > 20) && !inGame() && mode !== 'design';
+  function hmSync(){ const P = $('#holPanel'), open = !!(P && !P.hidden && getComputedStyle(P).display !== 'none' && P.getBoundingClientRect().height > 20) && !inGame() && mode !== 'design' && !isPh();   /* r46 calm phone pass: no 'Also try' strip over the holiday panel on a phone (Design is in the menu) */
     if(!open){ if(!hm.hidden && !hmT) hmT = setTimeout(() => { hmT = 0; const P2 = $('#holPanel'); if(!P2 || P2.hidden || mode === 'design') hm.hidden = true; }, 350); return; }   // a click on these buttons closes the panel first: they stay a moment
     clearTimeout(hmT); hmT = 0; hm.hidden = false; const r = P.getBoundingClientRect(), h = hm.offsetHeight || 52;
     if(isPh()) hm.style.setProperty('--hm42t', Math.max(8, Math.round(r.top - h - 8)) + 'px');
@@ -16647,7 +16651,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
       const same = f && (facts('asbuilt') || {}).beds === f.beds, nm = (plans().find(p => p.id === v) || {}).name || '';   // a concept with as many bedrooms as the house says which one it is
       const sl = banner.classList.contains('b42sl');   // the slim line on a phone: what it is, then 'Not the house as it is.' on a line of its own
-      b.textContent = (k === 'mine' ? 'Your design' : 'Illustrative idea') + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '') ;
+      const what = k === 'mine' ? 'Your design' : 'Illustrative idea', full = what + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '');
+      const short = isPh() && !sl && innerWidth < 520;   /* r46 calm phone pass: one row, the label and its two buttons (the counts are in the Floor plans menu) */
+      b.textContent = short ? what : full; if(short) banner.setAttribute('aria-label', full); else banner.removeAttribute('aria-label');
       s.textContent = '';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
     banner.hidden = false;
@@ -16743,9 +16749,9 @@ const IDEA_TOURS = {
         p: 'The kitchen runs along two walls, with the range under two tiers of upper cabinets. The island has a sink and counter stools.'},
       {key: 'dining', t: 'Dining', rooms: ['great'], real: 'great', f: {at: [19.0, 22.4], to: [3.0, 13.0]},
         p: 'The table seats eight beside 14 feet of folding glass doors, which open to the deck.'},
-      {key: 'bath', t: 'New bath', rooms: ['mainbath'], real: 'hallbath', f: {at: [11.3, -2.4], to: [11.9, -9.7], hf: 100},
-        p: 'A three-quarter bath opens off a short hall beside the library.'},
-      {key: 'bedroom', t: 'Back bedroom', rooms: ['mainbeds'], real: 'backbed', f: {at: [18.1, 4.0], to: [24.5, -4.5], hf: 100},
+      {key: 'bath', t: 'New bath', rooms: ['mainbath'], real: 'hallbath', f: {at: [13.4, -2.0], to: [9.6, -8.5], hf: 100, rise: -.15},
+        p: 'A three-quarter bath opens off a short hall beside the library. The vanity is by the window, and the shower is to the right.'},
+      {key: 'bedroom', t: 'Back bedroom', rooms: ['mainbeds'], real: 'backbed', f: {at: [17.9, 2.6], to: [22.5, -6.7], hf: 100, rise: -.1},
         p: 'The back bedroom stays where it is, entered through a small vestibule off the hall.'}]}
 };
 const IT46 = window.IT46 = (() => {
@@ -16782,7 +16788,9 @@ const IT46 = window.IT46 = (() => {
   { const _ss = showStop; showStop = function(){ const r = _ss.apply(this, arguments);
       try{ const s = STOPS[stopIdx]; if(s && (s.i46 || s.t46)) $('#dims').textContent = s.dims || ''; }catch(e){} return r; }; }
   function start(v){ if(!has(v) || ACTIVE_VAR !== v || on !== v) return false; const T = IDEA_TOURS[v], i = STOPS.findIndex(s => s.id === sid(v, T.start));
-    if(mode === 'tour') showStop(i < 0 ? 0 : i); else { stopIdx = i < 0 ? 0 : i; setMode('tour'); } return true; }
+    if(mode === 'tour') showStop(i < 0 ? 0 : i); else { stopIdx = i < 0 ? 0 : i; setMode('tour'); }
+    try{ if(window.__phone && __phone.isPh()) __phone.sheet(false); }catch(e){}   // a phone: the sheet Design opened folds away, the room is the picture
+    return true; }
   /* QA and the page console: show(id) = pick the idea and start its tour; real() = the banner's 'Real house' */
   async function show(v){ if(!has(v)) return false; try{ const ok = await bim2EnsureOption(v); if(!ok) return false; }catch(e){ return false; }
     if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return start(v); }
