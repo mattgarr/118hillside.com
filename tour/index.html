@@ -1908,11 +1908,32 @@ const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: r
    is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
 const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .1, duskIn: .3,
   U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}, r40MetK: {value: 1}}};
+/* r41 W (owner 11/12, launch-blocking: from inside the big-glass rooms at midday the sunlit yard read near-white, "like snow").
+   rule:window-pull - with two environments the glass is clear (r40), so the garden seen from a room was drawn at the ROOM's exposure,
+   1.2-2 stops over what the same garden gets outdoors, and ACES clipped lawn, paving and leaves to white. A real-estate photographer
+   exposes the window for the outside (a second, darker frame blended into the glass: the "window pull"). Here every lit surface
+   OUTSIDE the house envelope is drawn, before tone mapping, at the exterior exposure plus R41W.stops: its radiance is scaled by
+   E_ext / E_now. E_ext = the time of day's outdoor exposure x the outdoor meter's typical gain; E_now = the exposure in use.
+   Tuned 11/12 on the owner's Mac (browser pane, GPU): by day the outdoor stops settle at .965-.98 on a base of .80-.84 (gain
+   R41W.outGain 1.2), the glazed rooms at .90-1.13. R41W.stops 0: the garden through the glass is never brighter than the same
+   garden seen standing outside (the +.6 of the first pass never engaged: E_ext was above every room's exposure). At the rooms'
+   calibrated stops the pull is 1 (no change); it takes up to ~.25 stop off when a room's exposure climbs over the outdoor one. The factor follows EXPO_IN (eased, so a doorway crossing
+   blends) and is never above 1 (dusk: the garden is darker than the room, nothing is pulled). It depends on where the camera
+   stands, never where it looks. The envelope is a plan distance field from the BIM interior spaces (R41W.tex, 3-in cells, linear
+   filtered: no cells), with the height range of the nearest room: a window reveal, a sill or a jamb inside the wall thickness is the
+   room's, ground below the floor and a roof above the ceiling are outside. The meter's all-round view is drawn without the pull, so
+   every room keeps its calibrated exposure. ?r41w=0 turns it off. */
+/* r41 W3 (11/12): OFF by default, ?r41w=1 turns it on. With the tuned values it changes nothing at the rooms' calibrated stops (pull 1),
+   and its shader code made the hall-bath and lower-bath probe mirrors draw black (GL INVALID_OPERATION on their draw; ?r41w=0 restores
+   them; binding its uniforms in the mirror hook was not enough). Until that is solved the mirrors win. */
+const R41W = window.R41W = {on: R40E.on && /[?&]r41w=1\b/.test(location.search), d0: .7, d1: 1.2, dMax: 4, stops: 0, outGain: 1.2, pull: 1, built: false,
+  U: {r41Dist: {value: null}, r41DB: {value: new THREE.Vector4(0, 0, 0, 0)}, r41DY: {value: new THREE.Vector2(0, 1)}, r41Pull: {value: 0}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
   C.worldpos_vertex += `\n${G}\nvR40W = worldPosition.xyz;\n#endif\n`;
   C.envmap_physical_pars_fragment += `
 #if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
+#define R41G8 ${/[?&]ghost41=0\b/.test(location.search) ? 'false' : 'true'}
 uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K, r40MetK;
 float r40MaskAt( vec3 P ){
   vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
@@ -1923,12 +1944,14 @@ float r40MaskAt( vec3 P ){
 float r40Interior( const in GeometricContext geometry ){
   if( r40Mode.x < 0.5 ) return 0.0;
   if( r40Mode.y > 0.5 || r40MB.z <= 0.0 ) return r40K;
-  vec3 P = vR40W + inverseTransformDirection( geometry.normal, viewMatrix ) * 0.75;
+  vec3 N = inverseTransformDirection( geometry.normal, viewMatrix ), P = vR40W + N * 0.75;
   float m = r40MaskAt( P );
   // r41: furnishings, hardware and window coverings (mode 2) hang ON the room side of a wall; within ~6 in of an exterior wall's inner face
   // the plan cells are not interior air, so a knob's, towel ring's or shade rail's faces along the wall read the open sky and shone.
   // For them the room on either side, 6 in away, counts too (an outdoor piece would have to be inside the wall to reach it)
   if( m < 0.999 && r40Mode.x > 1.5 ){ m = max( m, max( max( r40MaskAt( P + vec3( 0.5, 0.0, 0.0 ) ), r40MaskAt( P - vec3( 0.5, 0.0, 0.0 ) ) ), max( r40MaskAt( P + vec3( 0.0, 0.0, 0.5 ) ), r40MaskAt( P - vec3( 0.0, 0.0, 0.5 ) ) ) ) ); }
+  // r41 G8: a level surface (ceiling, floor, counter top) keeps its test point over the wall line: also read 3 in to each side
+  else if( R41G8 && m < 0.999 && abs( N.y ) > 0.5 ) m = max( m, max( max( r40MaskAt( P + vec3( 0.25, 0.0, 0.0 ) ), r40MaskAt( P - vec3( 0.25, 0.0, 0.0 ) ) ), max( r40MaskAt( P + vec3( 0.0, 0.0, 0.25 ) ), r40MaskAt( P - vec3( 0.0, 0.0, 0.25 ) ) ) ) );
   return m;
 }
 vec3 r40IrrB( const in GeometricContext geometry ){ return PI * textureCubeUV( envMapB, inverseTransformDirection( geometry.normal, viewMatrix ), 1.0 ).rgb * envMapIntensity; }
@@ -1944,10 +1967,30 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
     // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
     // (an accessor: page hooks keep the previous hook and call it as a plain function, so the default returns one bound to its material)
     Object.defineProperty(THREE.Material.prototype, 'onBeforeCompile', {configurable: true,
-      get(){ const m = this; return function r40DefaultHook(sh){ if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
+      get(){ const m = this; return function r40DefaultHook(sh){ if(sh && sh.uniforms && R41W.on) Object.assign(sh.uniforms, R41W.U); if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
       set(v){ Object.defineProperty(this, 'onBeforeCompile', {value: v, writable: true, configurable: true, enumerable: true}); }});
   } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
-function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
+if(!R40E.on) R41W.on = false;
+if(R41W.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) || defined( PHONG ) || defined( LAMBERT ) || defined( TOON )', TM = '#if defined( TONE_MAPPING )';
+  if(C.tonemapping_fragment.indexOf(TM) === 0 && C.project_vertex.includes('gl_Position')){
+    C.common += `\n${G}\nvarying vec3 vR41P;\n#endif\n`;
+    C.project_vertex += `\n${G}\n{ vec4 r41w = vec4( transformed, 1.0 );\n#ifdef USE_INSTANCING\nr41w = instanceMatrix * r41w;\n#endif\nvR41P = ( modelMatrix * r41w ).xyz; }\n#endif\n`;
+    C.tonemapping_pars_fragment += `
+${G}
+uniform sampler2D r41Dist; uniform vec4 r41DB; uniform vec2 r41DY; uniform float r41Pull;
+// 1 inside the house envelope (rooms, their walls, reveals and sills), 0 outside it; soft over R41W.d0-d1 ft beyond the room air
+float r41Envelope( vec3 P ){
+  vec2 uv = ( P.xz - r41DB.xy ) * r41DB.zw;
+  if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
+  vec4 t = texture2D( r41Dist, uv ); float y = ( P.y - r41DY.x ) / r41DY.y;
+  float v = clamp( y - t.g * 255.0 + 0.5, 0.0, 1.0 ) * clamp( t.b * 255.0 - y + 0.5, 0.0, 1.0 );
+  return v * ( 1.0 - smoothstep( ${R41W.d0.toFixed(3)}, ${R41W.d1.toFixed(3)}, t.r * ${R41W.dMax.toFixed(3)} ) );
+}
+#endif
+`;
+    C.tonemapping_fragment = `${G}\n\tif( r41Pull > 0.0 ) gl_FragColor.rgb *= 1.0 - r41Pull * ( 1.0 - r41Envelope( vR41P ) );\n#endif\n` + C.tonemapping_fragment;
+  } else { R41W.on = false; console.warn('[r41w] tone-mapping anchors missing: no window pull'); } }
+function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); if(R41W.on) Object.assign(sh.uniforms, R41W.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
 const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawing registered to the A2.2 walls
@@ -10413,7 +10456,7 @@ function glass20MirrorMat(q, clone){
   // A mirror shows only what it reflects (the room capture, with the MR-1 light floor that follows the light level): no emission.
   if(m.emissive) m.emissive.setRGB(0, 0, 0); m.emissiveIntensity = 0; m.emissiveMap = null;
   const U = q.U;
-  m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U);
+  m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U); if(typeof R41W !== 'undefined' && R41W.on) Object.assign(sh.uniforms, R41W.U);   /* r41 W2: the window pull's sampler must be bound (left on unit 0 with this cube envMap, the draw failed: black mirror) */
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vG20W;').replace('#include <project_vertex>', '#include <project_vertex>\nvG20W = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vG20W; uniform vec3 gBoxMin, gBoxMax, gProbe;')
       .replace('reflectVec = inverseTransformDirection( reflectVec, viewMatrix );', `reflectVec = inverseTransformDirection( reflectVec, viewMatrix );
@@ -10581,8 +10624,9 @@ function lightMeterPoll(){
   const st = gl.clientWaitSync(METER.sync, 0, 0); if(st !== gl.ALREADY_SIGNALED && st !== gl.CONDITION_SATISFIED) return;
   gl.deleteSync(METER.sync); METER.sync = null;
   gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-  let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
+  let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = METER.atlas ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
   METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt;
+  if(METER.atlas && typeof ghost41MeterCal === 'function') ghost41MeterCal();   // r41 G5: the all-round view, evenly weighted, calibrated per room (see GHOST r41)
 }
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
@@ -11019,7 +11063,7 @@ GOV.apply = (k, force) => {
   if(composer && ssao){ const bt = ssao.beautyRenderTarget, n = Math.max(0, k.aa);
     if(bt && bt.isWebGLMultisampleRenderTarget && bt.samples !== n){ bt.samples = n; bt.dispose(); }
     if(composer._govFx){ const on = k.aa === 0; if(composer._govFx.enabled !== on){ composer._govFx.enabled = on; sizePost(); } } }
-  const sm = Math.min(G.sharp ? G.L[G.lvl].sm : k.sm, renderer.capabilities.maxTextureSize || 4096, coarse && !PERF.off('phone') ? (k.i === 0 ? 4096 : 2048) : 1e9);
+  const sm = Math.min(G.sharp ? G.L[G.lvl].sm : k.sm, renderer.capabilities.maxTextureSize || 4096, coarse && !PERF.off('phone') ? (G.ceil === 0 ? 4096 : 2048) : 1e9);   // r41 G6: the phone cap follows the quality button, not the level being drawn
   if(sun.shadow.mapSize.x !== sm){ sun.shadow.mapSize.set(sm, sm); if(sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map = null; } PERF.shadowDirty = true; }
   if(force || A.fol !== k.fol) GOV.foliage(k.fol);
   Object.assign(A, {ao: k.ao, fol: k.fol, i: k.i});
@@ -20546,6 +20590,7 @@ async function bim2Load(){
   BIM2T.load0 = performance.now();
   try{ railMats(); }catch(e){ console.warn('[bim2] rail materials', e); }   // stair/rail photo materials are created lazily by the page
   BIM2S = await BIM2.load({THREE, glb: BIM2_CFG.glb, meta: BIM2_CFG.meta, mapMaterial: bim2MapMaterial, groupOf: bim2GroupOf, attach: (g, m) => grp(g).add(m)});
+  try{ ghostFlattenJogs(BIM2S); }catch(e){ console.warn('[ghost41] jogs', e); }   // r41 G4: collinear wall segments a stud's width apart -> one flat face
   KGEO = null; window.__KSRC = 'bim2'; window.__BIM2 = BIM2; SCENE_META = BIM2S.meta; HOUSE = BIM2S;
   // design options (meta.options): nothing is fetched at boot; an option's package is fetched the first time it is shown (bim2EnsureOption)
   if(MODEL){ MODEL.rooms = null; MODEL.collide = null; }   // the legacy room grid is retired: rooms come from the meta spaces
@@ -22982,10 +23027,12 @@ if(R10.on && typeof lightMeterInit === 'function'){
     gl.deleteSync(METER.sync); METER.sync = null;
     gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     let s = 0, ws = 0, hi = 0, cr = 0, cg = 0, cb = 0, cw = 0; const B = METER.buf;
-    for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
+    const AT = METER.atlas;   // r41 G5: the all-round atlas (GHOST r41) is weighted evenly: no centre in a ring of four views
+    for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = AT ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
       const r = B[o] / 255, g = B[o + 1] / 255, b = B[o + 2] / 255, v = .2126 * r + .7152 * g + .0722 * b; s += w * v; ws += w; if(v > .88) hi++;
       const mx = Math.max(r, g, b), mn = Math.min(r, g, b); if(v > .12 && v < .9 && (mx - mn) < .25){ cr += w * r; cg += w * g; cb += w * b; cw += w; } }   // mid-tones, not strongly coloured (paint accents, sky)
-    METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; R10WB.mean = cw > 4 ? [cr / cw, cg / cw, cb / cw] : null; };
+    METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; R10WB.mean = cw > 4 ? [cr / cw, cg / cw, cb / cw] : null;
+    if(AT && typeof ghost41MeterCal === 'function') ghost41MeterCal(); };
   const prev10 = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prev10) prev10.apply(this, arguments);
     try{ if(DUSK || (typeof HW !== 'undefined' && HW.on) || (typeof TG !== 'undefined' && TG.on) || !GRADE_PASS || !GRADE_PASS.uniforms.wb) return;
       const k = typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0, m = R10WB.mean, C = R10WB.cur;
@@ -23080,7 +23127,8 @@ function r13Band(P, C, rows, shade){ for(let r = 0; r + 1 < rows.length; r++) fo
    break (an opening, an open-plan edge), so a band never ends in a hard square end */
 const R13U = [0, .12, .3, .55, 1], R13PROF = R13U.map(u => (1 - u) * (1 - u));
 function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0), on = i => !!rows[0][i];
-  for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = [.15, .55, .85, 1][d]; }
+  const TP = /[?&]ghost41=0\b/.test(location.search) ? [.15, .55, .85, 1] : [0, .45, .8, 1];   // r41 G3: a band's last column fades to nothing (was .15: a square end)
+  for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = TP[d]; }
   return (r, i) => 1 - (1 - s0) * R13PROF[r] * tp[i]; }
 
 /* R13-1 rule:room-edge-occlusion - every interior read as evenly lit white boxes: no darkening where wall meets ceiling, wall meets
@@ -23091,6 +23139,7 @@ function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0)
    the wall base, and up both walls of each inside corner. Merged into one mesh per house group; fades with EXPO_IN (indoors only) and
    only in Tour / Walk. */
 const R13E = {step: .75, ceilW: 1.6, wallW: 1.4, floorW: .8, vertW: 1.3, sCeil: .6, sWall: .64, sFloor: .58, sVert: .66, lift: .012};
+if(!/[?&]ghost41=0\b/.test(location.search)) Object.assign(R13E, {ceilW: 1.1, wallW: .9, floorW: .6, vertW: .9, sCeil: .86, sWall: .88, sFloor: .84, sVert: .9});   // r41 G3: a soft few-percent falloff (was 34-42 % over 1.3-1.6 ft)
 function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
   const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
   const bucket = k => out[k] = out[k] || {P: [], C: []};
@@ -23122,10 +23171,12 @@ function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null
       const e2 = inN((i + 1) % n); if(!e2 || e2.L < .8) continue;
       const cr = e.dx * e2.dy - e.dy * e2.dx; if(cr * sg < .5) continue;   // a convex polygon vertex = an inside room corner (~90 deg)
       const vx = P[(i + 1) % n][0], vy = P[(i + 1) % n][1], cv = ceil(vx - e.dx * .1 + e.nx * .1, vy - e.dy * .1 + e.ny * .1); if(cv == null) continue; rep.corners++;
-      for(const [dx, dy, nx, ny] of [[-e.dx, -e.dy, e.nx, e.ny], [e2.dx, e2.dy, e2.nx, e2.ny]]){   // along each wall, away from the corner
+      const SIDES = [[-e.dx, -e.dy, e.nx, e.ny], [e2.dx, e2.dy, e2.nx, e2.ny]], G41 = !/[?&]ghost41=0\b/.test(location.search);
+      const both = z => SIDES.every(([sx, sy, snx, sny]) => wall(vx + sx * .4, vy + sy * .4, snx, sny, z) && wall(vx + sx * 1.1, vy + sy * 1.1, snx, sny, z));   // r41 G3: a corner is two walls
+      for(const [dx, dy, nx, ny] of SIDES){   // along each wall, away from the corner
         const W = E.vertW, L = E.lift, rows = R13U.map(() => []), zs = []; for(let z = f + .05; z < cv - .05; z += 1) zs.push(z); zs.push(cv - .02);
         for(let k = 0; k < zs.length; k++){ const z = zs[k], z1 = zs[Math.min(zs.length - 1, k + 1)], z0 = zs[Math.max(0, k - 1)];
-          const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
+          const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && (!G41 || both(z)) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
           R13U.forEach((u, r) => rows[r].push(ok ? V(vx + dx * u * W + nx * L, vy + dy * u * W + ny * L, z) : null)); }
         // rows[r] = a constant distance from the corner, running up the wall
         r13Band(bucket(top).P, bucket(top).C, rows, r13Shade(rows, E.sVert)); } } }
@@ -23464,6 +23515,191 @@ if(R17.on){
       if(R17.meshes) for(const m of R17.meshes) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick17); };
   requestAnimationFrame(tick17); }
 BIM3.report.r17 = R17.report;
+/* ===== GHOST r41 (owner 11/12: "shadows at random places", "whole shadows popping in and out when I pivot", "the corner darkening looks
+   overdone", "no jogs that aren't in the house") =====================================================================================
+   G1 rule:shadow-map-integrity - the sun's shadow map is cached and redrawn only when something asks (PERF shadow cache). The redraw
+      happened inside whichever scene render came first after the request, and two of those draw the scene in a different state:
+      (a) the speed governor's small-object cull (GOV.cull, motion levels 3-7) hides every mesh under k.cull pixels for the frame, so a
+          redraw during motion baked the map WITHOUT them (measured at the kitchen stop: 170 casters missing - cabinet hardware, door
+          leaves and window-shade cells of other rooms) and it stayed that way until the next redraw;
+      (b) the mirror probes (glass20Step) draw cube faces with every mirror hidden; a redraw that landed there baked the map without
+          the mirrors and nightstand / medicine-cabinet glass (15 casters).
+      Every tiny pivot is a "move", so whole shadows dropped out and came back. Now the cull hides objects from the camera only (the
+      shadow pass shows them), and the map is never redrawn while drawing into a cube target (it waits for the next camera frame).
+   G2 rule:no-screen-space-ao - SSAO is drawn from the depth buffer of the current view: what is off screen does not occlude, so corner
+      shading popped in and out at the screen edges as the view turned, its 1.6-ft kernel drew halos and doubled edges, and the governor
+      switched it between full, half resolution and off as the camera stopped and started. Removed at every level (the composer keeps
+      its MSAA beauty pass and the grade). Occlusion is now view-independent only: the r13 room-edge bands (computed once, in world
+      space), the r13 contact shadows under furniture and the sun's shadow map. Shadow filter taps are the same (16) at every level, so
+      a still frame and a moving frame draw the same shadow edge.
+   G3 rule:subtle-room-edges - the r13 bands took 34-42 % of the light at a corner over 1.3-1.6 ft (a grey stripe down every corner and
+      along every ceiling line; real white rooms in the listing photos show a soft few-percent falloff). Now 10-16 % over .6-1.1 ft,
+      band ends fade to nothing (no square ends), and a vertical corner band is laid only where BOTH walls of the corner are there at
+      that height (an open stair edge is not a corner: the loft wall beside the handrail and the stair-hall wall had full-height
+      bands at corners that do not exist).
+   G4 rule:flat-walls - collinear wall segments of the BIM model that miss each other by 1/4"-3" (two walls drawn a stud's
+      width apart) showed a seam, two shades and a stepped baseboard (living room left of the window, primary bedroom between the
+      closet door and the corner, ...). Right after the model loads, each such room face is moved onto the plane of the longer segment
+      it meets: wall paint, baseboard and casing vertices within 1" in front of the short face, the ceiling / floor edge on that line,
+      and the room polygon's edge (so the corner bands and the interior mask follow). Real jogs (more than 3") are untouched.
+   G5 rule:meter-where-you-stand - the camera meter read the picture on screen (centre-weighted 16x16): turning 5 degrees in place moved
+      the exposure by up to .1 stop (14/255 on a white wall, stairs and loft stops), so recessed cans or a window entering the frame
+      brightened or darkened the whole room. The meter now reads four level 90-degree views around the eye (one 32-px view per frame
+      into a 2 x 2 atlas, redrawn when the eye moves 2.4" or every 1.5 s), evenly weighted: the same for every direction you look from
+      one spot. Calibrated per room so each room's tour stop is exposed as the screen meter exposed it (daylight; dusk: one factor
+      for the house, x.906). The eye-adaptation ease (tau .45 s, .3 stop/s) is unchanged.
+   ?ghost41=0 turns G1-G5 off (?ghost41m=0: G5 only). */
+const GHOST41 = window.GHOST41 = {on: !/[?&]ghost41=0\b/.test(location.search), jogs: [], shadowSkips: 0, cullShown: 0, ssao: 'off'};
+function ghostFlattenJogs(S){
+  if(!GHOST41.on || !S || !S.colliders || !S.meshes) return 0;
+  const MAX = .24, MIN = .015, faces = [];   // 3/16" to 2.9": a 3" step (lower bedroom 2) may be real and is left
+  for(const c of S.colliders){ if(c.kind !== 'WALL' || !c.poly || c.poly.length < 4) continue; const P = c.poly, n = P.length; let A = 0;
+    for(let i = 0, j = n - 1; i < n; j = i++) A += P[j][0] * P[i][1] - P[i][0] * P[j][1];
+    for(let i = 0; i < n; i++){ const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); if(L < 1) continue;
+      const ux = dx / L, uy = dy / L, s = A > 0 ? 1 : -1; faces.push({c, a, b, L, u: [ux, uy], n: [uy * s, -ux * s]}); } }   // n: out of the wall body
+  const room = (x, y, st) => S.spaces.find(s => s.storey === st && s.interior && !s.openAir && S.contains(s, x, y));
+  for(let i = 0; i < faces.length; i++) for(let j = i + 1; j < faces.length; j++){ const f = faces[i], g = faces[j];
+    if(f.c === g.c || f.c.storey !== g.c.storey || f.n[0] * g.n[0] + f.n[1] * g.n[1] < .9995) continue;
+    const n = f.n, d = (g.a[0] - f.a[0]) * n[0] + (g.a[1] - f.a[1]) * n[1]; if(Math.abs(d) < MIN || Math.abs(d) > MAX) continue;
+    const u = f.u, pg = [(g.a[0] - f.a[0]) * u[0] + (g.a[1] - f.a[1]) * u[1], (g.b[0] - f.a[0]) * u[0] + (g.b[1] - f.a[1]) * u[1]].sort((p, q) => p - q);
+    if(Math.max(pg[0] - f.L, -pg[1]) > .7 || Math.min(pg[1], f.L) - Math.max(pg[0], 0) > .05) continue;   // end to end (gap under 8"), not side by side
+    // the whole run of each wall on this line (a wall is split into pieces around its openings): the shorter wall moves, all of it
+    const run = F => { let L = 0, s0 = 1e9, s1 = -1e9; const dF = F.a[0] * n[0] + F.a[1] * n[1];
+      for(const h of faces){ if(h.c.element !== F.c.element || h.c.storey !== F.c.storey || h.n[0] * n[0] + h.n[1] * n[1] < .9995 || Math.abs(h.a[0] * n[0] + h.a[1] * n[1] - dF) > .005) continue;
+        L += h.L; for(const p of [h.a, h.b]){ const sv = (p[0] - f.a[0]) * u[0] + (p[1] - f.a[1]) * u[1]; s0 = Math.min(s0, sv); s1 = Math.max(s1, sv); } } return {L, s0, s1}; };
+    const rf = run(f), rg = run(g), K = rf.L >= rg.L ? f : g, Mv = K === f ? g : f, rm = K === f ? rg : rf, dk = K.a[0] * n[0] + K.a[1] * n[1], dm = Mv.a[0] * n[0] + Mv.a[1] * n[1];
+    const sm = [rm.s0, rm.s1].map(v => v - ((K.a[0] - f.a[0]) * u[0] + (K.a[1] - f.a[1]) * u[1]));
+    const mid = [(Mv.a[0] + Mv.b[0]) / 2 + n[0] * .6, (Mv.a[1] + Mv.b[1]) / 2 + n[1] * .6], sp = room(mid[0], mid[1], Mv.c.storey);
+    if(!sp) continue;   // a room face only (siding steps outside are left as built)
+    GHOST41.jogs.push({keep: K.c.element, move: Mv.c.element, storey: Mv.c.storey, room: sp.id, inches: +((dk - dm) * 12).toFixed(2), n, u, o: K.a.slice(), dm, dk, s0: sm[0], s1: sm[1], y0: Math.min(K.c.z0, Mv.c.z0) - .3, y1: Math.max(K.c.z1, Mv.c.z1) + .3, verts: 0}); }
+  // de-duplicate (the same face pair is found from both walls' polygons only once, but two keeps can claim one face: take the first)
+  const seen = new Set(); GHOST41.jogs = GHOST41.jogs.filter(J => { const k = J.move + '|' + J.n.map(v => v.toFixed(3)) + '|' + J.dm.toFixed(3); if(seen.has(k)) return false; seen.add(k); return true; });
+  const e = new THREE.Matrix4();
+  ghostMoveJogs(S, false); return GHOST41.jogs.length; }
+// the vertex / room / collider moves; from = true: a later pass over faces the page added after load (r42 office alcove end)
+function ghostMoveJogs(S, from){ const e = new THREE.Matrix4();
+  for(const J of GHOST41.jogs){ const del = J.dk - J.dm, small = Math.abs(del) < .055, tmax = small ? .003 : (del > 0 ? Math.min(.09, del - .008) : .09);
+    const hit = (px, py, y) => { if(y < J.y0 || y > J.y1) return false; const s = (px - J.o[0]) * J.u[0] + (py - J.o[1]) * J.u[1]; if(s < J.s0 - .012 || s > J.s1 + .012) return false;
+      const t = px * J.n[0] + py * J.n[1] - J.dm; return t > -.004 && t < tmax; };
+    for(const m of S.meshes){ const b = m.userData && m.userData.bim2; if(!b || !m.geometry || (b.storey && b.storey !== J.storey) || /^(roofs|site|glass)$/.test(b.group) || /^leaf\|/.test(m.name)) continue;
+      m.updateMatrixWorld(true); if(!m.matrixWorld.equals(e)) continue; const pa = m.geometry.attributes.position, A = pa.array; let k = 0;
+      const q0 = from ? (m.userData.g41n == null ? pa.count : m.userData.g41n) : 0; if(!from && m.userData.g41n == null) m.userData.g41n = pa.count;   // a later pass only sees faces added since
+      for(let q = q0; q < pa.count; q++){ const x = A[q * 3], y = A[q * 3 + 1], z = A[q * 3 + 2]; if(!hit(z, x, y)) continue;   // world x = plan y, world z = plan x
+        A[q * 3 + 2] = z + J.n[0] * del; A[q * 3] = x + J.n[1] * del; k++; }
+      if(k){ pa.needsUpdate = true; m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox(); J.verts += k; } }
+    if(from) continue;
+    for(const s of S.spaces){ if(s.storey !== J.storey || !s.poly) continue; let k = 0;
+      for(const p of s.poly){ const sv = (p[0] - J.o[0]) * J.u[0] + (p[1] - J.o[1]) * J.u[1], t = p[0] * J.n[0] + p[1] * J.n[1] - J.dm;
+        if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; k++; } }
+      if(k){ J.poly = (J.poly || []).concat(s.id); if(s.bb) s.bb = [Math.min(...s.poly.map(p => p[0])), Math.min(...s.poly.map(p => p[1])), Math.max(...s.poly.map(p => p[0])), Math.max(...s.poly.map(p => p[1]))]; } }
+    // r41 G4b: the moved wall's collider face goes with its paint, so walking and click-to-move keep their clearance from what is drawn
+    for(const c of S.colliders){ if(c.element !== J.move || c.storey !== J.storey || !c.poly) continue;
+      for(const p of c.poly){ const sv = (p[0] - J.o[0]) * J.u[0] + (p[1] - J.o[1]) * J.u[1], t = p[0] * J.n[0] + p[1] * J.n[1] - J.dm;
+        if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; J.coll = (J.coll || 0) + 1; } }
+      if(c.bb) c.bb = [Math.min(...c.poly.map(p => p[0])), Math.min(...c.poly.map(p => p[1])), Math.max(...c.poly.map(p => p[0])), Math.max(...c.poly.map(p => p[1]))]; } }
+  return GHOST41.jogs.length; }
+// r41 G4c: faces the page adds to the walls after load (r42: the office alcove's end, which the model never built) are flattened too
+{ const _bh41 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh41.apply(this, arguments); try{ if(GHOST41.on && BIM2S && GHOST41.jogs.length) ghostMoveJogs(BIM2S, true); }catch(e){ console.warn('[ghost41] late faces', e); } return r; }; }
+/* QA (?qa=1): the shadow-pass trace and a window on the renderer state for the pivot test (GHOST41.trace = true to record) */
+if(/[?&]qa=1\b/.test(location.search)){ const SM = renderer.shadowMap, orig = SM.render.bind(SM); GHOST41.sm = [];
+  SM.render = function(lights, sc, cam){ if(GHOST41.trace && (SM.autoUpdate || SM.needsUpdate) && sun.castShadow){ let n = 0, hidden = 0;
+      const vis = o => { for(let x = o; x; x = x.parent) if(!x.visible) return false; return true; };
+      sc.traverse(o => { if(!o.isMesh || !o.castShadow) return; if(vis(o) && o.layers.test(sun.shadow.camera.layers)) n++; else if(o.visible === false || !o.layers.test(sun.shadow.camera.layers)) hidden++; });
+      const rt = renderer.getRenderTarget(); GHOST41.sm.push({f: renderer.info.render.frame, t: +performance.now().toFixed(1), casters: n, off: hidden, size: sun.shadow.mapSize.x, rt: rt ? (rt.isWebGLCubeRenderTarget ? 'cube' : 'rt' + rt.width) : 'screen', cam: cam === camera ? 'eye' : 'other'});
+      if(GHOST41.sm.length > 4000) GHOST41.sm.splice(0, 1000); }
+    return orig(lights, sc, cam); };
+  window.__g41 = {GOV, METER, sun, renderer, scene, camera, LOOK, PERF, get R40X(){ return R40X; }, get R40L(){ return R40L; }, ACC: window.__aa && __aa.ACC, get EXPO_IN(){ return EXPO_IN; }, get room(){ return LIGHT_ENV_ID; }, get DUSK(){ return DUSK; }, get TOD(){ return TOD_KEY; }}; }
+if(GHOST41.on){
+  // G1: the shadow map is drawn with what the scene really holds
+  { const SM = renderer.shadowMap, orig = SM.render.bind(SM);
+    SM.render = function(lights, sc, cam){
+      if(!(SM.autoUpdate || SM.needsUpdate)) return orig(lights, sc, cam);
+      const rt = renderer.getRenderTarget(); if(rt && rt.isWebGLCubeRenderTarget && sun.shadow.map){ GHOST41.shadowSkips++; return; }   // a probe capture: the next camera frame draws the map
+      const hid = []; for(const o of (GOV.cullList || [])) if(!o.visible){ o.visible = true; hid.push(o); }
+      GHOST41.cullShown += hid.length;
+      try{ return orig(lights, sc, cam); } finally { for(const o of hid) o.visible = false; } }; }
+  // G2: no screen-space AO at any governor level; the same shadow filter at every level
+  if(typeof GOV !== 'undefined' && GOV.L){ const tp = 16;   // one filter at every level (the top levels already used 16)
+    for(const l of GOV.L){ l.ao = 0; l.taps = tp; l.cost = l.s * l.s * .66 * (tp === 16 ? 1 : .86) * (l.aa >= 8 ? 1.15 : l.aa >= 4 ? 1 : l.aa >= 2 ? .93 : .88); }
+    if(GOV.k){ GOV.k.ao = 0; GOV.k.taps = tp; } }
+  LOOK.aoStrength = 0;
+  // G5: the camera meter reads where the camera STANDS, not where it looks
+  if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
+    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, every: 10000, gap: 500, last: new THREE.Vector3(1e9, 0, 0), movedAt: 0, M: METER,
+      // the calibration (ghost41MeterCal): per room (R40L.zone), the screen meter's reading at the room's tour stop(s) over the all-round
+      // reading there, so each stop is exposed as before. Measured 11/12 with GHOST41.calibrate() (?qa=1) at every stop: by day the
+      // geometric mean of morning, midday and golden (they agree within 3 %), dusk on its own (lamps: the view mattered more, 0.84-1.25).
+      // Out = the median over the outdoor stops. A room is crossed by the meter's own ease (no pop).
+      // 11/12 later, against main e5a6149 on the owner's Mac, both SETTLED (20 s at the stop): 'stairs' is the zone of the ENTRY stop (its eye
+      // is in the open stair-hall air); .845 put it ~.1 stop over main's 1.22 -> .881 (1.22). Dusk great room 1.024 gave ~.56 vs main .68
+      // -> .955 (.67, measured); dusk living room .845 gives ~.61 vs main .62 (kept). Exposure ~ f^-(k / gamma): -1.33 by day, -2 at dusk.
+      cal: .97, calDusk: .973, out: .941, outDusk: 1.03, hiK: 1,
+      room: {stairs: .881, living: .899, great: 1.041, mainbed3: 1.084, mainbed2: 1.033, mainbath: 1.026, mainbed1: .934, entry: 1.122, loft: .943, pbath: .977,
+        primary: 1.06, lbed1: .929, lbath: .947, lbed2: .946, laundry: .945, office: .981, rec: .954, garage: .975},
+      roomDusk: {stairs: .984, living: .845, great: .955, mainbed3: 1.16, mainbed2: 1.007, mainbath: 1.201, mainbed1: .964, entry: .958, loft: .924, pbath: .835,
+        primary: 1.143, lbed1: .973, lbath: .989, lbed2: .957, laundry: .929, office: 1.017, rec: .876, garage: .977}};
+    METER_PASS.render = function(r, w, read){
+      if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
+      const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
+      if(!G5.rt){ G5.rt = new THREE.WebGLRenderTarget(2 * Q, 2 * Q, {minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat}); G5.rt.texture.generateMipmaps = false; }
+      const rest = cp.distanceToSquared(G5.last) < 1e-8; if(!rest) G5.movedAt = now; G5.last.copy(cp);   // the eye stopped this frame: measure where it stands at once
+      const fading = R40X.k < 1 || (EXPO_IN > .001 && EXPO_IN < .999) || Math.abs(Math.log2(r.toneMappingExposure / (G5.eSweep || 1))) > .015, settled = now - G5.movedAt > 1500 && G5.at < G5.movedAt + 1500;   // the room light still crossfading; and once more when it has settled
+      if(G5.k >= 4 && ((cp.distanceToSquared(G5.pos) > .04 && (rest || now - G5.at > G5.gap)) || (fading && now - G5.at > G5.gap) || settled || now - G5.at > G5.every || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; G5.eSweep = r.toneMappingExposure; }
+      if(G5.k < 4){   // one of four level views (90 deg each, the full circle around the eye) per frame into a 2 x 2 atlas
+        const c = G5.cam, prev = r.getRenderTarget(), q = G5.k; c.near = camera.near; c.far = camera.far; c.updateProjectionMatrix(); c.position.copy(G5.pos); c.rotation.set(0, q * Math.PI / 2, 0, 'YXZ'); c.updateMatrixWorld();
+        const vp = G5.rt.viewport, sc = G5.rt.scissor; vp.set((q & 1) * Q, (q >> 1) * Q, Q, Q); sc.copy(vp); G5.rt.scissorTest = true;
+        r.setRenderTarget(G5.rt); R41W.hold = true; try{ r.render(scene, c); } finally { R41W.hold = false; } r.setRenderTarget(prev); G5.k++;   /* r41 W: the meter sees the room without the window pull (its calibration) */ if(G5.k === 4){ G5.ready = true; G5.sweeps++; } }
+      if(!G5.ready || G5.k < 4) return G5.ready ? undefined : orig.call(this, r, w, read);
+      lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
+      METER.atlas = G5; const gl = r.getContext(), prev = r.getRenderTarget(); METER.mat.uniforms.tDiffuse.value = G5.rt.texture; r.setRenderTarget(METER.rt); METER.quad.render(r);
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 16 * 16 * 4, gl.STREAM_READ);
+      gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+      METER.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); METER.eAt = r.toneMappingExposure; r.setRenderTarget(prev); }; } }
+/* GHOST r41, second pass (owner 11/12, the kitchen micro-pivot captures, the boxy ceiling, "flashes as you pivot"):
+   G5b rule:meter-calibration-applied - the page's lightMeterPoll is replaced whole by r10 (colour meter + AWB), so the all-round
+      reading was centre-weighted and never calibrated (the first pass put both in the replaced function). Both now run in the
+      poll that is in use (ghost41MeterCal, called from r10's poll and from the page's own); the factors are measured by
+      GHOST41.calibrate() (?qa=1). The atlas (four small extra scene draws) is redrawn when the eye has moved 2.4" (at once when it stops, at most every .5 s while it moves, the room light crossfades or the exposure is still adapting (the reading is made at the exposure it drives), so a walk does not pay a draw every frame), once more 1.5 s after it stops, and every 10 s (doors, shades); turning in place does not redraw it.
+   G6 rule:one-shadow-map-size - the governor's levels carried their own shadow-map size (8192 / 4096 / 2048 / 1024) and the phone
+      cap followed the level being drawn: a level change while moving, or the still frame at the top level on a phone in Ultra,
+      reallocated and redrew the sun's map at another resolution, so window-blind and rail shadows changed in one frame. One size
+      for every level now (4096; phones 2048, Ultra phones 4096), and a still frame keeps the moving level's foliage shadows.
+   G7 rule:accumulate-only-a-still-view - the still-frame supersampler (ACC) compared the camera against matrixWorld BEFORE this
+      frame's render had rebuilt it: a turn that began without an input event (a glide, a flight's last frame, a game's look) was
+      averaged into the previous view's history for a frame - a faint double of the room (books on the cabinet doors, doubled
+      wall / ceiling lines). The pose is rebuilt before the comparison now.
+   G8 rule:one-room-light-per-ceiling - the two-environment mask (R40M) is a 6-in grid read 9" off each surface along its normal:
+      on a ceiling or floor that point stays over the wall line, so a strip along every wall (1.2 % of all ceiling area, measured on
+      the as-built model: 5221 of 426602 one-inch samples) read the sky instead of the room, in 6-in cells: the boxy pattern above
+      the kitchen cabinets. A level surface now also reads the mask 3" to each side (max of five taps): 0 of 426602 ceiling samples
+      and 0.01 % of floor samples read the sky; points just outside the outer walls read the room 1.4 % more often than before. */
+function ghost41MeterCal(){ const A = GHOST41.meter; if(!A || !METER.atlas || METER.m == null) return; METER.mRaw = METER.m;
+  const z = R40L.zone, f = !R40L.state ? (DUSK ? A.outDusk : A.out) : DUSK ? (A.roomDusk[z] || A.calDusk) : (A.room[z] || A.cal);
+  METER.m *= f; METER.calF = f; GHOST41.reads = (GHOST41.reads || 0) + 1; }
+if(GHOST41.on){
+  // G6: one shadow-map size at every governor level; a still frame keeps the moving level's foliage shadows
+  if(typeof GOV !== 'undefined' && GOV.L){ for(const l of GOV.L) l.sm = 4096;
+    const ap = GOV.apply; GOV.apply = (k, force) => { if(GOV.sharp && GOV.L[GOV.lvl] && k.fol !== GOV.L[GOV.lvl].fol) k = Object.assign({}, k, {fol: GOV.L[GOV.lvl].fol});
+      return ap(k, force); }; }
+  // G7: the still-frame accumulator sees this frame's camera pose
+  { const A = window.__aa && __aa.ACC; if(A && A.frame){ const f = A.frame; A.frame = function(orig, args){ try{ camera.updateMatrixWorld(); }catch(e){} return f(orig, args); }; } }
+  // G5b: QA - measure the meter calibration at every tour stop (await GHOST41.calibrate({tod: 'midday'}))
+  GHOST41.calibrate = async function(o = {}){ const T = window.__TOUR, A = GHOST41.meter; if(!T || !A) return null;
+    const raf = () => new Promise(r => requestAnimationFrame(r)), frames = async n => { for(let i = 0; i < n; i++) await raf(); };
+    const lp = window.lightMeterPoll; let reads = 0; window.lightMeterPoll = function(){ const had = METER.sync; const r = lp.apply(this, arguments); if(had && !METER.sync) reads++; return r; };
+    const fresh = async () => { const n0 = reads; for(let i = 0; i < 240 && reads < n0 + 2; i++) await raf(); return reads >= n0 + 2; };
+    const rows = [], tod0 = TOD_KEY; try{
+      for(let i = 0; i < T.STOPS.length; i++){ const s = T.STOPS[i]; if(o.only && !o.only.includes(s.id)) continue;
+        T.showStop(i); T.finish(); if(o.tod) T.dbg.setTOD(o.tod); await frames(o.settle || 150);   // a stop sets its own time of day
+        A.off = true; await fresh(); const ms = METER.m;
+        A.off = false; A.k = 4; A.at = -1e9; await frames(6); await fresh(); const ma = METER.mRaw;
+        rows.push({id: s.id, room: R40L.zone, tod: TOD_KEY, inside: R40L.state, ms: +ms.toFixed(4), ma: +ma.toFixed(4), r: +(ms / ma).toFixed(3), e: +renderer.toneMappingExposure.toFixed(3)}); } }
+    finally { window.lightMeterPoll = lp; A.off = false; if(o.tod) T.dbg.setTOD(tod0); }
+    const gm = a => Math.exp(a.reduce((s, v) => s + Math.log(v), 0) / a.length), med = a => a.slice().sort((p, q) => p - q)[a.length >> 1], room = {};
+    for(const r of rows) if(r.inside && r.room) (room[r.room] = room[r.room] || []).push(r.r);
+    const out = {rows, room: Object.fromEntries(Object.entries(room).map(([k, v]) => [k, +gm(v).toFixed(3)])), out: rows.some(r => !r.inside) ? +med(rows.filter(r => !r.inside).map(r => r.r)).toFixed(3) : null,
+      inMedian: rows.some(r => r.inside) ? +med(rows.filter(r => r.inside).map(r => r.r)).toFixed(3) : null};
+    return out; }; }
 /* NAV r18 (owner 11/4) =====================================================================================================
    1 rule:eye-five-feet - walking eye = the floor under the eye (tread, deck, terrain: walkSurfaceAt) + 5.0 ft. The page's EYE is 5.0
      (patch_bim3_v33 NAV r18 callsite), so walk mode, click-to-move, waypoints and entering walk all stand at 5 ft. Tour stops: a stop
@@ -24551,6 +24787,42 @@ function r40BuildMask(){
 window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.r40Mask.value; if(!t) return null; const B = U.r40MB.value, Y = U.r40MY.value, P = [x + nx * .75, y + ny * .75, z + nz * .75];
   const u = (P[0] - B.x) * B.z, v = (P[2] - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0; const i = Math.min(R40M.nx - 1, Math.floor(u * R40M.nx)), j = Math.min(R40M.nz - 1, Math.floor(v * R40M.nz)), d = t.image.data, o = (j * R40M.nx + i) * 4, yy = (P[1] - Y.x) / Y.y;
   const f = (lo, hi) => Math.max(0, Math.min(1, yy - lo + .5)) * Math.max(0, Math.min(1, hi - yy + .5)); return Math.max(f(d[o], d[o + 1]), f(d[o + 2], d[o + 3])); };
+// ---- R41W: the house envelope for the window pull (see R41W at the top). Per 3-in plan cell: R = distance to the nearest interior
+// room air (0-4 ft), G / B = that room column's floor and ceiling (the R40M height scale), so a jamb in the wall reads its room's height
+function r41WBuild(){
+  if(!R41W.on || !R40M.done || typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false;
+  const S = BIM2.state, sp = S.spaces.filter(s => s.interior), key = R40M.key + ':' + sp.map(s => s.bb && s.bb.map(v => v.toFixed(2)).join(',')).join(';');
+  if(R41W.built && key === R41W.key) return true; if(!sp.length) return false;
+  const t0 = performance.now(), c = .25, pad = R41W.dMax + 1; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9;
+  for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); }
+  const X0 = py0 - pad, Z0 = px0 - pad, NX = Math.ceil((py1 - py0 + 2 * pad) / c), NZ = Math.ceil((px1 - px0 + 2 * pad) / c), N = NX * NZ;   // world X = plan y, world Z = plan x
+  const lo = new Float32Array(N).fill(1e9), hi = new Float32Array(N).fill(-1e9), src = new Int32Array(N).fill(-1), dd = new Float32Array(N).fill(1e9);
+  for(const s of sp){ const i0 = Math.max(0, Math.floor((s.bb[1] - X0) / c)), i1 = Math.min(NX - 1, Math.ceil((s.bb[3] - X0) / c)), j0 = Math.max(0, Math.floor((s.bb[0] - Z0) / c)), j1 = Math.min(NZ - 1, Math.ceil((s.bb[2] - Z0) / c));
+    for(let j = j0; j <= j1; j++) for(let i = i0; i <= i1; i++){ const X = X0 + (i + .5) * c, Z = Z0 + (j + .5) * c; if(!S.contains(s, Z, X)) continue; const top = S.topOf(s, Z, X); if(!(top > s.floorZ)) continue;
+      const q = j * NX + i; lo[q] = Math.min(lo[q], s.floorZ); hi[q] = Math.max(hi[q], top); src[q] = q; dd[q] = 0; } }
+  // two-pass nearest-source propagation (8 neighbours), Euclidean distance to the source cell
+  const pass = (j0, j1, dj, i0, i1, di, nb) => { for(let j = j0; j !== j1; j += dj) for(let i = i0; i !== i1; i += di){ const q = j * NX + i;
+    for(const [a, b] of nb){ const ii = i + a, jj = j + b; if(ii < 0 || jj < 0 || ii >= NX || jj >= NZ) continue; const s0 = src[jj * NX + ii]; if(s0 < 0) continue;
+      const sx = s0 % NX, sz = (s0 / NX) | 0, d = Math.hypot(sx - i, sz - j); if(d < dd[q]){ dd[q] = d; src[q] = s0; } } } };
+  pass(0, NZ, 1, 0, NX, 1, [[-1, -1], [0, -1], [1, -1], [-1, 0]]); pass(NZ - 1, -1, -1, NX - 1, -1, -1, [[1, 1], [0, 1], [-1, 1], [1, 0]]);
+  pass(0, NZ, 1, 0, NX, 1, [[-1, -1], [0, -1], [1, -1], [-1, 0]]);
+  const Y0 = R40M.y0, sc = R40M.sc, lv = y => Math.max(0, Math.min(255, y)), data = new Uint8Array(N * 4);
+  for(let q = 0; q < N; q++){ const s0 = src[q]; if(s0 < 0){ data.set([255, 255, 0, 0], q * 4); continue; }
+    data.set([lv(Math.round(dd[q] * c / R41W.dMax * 255)), lv(Math.floor((lo[s0] - .3 - Y0) / sc)), lv(Math.ceil((hi[s0] + .3 - Y0) / sc)), 255], q * 4); }
+  const tex = new THREE.DataTexture(data, NX, NZ, THREE.RGBAFormat, THREE.UnsignedByteType); tex.magFilter = tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.flipY = false; tex.needsUpdate = true;
+  if(R41W.U.r41Dist.value) R41W.U.r41Dist.value.dispose(); R41W.U.r41Dist.value = tex; R41W.U.r41DB.value.set(X0, Z0, 1 / (NX * c), 1 / (NZ * c)); R41W.U.r41DY.value.set(Y0, sc);
+  Object.assign(R41W, {built: true, key, ms: +(performance.now() - t0).toFixed(1), nx: NX, nz: NZ}); return true; }
+// the pull for this frame: exterior radiance x E_ext / E_now (at most 1), in stops by EXPO_IN; 0 in the uniform = no pull
+function r41WFrame(){
+  if(!R41W.on) return; if(!R41W.built || (R40L.frame % 240) === 0) try{ r41WBuild(); }catch(e){ if(!R41W.warned){ R41W.warned = true; console.warn('[r41w] envelope', e); } }
+  const kIn = r40C(typeof EXPO_IN === 'number' ? EXPO_IN : 0), E = renderer.toneMappingExposure, ext = (typeof BASE_EXPOSURE === 'number' ? BASE_EXPOSURE : E) * R41W.outGain * Math.pow(2, R41W.stops);
+  const p = R41W.built && !isDoll() && kIn > 0 && E > 0 ? Math.pow(Math.min(1, ext / E), kIn) : 1; R41W.pull = p;
+  R41W.U.r41Pull.value = R41W.hold ? 0 : 1 - p; }
+if(R41W.on){ const prevOBR = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prevOBR) prevOBR.apply(this, arguments); try{ r41WFrame(); }catch(e){} }; }
+// QA: the envelope as the shader reads it at a world point (1 room / wall, 0 outside)
+window.__r41env = (x, y, z) => { const t = R41W.U.r41Dist.value; if(!t) return null; const B = R41W.U.r41DB.value, Y = R41W.U.r41DY.value, u = (x - B.x) * B.z, v = (z - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0;
+  const i = Math.min(R41W.nx - 1, Math.floor(u * R41W.nx)), j = Math.min(R41W.nz - 1, Math.floor(v * R41W.nz)), d = t.image.data, o = (j * R41W.nx + i) * 4, yy = (y - Y.x) / Y.y, cl = a => Math.max(0, Math.min(1, a));
+  const dist = d[o] / 255 * R41W.dMax, s = cl((dist - R41W.d0) / (R41W.d1 - R41W.d0)); return {dist: +dist.toFixed(2), env: +(cl(yy - d[o + 1] + .5) * cl(d[o + 2] - yy + .5) * (1 - s * s * (3 - 2 * s))).toFixed(3)}; };
 /* r41 owner 11/12: "the light filtering shades appear to be luminous". The light-filtering fabrics (roller shades r28filter, honeycomb cells
    r29cellFilter, skylight shades r35skyShade) and the rainbow privacy film (r28film) carried a FIXED emissive (.14 / .22 / .5 / .32) standing
    in for daylight coming through them, at every time of day: at dusk (the tour's opening light) and in the night decor modes a lowered shade
