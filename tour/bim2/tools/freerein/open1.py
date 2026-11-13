@@ -60,16 +60,69 @@ def a():
     p.room(17.2, 10.6, 'GREAT ROOM', "31'-4\" x 27'-3\", 855 SF")
     return p
 
-def b():
-    p = Plan('1-open B. Two axes', '4 bedrooms. A hearth on the west gable under the ridge with two sofas on its axis; the kitchen axis crosses it at the table', deck=(36.6, -4.0), drop=DROP)
-    wing(p); den(p); kitchen_dining(p)
+def living_b(p):
     p.fireplace(5.78, RIDGE, 0, 6.0, 1.0, lab=False); p.text(6.6, 22.1, 'GAS FIRE', 6)
     p.rug(7.4, 12.5, 17.0, 24.4)
     p.sofa(12.3, 23.6, 270, 8.0); p.sofa(12.3, 13.3, 90, 8.0); p.table(9.8, 16.65, 14.8, 20.25, 'coffee table')
     p.shelves(5.5, 31.09, 8.7, 32.09); p.shelves(14.1, 31.09, 17.3, 32.09); p.win(11.4, 5.0, 'h', 32.29); p.piano(6.35, 28.3, 0)
     p.builtin(6.5, 4.81, 12.5, 6.4, 'WINDOW SEAT')
     p.room(12.3, 27.6, 'LIVING'); p.room(11.0, 9.9, 'GREAT ROOM', "31'-4\" x 27'-3\", 855 SF")
-    p.dim(16.3, 23.4, 22.15, 23.4, None, -1); p.dim(15.6, 4.81, 15.6, 11.7)
+    p.dim(15.6, 4.81, 15.6, 11.7)
+
+def b():
+    p = Plan('1-open B. Two axes', '4 bedrooms. A hearth on the west gable under the ridge with two sofas on its axis; the kitchen axis crosses it at the table', deck=(36.6, -4.0), drop=DROP)
+    wing(p); den(p); kitchen_dining(p); living_b(p)
+    p.dim(16.3, 23.4, 22.15, 23.4, None, -1)
+    return p
+
+def bl():
+    """B with the kitchen as an L: north wall and street gable wall"""
+    p = Plan('1-open B-L. Two axes, L-shaped kitchen', '4 bedrooms. As B, with the kitchen turning down the street gable: a sink under a new counter-height window, and an 8 ft 4 island', deck=(36.6, -4.0), drop=DROP + ('WN-L1-05', 'WN-L1-07'))
+    wing(p); den(p); living_b(p)
+    p.tall(17.69, 30.0, 20.2, 32.09, 'PAN'); p.app(20.2, 29.6, 23.2, 32.09, 'REF'); p.counter(23.2, 30.0, 36.59, 32.09); p.range_(24.8, 29.95, 27.8, 32.09); p.uppers(24.55, 31.0, 28.05, 32.09)
+    p.win(30.6, 2.4, 'h', 32.29)
+    p.counter(34.5, 21.0, 36.59, 30.0); p.tall(34.5, 18.9, 36.59, 21.0, 'PAN'); p.sink(34.8, 23.7, 36.3, 26.3); p.dw(34.5, 26.5, 36.59, 28.5); p.win(25.0, 5.0, 'v', 36.79)
+    p.counter(22.15, 22.5, 30.5, 26.0, 'island'); p.sink(23.4, 24.3, 24.9, 25.7); p.text(27.6, 24.2, "ISLAND 8'-4\"", 6.5)
+    p.stools([(23.6, 21.8), (25.6, 21.8), (27.6, 21.8), (29.6, 21.8)])
+    p.dining(26.3, 13.0, 'h', 8.0, 3.5, 3, leaf=10.0)
+    p.fold(19.2, 33.4); p.otable(26.3, -0.5)
+    p.room(31.6, 27.9, 'KITCHEN'); p.room(26.3, 7.6, 'DINING')
+    p.room(26.3, 13.45, 'SEATS 8: 96 x 42 IN', small=True); p.room(26.3, 12.55, '10 WITH LEAVES', small=True)
+    p.note(33.6, -2.6, 'DECK'); p.note(26.3, 3.65, 'FOLDING GLASS WALL')
+    p.dim(21.8, 4.81, 21.8, 9.65); p.dim(21.9, 16.35, 21.9, 21.2); p.dim(28.6, 26.0, 28.6, 30.0); p.dim(30.5, 23.4, 34.5, 23.4); p.dim(16.3, 23.4, 22.15, 23.4, None, -1); p.dim(31.9, 14.5, 36.59, 14.5)
+    p.ridge(5.28, 36.59, posts=[(17.5, RIDGE)], lab=29.5)
+    p.room(-2.3, -5.6, 'ENTRY FOYER', 90); p.room(9.0, -7.3, 'FRONT PORCH', small=True)
+    return p
+
+def bflip():
+    """B turned end for end: hearth on the street gable, an L-shaped kitchen on the north and west walls"""
+    p = Plan('1-open B-flip. Hearth on the street gable', '4 bedrooms. Living at the street end on the ridge axis; an L-shaped kitchen on the north and west walls; the table at the glass doors between them',
+             deck=(24.6, -4.0), drop=DROP + ('WN-L1-02', 'WN-L1-04', 'WN-L1-05', 'WN-L1-07'))
+    wing(p)
+    p.wall(-9.53, 9.4, 4.9, 9.4); p.door(1.6, 9.4, 2.8, 'h', 'hi', kind='pocket')
+    p.shelves(-9.3, 8.2, -0.6, 9.21); p.rug(-8.6, 0.3, -2.0, 7.4)
+    p.chair(-6.6, 2.1, 0); p.chair(-6.6, 5.6, 0); p.rtable(-3.6, 3.85, 2.4, 'side table')
+    p.room(-0.3, 6.6, 'LIBRARY', "14'-5\" x 9'-11\"")
+    p.way([DOOR, (-1.0, -3.6), (2.0, 1.5), (3.4, 6.6), (9.0, 6.4), (23.5, 6.6), (27.0, 9.6)])
+    p.fireplace(36.09, RIDGE, 180, 6.0, 1.0, lab=False); p.text(35.2, 22.1, 'GAS FIRE', 6)
+    p.win(12.5, 4.2, 'v', 36.79); p.win(24.4, 4.2, 'v', 36.79)
+    p.rug(24.9, 12.5, 34.5, 24.4)
+    p.sofa(29.6, 23.6, 270, 8.0); p.sofa(29.6, 13.3, 90, 8.0); p.table(27.1, 16.65, 32.1, 20.25, 'coffee table')
+    p.shelves(24.6, 31.09, 27.9, 32.09); p.shelves(33.1, 31.09, 36.4, 32.09); p.win(30.5, 5.0, 'h', 32.29)
+    p.tall(5.28, 21.0, 7.36, 23.5, 'PAN'); p.tall(5.28, 23.5, 7.36, 26.0, 'OVENS'); p.app(5.28, 26.0, 7.78, 29.0, 'REF')
+    p.counter(5.28, 29.0, 7.36, 32.09); p.counter(7.36, 30.0, 21.5, 32.09); p.range_(14.3, 29.95, 17.3, 32.09); p.uppers(14.05, 31.0, 17.55, 32.09)
+    p.win(11.2, 2.6, 'h', 32.29); p.win(19.6, 2.6, 'h', 32.29)
+    p.counter(11.8, 22.5, 19.8, 26.0, 'island'); p.sink(13.0, 24.1, 15.7, 25.7, True); p.dw(15.9, 24.0, 17.9, 26.0); p.text(18.85, 23.2, 'ISLAND', 6.5)
+    p.stools([(12.9, 21.8), (14.85, 21.8), (16.8, 21.8), (18.75, 21.8)])
+    p.builtin(5.28, 11.0, 6.9, 19.5, None, 'sideboard'); p.text(6.1, 15.25, 'SIDEBOARD', 6.5, rot=-90)
+    p.dining(15.8, 13.0, 'h', 8.0, 3.5, 3, leaf=10.0)
+    p.fold(8.7, 22.9, stack='west'); p.win(28.1, 8.8, 'h', 4.6); p.otable(15.8, -0.5)
+    p.room(15.8, 28.0, 'KITCHEN'); p.room(15.8, 8.2, 'DINING'); p.room(29.6, 27.6, 'LIVING'); p.room(30.4, 8.6, 'GREAT ROOM', "31'-4\" x 27'-3\", 855 SF")
+    p.room(15.8, 13.45, 'SEATS 8: 96 x 42 IN', small=True); p.room(15.8, 12.55, '10 WITH LEAVES', small=True)
+    p.note(21.7, -2.6, 'DECK'); p.note(15.8, 3.65, 'FOLDING GLASS DOORS, 14 FT')
+    p.dim(11.2, 4.81, 11.2, 9.65); p.dim(11.3, 16.35, 11.3, 21.2); p.dim(12.4, 26.0, 12.4, 30.0); p.dim(7.36, 24.7, 11.8, 24.7); p.dim(21.4, 14.2, 25.6, 14.2); p.dim(6.9, 13.0, 10.2, 13.0, None, -1)
+    p.ridge(5.28, 36.59, posts=[(24.6, RIDGE)], lab=8.0)
+    p.room(-2.3, -5.6, 'ENTRY FOYER', 90); p.room(9.0, -7.3, 'FRONT PORCH', small=True)
     return p
 
 def c():
@@ -93,7 +146,7 @@ SC = {'freerein-1-open-A': ('1-open A. North hearth', '4 BR: whole gable open, f
 tot = lambda k: sum(x * y for x, y in zip(SC[k][2], W)) / 100.0
 if __name__ == '__main__':
     O = sys.argv[1].rstrip('/') + '/'
-    for n, f in (('freerein-1-open-A', a), ('freerein-1-open-B', b), ('freerein-1-open-C', c)):
+    for n, f in (('freerein-1-open-A', a), ('freerein-1-open-B', b), ('freerein-1-open-C', c), ('freerein-1-open-B-flip', bflip), ('freerein-1-open-B-L', bl)):
         p = f(); print(n); p.check(); open(O + n + '.svg', 'w').write(p.svg()); subprocess.check_call(['rsvg-convert', '-z', '2', O + n + '.svg', '-o', O + n + '@2x.png'])
     fb = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 38); fr_ = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 26)
     tw, th, band = 1352, 1040, 130; order = list(SC)
@@ -104,3 +157,15 @@ if __name__ == '__main__':
         dr.text((x + 24, y + 14), SC[k][0], fill='white', font=fb); t = '%.2f / 5' % tot(k); dr.text((x + tw - 24 - dr.textlength(t, font=fb), y + 14), t, fill='white', font=fb)
         dr.text((x + 24, y + 76), SC[k][1], fill=(225, 225, 225), font=fr_)
     sheet.save(O + 'freerein-1-open-sheet@2x.png'); print({k: tot(k) for k in order})
+
+    FAM = {'freerein-1-open-B': ('1-open B. Two axes', '4 BR: hearth on the west gable, kitchen axis at the street end', [5, 5, 5, 5, 5, 4]),
+           'freerein-1-open-B-flip': ('1-open B-flip', '4 BR: hearth on the street gable, L-shaped kitchen at the west end', [5, 5, 5, 5, 5, 4]),
+           'freerein-1-open-B-L': ('1-open B-L', '4 BR: B with the kitchen turning down the street gable', [5, 5, 5, 5, 5, 4])}
+    sheet = Image.new('RGB', (tw * 3, th + band), 'white'); dr = ImageDraw.Draw(sheet)
+    for i, k in enumerate(FAM):
+        im = Image.open(O + k + '@2x.png').convert('RGB').crop((0, 250, 2704, 2330)).resize((tw, th), Image.LANCZOS); x = i * tw
+        sheet.paste(im, (x, band)); dr.rectangle([x, 0, x + tw - 1, band - 1], fill=(20, 20, 20))
+        t = '%.2f / 5' % (sum(u * v for u, v in zip(FAM[k][2], W)) / 100.0)
+        dr.text((x + 24, 14), FAM[k][0], fill='white', font=fb); dr.text((x + tw - 24 - dr.textlength(t, font=fb), 14), t, fill='white', font=fb); dr.text((x + 24, 76), FAM[k][1], fill=(225, 225, 225), font=fr_)
+        dr.line([x + tw - 1, 0, x + tw - 1, th + band], fill=(200, 200, 200), width=2)
+    sheet.save(O + 'freerein-B-family@2x.png')
