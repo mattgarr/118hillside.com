@@ -316,7 +316,7 @@ def build():
     # ---- the west gable wall: the two old doors close up; a 3 ft 10 way in from the library at its south end
     wall_run('W-L1-B5W', 'y', X_WW, X_LW, 4.404, 14.51, lambda x, y: zg(y), openings=[(PASS[0], PASS[1], PASS[2])], bbf='c', maxz={'c': zl(X_WW) - 0.03})
     wall_run('W-L1-B5V', 'y', X_WW, X_LW, 22.22, 25.5555, lambda x, y: zg(y), bbf='c')
-    ext = Polygon([(22.4, 9.08), (25.37, 9.08), (25.37, zg(25.37) - 0.03), (22.4, zg(22.4) - 0.03)])
+    ext = Polygon([(22.4, zw(22.4) + 0.5), (25.37, zw(25.37) + 0.5), (25.37, zg(25.37) - 0.03), (22.4, zg(22.4) - 0.03)])
     plane_face(O, 'W-L1-B5V', None, 'walls', 'L1', 'hardie-lap#paint-ext-body', ext, lambda y, z: (X_WW - 0.004, y, z), (-1, 0, 0))   # above the wing roof it is an outside wall
     # ---- outside the gable: library, hall, bath, vestibule, bedroom
     wall_run('W-L1-B5A', 'x', 9.21, 9.59, -9.53, X_WW, lambda x, y: zl(x) + 0.03, openings=[(LIB_DOOR[0], LIB_DOOR[1], DOOR_H)], pocket={0: 'hi'})                     # library / bath and hall
@@ -418,12 +418,15 @@ def option_data(meta, elements, bounds, new_col):
     NEW = {'SP-L1-LIVING': ('Library', Polygon([(-9.5298, -0.7477), (4.7564, -0.7477), (4.7564, 4.4041), (X_WW, 4.4041), (X_WW, 9.21), (-9.5298, 9.21)]), liv),
            'SP-L1-BATH': ('Bath', sbox(-9.5298, 9.59, -1.29, 14.3208), liv), 'SP-L1-HALL': ('Hall', sbox(-0.91, 9.59, X_WW, 14.3208), liv), GREAT: ('Kitchen, dining & living', room.buffer(0.2, join_style=2), vault)}   # 2-1/2 in into the walls: the page's interior light masks are cell grids, and a room drawn to the wall face leaves a strip of 'outside' along it
     RENAME = {'SP-L1-LAUNDRY-CLOSET': 'Shower', 'SP-L1-HALL-CLOSET': 'Bedroom vestibule'}
+    GROW = ('SP-L1-BED1', 'SP-L1-BED1-CLOSET', 'SP-L1-HALL-CLOSET', 'SP-L1-LAUNDRY-CLOSET', 'SP-L1-LIVING', 'SP-L1-BATH', 'SP-L1-HALL')
     sp = []
     for s in meta['spaces']:
         if s['id'] in REMOVED_SPACES: continue
         if s['id'] in NEW:
             nm, poly, cf = NEW[s['id']]; s = json.loads(json.dumps(s)); s['name'] = nm; s['polygon'] = P2(poly.exterior.coords[:-1]); s['ceiling'] = cf(poly)
         elif s['id'] in RENAME: s = dict(s, name=RENAME[s['id']])
+        if s['id'] in GROW and s.get('polygon'):       # r44f: 2-1/4 in into the walls, like the great room: a wall face on a room's own outline falls 'outside' the page's light masks and takes sun and shadow
+            s = json.loads(json.dumps(s)); g = Polygon(s['polygon']).buffer(0.19, join_style=2); s['polygon'] = P2(g.exterior.coords[:-1])
         sp.append(s)
     D['spaces'] = sp
     rm_el = set(REMOVED_WALLS + REMOVED_OPENINGS + ['SL-L1-STORE-BED2']); rm_fl = set('FL-SP-L1-' + s for s in ('GREAT', 'BED2', 'BED2-CLOSET', 'BED3', 'BED3-CLOSET', 'KITCHEN', 'HALL', 'BATH'))
