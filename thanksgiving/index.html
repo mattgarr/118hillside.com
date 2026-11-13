@@ -1495,7 +1495,7 @@ html.hwload .loading .loadtips .ng-l{color:#c9bcd8} html.hwload .loading .loadti
   <script src="../assets/intro28.js?v=38c"></script>
   <dialog id="aboutDlg" class="aboutdlg" aria-labelledby="aboutH"><h2 id="aboutH">About this 3D tour</h2><p>This 3D tour is an illustrative visual aid only. It was drawn from the approved plans and the listing photos. It is not a survey, an appraisal or a construction document. It is not to scale, and it will not match the house in every detail.</p><p>Dimensions, room sizes, materials, finishes, colors, lighting, landscaping, neighboring homes and terrain are approximate and may differ from the property as it is today. The furnishings, landscaping and holiday decor shown are AI-generated illustrations. They are not included in the sale and may not match the property. Remodel concepts, paint colors and landscape ideas are suggestions only. They are not designed, engineered, permitted or priced.</p><p>Square footage, lot size, room counts and room sizes are approximate and are not guaranteed. Buyers should review the seller’s disclosures, available from the listing agent, and verify all information themselves, including square footage and school assignment.</p><p class="navkeys"><b>Walking with a keyboard:</b> <kbd>↑</kbd>/<kbd>↓</kbd> (or <kbd>W</kbd>/<kbd>S</kbd>) walk forward and back, <kbd>Shift</kbd> to hurry · <kbd>←</kbd>/<kbd>→</kbd> turn · drag the view (or <kbd>PgUp</kbd>/<kbd>PgDn</kbd>) to look up and down · <kbd>U</kbd>/<kbd>D</kbd> raise or lower your eye height · <kbd>Home</kbd> level the view · <kbd>F</kbd> full screen, <kbd>Esc</kbd> to leave it. Stairs climb on their own as you walk onto them.</p><form method="dialog"><button class="btn primary" value="ok">OK</button></form></dialog><style id="v33discCss">/* r35 owner 11/10: the notice sits in the bottom right corner, lifted clear of whatever is there (floor-plan button, tour card, game controls) by the script below; top right when the bottom is taken */#v33disc{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + var(--v33up,0px));z-index:60;width:fit-content;height:fit-content;max-width:calc(100vw - 48px);font:500 11px/1.3 Jost,system-ui,sans-serif;color:#fff;background:rgba(0,0,0,.5);padding:4px 9px;border-radius:999px;border:0;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent}#v33disc.v33top{bottom:auto;top:calc(max(12px,env(safe-area-inset-top,0px)) + var(--v33dn,0px))}#v33disc:hover{background:rgba(0,0,0,.65)}html.v33game #v33disc,html.hs28on #v33disc,html.mz28on #v33disc,html.tt28on #v33disc,html.tt31on #v33disc,html.cn31on #v33disc,html.dn33on #v33disc,html.lp33on #v33disc,html.th33on #v33disc{display:none}@media (max-width:600px){#v33disc{font-size:10px;right:max(12px,env(safe-area-inset-right,0px));max-width:calc(100vw - 24px)}#v33disc .v33dl{display:none}}</style><button id="v33disc" type="button" aria-label="About this 3D tour: illustrative model with AI-generated furnishings, landscaping and decor, not to scale" onclick="var d=document.getElementById('aboutDlg');if(d&&d.showModal)d.showModal();">ⓘ Illustrative model. Furnishings, landscaping and decor are AI-generated<span class="v33dl">. Not to scale. Verify all details</span>.</button><script>(function w(n){var H=window.HWGAMES;if(!H||!H.start||!H.stop){if(n<120)setTimeout(function(){w(n+1)},500);return}if(H.__v33d)return;H.__v33d=1;var R=document.documentElement,s=H.start,t=H.stop;H.start=function(){R.classList.add("v33game");return s.apply(this,arguments)};H.stop=function(){try{return t.apply(this,arguments)}finally{R.classList.remove("v33game")}}})(0)</script><script>/* r35: keep the notice clear of the page's controls. It starts in the bottom right corner and is lifted above anything it would touch there (the floor-plan button, the tour card, a game's dock); if that would carry it past mid-screen it goes to the top right corner, below the header. */
 (function(){ var b = document.getElementById('v33disc'); if(!b || !b.getBoundingClientRect) return; var sig = '';
-  var SEL = '.bar,#card,#mini,#pad,#peek27,.navguide,.phlvbar,.ideas35,#cv27';
+  var SEL = '.bar,#card,#mini,#pad,#peek27,.navguide,.phlvbar,.ideas35,#cv27,#bks36';
   function box(e, strict){ var cs = getComputedStyle(e); if(cs.display === 'none') return null; if(strict && (cs.visibility === 'hidden' || +cs.opacity < .05)) return null;
     var r = e.getBoundingClientRect(); if(r.width < 6 || r.height < 6 || (r.width > innerWidth * .9 && r.height > innerHeight * .8)) return null; return r; }
   function obstacles(){ var out = [], L = document.querySelectorAll(SEL), i, e, r, cs, z;
@@ -20580,6 +20580,159 @@ if(typeof v27TodStart === 'function'){ const _ts = v27TodStart; v27TodStart = fu
         for(const l of (DUSK_LIGHTS || [])){ l.intensity = G.lamps; } } }catch(e){ console.warn('[bim3] golden', e); }
     return r; }; }
 BIM3.report.golden = GOLDEN35;
+/* ===== r45 owner: the seasonal tours get the main tour's price and "Schedule a showing" (the r36 SELL36 block, copied from tour/index.html
+   up to its Photos and finale parts, which belong to the main tour's 25 stops). On a computer: the price under the address and the pill in
+   the bar; on a phone: the line under the header with the price and the pill; in full screen: the button in the pill of controls. ===== */
+const SELL36 = window.SELL36 = (() => {
+  const root = document.documentElement, bar = document.querySelector('header.bar'), plate = bar && bar.querySelector('.plate'), app = document.getElementById('app'), card = $('#card');
+  if(!bar || !plate || !app || !card) return null;
+  const GAME = /[?&](escape|snowball|deck|room|feast|game)=/.test(location.search);
+  const F = {addr: '118 Hillside Drive', town: 'Woodside, California', price: 'Offered at $4,195,000', facts: 'Six bedrooms, three full baths',
+    how: 'Showings are private. Call, text or email Michael Warren, the listing agent, to set one up.', agent: 'Michael Warren', firm: 'Compass, DRE 01968537',
+    tel: 'tel:+16503150224', sms: 'sms:+16503150224', telTxt: '650.315.0224', email: 'Michael@MichaelWarrenRealEstate.com',
+    mail: 'mailto:Michael@MichaelWarrenRealEstate.com?subject=Showing%20request%3A%20118%20Hillside%20Drive',
+    note: 'The seller’s disclosures and reports are available from the listing agent.'};
+  const preview = /githack/.test(location.host), up = p => '../' + p + (preview ? 'index.html' : '');   // preview hosts serve no directory index
+  const ga = (ev, o) => { try{ gtag('event', ev, Object.assign({page: location.pathname}, o || {})); }catch(e){} };
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
+  const CAL = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 8.6h14M7 2.8V6M13 2.8V6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  const JOST = '"Jost","Avenir Next","Helvetica Neue",Arial,sans-serif', CORM = '"Cormorant Garamond",Georgia,"Times New Roman",serif';
+  const st = document.createElement('style'); st.id = 'sell36css';
+  st.textContent =
+    /* plate: the address is a link home; the price sits under it; "About this tour" is a real tap target */
+    '.plate .home36{color:inherit;text-decoration:none}.plate .home36:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}' +
+    '.plate .pr36{margin-top:5px;font-family:' + JOST + ';font-size:13px;font-weight:500;letter-spacing:.01em;text-transform:none;color:var(--ink);font-variant-numeric:lining-nums;white-space:nowrap}' +
+    'html:not(.ph) .plate .aboutlink{margin:1px 0 -5px;padding:6px 0;min-height:28px;box-sizing:border-box;text-align:left}' +
+    /* the booking pill (computer) */
+    '.bk36{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 17px 0 14px;border:0;border-radius:999px;background:#7d6038;color:#fff;font:500 14px/1 ' + JOST + ';letter-spacing:.01em;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px rgba(60,45,25,.2),0 8px 22px rgba(60,45,25,.28);-webkit-tap-highlight-color:transparent}' +
+    '.bk36:hover{background:#6a5130}.bk36:focus-visible{outline:2px solid #fff!important;outline-offset:2px;box-shadow:0 0 0 5px #7d6038}.bk36 svg{flex:none}' +
+    'html.ph .bar .bk36{display:none}.brk36{display:none}' +
+    /* 1020-1209 px: one row still fits once Holiday decor and View are icons and the gaps tighten */
+    '@media (min-width:1020px) and (max-width:1209px){html:not(.ph) .bar{gap:8px}html:not(.ph) #holBtn .hl36,html:not(.ph) #viewBtn>span{display:none}html:not(.ph) .bk36{padding:0 15px}html:not(.ph) .bk36 svg{display:none}}' +
+    /* under 1020 px: two tidy rows. The address and the booking pill on top, the tabs and view controls below */
+    '@media (max-width:1019px){html:not(.ph) .bar .plate{order:-3}html:not(.ph) .bar .bk36{order:-2;margin-left:auto;align-self:flex-start;margin-top:4px}html:not(.ph) .bar .brk36{display:block;order:-1;flex:0 0 100%;height:0;margin:-6px 0}}' +
+    'html:not(.ph) .ovtag{top:calc(var(--bar36,96px) + 6px)}' +
+    /* the booking line (phone): price on the left, the pill on the right, directly under the header */
+    '.bks36{display:none}' +
+    'html.ph.bks36on .bks36{display:flex;position:absolute;left:0;right:0;top:var(--bar36,53px);z-index:9;align-items:center;justify-content:space-between;gap:10px;min-height:42px;box-sizing:border-box;padding:5px max(10px, env(safe-area-inset-right,0px)) 5px max(12px, env(safe-area-inset-left,0px));background:rgba(244,241,234,.97);border-bottom:1px solid #e5e1d8;box-shadow:0 4px 14px rgba(60,45,25,.1);font-family:' + JOST + ';color:#1f1f1d}' +
+    '.bks36 .bkp36{min-width:0;font-size:14.5px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:lining-nums}' +
+    '.bks36 .bkb36{flex:none;height:32px;padding:0 15px;border:0;border-radius:999px;background:#7d6038;color:#fff;font:500 14.5px/1 ' + JOST + ';letter-spacing:.01em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
+    '.bks36 .bkb36:active{background:#654d2c}' +
+    /* what sat just under the phone header moves down by the height of that line */
+    'html.ph.bks36on .ovtag,html.ph.bks36on .qhint{top:calc(max(6px, env(safe-area-inset-top,0px)) + 106px)}' +
+    'html.ph.bks36on .ideas35{top:calc(max(6px, env(safe-area-inset-top,0px)) + 104px)}' +
+    /* r38 owner 11/11: the status pill took this top and kept its phone bottom, so it stretched into a tall translucent capsule over the house. One line, right under the booking line */
+    'html.ph.bks36on .perfpill,html.ph.bks36on.phdoll .perfpill{top:calc(var(--bar36,53px) + 82px);bottom:auto}' +
+    'html.ph.bks36on.ideas35on .perfpill{top:calc(var(--bar36,53px) + 136px)}' +
+    'html.ph.bks36on.ideas35on .qhint{top:calc(max(6px, env(safe-area-inset-top,0px)) + 166px)}' +
+    'html.ph.bks36on .qrow{top:calc(max(6px, env(safe-area-inset-top,0px)) + 96px);max-height:calc(100% - max(6px, env(safe-area-inset-top,0px)) - 96px - max(var(--gut), env(safe-area-inset-bottom,0px)))}' +
+    'html.ph.bks36on .gallery{padding-top:calc(max(6px, env(safe-area-inset-top,0px)) + 108px)}' +
+    /* full screen: a small booking button in the pill of controls */
+    '.cv27 .cvb36{display:inline-flex;align-items:center;gap:7px;padding:0 13px;color:#7d6038;font-weight:600}.cv27 .cvb36 em{font-style:normal}' +
+    /* the contact sheet */
+    '.bk36dlg{width:min(480px, calc(100vw - 24px));max-width:none;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);margin:auto;padding:0;border:0;border-radius:16px;background:#fbfaf7;color:#1f1f1d;font-family:' + JOST + ';font-size:16px;line-height:1.55;box-shadow:0 24px 80px rgba(0,0,0,.42);overflow:auto;color-scheme:light}' +
+    '.bk36dlg::backdrop{background:rgba(14,14,13,.55)}' +
+    '.bk36dlg .bkin{position:relative;padding:28px 30px 24px;text-align:center}' +
+    '.bk36dlg .bkx{position:absolute;top:8px;right:8px;width:42px;height:42px;border:0;border-radius:50%;background:none;color:#67665f;font:400 27px/1 ' + JOST + ';cursor:pointer}.bk36dlg .bkx:hover{background:#f0ece3;color:#1f1f1d}' +
+    '.bk36dlg .bke{margin:0 30px 10px;font-size:14px;font-weight:500;letter-spacing:.01em;color:#7d6038;font-variant-numeric:lining-nums}' +
+    '.bk36dlg h2{margin:0 0 12px;font-family:' + CORM + ';font-weight:500;font-size:38px;line-height:1;letter-spacing:-.01em}' +
+    '.bk36dlg .bkhow{margin:0 auto;max-width:27em;text-wrap:balance}' +
+    '.bk36dlg .bkag{margin:20px 0 0;font-family:' + CORM + ';font-weight:500;font-size:27px;line-height:1.2;font-variant-numeric:lining-nums}' +
+    '.bk36dlg .bkfirm{margin:0;color:#67665f;font-size:15.5px;font-variant-numeric:lining-nums}' +
+    '.bk36dlg dl{margin:14px 0 20px;text-align:left}' +
+    '.bk36dlg dl>div{display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #e5e1d8}' +
+    '.bk36dlg dt{font-size:14.5px;font-weight:500;color:#7d6038}' +
+    '.bk36dlg dd{margin:0;font-size:15.5px;overflow-wrap:anywhere;font-variant-numeric:lining-nums;-webkit-user-select:text;user-select:text}.bk36dlg dd a{color:inherit;text-decoration:none}.bk36dlg dd a:hover{text-decoration:underline;text-underline-offset:3px}' +
+    '.bk36dlg .bkcopy{padding:4px 12px;border:1px solid #d9d3c7;border-radius:999px;background:none;color:#67665f;font:400 14px/1.3 ' + JOST + ';cursor:pointer;white-space:nowrap}.bk36dlg .bkcopy:hover{border-color:#1f1f1d;color:#1f1f1d}' +
+    '.bk36dlg .bkacts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}' +
+    '.bk36dlg .bkbtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border:1px solid #1f1f1d;border-radius:999px;background:none;color:#1f1f1d;font:400 15.5px/1.2 ' + JOST + ';text-decoration:none;white-space:nowrap}.bk36dlg .bkbtn:hover{background:#1f1f1d;color:#fbfaf7}' +
+    '.bk36dlg .bkbtn.solid{background:#1f1f1d;color:#fbfaf7}.bk36dlg .bkbtn.solid:hover{background:#3a3a36}' +
+    '.bk36dlg .bkfull{display:inline-block;margin:18px 0 0;padding:4px 0;color:#1f1f1d;font-size:15.5px;text-underline-offset:4px;text-decoration-color:#a8865b}' +
+    '.bk36dlg .bknote{margin:12px auto 0;max-width:34em;color:#67665f;font-size:13.5px;line-height:1.5}' +
+    '.bk36dlg :is(a,button):focus-visible{outline:2px solid #4b5f68!important;outline-offset:2px}' +
+    'html.ph .bk36dlg{width:100vw;margin:auto 0 0;border-radius:18px 18px 0 0}html.ph .bk36dlg .bkin{padding:26px 18px calc(20px + env(safe-area-inset-bottom,0px))}' +
+    'html.ph .bk36dlg h2{font-size:34px}html.ph .bk36dlg dl>div{grid-template-columns:minmax(0,1fr) auto;gap:0 10px}html.ph .bk36dlg dt{grid-column:1 / -1}html.ph .bk36dlg dd{font-size:15.5px}' +
+    'html.ph .bk36dlg .bkbtn{flex:1 1 auto;padding:0 14px}' +
+    /* the finale card: a lower third over the house at dusk */
+    '.fin36{position:absolute;z-index:7;left:50%;bottom:var(--fin36b,78px);width:min(920px, calc(100% - 48px));box-sizing:border-box;padding:24px 30px 16px;border-radius:16px;background:rgba(18,17,15,.8);-webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1);border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 60px rgba(0,0,0,.42);color:#fbfaf7;font-family:' + JOST + ';font-size:15px;line-height:1.45;opacity:0;transform:translate(-50%,18px);pointer-events:none;transition:opacity .9s ease,transform 1s cubic-bezier(.2,.7,.2,1)}' +
+    '.fin36.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}' +
+    'html:not(.ph) .fin36.side{left:auto;right:max(16px, env(safe-area-inset-right,0px));width:var(--fin36w,520px);transform:translate(0,18px)}html:not(.ph) .fin36.side.on{transform:none}' +
+    'html:not(.ph) .fin36.slim .fing{grid-template-columns:minmax(0,1fr);gap:16px}html:not(.ph) .fin36.slim .fa{min-width:0}html:not(.ph) .fin36.slim h2{font-size:38px}' +
+    '.fin36 .fing{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 40px;align-items:center}' +
+        '.fin36 h2{margin:0;font-family:' + CORM + ';font-weight:500;font-style:normal;font-size:clamp(36px, 3.8vw, 52px);line-height:1;letter-spacing:-.01em;color:#fff}' +
+    '.fin36 .ft{margin:7px 0 0;font-size:15.5px;letter-spacing:.02em;color:rgba(251,250,247,.82)}' +
+    '.fin36 .fp{margin:14px 0 0;font-size:20px;letter-spacing:.02em;font-variant-numeric:lining-nums;color:#fff}' +
+    '.fin36 .ff{margin:2px 0 0;font-size:15.5px;color:rgba(251,250,247,.88);font-variant-numeric:lining-nums}' +
+    '.fin36 .fa{display:flex;flex-direction:column;gap:8px;min-width:250px}' +
+    '.fin36 .fb{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;box-sizing:border-box;padding:0 22px;border:1px solid rgba(255,255,255,.7);border-radius:999px;background:none;color:#fff;font:500 15.5px/1.2 ' + JOST + ';letter-spacing:.01em;text-decoration:none;white-space:nowrap;cursor:pointer}' +
+    '.fin36 .fb:hover{background:rgba(255,255,255,.14)}.fin36 .fb.go{background:#fff;color:#1f1f1d;border-color:#fff}.fin36 .fb.go:hover{background:#f1ece2}' +
+    '.fin36 .fb2{display:flex;gap:8px}.fin36 .fb2 .fb{flex:1 1 0;padding:0 12px}' +
+    '.fin36 .fn{margin:0;font-size:14px;text-align:center;color:rgba(251,250,247,.86);font-variant-numeric:lining-nums;-webkit-user-select:text;user-select:text}' +
+    '.fin36 .fl{display:flex;flex-wrap:wrap;gap:2px 24px;margin-top:16px;padding-top:8px;border-top:1px solid rgba(255,255,255,.16);font-size:14.5px}' +
+    '.fin36 .fl :is(a,button){display:inline-flex;align-items:center;box-sizing:border-box;min-height:36px;padding:6px 0;border:0;background:none;color:rgba(251,250,247,.88);font:400 14.5px/1.3 ' + JOST + ';text-decoration:underline;text-decoration-color:rgba(232,211,176,.6);text-underline-offset:4px;cursor:pointer}.fin36 .fl :is(a,button):hover{color:#fff;text-decoration-color:#e8d3b0}' +
+    '.fin36 .fx{position:absolute;top:6px;right:8px;width:40px;height:40px;border:0;border-radius:50%;background:none;color:rgba(251,250,247,.75);font:400 25px/1 ' + JOST + ';cursor:pointer}.fin36 .fx:hover{background:rgba(255,255,255,.12);color:#fff}' +
+    '.fin36 :is(a,button):focus-visible{outline:2px solid #e8d3b0!important;outline-offset:2px}' +
+    '.fin36 .fing>div>*,.fin36 .fl{opacity:0;transform:translateY(8px);transition:opacity .7s ease,transform .7s ease}.fin36.on .fing>div>*,.fin36.on .fl{opacity:1;transform:none}' +
+    '.fin36.on .fing>div:first-child>:nth-child(1){transition-delay:.35s}.fin36.on .fing>div:first-child>:nth-child(2){transition-delay:.5s}.fin36.on .fing>div:first-child>:nth-child(3){transition-delay:.62s}.fin36.on .fing>div:first-child>:nth-child(4){transition-delay:.85s}.fin36.on .fing>div:first-child>:nth-child(5){transition-delay:.95s}' +
+    '.fin36.on .fa>*{transition-delay:1.15s}.fin36.on .fl{transition-delay:1.4s}' +
+    'html.ph .fin36{left:max(var(--gut), env(safe-area-inset-left,0px));right:max(var(--gut), env(safe-area-inset-right,0px));width:auto;padding:18px 18px 8px;transform:translate(0,18px)}html.ph .fin36.on{transform:none}' +
+    'html.ph .fin36{padding:16px 16px 6px}html.ph .fin36 .fing{grid-template-columns:minmax(0,1fr);gap:12px}html.ph .fin36 h2{font-size:34px}html.ph .fin36 .ft{margin-top:4px;font-size:15px}html.ph .fin36 .fp{margin-top:8px;font-size:19px}html.ph .fin36 .ff{font-size:15px;text-wrap:balance}html.ph .fin36 .fb{min-height:44px}html.ph .fin36 .fa{min-width:0}html.ph .fin36 .fn{display:none}html.ph .fin36 .fl{margin-top:10px;padding-top:4px;gap:0 18px}' +
+    '@media (max-height:520px){html.ph .fin36 .ft,html.ph .fin36 .ff{display:none}html.ph .fin36 h2{font-size:28px}}' +
+    '@media (prefers-reduced-motion: reduce){.fin36 .fing>div>*,.fin36 .fl{transition:opacity .2s ease!important;transform:none!important}.fin36{transition:opacity .2s ease!important;transform:translate(-50%,0)!important}html.ph .fin36,html:not(.ph) .fin36.side{transform:none!important}}' +
+    /* Photos: the bar rides above the gallery on a computer too, on the gallery's own paper */
+    'html.g36:not(.ph) .bar{z-index:9;pointer-events:auto;background:var(--paper);border-bottom:1px solid var(--line)}' +
+    'html.g36:not(.ph) .gallery{padding-top:calc(var(--bar36,96px) + 8px)}' +
+    '.gallery header{position:relative}.gallery .gx36{float:right;margin:2px 0 10px 18px}html.ph .gallery .gx36{float:none;display:block;margin:0 0 14px;min-height:40px}';
+  document.head.appendChild(st);
+
+  /* ---- the plate: address -> the listing page, price under it */
+  { const b = plate.querySelector('b');
+    if(b && !b.querySelector('a')){ const a = document.createElement('a'); a.className = 'home36'; a.href = up(''); a.title = 'The listing page for 118 Hillside Drive'; while(b.firstChild) a.appendChild(b.firstChild); b.appendChild(a);
+      a.addEventListener('click', () => ga('tour_home_click', {})); }
+    const town = plate.querySelector('span'), pr = el('span', 'pr36'); pr.textContent = F.price; if(town) town.after(pr); else if(b) b.after(pr); }
+
+  /* ---- the contact sheet */
+  const dlg = el('dialog', 'bk36dlg'); dlg.id = 'bkDlg'; dlg.setAttribute('aria-labelledby', 'bkH');
+  dlg.innerHTML = '<div class="bkin"><button type="button" class="bkx" aria-label="Close">×</button>' +
+    '<p class="bke">' + F.addr + ' · ' + F.price + '</p><h2 id="bkH">Schedule a showing</h2><p class="bkhow">' + F.how + '</p>' +
+    '<p class="bkag">' + F.agent + '</p><p class="bkfirm">' + F.firm + '</p>' +
+    '<dl><div><dt>Phone</dt><dd><a href="' + F.tel + '">' + F.telTxt + '</a></dd><button type="button" class="bkcopy" data-copy="' + F.telTxt + '" aria-label="Copy the phone number">Copy</button></div>' +
+    '<div><dt>Email</dt><dd><a href="' + F.mail + '">' + F.email + '</a></dd><button type="button" class="bkcopy" data-copy="' + F.email + '" aria-label="Copy the email address">Copy</button></div></dl>' +
+    '<div class="bkacts"><a class="bkbtn solid" href="' + F.tel + '">Call Michael</a><a class="bkbtn" href="' + F.sms + '">Text Michael</a><a class="bkbtn" href="' + F.mail + '">Email Michael</a></div>' +
+    '<a class="bkfull" href="' + up('') + '">See the full listing page</a><p class="bknote">' + F.note + '</p></div>';
+  document.body.appendChild(dlg);
+  let from = '';
+  function open(where){ from = where || ''; ga('book_open', {where: from, stop: (STOPS[stopIdx] || {}).id || '', mode});
+    if(!dlg.showModal){ location.href = up('') + '#contact'; return; }
+    try{ if(!dlg.open) dlg.showModal(); const h = dlg.querySelector('h2'); h.setAttribute('tabindex', '-1'); h.focus({preventScroll: true}); dlg.scrollTop = 0; }catch(e){ console.warn('[sell36] sheet', e); } }
+  const close = () => { try{ if(dlg.open) dlg.close(); }catch(e){} };
+  dlg.querySelector('.bkx').addEventListener('click', close);
+  dlg.addEventListener('click', e => { if(e.target === dlg) close(); });                      // a click on the dimmed backdrop
+  dlg.addEventListener('keydown', e => { if(e.key !== 'Escape') e.stopPropagation(); });      // arrow keys and Space stay in the sheet (they drive the tour otherwise)
+  dlg.addEventListener('click', e => { const t = e.target.closest ? e.target.closest('a[href],.bkcopy') : null; if(!t) return;
+    if(t.classList.contains('bkcopy')){ const v = t.getAttribute('data-copy'), done = () => { t.textContent = 'Copied'; setTimeout(() => { t.textContent = 'Copy'; }, 1800); };
+      const old = () => { const ta = document.createElement('textarea'); ta.value = v; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0'; dlg.appendChild(ta); ta.select(); try{ if(document.execCommand('copy')) done(); }catch(x){} ta.remove(); };
+      try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done, old); else old(); }catch(x){ old(); }
+      ga('contact_copy', {what: /@/.test(v) ? 'email' : 'phone', where: 'tour'}); return; }
+    const m = /^(tel|sms|mailto):/.exec(t.getAttribute('href') || ''); if(m) ga('showing_contact', {method: {tel: 'call', sms: 'text', mailto: 'email'}[m[1]], where: 'tour-sheet', from, transport_type: 'beacon'}); });
+  if(GAME) return {open, close, dlg, facts: F};
+
+  /* ---- the booking control: a pill in the bar (computer), a line under the header (phone), a button in the full-screen pill */
+  const bk = el('button', 'bk36', CAL + '<span>Schedule a showing</span>'); bk.type = 'button'; bk.id = 'bk36'; bk.setAttribute('aria-haspopup', 'dialog');
+  { const fs = document.getElementById('fsBtn'); if(fs) fs.after(bk); else bar.appendChild(bk); const br = el('i', 'brk36'); br.setAttribute('aria-hidden', 'true'); bk.after(br); }
+  bk.addEventListener('click', e => { e.stopPropagation(); open('bar'); });
+  const strip = el('div', 'bks36', '<span class="bkp36">' + F.price + '</span><button type="button" class="bkb36" aria-haspopup="dialog">Schedule a showing</button>'); strip.id = 'bks36'; bar.after(strip);
+  strip.querySelector('button').addEventListener('click', e => { e.stopPropagation(); open('phone-header'); });
+  { const cx = document.getElementById('cvX'); if(cx){ const cb = el('button', 'cvb36', CAL + '<em>Schedule a showing</em>'); cb.type = 'button'; cb.id = 'cvBook'; cb.setAttribute('aria-label', 'Schedule a showing'); cx.before(cb);
+      cb.addEventListener('click', e => { e.stopPropagation(); open('full-screen'); }); } }
+  const inGame = () => /(^|\s)(v33game|hs28on|mz28on|tt28on|tt31on|cn31on|dn33on|lp33on|th33on)(\s|$)/.test(root.className) || !!(window.HWGAMES && HWGAMES.active) || !!window.HILLSIDE;
+  function chrome(){ const on = root.classList.contains('ph') && !inGame() && !root.classList.contains('clean27'); if(on !== root.classList.contains('bks36on')) root.classList.toggle('bks36on', on);
+    const h = Math.round(bar.getBoundingClientRect().height); if(h > 0 && h + 'px' !== root.style.getPropertyValue('--bar36')) root.style.setProperty('--bar36', h + 'px'); }
+  try{ new MutationObserver(chrome).observe(root, {attributes: true, attributeFilter: ['class']}); }catch(e){}
+  if(window.ResizeObserver) new ResizeObserver(chrome).observe(bar); addEventListener('resize', chrome); chrome();
+
+  return {open, close, dlg, facts: F};
+})();
 /* ===== RENDER r4 (owner 11/3 night) ===== */
 /* SH-1 rule:shade-while-moving ("it doesn't really show the shading when it's moving... even some light degree of shading").
    The speed governor (v19 GOV) renders camera motion at a lower ladder level than the still frame. Levels 5-7 turned SSAO off
