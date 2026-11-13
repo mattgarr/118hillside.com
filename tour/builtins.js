@@ -552,6 +552,24 @@ def('rangeSlideIn30', { w: 2.5, d: 2.08, h: 3.0 }, function (b, o) {
 }, function (o) { return [o.w, o.d + 0.28, o.h + 0.1]; }, '30" slide-in gas range: 5 burners, continuous grates, front controls, no backguard.');
 
 // finished back / end panel of a cabinet run (p01: the peninsula's room side under the seating overhang is white panelling)
+// r44: a tall oven column for a cabinet wall: drawer, a 27-in wall oven, a built-in microwave over it, a cabinet above (origin at the wall, faces +z)
+def('wallOvenStack', { w: 2.5, h: 8, d: 2.08, finish: 'cabinetWhite', kick: 4 * IN }, function (b, o) {
+  var w = o.w, d = o.d, fin = o.finish, zf = d, aw = Math.min(w - 0.26, 2.25), x0 = -aw / 2, x1 = aw / 2;
+  b.bb(fin, -w / 2, o.kick, 0, w / 2, o.h, d); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - 0.25);            // carcass, toe kick
+  raisedDoor(b, fin, w - 0.14, 1.5, 0, o.kick + 0.85, zf + DOORT * 0.6);                                                  // drawer front
+  b.bb('stainless', -0.5, o.kick + 1.36, zf + DOORT, 0.5, o.kick + 1.41, zf + DOORT + 0.09);
+  function oven(y0, y1, band) {
+    b.bb('stainless', x0, y0, zf - 0.02, x1, y1, zf + 0.05);                                                             // face
+    b.bb('darkGlass', x0 + 0.1, y0 + 0.14, zf + 0.05, x1 - 0.1, y1 - band - 0.08, zf + 0.058);                            // door glass
+    b.bb('darkGlass', x0 + 0.1, y1 - band, zf + 0.05, x1 - 0.1, y1 - 0.06, zf + 0.056);                                   // control band
+    b.bb('stainless', x0 + 0.14, y1 - band - 0.2, zf + 0.12, x1 - 0.14, y1 - band - 0.15, zf + 0.17);                     // handle bar
+    b.bb('stainless', x0 + 0.2, y1 - band - 0.2, zf + 0.05, x0 + 0.25, y1 - band - 0.15, zf + 0.14); b.bb('stainless', x1 - 0.25, y1 - band - 0.2, zf + 0.05, x1 - 0.2, y1 - band - 0.15, zf + 0.14);
+  }
+  oven(2.3, 4.7, 0.36); oven(4.85, 6.2, 0.3);                                                                             // wall oven, microwave
+  var uh = o.h - 6.45, dw = (w - 0.14) / 2;
+  if (uh > 0.6) for (var i = 0; i < 2; i++) raisedDoor(b, fin, dw - 0.03, uh - 0.12, (i ? 1 : -1) * dw / 2, 6.38 + uh / 2, zf + DOORT * 0.6);
+}, function (o) { return [o.w, o.d + 0.2, o.h]; }, 'Tall oven column: drawer, wall oven, built-in microwave, cabinet above; origin at the wall back, faces +z.');
+
 def('finishedPanel', { w: 5, h: 2.896, t: 0.06, panels: 0, kick: 4 * IN, finish: 'cabinetWhite' }, function (b, o) {
   var w = o.w, t = o.t, n = o.panels || Math.max(1, Math.round(w / 1.6)), fin = o.finish;
   b.bb(fin, -w / 2, 0, 0, w / 2, o.h, t);

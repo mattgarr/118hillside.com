@@ -151,7 +151,7 @@ def build():
     prism_sides(O, 'BM-L1-B5', None, 'ceilings', 'L1', 'fir-beam', sec.exterior, lambda y, z: (X_LW + 0.002, y, z), lambda y, z: (X_E - 0.002, y, z), inward_center=(20, RIDGE_Y, APEX - KB_D / 2))
     # bath and shower floors: tile over the old oak
     tile = unary_union([sbox(-9.53, 9.59, -1.29, 14.32), sbox(-9.53, 14.32, -6.79, 18.42), sbox(-9.14, 14.32, -6.8, 14.70)])
-    plane_face(O, 'FL-B5-BATH', None, 'floors', 'L1', 'tile-woodlook-tan', tile, lambda x, y: (x, y, 0.014), (0, 0, 1))
+    plane_face(O, 'FL-B5-BATH', None, 'floors', 'L1', 'stone-tile-24', tile, lambda x, y: (x, y, 0.014), (0, 0, 1))
 
     # ---- the south wall: folding glass doors centred on the table, the east part of the picture window kept as fixed glass
     fold = sbox(FOLD['x0'], 0.0, FOLD['x1'], FOLD['head']); fixw = sbox(FIXW['x0'], FIXW['sill'], FIXW['x1'], FIXW['head'])
@@ -177,7 +177,7 @@ def build():
                 if t['n'][0] > 0.9: xs.append(t['v'][:, 0].mean())
         if xs:
             lo, hi = bbox[el]; y0, y1 = max(lo[1], 25.5555), min(hi[1], Y_N); x = float(np.median(xs))
-            plane_face(O, 'W-L1-B5P', None, 'walls', 'L1', PAINT, Polygon([(y0, 0), (y1, 0), (y1, ceil_z(y1)), (y0, ceil_z(y0))]), lambda y, z, x=x: (x, y, z), (1, 0, 0))
+            plane_face(O, 'W-L1-B5P', None, 'walls', 'L1', PAINT, Polygon([(y0, 0), (y1, 0), (y1, ceil_z(y1)), (y0, ceil_z(y0))]), lambda y, z, x=x: (x + 0.014, y, z), (1, 0, 0))   # a hair proud of the old wall's studs, which show above the old 8-ft ceiling
     plane_face(O, 'W-L1-B5P', None, 'walls', 'L1', PAINT, Polygon([(22.0293, 0), (22.22, 0), (22.22, ceil_z(22.22)), (22.0293, ceil_z(22.0293))]), lambda y, z: (X_LW, y, z), (1, 0, 0))
 
     # ---- the west gable wall: the two old doors close up; a 3 ft 10 way in from the library at its south end
@@ -186,7 +186,13 @@ def build():
     ext = Polygon([(22.4, 9.08), (25.37, 9.08), (25.37, zg(25.37) - 0.03), (22.4, zg(22.4) - 0.03)])
     plane_face(O, 'W-L1-B5V', None, 'walls', 'L1', 'hardie-lap#paint-ext-body', ext, lambda y, z: (X_WW - 0.004, y, z), (-1, 0, 0))   # above the wing roof it is an outside wall
     # ---- outside the gable: library, hall, bath, vestibule, bedroom
-    wall_run('W-L1-B5A', 'x', 9.21, 9.59, -9.53, X_WW, lambda x, y: zl(x) + 0.03, openings=[(0.2, 3.0, DOOR_H)])                       # library / bath and hall
+    wall_run('W-L1-B5A', 'x', 9.21, 9.59, -9.53, X_WW, lambda x, y: zl(x) + 0.03, openings=[(-0.7, 1.95, DOOR_H)])                     # library / bath and hall
+    # the laundry closet in the hall's south-east corner: stacked washer and dryer behind a closed door, 36 in of hall left beside it
+    wall_run('W-L1-B5L', 'x', 11.9, 12.2, 2.1, X_WW, lambda x, y: zl(x) + 0.03)
+    wall_run('W-L1-B5M', 'y', 2.1, 2.25, 9.59, 11.9, lambda x, y: zl(x) + 0.03, openings=[(9.67, 11.82, DOOR_H)], collide=False)
+    boxel('D-L1-B5L', 'openings', 'L1', 'door-panel-field', 2.14, 9.68, 0.04, 2.21, 11.81, DOOR_H - 0.03, faces='xXyYZ')
+    boxel('D-L1-B5L', 'openings', 'L1', 'steel-black', 2.10, 9.86, 3.0, 2.14, 9.92, 3.45, faces='xyYzZ')
+    colliders.append({'id': 'FX-B5-LAUNDRY#0', 'element': 'FX-B5-LAUNDRY', 'kind': 'WALL', 'poly': [[2.1, 9.59], [2.25, 9.59], [2.25, 11.9], [2.1, 11.9]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
     wall_run('W-L1-B5B', 'y', -1.29, -0.91, 9.59, 14.32, lambda x, y: zl(x) + 0.03, openings=[(9.95, 12.45, DOOR_H)])                  # bath / hall
     wall_run('W-L1-B5C', 'x', 14.32, 14.70, -6.6, X_WW, lambda x, y: max(zl(x), zw(14.7)) + 0.03, openings=[(0.1, 2.9, DOOR_H)])      # hall / vestibule and closet
     wall_run('W-L1-B5D', 'x', 16.78, 17.08, -6.41, X_WW, lambda x, y: zw(y) + 0.03, openings=[(-6.1, -0.7, DOOR_H), (0.27, 2.93, DOOR_H)])   # closet and vestibule / bedroom
@@ -306,7 +312,7 @@ def option_data(meta, elements, bounds, new_col):
         if leaf: o['leaf'] = leaf; o['leaves'] = [leaf]; o['class'] = 'IfcDoor'
         return o
     ops += [cased('OP-L1-B5W', 'W-L1-B5W', [5.09, (PASS[0] + PASS[1]) / 2], PASS[1] - PASS[0], [0, 1], [1, 0], 'SP-L1-LIVING', GREAT, PASS[2]),
-            cased('OP-L1-B5A', 'W-L1-B5A', [1.6, 9.4], 2.8, [1, 0], [0, 1], 'SP-L1-LIVING', 'SP-L1-HALL', leaf={'kind': 'POCKET', 'hingeEnd': 'END'}),
+            cased('OP-L1-B5A', 'W-L1-B5A', [0.625, 9.4], 2.65, [1, 0], [0, 1], 'SP-L1-LIVING', 'SP-L1-HALL', leaf={'kind': 'POCKET', 'hingeEnd': 'END'}),
             cased('OP-L1-B5B', 'W-L1-B5B', [-1.1, 11.2], 2.5, [0, 1], [1, 0], 'SP-L1-BATH', 'SP-L1-HALL', leaf={'kind': 'POCKET', 'hingeEnd': 'END'}),
             cased('OP-L1-B5C', 'W-L1-B5C', [1.5, 14.51], 2.8, [1, 0], [0, 1], 'SP-L1-HALL', 'SP-L1-HALL-CLOSET'),
             cased('OP-L1-B5S', 'W-L1-004', [-7.97, 14.51], 2.33, [1, 0], [0, 1], 'SP-L1-BATH', 'SP-L1-LAUNDRY-CLOSET'),
@@ -321,7 +327,7 @@ def option_data(meta, elements, bounds, new_col):
     cut = {e: GREAT for e in elements}
     for e in elements:
         if e in ('BM-L1-B5', 'SL-DK-B5', 'ST-FRONT-B5', 'RL-FRONT-STAIR-B5', 'RL-DECK-B5S', 'RL-DECK-B5E', 'W-L1-B5W', 'W-L1-B5V', 'FL-B5-PATCH'): cut[e] = '@L1'
-        elif e in ('W-L1-B5A', 'W-L1-B5B', 'FL-B5-BATH'): cut[e] = 'SP-L1-BATH'
+        elif e in ('W-L1-B5A', 'W-L1-B5B', 'FL-B5-BATH', 'W-L1-B5L', 'W-L1-B5M', 'D-L1-B5L'): cut[e] = 'SP-L1-BATH'
         elif e in ('W-L1-B5C', 'W-L1-B5D', 'D-L1-B5C', 'D-L1-B5B'): cut[e] = 'SP-L1-BED1'
     for b in bounds: cut[b] = GREAT
     D['cut'] = cut
@@ -343,7 +349,7 @@ def fixtures():
         F.append({'id': 'KX-B5-%02d' % (len(F) + 1), 'type': 'FXT-' + kind, 'render': {'kind': kind, 'lib': lib}, 'at': [round(at[0], 3), round(at[1], 3), z], 'rot': rot, 'space': space, 'storey': 'L1', 'params': params, 'footprint': None})
     # the tall wall on the west gable, south to north: pantry, wall ovens (shown as a tall cabinet), fridge, then counter into the corner
     add('tallCabinet', 'FIX', (W, 22.25), 0, dict(CAB, d=2.08, h=8, w=2.5, pull='knob'))
-    add('tallCabinet', 'FIX', (W, 24.75), 0, dict(CAB, d=2.08, h=8, w=2.5, pull='knob', hinge='right'))
+    add('wallOvenStack', 'BUILTIN', (W, 24.75), 0, {'w': 2.5, 'd': 2.08, 'h': 8})
     add('fridge4Door', 'BUILTIN', (W, 27.5), 0, {'d': 2.5, 'dispenser': True, 'h': 5.9, 'w': 3})
     add('upperCabinet', 'FIX', (W, 27.5), 0, dict(CAB, d=2, h=1.9, mountY=6.1, w=3, pull='knob'))
     add('baseCabinet', 'FIX', (W, 29.96), 0, dict(CAB, w=1.92))
@@ -371,7 +377,7 @@ def fixtures():
     add('bedQueen', 'FIX', (-1.6, 26.67), 270, None, 'SP-L1-BED1')
     add('nightstand', 'FIX', (-5.2, 26.67), 270, None, 'SP-L1-BED1'); add('nightstand', 'FIX', (2.0, 26.67), 270, None, 'SP-L1-BED1')
     # the hall: stacked washer and dryer
-    add('washerFront', 'FIX', (X_WW, 13.0), 180, {'stacked': True}, 'SP-L1-HALL')
+    add('washerFront', 'FIX', (X_WW, 10.75), 180, {'stacked': True}, 'SP-L1-HALL')
     return F
 
 def staging():
@@ -403,7 +409,7 @@ def staging():
     add('lamp', (0, 0), 0, {'h': 2.2}, on='sb', dx=-3.0); add('vase2', (0, 0), 0, {'h': 1.0}, on='sb', dx=2.6)
     add('art', (X_LW, 15.25), 0, {'w': 4.6, 'h': 2.6, 'mountY': 5.6, 'style': 'blots', 'seed': 7}, back=True)
     # the library: a wall of shelves, two reading chairs, a round table, a rug
-    add('builtinBookcase', (-4.95, 9.21), 270, dict(BK, boxes=3, levels=[4.2, 5.4, 6.6], seed=21, w=8.7), lib='BUILTIN', space='SP-L1-LIVING')
+    add('builtinBookcase', (-5.1, 9.21), 270, dict(BK, boxes=3, levels=[4.2, 5.4, 6.6], seed=21, w=8.4), lib='BUILTIN', space='SP-L1-LIVING')
     add('rug2', (-5.3, 3.85), 0, {'w': 7.1, 'd': 6.6, 'pattern': 'sisal'}, space='SP-L1-LIVING')
     add('armchairBoucle', (-6.6, 2.1), 0, {'fabric': 'fabricLight'}, space='SP-L1-LIVING'); add('armchairBoucle', (-6.6, 5.6), 0, {'fabric': 'fabricLight'}, space='SP-L1-LIVING')
     add('woodSideTable', (-3.6, 3.85), 0, {'dia': 2.4, 'h': 1.85}, key='lt', space='SP-L1-LIVING'); add('books', (0, 0), 0, {'n': 3}, on='lt'); add('lamp', (0, 0), 0, {'h': 1.9, 'shadeDia': 1.0}, on='lt', dx=.5, dz=-.4)
@@ -426,7 +432,7 @@ def register(hide, hide_ranges, sha):
               # entry -> library -> great room; round the island; out through the folding doors; hall, vestibule, bedroom, bath; walls that must still stop a walker
               'walkTests': [[[0.0, -3.0], [2.5, 5.5], 'open'], [[2.5, 6.8], [9.0, 7.0], 'open'], [[9.0, 7.0], [26.0, 8.0], 'open'], [[10.0, 20.0], [10.0, 28.0], 'open'], [[10.5, 28.2], [21.0, 28.2], 'open'], [[21.2, 28.0], [21.2, 20.0], 'open'],
                             [[15.8, 7.5], [15.8, 0.0], 'open'], [[23.0, 16.0], [23.0, 30.0], 'open'], [[24.0, 20.0], [34.0, 26.5], 'open'], [[20.0, 25.0], [26.0, 25.0], 'open'],
-                            [[1.6, 7.5], [1.6, 12.0], 'open'], [[1.6, 12.0], [1.5, 15.8], 'open'], [[1.6, 15.8], [1.6, 19.5], 'open'], [[0.5, 11.2], [-4.0, 11.2], 'open'], [[-7.97, 13.0], [-7.97, 16.5], 'open'],
+                            [[0.6, 7.5], [0.6, 12.6], 'open'], [[0.6, 12.6], [1.5, 15.8], 'open'], [[0.6, 11.0], [4.0, 11.0], 'wall'], [[3.5, 13.2], [3.5, 10.5], 'wall'], [[1.6, 15.8], [1.6, 19.5], 'open'], [[0.5, 11.2], [-4.0, 11.2], 'open'], [[-7.97, 13.0], [-7.97, 16.5], 'open'],
                             [[8.0, 12.0], [3.0, 12.0], 'wall'], [[8.0, 24.0], [3.0, 24.0], 'wall'], [[-4.0, 7.0], [-4.0, 11.5], 'wall'], [[21.5, -1.0], [27.0, -1.0], 'wall'], [[30.0, 8.0], [30.0, 2.0], 'wall'], [[30.0, 18.4], [38.0, 18.4], 'wall']],
               'labels': [{'name': 'Kitchen', 'at': [15.8, 28.0]}, {'name': 'Dining', 'at': [15.8, 8.2]}, {'name': 'Living', 'at': [29.6, 27.6]}, {'name': 'Library', 'at': [-0.3, 6.6]}, {'name': 'Deck', 'at': [20.5, -2.6]},
                          {'name': 'Bedroom', 'at': [-1.6, 21.5]}, {'name': 'Bath', 'at': [-5.2, 12.2]}],
@@ -443,7 +449,7 @@ def register(hide, hide_ranges, sha):
                         'library': {'pos': [0.6, 5.0, 2.6], 'look': [8.5, 4.2, -6.0]},
                         'bedroom': {'pos': [17.7, 5.0, 1.6], 'look': [23.5, 3.2, -2.6]},
                         'bath': {'pos': [10.7, 5.0, -2.6], 'look': [14.4, 3.6, -8.4]},
-                        'hall': {'pos': [8.4, 5.0, 1.0], 'look': [16.5, 4.2, 1.6]},
+                        'hall': {'pos': [8.2, 5.0, 0.5], 'look': [16.5, 4.2, 1.9]},
                         'deck': {'pos': [-2.6, 5.0, 19.0], 'look': [13.0, 4.4, 15.8]},
                         'driveway': {'pos': [-14.0, 1.0, 34.0], 'look': [2.0, 1.4, 18.0]},
                         'street': {'pos': [18.4, 1.6, 52.0], 'look': [18.4, 6.0, 30.0]},

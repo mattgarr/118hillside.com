@@ -188,7 +188,7 @@ street, y north).
   the old picture window stays as fixed glass (x 23.7 to 32.5) beside the sofas.
 - **Outside the gable.** The back bedroom stays (11 ft 5 x 9 ft 7) with one closet; the other closet becomes its vestibule, so
   the bedroom door no longer opens off the main room. A new 3/4 bath runs across the north end of the old living room, with
-  the shower in the old laundry closet. A short hall between them holds a stacked washer and dryer. The rest of the old
+  the shower in the old laundry closet. A short hall between them has a laundry closet (stacked washer and dryer behind a door) in its corner, with 36 in of hall left beside it. The rest of the old
   living room is a 14 ft 5 x 9 ft 11 library: a wall of shelves, two reading chairs, a round table.
 - **Arrival.** From the front door you pass through the library and enter the great room at its south-west corner, through
   a 3 ft 10 cased opening in the west gable wall, then walk along the glass past the table. The first view is the long
@@ -217,7 +217,7 @@ street, y north).
 | table end to the living rug | 5 ft 1 (about 3 ft 7 behind the end chair) | 36 in |
 | sofa to sofa (seat fronts) | about 7 ft 4, coffee table between | conversation within 10 ft |
 | sofa ends to the hearth | about 2 ft (not a route) | side clearance only |
-| hall beside the washer and dryer | 2 ft 5 | 36 in preferred (tight; see below) |
+| hall beside the laundry closet | 3 ft 0 | 36 in |
 
 ### Structure: a big beam and no post
 
@@ -232,12 +232,13 @@ exterior walls and adding a fireplace vent are all permit work.
 
 - The old living room's big west window runs past the new library/bath wall, which meets it at a mullion. A real project
   would reframe or split that window.
-- The wall ovens are shown as a tall cabinet front; the fixture library has no wall oven.
+- The oven column (drawer, wall oven, built-in microwave, cabinet above) is a simple stand-in drawn for this concept.
 - The island sink is centred on the island (the plan has it a little west with the dishwasher beside it).
-- The closet doors and the bedroom door are drawn fixed (the bedroom door standing open); the two pocket doors are drawn
-  open. They do not operate in the tour.
-- The passage beside the stacked washer and dryer to the bedroom vestibule is about 29 in clear, as drawn on the plan.
-  It walks, but 36 in would be better; a real plan would recess the machines or shift the vestibule door.
+- The closet doors, the laundry closet door (shut) and the bedroom door (standing open) are drawn fixed; the two pocket
+  doors are drawn open. They do not operate in the tour.
+- The plan drew the washer and dryer open to the hall with about 29 in beside them. The model moves them to a closet in
+  the hall's south-east corner and slides the library door 1 ft west, which leaves 36 in. The cost is 4 in of library
+  shelving and a 32-in door instead of a 34-in one.
 - No high gable glass and no skylights in this version; daylight is the folding doors, the fixed window and the five
   new windows.
 - The deck carries two lounge chairs and a low table off to the east; the floor in front of the open doors is clear.

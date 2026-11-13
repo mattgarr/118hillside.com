@@ -1869,7 +1869,7 @@ var ACCEL_PHONETEX = 0;
 <script src="fixtures.js?v=43f"></script>
 <script src="staging.js?v=43f"></script>
 <script src="staging33.js?v=2"></script>
-<script src="builtins.js?v=43f"></script>
+<script src="builtins.js?v=44"></script>
 <script src="landscape.js"></script>
 <script src="trees.js?v=40"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
@@ -20696,6 +20696,7 @@ function opt42Clear(v, o){
   for(const k of ['main', 'furn', 'ceil', 'trim']){ const G = GROUPS[k]; if(!G) continue;
     for(const c of G.children){ if(c.isInstancedMesh || (c.userData && (c.userData.kind === 'ceilingFan' || c.userData.bim2))) continue;
       const F = c.userData && c.userData.el === 'r28-attic-cabinet' ? null : fx.get(c); if((F && (F.v || keep.has(F.id))) || only.has(c) || opId(c)) continue;
+      if(c.userData && c.userData.el === 'r28-attic-cabinet'){ if(BIM2.inPoly(R, c.position.z, c.position.x)) out.push(c); continue; }   /* r44: by its position; it can be hidden (an empty box) when this first runs */
       B.setFromObject(c); if(B.isEmpty()) continue; const sx = B.max.z - B.min.z, sy = B.max.x - B.min.x;
       if(sx > 14 || sy > 14 || B.max.y < -.5 || B.min.y > 13) continue;
       if(!BIM2.inPoly(R, (B.min.z + B.max.z) / 2, (B.min.x + B.max.x) / 2)) continue;
@@ -20804,7 +20805,7 @@ Object.assign(FOLD42, {toggle: (it) => fold42Toggle(it || FOLD42.items[0]), set(
 /* r43: the corner floor plan (minimap) shows the plan that is showing. A layout idea with its own plan image (drawn from its model data
    by the same projection as floor_main.jpg) is drawn instead of the house's while it shows (Design and its walk-through); everywhere
    else, and until that image has loaded, the house's plan. */
-const MM43 = {open4k: 'floor_main_open4k.jpg?v=3'}, MM43I = {};
+const MM43 = {open4k: 'floor_main_open4k.jpg?v=4'}, MM43I = {};
 { const _dm43 = drawMini; drawMini = function(){
     const v = typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt', src = MM43[v]; if(!src) return _dm43.apply(this, arguments);
     let im = MM43I[v]; if(!im){ im = MM43I[v] = new Image(); im.src = src; }

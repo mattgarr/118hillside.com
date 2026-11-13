@@ -60,12 +60,12 @@ def make_b5(v):
         if f['render']['kind'] == 'counterTop':
             for o in (f.get('params') or {}).get('outlines', []): fill(dr, Polygon(o).buffer(0).intersection(clip), (250, 250, 248))
     SZ = {'bedQueen': (5.42, 7.45), 'nightstand': (2.0, 1.5), 'showerGlass': (2.3, .12), 'coffeeTableGlass': (5.0, 3.6), 'woodSideTable': (2.4, 2.4)}
-    COL = {'fridge4Door': (214, 216, 218), 'range36': (214, 216, 218), 'washerFront': (232, 234, 236), 'bedQueen': (240, 238, 232), 'nightstand': (206, 176, 136), 'toilet': (252, 252, 252), 'vanity': (250, 250, 248),
+    COL = {'wallOvenStack': (214, 216, 218), 'fridge4Door': (214, 216, 218), 'range36': (214, 216, 218), 'washerFront': (232, 234, 236), 'bedQueen': (240, 238, 232), 'nightstand': (206, 176, 136), 'toilet': (252, 252, 252), 'vanity': (250, 250, 248),
            'diningTable': (196, 160, 118), 'sideboard': (60, 70, 86), 'sofa3': (236, 232, 222), 'armchairBoucle': (236, 232, 222), 'coffeeTableGlass': (205, 214, 216), 'woodSideTable': (206, 176, 136),
            'parsonsChair': (244, 242, 236), 'outdoorLounge': (70, 72, 76), 'outdoorCoffee': (120, 120, 120), 'counterStoolRope': (186, 160, 126)}
     for f in F:
         k = f['render']['kind']; pr = f.get('params') or {}
-        if k in ('baseCabinet', 'tallCabinet', 'island', 'builtinBookcase', 'fridge4Door', 'range36', 'washerFront', 'vanity', 'toilet', 'bedQueen', 'nightstand'):
+        if k in ('baseCabinet', 'tallCabinet', 'wallOvenStack', 'island', 'builtinBookcase', 'fridge4Door', 'range36', 'washerFront', 'vanity', 'toilet', 'bedQueen', 'nightstand'):
             f2 = dict(f)
             if k in SZ: f2['params'] = dict({'w': SZ[k][0], 'd': SZ[k][1]}, **{kk: vv for kk, vv in pr.items() if kk in ('w', 'd')})
             g = RP.foot(f2)
@@ -92,6 +92,7 @@ def make_b5(v):
     for g in wins:
         if g.intersects(inside.buffer(.5)): fill(dr, g.intersection(clip), (255, 255, 255)); outl(g.intersection(clip), 1, (90, 90, 90))
     for x0, x1, y in ((-6.05, -3.35, 16.86), (-3.45, -0.75, 16.95)): fill(dr, sbox(x0, y - .05, x1, y + .05), (90, 90, 90))      # closet sliders
+    fill(dr, sbox(2.12, 9.62, 2.23, 11.88), (90, 90, 90))                                                                    # laundry closet door, shut
     fill(dr, sbox(2.85, 17.08, 2.95, 19.66), (90, 90, 90))                                                                    # bedroom door, open
     # the folding doors: a thin track line and the folded stack at the west jamb
     dr.line([uv(FO['x0'], 4.6), uv(FO['x1'], 4.6)], fill=(120, 120, 120), width=2)
