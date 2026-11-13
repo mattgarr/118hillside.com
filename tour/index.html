@@ -79,6 +79,7 @@ html{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100
     return nf.apply(window, arguments); };
 }catch(e){} })();</script>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com"><link rel="preconnect" href="https://cdn.jsdelivr.net"><!-- r46 perf: three.js and its add-ons come from these two; the page waits on them -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Public+Sans:wght@400;500;600&display=swap">
@@ -1877,7 +1878,7 @@ html.tgload .loading::after{content:"";position:absolute;left:0;right:0;top:-60p
   i.src = tg ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/tg_poster_ph.jpg' : 'thumbs/tg_poster.jpg') : hw ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/hw_poster_ph.jpg' : 'thumbs/hw_poster.jpg') : (() => { try{ const k = sessionStorage.getItem('hillside.tod.v27'); if(k && k !== 'dusk') return 'thumbs/p69.jpg'; }catch(e){} return 'thumbs/p02.jpg'; })(); })();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="house_loader.js?v=44"></script>
+<script src="house_loader.js?v=46"></script>
 <script>/* v20 reveal: count three.js loads in flight */ (function(){ var M = window.THREE && THREE.DefaultLoadingManager; if(!M) return;
   var R = window.__revealLM = {pending: 0, errors: 0, last: 0}, s = M.itemStart, e = M.itemEnd, x = M.itemError;
   M.itemStart = function(u){ R.pending++; R.last = performance.now(); return s.apply(this, arguments); };
@@ -1893,6 +1894,17 @@ var ACCEL_PHONETEX = 0;
     if(k && MV.has(k)){ var self = this; ACCEL_PHONETEX++;
       return IL.call(this, k.replace(/\.(jpe?g|png|webp)$/i, '.m.webp'), onLoad, onProgress, function(e){ ACCEL_PHONETEX--; IL.call(self, url, onLoad, onProgress, onError); }); }
     return IL.apply(this, arguments); };
+})();</script>
+<script>/* r46 perf: the 'lean' reload. When a phone takes the 3D canvas away (memory), the tour reloads itself once at the same stop (main script, "r46 perf") and sets
+   sessionStorage 'hillside.lean': for the rest of that visit the photo textures are drawn at most 512 px on their long side (the terrain photos keep their size),
+   about a third of the texture memory, and the holiday dresses are not made ready ahead (assets/holiday/holiday.js). ?lean=1 forces it, ?lean=0 clears it. */
+(function(){ var on = false; try{ if(/[?&]lean=0\b/.test(location.search)) sessionStorage.removeItem('hillside.lean'); else on = /[?&]lean=1\b/.test(location.search) || sessionStorage.getItem('hillside.lean') === '1'; }catch(e){}
+  window.__LEAN = on; if(!on || !window.THREE) return; var MAX = 512, IL = THREE.ImageLoader.prototype.load, N = window.__LEANTEX = {n: 0};
+  THREE.ImageLoader.prototype.load = function(url, onLoad, onProgress, onError){
+    return IL.call(this, url, function(img){ try{ var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height, m = Math.max(w, h);
+        if(m > MAX && !/terrain\//.test(String(url))){ var k = MAX / m, c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); img = c; N.n++; } }catch(e){}
+      if(onLoad) onLoad(img); }, onProgress, onError); };
 })();</script>
 <script src="fixtures.js?v=44d"></script>
 <script src="staging.js?v=43f"></script>
@@ -11346,6 +11358,7 @@ var HITCH_CPR = null, HITCH_FLUSH = null;
   const busy = () => document.hidden || anim || performance.now() - ((window.__gov && __gov.G.lastMove) || 0) < 1500;
   const step = () => {
     if(!run() || !(window.LAND && LAND.buildConcepts && typeof TERR !== 'undefined' && TERR)) return;
+    if(coarse && !PERF.off('phone')) return;   /* r46 perf: not on a phone. Each concept is 0.5-1 s of one blocked task and its own geometry and programs, and they started the moment Design opened (the owner's "went into Design mode and it was frozen for a bit"); a landscape idea is built when it is picked, under the 'Planting the landscape idea' pill */
     if(!PERF.lsWant) return later(1500, step);
     if(busy()) return later(700, step);
     if(DUSK) return later(5000, step);
@@ -11648,13 +11661,20 @@ const P22OFF = k => /[?&]perf-off\b/.test(location.search) || new RegExp('[?&]pe
       else { l = new THREE.SpotLight(0x000000, 0, 1, Math.PI / 4, 0, 2); l.target.position.set(0, -50001, 0); l.target.updateMatrixWorld(true); }
       l.castShadow = false; l.position.set(0, -50000, 0); l.userData.p22pad = true; l.matrixAutoUpdate = true; return l; };
   const prep = () => {
-    if(LP.n++ % 30 === 0){ LP.list = []; scene.traverse(o => { if(o.isLight && !isPad(o) && (o.isPointLight || o.isSpotLight)) LP.list.push(o); }); }
+    if(LP.n++ % 30 === 0 || LP.dirty){ LP.dirty = false; LP.scans = (LP.scans || 0) + 1; LP.list = []; scene.traverse(o => { if(o.isLight && !isPad(o) && (o.isPointLight || o.isSpotLight)) LP.list.push(o); }); }   /* r46 perf: also at once when a light joined the scene (below) */
     let op = 0, os = 0, ep = 0, es = 0, shadowHidden = false;
     for(const l of LP.list){ if(!l.visible) continue; const e = effVis(l);
       if(l.castShadow && !e){ shadowHidden = true; continue; }
       if(l.isPointLight){ op++; if(e) ep++; } else { os++; if(e) es++; } }
     const kp = 'p' + op + (shadowHidden ? 'x' : ''), ks = 's' + os + (shadowHidden ? 'x' : '');
-    const mp = Math.max(LP.max.get(kp) || 0, ep), ms = Math.max(LP.max.get(ks) || 0, es); LP.max.set(kp, mp); LP.max.set(ks, ms);
+    /* r46 perf: one program set for every lamp-lit view. The pads held the count steady only among views with the same number of lamps switched
+       on; a layout idea brings lamps of its own (16 point lights in the open plan, against 13), which made a new class, and its first frame rebuilt
+       every material on screen: 58 programs, 1.3 s of blocked main thread on an M-series Mac for "See it in 3D", seconds on a phone, picture frozen.
+       Whenever any lamp is in view the point lights are now padded to at least LP.floor (18: the open plan's tour shows 17, the most of any layout), from the first frame on, so
+       the house has two sets for good: lamps out (0 lights, as before) and lamps on. The lamp list is also taken again as soon as a light is added
+       to the scene (it was up to 30 draws stale, and the frames in between compiled a third, short-lived set). ?perf-lightfloor-off: as before. */
+    const fl = ep > 0 && !P22OFF('lightfloor') ? LP.floor : 0;
+    const mp = Math.max(LP.max.get(kp) || 0, ep, fl), ms = Math.max(LP.max.get(ks) || 0, es); LP.max.set(kp, mp); LP.max.set(ks, ms);
     const np = mp - ep, ns = ms - es; if(!np && !ns) return null;
     if(!LP.holder){ LP.holder = new THREE.Group(); LP.holder.name = 'p22lightpads'; LP.holder.userData.p22pad = true; LP.holder.userData.probeSkip = false; }
     while(LP.pool.p.length < np) LP.pool.p.push(mk('p')); while(LP.pool.s.length < ns) LP.pool.s.push(mk('s'));
@@ -11671,6 +11691,9 @@ const P22OFF = k => /[?&]perf-off\b/.test(location.search) || new RegExp('[?&]pe
       try{ return orig.apply(this, arguments); }
       finally{ const i = scene.children.lastIndexOf(H); if(i >= 0) scene.children.splice(i, 1); H.parent = null; } }; };
   wrap('render'); wrap('compile');
+  LP.floor = 18;
+  { const add = THREE.Object3D.prototype.add, hasLight = o => { if(o.isLight) return true; const c = o.children; if(c) for(let i = 0; i < c.length; i++) if(hasLight(c[i])) return true; return false; };   /* r46 perf */
+    THREE.Object3D.prototype.add = function(o){ try{ if(!LP.dirty && arguments.length === 1 && o && o.isObject3D && hasLight(o)) LP.dirty = true; }catch(e){} return add.apply(this, arguments); }; }
   window.__p22 = Object.assign(window.__p22 || {}, {lightpads: LP}); }
 // ---- 2. any-hit occlusion
 const P22OCC = (() => {
@@ -13061,6 +13084,10 @@ BUSY24.defer = (btn, label, work) => { BUSY24.start(btn, label, true);
 const b24HwKeyCached = () => { try{ const k = hw22Key(); return HW.built && (HW.builtKey === k || HW22.cache.has(k)); }catch(e){ return false; } };
 // heavy controls: predicted slow -> busy state at once, the click itself replays after the paint
 const B24_HEAVY = [
+  /* r46 perf: one quiet 'Loading…' for the waits that are left: a change of floor plan, the first time in Design or the Dollhouse, a stop whose way on foot has to be worked out afresh (R46H, in the "r46 perf" block near the end) */
+  {sel: '#dm45 .pb[data-a], .k42c, #cb42 button, #id46 button', label: () => 'Loading…', slow: el => R46H.planSlow(el), after: () => R46H.after()},
+  {sel: '.tab[data-mode=doll], .tab[data-mode=design], #phDoll', label: () => 'Loading…', slow: el => R46H.modeSlow(el), after: () => R46H.after()},
+  {sel: '#next, #prev, #cvNext, #cvPrev', label: () => 'Loading…', slow: el => R46H.stopSlow(el), after: () => R46H.after(true)},
   {sel: '#hwBtn', label: () => HW.on ? 'Taking the decorations down…' : 'Lighting the jack-o’-lanterns…',
    slow: () => !HW.on && !!(MODEL && BIM && FURN.items().length) && (!b24HwKeyCached() || !(WARM24.hwCompiled || WARM24.hwEverOn))},
   {sel: '.tab[data-mode=design]', label: () => PERF.pendingVar && PERF.pendingVar.size ? 'Building the design concepts…' : 'Loading the design tools…',
@@ -13076,9 +13103,10 @@ document.addEventListener('click', e => {
   const el = e.target.closest(B24_SEL); if(!el) return;
   if(BUSY24.active){   // busy: a repeat click on the busy control is ignored, a click on another control is queued (last one wins)
     e.stopImmediatePropagation(); e.preventDefault(); if(el !== BUSY24.active.btn) BUSY24.queued = el; return; }
-  const h = B24_HEAVY.find(q => el.matches(q.sel)); BUSY24.lastBtn = el; BUSY24.lastBtnAt = performance.now();
-  let slow = false; try{ slow = h.slow(el); }catch(x){}
+  let h = null, slow = false; BUSY24.lastBtn = el; BUSY24.lastBtnAt = performance.now();
+  for(const q of B24_HEAVY){ if(!el.matches(q.sel)) continue; let sl = false; try{ sl = !!q.slow(el); }catch(x){} if(sl){ h = q; slow = true; break; } if(!h) h = q; }   /* r46 perf: the first entry that says 'slow' (a control can be in two) */
   if(!slow) return;
+  try{ const dg = el.closest('dialog[open]'); if(dg) dg.appendChild(b24Pill()); }catch(x){}   /* r46 perf: a pill under an open dialog is not seen: it rides in the dialog until that closes (R46H.after puts it back) */
   e.stopImmediatePropagation(); e.preventDefault();
   BUSY24.defer(el, h.label(el), () => { BUSY24.replaying = true; try{ el.click(); } finally { BUSY24.replaying = false; } return h.after ? h.after() : null; });
 }, true);
@@ -21060,7 +21088,7 @@ function bim2BuildVariant(id, def){
 function bim2EnsureOption(v){
   const o = BIM2S && BIM2.option(v); if(!o) return null; const key = o.legacyId || o.id;
   if(B2OPT.built[key]) return Promise.resolve(true); if(B2OPT.busy[key]) return B2OPT.busy[key];
-  return (B2OPT.busy[key] = BIM2.loadOptions({mapMaterial: bim2MapMaterial, groupOf: bim2GroupOf, attach: (g, m, opt) => { m.userData.bim2.var = opt; grp(g + '@' + opt).add(m); }}, o.id)
+  return (B2OPT.busy[key] = BIM2.loadOptions({fetch: (u, i) => R46H.fetch(u, i), mapMaterial: bim2MapMaterial, groupOf: bim2GroupOf, attach: (g, m, opt) => { m.userData.bim2.var = opt; grp(g + '@' + opt).add(m); }}, o.id)
     .then(() => { bim2OptionData(o); B2OPT.built[key] = true; try{ if(typeof finish === 'function') finish(); }catch(e){} applyVisibility(); return true; })
     .catch(e => { console.warn('[bim2] option', key, e); return false; })); }
 function bim2OptionData(o){                                            // walls / openings / floors / furnishings of an option, from its meta
@@ -24539,7 +24567,7 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
       easing onto the destination's own view; doors on the way open ahead of you. Anything further, unreachable, or under reduced motion is a cut
       (a 350 ms dissolve), never a flight through structure. window.HILLSIDE games and flyTo itself are untouched.
    C  Doors open by themselves as you walk up to them; the 'You are in' line reads the space under your feet, indoors and out. */
-const R36N = window.R36N = {on: !/[?&]nav36-off\b/.test(location.search), cell: .5, RW: 1.0, RF: .9, PACE: 8.5, MAXS: 6, CAP: 66, lv: null, key: '', rev: 0, chk: 0, cache: new Map(), stats: {}, last: null};
+const R36N = window.R36N = {budget: /[?&]nav36budget=(\d+)/.test(location.search) ? +/[?&]nav36budget=(\d+)/.exec(location.search)[1] : 300, kept: new Map(), struct: null, on: !/[?&]nav36-off\b/.test(location.search), cell: .5, RW: 1.0, RF: .9, PACE: 8.5, MAXS: 6, CAP: 66, lv: null, key: '', rev: 0, chk: 0, cache: new Map(), stats: {}, last: null};
 const r36Excl = s => /CLOSET|STORAGE/.test(s.id || '') && !/DRESSING/.test(s.id || '');
 function r36DoorKind(it){   // 'closet' doors never open for a walker and are walls to the planner
   if(it.r36k) return it.r36k; let k = 'door';
@@ -24552,13 +24580,21 @@ function r36Key(){ let k = ACTIVE_VAR + '|' + COLLIDERS.length + '|' + FLOORS.le
 function r36Grids(){
   const now = performance.now(); if(R36N.lv && now - R36N.chk < 700) return R36N.lv; R36N.chk = now;
   const key = r36Key(); if(R36N.lv && key === R36N.key) return R36N.lv;
-  const t0 = now; R36N.key = key; R36N.cache.clear(); navPassTag();
+  /* r46 perf: the grids of the last few layouts are kept (they took 0.5 s on a laptop to make, and going from an idea back to the house, or to the
+     idea again, made them again at the first step); routes are stored under the same key, so they stay good too */
+  { const had = R36N.kept.get(key); if(had){ R36N.key = key; R36N.lv = had; navPassTag(); R36N.gridHits = (R36N.gridHits || 0) + 1; return had; } }
+  const t0 = now; R36N.key = key; navPassTag();
   const c = R36N.cell, B = dollBox(), X0 = Math.floor(B.min.x - 8), Z0 = Math.floor(B.min.z - 8), NX = Math.ceil((B.max.x + 8 - X0) / c), NZ = Math.ceil((B.max.z + 8 - Z0) / c), n = NX * NZ;
   const LVS = [['lower', LV.lower], ['garage', LV.garage], ['main', LV.main], ['upper', LV.upper]].map(([name, L]) => ({name, L, base: new Uint8Array(n), blk: new Uint8Array(n), wb: new Uint8Array(n), st: new Uint8Array(n), sp: new Uint8Array(n), f1: new Uint8Array(n), fb: new Uint8Array(n), door: new Uint8Array(n), ok: new Uint8Array(n)}));
   const G = {X0, Z0, NX, NZ, c, LVS}, cx = i => X0 + (i + .5) * c, cz = j => Z0 + (j + .5) * c, ci = x => Math.floor((x - X0) / c), cj = z => Math.floor((z - Z0) / c);
   G.idx = (x, z) => { const i = ci(x), j = cj(z); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
   const doors = r36Doors(), dcoll = new Set(DOOR28.items.filter(it => it.coll).map(it => it.coll)), open = new Set(doors.map(it => it.coll));
-  for(const g of LVS){ const L = g.L;
+  /* r46 perf: floors, walls, stair ends, closets and doorways do not change when a chair does. The grid is made again whenever the furniture count
+     changes (staging arrives in steps after a plan change: three times in the first stops of an idea's tour), and this half of it, a floor lookup
+     for every cell of every level, was most of the 0.5-0.7 s each time. It is kept per layout (R36N.struct) and only the furniture half is redone. */
+  const sKey = ACTIVE_VAR + '|' + COLLIDERS.length + '|' + FLOORS.length + '|' + doors.length + '|' + n, SK = R36N.struct && R36N.struct.key === sKey ? R36N.struct : null;
+  if(SK) LVS.forEach((g, q) => { for(const a of ['base', 'wb', 'st', 'sp', 'door']) g[a].set(SK.lv[q][a]); g.blk.set(SK.lv[q].sp); });
+  else for(const g of LVS){ const L = g.L;
     for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ const x = cx(i), z = cz(j), y = walkSurfaceAt(x, z, L + .3); if(Math.abs(y - L) < .4 && !(y !== L && FLOORS.some(f => f.kind === 'TREAD' && Math.abs(f.y - y) < .02 && onFloor(f, x, z)))) g.base[j * NX + i] = 1; }   // a stair tread that happens to pass a level's height is stair, not that level's floor
     for(const q of COLLIDERS){ if(q.y1 <= L + .7 || q.y0 >= L + 5.6 || (q.v && q.v !== ACTIVE_VAR)) continue; if(dcoll.has(q) ? open.has(q) : q.pass) continue;
       const R = R36N.RW, i0 = Math.max(0, ci(q.x0 - R)), i1 = Math.min(NX - 1, ci(q.x1 + R)), j0 = Math.max(0, cj(q.z0 - R)), j1 = Math.min(NZ - 1, cj(q.z1 + R));
@@ -24572,6 +24608,7 @@ function r36Grids(){
         for(let j = Math.max(0, cj(b0 - .3)); j <= Math.min(NZ - 1, cj(b1 + .3)); j++) for(let i = Math.max(0, ci(a0 - .3)); i <= Math.min(NX - 1, ci(a1 + .3)); i++) if(BIM2S.contains(s, cz(j), cx(i))) g.blk[j * NX + i] = g.sp[j * NX + i] = 1; } }catch(e){}
     for(const it of doors){ const q = it.coll; if(q.y1 <= L + .7 || q.y0 >= L + 5.6 || Math.abs(q.y0 - L) > 1.3) continue; const W = it.o.width || 3, ux = -it.n3.z, uz = it.n3.x, hw = Math.max(.3, W / 2 - .45);
       for(let a = -hw; a <= hw + 1e-6; a += .25) for(let d = -2; d <= 2 + 1e-6; d += .25){ const k = G.idx(it.c0[0] + ux * a + it.n3.x * d, it.c0[1] + uz * a + it.n3.z * d); if(k >= 0) g.door[k] = 1; } } }
+  if(!SK) R36N.struct = {key: sKey, lv: LVS.map(g => ({base: g.base.slice(), wb: g.wb.slice(), st: g.st.slice(), sp: g.sp.slice(), door: g.door.slice()}))};
   // furniture, cabinets, appliances, built-ins: every triangle that crosses a level's standing band marks the cells under its edges
   const mark = (g, x, z) => { const k = G.idx(x, z); if(k >= 0) g.fb[k] = 1; }, V = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]; let nt = 0;
   const seen = new Set(), doMesh = m => { if(!m.isMesh || m.isInstancedMesh || !m.geometry || seen.has(m)) return; seen.add(m); const mt = m.material; if(mt && mt.visible === false) return;
@@ -24599,6 +24636,7 @@ function r36Grids(){
     while(st.length){ const k = st.pop(), i = k % NX, j = (k - i) / NX; for(const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const a = i + di, b = j + dj; if(a < 0 || b < 0 || a >= NX || b >= NZ) continue; const q = b * NX + a; if(free[q] && !g.ok[q]){ g.ok[q] = 1; st.push(q); } } }
     g.free = free; g.n = g.ok.reduce((s, v) => s + v, 0); }
   R36N.lv = G; R36N.stats = {ms: Math.round(performance.now() - t0), tris: nt, cells: LVS.map(g => g.name + ' ' + g.n), grid: [NX, NZ]};
+  R36N.kept.set(key, G); if(R36N.kept.size > 4){ const old = R36N.kept.keys().next().value; R36N.kept.delete(old); for(const k of [...R36N.cache.keys()]) if(k.endsWith(old)) R36N.cache.delete(k); }
   return G; }
 /* 1 allowed, 0 not, 2 = no opinion (stairs, slopes, far outside: the older rules alone decide) */
 function r36At(x, z, f){ if(!R36N.on) return 2; let G; try{ G = r36Grids(); }catch(e){ console.warn('[r36 nav] grid', e); R36N.on = false; return 2; }
@@ -24616,10 +24654,17 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
   const G = r36Grids(), c = G.c, NX = G.NX, NZ = G.NZ, doors = r36Doors(), was = doors.map(it => it.coll.pass); for(const it of doors) it.coll.pass = true;
   try{
     const lvOf = (k, f) => { for(let q = 0; q < G.LVS.length; q++) if(Math.abs(f - G.LVS[q].L) < .45 && G.LVS[q].base[k]) return q; return -1; };
-    const freeOK = (x, z, f) => { const p = {x, z}; collide(p, f); return Math.abs(p.x - x) + Math.abs(p.z - z) < .04; };
+    /* r46 perf: a cell that is on no level's grid (stairs, a floor an idea adds at another height) is tested with navSupport + collide, and the search
+       asked again for every neighbour it was reached from, eight times a cell. To the open plan's New bath that was 1.7 s of blocked main thread on an
+       M-series Mac (5-10 s on a phone, the owner's "froze at New bath"). Both tests depend only on the cell and the height they are asked at, so
+       each is now made once a search; and a search that still runs past R36N.budget ms gives up (the caller then moves as it does when there is no
+       way on foot: a short dissolve). ?nav36budget=0: no limit. */
+    const _fo = new Map(), _ns = new Map(), _t0 = performance.now(), _bud = R36N.budget;
+    const freeOK = (x, z, f) => { const k = x + ',' + z + ',' + f; let r = _fo.get(k); if(r === undefined){ const p = {x, z}; collide(p, f); r = Math.abs(p.x - x) + Math.abs(p.z - z) < .04; _fo.set(k, r); } return r; };
+    const navSup = (x, z, fh) => { const k = x + ',' + z + ',' + fh; let r = _ns.get(k); if(r === undefined){ r = navSupport(x, z, fh); _ns.set(k, r); } return r; };
     const mk = (i, j, fh, from) => { if(i < 0 || j < 0 || i >= NX || j >= NZ) return null; const k = j * NX + i, x = G.X0 + (i + .5) * c, z = G.Z0 + (j + .5) * c; let l = lvOf(k, fh);
       if(l >= 0) return G.LVS[l].ok[k] ? {id: (l * NZ + j) * NX + i, i, j, x, z, f: G.LVS[l].L} : null;
-      const f = navSupport(x, z, fh); if(Math.abs(f - fh) > 1.05) return null; l = lvOf(k, f); if(l >= 0) return G.LVS[l].ok[k] ? {id: (l * NZ + j) * NX + i, i, j, x, z, f: G.LVS[l].L} : null;
+      const f = navSup(x, z, fh); if(Math.abs(f - fh) > 1.05) return null; l = lvOf(k, f); if(l >= 0) return G.LVS[l].ok[k] ? {id: (l * NZ + j) * NX + i, i, j, x, z, f: G.LVS[l].L} : null;
       if(from && !navStepOK(from.x, from.z, x, z, from.f)) return null; if(!freeOK(x, z, f)) return null;
       return {id: ((4 + Math.round((f + 12) * 1.5)) * NZ + j) * NX + i, i, j, x, z, f}; };
     const near = P => { const i0 = Math.floor((P.x - G.X0) / c), j0 = Math.floor((P.z - G.Z0) / c); let b = null, bd = 1e9; for(let dj = -18; dj <= 18; dj++) for(let di = -18; di <= 18; di++){ const d = Math.hypot((i0 + di + .5) * c + G.X0 - P.x, (j0 + dj + .5) * c + G.Z0 - P.z); if(d > 9) continue; const nd = mk(i0 + di, j0 + dj, P.f, null); if(!nd || Math.abs(nd.f - P.f) >= 1.3) continue; let sc = d;
@@ -24630,7 +24675,8 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
     const push = (n, pr) => { open.push([pr, n]); let k = open.length - 1; while(k > 0){ const p = (k - 1) >> 1; if(open[p][0] <= open[k][0]) break; [open[p], open[k]] = [open[k], open[p]]; k = p; } };
     const pop = () => { const t = open[0], l = open.pop(); if(open.length){ open[0] = l; let k = 0; for(;;){ const a = 2 * k + 1, b = a + 1; let m = k; if(a < open.length && open[a][0] < open[m][0]) m = a; if(b < open.length && open[b][0] < open[m][0]) m = b; if(m === k) break; [open[m], open[k]] = [open[k], open[m]]; k = m; } } return t[1]; };
     gS.set(S.id, 0); node.set(S.id, S); push(S, h(S)); let it = 0, found = null; const done = new Set();
-    while(open.length && it++ < 90000){ const n = pop(); if(done.has(n.id)) continue; done.add(n.id); if(n.id === E.id){ found = n; break; } const g0 = gS.get(n.id);
+    while(open.length && it++ < 90000){ if(_bud > 0 && (it & 255) === 0 && performance.now() - _t0 > _bud){ R36N.dbg.budget = true; R36N.over = (R36N.over || 0) + 1; break; }
+      const n = pop(); if(done.has(n.id)) continue; done.add(n.id); if(n.id === E.id){ found = n; break; } const g0 = gS.get(n.id);
       const nb = {}; for(const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
         if(di && dj && (!nb[di + ',0'] || !nb['0,' + dj])) continue; const m = mk(n.i + di, n.j + dj, n.f, n); if(!di || !dj) nb[di + ',' + dj] = m; if(!m || done.has(m.id)) continue;
         const cost = g0 + Math.hypot(di, dj) * c + Math.abs(m.f - n.f) * .6; if(cost < (gS.has(m.id) ? gS.get(m.id) : 1e9)){ gS.set(m.id, cost); came.set(m.id, n.id); node.set(m.id, m); push(m, cost + h(m)); } } }
@@ -25387,6 +25433,171 @@ if(/[?&]qa=1\b/.test(location.search)){
     ov.src = sh.toDataURL('image/jpeg', .92); ov.style.display = 'block'; return {w: sh.width, h: sh.height}; };
   window.__SHEETOFF = () => { const ov = document.getElementById('sheetOv'); if(ov) ov.style.display = 'none'; }; }
 window.__LSTATE = () => ({k: +EXPO_IN.toFixed(4), state: R40L.state, raw: R40L.raw, zone: R40L.zone, room: LIGHT_ENV_ID, envK: +R40X.k.toFixed(3), cov: +R40L.covP.toFixed(3), expo: +renderer.toneMappingExposure.toFixed(4), mul: +METER.mul.toFixed(4), tod: TOD_KEY});
+/* r46 perf (perf agent, 11/13) ====================================================================================================
+   Owner, on an iPhone: "Certain screens hang." Three things live here; none changes what a frame draws. ?perf46-off turns all of it off.
+   1. Field telemetry: one GA4 event name, tour_perf, a handful per page load (R46.max), nothing while the tab is hidden, no addresses,
+      no text typed or read from the page. kind = 'load' (how long the first view, the model download / parse and the refinement took),
+      'stall' (the main thread was blocked for 1.5 s or more after the first view: a long task where the browser reports them, otherwise a
+      gap between animation frames that a timer saw too; with the screen, the stop, and the last control touched), 'context_lost' /
+      'context_restored' (the phone took the 3D canvas away), 'loop_restart' (the frame loop had stopped). Every event carries a coarse
+      device class (screen bucket, pixel ratio, memory / cores where the browser says, touch, quality level) and `label`, one readable
+      line of the same facts. window.__r46.log holds what was sent (and, under ?qa=1 or ?perf46=log, what would have been).
+   2. WebGL context loss: iOS takes the canvas away under memory pressure (often after a visit to another app). The page had no
+      handler: the 3D view stayed frozen for good. Now a quiet card says so and the tour reloads itself at the same stop (once; a second
+      loss within 90 s, or a game in progress, shows a Reload button instead of reloading by itself). That reload is 'lean' on a phone:
+      photo textures at most 512 px and no idle holiday preparation (sessionStorage 'hillside.lean'), so it fits where the full one did not.
+   3. Frame-loop watchdog: every wrapper around tick() runs before the frame is rescheduled; one that throws stops the tour for good.
+      If the browser is giving frames and tick() has not run for 3 s, it is started again (and reported). */
+let R46H = {planSlow: () => false, modeSlow: () => false, stopSlow: () => false, after: async () => {}, fetch: (u, i) => fetch(u, i)};   // filled in below; these stand in under ?perf46-off
+const R46 = window.__r46 = (() => {
+  const Q = location.search, R = {off: /[?&]perf46-off\b/.test(Q), max: 8, sent: 0, log: [], stalls: 0, lost: 0, lastTick: 0, hb: 0, act: '', actAt: 0, t0: performance.now(), visAt: performance.now(), dry: false};
+  if(R.off) return R;
+  const qa = /[?&](qa=1|perf46=log)\b/.test(Q); R.dry = /[?&]perf46=log\b/.test(Q);
+  const now = () => performance.now(), game = /[?&](escape|snowball|deck|room|feast)=/.test(Q);
+  const SS = {get: k => { try{ return sessionStorage.getItem(k); }catch(e){ return null; } }, set: (k, v) => { try{ sessionStorage.setItem(k, v); }catch(e){} }};
+  /* ---- the device, coarsely */
+  const dev = () => { const w = Math.min(innerWidth, innerHeight), n = navigator, ua = n.userAgent || '';
+    const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && n.maxTouchPoints > 1);
+    const o = {vp: w < 360 ? 'xs' : w < 430 ? 's' : w < 768 ? 'm' : w < 1100 ? 'l' : 'xl', dpr: Math.round((devicePixelRatio || 1) * 2) / 2, touch: coarse ? 1 : 0,
+      os: ios ? 'ios' : /Android/.test(ua) ? 'android' : /Mac/.test(ua) ? 'mac' : /Win/.test(ua) ? 'win' : 'other',
+      br: /CriOS/.test(ua) ? 'chrome-ios' : /FxiOS/.test(ua) ? 'firefox-ios' : /Edg/.test(ua) ? 'edge' : /Chrome/.test(ua) ? 'chrome' : /Firefox/.test(ua) ? 'firefox' : /Safari/.test(ua) ? 'safari' : 'other'};
+    if(n.deviceMemory) o.dmem = n.deviceMemory; if(n.hardwareConcurrency) o.cores = n.hardwareConcurrency;
+    try{ o.gov = GOV.lvl; o.q = qLevel(); }catch(e){}
+    if(SS.get('hillside.lean') === '1') o.lean = 1;
+    return o; };
+  const where = () => { let s = ''; try{ s = (STOPS[stopIdx] || {}).id || ''; }catch(e){}
+    let scr = game ? 'game' : ''; try{ scr = scr || mode; }catch(e){}
+    try{ if(typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt') scr += ':' + ACTIVE_VAR.slice(0, 12); }catch(e){}
+    const L = document.getElementById('loading'), B = window.__boot22;
+    return {screen: scr || 'tour', stop_id: s, phase: L && !L.classList.contains('done') ? 'loading' : B && B.prog && !B.done ? 'refining' : 'ready'}; };
+  const send = (kind, p) => { try{ if(document.hidden || R.sent >= R.max) return false;
+      const n = +(SS.get('hillside.perf.n') || 0); if(n >= 16) return false;   // across the reloads of one visit (games reopen the tour page)
+      const o = Object.assign({kind}, where(), p, dev());
+      o.label = [kind + (p && p.bucket ? ' ' + p.bucket : p && p.first_view_ms ? ' ' + (p.first_view_ms / 1000).toFixed(1) + 's' : ''), o.screen, o.stop_id || '-', p && p.action ? p.action : '-', o.os + '/' + o.br, o.vp + '@' + o.dpr, 'q' + (o.gov == null ? '?' : o.gov)].join(' | ').slice(0, 100);
+      R.sent++; SS.set('hillside.perf.n', String(n + 1)); R.log.push(o); if(R.log.length > 24) R.log.shift();
+      if(qa) console.info('[perf46]', o.label, o);
+      if(!R.dry && typeof window.gtag === 'function') window.gtag('event', 'tour_perf', o);
+      return true; }catch(e){ return false; } };
+  R.send = send;
+  /* ---- the last control touched: an element id or a data-a name from the page's own markup, never text */
+  const nameOf = t => { try{ if(!t || !t.closest) return ''; if(t.closest('#c')) return 'canvas';
+      const e = t.closest('[id],[data-a],button,a,select'); if(!e) return '';
+      const d = e.getAttribute('data-a'), host = e.closest('dialog[id],nav,[id]');
+      return String((d ? ((host && host.id) || 'btn') + '.' + d : e.id || (e.className && String(e.className).split(' ')[0]) || e.tagName) || '').toLowerCase().replace(/[^a-z0-9_.#-]/g, '').slice(0, 28); }catch(e){ return ''; } };
+  for(const ev of ['pointerdown', 'keydown', 'change']) addEventListener(ev, e => { const n = ev === 'keydown' ? 'key' : nameOf(e.target); if(n){ R.act = n; R.actAt = now(); } }, {capture: true, passive: true});
+  /* ---- stalls: long tasks where reported (Chrome), else a frame gap that a timer saw as well (Safari) */
+  const seen = () => { R.visAt = now(); lastF = 0; lastI = now(); drift = 0; };
+  let lastF = 0, lastI = now(), drift = 0, driftAt = 0, lastStall = -1e9, hasLT = false;
+  document.addEventListener('visibilitychange', seen); addEventListener('pageshow', seen); addEventListener('pagehide', seen);
+  const bucket = ms => ms < 3000 ? '1.5-3s' : ms < 6000 ? '3-6s' : ms < 12000 ? '6-12s' : '12s+';
+  const stall = (ms, src, endAt) => { const t = now(); if(document.hidden || t - R.visAt < 2500 || endAt - ms < R.visAt) return;   // not across a hidden spell
+    const W = where(); if(W.phase === 'loading') return;   // the loading screen is up: the load event covers it
+    if(endAt - lastStall < 1200) return; lastStall = endAt; R.stalls++;
+    if(R.stalls > 5) return; if(W.phase === 'refining' && (R.refStalls = (R.refStalls || 0) + 1) > 2) return;   // at most two from the busy seconds after the first view
+    const age = endAt - ms - R.actAt;
+    send('stall', {bucket: bucket(ms), stall_ms: Math.round(ms / 100) * 100, src, action: R.act && age < 20000 ? R.act : '', action_age: !R.act || age >= 20000 ? 'none' : age < 0 ? 'during' : age < 1000 ? '<1s' : age < 5000 ? '1-5s' : '5-20s', since_load_s: Math.round((endAt - R.t0) / 1000)}); };
+  try{ if(window.PerformanceObserver && (PerformanceObserver.supportedEntryTypes || []).includes('longtask')){ hasLT = true;
+      new PerformanceObserver(l => { for(const e of l.getEntries()){ R.ltSum = (R.ltSum || 0) + e.duration; if(e.duration > (R.ltMax || 0)) R.ltMax = e.duration; if(e.duration >= 1500) stall(e.duration, 'longtask', e.startTime + e.duration); } }).observe({entryTypes: ['longtask']}); } }catch(e){}
+  setInterval(() => { const t = now(), d = t - lastI - 500; lastI = t; if(d > 1000 && !document.hidden){ drift = d; driftAt = t; } }, 500);
+  const beat = t => { requestAnimationFrame(beat); R.hb++; const n = now();
+    if(lastF && !document.hidden){ const gap = n - lastF; if(gap > (R.gapMax || 0) && n - R.visAt > 2500) R.gapMax = gap;
+      if(gap >= 1500 && !hasLT) setTimeout(() => { if(drift >= 1000 && Math.abs(driftAt - n) < 1200) stall(Math.max(gap, drift), 'frame', n); }, 700); }
+    lastF = n; };
+  requestAnimationFrame(beat);
+  /* ---- the load: sent once the view has refined (or 40 s after the first view), if the tab was in view all along */
+  let hid = document.hidden; document.addEventListener('visibilitychange', () => { if(document.hidden) hid = true; });
+  (function wait(){ const B = window.__boot22, L = B && B.log; if(!L || !L.reveal) return void setTimeout(wait, 1000);
+    if(!B.done && now() - L.reveal < 40000) return void setTimeout(wait, 1000);
+    if(hid) return; let T = {}; try{ T = (BIM2S && BIM2S.times) || {}; }catch(e){}
+    const nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {}, r = v => Math.round(v / 10) * 10;
+    setTimeout(() => send('load', {first_view_ms: r(L.reveal), refined_ms: L.refined ? r(L.refined) : 0, build_start_ms: r(L.began || 0), html_ms: r(nav.responseEnd || 0),
+      model_fetch_ms: T.fetch || 0, model_hash_ms: T.hash || 0, model_parse_ms: T.parse || 0, model_build_ms: T.build || 0,
+      trees_ms: (window.__treeBuild && window.__treeBuild.ms) || 0, block_max_ms: r(Math.max(R.ltMax || 0, R.gapMax || 0)), block_sum_ms: r(R.ltSum || 0),
+      cached: nav.transferSize === 0 ? 1 : 0, game: game ? 1 : 0}), 0); })();
+  /* ---- the WebGL context taken away */
+  let card = null, lostAt = 0;
+  const hereURL = () => { let s = ''; try{ s = (STOPS[stopIdx] || {}).id || ''; }catch(e){}
+    const u = new URL(location.href); if(s && !game){ u.searchParams.set('stop', s); } u.hash = ''; try{ if(!game && ['walk', 'doll', 'design', 'photos'].includes(mode)) u.hash = mode; }catch(e){} return u.href; };
+  const reload = () => { try{ if(coarse) SS.set('hillside.lean', '1'); SS.set('hillside.ctxlost', String(Date.now())); const u = hereURL(); if(u === location.href) location.reload(); else { location.replace(u); if(u.split('#')[0] === location.href.split('#')[0]) location.reload(); } }catch(e){ location.reload(); } };
+  const show = auto => { if(card) card.remove(); card = document.createElement('div'); card.id = 'r46lost'; card.setAttribute('role', 'status');
+    card.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9000;max-width:min(320px,calc(100vw - 48px));padding:18px 20px;border-radius:16px;background:rgba(251,250,247,.97);color:#1f1f1d;box-shadow:0 10px 40px rgba(0,0,0,.28);font:500 15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center';
+    const p = document.createElement('p'); p.style.cssText = 'margin:0'; p.textContent = auto ? 'The 3D view was paused by your device. Reloading it…' : 'The 3D view was paused by your device to save memory.'; card.appendChild(p);
+    if(!auto){ const b = document.createElement('button'); b.type = 'button'; b.id = 'r46reload'; b.textContent = 'Reload the 3D view';
+      b.style.cssText = 'margin:12px 0 0;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:#1f1f1d;color:#fbfaf7;font:inherit;cursor:pointer'; b.addEventListener('click', reload); card.appendChild(b); }
+    document.body.appendChild(card); };
+  const onLost = () => { if(lostAt) return; lostAt = now(); R.lost++;
+    const go = () => { send('context_lost', {since_load_s: Math.round((lostAt - R.t0) / 1000), action: R.act && lostAt - R.actAt < 20000 ? R.act : ''});
+      const prev = +(SS.get('hillside.ctxlost') || 0), auto = !game && Date.now() - prev > 90000 && !/[?&]perf46=noreload\b/.test(Q);
+      show(auto); if(auto) setTimeout(() => { if(lostAt) reload(); }, 1400); };
+    if(document.hidden){ const f = () => { if(document.hidden) return; document.removeEventListener('visibilitychange', f); if(lostAt) setTimeout(go, 300); }; document.addEventListener('visibilitychange', f); } else go(); };
+  const onBack = () => { if(!lostAt) return; const ms = now() - lostAt;   // the context came back by itself before the reload: the environment maps and mirror captures were made on the old one, so the reload still happens when it was going to; otherwise the card keeps its button
+    send('context_restored', {restore_ms: Math.round(ms / 100) * 100}); try{ PERF.shadowDirty = true; if(composer) composer._w = -1; resize(); }catch(e){} };
+  try{ canvas.addEventListener('webglcontextlost', onLost); canvas.addEventListener('webglcontextrestored', onBack); }catch(e){}
+  R.lose = () => { try{ const x = renderer.getContext().getExtension('WEBGL_lose_context'); if(x) x.loseContext(); return !!x; }catch(e){ return false; } };   // QA
+  R.hereURL = hereURL;
+  /* ---- 4. the waits around floor plans: one 'Loading…' pill (the page's own busy pill), and getting ready ahead.
+     R46H.planSlow / modeSlow / stopSlow tell the busy-click handler (B24_HEAVY) which taps will take a while; it paints the pill, yields a frame,
+     then lets the tap through; R46H.after() keeps the pill until the idea's package is in and the walking grid for it is made, so the first
+     'Next' after a plan change is not where that half second lands.
+     Ahead of time (R46H.pre): once the first view has refined and the visitor has been still for 3 s, one thing at a time and never on a
+     data-saver or 2g/3g connection: the open plan's package (the first idea in the menu, and the one with a guided tour; 1.15 MB) is fetched,
+     parsed and built into its hidden groups, and the programs of its materials are compiled in 12 ms slices; the four plan pictures (40 KB)
+     are fetched. The two larger ideas (3.4 MB each) are only downloaded, held as bytes and built when picked: on a computer after the open
+     plan is ready, on a phone not until the Floor plans menu is opened. Nothing after a 'lean' reload. ?prep46=0 turns the getting-ready off. */
+  R46H = (() => {
+    const H = {seen: {}, store: new Map(), log: [], state: 'waiting', bytes: 0};
+    const frame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+    const dlgPlanShown = () => !!document.querySelector('#dm45[open] .top .m i');   // the detail view of the plan already on screen
+    H.planSlow = el => { try{ if(game) return false; const a = el.getAttribute('data-a');
+        if(el.closest('#dm45')){ if(a === 'real') return ACTIVE_VAR !== 'asbuilt'; if(a === 'see') return mode !== 'design' || !dlgPlanShown(); return a === 'tour' || a === 'walk'; }
+        if(el.classList.contains('k42c')) return el.dataset.id !== ACTIVE_VAR;
+        return ACTIVE_VAR !== 'asbuilt' && (a === 'real' || /real house/i.test(el.textContent || '')); }catch(e){ return false; } };
+    H.modeSlow = el => { try{ const m = el.id === 'phDoll' ? 'doll' : el.dataset.mode; if(!m || mode === m || H.seen[m]) return false; H.seen[m] = true; return true; }catch(e){ return false; } };
+    H.stopSlow = () => { try{ if(game || mode !== 'tour' || !R36N.on || !R36N.key) return false; const k = r36Key(); return k !== R36N.key && !R36N.kept.has(k); }catch(e){ return false; } };
+    H.after = async quick => { try{ const pill = document.getElementById('busy24'); if(pill && pill.parentNode !== document.body) document.body.appendChild(pill);
+        if(quick) return;
+        for(let i = 0; i < 3; i++){ const P = Object.keys(B2OPT.busy).filter(k => !B2OPT.built[k]).map(k => B2OPT.busy[k]); if(!P.length) break; await Promise.all(P.map(q => Promise.resolve(q).catch(() => {}))); }
+        await frame(); if(R36N.on && !game && (mode === 'tour' || mode === 'walk')){ R36N.chk = 0; r36Grids(); } await frame(); }catch(e){} };   // the walking grid only where the next tap walks
+    /* fetches made ahead are handed to the loader once (a Response is read once; the browser's cache serves any later ask) */
+    H.fetch = (u, init) => { const k = String(u).split('?')[0], had = H.store.get(k); if(had){ H.store.delete(k); return had.then(r => (r && r.ok ? r : fetch(u, init)), () => fetch(u, init)); } return fetch(u, init); };
+    const optURLs = o => { const base = BIM2S.metaBase || location.href, U = []; if(o.meta && !o.data) U.push([new URL(o.meta, base).href, {cache: 'no-cache'}]); if(o.glb) U.push([new URL(o.glb, base).href, undefined]); return U; };
+    const hold = async o => { for(const [u, init] of optURLs(o)){ const k = u.split('?')[0]; if(H.store.has(k)) continue; const pr = fetch(u, Object.assign({priority: 'low'}, init || {})); H.store.set(k, pr);
+        try{ const r = await pr; H.bytes += +(r.headers.get('content-length') || 0); }catch(e){ H.store.delete(k); } } };
+    const roomy = () => { try{ const c = navigator.connection; return !c || (!c.saveData && (!c.effectiveType || c.effectiveType === '4g')); }catch(e){ return true; } };
+    const still = ms => { try{ return w24Idle(ms) && mode === 'tour'; }catch(e){ return false; } };
+    const until = async (ms, cap) => { const t0 = now(); while(!still(ms)){ if(now() - t0 > cap) return false; await new Promise(r => setTimeout(r, 700)); } return true; };
+    const note = m => { H.log.push([Math.round(now()), m]); };
+    H.pre = async () => { try{
+        if(/[?&]prep46=0\b/.test(Q) || game || window.__LEAN || SS.get('hillside.lean') === '1'){ H.state = 'off'; return; }
+        if(!roomy()){ H.state = 'skipped: connection'; return; }
+        for(;;){ const B = window.__boot22; if(B && (B.done || !B.prog) && document.querySelector('#loading.done') && !document.getElementById('intro28') && BIM2S && still(3000)) break; await new Promise(r => setTimeout(r, 1500)); }
+        H.state = 'running'; const opts = (BIM2S.meta.options || []).filter(o => o.glb), first = opts.find(o => (o.legacyId || o.id) === 'open4k') || opts[0], rest = opts.filter(o => o !== first);
+        if(first){ const key = first.legacyId || first.id, t0 = now();
+          if(!B2OPT.built[key] && !B2OPT.busy[key]){ await hold(first); note('fetched ' + key); if(!(await until(2500, 120000))){ H.state = 'stopped: busy'; return; }
+            if(!B2OPT.built[key] && !B2OPT.busy[key] && ACTIVE_VAR === 'asbuilt'){ const t1 = now(); await bim2EnsureOption(key); note('built ' + key + ' in ' + Math.round(now() - t1) + ' ms'); } }
+          /* its programs, for the lamp-lit set the house is drawn with */
+          if(B2OPT.built[key] && ACTIVE_VAR === 'asbuilt'){ const objs = [], seenM = new Set(); for(const g in GROUPS) if(g.endsWith('@' + key)) GROUPS[g].traverse(o => { if(!o.material || !o.isMesh) return; const k = [].concat(o.material).map(m => m.uuid).join(); if(!seenM.has(k)){ seenM.add(k); objs.push(o); } });
+            const n0 = renderer.info.programs.length; let guard = 0;
+            while(objs.length && guard++ < 400){ if(!still(1500) || DUSK){ if(!(await until(1500, 60000)) || DUSK) break; continue; } let more = false; try{ more = w24Compile(objs); }catch(e){ break; } if(more) await new Promise(r => setTimeout(r, 30)); }
+            note('compiled ' + (renderer.info.programs.length - n0) + ' programs for ' + key); } }
+        /* the Dollhouse / Design section cut of the level on show, in the page's own 8 ms idle slices (it was started only by a mouse over the Dollhouse tab: never on a phone, where the first tap on Dollhouse, Design or a floor plan then cut every mesh in one go) */
+        try{ if(await until(1500, 60000) && ACTIVE_VAR === 'asbuilt' && vis.level !== 'roof'){ dollCut().warm(vis.level, ACTIVE_VAR); note('section cut warming'); await new Promise(r => setTimeout(r, 2500)); } }catch(e){}
+        for(const id of ['asbuilt', 'open4k', 'jan24', 'apr24b']){ const im = new Image(); im.decoding = 'async'; im.src = 'plan_' + id + '.jpg?v=1'; }
+        const others = async () => { for(const o of rest){ const key = o.legacyId || o.id; if(B2OPT.built[key] || B2OPT.busy[key]) continue; if(!(await until(2000, 120000))) return; await hold(o); note('fetched ' + key); } H.state = 'done'; };
+        if(!coarse) await others(); else { H.state = 'done: first idea (phone)'; const t = setInterval(() => { try{ if(window.LAYOUTS45 && LAYOUTS45.isOpen){ clearInterval(t); for(const o of rest) hold(o); } }catch(e){} }, 800); }
+      }catch(e){ H.state = 'failed'; console.warn('[perf46] getting ready', e); } };
+    setTimeout(H.pre, 0);
+    return H;
+  })();
+  R.H = R46H;
+  /* ---- the frame loop stopped (a wrapper threw before the frame was rescheduled) */
+  { const _t = tick; tick = function(){ R.lastTick = performance.now(); return _t.apply(this, arguments); }; }
+  let hb0 = 0; setInterval(() => { const n = now(), beats = R.hb - hb0; hb0 = R.hb;
+    if(document.hidden || lostAt || !R.lastTick || beats < 30 || n - R.lastTick < 3000 || n - R.visAt < 4000) return;   // frames are being given (30+ in 2 s) and tick() ran none of them for 3 s
+    R.restarts = (R.restarts || 0) + 1; if(R.restarts > 3) return; console.warn('[perf46] frame loop restarted'); send('loop_restart', {since_load_s: Math.round((n - R.t0) / 1000), action: R.act});
+    R.lastTick = n; requestAnimationFrame(tick); }, 2000);
+  return R;
+})();
 boot();
 })();
 </script>
@@ -25406,7 +25617,7 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=27" defer></script>
+<script src="../assets/holiday/holiday.js?v=28" defer></script>
 <script>(function(){ /* r46 phone: no 'Offered at / Schedule a showing' row under the header. Schedule a showing is the first row of the menu, with the price as a quiet word beside it (it still opens the same sheet) */
   var n = 0; (function w(){ var m = document.getElementById('phMenu'), s = document.querySelector('#bks36 button'), p = document.querySelector('#bks36 .bkp36');
     if(!m || !s){ if(n++ < 240) setTimeout(w, 500); return; } if(document.getElementById('phBook46')) return;
