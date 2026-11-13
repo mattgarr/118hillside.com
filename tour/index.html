@@ -5725,12 +5725,7 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
      lo / hi = the floor and ceiling of the air at the cell (lo follows the walking surface down where the room's outline lies over a void). */
   R.F = new Map(); R.fv = -1; R.sig = '';
   const surfC = new Map(), ceilC = new Map();
-  // r48b D: a drop counts only where the cells 6 in round it drop too. A sliver where two storeys' walls or slabs do not quite meet (the
-  // skylit office's end wall under the loft: a 1/4-in jog in the wall line) read as a void two storeys deep, so the upstairs lamp's reach
-  // ran down it and lit a floor-to-ceiling strip of the office wall ("a translucent slab"). Real voids (stair wells, the loft opening) are feet wide.
-  const surfAt = (x, z, f) => { const key = Math.round(x * 2) + ',' + Math.round(z * 2) + ',' + f; let v = surfC.get(key); if(v === undefined){ v = f; try{ const gx = Math.round(x * 2) / 2, gz = Math.round(z * 2) / 2, one = (a, b) => { const y = walkSurfaceAt(a, b, f + .6); return isFinite(y) ? y : f; };
-      let sy = one(gx, gz); if(sy < f - .3) for(const [a, b] of [[.5, 0], [-.5, 0], [0, .5], [0, -.5]]){ sy = Math.max(sy, one(gx + a, gz + b)); if(sy >= f - .3) break; }
-      if(sy < f - .3) v = Math.max(f - 14, sy); }catch(e){} surfC.set(key, v); } return v; };
+  const surfAt = (x, z, f) => { const key = Math.round(x * 2) + ',' + Math.round(z * 2) + ',' + f; let v = surfC.get(key); if(v === undefined){ v = f; try{ const sy = walkSurfaceAt(Math.round(x * 2) / 2, Math.round(z * 2) / 2, f + .6); if(isFinite(sy) && sy < f - .3) v = Math.max(f - 14, sy); }catch(e){} surfC.set(key, v); } return v; };
   const ceilAt = (x, z, f) => { const key = Math.floor(x) + ',' + Math.floor(z) + ',' + f; let v = ceilC.get(key); if(v === undefined){ v = f + 9; try{ const cz = bim2CeilingAt(Math.floor(z) + .5, Math.floor(x) + .5, f).z; if(isFinite(cz) && cz > f + 6 && cz < f + 30) v = cz; }catch(e){} ceilC.set(key, v); } return v; };
   R.buildField = k => { const r = R.rooms[k]; if(!r) return null; const t0 = performance.now(), c = R.cell, W = R.W, H = R.H, D = R.D, ch = r.ch, fA = r.floor, nr = Math.ceil(R.reach / c) + 2;
     let i0 = 1e9, i1 = -1, j0 = 1e9, j1 = -1; for(let j = 0; j < H; j++) for(let i = 0; i < W; i++) if(D[(j * W + i) * 4 + ch] === k){ if(i < i0) i0 = i; if(i > i1) i1 = i; if(j < j0) j0 = j; if(j > j1) j1 = j; }
@@ -5764,6 +5759,14 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
         if(best >= 0) add.push(q, best); }
       for(let n = 0; n < add.length; n += 2){ const q = add[n], p = add[n + 1]; data[q * 4] = blk[q] && !ring ? data[p * 4] : 0; data[q * 4 + 1] = data[p * 4 + 1]; data[q * 4 + 2] = data[p * 4 + 2]; data[q * 4 + 3] = 255; has[q] = 1; } }
     for(let q = 0; q < N; q++) if(!has[q]){ data[q * 4 + 1] = enc(fA); data[q * 4 + 2] = enc(fA + 9); }
+    // r48b D (QA 11/13, skylit office: "a translucent ghost-like slab, floor to ceiling, beside the chair"): the shader reads the field
+    // bilinearly and w, lo and hi each blend on their own. A cell with no reach (w 0) that kept a deep floor (lo copied two rings out from
+    // air over the loft's stair opening) sat beside the loft's own cells (w 1, lo = the loft floor): between them w blended to ~.5 while lo
+    // blended down through the storey below, so the loft lamp lit a quarter-foot strip of the office wall under it, floor to ceiling.
+    // A cell without reach now carries the floor and ceiling of its strongest reached neighbour, so nothing it blends with reaches lower.
+    { const D2 = data.slice(); for(let j = 0; j < h; j++) for(let i = 0; i < w; i++){ const q = j * w + i; if(D2[q * 4]) continue; let best = -1, bw = 0;
+        for(let b = -1; b <= 1; b++) for(let a = -1; a <= 1; a++){ const ii = i + a, jj = j + b; if((!a && !b) || ii < 0 || jj < 0 || ii >= w || jj >= h) continue; const p = jj * w + ii; if(D2[p * 4] > bw){ bw = D2[p * 4]; best = p; } }
+        if(best >= 0 && D2[best * 4 + 1] > D2[q * 4 + 1]){ data[q * 4 + 1] = D2[best * 4 + 1]; data[q * 4 + 2] = D2[best * 4 + 2]; } } }
     // the tile's outer ring is 0: the reach ends inside the tile
     for(let i = 0; i < w; i++){ data[i * 4] = 0; data[((h - 1) * w + i) * 4] = 0; } for(let j = 0; j < h; j++){ data[j * w * 4] = 0; data[(j * w + w - 1) * 4] = 0; }
     const f = {k, w, h, X0, Z0, data, ax: 0, ay: 0, ms: +(performance.now() - t0).toFixed(1)}; R.fms += f.ms; return f; };
@@ -22125,17 +22128,27 @@ function bim3Glass35(){
    F1 the stairwell's north wall is three walls stacked (W-L0-043 to 4.45 ft, W-L1-024/025 to the upper floor, W-L2-034/035 above). Their
       room faces stand at z -12.197, -12.204 and -12.188: the 0.2-in step at the upper floor line (5.56 ft) showed as a dark hairline right
       across the wall. The lower two faces are brought into the upper wall's plane.
-   F2 RL-STAIR-LO, a 2-ft length of wall rail (no brackets, no ends, flush on the lower-flight landing wall), read from the Stairs stop as a
-      wood bar floating by the closet door. Not drawn (its triangles are collapsed). */
-const R48G = window.R48G = {seam: 0, rail: 0, err: []};
+   F2 RL-STAIR-LO, a 2-ft length of wall rail (no brackets, no ends, set flush in a slot cut through the lower landing's wall face), read
+      from the Stairs stop as a wood bar floating by the closet door. Not drawn (its triangles are collapsed) and the slot is closed. */
+const R48G = window.R48G = {seam: 0, rail: 0, patch: 0, err: []};
 function r48bGeo(){
   const rangesOf = o => (o.userData && o.userData.bim2 && o.userData.bim2.ranges) || [];
   const meshes = []; scene.traverse(o => { if(o.isMesh && o.geometry && rangesOf(o).length && !(o.userData.bim2 && o.userData.bim2.var)) meshes.push(o); });
   const triRange = (o, el) => rangesOf(o).filter(r => r[0] === el);
-  // F2
-  for(const o of meshes){ if(!/^stairs\|/.test(o.name)) continue; const ix = o.geometry.index; if(!ix) continue;
-    for(const r of triRange(o, 'RL-STAIR-LO')){ const a = r[2] * 3, b = (r[2] + r[3]) * 3, v0 = ix.getX(a); let n = 0; for(let i = a; i < b; i++) if(ix.getX(i) !== v0){ ix.setX(i, v0); n++; }
-      if(n){ ix.needsUpdate = true; R48G.rail += r[3]; } } }
+  // F2: the kernel cut the rail's slot through the wall's stair face (W-L0-009), so the wall face is closed over the slot with the rail's own
+  // outline, flattened onto that face, in the wall's paint
+  const wallM = meshes.find(o => /^walls\|L0\|paint-int-flat#PAINT-BM-1472-SILVER-CHAIN$/.test(o.name) && triRange(o, 'W-L0-009').length);
+  for(const o of meshes){ if(!/^stairs\|/.test(o.name)) continue; const ix = o.geometry.index, P = o.geometry.attributes.position; if(!ix) continue;
+    for(const r of triRange(o, 'RL-STAIR-LO')){ const a = r[2] * 3, b = (r[2] + r[3]) * 3, v0 = ix.getX(a); if(ix.getX(a + 1) === v0 && ix.getX(a + 2) === v0) continue;   // done already
+      let x0 = 1e9, x1 = -1e9; for(let i = a; i < b; i++){ const x = P.getX(ix.getX(i)); x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+      if(wallM && x1 - x0 < .2 && o.matrixWorld.equals(new THREE.Matrix4())){   // a rail flush on a wall facing +x (the stair side): the plate faces +x
+        const pos = [], A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
+        for(let i = a; i < b; i += 3){ A.fromBufferAttribute(P, ix.getX(i)).setX(x0); B.fromBufferAttribute(P, ix.getX(i + 1)).setX(x0); C.fromBufferAttribute(P, ix.getX(i + 2)).setX(x0);
+          const nx = (B.y - A.y) * (C.z - A.z) - (B.z - A.z) * (C.y - A.y); if(Math.abs(nx) < 1e-6) continue; if(nx > 0) pos.push(...A.toArray(), ...B.toArray(), ...C.toArray()); else pos.push(...A.toArray(), ...C.toArray(), ...B.toArray()); }
+        if(pos.length){ const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+          const uv = new Float32Array(pos.length / 3 * 2); for(let k = 0; k < pos.length / 3; k++){ uv[2 * k] = pos[3 * k + 2]; uv[2 * k + 1] = pos[3 * k + 1]; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+          const pm = new THREE.Mesh(g, Array.isArray(wallM.material) ? wallM.material[0] : wallM.material); pm.name = 'r48b-slot-patch'; pm.receiveShadow = true; pm.userData.bim2 = {name: pm.name, group: 'walls', storey: 'L0', ranges: []}; wallM.parent.add(pm); R48G.patch = pos.length / 9; } }
+      for(let i = a; i < b; i++) ix.setX(i, v0); ix.needsUpdate = true; R48G.rail += r[3]; } }
   // F1
   const W2N = /^walls\|L[012]\|paint-int-flat#PAINT-BM-1472-SILVER-CHAIN$/, LOW = ['W-L0-043', 'W-L0-045', 'W-L1-024', 'W-L1-025'], TOP = ['W-L2-034', 'W-L2-035'];
   const faceZ = (o, els, z0) => { const P = o.geometry.attributes.position, ix = o.geometry.index, out = []; if(!ix) return out;
@@ -23776,6 +23789,14 @@ function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0)
    only in Tour / Walk. */
 const R13E = {step: .75, ceilW: 1.6, wallW: 1.4, floorW: .8, vertW: 1.3, sCeil: .6, sWall: .64, sFloor: .58, sVert: .66, lift: .012};
 if(!/[?&]ghost41=0\b/.test(location.search)) Object.assign(R13E, {ceilW: 1.1, wallW: .9, floorW: .6, vertW: .9, sCeil: .86, sWall: .88, sFloor: .84, sVert: .9});   // r41 G3: a soft few-percent falloff (was 34-42 % over 1.3-1.6 ft)
+/* r48b F1: the ceiling + wall-top bands need a ceiling. Over an open stair well the space's ceiling record is the floor line of the storey
+   above, and the wall runs on up past it: the band's crisp top edge drew a dark hairline right across the stairwell wall at 5.6 ft. A band
+   is laid only where something closes the room within 5 in over its ceiling line, 5 in out from the wall. */
+const R48L = new Map();
+function r48Lid(x, y, c){ const k = Math.round(x * 4) + ',' + Math.round(y * 4) + ',' + Math.round(c * 4); let v = R48L.get(k); if(v !== undefined) return v; v = true;
+  try{ const w = W2(x, y), objs = ['ceil', 'upper', 'main', 'vault', 'vaultUp', 'roof', 'lowerRoof'].map(g => GROUPS[g]).filter(Boolean), rc = new THREE.Raycaster(new THREE.Vector3(w[0], c - .4, w[1]), new THREE.Vector3(0, 1, 0), 0, .82);
+    v = rc.intersectObjects(objs, true).some(h => h.object.isMesh && !/^r1[37]-/.test(h.object.name || '') && !(h.object.material && h.object.material.transparent)); }catch(e){ v = true; }
+  R48L.set(k, v); return v; }
 function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
   const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
   const bucket = k => out[k] = out[k] || {P: [], C: []};
@@ -23794,7 +23815,7 @@ function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null
       // ceiling + wall-top bands
       const NR = R13U.length, mk = () => R13U.map(() => []), cc = mk(), ww = mk(), ff = mk();
       for(let k = 0; k <= N; k++){ const q = S[k], prev = S[Math.max(0, k - 1)], next = S[Math.min(N, k + 1)];
-        const okC = q.c != null && wall(q.x, q.y, e.nx, e.ny, q.c - .3) && !opening(q.x, q.y, q.c - E.wallW, q.c) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, q.c - E.wallW, q.c) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, q.c - E.wallW, q.c);
+        const okC = q.c != null && wall(q.x, q.y, e.nx, e.ny, q.c - .3) && r48Lid(q.x + e.nx * .4, q.y + e.ny * .4, q.c) && !opening(q.x, q.y, q.c - E.wallW, q.c) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, q.c - E.wallW, q.c) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, q.c - E.wallW, q.c);
         if(okC){ const L = E.lift;
           R13U.forEach((u, r) => { const d = u * E.ceilW, x = q.x + e.nx * d, y = q.y + e.ny * d, c = ceil(x, y); cc[r].push(c == null ? null : V(x, y, c - L)); });
           R13U.forEach((u, r) => { ww[r].push(V(q.x + e.nx * L, q.y + e.ny * L, q.c - .004 - u * E.wallW)); }); }
