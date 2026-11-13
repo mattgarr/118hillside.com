@@ -5761,7 +5761,7 @@ for(const [p,y] of lampPts){ const l=new THREE.PointLight(0xffc98a, 0, 38, 1.6);
     if(!R.pts && !(R.pts = findPts(rend))) return;
     const P = R.pts, n = Math.min(P.length, R.L.length);
     // r47: the fields are rebuilt when the room grid was edited after they were made (bim3WellTops marks the texture) or the walls / floors changed
-    { const sg = (typeof COLLIDERS !== 'undefined' ? COLLIDERS.length : 0) + ':' + FLOORS.length; if(R.F.size && (R.tex.version !== R.fv || sg !== R.sig)){ R.F.clear(); surfC.clear(); ceilC.clear(); } R.sig = sg; }
+    { let nw = 0; if(typeof COLLIDERS !== 'undefined') for(const q of COLLIDERS) if(q.kind === 'WALL' && !q.v && !q.pass) nw++; const sg = nw + ':' + FLOORS.length; if(R.F.size && (R.tex.version !== R.fv || sg !== R.sig)){ R.F.clear(); surfC.clear(); ceilC.clear(); } R.sig = sg; }
     const ks = []; for(let i = 0; i < n; i++){ v.copy(P[i].position).applyMatrix4(cam.matrixWorld); const k = R.on ? R.at(v) : null; ks.push(k); if(k) R.fieldOf(k); }   // every field first: a new one repacks the atlas
     for(let i = 0; i < n; i++){ const f = ks[i] ? R.F.get(ks[i]) : null;
       if(f){ R.L[i].set(f.X0, f.Z0, f.w, f.h); R.O[i].set(f.ax, f.ay, 0, 1); } else { R.L[i].set(0, 0, 0, 0); R.O[i].set(0, 0, 0, 0); } }
