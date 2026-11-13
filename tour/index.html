@@ -16240,6 +16240,7 @@ html:not(.ph) #cb42:not(.b42ab){flex-wrap:nowrap}html:not(.ph) #cb42:not(.b42ab)
 #cb42.b42ab{padding:6px 14px;gap:8px;background:var(--glass);color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 10px rgba(20,24,26,.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:13px;flex-wrap:nowrap;pointer-events:none}
 #cb42.b42ab .b42m{flex:0 1 auto}#cb42.b42ab .b42m b{font-weight:500}#cb42.b42ab .b42m b::before{background:var(--accent)}#cb42.b42ab .b42m span,#cb42.b42ab .b42s{display:none}
 html.cb42on .ideas35{display:none!important}
+#bkH:focus{outline:none}   /* r45 calm pass: the booking dialog's heading takes focus for screen readers; no ring round it */
 html.vmo27:not(.ph) #cb42:not(.b42ab),html.ph.phm #cb42{visibility:hidden}   /* r45: out of the way while the View menu (the phone's menu) is open; it keeps its place */
 html.ph.bks36on.cb42on .perfpill{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 html.ph.cb42on .qhint{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
@@ -16570,7 +16571,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     const hs = $('#holShow'); if(hs && !hs.hidden) return ''; const P = $('#holPanel'); if(P && !P.hidden) return '';
     const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
     const id = stopId(); return PLAN_STOPS.has(id) && plans().length > 1 ? 'plans' : DECOR_STOPS.has(id) && window.HOLIDAY ? 'decor' : ''; }
-  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>Compare floor plans</b>' + (b ? '<i>: ' + b + '</i>' : '') + '</span>' + ARROW; }
+  function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>See other layouts</b></span>' + ARROW; }   /* r45 calm pass: short (was 'Compare floor plans: 6, 5 or 4 bedrooms') */
     return ICON_DECOR + '<span class="c42x"><b>' + (isPh() ? 'Holiday decor' : 'See it decorated for the holidays') + '</b></span>' + ARROW; }
   chip.addEventListener('click', e => { e.stopPropagation(); const where = chip.classList.contains('c42in') ? 'stop-card' : 'stop-chip'; if(chip.dataset.k === 'plans') openPicker(where); else openDecor(where); });
   for(const n of [chip, nudge, banner, hm]) for(const ev of ['pointerdown', 'wheel', 'touchstart']) n.addEventListener(ev, e => e.stopPropagation(), {passive: true});   // not the canvas: no drag or walk through them
@@ -16605,7 +16606,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
   function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
     const hp = $('#holPanel'), holOpen = !!(hp && !hp.hidden);
-    const show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || (pickerUsed && !root.classList.contains('ideas35on') && !holOpen));
+    const show = !g && !gal && mode !== 'photos' && v !== 'asbuilt';   /* r45 calm pass: no 'As built: the house as it is' pill once the layouts have been looked at; the house needs no label, only an idea does */
     root.classList.toggle('cb42on', show && v !== 'asbuilt');
     if(!show){ banner.hidden = true; return; }
     const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
@@ -16633,7 +16634,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
 
   /* ---- the closing card: one line with both */
   function finLinks(){ const fl = document.querySelector('#fin36 .fl'); if(!fl) return false; if(fl.querySelector('.c42f')) return true;
-    const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Compare floor plans';
+    const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'See other layouts';
     const d = el('button', 'c42f', '<span class="c42w">See it decorated for the holidays</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
     a.addEventListener('click', e => { e.stopPropagation(); openPicker('finale'); });
     d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); });
@@ -16645,7 +16646,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(nudgeOn && (stopIdx !== nudgeStop || mode !== 'tour' || inGame())) hideNudge();
     const k = nudgeOn ? '' : chipKind();
     if(k){ const sig = k + bedsPhrase() + isPh(); if(chip._s !== sig){ chip._s = sig; chip.dataset.k = k; chip.innerHTML = chipText(k);
-        chip.setAttribute('aria-label', k === 'plans' ? 'Compare floor plans' + (bedsPhrase() ? ': ' + bedsPhrase() : '') : 'See the house decorated for the holidays'); }
+        chip.setAttribute('aria-label', k === 'plans' ? 'See other layouts' + (bedsPhrase() ? ': ' + bedsPhrase() : '') : 'See the house decorated for the holidays'); }
       if(chip.hidden){ chip.hidden = false; requestAnimationFrame(() => chip.classList.add('c42on')); } }
     else if(!chip.hidden){ chip.hidden = true; if(!chip.classList.contains('c42in')) chip.classList.remove('c42on'); chip.dataset.k = ''; chip._s = ''; }
     place(); label(); hmSync();
