@@ -234,3 +234,6 @@ stops. `?ghost41=0` turns r41 off.
   (0.25 degree steps, stop-and-go, real drags) logged only the governor level / render scale and shadow-map redraws with a constant
   1218-1220 casters; exposure, lights, the env crossfade, the shadow camera and the pull did not change, and a fixed reference view
   redrawn every frame with that frame's lighting changed by at most .0016 (mean |log2 luma|).
+- **Meter factors against main** (settled, 15-20 s at the stop; main e5a6149 -> r41): entry midday 1.22 -> 1.22-1.25 (the
+  entry stop's eye is in the stair-hall air, zone `stairs`: .845 -> .881), great room at dusk .68 -> .68 (1.024 -> .955), living
+  room at dusk .62 -> .59 (kept .845). Readings taken 6-7 s after arriving were still adapting (.3 stop/s) and are not comparisons.
