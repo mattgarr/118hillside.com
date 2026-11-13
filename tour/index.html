@@ -1923,7 +1923,10 @@ const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, l
    filtered: no cells), with the height range of the nearest room: a window reveal, a sill or a jamb inside the wall thickness is the
    room's, ground below the floor and a roof above the ceiling are outside. The meter's all-round view is drawn without the pull, so
    every room keeps its calibrated exposure. ?r41w=0 turns it off. */
-const R41W = window.R41W = {on: R40E.on && !/[?&]r41w=0\b/.test(location.search), d0: .7, d1: 1.2, dMax: 4, stops: 0, outGain: 1.2, pull: 1, built: false,
+/* r41 W3 (11/12): OFF by default, ?r41w=1 turns it on. With the tuned values it changes nothing at the rooms' calibrated stops (pull 1),
+   and its shader code made the hall-bath and lower-bath probe mirrors draw black (GL INVALID_OPERATION on their draw; ?r41w=0 restores
+   them; binding its uniforms in the mirror hook was not enough). Until that is solved the mirrors win. */
+const R41W = window.R41W = {on: R40E.on && /[?&]r41w=1\b/.test(location.search), d0: .7, d1: 1.2, dMax: 4, stops: 0, outGain: 1.2, pull: 1, built: false,
   U: {r41Dist: {value: null}, r41DB: {value: new THREE.Vector4(0, 0, 0, 0)}, r41DY: {value: new THREE.Vector2(0, 1)}, r41Pull: {value: 0}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
