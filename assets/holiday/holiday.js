@@ -369,14 +369,25 @@
   function idlePrep(){ if(/[?&]noprep=1\b/.test(location.search)) { PREP.state = 'off'; return; }
     if(!roomy()){ PREP.state = 'skipped: connection'; return; }
     const ric = f => window.requestIdleCallback ? requestIdleCallback(f, {timeout: 4000}) : setTimeout(f, 300);
+    /* r46 perf: (a) nothing starts while the first view is still refining (trees, mirror captures, staging): the two used to share the main thread
+       for the first 20-40 s, when a visitor's first taps land; (b) a phone makes ready only the season's own dress. The other two cost it
+       80 MB of geometry it will rarely show, 90 more shader programs, and Halloween's set is one unsliced block (0.5 s on a laptop, seconds
+       on a phone) that ran while the visitor was reading a stop card: they are built when asked for, as before r43. (c) Nothing at all after
+       a 'lean' reload (the phone had taken the 3D canvas away: tour/index.html, "r46 perf"). */
+    const phone = (() => { try{ return (window.matchMedia && matchMedia('(pointer:coarse)').matches) || (navigator.deviceMemory && navigator.deviceMemory <= 4); }catch(e){ return false; } })();
+    const lean = (() => { try{ return !!window.__LEAN || sessionStorage.getItem('hillside.lean') === '1'; }catch(e){ return false; } })();
+    if(lean && !/[?&]prep=all\b/.test(location.search)){ PREP.state = 'skipped: lean'; return; }
+    PREP.phone = !!phone && !/[?&]prep=all\b/.test(location.search);
     (function wait(){ const L = document.getElementById('loading'), up = (L && !L.classList.contains('done')) || !!document.getElementById('intro28');
-      if(up || !H.ready || !(PREP.gate())) return setTimeout(wait, 1500);
+      const B = window.__boot22, refining = !!(B && B.prog && !B.done && B.log && B.log.reveal && performance.now() - B.log.reveal < 90000);
+      if(up || refining || !H.ready || !(PREP.gate())) return setTimeout(wait, 1500);
       ric(async () => { PREP.state = 'running'; PREP.t0 = performance.now(); note('start: ' + SEASON);
         const order = [SEASON].concat(['thanksgiving', 'winter', 'halloween'].filter(k => k !== SEASON)).filter(k => k !== 'none');
         try{ if(order[0] !== 'halloween') await prepare(order[0]); }catch(e){ console.warn('[holiday] prepare', e); note('failed: ' + (e && e.message)); }
         try{ const G = window.GAMESMENU; if(G && G.prefetch && G.order){ const id = G.order().ids[0]; if(G.prefetch(id)) note('prefetched game ' + id); } }catch(e){}
         /* then the other dresses, one at a time, still only while the visitor is idle: Thanksgiving or Winter here; Halloween is built by the page's
            own idle warm-up (WARM24 'hwbuild' / 'hwcompile'), which waits for PREP.others (Halloween's build is one block, so it goes last) */
+        if(PREP.phone){ PREP.state = 'done: season only'; note('done (phone: the season only)'); return; }
         for(const k of order.slice(1)) try{ await prepare(k); }catch(e){ console.warn('[holiday] prepare ' + k, e); }
         PREP.others = true; PREP.state = 'done'; note('done'); }); })(); }
   idlePrep();

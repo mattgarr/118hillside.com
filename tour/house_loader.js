@@ -126,11 +126,14 @@
     const bust = u => typeof u === 'string' ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'r=' + Date.now() : u;
     const getMeta = async u => typeof opts.meta === 'string' ? JSON.parse(new TextDecoder().decode(await fetchBuf(u, opts.fetch, {cache: 'no-cache'}))) : opts.meta;
     let meta = normalize(await getMeta(opts.meta)), buf = await fetchBuf(opts.glb, opts.fetch);
+    const now_ = () => (root.performance || Date).now(), tFetch = now_();   // r46: where the load time goes (S.times, sent with the page's tour_perf load event)
     let glbSha = opts.verifyHash !== false ? await sha256Hex(buf) : null, want = meta.glb && (meta.glb.sha256 || meta.glb.hash);
     if(want && glbSha && want !== glbSha && typeof opts.glb === 'string'){   /* a cached old meta beside a fresh model (or the reverse) after a deploy: fetch both fresh once */
       meta = normalize(await getMeta(bust(opts.meta))); buf = await fetchBuf(bust(opts.glb), opts.fetch); glbSha = await sha256Hex(buf); want = meta.glb && (meta.glb.sha256 || meta.glb.hash); }
     if(want && glbSha && want !== glbSha) console.warn('bim2: scene.glb sha256 ' + glbSha.slice(0, 12) + ' does not match meta glb.sha256 ' + String(want).slice(0, 12) + '; loading anyway');
+    const tHash = now_();
     const gltf = await new Promise((res, rej) => new T.GLTFLoader().parse(buf, '', res, rej));
+    const tParse = now_();
     const S = {version: VERSION, meta, gltf, glbSha, glbBytes: buf.byteLength, storeyOf: Object.fromEntries(meta.storeys.map(s => [s.id, s])),
       spaces: meta.spaces, walk: meta.walk, colliders: meta.colliders, openings: meta.openings, spaceById: Object.fromEntries(meta.spaces.map(s => [s.id, s])), metaBase,
       meshes: [], byGroup: {}, materials: new Map(), unmapped: new Set(), elementMeshes: new Map(), nTris: 0};
@@ -160,6 +163,7 @@
     }
     Object.assign(S, makeQueries(S));
     S.loadMs = Math.round((root.performance || Date).now() - t0);
+    S.times = {fetch: Math.round(tFetch - t0), hash: Math.round(tHash - tFetch), parse: Math.round(tParse - tHash), build: Math.round(now_() - tParse)};
     API.state = S; return S;
   }
 
