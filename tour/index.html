@@ -8659,6 +8659,7 @@ const DESIGN = (() => {
   function chips(){
     const box = $('#optChips'); box.innerHTML = '';
     /* r44f owner: a lighter picker; each layout leads with its bedroom and bath count, the as-built included, most bedrooms first */
+    if(custom && custom.base && custom.base !== 'asbuilt' && !defOf(custom.base)) custom.base = 'asbuilt';   // r45: its starting layout was retired
     const cnt = id => { try{ if(id === 'asbuilt') return [6, 3]; const o = BIM2.option(id) || {}; const b = +(o.bedrooms || o.beds) || 0; return b ? [b, +o.baths || 0] : null; }catch(e){ return null; } };
     const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today', n: cnt('asbuilt')}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea', n: cnt(d.id)})).sort((a, b) => ((b.n || [0])[0]) - ((a.n || [0])[0])));
     if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base).toLowerCase() : 'From today’s layout'});
@@ -10285,6 +10286,8 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   // Walk: the stop nearest the walker. A stop on another level counts 30 ft further; a stop that shows the room you are in counts 12 ft nearer.
   function nearest(){
     const P = camera.position, cr = curRoom && curRoom.id; let best = -1, bs = 1e9, cur = 1e9;
+    try{ if(ACTIVE_VAR !== 'asbuilt' && DESIGN.walking()){ const d = (bim2DesignOptions() || []).find(q => q.id === ACTIVE_VAR);   // r45: walking an idea, the stop its room gives (the nearest as-built stop can be through a wall)
+        for(const r of ((d && d.rooms) || [])) if(r.stop && inPoly(r.poly, P.z, P.x)){ const i = STOPS.findIndex(q => q && q.id === r.stop); if(i >= 0) return i; } } }catch(e){}
     for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; if(!s || s.aerial || !s.pos) continue;
       const L = s.level === 'outside' ? LV.outside : LV[s.level]; let d = Math.hypot(s.pos[0] - P.x, s.pos[2] - P.z);
       if(L != null && Math.abs(L - feet) > 2.5) d += 30; if(cr && s.rooms && s.rooms.includes(cr)) d -= 12;
@@ -16120,14 +16123,13 @@ const CTA42 = (() => {
     ill: 'Illustrative idea.',
     mine: 'Your own changes.'};
   /* r43 owner 11/12: four cards, the real house plus three concepts, in this order: 6 bedrooms (as built), 6 bedrooms (alternate layout),
-     5 bedrooms (open plan), 4 bedrooms (open great room). The Semi-open plan is shown as the alternate six-bedroom layout. */
-  const NAME = {asbuilt: 'As built', apr24b: 'Alternate layout', jan24: 'Open plan'};
-  const RANK = {apr24b: 0, jan24: 1, open4: 2, open4k: 3};
+     5 bedrooms (open plan), 4 bedrooms (open kitchen and great room; r45: the earlier "Open great room" idea was retired). */
+  const NAME = {asbuilt: 'As built', apr24b: 'Semi-open plan', jan24: 'Open plan'};   /* r45: one name per idea everywhere (Design calls it Semi-open plan) */
+  const RANK = {apr24b: 0, jan24: 1, open4k: 2};
   const LINE = {asbuilt: 'The house as it is today.',
     /* r44f owner: the picker lighter, one short line each; the counts carry the card */
     apr24b: 'All six bedrooms, with a more open kitchen and family room.',
     jan24: 'Kitchen, dining and family room in one open space.',
-    open4: 'Two bedrooms become one vaulted living, dining and kitchen space.',
     open4k: 'One vaulted great room: hearth, island kitchen, folding doors to a new deck.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
@@ -16361,7 +16363,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   function sideFit(){ if(!(isPh() && innerWidth > innerHeight && innerWidth >= 600 && mode === 'design')) return;
     root.classList.remove('ph'); try{ DESIGN.view(1.2); }catch(e){} finally{ root.classList.add('ph'); } }
   const photoUp = () => { const g = $('#gallery'), l = $('#lb'), o = $('#ov'); return !!((g && !g.hidden) || (l && !l.hidden) || (o && o.classList.contains('on'))); };   // a real photograph on screen
+  const TRIED = {};
   function render(){ const cur = ACTIVE_VAR, L = plans(), busy = {};
+    for(const p of L) if(!SPACES[p.id] && !TRIED[p.id]){ const r = load(p.id); if(SPACES[p.id] || FETCH[p.id]) TRIED[p.id] = true; }   // r45: the sketches of the plans whose counts were already known were never read when the picker opened from the banner
     pick.querySelector('.p42lede').textContent = L.length > 1 ? 'Pick a layout to see it in 3D.' : '';
     for(const b of list.querySelectorAll('.k42busy')) busy[b.dataset.id] = true;
     list.innerHTML = '';
@@ -16393,6 +16397,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     if(id !== 'asbuilt'){ let p = null; try{ p = bim2EnsureOption(id); }catch(e){}
       if(p && p.then){ const mark = on => { const n = list.querySelector('.k42c[data-id="' + id + '"]'); if(n) n.classList.toggle('k42busy', on); }; render(); mark(true); p.then(() => mark(false), () => mark(false)); } }
     lastSig = ''; sync(); }
+  { const dt = document.querySelector('.tab[data-mode="design"]');   // r45: from the plans-only picker, the Design tab opens the whole Design panel
+    if(dt) dt.addEventListener('click', () => { if(!root.classList.contains('pk42') || mode !== 'design') return; setPk(false); try{ DESIGN.open('design'); }catch(x){} sync(); const c = $('#card'); if(c) c.scrollTop = 0; }); }
   function openPicker(where){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
     if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
     hideNudge();
@@ -18764,8 +18770,9 @@ window.CORN31 = CORNMAZE;
     // Remodel ideas: As built / the two 2024 concepts (names from the BIM), on phone and desktop
     let v31rmDone = false;
     const v31remodel = () => { if(v31rmDone) return; try {
-      if(typeof BIM === 'undefined' || !BIM || !(BIM.options || []).length) return;
-      const opts = [['asbuilt', 'As built']].concat((BIM.options || []).map(o => [o.id, DESIGN.nameOf ? DESIGN.nameOf(o.id) : o.name]));
+      let ideas = []; try{ ideas = (bim2DesignOptions() || []).filter(d => d && d.id && d.id !== 'custom'); }catch(e){}   // r45: the scene's own list, as Design shows it
+      if(!ideas.length) return;
+      const opts = [['asbuilt', 'As built']].concat(ideas.map(o => [o.id, DESIGN.nameOf ? DESIGN.nameOf(o.id) : o.name]));
       if(opts.length > 1 && typeof DESIGN !== 'undefined'){
         const row = document.createElement('button'); row.type = 'button'; row.className = 'tod v31rm'; row.setAttribute('aria-expanded', 'false');
         row.innerHTML = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 17V7l7-4 7 4v10H3zM8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Design</span><em class="v31val"></em>';   /* r36: one name, the tab's (was 'Remodel ideas' here and 'Design' on the tab) */
@@ -20770,8 +20777,8 @@ function bim2TrimOut(){ if(!M.trimOut) M.trimOut = M.trimExt; }                 
         for(const e of B2OPT.hideFx){ const h = e.vars.has(ACTIVE_VAR); if(h && e.o.visible){ e.o.visible = false; e.hid = true; } else if(!h && e.hid){ e.o.visible = true; e.hid = false; } } } }catch(e){ console.warn('[bim2] variant', e); }
     return _av.apply(this, arguments); }; }
 /* concept r42 (tour/CONCEPT-4BR.md; package built by tour/bim2/tools/build_open4.py): what an option package can carry beyond walls and
-   floors, read from its own data. Only an option that says so (scene.meta options[] pageExtras: true) gets any of it: "Open great room"
-   (open4) does; the two 2024 concepts do not, so they show exactly as before.
+   floors, read from its own data. Only an option that says so (scene.meta options[] pageExtras: true) gets any of it: "Open kitchen and great room"
+   (open4k; the first such idea, open4, was retired in r45) does; the two 2024 concepts do not, so they show exactly as before.
    - furnishings with render.lib 'STAGE': staged like the house's own STAGING rows (staging.js, falling back to fixtures.js). at = the
      centre of the piece on the floor (at[2] = height of a hung piece's canopy), rot 0 / 90 / 180 / 270 = facing east / north / west / south,
      stageBack = the point is on the wall behind it, stageKey / stageOn / stageDx / stageDz / stageZ = decor sitting on a piece. They live
@@ -20952,7 +20959,7 @@ window.__IDEA42 = {
   async set(v){ v = v || 'asbuilt'; if(v !== 'asbuilt'){ const ok = await bim2EnsureOption(v); if(!ok) return 'not loaded'; }
     if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return ACTIVE_VAR; },
   async view(name, v, as){   // as: the layout to show from that viewpoint (default v; 'asbuilt' for the before view)
-    v = v || (ACTIVE_VAR !== 'asbuilt' ? ACTIVE_VAR : 'open4'); const o = BIM2.option(v), w = o && o.views && o.views[name]; if(!w) return 'no view ' + name;
+    v = v || (ACTIVE_VAR !== 'asbuilt' ? ACTIVE_VAR : 'open4k'); const o = BIM2.option(v), w = o && o.views && o.views[name]; if(!w) return 'no view ' + name;
     await this.set(as || v);
     if(name === 'aerial'){ try{ if(vis.level !== 'main') setLevel('main', {keepCam: true, instant: true}); }catch(e){} DESIGN.view(.01); return 'design layout view'; }
     setMode('walk', {keep: true}); feet = walkSurfaceAt(w.pos[0], w.pos[2], w.pos[1] - EYE + .6); anim = null; glide = null; nav = 'look'; camera.position.set(...w.pos); camera.lookAt(new THREE.Vector3(...w.look)); lookFromCamera();
@@ -21459,7 +21466,7 @@ function bim3StageSettle(){
 }
 { const _sc3 = stg33Check; stg33Check = function(){ try{ bim3StageSettle(); }catch(e){ console.warn('[bim3] stage settle', e); } return _sc3.apply(this, arguments); }; }
 /* Design tab order (owner/OPTIONS 11/3): jan24 "Open Plan" first, then apr24b "Semi-Open Plan" */
-{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({jan24: 0, apr24b: 1, open4: 2, open4k: 3}[id] ?? 9); return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
+{ const _do3 = bim2DesignOptions; bim2DesignOptions = function(){ const L = _do3.apply(this, arguments), rank = id => ({apr24b: 0, jan24: 1, open4k: 2}[id] ?? 9);   /* r45: most bedrooms first, the same order in Design, the picker and the View menu */ return L.slice().sort((a, b) => rank(a.id) - rank(b.id)); }; }
 /* rack wire deck: library-less render material 'wire-deck' (kernel BI3) = white 2" x 4" wire grid, alpha-tested (UV = feet) */
 BIM2_MATKEY['wire-deck'] = 'bim3WireDeck';
 { const _bl3 = bim2Load; bim2Load = async function(){

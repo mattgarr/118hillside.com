@@ -1,5 +1,9 @@
 # Open great room, 4 bedrooms: a third floor-plan concept
 
+> **r45 (owner, 11/12/2026): the first idea described here, "Open great room" (`open4`), is retired and no longer ships.** Only the refined
+> B-flip, "Open kitchen and great room" (`open4k`), remains as the 4-bedroom idea. The open4 sections below are kept as history;
+> `build_open4.py` stays only as the helper library that `build_open4k.py` imports, and refuses to run on its own.
+
 **Illustrative idea. Not designed or reviewed by an architect or engineer.**
 
 Owner's brief (11/12): a third concept where the whole great-room area opens up and two main-level bedrooms go instead of one,

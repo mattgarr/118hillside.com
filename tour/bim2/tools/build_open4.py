@@ -544,4 +544,6 @@ def main():
     print(json.dumps(report, indent=1)); print('hide', len(hide), 'hideRanges', hide_ranges, 'glb bytes', len(raw))
 
 if __name__ == '__main__':
-    main()
+    # r45 (owner): the 'Open great room' idea (open4) is retired; only the B-flip (open4k) remains. This file stays for the helpers that
+    # build_open4k.py, minimap_option.py and plan_svg.py import. Running it would put the retired idea back.
+    sys.exit('build_open4.py is a helper library now (open4 was retired in r45); run build_open4k.py')
