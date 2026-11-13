@@ -16721,7 +16721,7 @@ window.CTA42 = CTA42;
    To give another idea a tour, add one entry:
      start  the stop "Tour this idea" opens on
      from   {as-built stop id: idea stop key}: the as-built stops the idea replaces, and where each lands when the idea comes on
-     text   {kept stop id: {t, dims, p}}: wording for a kept stop while the idea shows
+     text   {kept stop id: {t, dims, p, ph, photo}}: wording for a kept stop while the idea shows (ph: [], photo: null where its listing photos no longer match)
      stops  in walking order, placed where the first replaced stop was: key, t (title), dims, rooms (ROOMS ids, for the walk planner and the
             photo gallery), real (the as-built stop 'Real house' goes to), p (caption: what is in view, facts from the model only), and
             f = a FRAME22 spec in world feet: at [x, z] camera, to [x, z] aim, ph / atP portrait aim / position, hf, rise, riseP.
@@ -16735,7 +16735,7 @@ const IDEA_TOURS = {
     from: {living: 'library', kitchen: 'kitchen', great: 'great', mainbeds: 'hearth', middlebed: 'kitchen', hallbath: 'bath', backbed: 'bedroom'},
     text: {
       street: {dims: '', p: 'The paver driveway runs up to the garage on the left. Beside it, the front steps climb to a new deck along the great room.'},
-      porch: {t: 'Deck', dims: '', p: 'The deck runs along the south side of the great room, from the iron-and-glass front doors to the folding glass doors.'},
+      porch: {t: 'Deck', dims: '', ph: [], photo: null, p: 'The deck runs along the south side of the great room, from the iron-and-glass front doors to the folding glass doors.'},
       entry: {p: 'The foyer stands between two pairs of iron-and-glass doors, under a cathedral ceiling with a starburst light fixture. The library is straight ahead.'},
       stairs: {p: 'Back in the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'}},
     stops: [
@@ -16751,7 +16751,7 @@ const IDEA_TOURS = {
         p: 'The table seats eight beside 14 feet of folding glass doors, which open to the deck.'},
       {key: 'bath', t: 'New bath', rooms: ['mainbath'], real: 'hallbath', f: {at: [13.4, -2.0], to: [9.6, -8.5], hf: 100, rise: -.15, riseP: 0},
         p: 'A three-quarter bath opens off a short hall beside the library. The vanity is by the window, and the shower is to the right.'},
-      {key: 'bedroom', t: 'Back bedroom', rooms: ['mainbeds'], real: 'backbed', f: {at: [17.9, 2.6], to: [22.5, -6.7], ph: [25.5, -4.2], hf: 100, rise: -.1, riseP: -.05},
+      {key: 'bedroom', t: 'Back bedroom', rooms: ['mainbeds'], real: 'backbed', f: {at: [18.4, 1.3], to: [22.8, -6.7], ph: [25.5, -4.6], hf: 100, rise: -.1, riseP: -.05},
         p: 'The back bedroom stays where it is, entered through a small vestibule off the hall.'}]}
 };
 const IT46 = window.IT46 = (() => {
