@@ -19529,7 +19529,7 @@ function v33Accent(){
    blocked elevation band along each, nearer solids count more), at most V33C.k dark. A table top a foot up gives a faint wide shade, a
    foot on the floor a tight dark one, a round piece a round one. One texture per kind and size. Its quad stops at a wall and at a floor
    edge (v33Fit), so nothing is drawn through a wall or over a drop. It does not depend on the quality level, the device or the view. */
-const V33C = {skip: /^(rug2?|tvWall|art|wallMirror|towel\w*|pillows|bedRunner|throwBlanket|throwDrape|seatCushion|windowSeat)$/, pad: 1.2, G: 40, k: .8, hClip: 2.2, y: .045, n: 0, fields: 0, ms: 0, mats: {}};
+const V33C = {skip: /^(rug2?|tvWall|art|wallMirror|towel\w*|pillows|bedRunner|throwBlanket|throwDrape|seatCushion|windowSeat)$/, pad: 1.2, G: 40, k: .9, hClip: 2.2, y: .045, n: 0, fields: 0, ms: 0, mats: {}};
 function v33Field(o, w, dd){
   const t0 = performance.now(), P = V33C.pad, ex = w + 2 * P, ez = dd + 2 * P, s = Math.max(ex, ez) / V33C.G, NX = Math.max(8, Math.ceil(ex / s)), NZ = Math.max(8, Math.ceil(ez / s)), N = NX * NZ;
   const X0 = -w / 2 - P, Z0 = -P, LO = new Float32Array(N).fill(1e9), HI = new Float32Array(N).fill(-1e9), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), M = new THREE.Matrix4();
@@ -19544,7 +19544,7 @@ function v33Field(o, w, dd){
       for(let a = 0; a <= k; a++) for(let b = 0; b <= k - a; b++){ const u = a / k, v = b / k, c = 1 - u - v; put(A.x * c + B.x * u + C.x * v, A.z * c + B.z * u + C.z * v, A.y * c + B.y * u + C.y * v); } } });
   // the share of the dome hidden at each floor texel: 16 directions x 16 bands of sin^2(elevation) (equal shares of a level surface's light)
   const F = new Float32Array(N), NA = 16, NB = 16, bins = new Float32Array(NB), R2 = P * P, hc = V33C.hClip; let any = false;
-  const add = (q, d) => { const lo = LO[q]; if(lo > hc) return; const hb = Math.max(0, lo) * .5, ht = Math.min(hc, Math.max(HI[q], lo + .05)), fo = 1 - d * d / R2; if(fo <= 0) return; const wgt = fo * fo;
+  const add = (q, d) => { const lo = LO[q]; if(lo > hc) return; const hb = Math.max(0, lo) * .5, ht = Math.min(hc, Math.max(HI[q], lo + .05)), fo = 1 - d * d / R2; if(fo <= 0) return; const wgt = fo * Math.sqrt(fo);
     const u1 = hb * hb / (hb * hb + d * d) * NB, u2 = ht * ht / (ht * ht + d * d) * NB;
     for(let b = Math.floor(u1); b < NB && b < u2; b++){ const cov = Math.min(b + 1, u2) - Math.max(b, u1), v = wgt * Math.max(0, Math.min(1, cov)); if(v > bins[b]) bins[b] = v; } };
   for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let sum = 0;
