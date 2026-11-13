@@ -20293,7 +20293,7 @@
    "date": "2024-01-25",
    "source": "240125 Proposed Phase 2 Remodel Plan (concept)",
    "status": "concept",
-   "description": "One big open space: kitchen, dining, family room and a sitting/games area together, with a pantry, a new bath and two bedrooms on the east side.",
+   "description": "Kitchen, dining and family room in one open space, with the kitchen at the back of the house and a sitting room in the old living room. A new bath sits between two bedrooms at the street end.",
    "scope": "L1 main (1950s) house: interior layout, kitchen, baths, and some exterior windows",
    "region": [
     [
@@ -22421,7 +22421,7 @@
      "id": "jan24-L05",
      "ifc": "IfcAnnotation",
      "kind": "roomLabel",
-     "name": "Sitting / games",
+     "name": "Sitting room",
      "at": [
       -3.0,
       8.5
@@ -22587,7 +22587,7 @@
    "date": "2024-04-24",
    "source": "240424 Proposed Phase 2 Plan 'B'",
    "status": "concept",
-   "description": "Open kitchen and dining around a 13-ft island, with the family room, a pantry wall and three bedrooms in their own rooms.",
+   "description": "The kitchen opens to the dining room around a 13-ft island, with a pantry beside it. The family room, the hall bath and the three main-level bedrooms keep rooms of their own.",
    "scope": "L1 main (1950s) house: interior layout, kitchen, baths, and some exterior windows",
    "region": [
     [
@@ -24304,7 +24304,7 @@
      "id": "apr24b-L08",
      "ifc": "IfcAnnotation",
      "kind": "roomLabel",
-     "name": "Pantry wall",
+     "name": "Pantry",
      "at": [
       11.3,
       20.2

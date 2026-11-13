@@ -19579,7 +19579,14 @@ function bim2OptionData(o){                                            // walls 
   const D = o.data || {}, keep = new Set((D.furnishings || []).map(f => f.id)), baseIds = new Set((BIM2S.meta.furnishings || []).concat(BIM2S.meta.builtins || []).map(f => f.id)),
     biKinds = new Set((BIM2S.meta.builtins || []).map(b => b.kind));   // rule:option-skips-builtins - built-ins (downspouts, hatch, racks, closets, blinds) come from the kernel; the page drew them as 2-ft white placeholder cubes (owner 11/7)
   for(const F of FIXOBJ){ if(!F.id || !baseIds.has(F.id) || keep.has(F.id) || F.v) continue; let e = B2OPT.hideFx.find(q => q.o === F.obj); if(!e) B2OPT.hideFx.push(e = {o: F.obj, vars: new Set()}); e.vars.add(v); }
-  const add = (D.furnishings || []).filter(f => !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN').map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
+  /* r47 (ideas47): the layout ideas' packages now stage their furniture the way the tour page does (rows with render.lib 'STAGE', the piece's
+     centre at `at`) and use a few cabinet-finishing kinds this page's libraries do not have. A kind no library here can make is left out (it
+     used to become a placeholder cube); a staged piece fixtures.js can make is built from its back edge; decor on a host and wall art are left out. */
+  const canMake47 = k => ['counterTop', 'openShelves', 'fridge4Door', 'showerSystem'].includes(k) || !!(window.BUILTIN && BUILTIN.has && BUILTIN.has(k)) || ((window.FIX && FIX.kinds) || []).some(q => q.kind === k);
+  const stage47 = f => { if(!f.render || f.render.lib !== 'STAGE') return f; if(f.stageOn || f.stageBack || (f.at && f.at[2] > 0) || !((window.FIX && FIX.kinds) || []).some(q => q.kind === f.render.kind)) return null;
+    let d = 0; try{ d = FIX.sizeOf(f.render.kind, Object.assign({}, f.params || {}))[1] / 2; }catch(e){ return null; }
+    const a = (f.rot || 0) * Math.PI / 180; return Object.assign({}, f, {at: [f.at[0] - Math.cos(a) * d, f.at[1] - Math.sin(a) * d, 0]}); };
+  const add = (D.furnishings || []).map(stage47).filter(f => f && !baseIds.has(f.id) && f.render && f.render.kind && !biKinds.has(f.render.kind) && f.render.builder !== 'BUILTIN' && canMake47(f.render.kind)).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}), space: f.space}));
   if(add.length){ const n0 = FIXOBJ.length; try{ buildFixturesBIM(add); }catch(e){ console.warn('[bim2] option furnishings', v, e); } for(let i = n0; i < FIXOBJ.length; i++){ FIXOBJ[i].v = v; if(window.__c22OnlyVar) __c22OnlyVar(FIXOBJ[i].obj, v); } }
   window.__B2OPT = Object.assign(window.__B2OPT || {}, {[v]: {walls: C.WALLGEO.length, opens: C.OPENRECTS.length, collidersAbsent: COLLIDERS.filter(c => c.__absent && c.__absent.has(v)).length, floorsAdded: C.FLOORS.filter(f => !baseF.has(f.bim2)).length,
     furnHidden: B2OPT.hideFx.filter(e => e.vars.has(v)).length, furnAdded: add.length}}); }
