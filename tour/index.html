@@ -10999,7 +10999,7 @@ const LAUNDRY48 = window.LAUNDRY48 = {drop: ['FX-washerFront-07', 'FX-dryerFront
     'LX-COUNTER': {opts: {outlines: [[[-23.3234, -29.9159], [-22.7609, -29.9159], [-22.7609, -29.9777], [-17.0119, -29.9777], [-17.0119, -27.8327], [-20.1222, -27.8327],
       [-21.2401, -26.7148], [-21.2401, -25.4993], [-23.3234, -25.4993]]], holes: [[[-21.182, -28.6408], [-22.0482, -27.7746], [-21.2999, -27.0263], [-20.4337, -27.8925]]]}}},
   built: 0};
-function laundry48Pieces(){ const L = LAUNDRY48, src = (window.BIM && BIM.raw && BIM.raw.elements) || [];
+function laundry48Pieces(){ const L = LAUNDRY48, src = (BIM && BIM.raw && BIM.raw.elements) || [];
   return src.filter(e => e.by === L.by && e.kind && e.at).map(e => { const f = {id: e.id, kind: e.kind, at: e.at.slice(), rot: e.rot || 0, opts: Object.assign({}, e.opts || {}), space: 'SP-L0-LAUNDRY'};
     if(L.shiftX.includes(e.id)) f.at[0] = +(f.at[0] + L.dx).toFixed(4);
     const s = L.set[e.id]; if(s){ if(s.at){ f.at[0] = s.at[0]; f.at[1] = s.at[1]; } Object.assign(f.opts, s.opts || {}); }
