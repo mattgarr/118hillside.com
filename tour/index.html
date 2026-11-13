@@ -1477,7 +1477,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
       </div>
       <div class="design" id="design" hidden>
         <div class="dsec"><div class="dlab">Layout</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
-        <div class="dact"><button class="btn" id="dWalk">Walk through the house</button><button class="btn" id="dEdit">Edit a copy</button></div>
+        <div class="dact"><button class="btn" id="dWalk">Walk through</button><button class="btn" id="dEdit">Edit a copy</button></div>
         <div class="dtools" id="dTools" hidden>
           <div class="trow" role="toolbar" aria-label="Edit tools">
             <button class="tool" data-tool="select" aria-pressed="true">Select</button>
@@ -1499,7 +1499,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
         <p class="dnote" id="dNote"></p>
         <div class="dsec" id="fSec"><div class="dlab">Furniture</div>
           <div class="frow"><div class="seg" role="group" aria-label="Furniture"><button id="fOn" aria-pressed="true">On</button><button id="fOff" aria-pressed="false">Off</button></div>
-            <button class="tool" id="fRot" disabled>Rotate</button><button class="tool danger" id="fDel" disabled>Remove</button><button class="tool" id="fUndo" disabled>Undo</button><button class="tool" id="fReset" disabled>Put it all back</button></div>
+            <button class="tool" id="fRot" disabled>Rotate</button><button class="tool danger" id="fDel" disabled>Remove</button><button class="tool" id="fUndo" disabled>Undo</button><button class="tool" id="fReset" disabled aria-label="Put all the furniture back">Reset</button></div>
           <div class="dstat" id="fStat"></div></div>
         <div class="dsec" id="pSec"><div class="dlab">Exterior paint</div>
           <div class="pals" id="pPal" role="radiogroup" aria-label="Exterior paint colors"></div>
@@ -8664,17 +8664,23 @@ const DESIGN = (() => {
     const cnt = id => { try{ if(id === 'asbuilt') return [6, 3]; const o = BIM2.option(id) || {}; const b = +(o.bedrooms || o.beds) || 0; return b ? [b, +o.baths || 0] : null; }catch(e){ return null; } };
     const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today', n: cnt('asbuilt')}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea', n: cnt(d.id)})).sort((a, b) => ((b.n || [0])[0]) - ((a.n || [0])[0])));
     if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base).toLowerCase() : 'From today’s layout'});
-    for(const o of list){ const b = document.createElement('button'); b.type = 'button'; b.className = 'opt ' + (o.id === 'asbuilt' ? 'today' : 'idea'); b.dataset.id = o.id; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(o.id === sel)); b.tabIndex = o.id === sel ? 0 : -1;
+    /* r45 owner: the list is the layouts menu now (LAYOUTS45, in the Games menu's style); here one row says which layout is showing and opens it.
+       A saved 'My design' keeps a row of its own. */
+    box.removeAttribute('role'); const shown = list.filter(o => o.id === sel || o.id === 'custom');
+    for(const o of shown){ const b = document.createElement('button'); b.type = 'button'; b.className = 'opt ' + (o.id === 'asbuilt' ? 'today' : 'idea') + (o.id === sel ? ' lay45' : ''); b.dataset.id = o.id; if(o.id === sel) b.setAttribute('aria-haspopup', 'dialog');
       const nm = document.createElement('span'), sm = document.createElement('small');
       if(o.n){ nm.className = 'obb'; nm.innerHTML = '<b>' + o.n[0] + '</b> bed <i>·</i> <b>' + o.n[1] + '</b> bath'; sm.textContent = o.id === 'asbuilt' ? 'As built today' : o.name; b.setAttribute('aria-label', o.n[0] + ' bedrooms, ' + o.n[1] + ' baths: ' + o.name + (o.id === 'asbuilt' ? ', the house today' : ', remodel idea')); }
       else { nm.textContent = o.name; sm.textContent = o.sub; }
-      b.appendChild(nm); b.appendChild(sm); b.onclick = () => choose(o.id, true); box.appendChild(b); }
-    if(!box._r35){ box._r35 = true; box.addEventListener('keydown', e => { const L = [...box.querySelectorAll('.opt')], i = L.indexOf(document.activeElement); if(i < 0) return;   // radio group: arrows move and choose
+      b.appendChild(nm); b.appendChild(sm);
+      if(o.id === sel){ const ch = document.createElement('em'); ch.textContent = 'Change'; b.appendChild(ch); b.setAttribute('aria-label', (b.getAttribute('aria-label') || o.name) + '. Change the layout'); b.onclick = () => { try{ window.LAYOUTS45.open(b, 'design-panel'); }catch(e){ console.warn(e); } }; }
+      else b.onclick = () => choose(o.id, true);
+      box.appendChild(b); }
+    if(!box._r35){ box._r35 = true; box.addEventListener('keydown', e => { if(box.querySelector('.lay45')) return; const L = [...box.querySelectorAll('.opt')], i = L.indexOf(document.activeElement); if(i < 0) return;   // radio group: arrows move and choose
         const j = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (i + 1) % L.length : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
         e.preventDefault(); e.stopPropagation(); const id = L[j].dataset.id; choose(id, true); const n = box.querySelector('.opt[data-id="' + id + '"]'); if(n) n.focus(); }); }
     $('#dTools').hidden = sel !== 'custom'; $('#dEdit').hidden = sel === 'custom';
-    $('#dEdit').textContent = sel === 'asbuilt' ? 'Edit a copy' : 'Edit a copy of this';
-    $('#dWalk').textContent = sel === 'asbuilt' ? 'Walk through the house' : 'Walk through this idea';
+    $('#dEdit').textContent = 'Edit a copy';
+    $('#dWalk').textContent = 'Walk through'; $('#dWalk').setAttribute('aria-label', sel === 'asbuilt' ? 'Walk through the house' : 'Walk through this idea');
   }
   function card(){
     if(mode !== 'design') return;
@@ -8920,6 +8926,18 @@ html .design .lsopt{border:1px solid var(--line);border-radius:10px;background:v
 html .design .lsopt[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
 html.ph .design .lsopt{min-height:44px}
 .design :is(button,select,input,summary):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* r45 owner: "the pills and buttons are mixed heights and lengths: make them all the short kind" - one height (36 px; 44 px on a phone), one radius, in the Design panel */
+html .design :is(.tool,.pal,.lsopt,.opt),html .design .dact .btn,html .design .seg button,html .design .lrow select,html .design .dnow .tool{min-height:36px;padding-top:0;padding-bottom:0;border-radius:999px;font-size:13px;line-height:1.2}
+html .design :is(.tool,.lsopt),html .design .dact .btn{padding-left:14px;padding-right:14px}
+html .design .seg{border-radius:999px}
+html .design .lrow select{padding-left:12px}
+html.ph .design :is(.tool,.pal,.lsopt,.opt),html.ph .design .dact .btn,html.ph .design .seg button,html.ph .design .lrow select{min-height:44px;font-size:14.5px}
+html .design .opt.lay45{grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding-left:14px;padding-right:6px;background:var(--btn27,var(--paper));color:var(--ink);border:1px solid var(--line)}
+html .design .opt.lay45::before{display:none}
+html .design .opt.lay45 small{text-align:left;color:var(--muted)}
+html .design .opt.lay45 em{font-style:normal;font-size:12.5px;font-weight:600;padding:0 11px;min-height:26px;display:inline-flex;align-items:center;border-radius:999px;background:var(--ink);color:var(--paper)}
+html.ph .design .opt.lay45 em{min-height:32px;font-size:13.5px}
+html .design .opt.lay45:hover{border-color:var(--ink)}
 html.ph .design .opt{min-height:48px}
 html.ph .design .tool,html.ph .design .seg button,html.ph .design .dact .btn{min-height:42px}
 html.ph .design .pal{min-height:44px}
@@ -8943,7 +8961,7 @@ html.v33game .ideas35{display:none}
 `; document.head.appendChild(css);
   // in Design: one line at the top of the panel that says what is on screen, and the way back
   const now = document.createElement('div'); now.className = 'dnow'; now.id = 'dNow';
-  now.innerHTML = '<p id="dNowTxt" role="status"></p><button type="button" class="tool" id="dToday" hidden>Show the house as it is today</button>';
+  now.innerHTML = '<p id="dNowTxt" role="status"></p><button type="button" class="tool" id="dToday" hidden>Real house</button>';
   $('#design').insertBefore(now, $('#design').firstChild);
   // outside Design: the same, as a small strip under the top bar, only while an idea is showing
   const chip = document.createElement('div'); chip.className = 'ideas35'; chip.id = 'ideas35'; chip.hidden = true; chip.setAttribute('role', 'status');
@@ -16150,7 +16168,7 @@ const CTA42 = (() => {
     const o = optMeta(id); if(!o) return Promise.resolve(false);
     if(o.data && o.data.spaces){ SPACES[id] = o.data.spaces; FACTS[id] = count(o.data.spaces) || FACTS[id]; return Promise.resolve(true); }
     if(!o.meta) return Promise.resolve(false);
-    return (FETCH[id] = fetch(metaUrl(o)).then(r => r.ok ? r.json() : null).then(j => { if(j && j.spaces){ SPACES[id] = j.spaces; FACTS[id] = count(j.spaces) || FACTS[id]; } FETCH[id] = null; lastSig = ''; sync(); return !!j; })
+    return (FETCH[id] = fetch(metaUrl(o)).then(r => r.ok ? r.json() : null).then(j => { if(j && j.spaces){ SPACES[id] = j.spaces; FACTS[id] = count(j.spaces) || FACTS[id]; } FETCH[id] = null; lastSig = ''; sync(); try{ DM.refresh(); }catch(e){} return !!j; })
       .catch(e => { FETCH[id] = null; console.warn('[cta42] plan file', id, e); return false; })); }
   function facts(id){ if(FACTS[id]) return FACTS[id]; const o = optMeta(id) || {};
     if(o.bedrooms) return {beds: +o.bedrooms, baths: +o.baths || 0, office: o.office !== false};   // a plan may state its own counts
@@ -16342,9 +16360,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   const chip = el('button'); chip.type = 'button'; chip.id = 'cta42'; chip.hidden = true;
   const nudge = el('aside'); nudge.id = 'ng42'; nudge.hidden = true; nudge.setAttribute('aria-label', 'Ideas for this house');
   nudge.innerHTML = '<button type="button" class="g42x" aria-label="Dismiss">×</button><p class="g42h">Ideas for this house</p><p class="g42t"></p>'
-    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>Compare floor plans</span></button><button type="button" data-a="decor">' + ICON_DECOR + '<span>Holiday decor</span></button></div>';
+    + '<div class="g42a"><button type="button" data-a="plans">' + ICON_PLAN + '<span>See the layouts</span></button><button type="button" data-a="decor">' + ICON_DECOR + '<span>Holiday decor</span></button></div>';
   const banner = el('div'); banner.id = 'cb42'; banner.hidden = true; banner.setAttribute('role', 'status');
-  banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">Back to floor plans</button><button type="button" data-a="real">Back to the real house</button></div>';
+  banner.innerHTML = '<div class="b42m"><b></b><span></span></div><div class="b42s"><button type="button" class="b42alt" data-a="plans">All layouts</button><button type="button" data-a="real">Real house</button></div>';
   const hm = el('div'); hm.id = 'hm42'; hm.hidden = true;
   hm.innerHTML = '<p>Also try</p><button type="button" data-a="paint">Paint colors</button><button type="button" data-a="furn">Furniture</button>';
   const head = el('div'); head.id = 'pk42h'; head.innerHTML = '<p class="p42e">Floor plans</p><h2 id="pk42H">Compare floor plans</h2>';
@@ -16401,7 +16419,127 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     lastSig = ''; sync(); }
   { const dt = document.querySelector('.tab[data-mode="design"]');   // r45: from the plans-only picker, the Design tab opens the whole Design panel
     if(dt) dt.addEventListener('click', () => { if(!root.classList.contains('pk42') || mode !== 'design') return; setPk(false); try{ DESIGN.open('design'); }catch(x){} sync(); const c = $('#card'); if(c) c.scrollTop = 0; }); }
-  function openPicker(where){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
+  /* ---- r45 the layouts menu (owner 11/12: "a really nice calm layout where you just click on it", like the Games menu): one dialog in the
+     Games menu's own visual language (assets/games-menu.js, #gm36): the four layouts as rows; a row opens one calm detail view with a
+     short description, a few facts the model knows, and two or three short buttons. It replaces the "Compare floor plans" picker and the
+     layout list in the Design panel; every entry point (the stop chip, the nudge, the banner, the finale, Design's Layout row) opens it.
+     Opening it does not touch the house. window.LAYOUTS45 = {open(from, where), close(), isOpen, show(id)}. */
+  const DM = (() => {
+    let dlg = null, opener = null, cur = null;
+    const DESC = {asbuilt: 'The house as it is today, and as it is offered. The living room, the kitchen and the dining area are separate rooms on the main level.',
+      apr24b: 'Keeps all six bedrooms. The kitchen opens to the dining room around a long island, with a family room beside it.',
+      jan24: 'Kitchen, dining and family room become one open space, with a pantry and a new bath.'};
+    const NOTE = 'Illustrative idea. Not designed or reviewed by an architect or engineer. The house is sold as built.';
+    const CH = '<span class="ch" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>';
+    const XB = '<button type="button" class="x" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>';
+    const cssT = `
+#dm45{box-sizing:border-box;width:min(452px,calc(100vw - 20px));max-width:none;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);margin:auto;padding:0;border:0;border-radius:20px;background:#fbfaf7;color:#1f1f1d;
+  font:400 15px/1.4 Jost,"Avenir Next","Helvetica Neue",Arial,sans-serif;box-shadow:0 30px 90px rgba(10,10,8,.45);overflow:hidden;-webkit-font-smoothing:antialiased;color-scheme:light}
+#dm45::backdrop{background:rgba(18,18,16,.5)}
+#dm45[open]{display:flex;flex-direction:column;animation:dm45in .18s ease-out}
+@keyframes dm45in{from{opacity:0;transform:translateY(8px) scale(.985)}}
+#dm45 *{box-sizing:border-box}
+#dm45 .hd{flex:none;padding:20px 60px 10px 22px}
+#dm45 h2{margin:0;font:600 30px/1.05 "Cormorant Garamond",Georgia,serif;letter-spacing:-.005em;color:#1f1f1d}
+#dm45 .hd p{margin:5px 0 0;font-size:14.5px;line-height:1.4;color:#67665f}
+#dm45 .ls{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;margin:0;padding:2px 10px 4px;list-style:none}
+#dm45 .ls li{margin:0;padding:0}
+#dm45 .ls li + li{border-top:1px solid #e9e5dc}
+#dm45 button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+#dm45 .row{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr) 22px;column-gap:13px;align-items:center;width:100%;min-height:76px;margin:0;padding:10px 12px;border:0;border-radius:13px;background:none;text-align:left;cursor:pointer;transition:background-color .12s}
+#dm45 .row:hover{background:#f1eee6}
+#dm45 .row:active{background:#e9e4d8}
+#dm45 :is(.row,.x,.bk,.pb):focus-visible{outline:2px solid #4b5f68;outline-offset:1px}
+#dm45 .t{display:block;font:600 23px/1.1 "Cormorant Garamond",Georgia,serif;color:#1f1f1d;white-space:nowrap}
+#dm45 .t i{font-style:normal;color:#b9b2a2;margin:0 2px}
+#dm45 .s{display:block;margin-top:2px;font-size:14.5px;line-height:1.35;color:#55534c}
+#dm45 .m{display:block;margin:5px 0 0;font-size:12px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:#7a6a4f}
+#dm45 .m i{font-style:normal;color:#55633a}
+#dm45 .m i::after{content:"\\00b7";margin:0 6px;color:#b9b2a2}
+#dm45 .ch{width:22px;height:22px;display:grid;place-items:center;color:#8d897f}
+#dm45 .ch svg{width:16px;height:16px}
+#dm45 .k42s{display:block;width:56px;height:56px;border-radius:10px;background:#efece4;padding:5px}
+#dm45 .k42s path{stroke:#4a4e50;stroke-width:.3;stroke-linejoin:round;fill:#fbfaf7}
+#dm45 .k42s path.kb{fill:#e2c79c}#dm45 .k42s path.kw{fill:#bcd0d8}#dm45 .k42s path.kc{fill:#dcdcd4}
+#dm45 .ft{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 22px 16px;border-top:1px solid #e9e5dc;font-size:13.5px;color:#67665f}
+#dm45 .x{position:absolute;right:12px;top:12px;width:40px;height:40px;border:0;border-radius:50%;background:#efece4;color:#1f1f1d;cursor:pointer;display:grid;place-items:center;padding:0}
+#dm45 .x:hover{background:#e4dfd3}#dm45 .x svg{width:16px;height:16px}
+/* the detail view */
+#dm45 .bk{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin:0 0 0 -8px;padding:0 12px 0 8px;border:0;border-radius:999px;background:none;font-size:14px;font-weight:500;color:#55534c;cursor:pointer}
+#dm45 .bk:hover{background:#f1eee6;color:#1f1f1d}#dm45 .bk svg{width:14px;height:14px}
+#dm45 .hd.dh{padding:14px 60px 0 22px}
+#dm45 .bd{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:8px 22px 16px}
+#dm45 .top{display:grid;grid-template-columns:112px minmax(0,1fr);gap:16px;align-items:center}
+#dm45 .top .k42s{width:112px;height:112px;border-radius:14px;padding:8px}
+#dm45 .top .m{margin:0 0 5px}
+#dm45 .cnt{margin:6px 0 0;font:600 23px/1.1 "Cormorant Garamond",Georgia,serif;color:#1f1f1d}#dm45 .cnt i{font-style:normal;color:#b9b2a2;margin:0 2px}
+#dm45 .ds{margin:14px 0 0;font-size:15px;line-height:1.5;color:#3d3c37}
+#dm45 .st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 0;padding:0}
+#dm45 .st div{margin:0;padding:10px 6px 9px;border-radius:12px;background:#f4f1ea;text-align:center}
+#dm45 .st dd{margin:0;font:600 22px/1.1 "Cormorant Garamond",Georgia,serif;color:#1f1f1d;white-space:nowrap}
+#dm45 .st dt{margin:3px 0 0;font-size:11.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#7a6a4f}
+#dm45 .nt{margin:12px 0 0;font-size:12.5px;line-height:1.45;color:#67665f}
+#dm45 .ft.ac{justify-content:flex-start;flex-wrap:wrap}
+#dm45 .pb{flex:0 1 auto;min-height:40px;padding:0 16px;border:1px solid #d9d4c8;border-radius:999px;background:#fbfaf7;font-size:14.5px;font-weight:500;color:#1f1f1d;white-space:nowrap;cursor:pointer;transition:background-color .12s,border-color .12s}
+#dm45 .pb:hover{border-color:#1f1f1d}
+#dm45 .pb.pri{background:#1f1f1d;border-color:#1f1f1d;color:#fbfaf7}#dm45 .pb.pri:hover{background:#34332f}
+#dm45 .pb[hidden]{display:none}
+@media (max-width:480px){#dm45 .hd{padding:18px 58px 8px 18px}#dm45 .hd.dh{padding:12px 58px 0 18px}#dm45 h2{font-size:27px}#dm45 .ls{padding:2px 6px 4px}#dm45 .t{font-size:22px}#dm45 .bd{padding:8px 18px 14px}#dm45 .ft{padding:10px 18px 14px}
+  #dm45 .top{grid-template-columns:92px minmax(0,1fr);gap:14px}#dm45 .top .k42s{width:92px;height:92px}#dm45 .pb{flex:1 1 auto;min-height:44px;padding:0 12px}}
+@media (max-height:560px){#dm45 .hd p{display:none}#dm45 .row{min-height:60px;padding:6px 12px}#dm45 .row .m{display:none}#dm45 .top{grid-template-columns:72px minmax(0,1fr)}#dm45 .top .k42s{width:72px;height:72px}#dm45 .st div{padding:6px 6px 5px}#dm45 .ds{margin-top:10px}}
+@media (prefers-reduced-motion:reduce){#dm45[open]{animation:none}#dm45 .row,#dm45 .pb{transition:none}}`;
+    const cnt = f => f ? '<b>' + f.beds + '</b> bed <i>·</i> <b>' + f.baths + '</b> bath' : '';
+    const tag = k => k === 'real' ? 'The real house' : k === 'mine' ? 'Your design' : 'Illustrative idea';
+    function build(){ if(dlg) return dlg;
+      const st = el('style'); st.id = 'dm45css'; st.textContent = cssT; document.head.appendChild(st);
+      dlg = el('dialog'); dlg.id = 'dm45'; dlg.setAttribute('aria-labelledby', 'dm45h'); document.body.appendChild(dlg);
+      dlg.addEventListener('click', e => { if(e.target === dlg){ close(); return; }
+        const x = e.target.closest('.x'); if(x){ close(); return; }
+        const r = e.target.closest('.row'); if(r){ detail(r.dataset.id); return; }
+        if(e.target.closest('.bk')){ const id = cur; listView(); const b = dlg.querySelector('.row[data-id="' + id + '"]'); if(b) try{ b.focus({preventScroll: true}); }catch(x){} return; }
+        const a = e.target.closest('.pb'); if(a) act(a.dataset.a, cur); });
+      dlg.addEventListener('close', () => { const o = opener; opener = null; cur = null; if(o && o.isConnected) try{ o.focus({preventScroll: true}); }catch(e){} });
+      dlg.addEventListener('keydown', e => e.stopPropagation()); dlg.addEventListener('keyup', e => e.stopPropagation());   // arrows and Space must not walk the tour behind it
+      return dlg; }
+    function listView(){ cur = null; const L = plans(), n = L.length - 1;
+      let h = '<div class="hd"><h2 id="dm45h">Layouts for this house</h2><p>The house as it is, and ' + ideaWords(n).toLowerCase() + ' for its main level.</p></div><ul class="ls">';
+      for(const p of L){ const f = facts(p.id), k = kindOf(p.id), on = ACTIVE_VAR === p.id;
+        h += '<li><button type="button" class="row" data-id="' + p.id + '"' + (on ? ' aria-current="true"' : '') + '>' + sketch(p.id) + '<span class="tx"><span class="t">' + (cnt(f) || p.name) + '</span><span class="s">' + p.name + '</span>'
+          + '<span class="m">' + (on ? '<i>Showing now</i>' : '') + tag(k) + '</span></span>' + CH + '</button></li>'; }
+      h += '</ul><div class="ft"><span>Pick one to read about it and see it in 3D.</span></div>' + XB;
+      dlg.innerHTML = h; }
+    function detail(id){ const p = plans().find(q => q.id === id); if(!p) return; cur = id; ga('plan_detail', {plan: id});
+      const f = facts(id), k = kindOf(id), o = optMeta(id) || {}, idea = id !== 'asbuilt';
+      const S = []; if(f){ S.push(['Bedrooms', f.beds], ['Baths', f.baths], ['Office', f.office ? 'Yes' : 'No']); }
+      for(const q of (o.stats || [])) if(Array.isArray(q) && q.length === 2) S.push(q);
+      const desc = DESC[id] || o.description || p.line || '';
+      dlg.innerHTML = '<div class="hd dh"><button type="button" class="bk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5"/></svg>All layouts</button></div>'
+        + '<div class="bd"><div class="top">' + sketch(id) + '<div><p class="m">' + (ACTIVE_VAR === id ? '<i>Showing now</i>' : '') + tag(k) + '</p><h2 id="dm45h">' + p.name + '</h2><p class="cnt">' + cnt(f) + '</p></div></div>'
+        + '<p class="ds">' + desc + '</p>'
+        + (S.length ? '<dl class="st">' + S.map(q => '<div><dd>' + q[1] + '</dd><dt>' + q[0] + '</dt></div>').join('') + '</dl>' : '')
+        + (idea ? '<p class="nt">' + NOTE + '</p>' : '') + '</div>'
+        + '<div class="ft ac"><button type="button" class="pb pri" data-a="see">See it in 3D</button><button type="button" class="pb" data-a="walk">Walk through</button>'
+        + '<button type="button" class="pb" data-a="real"' + (idea && ACTIVE_VAR !== 'asbuilt' ? '' : ' hidden') + '>Real house</button></div>' + XB;
+      const b = dlg.querySelector('.pb.pri'); if(b) try{ b.focus({preventScroll: true}); }catch(e){} const bd = dlg.querySelector('.bd'); if(bd) bd.scrollTop = 0; }
+    function act(a, id){ if(!id) return; opener = null; close(); setPk(false);
+      if(a === 'real'){ choose('asbuilt', 'menu'); return; }
+      choose(id, a === 'walk' ? 'menu-walk' : 'menu');
+      if(a === 'walk'){ let pr = null; try{ pr = id === 'asbuilt' ? null : bim2EnsureOption(id); }catch(e){}
+        Promise.resolve(pr).then(() => setTimeout(() => { if(mode !== 'design' || ACTIVE_VAR !== id) return; ga('plan_walk', {plan: id}); const w = $('#dWalk'); if(w) w.click(); }, 80), () => {}); }
+      else { const c = $('#card'); if(c) c.scrollTop = 0; } }
+    function open(from, id){ build(); for(const p of plans()) load(p.id);
+      if(!dlg.open){ opener = from && from.focus ? from : null; try{ dlg.showModal(); }catch(e){ return false; } }
+      if(id) detail(id); else { listView(); const b = dlg.querySelector('.row[aria-current]') || dlg.querySelector('.row'); if(b) try{ b.focus({preventScroll: true}); }catch(e){} }
+      return true; }
+    function close(){ if(dlg && dlg.open) dlg.close(); }
+    const refresh = () => { if(dlg && dlg.open){ if(cur) detail(cur); else listView(); } };   // a plan file arrived: its sketch and counts
+    return {open, close, refresh, show: id => open(null, id), get isOpen(){ return !!(dlg && dlg.open); }};
+  })();
+  window.LAYOUTS45 = {open: (from, where) => openPicker(where || 'design-panel', from), close: DM.close, show: DM.show, get isOpen(){ return DM.isOpen; }};
+  function openPicker(where, from){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
+    if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
+    hideNudge(); setPk(false); DM.open(from || document.activeElement); lastSig = ''; sync(); return; }
+  function openPickerOld(where){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
     if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
     hideNudge();
     for(const p of plans()) load(p.id);
@@ -16489,7 +16627,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     banner.style.setProperty('--cb42t', Math.round(top) + 'px'); banner.style.setProperty('--cb42x', Math.round(cx) + 'px'); banner.style.setProperty('--cb42w', Math.round(Math.min(w, 860)) + 'px');
     root.style.setProperty('--cb42t', Math.round(top) + 'px'); root.style.setProperty('--cb42h', Math.round(banner.offsetHeight || 0) + 'px'); }
   banner.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
-    if(b.dataset.a === 'plans'){ ga('design_cta', {where: 'banner', stop: stopId(), kind: 'plans'}); setPk(true); setMode('design'); lastSig = ''; sync(); return; }
+    if(b.dataset.a === 'plans'){ openPicker('banner', b); return; }   /* r45: the layouts menu */
     ga('plan_pick', {plan: 'asbuilt', concept: 'real', where: 'banner'});
     const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); });
 
