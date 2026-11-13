@@ -220,3 +220,17 @@ atlas, redrawn when the eye moves or the light or exposure is still changing, ne
 ?qa=1); the still-frame accumulator compares this frame's camera pose; level surfaces read the room mask 3" to each side (the 6-in
 cells along every wall read the sky). Same test after: 1248 casters at every redraw, one map size, no SSAO, exposure range .01
 stops. `?ghost41=0` turns r41 off.
+
+### 7.1 r41, later the same day: the window pull, the mirrors, and the pivot evidence on the owner's Mac
+
+- **Window pull** (`R41W`, rule:window-pull): exterior surfaces seen from inside are drawn at the outdoor exposure (`outGain` 1.2,
+  +0 stop). Measured in the browser pane (real GPU): by day the outdoor stops settle at .965-.98 on a base of .80-.84 and the
+  glazed rooms at .90-1.13, so at the calibrated stops the pull is 1 (no change); the first pass (+.6 stop, gain 1) never engaged.
+  Its sampler, declared in every standard program through the shared chunks, made the probe mirrors (own `onBeforeCompile`, cube
+  envMap) fail their draw (GL INVALID_OPERATION): the hall-bath and lower-bath mirrors were black. **Off by default; `?r41w=1`.**
+- **Pivot popping, root cause** (kitchen stop, governor on, `&gov=1`): on main the governor's still / moving switch redraws the
+  frame with SSAO and another shadow-map size when you stop and without them when you move: big grey patches on the hood, upper
+  cabinets and ceiling appear and vanish at every start and stop. On r41 the same sequence is identical. A per-frame trace
+  (0.25 degree steps, stop-and-go, real drags) logged only the governor level / render scale and shadow-map redraws with a constant
+  1218-1220 casters; exposure, lights, the env crossfade, the shadow camera and the pull did not change, and a fixed reference view
+  redrawn every frame with that frame's lighting changed by at most .0016 (mean |log2 luma|).
