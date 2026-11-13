@@ -1419,11 +1419,11 @@ html.hwload .loading .loadnote{color:#c9bcd8}
      r43: every game, and the files each one loads next (Snowball, its props, its level logic), fetched in parallel with the house instead of one after another
      once it is built. __GAMES_SRC[id][0] is the game itself (the loader below uses it); the rest must match the URLs the game requests (a mismatch only costs a
      wasted download: the game still loads its own). assets/games-menu.js prefetches these when the Games picker opens; holiday.js the season's game when idle. */
-  window.__GAMES_SRC = {feast: ['../assets/feast3d/feast.js?v=9', '../assets/snowball.js?v=37', '../assets/feast3d/feast-props.js?v=2'],
+  window.__GAMES_SRC = {feast: ['../assets/feast3d/feast.js?v=10', '../assets/snowball.js?v=37', '../assets/feast3d/feast-props.js?v=2'],
     deck: ['../assets/deck3d/deck.js?v=52', '../assets/snowball.js?v=37', '../assets/deck3d/deck-props.js?v=46', '../assets/deck3d/deck-sfx.js?v=34'],
     snowball: ['../assets/find/find.js?v=42', '../assets/snowball.js?v=37'],
-    escape: ['../assets/escape/escape.js?v=55', '../assets/escape/logic.js?v=55', '../assets/snowball.js?v=36'],
-    room: ['../assets/room3d/room.js?v=12', '../assets/room3d/room-logic.js?v=4', '../assets/room3d/room-data.js?v=2', '../assets/snowball.js?v=37']};
+    escape: ['../assets/escape/escape.js?v=56', '../assets/escape/logic.js?v=55', '../assets/snowball.js?v=36'],
+    room: ['../assets/room3d/room.js?v=13', '../assets/room3d/room-logic.js?v=4', '../assets/room3d/room-data.js?v=2', '../assets/snowball.js?v=37']};
   window.__FEAST_SRC = window.__GAMES_SRC.feast[0];
   (function(){ var m = /[?&](feast|deck|snowball|escape|room)=/.exec(location.search); if(!m) return; window.__GAMES_SRC[m[1]].forEach(function(u){ var l = document.createElement('link'); l.rel = 'preload'; l.as = 'script'; l.href = u; document.head.appendChild(l); }); })();</script>
   <canvas id="c" tabindex="0" aria-label="3D model of 118 Hillside Drive"></canvas>

@@ -1033,7 +1033,7 @@
       <ul class="how"><li>${ICO.bed}Tap a guest, then a room</li><li>${ICO.house}Tap a room on its own to go inside</li><li>${ICO.ring}Tap gold rings and drag the sun to see what a room has</li></ul>
       ${first ? '' : levelList()}
       <div class="acts"><button class="rfeBtn primary" type="button" id="rfeGo" style="min-width:150px;min-height:52px;font-size:17px">${first ? 'Meet the guests' : nx === 'daily' ? 'Play today’s guest list' : 'Play puzzle ' + (nx + 1)}</button>${sndBtn()}</div>
-      <p class="foot">Five puzzles, and a new one every day. The house is real: 118 Hillside Drive in Woodside, California, and it’s for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day. The animals are made up.</p></div>`);
+      <p class="foot">Five puzzles, and a new one every day. The house is real: 118 Hillside Drive in Woodside, California, and it’s for sale. What you see here is a 3D model of it, and the sunlight is the model’s, worked out for a midsummer day. The furniture is AI-generated, and the animals are made up.</p></div>`);
     document.body.appendChild(c); bindSnd0(); const go = v => { SND.unlock(); SND.tap(); introCard(v === 'daily' ? LG.daily(LG.dayNumber(new Date())) : LG.LEVELS[v]); };
     $('#rfeGo').onclick = () => go(nx); $$('#rfeCard .lv button').forEach(b => b.onclick = () => go(b.dataset.lv === 'daily' ? 'daily' : +b.dataset.lv)); try{ $('#rfeGo').focus({preventScroll: true}); }catch(e){} }
   // who takes a bedroom and what does not: said once, on the card for each puzzle

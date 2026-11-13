@@ -921,7 +921,7 @@
         ${D && D.lede ? `<p class="lede">${D.lede}</p>` : ''}${note}
         <ul class="how"><li>${ICO.drag}Drag to look around</li><li>${ICO.disc}Tap a white circle to walk there</li><li>${ICO.ring}Tap a gold ring to look closer</li></ul>
         <div class="acts">${sv ? `<button class="escBtn primary" type="button" id="escGo" style="min-width:150px;min-height:52px;font-size:17px">Carry on (${fmtT(sv.el)} in)</button><button class="escBtn" type="button" id="escNew">Start over</button>` : `<button class="escBtn primary" type="button" id="escGo" style="min-width:150px;min-height:52px;font-size:17px">Go inside</button>`}<button class="escBtn" type="button" id="escSnd0"></button></div>
-        <p class="foot">${M.time}${best ? ', and your best so far is ' + fmtT(best.time) : ''}. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it’s for sale.</p></div>`;
+        <p class="foot">${M.time}${best ? ', and your best so far is ' + fmtT(best.time) : ''}. The house is real: 118 Hillside Drive in Woodside, California, shown here as a 3D model, and it’s for sale. Its furniture and decor are AI-generated.</p></div>`;
       const s0 = $('#escSnd0'), d0 = () => { s0.innerHTML = (SND.muted ? ICO.mute : ICO.sound) + '<span>' + (SND.muted ? 'Sound is off' : 'Sound is on') + '</span>'; s0.setAttribute('aria-pressed', String(!SND.muted)); };
       s0.onclick = () => { SND.setMuted(!SND.muted); d0(); UI.drawSnd(); if(!SND.muted) SND.goal(); }; d0();
       $$('.lv button', c).forEach(b => b.onclick = () => { if(b.dataset.l === LEVEL) return; SND.unlock(); SND.tap(); LEVEL = b.dataset.l; store.set('esc.level', LEVEL); ga('esc_level', {pick: LEVEL});
