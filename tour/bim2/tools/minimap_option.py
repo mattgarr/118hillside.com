@@ -9,6 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_open4 as B4
 import plan_svg as RP
+import build_open4k as K4
 T = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..') + '/'
 EXT = [-35.075, -51.493, 33.582, 39.552]          # world x0 (plan y), z0 (plan x), x1, z1
 base = Image.open(T + 'floor_main.jpg').convert('RGB'); Wd, Ht = base.size
@@ -38,9 +39,9 @@ def make(v):
         return t
     OAK, DECK = tiled(oak), tiled(deckp)
     # the area that changes: the old kitchen, the great room (with the two bedrooms), the new deck
-    room = Polygon(B4.ROOM); oldk = Polygon([s for s in D['spaces'] if s['id'] == 'SP-L1-KITCHEN'][0]['polygon']).buffer(0)
+    room = Polygon(K4.ROOM2) if v == 'open4k' else Polygon(B4.ROOM); oldk = Polygon([s for s in D['spaces'] if s['id'] == 'SP-L1-KITCHEN'][0]['polygon']).buffer(0)
     inside = unary_union([room, oldk])
-    deck = unary_union([Polygon(w['poly']).buffer(0) for w in D['walkable'] if w.get('id') == 'SL-DK-K4']).difference(Polygon(B4.ROOM).buffer(.45))
+    deck = unary_union([Polygon(w['poly']).buffer(0) for w in D['walkable'] if w.get('id') == 'SL-DK-K4']).difference(room.buffer(.45))
     region = unary_union([inside.buffer(.62), deck.buffer(.3)])
     mask = Image.new('L', (W_, H_), 0); md = ImageDraw.Draw(mask)
     for ext, holes in poly_px(region): md.polygon(ext, fill=255)
@@ -66,6 +67,19 @@ def make(v):
             col = (250, 250, 248) if k not in ('fridge4Door', 'range36') else (214, 216, 218)
             fill(dr, g, col)
             for ext, holes in poly_px(g): dr.line(ext + [ext[0]], fill=(150, 150, 150), width=1)
+    # the library wall, the beam's post, and the loose pieces that explain the plan (dining table, piano, sideboard, sofa)
+    for f in F:
+        k = f['render']['kind']; pr = f.get('params') or {}
+        if k == 'libraryWall':
+            for a, b, ty in pr.get('bays', []):
+                if ty in ('post', 'door'): continue
+                g = sbox(f['at'][0], f['at'][1] + a, f['at'][0] + (pr.get('baseD', 1) if ty == 'base' else pr.get('d', 1)), f['at'][1] + b); fill(dr, g, (250, 250, 248))
+                for ext, holes in poly_px(g): dr.line(ext + [ext[0]], fill=(150, 150, 150), width=1)
+        elif k in ('diningTable', 'pianoUpright', 'sideboard', 'sofa3', 'pianoBench'):
+            w_, d_, sh = RP.LOOSE[k]; f2 = dict(f); f2['params'] = dict({'w': w_, 'd': d_}, **{kk: vv for kk, vv in pr.items() if kk in ('w', 'd')}); g = RP.foot(f2)
+            fill(dr, g, {'diningTable': (196, 160, 118), 'pianoUpright': (28, 28, 30), 'pianoBench': (40, 40, 42), 'sideboard': (60, 70, 86), 'sofa3': (236, 232, 222)}[k])
+            for ext, holes in poly_px(g): dr.line(ext + [ext[0]], fill=(120, 120, 120), width=1)
+    if v == 'open4k': fill(dr, sbox(K4.POST[0], K4.POST[2], K4.POST[1], K4.POST[3]), (150, 110, 70))
     # fireplace
     fill(dr, sbox(16.3, B4.Y_N - 1.2, 22.3, B4.Y_N), (205, 205, 205)); fill(dr, sbox(17.05, B4.Y_N - .55, 21.55, B4.Y_N - .15), (40, 40, 40))
     # walls (black) of the option, cut at the openings; windows white, doors open

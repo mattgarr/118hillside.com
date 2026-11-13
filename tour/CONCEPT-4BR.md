@@ -170,6 +170,74 @@ decking, skirt and cable rail as the porch.
 Same shell as the first version: the front and middle bedrooms and their closets come out, the back bedroom, hall and hall bath
 stay, and the exposed fir ridge beam carries the ridge. Only what changes is listed here.
 
+## v2 (r43f): one room from gable to gable. Design rationale
+
+**Illustrative idea. Not designed or reviewed by an architect or engineer.** This section replaces the layout notes further down
+wherever they differ (the "reading nook", the dining table for six, the fridge on the gable wall).
+
+**What was wrong.** The first build of this plan took out the two bedrooms and the old kitchen but left the walls that only served
+them: a stub between the old kitchen and the great room, the rest of that wall up to the bath with a door that now led from a hall
+to nowhere, and two short pieces of wall between the old kitchen and the hall. The owner: "a random bit of wall and a vestigial
+door ... extend that beam a little bit longer and open all of that up."
+
+**What comes out.** W-L1-041, 042, 043 (the stub and the hall / bedroom wall) with door D-L1-06; W-L1-014 and 015 (the two pieces
+between the old kitchen and the hall); the hall's flat 8-ft ceiling. Nothing is left standing inside the room.
+
+**What stays, and why.** The exterior walls. The original west gable wall of the 1950s house (W-L1-033 to 038): it closes the
+room, carries the beam's post, and has the pocket door to the living room and the door to the west bedroom. The hall bath's two
+walls (W-L1-016, W-L1-044) and the corner where the removed wall met them. The west bedroom, its closets, the laundry, the entry
+and the living room are untouched.
+
+**Structure.** The vault now runs 31 ft 4 in from the street gable to the west gable wall, and the ridge beam runs with it as one
+clear span: no post in the room. It is drawn as a 6-3/4 by 24 in glulam, which a rough check says is the right order of size for
+this roof (about 14 ft of roof on the beam); an engineer sizes it, and steel is the alternative if the depth has to come down. The
+west end sits on a post against the gable wall, on a new footing below; the east end bears in the street gable over the kitchen
+window's header, with posts either side of the window. **Fallback:** if the clear span proves too costly, one post on the old
+wall line (about 8 ft 8 in from the west wall) cuts the main span to 22 ft 8 in; it would stand at the edge of the library rug.
+The hall's ceiling joists come out, so the rafters over it need the same tie or ridge support as the rest of the vault.
+
+**The library.** The old kitchen and hall are the west end of the room, where three doors arrive (living room, bedroom, bath).
+Instead of a nook in a corner, the west gable wall becomes the room's second focal wall: shelved from the floor to the ceiling
+line, 8 ft at the south eave rising to 13 ft 7 in under the ridge, with the living-room door passing through the books, cabinets
+below, and a rolling ladder on a rail. The beam's post is the centre of the tall bays. So the room has an axis: from the island
+you look 31 ft down the beam to a wall of books; from the living-room door you look the other way down the dining table to the
+kitchen and the gable glass. A window seat 6-1/2 ft long and 2-1/2 ft deep fills the south window, which looks onto the front
+porch. Two reading chairs sit in front of the tall bays, under a fifth skylight on the north slope
+where the hall was: the darkest part of the old plan gets even north light, which is what a reading chair and book spines want.
+From the chairs you see the fire across the room.
+
+**Piano.** An upright on the bath's east wall, beside the fireplace: an inside wall, out of the sun, away from the folding wall's
+draughts and from the kitchen. The pianist is part of the living group. (It was first drawn on the south wall next to the folding
+wall; the ten-seat table needs that floor, and an outside wall beside a wall that opens is the wrong place for a piano.)
+
+**Dining.** This is the house's only dining table, so it is sized as one: an extending table, 8 ft by 3 ft 6 in for eight every
+day, 10 ft with the leaf in for ten. It is shown extended, with four chairs a side and one at each end (30 in a place on the
+sides). It runs along the folding glass wall: 3 ft clear behind the chairs on the glass side, about 7-1/2 ft on the room side,
+which is the main way through. A sideboard stands on the south wall between the window seat and the glass. The island stools
+moved north so the nearest is clear of the table's corner chair.
+
+**Kitchen.** Fridge at the room end of the range wall, with a panelled end toward the living area: a drink is fetched without
+passing the range. Then 2 ft of drawers, the 36-in range and hood, and the corner. The island gets a prep sink at its north end.
+Fridge to range is about 5 ft, range to prep sink 6 ft, prep sink to fridge 6-1/2 ft. The sink under the window and the
+dishwasher on the gable wall are the clean-up side, with the two pantry cabinets at the dining end. Aisles: 3-1/2 ft between
+island and gable-wall counter, 4-1/2 ft between island and range counter.
+
+**Getting around.** Everyone arrives at the west end and reaches the living area, the table and the deck without entering the
+kitchen. The way to the deck is along the glass or round the east end of the table, past the pantry end of the kitchen, not the
+cooking end. The kitchen is entered at its north end by the fridge, or from the dining end.
+
+**Doors onto the room.** The bedroom and bath doors now open onto the library's north edge instead of a hall. The bath door
+becomes a pocket door sliding east into its wall, so no leaf stands open toward the room; in the 3D model it is the house's own
+hinged door, shown shut (it still swings if tapped). The bedroom door wants a solid core. This loss of a buffer is the real cost
+of taking the hall out, and a buyer who minds it should keep a short screen wall by the bath door.
+
+**Model notes (v2).** New page pieces: `libraryWall` (builtins.js), `pianoUpright` and `pianoBench` (staging.js), an `island`
+option `sinkEnd` for a prep sink (fixtures.js), and an option key `restShut` (doors of the house that rest shut while the plan
+shows). The old kitchen's space id is kept and renamed Library, enlarged over the hall; the hall space is dropped. New element
+ids: `W-L1-K5P` (wall faces left bare), `W-L1-K5C` (bath corner collider), `PT-L1-K5W` (post). Viewpoints: foyer, entry, library,
+windowseat, hall, kitchen, kitchenrun, living, dining, deck, driveway, street, aerial. Drawings: `bim2/tools/plan_svg.py`;
+minimap: `bim2/tools/minimap_option.py open4k`.
+
 ## Where the kitchen goes: three options
 
 The room is about 22.7 ft east-west (x 13.9 to 36.6) by 27.3 ft north-south (y 4.8 to 32.1), entered at its west end from the old
@@ -231,12 +299,12 @@ wall; dining: glass and deck). B is the budget version and is not worth it here 
   the island to the range.
 - **Living** (middle, north side): a 6-ft-wide gas fireplace on the north wall where the middle bedroom's window was, with a fir
   mantel at 4¼ ft, built-in bookcases either side, a sofa facing it across a rug, an ottoman and two armchairs.
-- **Dining** (west, south side): a 7-ft glass table with six parsons chairs along the folding glass wall, under a skylight.
+- **Dining** (west, south side): first a 7-ft glass table for six; in v2 an extending oak table for eight, ten with the leaf in (see above).
 - **Old kitchen**: taken out entirely and reused as a reading nook (below).
 - **Skylights**: four 2½ ft by 3 ft skylights in wells through the vault: two over the island, one over the dining table, one
   over the living area.
 
-### The old kitchen, reused (r43, owner: "that counter / cabinets should be removed to use for other purposes")
+### The old kitchen, reused: first pass, replaced by the v2 library above (r43, owner: "that counter / cabinets should be removed to use for other purposes")
 Every cabinet, counter, the peninsula, the sink, the range slot, the fridge alcove's tower and all appliances come out; its walls,
 window and doors stay, and the oak floor (already one continuous floor under the cabinets) runs through. The space is about 10.8
 by 13.5 ft plus the alcove to the bedroom hall.
