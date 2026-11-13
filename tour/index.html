@@ -19592,7 +19592,7 @@ function v33Fit(mesh){ const o = mesh.parent, u = o && o.userData, f = mesh.mate
   const pl = side(-w / 2, 0, -w / 2, dd, -1, 0), pr = side(w / 2, 0, w / 2, dd, 1, 0), pb = side(-w / 2, 0, w / 2, 0, 0, -1), pf = side(-w / 2, dd, w / 2, dd, 0, 1);
   const xs = [-w / 2 - pl, w / 2 + pr], zs = [-pb, dd + pf], g = mesh.geometry, Pp = g.attributes.position, T = g.attributes.uv; let n = 0;
   for(const z of zs) for(const x of xs){ Pp.setXYZ(n, x, V33C.y, z); T.setXY(n, (x - f.X0) / f.ex, (z - f.Z0) / f.ez); n++; }
-  Pp.needsUpdate = true; T.needsUpdate = true; g.computeBoundingSphere(); mesh.userData.v33pads = [pl, pr, pb, pf]; }
+  Pp.needsUpdate = true; T.needsUpdate = true; mesh.userData.v33pads = [pl, pr, pb, pf]; }
 function v33Contact(o){
   const u = o && o.userData; if(!u || u.category !== 'furniture' || !u.size || u.v33c || V33C.skip.test(u.kind || '')) return; if(u.opts && u.opts.mountY !== undefined) return;
   const w = u.size[0], dd = u.size[1]; if(!(w > .3 && dd > .3)) return;
@@ -19601,7 +19601,8 @@ function v33Contact(o){
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(12, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(8, 2)); g.setIndex([0, 2, 1, 1, 2, 3]);
   g.boundingBox = new THREE.Box3(new THREE.Vector3(0, V33C.y, dd / 2), new THREE.Vector3(0, V33C.y, dd / 2));   // a point: the decal does not widen the piece's own box
   const mesh = new THREE.Mesh(g, mat);
-  mesh.name = 'v33contact'; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 1; mesh.raycast = () => {}; mesh.userData.noAO = true; mesh.userData.v33contact = true; mesh.frustumCulled = false;
+  mesh.name = 'v33contact'; mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 1; mesh.raycast = () => {}; mesh.userData.noAO = true; mesh.userData.v33contact = true;
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, V33C.y, dd / 2), Math.hypot(w / 2 + V33C.pad, dd / 2 + V33C.pad));   // the widest the quad gets: culled with the piece, refitted only when drawn
   mesh.onBeforeRender = function(){ try{ v33Fit(this); }catch(e){} };
   o.add(mesh); try{ v33Fit(mesh); }catch(e){} V33C.n++; V33.report.contact = V33C.n;
 }
