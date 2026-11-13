@@ -11966,6 +11966,8 @@ function hwPlan(){ if(HW.G.plan) return HW.G.plan; const P = {walls: {}, fx: {}}
   for(const e of B2L.walls.concat(B2L.fixtures)){ if(e.ifc === 'IfcWall' && Array.isArray(e.footprint || (e.outline))){ (P.walls[e.storey] = P.walls[e.storey] || []).push(e.footprint || e.outline); }
     else if(/^Ifc(Furniture|SanitaryTerminal|ElectricAppliance)$/.test(e.ifc) && Array.isArray(e.at)) (P.fx[e.storey || ''] = P.fx[e.storey || ''] || []).push(e.at); }
   for(const w of []){ if(w.footprint && w.storey) (P.walls[w.storey] = P.walls[w.storey] || []).push(w.footprint); }
+  // r48 laundry: the laundry built-ins are built from the legacy list (LAUNDRY48), not the meta's fixtures: their centres keep the kits off them
+  try{ for(const F of FIXOBJ){ if(!F.id || !/^LX-/.test(F.id) || F.v) continue; const c = new THREE.Box3().setFromObject(F.obj).getCenter(new THREE.Vector3()); (P.fx.L0 = P.fx.L0 || []).push([c.z, c.x, c.y]); } }catch(e){}
   return HW.G.plan = P; }
 function hwFree(x, z, yFloor, rad, occ, storey, maxR = 5){ const P = hwPlan(), walls = P.walls[storey] || [], fx = [].concat(...Object.values(P.fx));
   for(let rr = 0; rr <= maxR; rr += .75) for(let k = 0; k < (rr ? 10 : 1); k++){ const a = k / 10 * Math.PI * 2 + rr, px = x + Math.cos(a) * rr, pz = z + Math.sin(a) * rr, bp = [pz, px];   // world (x,z) -> BIM (x = world z, y = world x)
