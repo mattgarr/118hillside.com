@@ -488,7 +488,7 @@ def staging():
     return F
 
 CARD = {'name': 'Open kitchen and great room', 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': LABEL,
-        'description': 'The whole original gable becomes one vaulted great room under a clear-span ridge beam: living around a gas hearth at the street end, an L-shaped kitchen with an island at the other, a table for eight (ten with leaves) between them at 14-ft folding glass doors to the porch and a new deck. The old living room becomes a library on the way in, with a new bath beside the back bedroom. 4 bedrooms, 3 baths, plus office.',
+        'description': 'The whole original gable becomes one vaulted great room under a clear-span ridge beam: living around a gas hearth at the street end, a working L-shaped kitchen with an island at the other, a table for eight (ten with leaves) between them at 14-ft folding glass doors to the porch and a new deck. The old living room becomes a library on the way in, with a new bath beside the back bedroom. 4 bedrooms, 3 baths, plus office.',
         'note': 'Concept r44 (owner pick "1-open B-flip", 11/12/2026): the front and middle bedrooms, the hall bath, the hall and the old kitchen all come out of the original gable; hearth on the street gable; L kitchen on the north and west walls; folding glass doors centred on the table; a 3/4 bath, hall with stacked washer and dryer and a library in the old living room; back bedroom entered through a vestibule. Status: illustrative, not designed or reviewed by an architect or engineer.',
         'status': 'illustrative', 'source': 'concept r44 (tour/CONCEPT-4BR.md)', 'pageExtras': True}
 

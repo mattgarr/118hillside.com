@@ -179,11 +179,14 @@ street, y north).
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
   6 ft 6 windows (three mulled double-hung-style units each, like the rest of the house), one either side of the hearth,
   with a triangle of gable glass over each that follows the rake and stops short of the stone. Bookshelves stand on the north wall either side of a 5-ft window.
-- **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood) is on the north wall between two counter-height
-  windows. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
+- **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood, pot filler) is centred on the north wall, which is now a
+  solid cabinet wall: the two small windows that flanked the range are closed up (siding outside), with upper cabinets the
+  length of the run either side of the hood, glass fronts next to it, quartz up the wall to the uppers and the hood, lights
+  and plug strips under them. The run goes 2 ft further toward the living area and ends in a drinks fridge and a panelled end. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
   cabinets, one crown along the top and a panelled end. (The owner asked for about 3 ft more cabinetry toward the table;
-  the tall wall took the full 3 ft, now starting at y 18.) An 8-ft x 3 ft 6 island carries the sink and
-  dishwasher on its working side and four stools on the dining side. Sink to range is one step across a 4-ft aisle; the
+  the tall wall took the full 3 ft, now starting at y 18.) An 8-ft x 3 ft 6 island carries, on its working side, a pull-out trash and recycling cabinet, the sink, the
+  dishwasher and a drawer stack, with four stools on the dining side. Deep pot drawers sit either side of the range, and the
+  tall wall has a coffee station (an open lit niche with an appliance garage over it) beside the oven column. Sink to range is one step across a 4-ft aisle; the
   fridge is at the end of the same aisle, reachable from the room without crossing the cook.
 - **Dining between them.** A table for eight (8 ft x 3 ft 6; ten with its leaves) sits on the kitchen's axis, parallel to the
   island, with a 7-ft sideboard on the west wall, centred on the table. This is the house's only dining place, so it is sized as one.
@@ -246,8 +249,8 @@ exterior walls and adding a fireplace vent are all permit work.
 - The plan drew the washer and dryer open to the hall with about 29 in beside them. The model moves them to a closet in
   the hall's south-east corner and slides the library door 1 ft west, which leaves 36 in. The cost is 4 in of library
   shelving and a 32-in door instead of a 34-in one.
-- No high gable glass and no skylights in this version; daylight is the folding doors, the fixed window and the five
-  new windows.
+- No skylights in this version; daylight is the folding doors, the fixed window, the two gable windows with the gable glass
+  over them and the living-area window on the north wall. The stove wall has no windows.
 - The deck carries two lounge chairs and a low table off to the east; the floor in front of the open doors is clear.
 - Cost drivers, roughly in order: the beam and its supports, the folding doors and south-wall structure, the kitchen
   (new plumbing and gas at the west end, though it is close to the existing bath's lines), the new bath, the fireplace.

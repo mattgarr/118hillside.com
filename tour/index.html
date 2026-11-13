@@ -24773,8 +24773,27 @@ function r40EnvStep(){ const X = R40X; if(!X.out || X.k >= 1 || !X.B) return; X.
 // ---- R40M: the interior mask. Per 6-in plan cell, up to two height intervals of interior air (BIM interior spaces, floor to the
 // ceiling over that cell), closed by 1 ft so interior walls and the door openings between rooms count as inside (the outer walls do not)
 const R40M = window.R40M = {c: .5, done: false, key: '', ms: 0, nx: 0, nz: 0, filled: 0};
+/* r44: the rooms the interior masks are built from. With a layout idea showing, its own rooms (scene.opt-*.meta.json spaces), not the
+   as-built ones: under the as-built rooms the vault of an opened-up great room was still cut at the removed hall's and bath's 8-ft
+   ceilings, so the ceiling above read as outside air (a grey patch over the kitchen, owner 11/12). A room the idea leaves as built
+   keeps the house's own record; a changed or new room is read from the idea's polygon and ceiling planes. */
+function r44MaskSpaces(){
+  const S = BIM2.state; let sp = S.spaces.filter(s => s.interior), contains = S.contains, topOf = S.topOf;
+  try{ const o = (typeof ACTIVE_VAR !== 'undefined' && ACTIVE_VAR !== 'asbuilt' && BIM2.option) ? BIM2.option(ACTIVE_VAR) : null, D = o && o.data;
+    if(D && Array.isArray(D.spaces) && D.spaces.length && S.spaceById){ const out = [], J = JSON.stringify;
+      for(const r of D.spaces){ if(r.interior === false) continue; const b = S.spaceById[r.id];
+        if(b && b.raw && J(b.raw.polygon) === J(r.polygon) && J(b.raw.ceiling) === J(r.ceiling)){ if(b.interior) out.push(b); continue; }
+        if(!r.polygon || r.polygon.length < 3 || (b && !b.interior)) continue; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for(const q of r.polygon){ x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0]); y1 = Math.max(y1, q[1]); }
+        out.push({id: r.id, floorZ: r.floorZ || 0, bb: [x0, y0, x1, y1], interior: true, r44: r}); }
+      if(out.length){ sp = out;
+        contains = (s, x, y) => s.r44 ? BIM2.inPoly(s.r44.polygon, x, y) : S.contains(s, x, y);
+        topOf = (s, x, y) => { if(!s.r44) return S.topOf(s, x, y); const c = s.r44.ceiling || {};
+          for(const pl of (c.planes || [])){ if(pl.poly && !BIM2.inPoly(pl.poly, x, y)) continue; const P = pl.P; if(P && P.c != null) return P.c + (P.gx || 0) * x + (P.gy || 0) * y; }
+          return s.floorZ + (c.height || 8); }; } } }catch(e){ console.warn('[r44] mask spaces', e); }
+  return {spaces: S.spaces, sp, contains, topOf}; }
 function r40BuildMask(){
-  if(typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false; const S = BIM2.state, sp = S.spaces.filter(s => s.interior); if(!sp.length) return false;
+  if(typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false; const S = r44MaskSpaces(), sp = S.sp; if(!sp.length) return false;
   const key = (typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : '') + ':' + S.spaces.length + ':' + sp.length; if(R40M.done && key === R40M.key) return true;
   const t0 = performance.now(), c = R40M.c; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9, zlo = 1e9, zhi = -1e9;
   for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); zlo = Math.min(zlo, s.floorZ); }
@@ -24808,7 +24827,7 @@ window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.
 // room air (0-4 ft), G / B = that room column's floor and ceiling (the R40M height scale), so a jamb in the wall reads its room's height
 function r41WBuild(){
   if(!R41W.on || !R40M.done || typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false;
-  const S = BIM2.state, sp = S.spaces.filter(s => s.interior), key = R40M.key + ':' + sp.map(s => s.bb && s.bb.map(v => v.toFixed(2)).join(',')).join(';');
+  const S = r44MaskSpaces(), sp = S.sp, key = R40M.key + ':' + sp.map(s => s.bb && s.bb.map(v => v.toFixed(2)).join(',')).join(';');
   if(R41W.built && key === R41W.key) return true; if(!sp.length) return false;
   const t0 = performance.now(), c = .25, pad = R41W.dMax + 1; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9;
   for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); }
