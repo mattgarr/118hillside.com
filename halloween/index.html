@@ -8670,7 +8670,7 @@ if(window.FIX && FIX.make && !FIX.__fridge4){ FIX.__fridge4 = true; const _mk = 
     sb(-w / 2 + .005, w / 2 - .005, toe + g, ys - g / 2);                                                  // freezer drawer
     bar(0, ys - .2, w - .7, false);
     for(const sg of [-1, 1]){ const x0 = sg < 0 ? -w / 2 + .005 : g / 2, x1 = sg < 0 ? -g / 2 : w / 2 - .005;   // French doors
-      sb(x0, x1, ys + g / 2, h - g); bar(sg * .16, ys + .45 + 1.65, 3.1, true);
+      sb(x0, x1, ys + g / 2, h - g); { const hl = Math.min(3.1, h - ys - .7); bar(sg * .16, Math.min(ys + .45 + 1.65, h - .2 - hl / 2), hl, true); }   /* r47 (owner 11/13: "the refrigerator handles ... are actually going above the fridge"): the door handles were 3.1 ft long, centred 2.1 ft above the drawer line, whatever the fridge's height; on this 5.9 ft fridge they stood 5 in over its top. They now fit the doors: at most 3.1 ft, ending 0.2 ft below the top */
       b.rbox('fGloss', .2, .045, .06, .015, sg * (w / 2 - .22), h - .02, zf + dt - .03, {seg: 2}); }      // hinge covers
     b.bb('fSide', -w / 4 - .1, h - .3, zf + dt + .001, -w / 4 + .1, h - .285, zf + dt + .003);            // badge (a small dark-steel nameplate)
     if(O.dispenser){ const dw = .78, dh = 1.32, dx = -w / 4 - .05, dy = ys + (h - ys) * .52, zz = zf + dt;
@@ -19561,6 +19561,9 @@ async function bim2Lighting(){ if(BIM2S && BIM2S.meta.exteriorLights) return B2L
 /* ================= bim3 integration (bim2/web/patches/bim3_integration.js): v33-page additions on top of bim2_integration.js ========== */
 /* category flags: which house categories come from the compiled model (scene.glb + scene.meta.json). ?bim3off=cat1,cat2 turns a category
    back to the v33 page builder where one still exists (debug only). */
+/* r47: the model's brushed nickel (door knobs and pulls) as satin nickel: a light warm grey, a third metal, a soft highlight (see the tour page) */
+function r47Nickel(){ try{ const m = M.b2_nickel_brushed; if(m && !m.userData.r47){ m.userData.r47 = true; m.color.set(0xd6d3cb).convertSRGBToLinear(); m.metalness = .35; m.roughness = .3; m.envMapIntensity = 1.5; m.needsUpdate = true; } }catch(e){} }
+{ const _b47 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b47.apply(this, arguments); r47Nickel(); return r; }; }
 const BIM3 = window.BIM3 = {cats: {shell: true, finishes: true, builtins: true, fixtures: true, site: true}, report: {}};
 try{ const m = /[?&]bim3off=([^&]+)/.exec(location.search); if(m) for(const c of decodeURIComponent(m[1]).split(',')) BIM3.cats[c] = false; }catch(e){}
 /* top of the ceiling over a world point (x, z) at height y (the v33 closet check asks 'does the cabinet meet the ceiling') */

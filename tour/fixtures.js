@@ -2071,7 +2071,7 @@ def('tvWall', 'furniture', { size: 65, mountY: 4.5, standoff: 0.12 }, function (
   var W = o.size * 0.8716 / 12, H = o.size * 0.4903 / 12, t = 0.07, y = o.mountY, z = o.standoff;
   b.bb('blackMetal', -0.6, y - 0.4, 0, 0.6, y + 0.4, z - t / 2, 0.01);
   b.rbox('frameDark', W, H, t, 0.012, 0, y, z, { seg: 1 });
-  b.box('screen', W - 0.04, H - 0.04, 0.004, 0, y, z + t / 2 + 0.001);
+  b.box('screen', W - 0.04, H - 0.04, 0.02, 0, y, z + t / 2 + 0.002);   // r47: the glass stands 1/8 in proud of the frame (it was 1/32 in: the two flickered through one another from across the room)
 }, function (o) { return [o.size * 0.8716 / 12, 0.2, o.mountY + o.size * 0.4903 / 24]; }, 'Wall-mounted flat TV (size = diagonal inches); screen centre at mountY.');
 
 /* ================================================================== OUTDOOR KITCHEN (rear terrace, photos p30 / p43 / p47) */

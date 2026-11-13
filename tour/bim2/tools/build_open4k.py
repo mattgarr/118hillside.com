@@ -249,9 +249,13 @@ def build():
     oldr = lambda k, pad=0.35: rect(OLD_WIN[k][1], OLD_WIN[k][2] + 2 * pad, OLD_WIN[k][3] - pad, OLD_WIN[k][4] + pad)
 
     # ---- one oak floor and one vault over the whole gable box; the ridge beam, clear span
-    room = Polygon(BOX); floor = unary_union([room, sbox(FOLD['x0'], Y_SO, FOLD['x1'], Y_S), sbox(X_WW, PASS[0], X_LW, PASS[1])])
+    # r47: under the folding doors the oak used to run on at floor level, in the same plane as the wall's own sill face and 1/8 in under the
+    # steel track (they flickered through one another). The floor now stops at the room face; under the doors it is a sub-sill 1/4 in down,
+    # there only to close the light mask, and the track stands 3/8 in proud.
+    room = Polygon(BOX); floor = unary_union([room, sbox(X_WW, PASS[0], X_LW, PASS[1])]); under = sbox(FOLD['x0'], Y_SO, FOLD['x1'], Y_S)
     plane_face(O, 'FL-SP-L1-B5', None, 'floors', 'L1', 'oak-red-lauzon-vela', floor, lambda x, y: (x, y, 0.0), (0, 0, 1))
-    plane_face(O, 'FL-SP-L1-B5', None, 'floors', 'L1', 'oak-red-lauzon-vela', floor, lambda x, y: (x, y, -0.062), (0, 0, -1))
+    plane_face(O, 'FL-SP-L1-B5', None, 'floors', 'L1', 'oak-red-lauzon-vela', under, lambda x, y: (x, y, -0.02), (0, 0, 1))
+    plane_face(O, 'FL-SP-L1-B5', None, 'floors', 'L1', 'oak-red-lauzon-vela', unary_union([floor, under]), lambda x, y: (x, y, -0.062), (0, 0, -1))
     strips = unary_union([sbox(-6.6, 14.32, X_WW, 14.70), sbox(-6.42, 16.74, X_WW, 17.11), sbox(X_WW, 9.0, X_LW, 14.51), sbox(X_WW, 22.22, X_LW, 25.5555), sbox(X_WW, 4.404, X_LW, PASS[0])])
     plane_face(O, 'FL-B5-PATCH', None, 'floors', 'L1', 'oak-red-lauzon-vela', strips, lambda x, y: (x, y, 0.0), (0, 0, 1))
     for part, nrm in ((room.intersection(sbox(0, 0, 60, RIDGE_Y)), (0, PITCH, -1)), (room.intersection(sbox(0, RIDGE_Y, 60, 60)), (0, -PITCH, -1))):
@@ -262,12 +266,16 @@ def build():
     # bath and shower floors: tile over the old oak
     tile = unary_union([sbox(-9.53, 9.59, -1.29, 14.32), sbox(-9.53, 14.32, -6.79, 18.42), sbox(-9.14, 14.32, -6.8, 14.70)])
     plane_face(O, 'FL-B5-BATH', None, 'floors', 'L1', 'stone-tile-24', tile, lambda x, y: (x, y, 0.014), (0, 0, 1))
+    # r47 (owner 11/13: the stone floor flickered, the oak showing through): the old oak under the tile is taken out, not covered. The house's
+    # floors that the tile lies on are hidden whole; what is left of them outside the tile is laid again as oak by the gap filler below.
+    under_tile = sorted(el for el, ts in E.items() if el.startswith('FL-') and any(t['n'][2] > 0.9 and -0.1 < t['v'][:, 2].mean() < 0.1 and Polygon(t['v'][:, :2]).intersection(tile).area > 0.01 for t in ts))
+    hide = sorted(set(hide) | set(under_tile)); rep['floors_under_tile_hidden'] = under_tile
 
     # ---- the south wall: folding glass doors centred on the table, the east part of the picture window kept as fixed glass
     fold = sbox(FOLD['x0'], 0.0, FOLD['x1'], FOLD['head']); fixw = sbox(FIXW['x0'], FIXW['sill'], FIXW['x1'], FIXW['head'])
     ext_wall(['W-L1-002', 'W-L1-003'], 'W-L1-B5S', 1, Y_S, Y_SO, 1, sbox(X_LW, 0, X_E, ceil_z(Y_S)), [oldr('WN-L1-02'), oldr('WN-L1-03')], [fold, fixw])
     window('WN-L1-B5S', 1, FIXW['x0'], FIXW['x1'], FIXW['sill'], FIXW['head'], Y_S, Y_SO, -1, units=3)
-    plane_face(O, 'D-L1-B5F', None, 'openings', 'L1', 'steel-black', sbox(FOLD['x0'], 4.45, FOLD['x1'], 4.75), lambda x, y: (x, y, 0.012), (0, 0, 1))   # threshold track
+    plane_face(O, 'D-L1-B5F', None, 'openings', 'L1', 'steel-black', sbox(FOLD['x0'], 4.45, FOLD['x1'], 4.75), lambda x, y: (x, y, 0.031), (0, 0, 1))   # threshold track
     # the folding doors' trim: the house's flat 3-1/2 in white casing up both jambs and across the head inside, the exterior trim outside, a sill nosing
     casing('D-L1-B5F', 'x', Y_S, 1, FOLD['x0'], FOLD['x1'], FOLD['head'], maxz=7.99, cw=0.375)
     for ua, ub, za, zb in ((FOLD['x0'], FOLD['x0'] + 0.05, 0.0, FOLD['head']), (FOLD['x1'] - 0.05, FOLD['x1'], 0.0, FOLD['head']), (FOLD['x0'], FOLD['x1'], FOLD['head'] - 0.05, FOLD['head'])):
@@ -276,7 +284,7 @@ def build():
     ex = sbox(FOLD['x0'] - B.TRIM_W, 0, FOLD['x1'] + B.TRIM_W, FOLD['head'] + B.TRIM_W).difference(sbox(FOLD['x0'], -1, FOLD['x1'], FOLD['head']))
     plane_face(O, 'D-L1-B5F', None, 'trim', '-', TRIM_EXT, ex, lambda x, z: (x, Y_SO - B.TRIM_T, z), (0, -1, 0))
     prism_sides(O, 'D-L1-B5F', None, 'trim', '-', TRIM_EXT, ex.exterior, lambda x, z: (x, Y_SO, z), lambda x, z: (x, Y_SO - B.TRIM_T, z), inward_center=((FOLD['x0'] + FOLD['x1']) / 2, Y_SO - B.TRIM_T / 2, FOLD['head'] + B.TRIM_W / 2))
-    boxel('D-L1-B5F', 'openings', 'L1', 'steel-black', FOLD['x0'], Y_SO - 0.12, -0.12, FOLD['x1'], Y_SO, 0.012, faces='xXyZ')   # sill nosing over the deck
+    boxel('D-L1-B5F', 'openings', 'L1', 'steel-black', FOLD['x0'], Y_SO - 0.12, -0.12, FOLD['x1'], Y_SO, 0.031, faces='xXyZ')   # sill nosing over the deck
     colliders += [{'id': 'W-L1-B5S#%d' % i, 'element': 'W-L1-B5S', 'kind': 'WALL', 'poly': [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]], 'z0': -5.2, 'z1': 8.16, 'storey': 'L1', 'exterior': True} for i, (a, b_) in enumerate(((4.9, FOLD['x0']), (FOLD['x1'], 32.49)))]
     # ---- the north wall: the old bedroom and bath windows go; two counter-height kitchen windows and one in the living area
     ncuts = [rect(c, w, s, h) for c, w, s, h in NWIN]
@@ -397,7 +405,7 @@ def build():
     for el, ts in E.items():
         if el in hide: continue
         have += [Polygon(t['v'][:, :2]).buffer(0.003) for t in ts if t['n'][2] > 0.9 and -0.1 < t['v'][:, 2].mean() < 0.1 and t['group'] in ('floors', 'openings')]
-    have += [floor.buffer(0.003), strips.buffer(0.003)]
+    have += [floor.buffer(0.003), strips.buffer(0.003), tile.buffer(0.003)]
     foot = unary_union([sbox(-9.53, -0.75, X_LW, 14.71), sbox(-6.42, 14.3, X_LW, 26.67), sbox(-9.53, 14.3, -6.4, 18.42)])
     gaps = foot.difference(unary_union(have)); gaps = [g for g in (gaps.geoms if hasattr(gaps, 'geoms') else [gaps]) if g.area > 0.002]
     if gaps:
