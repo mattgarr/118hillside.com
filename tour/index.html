@@ -1903,15 +1903,18 @@ const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, l
    rule:window-pull - with two environments the glass is clear (r40), so the garden seen from a room was drawn at the ROOM's exposure,
    1.2-2 stops over what the same garden gets outdoors, and ACES clipped lawn, paving and leaves to white. A real-estate photographer
    exposes the window for the outside (a second, darker frame blended into the glass: the "window pull"). Here every lit surface
-   OUTSIDE the house envelope is drawn, before tone mapping, at the exterior exposure plus R41W.stops (windows a little brighter than
-   a straight outdoor frame, as in the listing photos): its radiance is scaled by E_ext / E_now. E_ext = the time of day's outdoor
-   exposure x the outdoor meter's typical gain; E_now = the exposure in use. The factor follows EXPO_IN (eased, so a doorway crossing
+   OUTSIDE the house envelope is drawn, before tone mapping, at the exterior exposure plus R41W.stops: its radiance is scaled by
+   E_ext / E_now. E_ext = the time of day's outdoor exposure x the outdoor meter's typical gain; E_now = the exposure in use.
+   Tuned 11/12 on the owner's Mac (browser pane, GPU): by day the outdoor stops settle at .965-.98 on a base of .80-.84 (gain
+   R41W.outGain 1.2), the glazed rooms at .90-1.13. R41W.stops 0: the garden through the glass is never brighter than the same
+   garden seen standing outside (the +.6 of the first pass never engaged: E_ext was above every room's exposure). At the rooms'
+   calibrated stops the pull is 1 (no change); it takes up to ~.25 stop off when a room's exposure climbs over the outdoor one. The factor follows EXPO_IN (eased, so a doorway crossing
    blends) and is never above 1 (dusk: the garden is darker than the room, nothing is pulled). It depends on where the camera
    stands, never where it looks. The envelope is a plan distance field from the BIM interior spaces (R41W.tex, 3-in cells, linear
    filtered: no cells), with the height range of the nearest room: a window reveal, a sill or a jamb inside the wall thickness is the
    room's, ground below the floor and a roof above the ceiling are outside. The meter's all-round view is drawn without the pull, so
    every room keeps its calibrated exposure. ?r41w=0 turns it off. */
-const R41W = window.R41W = {on: R40E.on && !/[?&]r41w=0\b/.test(location.search), d0: .7, d1: 1.2, dMax: 4, stops: .6, outGain: 1, pull: 1, built: false,
+const R41W = window.R41W = {on: R40E.on && !/[?&]r41w=0\b/.test(location.search), d0: .7, d1: 1.2, dMax: 4, stops: 0, outGain: 1.2, pull: 1, built: false,
   U: {r41Dist: {value: null}, r41DB: {value: new THREE.Vector4(0, 0, 0, 0)}, r41DY: {value: new THREE.Vector2(0, 1)}, r41Pull: {value: 0}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
