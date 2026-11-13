@@ -20614,6 +20614,8 @@ const SELL36 = window.SELL36 = (() => {
     'html:not(.ph) .ovtag{top:calc(var(--bar36,96px) + 6px)}' +
     /* the booking line (phone): price on the left, the pill on the right, directly under the header */
     '.bks36{display:none}' +
+    /* r45: the seasonal tours still hide their header when the visitor is idle (and in full screen): the booking line goes with it, instead of floating under an empty strip */
+    'html.uidle27 .bks36,html.clean27 .bks36{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .5s ease,visibility 0s linear .5s}' +
     'html.ph.bks36on .bks36{display:flex;position:absolute;left:0;right:0;top:var(--bar36,53px);z-index:9;align-items:center;justify-content:space-between;gap:10px;min-height:42px;box-sizing:border-box;padding:5px max(10px, env(safe-area-inset-right,0px)) 5px max(12px, env(safe-area-inset-left,0px));background:rgba(244,241,234,.97);border-bottom:1px solid #e5e1d8;box-shadow:0 4px 14px rgba(60,45,25,.1);font-family:' + JOST + ';color:#1f1f1d}' +
     '.bks36 .bkp36{min-width:0;font-size:14.5px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:lining-nums}' +
     '.bks36 .bkb36{flex:none;height:32px;padding:0 15px;border:0;border-radius:999px;background:#7d6038;color:#fff;font:500 14.5px/1 ' + JOST + ';letter-spacing:.01em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
