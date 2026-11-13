@@ -100,14 +100,14 @@
   items.forEach(function (it) {
     var b = it.firstChild, t = 0;
     if (fine) {
-      it.addEventListener('mouseenter', function () { if (narrow()) return; clearTimeout(t); closeAll(it); it.classList.add('open'); b.setAttribute('aria-expanded', 'true'); });
-      it.addEventListener('mouseleave', function () { t = setTimeout(function () { it.classList.remove('open'); b.setAttribute('aria-expanded', 'false'); }, 180); });
+      it.addEventListener('mouseenter', function () { if (narrow()) return; clearTimeout(t); closeAll(it); if (!it.classList.contains('open')) it._hov = 1; it.classList.add('open'); b.setAttribute('aria-expanded', 'true'); });
+      it.addEventListener('mouseleave', function () { t = setTimeout(function () { it._hov = 0; it.classList.remove('open'); b.setAttribute('aria-expanded', 'false'); }, 180); });
     }
     b.addEventListener('click', function (e) {
       if (narrow()) return;                                   // phone: Games goes straight to the library
       if (b.tagName === 'A' && it.classList.contains('open') && fine) return;   // desktop: clicking "Games" opens the library
       if (b.tagName === 'A' && fine) return;
-      e.preventDefault(); var o = !it.classList.contains('open'); closeAll(); it.classList.toggle('open', o); b.setAttribute('aria-expanded', o ? 'true' : 'false');
+      e.preventDefault(); var was = it.classList.contains('open'), o = was && it._hov ? true : !was; it._hov = 0; closeAll(); it.classList.toggle('open', o);   // r44: a click on a menu that hovering just opened keeps it open (it used to close it) b.setAttribute('aria-expanded', o ? 'true' : 'false');
     });
   });
   burger.addEventListener('click', function () { var o = !sheet.classList.contains('open'); sheet.classList.toggle('open', o); burger.textContent = o ? '✕' : '☰'; burger.setAttribute('aria-expanded', o ? 'true' : 'false'); document.documentElement.style.overflow = o ? 'hidden' : ''; });
