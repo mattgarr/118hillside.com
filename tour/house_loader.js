@@ -114,7 +114,7 @@
 
   /* ---------- loading ---------- */
   async function sha256Hex(buf){ try{ if(!(root.crypto && crypto.subtle)) return null; const h = await crypto.subtle.digest('SHA-256', buf); return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join(''); }catch(e){ return null; } }
-  async function fetchBuf(url, fetchFn){ const r = await (fetchFn || fetch)(url); if(!r.ok) throw new Error('bim2: ' + url + ' ' + r.status); return r.arrayBuffer(); }
+  async function fetchBuf(url, fetchFn, init){ const r = await (fetchFn || fetch)(url, init); if(!r.ok) throw new Error('bim2: ' + url + ' ' + r.status); return r.arrayBuffer(); }
 
   /* opts: {THREE, glb: url, meta: url | object, mapMaterial(name, gltfMat, info) -> THREE.Material, groupOf(extras, info) -> string,
             attach(groupName, object3d), verifyHash: bool, fetch} */
@@ -124,7 +124,7 @@
     const t0 = (root.performance || Date).now();
     const metaBase = typeof opts.meta === 'string' && root.location ? new URL(opts.meta, root.location.href).href : (root.location ? root.location.href : '');
     const bust = u => typeof u === 'string' ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'r=' + Date.now() : u;
-    const getMeta = async u => typeof opts.meta === 'string' ? JSON.parse(new TextDecoder().decode(await fetchBuf(u, opts.fetch))) : opts.meta;
+    const getMeta = async u => typeof opts.meta === 'string' ? JSON.parse(new TextDecoder().decode(await fetchBuf(u, opts.fetch, {cache: 'no-cache'}))) : opts.meta;
     let meta = normalize(await getMeta(opts.meta)), buf = await fetchBuf(opts.glb, opts.fetch);
     let glbSha = opts.verifyHash !== false ? await sha256Hex(buf) : null, want = meta.glb && (meta.glb.sha256 || meta.glb.hash);
     if(want && glbSha && want !== glbSha && typeof opts.glb === 'string'){   /* a cached old meta beside a fresh model (or the reverse) after a deploy: fetch both fresh once */
@@ -197,8 +197,12 @@
   async function loadOptions(o, only){        // o: {fetch, mapMaterial, groupOf, attach(group, mesh, optionId)}; only: one option id / legacyId
     const S = st(); const T = T_; S.optionLoaded = S.optionLoaded || {};
     for(const opt of S.meta.options){ if(!opt.glb || (only && opt.id !== only && opt.legacyId !== only) || S.optionLoaded[opt.id]) continue; S.optionLoaded[opt.id] = 'loading'; try{
-        if(opt.meta && !opt.data){ const mb = await fetchBuf(S.metaBase ? new URL(opt.meta, S.metaBase).href : opt.meta, o.fetch); opt.data = JSON.parse(new TextDecoder().decode(mb)); }
-        const buf = await fetchBuf(S.metaBase ? new URL(opt.glb, S.metaBase).href : opt.glb, o.fetch); const gl = await new Promise((res, rej) => new T.GLTFLoader().parse(buf, '', res, rej)); const sc = gl.scene || gl.scenes[0]; sc.updateMatrixWorld(true);
+        const oU = u => S.metaBase ? new URL(u, S.metaBase).href : u, oBust = u => u + (u.indexOf('?') < 0 ? '?' : '&') + 'r=' + Date.now();
+        if(opt.meta && !opt.data){ const mb = await fetchBuf(oU(opt.meta), o.fetch, {cache: 'no-cache'}); opt.data = JSON.parse(new TextDecoder().decode(mb)); }
+        let buf = await fetchBuf(oU(opt.glb), o.fetch);
+        if(opt.sha256){ const h = await sha256Hex(buf); if(h && h !== opt.sha256){   /* r44: a cached older idea model after a deploy: fetch it fresh once (the scene meta naming its sha is always revalidated) */
+            buf = await fetchBuf(oBust(oU(opt.glb)), o.fetch); const h2 = await sha256Hex(buf); if(h2 && h2 !== opt.sha256) console.warn('bim2: ' + opt.glb + ' sha256 ' + h2.slice(0, 12) + ' does not match ' + String(opt.sha256).slice(0, 12) + '; loading anyway'); } }
+        const gl = await new Promise((res, rej) => new T.GLTFLoader().parse(buf, '', res, rej)); const sc = gl.scene || gl.scenes[0]; sc.updateMatrixWorld(true);
         const L = []; sc.traverse(x => { if(x.isMesh) L.push(x); });
         for(const m of L){ const ex = Object.assign({}, (m.parent && m.parent.userData) || {}, m.userData || {}); const info = {group: ex.group || 'walls', storey: ex.storey || null, material: ex.material || '', ranges: (ex.ranges || []).sort((a, b) => a[2] - b[2]), ex, option: opt.id};
           let mat = S.materials.get(info.material); if(mat === undefined){ mat = (o.mapMaterial && o.mapMaterial(info.material, m.material, info, S.meta.materials[info.material.split('#')[0]] || null, S.meta.materials[info.material] || null)) || m.material; S.materials.set(info.material, mat); }
