@@ -40,9 +40,12 @@ STAIR_Y = (-9.937, 0.0)
 FOLD = dict(x0=8.7, x1=22.9, head=7.6, panels=6)                     # folding glass doors, stacking at the west jamb
 FIXW = dict(x0=23.9, x1=32.0, sill=1.6833, head=7.6)             # the east part of the old picture window, fixed glass
 NWIN = [(30.5, 5.0, 2.7, 7.0)]   # north wall windows: centre x, width, sill, head
-EWIN_D = 8.565                       # the two gable windows' centres, either side of the ridge
-EWIN = [(RIDGE_Y - EWIN_D, 6.5, 3.4375, 7.75), (RIDGE_Y + EWIN_D, 6.5, 3.4375, 7.75)]
-GG = dict(zb=8.4, margin=0.45, gap=0.4)                              # gable glass over them: bottom, drop below the rake, gap to the breast         # street gable windows either side of the hearth: centre y, width, sill, head
+# the two gable windows, either side of the ridge: from 0.4 ft off the chimney breast (t = 3.9 from the ridge) out to t = 11.815, four
+# mulled units; the gable glass over each has the same inner jamb, its point over the same outer jamb, its bars on the same mullions
+EWIN_T, EUNITS = (3.9, 11.815), 4
+EWIN_D, EWIN_W = (EWIN_T[0] + EWIN_T[1]) / 2, EWIN_T[1] - EWIN_T[0]
+EWIN = [(RIDGE_Y - EWIN_D, EWIN_W, 3.4375, 7.75), (RIDGE_Y + EWIN_D, EWIN_W, 3.4375, 7.75)]
+GG = dict(zb=8.45, margin=APEX - 8.45 - PITCH * EWIN_T[1])            # gable glass: bottom, and the drop below the rake that puts its point over the window's outer jamb         # street gable windows either side of the hearth: centre y, width, sill, head
 FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 2.62), mantel=(3.55, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 5.72))   # mantel: bottom, height, depth, length
 PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
 DOOR_H = 6.7812
@@ -137,17 +140,19 @@ def build():
                 panes += [sbox(a_ + STILE, z0 + 0.04 + STILE, a_ + bw - STILE, zm - RAIL / 2), sbox(a_ + STILE, zm + RAIL / 2, a_ + bw - STILE, z1 - 0.04 - STILE)]
         else: panes = [mitre(ro, -0.16)]
         win_poly(el, axis, ro, panes, inner, outer, sign_out, stool=sbox(u0 - 0.37, z0 - 0.02, u1 + 0.37, z0 + 0.07))
+    def gable_bars():
+        """distances from the ridge of the gable windows' mullion centres (outer to inner)"""
+        bw = (EWIN_W - 2 * 0.04 - (EUNITS - 1) * MUL) / EUNITS
+        return [EWIN_T[1] - 0.04 - k * bw - (k - 0.5) * MUL for k in range(1, EUNITS)]
     def gable_glass(side):
-        """the clerestory over a gable window: a triangle whose top runs parallel to the rake, its inner edge near the chimney breast, its
-        bars in line with the mullions of the window below. Returns (outline, panes) in (y, z); side -1: south of the ridge, +1: north"""
-        cw, ww = EWIN_D, EWIN[0][1]; top = lambda t: APEX - PITCH * t - GG['margin']; t_in = FP['w'] / 2 + GG['gap']; t_tip = (APEX - GG['margin'] - GG['zb']) / PITCH
-        Y = lambda t: RIDGE_Y + side * t
+        """the clerestory over a gable window: a triangle whose top runs parallel to the rake, with the window's own inner jamb, its point
+        over the window's outer jamb, and a bar over every mullion of the window (same centre, same width). (outline, panes) in (y, z)"""
+        t_in, t_tip = EWIN_T; top = lambda t: APEX - PITCH * t - GG['margin']; Y = lambda t: RIDGE_Y + side * t
         tri = Polygon([(Y(t_in), GG['zb']), (Y(t_tip), GG['zb']), (Y(t_in), top(t_in))])
-        bw = (ww - 2 * 0.04 - 2 * MUL) / 3; t1 = cw + ww / 2                      # the window's outer edge, then its two mullions and its inner edge
-        bars = [t1 - 0.04 - bw - MUL / 2, t1 - 0.04 - 2 * bw - 1.5 * MUL, cw - ww / 2]
-        edges = [t_tip] + [b for b in bars if t_in + 0.8 < b < t_tip - 0.5] + [t_in]; panes = []
+        edges = [t_tip] + gable_bars() + [t_in]; panes = []
         for ta, tb in zip(edges[:-1], edges[1:]):
-            lo, hi = sorted((Y(ta), Y(tb))); bay = tri.intersection(sbox(lo + (MUL / 2 if ta != t_tip else 0), 0, hi - (MUL / 2 if tb != t_in else 0), 30)).buffer(-(STILE + 0.04), join_style=2)
+            a_ = ta - (MUL / 2 if ta != t_tip else 0); b_ = tb + (MUL / 2 if tb != t_in else 0.04)
+            lo, hi = sorted((Y(a_), Y(b_))); bay = tri.intersection(sbox(lo, 0, hi, 30)).buffer(-STILE, join_style=2)
             if not bay.is_empty and bay.geom_type == 'Polygon' and bay.area > 0.12: panes.append(bay)
         return tri, panes
     def ext_wall(els, dst, axis, inner, outer, sign_in, face, fills, cuts):
@@ -208,7 +213,14 @@ def build():
     ecuts = [rect(c, w, s, h) for c, w, s, h in EWIN] + [g[0] for g in GGS]
     eface = Polygon([(Y_S, 0), (Y_N, 0), (Y_N, ceil_z(Y_N)), (RIDGE_Y, APEX), (Y_S, ceil_z(Y_S))])
     ext_wall(['W-L1-049', 'W-L1-050', 'W-L1-051'], 'W-L1-B5E', 0, X_E, X_EO, -1, eface, [oldr('WN-L1-04'), oldr('WN-L1-05'), oldr('WN-L1-07')], ecuts)
-    for i, (c, w, s, h) in enumerate(EWIN): window('WN-L1-B5E%d' % (i + 1), 0, c - w / 2, c + w / 2, s, h, X_E, X_EO, 1, units=3)
+    for i, (c, w, s, h) in enumerate(EWIN): window('WN-L1-B5E%d' % (i + 1), 0, c - w / 2, c + w / 2, s, h, X_E, X_EO, 1, units=EUNITS)
+    rep['gable_align'] = {}
+    for side, (tri, panes) in zip((-1, 1), GGS):               # numerical check: window mullions against the bars of the glass above
+        c, w = EWIN[0 if side < 0 else 1][:2]; bw = (w - 0.08 - (EUNITS - 1) * MUL) / EUNITS
+        low = sorted(round(c - w / 2 + 0.04 + (k + 1) * bw + (k + 0.5) * MUL, 3) for k in range(EUNITS - 1))
+        xs = sorted(set(round(v, 3) for pn in panes for v in (pn.bounds[0], pn.bounds[2]))); gaps = [(a2, b2) for a2, b2 in zip(xs[1:-1:2], xs[2:-1:2])]
+        rep['gable_align']['south' if side < 0 else 'north'] = {'window_mullion_y': low, 'window_mullion_w': round(MUL + 2 * STILE, 3), 'glass_bar_y': [round((a2 + b2) / 2, 3) for a2, b2 in gaps], 'glass_bar_w': [round(b2 - a2, 3) for a2, b2 in gaps],
+                                                              'window_jambs_y': [round(c - w / 2, 3), round(c + w / 2, 3)], 'glass_ends_y': [round(tri.bounds[0], 3), round(tri.bounds[2], 3)], 'panes': len(panes)}
     for i, (tri, panes) in enumerate(GGS): win_poly('WN-L1-B5G%d' % (i + 1), 0, tri, panes, X_E, X_EO, 1)
     # ---- the west side of the box north of the bedroom (the old bath's tiled walls): repainted to the vault
     for el in ('W-L1-032', 'W-L1-038'):

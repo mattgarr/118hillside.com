@@ -177,7 +177,7 @@ street, y north).
   stone from a raised stone hearth to the vault, a 5-ft linear firebox with a 20-in opening in a steel frame, a heavy fir mantel and a 65-in TV
   above it. Low built-ins (36 in high, wood tops) run under the two gable windows either side, wall to wall. Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
-  6 ft 6 windows (three mulled double-hung-style units each, like the rest of the house), one either side of the hearth,
+  7 ft 11 windows (four mulled double-hung-style units each, like the rest of the house), one either side of the hearth,
   with a triangle of gable glass over each that follows the rake and stops short of the stone. Bookshelves stand on the north wall either side of a 5-ft window.
 - **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood, pot filler) is centred on the north wall, which is now a
   solid cabinet wall: the two small windows that flanked the range are closed up (siding outside), with upper cabinets the
