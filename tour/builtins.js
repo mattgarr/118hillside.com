@@ -604,6 +604,45 @@ def('cabinetCrown', { w: 8, d: 2.08, mountY: 8, finish: 'cabinetWhite', endL: tr
   b.bb(fin, -w / 2 - 0.13 * l, y + 0.3, 0, w / 2 + 0.13 * r, y + 0.36, d + 0.13, 0.008);
 }, function (o) { return [o.w + 0.26, o.d + 0.13, o.mountY + 0.36]; }, 'Continuous crown for the top of a tall cabinet run.');
 
+// r44b: a coffee station in a tall cabinet wall: drawers below, an open quartz-lined niche at counter height with a machine and cups,
+// a lift-up appliance garage and doors above (origin at the wall, faces +z)
+def('coffeeStation', { w: 2.5, h: 8, d: 2.08, finish: 'cabinetWhite', kick: 4 * IN }, function (b, o) {
+  var w = o.w, d = o.d, fin = o.finish, zf = d, n0 = 3.0, n1 = 4.75, t = 0.07;
+  b.bb(fin, -w / 2, o.kick, 0, w / 2, n0 - 0.1, d); b.bb(fin, -w / 2 + 0.02, 0, 0, w / 2 - 0.02, o.kick, d - 0.25);          // base
+  raisedDoor(b, fin, w - 0.14, 0.62, 0, n0 - 0.47, zf + DOORT * 0.6); raisedDoor(b, fin, w - 0.14, 1.72, 0, o.kick + 0.92, zf + DOORT * 0.6);
+  b.bb('stainless', -0.45, n0 - 0.2, zf + DOORT, 0.45, n0 - 0.16, zf + DOORT + 0.08); b.bb('stainless', -0.45, o.kick + 1.5, zf + DOORT, 0.45, o.kick + 1.54, zf + DOORT + 0.08);
+  b.rbox('brittanicca', w, 0.1, d + 0.04, 0.008, 0, n0 - 0.05, (d + 0.04) / 2, { boxUV: true });                              // niche counter
+  b.bb(fin, -w / 2, n0, 0, -w / 2 + t, n1, d); b.bb(fin, w / 2 - t, n0, 0, w / 2, n1, d);                                    // niche sides
+  b.bb('brittanicca', -w / 2 + t, n0, 0, w / 2 - t, n1, 0.05);                                                               // quartz back
+  b.bb('ledStrip', -w / 2 + 0.3, n1 - 0.02, d - 0.5, w / 2 - 0.3, n1 - 0.008, d - 0.44);                                      // niche light
+  b.bb('stainless', -0.75, n0, 0.55, -0.05, n0 + 1.15, 1.45, 0.02); b.bb('blackMetal', -0.68, n0 + 0.78, 1.45, -0.12, n0 + 1.08, 1.47);   // espresso machine
+  b.bb('blackMetal', -0.6, n0 + 0.03, 1.45, -0.2, n0 + 0.06, 1.75); b.bb('stainless', -0.48, n0 + 0.5, 1.45, -0.32, n0 + 0.62, 1.6);
+  b.bb('blackMetal', 0.3, n0, 0.7, 0.75, n0 + 0.9, 1.2, 0.03);                                                                // grinder
+  for (var i = 0; i < 3; i++) b.bb('stoneCream', 0.2 + i * 0.28, n0, 1.45, 0.4 + i * 0.28, n0 + 0.22, 1.65, 0.02);              // cups
+  b.bb(fin, -w / 2, n1, 0, w / 2, o.h, d);
+  raisedDoor(b, fin, w - 0.14, 1.3, 0, n1 + 0.72, zf + DOORT * 0.6);                                                          // lift-up appliance garage
+  b.bb('stainless', -0.45, n1 + 0.14, zf + DOORT, 0.45, n1 + 0.18, zf + DOORT + 0.08);
+  var uh = o.h - n1 - 1.44, dw = (w - 0.14) / 2;
+  for (i = 0; i < 2; i++) raisedDoor(b, fin, dw - 0.03, uh - 0.1, (i ? 1 : -1) * dw / 2, n1 + 1.42 + uh / 2, zf + DOORT * 0.6);
+}, function (o) { return [o.w, o.d + 0.2, o.h]; }, 'Coffee station in a tall cabinet wall: drawers, an open lit niche with a machine, an appliance garage and doors above.');
+
+// r44b: a wall-mounted pot filler over a range (origin on the wall at the swivel, faces +z)
+def('potFiller', { mountY: 4.9, finish: 'satinNickel', reach: 1.5 }, function (b, o) {
+  var y = o.mountY, f = o.finish, r = o.reach, h = r / 2;
+  b.bb(f, -0.11, y - 0.11, 0, 0.11, y + 0.11, 0.03, 0.02); b.bb(f, -0.035, y - 0.035, 0.03, 0.035, y + 0.035, 0.2, 0.02);
+  b.bb(f, -0.03, y - 0.03, 0.17, h, y + 0.03, 0.23, 0.02); b.bb(f, h - 0.045, y - 0.07, 0.155, h + 0.045, y + 0.07, 0.245, 0.02);   // first arm and its knuckle
+  b.bb(f, h - 0.03, y - 0.03, 0.2, h + 0.03, y + 0.03, 0.2 + h, 0.02);                                                             // second arm, swung out
+  b.bb(f, h - 0.03, y - 0.32, 0.17 + h, h + 0.03, y + 0.03, 0.23 + h, 0.02);                                                       // spout down
+  b.bb(f, h - 0.09, y + 0.03, 0.13 + h, h + 0.09, y + 0.06, 0.27 + h, 0.01);                                                       // lever
+}, function (o) { return [o.reach, o.reach, o.mountY + 0.2]; }, 'Wall-mounted articulated pot filler; swivel at mountY.');
+
+// r44b: a plug strip tucked under the wall cabinets along a prep counter (origin on the wall, faces +z)
+def('outletStrip', { w: 6, mountY: 4.3 }, function (b, o) {
+  var w = o.w, y = o.mountY;
+  b.bb('stainless', -w / 2, y, 0, w / 2, y + 0.13, 0.09, 0.01);
+  for (var x = -w / 2 + 0.5; x < w / 2 - 0.3; x += 1.0) { b.bb('blackMetal', x - 0.1, y + 0.03, 0.09, x + 0.1, y + 0.1, 0.094); }
+}, function (o) { return [o.w, 0.1, o.mountY + 0.13]; }, 'Under-cabinet plug strip.');
+
 // r44: a tall oven column for a cabinet wall: drawer, a 27-in wall oven, a built-in microwave over it, a cabinet above (origin at the wall, faces +z)
 def('wallOvenStack', { w: 2.5, h: 8, d: 2.08, finish: 'cabinetWhite', kick: 4 * IN }, function (b, o) {
   var w = o.w, d = o.d, fin = o.finish, zf = d, aw = Math.min(w - 0.26, 2.25), x0 = -aw / 2, x1 = aw / 2;

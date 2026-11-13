@@ -39,7 +39,7 @@ DECK = dict(x0=15.675, x1=24.6, y0=-4.0, z=0.0, skirt=-4.8)
 STAIR_Y = (-9.937, 0.0)
 FOLD = dict(x0=8.7, x1=22.9, head=7.6, panels=6)                     # folding glass doors, stacking at the west jamb
 FIXW = dict(x0=23.9, x1=32.0, sill=1.6833, head=7.6)             # the east part of the old picture window, fixed glass
-NWIN = [(11.2, 2.6, 3.5, 6.9), (19.6, 2.6, 3.5, 6.9), (30.5, 5.0, 2.7, 7.0)]   # north wall windows: centre x, width, sill, head
+NWIN = [(30.5, 5.0, 2.7, 7.0)]   # north wall windows: centre x, width, sill, head
 EWIN_D = 8.565                       # the two gable windows' centres, either side of the ridge
 EWIN = [(RIDGE_Y - EWIN_D, 6.5, 3.4375, 7.75), (RIDGE_Y + EWIN_D, 6.5, 3.4375, 7.75)]
 GG = dict(zb=8.4, margin=0.45, gap=0.4)                              # gable glass over them: bottom, drop below the rake, gap to the breast         # street gable windows either side of the hearth: centre y, width, sill, head
@@ -400,7 +400,7 @@ def fixtures():
     TALL = dict(CAB, d=2.08, h=8, pull='knob')
     add('finishedPanel', 'BUILTIN', (W + 1.04, 18.0), 270, {'w': 2.08, 'h': 8.0, 'panels': 1})
     add('tallCabinet', 'FIX', (W, 19.25), 0, dict(TALL, w=2.5))
-    add('tallCabinet', 'FIX', (W, 21.75), 0, dict(TALL, w=2.5, hinge='right'))
+    add('coffeeStation', 'BUILTIN', (W, 21.75), 0, {'w': 2.5, 'd': 2.08, 'h': 8})
     add('wallOvenStack', 'BUILTIN', (W, 24.25), 0, {'w': 2.5, 'd': 2.08, 'h': 8})
     add('fridge4Door', 'BUILTIN', (W, 27.0), 0, {'d': 2.3, 'dispenser': True, 'h': 5.9, 'w': 3})
     add('upperCabinet', 'FIX', (W, 27.0), 0, dict(CAB, d=2.08, h=2.06, mountY=5.94, w=3, pull='knob', contents=False))
@@ -411,16 +411,22 @@ def fixtures():
     X0 = W + 2.08
     add('baseCabinet', 'FIX', (X0 + 1.27, N), 270, dict(CAB, w=2.54, doors='drawers'))
     add('baseCabinet', 'FIX', (11.0, N), 270, dict(CAB, w=2.2))
-    add('baseCabinet', 'FIX', (13.2, N), 270, dict(CAB, w=2.2, doors='drawers'))
+    add('baseCabinet', 'FIX', (13.2, N), 270, dict(CAB, w=2.2, doors='drawers'))            # deep pot drawers either side of the range
     add('range36', 'FIX', (15.8, N), 270, {'w': 3})
     add('hoodChimney', 'FIX', (15.8, N), 270, {'mountY': 6.0, 'toCeiling': 8.0, 'w': 3.5})
+    add('potFiller', 'BUILTIN', (14.75, N - 0.06), 270, {'mountY': 4.95})
     add('baseCabinet', 'FIX', (18.35, N), 270, dict(CAB, w=2.1, doors='drawers'))
     add('baseCabinet', 'FIX', (20.45, N), 270, dict(CAB, w=2.1))
-    add('baseCabinet', 'FIX', (22.55, N), 270, dict(CAB, w=2.1, doors='drawers'))          # r44b: the run carried 2 ft further toward the living area, with uppers
-    add('upperCabinet', 'FIX', (22.4, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.4, pull='knob', led=True))
+    add('beverageCooler', 'FIX', (22.125, N), 270, {'w': 1.25, 'd': 2.08})                   # r44b: the run carried 2 ft toward the living area: drinks fridge, a narrow cabinet
+    add('baseCabinet', 'FIX', (23.175, N), 270, dict(CAB, w=0.85, doors='doors'))
     add('finishedPanel', 'BUILTIN', (23.6, N - 1.04), 0, {'w': 2.08, 'h': 2.79, 'panels': 1})
-    add('upperCabinet', 'FIX', (X0 + 1.22, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.44, pull='knob', led=True))
+    # uppers the length of the run, either side of the hood (the two windows here are gone): glass fronts next to the hood, lights under all
+    UP = dict(CAB, h=3.5, mountY=4.5, pull='knob', led=True)
+    for i, glass in enumerate((False, False, True)): add('upperCabinet', 'FIX', (X0 + 2.23 * (i + 0.5), N), 270, dict(UP, w=2.23, glass=glass, hinge='left' if i < 2 else 'right'))
+    for i, glass in enumerate((True, False, False)): add('upperCabinet', 'FIX', (17.55 + 2.0167 * (i + 0.5), N), 270, dict(UP, w=2.0167, glass=glass))
+    add('outletStrip', 'BUILTIN', (10.7, N - 0.06), 270, {'w': 6.4, 'mountY': 4.32}); add('outletStrip', 'BUILTIN', (20.55, N - 0.06), 270, {'w': 5.8, 'mountY': 4.32})
     add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[X0, NF], [23.68, NF], [23.68, N], [X0, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
+    add('counterTop', 'BUILTIN', (15.8, N - 0.03), 0, {'mat': 'brittanicca', 'mountY': 3.0, 'outlines': [[[14.05, N - 0.05], [17.55, N - 0.05], [17.55, N], [14.05, N]]], 'noSplash': True, 't': 3.0})   # quartz behind the range, up to the hood
     # the street gable: stone on the chimney breast, the TV over the mantel, low built-ins under the windows either side
     fx = X_E - FP['d']; ch = ceil_z
     add('ledgestone', 'BUILTIN', (X_E, FP['cy']), 180, {'w': FP['w'], 'd': FP['d'], 'apex': round(APEX - 0.03, 3), 'pitch': PITCH, 'hole': [-FP['box'][0] / 2 - 0.14, FP['box'][1] - 0.14, FP['box'][0] / 2 + 0.14, FP['box'][2] + 0.14]})
@@ -429,7 +435,7 @@ def fixtures():
     add('lowBuiltin', 'BUILTIN', (X_E, (ys0 + ys1) / 2), 180, {'w': round(ys1 - ys0, 3), 'd': 1.33, 'h': 3.0})
     add('lowBuiltin', 'BUILTIN', (X_E, (yn0 + yn1) / 2), 180, {'w': round(yn1 - yn0, 3), 'd': 1.33, 'h': 3.0})
     # the island: 8 ft x 3 ft 6, sink and dishwasher on the working (north) side, four stools on the dining side
-    add('island', 'FIX', (15.8, 26.0), 270, dict(CAB, w=8.0, d=3.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True))
+    add('island', 'FIX', (15.8, 26.0), 270, dict(CAB, w=8.0, d=3.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True, work=True))
     for x in (12.9, 14.85, 16.8, 18.75): add('counterStoolRope', 'BUILTIN', (x, 21.8), 90, None)
     # the 3/4 bath: vanity and mirror on the library wall, toilet on the north wall, shower in the old laundry closet
     add('vanity', 'FIX', (-7.45, 9.59), 90, {'basin': 'rect', 'faucetFinish': 'nickelBrushed', 'hw': 'nickelBrushed', 'sinks': 1, 'splash': 0, 'top': 'marble', 'w': 3.7}, 'SP-L1-BATH')
@@ -510,6 +516,9 @@ def register(hide, hide_ranges, sha):
                         'fridgewall': {'pos': [28.0, 5.0, 20.6], 'look': [26.4, 4.5, 5.3]},
                         'tallrun': {'pos': [9.6, 5.0, 17.4], 'look': [24.0, 4.4, 5.3]},
                         'sidewall': {'pos': [19.5, 5.0, 26.0], 'look': [4.8, 4.6, 29.5]},
+                        'stovewall': {'pos': [27.6, 5.0, 21.2], 'look': [32.0, 4.4, 14.6]},
+                        'stools': {'pos': [19.6, 5.0, 15.8], 'look': [26.0, 3.4, 15.8]},
+                        'northwall': {'pos': [50.0, 5.5, 16.0], 'look': [32.5, 4.5, 15.0]},
                         'kitchen': {'pos': [18.6, 5.0, 25.2], 'look': [27.0, 4.2, 9.0]},
                         'dining': {'pos': [19.0, 5.0, 22.4], 'look': [3.0, 3.4, 13.0]},
                         'island': {'pos': [29.0, 5.0, 22.8], 'look': [14.0, 4.0, 13.0]},
