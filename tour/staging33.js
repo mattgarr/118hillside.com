@@ -347,9 +347,9 @@ def('deskX:white', { w: 4.2, d: 2.0, h: 2.5 }, function (b, o) {                
   var w = o.w, d = o.d, h = o.h; b.bb('paintWhite33', -w / 2, h - 0.12, 0, w / 2, h, d, 0.02); b.bb('paintWhite33', -w / 2 + 0.1, h - 0.4, 0.1, w / 2 - 0.1, h - 0.12, d - 0.1, 0.01);
   [-1, 1].forEach(function (s) { var x = s * (w / 2 - 0.2); b.rod('paintWhite33', [x, 0, 0.1], [x, h - 0.4, d - 0.1], 0.06, 6); b.rod('paintWhite33', [x, 0, d - 0.1], [x, h - 0.4, 0.1], 0.06, 6); });
 }, function (o) { return [o.w, o.d, o.h]; });
-def('ghostChair', { seatH: 1.55 }, function (b, o) {                                            // office (p546): clear acrylic chair
-  var sH = o.seatH; b.rbox('acrylic33', 1.5, 0.08, 1.45, 0.05, 0, sH, 0.85, { seg: 2 }); b.rbox('acrylic33', 1.45, 1.25, 0.08, 0.08, 0, sH + 0.7, 0.18, { seg: 2, rx: -0.1 });
-  [[-0.65, 0.2], [0.65, 0.2], [-0.65, 1.5], [0.65, 1.5]].forEach(function (p) { b.rod('acrylic33', [p[0] * 1.05, 0, p[1] + (p[1] > 1 ? 0.08 : -0.05)], [p[0], sH, p[1]], 0.04, 8); });
+def('ghostChair', { seatH: 1.55, mat: 'acrylic33' }, function (b, o) {                         // office (p546): clear acrylic chair; r48b: o.mat (the office's is solid white)
+  var sH = o.seatH, M = o.mat; b.rbox(M, 1.5, 0.08, 1.45, 0.05, 0, sH, 0.85, { seg: 2 }); b.rbox(M, 1.45, 1.25, 0.08, 0.08, 0, sH + 0.7, 0.18, { seg: 2, rx: -0.1 });
+  [[-0.65, 0.2], [0.65, 0.2], [-0.65, 1.5], [0.65, 1.5]].forEach(function (p) { b.rod(M, [p[0] * 1.05, 0, p[1] + (p[1] > 1 ? 0.08 : -0.05)], [p[0], sH, p[1]], 0.04, 8); });
 }, function (o) { return [1.5, 1.6, o.seatH + 1.35]; });
 def('cubeShelf', { cols: 2, rows: 2, cell: 1.1, d: 1.3 }, function (b, o) {                     // office (p544): white 2x2 cube unit
   var w = o.cols * o.cell + 0.06 * (o.cols + 1), h = o.rows * o.cell + 0.06 * (o.rows + 1), d = o.d, t = 0.06, i;
@@ -571,7 +571,7 @@ function rows(h) {
     ['stairs', 'vase2', { style: 'round', h: 1.25, dia: 0.75, n: 2, gap: 0.1, mat: 'ceramicWhite', hs: [1, 0.8] }, 0, 'n', { on: 'sc', dx: -1.2 }],
     ['stairs', 'books', { n: 3 }, 0, 'n', { on: 'sc', dx: 1.3 }],
     ['stairs', 'art', { w: 4.6, h: 3.6, mountY: 5.6, style: 'swirlWhite', seed: 7, frame: 'frameOak', fw: 0.06 }, [870, 1884], 'n', { back: true }],
-    ['stairs', 'basket', { dia: 1.6, h: 1.2 }, [951, 1761], 's', { key: 'sb' }],   // r5 (agentA, owner r5 #4; photos IMG_0535/IMG_0572): on the main landing at the foot of the up-flight, against the down-stair rail - [985, 1688] put it on the ST-UP1 treads (only its throw showed, as a pad on a tread)
+    ['stairs', 'basket', { dia: 1.6, h: 1.2 }, [985, 1761], 's', { key: 'sb' }],   // r48b F3 (QA 11/13): 1.3 ft nearer the foyer (was [951, 1761]): still on the landing beside the up-flight's first tread, but under the Stairs stop's view instead of across the bottom of it   // r5 (agentA, owner r5 #4; photos IMG_0535/IMG_0572): on the main landing at the foot of the up-flight, against the down-stair rail - [985, 1688] put it on the ST-UP1 treads (only its throw showed, as a pad on a tread)
     ['stairs', 'throwDrape', { w: 1.2, len: 0.9, drop: 1.0, mountY: 1.2, mat: 'linenOat33', fringe: true }, 0, 's', { on: 'sb', z: 0.4 }]);
   // LOWER LOUNGE (model room 'rec'; p538, p539, p540, p547): round glass bistro table + four black wishbone chairs by the slider, striped vases
   // and a tic-tac-toe tray, two black / cream geometric cube poufs under the large ensō canvas, round grid mirror, jar tray on the wet bar.
@@ -624,7 +624,7 @@ function rows(h) {
     ['office', 'lamp', { style: 'clear', h: 2.3 }, 0, 'w', { on: 'oD', dx: 1.4 }],
     ['office', 'toyBlocks', {}, 0, 'w', { on: 'oD', dx: -0.9 }],
     ['office', 'books', { n: 2 }, 0, 'w', { on: 'oD', dx: 0.2 }],
-    ['office', 'ghostChair', {}, [608, 1756], 'e', { key: 'oC' }],
+    ['office', 'ghostChair', { mat: 'paintWhite33' }, [608, 1756], 'e', { key: 'oC' }],   // r48b D (QA 11/13): the 22 %-opaque acrylic read as a ghost chair (half-faded legs and back) at the office stop: solid white moulded chair
     ['office', 'pillows', { mountY: 1.6, lean: -0.25, items: [['pillowNavy33', 0, 1.2, 1.1]] }, 0, 'e', { on: 'oC', z: 0.3 }],
     ['office', 'art', { w: 3.2, h: 3.4, mountY: 5.6, style: 'kidsLoops', seed: 11, frame: 'frameOak', fw: 0.05 }, [680, 1756], 'w', { back: true }],
     ['office', 'cubeShelf', {}, [497, 1640], 'e', { key: 'oS' }],
