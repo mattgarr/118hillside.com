@@ -176,7 +176,7 @@ def build():
     window('WN-L1-B5S', 1, FIXW['x0'], FIXW['x1'], FIXW['sill'], FIXW['head'], Y_S, Y_SO, -1, units=3)
     # the old picture window ran 4 in past this wall piece into the next one: close that slot, inside and out
     slot = sbox(32.3, 1.25, 33.0, 8.05); sy_ = float(min(t['v'][:, 1].min() for t in E['W-L1-002'] if t['material'].startswith('hardie')))
-    plane_face(O, 'W-L1-B5S', None, 'walls', 'L1', PAINT, slot, lambda x, z: (x, Y_S + 0.006, z), (0, 1, 0))
+    plane_face(O, 'W-L1-B5S', None, 'walls', 'L1', PAINT, sbox(32.3, 0.0, X_E, ceil_z(Y_S) - 0.004), lambda x, z: (x, Y_S + 0.03, z), (0, 1, 0))   # the whole inside face east of the window, over the old room's corner shading too
     plane_face(O, 'W-L1-B5S', None, 'walls', 'L1', 'hardie-lap#paint-ext-body', slot, lambda x, z: (x, sy_ - 0.006, z), (0, -1, 0))
     plane_face(O, 'D-L1-B5F', None, 'openings', 'L1', 'steel-black', sbox(FOLD['x0'], 4.45, FOLD['x1'], 4.75), lambda x, y: (x, y, 0.012), (0, 0, 1))   # threshold track
     colliders += [{'id': 'W-L1-B5S#%d' % i, 'element': 'W-L1-B5S', 'kind': 'WALL', 'poly': [[a, 4.40], [b_, 4.40], [b_, 4.81], [a, 4.81]], 'z0': -5.2, 'z1': 8.16, 'storey': 'L1', 'exterior': True} for i, (a, b_) in enumerate(((4.9, FOLD['x0']), (FOLD['x1'], 32.49)))]
