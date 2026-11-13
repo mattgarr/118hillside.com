@@ -99,7 +99,7 @@ def plan(v, title, subtitle):
         room = Polygon(B4.ROOM)
         for yy in (K4.KB_Y0, K4.KB_Y1):
             A('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#444" stroke-width=".8" stroke-dasharray="10 4 2 4"/>' % (*P(K4.POST[1], yy), *P(B4.X_E, yy)))
-        x, y = P(14.3, B4.RIDGE_Y - .75); A('<text x="%.1f" y="%.1f" font-size="8" fill="#444" letter-spacing=".4">RIDGE BEAM ABOVE, 31 FT &#183; VAULTED CEILING</text>' % (x, y))
+        x, y = P(14.3, B4.RIDGE_Y - .75); A('<text x="%.1f" y="%.1f" font-size="8" fill="#444" letter-spacing=".4">CLEAR-SPAN RIDGE BEAM ABOVE, 31 FT (ENGINEER) &#183; VAULTED CEILING</text>' % (x, y))
         for (a, b, c0, c1) in (K4.SKY if SKY is None else SKY):
             A('<polygon points="%s" fill="none" stroke="#444" stroke-width=".8" stroke-dasharray="5 3"/>' % pts([(a, c0), (b, c0), (b, c1), (a, c1)]))
             x, y = P((a + b) / 2, (c0 + c1) / 2); A('<text x="%.1f" y="%.1f" font-size="7" fill="#555" text-anchor="middle">SKY</text>' % (x, y + 2.5))
@@ -131,7 +131,7 @@ def plan(v, title, subtitle):
     dim_h(A, bx0, bx1, by1 + 2.4, ftin(bx1 - bx0))
     dim_v(A, by0, by1, bx1 + 2.4, ftin(by1 - by0))
     if v == 'open4k':
-        dim_h(A, K4.X_LW, B4.X_E, by1 + 1.2, ftin(B4.X_E - K4.X_LW) + ' library wall to street gable (interior)', small=True)
+        dim_h(A, K4.X_LW, B4.X_E, by1 + 1.2, ftin(B4.X_E - K4.X_LW) + ' west gable to street gable (interior)', small=True)
         dim_v(A, B4.Y_S, B4.Y_N, bx1 + 1.2, ftin(B4.Y_N - B4.Y_S), small=True)
     # ---- title, north arrow, scale bar, label
     A('<text x="%d" y="44" font-size="22" font-weight="700" fill="#111">%s</text>' % (M_L, esc(title)))
@@ -314,12 +314,11 @@ def fixtures(D, v):
     # fireplace (from the option's glb element: its footprint inside the room) and the ridge beam's west post
     for fn in EXTRA: A(fn(P))                                # sketch overlays (concept studies)
     if v == 'open4k' and SHOW_FP:
-        poly(sbox(K4.POST[0], K4.POST[2], K4.POST[1], K4.POST[3]), '#111', .6); text((K4.POST[1] + 1.1, K4.RIDGE_Y - .75), 'POST', 6)
-        fpx0, fpx1 = B4_FP['cx'] - B4_FP['w'] / 2, B4_FP['cx'] + B4_FP['w'] / 2
-        poly(sbox(fpx0, B4.Y_N - B4_FP['d'], fpx1, B4.Y_N), '#e9e9e9', 1.0)
-        poly(sbox(B4_FP['cx'] - 2.25, B4.Y_N - .55, B4_FP['cx'] + 2.25, B4.Y_N - .15), '#555', .6)
-        poly(sbox(fpx0 - .3, B4.Y_N - B4_FP['d'] - 1.2, fpx1 + .3, B4.Y_N - B4_FP['d']), 'none', .6, '3 2')
-        text((B4_FP['cx'], B4.Y_N - B4_FP['d'] - .7), 'GAS FIREPLACE &#183; HEARTH', 6.5)
+        fp = K4.FP; fy0, fy1 = fp['cy'] - fp['w'] / 2, fp['cy'] + fp['w'] / 2          # r44: the hearth on the street gable, no post
+        poly(sbox(B4.X_E - fp['d'], fy0, B4.X_E, fy1), '#e9e9e9', 1.0)
+        poly(sbox(B4.X_E - .55, fp['cy'] - fp['box'][0] / 2, B4.X_E - .15, fp['cy'] + fp['box'][0] / 2), '#555', .6)
+        poly(sbox(B4.X_E - fp['d'] - 1.2, fy0 - .25, B4.X_E - fp['d'], fy1 + .25), 'none', .6, '3 2')
+        text((B4.X_E - fp['d'] - 2.6, fp['cy'] + 3.6), 'GAS FIRE', 6.5)
     return out
 B4_FP = dict(cx=19.3, w=6.0, d=1.2)
 SHOW_FP = True; EXTRA = []; SKY = None
@@ -351,7 +350,7 @@ def scale_bar(A, x, y):
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     jobs = [('asbuilt', 'Main level, as built', 'The house: 6 bedrooms, 3 baths, plus office · main level shown, as it is today'),
-            ('open4k', 'Main level, "Open kitchen and great room"', 'The house: 4 bedrooms, 3 baths, plus office · main level shown: kitchen at the street end, library at the west end, one vault between')]
+            ('open4k', 'Main level, "Open kitchen and great room"', 'The house: 4 bedrooms, 3 baths, plus office · main level shown: hearth at the street end, L-shaped kitchen at the west end, one vault under a clear-span beam')]
     for v, t, st in jobs:
         name = 'plan-%s.svg' % ('open4k-v2' if v == 'open4k' else v)
         s = plan(v, t, st.replace('&#183;', '·')); open(OUT + name, 'w').write(s); print('wrote', OUT + name, len(s))

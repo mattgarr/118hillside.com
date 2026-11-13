@@ -16060,7 +16060,7 @@ const CTA42 = (() => {
     apr24b: 'Keeps all six bedrooms, with a more open kitchen and dining room around a long island and a family room.',
     jan24: 'Kitchen, dining and family room in one open space, with a pantry, a new bath and two bedrooms.',
     open4: 'The front and middle bedrooms open into one vaulted living, dining and kitchen space, with new glass toward the street.',
-    open4k: 'One vaulted great room from end to end: the kitchen at the street end, a fireplace, skylights, a folding glass wall to a new deck, a library wall with a window seat where the old kitchen and hall were, and a dining table for eight that extends to ten.'};
+    open4k: 'One vaulted great room from end to end under a single big ridge beam: a gas hearth and two sofas at the street end, an L-shaped kitchen and island at the other, a table for eight (ten with leaves) at 14-ft folding glass doors to a new deck, and a library and a new bath where the living room was.'};
   const KNOWN = {asbuilt: {beds: 6, baths: 3, office: true}, apr24b: {beds: 6, baths: 3, office: true}, jan24: {beds: 5, baths: 3, office: true}};   // until the plan files are read
   const FACTS = {}, SPACES = {}, FETCH = {};
 
@@ -20804,7 +20804,7 @@ Object.assign(FOLD42, {toggle: (it) => fold42Toggle(it || FOLD42.items[0]), set(
 /* r43: the corner floor plan (minimap) shows the plan that is showing. A layout idea with its own plan image (drawn from its model data
    by the same projection as floor_main.jpg) is drawn instead of the house's while it shows (Design and its walk-through); everywhere
    else, and until that image has loaded, the house's plan. */
-const MM43 = {open4k: 'floor_main_open4k.jpg?v=2'}, MM43I = {};
+const MM43 = {open4k: 'floor_main_open4k.jpg?v=3'}, MM43I = {};
 { const _dm43 = drawMini; drawMini = function(){
     const v = typeof ACTIVE_VAR !== 'undefined' ? ACTIVE_VAR : 'asbuilt', src = MM43[v]; if(!src) return _dm43.apply(this, arguments);
     let im = MM43I[v]; if(!im){ im = MM43I[v] = new Image(); im.src = src; }
