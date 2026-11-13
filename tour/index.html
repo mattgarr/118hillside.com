@@ -1964,16 +1964,11 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
     // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
     // (an accessor: page hooks keep the previous hook and call it as a plain function, so the default returns one bound to its material)
     Object.defineProperty(THREE.Material.prototype, 'onBeforeCompile', {configurable: true,
-      get(){ const m = this; return function r40DefaultHook(sh){ r41WOn(sh); if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
+      get(){ const m = this; return function r40DefaultHook(sh){ if(sh && sh.uniforms && R41W.on) Object.assign(sh.uniforms, R41W.U); if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
       set(v){ Object.defineProperty(this, 'onBeforeCompile', {value: v, writable: true, configurable: true, enumerable: true}); }});
   } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
 if(!R40E.on) R41W.on = false;
-/* r41 W2: the pull's code is compiled only into programs that are given its uniforms (R41W_ON, defined by the hooks that assign them). A
-   material with its own onBeforeCompile that does not chain to the default (the probe mirrors) left the sampler r41Dist unassigned on texture
-   unit 0, the unit of its own cube envMap: two sampler types on one unit fail every draw, so the hall and lower-bath mirrors drew nothing (black). */
-function r41WOn(sh){ if(!sh || !sh.uniforms || !R41W.on) return; Object.assign(sh.uniforms, R41W.U); if(sh.r41w) return; sh.r41w = true;
-  sh.vertexShader = '#define R41W_ON\n' + sh.vertexShader; sh.fragmentShader = '#define R41W_ON\n' + sh.fragmentShader; }
-if(R41W.on){ const C = THREE.ShaderChunk, G = '#if defined( R41W_ON ) && ( defined( STANDARD ) || defined( PHONG ) || defined( LAMBERT ) || defined( TOON ) )', TM = '#if defined( TONE_MAPPING )';
+if(R41W.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) || defined( PHONG ) || defined( LAMBERT ) || defined( TOON )', TM = '#if defined( TONE_MAPPING )';
   if(C.tonemapping_fragment.indexOf(TM) === 0 && C.project_vertex.includes('gl_Position')){
     C.common += `\n${G}\nvarying vec3 vR41P;\n#endif\n`;
     C.project_vertex += `\n${G}\n{ vec4 r41w = vec4( transformed, 1.0 );\n#ifdef USE_INSTANCING\nr41w = instanceMatrix * r41w;\n#endif\nvR41P = ( modelMatrix * r41w ).xyz; }\n#endif\n`;
@@ -1992,7 +1987,7 @@ float r41Envelope( vec3 P ){
 `;
     C.tonemapping_fragment = `${G}\n\tif( r41Pull > 0.0 ) gl_FragColor.rgb *= 1.0 - r41Pull * ( 1.0 - r41Envelope( vR41P ) );\n#endif\n` + C.tonemapping_fragment;
   } else { R41W.on = false; console.warn('[r41w] tone-mapping anchors missing: no window pull'); } }
-function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); r41WOn(sh); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
+function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); if(R41W.on) Object.assign(sh.uniforms, R41W.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
 const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawing registered to the A2.2 walls
