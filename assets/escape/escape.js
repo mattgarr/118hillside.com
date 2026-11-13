@@ -541,9 +541,9 @@
   #escBook .big p{font-size:15.5px;line-height:1.45;margin:10px 0 0}
   #escBook .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   #escBook .stackv{position:relative;max-width:560px;margin:0 auto;background:#ebe7dd;border-radius:10px}#escBook .stackv img{position:absolute;left:0;top:0;width:100%;height:auto;background:none}#escBook .stackv img:first-child{position:relative}
-  #escCard{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(14,19,34,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);font-family:Jost,"Avenir Next",Arial,sans-serif;padding:16px;overflow:auto;animation:escIn .45s ease}
+  #escCard{position:fixed;inset:0;z-index:80;display:grid;justify-items:center;background:rgba(14,19,34,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);font-family:Jost,"Avenir Next",Arial,sans-serif;padding:16px;overflow:auto;animation:escIn .45s ease}
   @keyframes escIn{from{opacity:0}to{opacity:1}}
-  #escCard .c{background:#fbfaf7;color:#1f2a3a;border-radius:24px;max-width:580px;width:100%;padding:24px 24px 20px;box-shadow:0 30px 90px rgba(0,0,0,.45);animation:escUp .5s cubic-bezier(.2,.8,.2,1);box-sizing:border-box}
+  #escCard .c{margin:auto 0;background:#fbfaf7;color:#1f2a3a;border-radius:24px;max-width:580px;width:100%;padding:24px 24px 20px;box-shadow:0 30px 90px rgba(0,0,0,.45);animation:escUp .5s cubic-bezier(.2,.8,.2,1);box-sizing:border-box}
   @keyframes escUp{from{transform:translateY(18px)}to{transform:none}}
   #escCard h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(34px,6vw,48px);font-weight:600;line-height:1;margin:0 0 10px}
   #escCard .k{font-size:13px;color:#5c6575;margin:0 0 6px;letter-spacing:.03em}
