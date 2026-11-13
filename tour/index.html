@@ -16860,33 +16860,33 @@ const IDEA_TOURS = {
         p: 'A three-quarter bath opens off a short hall beside the library. The vanity is on the left, by the window, and the shower is behind glass on the right.'},
       {key: 'bedroom', t: 'Back bedroom', rooms: ['mainbeds'], real: 'backbed', f: {at: [17.7, 1.6], to: [22.6, -6.7], ph: [24.6, -5.6], hf: 100, rise: -.05, riseP: -.05},
         p: 'The back bedroom stays where it is, entered through a small vestibule off the hall.'}]},
-  /* Open plan (5 bedrooms): sitting area in the old living room, kitchen at the back, dining and family room in one space, a new bath between two street-side bedrooms */
+  /* Open plan (5 bedrooms): a sitting room in the old living room, the kitchen at the back, dining and family room in one space, a new bath
+     between two street-side bedrooms (r47: polished by tour/bim2/tools/ideas47.py, tour live) */
   jan24: {
-    live: false,   /* not live until its geometry and staging are cleaned up: 'Walk through' as before; ?ideatours=all turns it on for review */
     start: 'kitchen',
     from: {living: 'sitting', kitchen: 'dining', great: 'dining', mainbeds: 'bed1', middlebed: 'family', hallbath: 'bath', backbed: 'kitchen'},
     text: {
       street: {dims: '', p: 'The paver driveway runs up to the garage on the left. Beside it, the front steps climb to the porch and the iron-and-glass front doors.'},
-      entry: {p: 'The foyer stands between two pairs of iron-and-glass doors, under a cathedral ceiling with a starburst light fixture. The sitting area is straight ahead.'},
+      entry: {p: 'The foyer stands between two pairs of iron-and-glass doors, under a cathedral ceiling with a starburst light fixture. The sitting room is straight ahead.'},
       stairs: {p: 'Back in the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'}},
     stops: [
-      {key: 'sitting', t: 'Sitting area', rooms: ['living'], real: 'living', f: {at: [2.0, 3.5], to: [10.0, -8.0]},
-        p: 'The old living room becomes a sitting and games area under the same exposed beams, open to the kitchen.'},
+      {key: 'sitting', t: 'Sitting room', rooms: ['living'], real: 'living', f: {at: [2.0, 3.5], to: [10.0, -8.0]},
+        p: 'The old living room becomes a sitting room under the same exposed beams, open to the kitchen. The washer and dryer are in a closet behind sliding doors.'},
       {key: 'kitchen', t: 'Kitchen & island', rooms: ['kitchen'], real: 'backbed', f: {at: [10.6, 8.4], to: [22.0, -2.5]},
-        p: 'The kitchen moves to the back of the house, with the range on the far wall and an island with four stools.'},
+        p: 'The kitchen moves to the back of the house. The range is on the far wall under a hood, the sink is under the window, and the refrigerator is built into a panelled column. The island seats four.'},
       {key: 'dining', t: 'Dining', rooms: ['great'], real: 'great', f: {at: [6.5, 22.0], to: [13.0, 10.0]},
-        p: 'A table for ten stands between the kitchen and the family room, all in one open space.'},
+        p: 'A glass table for eight stands between the kitchen and the family room, all in one open space.'},
       {key: 'family', t: 'Family room', rooms: ['great'], real: 'middlebed', f: {at: [18.2, 11.2], to: [30.0, 22.0]},
-        p: 'The family room has two facing sofas, a wall-mounted TV and a window to the north.'},
+        p: 'Two sofas face each other across a glass table, with the TV on the east wall and a window to the north.'},
       {key: 'bath', t: 'New bath', rooms: ['mainbath'], real: 'hallbath', f: {at: [19.8, 32.6], to: [15.6, 28.2], hf: 100, rise: -.2, riseP: 0},
-        p: 'A new bath sits between the two street-side bedrooms. The vanity is by the door, and the shower is behind glass.'},
-      {key: 'bed1', t: 'Bedroom', rooms: ['mainbeds'], real: 'mainbeds', f: {at: [23.5, 26.2], to: [30.5, 34.5], hf: 100, rise: -.1},
-        p: 'A bedroom at the front of the house, with a window toward the street.'},
-      {key: 'bed2', t: 'Second bedroom', rooms: ['mainbeds'], real: 'great', f: {at: [13.5, 26.0], to: [6.0, 35.0], hf: 100},
-        p: 'The second street-side bedroom, shown here as an office, has a full wall of built-in cabinets.'}]},
-  /* Semi-open plan (6 bedrooms): the kitchen opens to the dining room around a long island; the family room, the three bedrooms and the hall bath keep their rooms */
+        p: 'A new bath sits between the two street-side bedrooms: a marble-topped vanity under a lit mirror, and a shower tiled to seven feet behind glass.'},
+      {key: 'bed1', t: 'North bedroom', rooms: ['mainbeds'], real: 'mainbeds', f: {at: [23.5, 26.2], to: [30.5, 34.5], hf: 100, rise: -.1},
+        p: 'A bedroom at the street end of the house, with a window to the east and a wall of built-in wardrobes.'},
+      {key: 'bed2', t: 'South bedroom', rooms: ['mainbeds'], real: 'great', f: {at: [13.5, 26.0], to: [6.0, 35.0], hf: 100},
+        p: 'The second street-side bedroom, with windows to the south and east and a wall of built-in wardrobes.'}]},
+  /* Semi-open plan (6 bedrooms): the kitchen opens to the dining room around a long island; the family room, the three bedrooms and the hall
+     bath keep their rooms (r47: polished by tour/bim2/tools/ideas47.py, tour live) */
   apr24b: {
-    live: false,
     start: 'kitchen',
     from: {living: 'family', kitchen: 'kitchen', great: 'dining', mainbeds: 'bed1', middlebed: 'bed2', hallbath: 'bath', backbed: 'backbed'},
     text: {
@@ -16896,17 +16896,17 @@ const IDEA_TOURS = {
       {key: 'family', t: 'Family room', rooms: ['living'], real: 'living', f: {at: [3.0, 3.0], to: [12.0, -7.0]},
         p: 'The living room becomes the family room, under the same exposed beams and beside the same windows to the trees.'},
       {key: 'kitchen', t: 'Kitchen & island', rooms: ['kitchen'], real: 'kitchen', f: {at: [6.6, 27.0], to: [12.5, 14.0]},
-        p: 'The kitchen opens to the dining room around a 13-foot island with six stools. The range and hood are on the far wall.'},
+        p: 'The kitchen opens to the dining room around a 13-foot island with six stools. The range and a built-in refrigerator are on the far wall, with a pantry beside them.'},
       {key: 'dining', t: 'Dining', rooms: ['great'], real: 'great', f: {at: [14.5, 23.0], to: [8.0, 33.0]},
-        p: 'The dining table stands at the large front windows, open to the kitchen.'},
+        p: 'The dining table stands at the large front windows, open to the kitchen, with a buffet along the north wall.'},
       {key: 'bed1', t: 'Front bedroom', rooms: ['mainbeds'], real: 'mainbeds', f: {at: [28.6, 25.6], to: [21.5, 35.5], hf: 100, rise: -.1},
-        p: 'The front bedroom keeps its place, with two windows toward the street.'},
+        p: 'The front bedroom keeps its place, with two windows toward the street and a closet behind sliding doors.'},
       {key: 'bed2', t: 'Middle bedroom', rooms: ['mainbeds'], real: 'middlebed', f: {at: [22.5, 15.5], to: [30.0, 23.0], hf: 100, rise: -.1},
-        p: 'The middle bedroom keeps its place too, with a window to the north.'},
+        p: 'The middle bedroom keeps its place too, with a window to the north and a closet behind sliding doors.'},
       {key: 'bath', t: 'Hall bath', rooms: ['mainbath'], real: 'hallbath', f: {at: [26.6, 9.2], to: [32.3, 11.2], hf: 100, rise: -.2},
         p: 'The hall bath is unchanged, with a tub and shower under a window.'},
       {key: 'backbed', t: 'Back bedroom', rooms: ['mainbeds'], real: 'backbed', f: {at: [18.5, 3.5], to: [26.0, -4.0], hf: 100},
-        p: 'The back bedroom also stays, shown here as an office.'}]}
+        p: 'The back bedroom opens off the end of the bedroom hall, with a window to the west.'}]}
 };
 const IT46 = window.IT46 = (() => {
   const REAL = STOPS.slice(), LISTS = {};
