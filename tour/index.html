@@ -2119,7 +2119,7 @@ const STOPS = [
   p:'The full bath on the lower hall has a dual-sink vanity and heated floors.'},
  {id:'lbed2', t:'Lower-level bedroom 2', photo:58, level:'lower', rooms:['lbed2'], pos:[-24.6,LV.lower+EYE,-27.2], look:[-28.0,LV.lower+EYE,-39.5],
   p:'The second bedroom on the lower level is across the hall from the bath, with skylights overhead.'},
- {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], pos:[-25.2,LV.lower+EYE,-16.6], look:[-27.3,LV.lower+EYE,-26.5],   // r48c: in the doorway (FRAME22.SPEC.laundry)
+ {id:'laundry', t:'Laundry room', photo:4, level:'lower', rooms:['laundry'], open:['D-L0-02'], pos:[-25.2,LV.lower+EYE,-16.6], look:[-27.3,LV.lower+EYE,-26.5],   // r48c: in the doorway (FRAME22.SPEC.laundry)
     // r48 laundry: just inside the door, where photo p04 was taken: window and open shelves left, corner sink and cabinets ahead, the stacked pair right (r48b G stood in the far corner, now the washer and dryer's place)
   p:'The main laundry room, with the washer and dryer, is off the lower level’s own entrance.'},
  {id:'office', t:'Skylit office', photo:20, level:'lower', rooms:['office'], pos:[-28.1,LV.lower+EYE,-10.1], look:[-26.0,LV.lower+EYE,-2.7],
@@ -6874,6 +6874,12 @@ function frame22Apply(id, sp){                              // spec -> STOP_CAMS
     if(P && c.posPh) f.pos = c.posPh; const lk = (P && c.lookPh22) || c.look22; if(lk) f.look = lk; else if(P && c.posPh){ const d = frame22Dir(c); f.look = [f.pos[0] + d[0] * 10, f.pos[1] + d[1] * 10, f.pos[2] + d[2] * 10]; } return f; };
   const _ss = showStop;   // a stop shown without a flight (the first view at boot) still gets its lens
   showStop = function(i, fly = true){ const r = _ss.apply(this, arguments); if(fly === false){ const st = STOPS[stopIdx], c = st && STOP_CAMS[camKey(st)]; if(c && c.f22){ const L = stopLens(c); LENS = L; lensTw = null; applyLens(L.fov, L.sy); } } return r; }; }
+/* r48c: a stop that stands in a doorway (STOPS open: door ids) has that door open whenever it is shown. A walk opens a door it passes through,
+   but a stop reached without one (a dissolve, ?stop=, a jump) found it shut, the camera standing in the leaf. Opened at once, before the
+   move is planned: from the neighbouring stops the door is not in view at the start of the move. */
+{ const _ssD = showStop; showStop = function(i){ try{ const s = STOPS[clamp(i, 0, STOPS.length - 1)];
+      if(s && s.open && typeof DOOR28 !== 'undefined') for(const it of DOOR28.items) if(s.open.includes(it.id) && it.t < 1){ it.t = 1; it.dir = 0; DOOR28.moving.delete(it); door28Pose(it); if(it.coll) it.coll.pass = true; PERF.shadowDirty = true; } }catch(e){ console.warn('[r48c] stop door', e); }
+    return _ssD.apply(this, arguments); }; }
 /* the opening (hero) camera for the current screen: {pos, target, fov (vertical), hfov, sy, zoom} - hw22 renders its splash from this */
 FRAME22.intro = (w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight) => { const c = STOP_CAMS.intro; if(!c) return null;
   const P = w < h, a = w / h, tD = Math.tan(FRAME22.DIAG * Math.PI / 180), hf = (P && c.hfP) || c.hf22, tH = Math.min(Math.tan(hf * Math.PI / 360), tD * a / Math.sqrt(1 + a * a));
