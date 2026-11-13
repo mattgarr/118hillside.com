@@ -177,8 +177,10 @@ street, y north).
   stone from a raised stone hearth to the vault, a 5-ft linear firebox with a 20-in opening in a steel frame, a heavy fir mantel and a 65-in TV
   above it. Low built-ins (36 in high, wood tops) run under the two gable windows either side, wall to wall. Two 8-ft sofas face each other across a coffee table on a rug, about 7 ft apart seat front
   to seat front, so the group reads from the hearth and from the table. The gable's three low windows become two matching
-  7 ft 11 windows (four mulled double-hung-style units each, like the rest of the house), one either side of the hearth,
-  with a triangle of gable glass over each that follows the rake and stops short of the stone. Bookshelves stand on the north wall either side of a 5-ft window.
+  7 ft 11 windows (four mulled casement-style units each, in the white Andersen pattern of the new wing: 2-in sashes,
+  a 3/4-in grille bar at mid-height, 3-5/8 in mullions), one either side of the hearth,
+  with a triangle of gable glass over each that follows the rake and stops short of the stone. The living area's two side walls mirror each other: an 8-ft, three-unit window of the same pattern on each
+  (sill 2 ft 7, head 7 ft 7), each 4 ft 2 from the gable corner.
 - **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood, pot filler) is centred on the north wall, which is now a
   solid cabinet wall: the two small windows that flanked the range are closed up (siding outside), with upper cabinets the
   length of the run either side of the hood, glass fronts next to it, quartz up the wall to the uppers and the hood, lights
@@ -192,7 +194,7 @@ street, y north).
   island, with a 7-ft sideboard on the west wall, centred on the table. This is the house's only dining place, so it is sized as one.
 - **Folding glass doors, moved west.** A 14-ft, six-panel folding door (x 8.7 to 22.9) is centred on the table and stacks at
   its west jamb. It opens to the porch and to about 9 ft of new deck (to x 24.6, 8 ft 5 deep, cable rail). The east part of
-  the old picture window stays as fixed glass (x 23.9 to 32.0, three mulled units) beside the sofas.
+  the old picture window stays as fixed glass (x 24.4 to 32.4, three mulled units, the mirror of the north wall's) beside the sofas.
 - **Outside the gable.** The back bedroom stays (11 ft 5 x 9 ft 7) with one closet; the other closet becomes its vestibule, so
   the bedroom door no longer opens off the main room. A new 3/4 bath runs across the north end of the old living room, with
   the shower in the old laundry closet. A short hall between them has a laundry closet (stacked washer and dryer behind a door) in its corner, with 36 in of hall left beside it. The rest of the old
