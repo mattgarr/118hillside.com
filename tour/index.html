@@ -1415,8 +1415,17 @@ html.hwload .loading .loadnote{color:#c9bcd8}
 <div id="app">
   <div class="loading" id="loading"><div><b>118 Hillside Drive</b><span id="loadtxt">Loading the 3D tour…</span><small class="loadnote">An illustrative visual aid, not to scale. Sizes are approximate.</small><small class="loadnote loadtips" aria-label="How to move around"><span class="ng-tips ng-d"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Drag</b> to look around or turn the model</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Scroll</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Shift</b>-drag to slide · <b>Ctrl/⌘</b>-drag to tilt</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Click a white circle or <b>Next ›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>F</b> for full screen</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4 14V2.5h8V14M2.5 14h11M9.6 8.2v.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Click</b> a door, a window shade or a skylight shade to open or close it</span></span></span><span class="ng-tips ng-p"><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>One finger</b> to look around</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2 8h12M10.5 4.5 14 8l-3.5 3.5M5.5 4.5 2 8l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Two fingers</b> to slide</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span><b>Pinch</b> to zoom</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5.5 9.5 8 7 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a circle or <b>›</b> to move</span></span><span class="ng-l"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4 14V2.5h8V14M2.5 14h11M9.6 8.2v.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Tap</b> a door or a shade to open or close it</span></span></span></small></div></div>
   <script src="../assets/intro28.js?v=38d"></script>
-  <script>/* r38 Thanksgiving: fetch the game script while the house loads (it used to be requested only once the house was built); the game loader below uses the same URL */
-  window.__FEAST_SRC = '../assets/feast3d/feast.js?v=9'; if(/[?&]feast=/.test(location.search)){ var fl = document.createElement('link'); fl.rel = 'preload'; fl.as = 'script'; fl.href = window.__FEAST_SRC; document.head.appendChild(fl); }</script>
+  <script>/* r38 Thanksgiving: fetch the game script while the house loads (it used to be requested only once the house was built); the game loader below uses the same URL.
+     r43: every game, and the files each one loads next (Snowball, its props, its level logic), fetched in parallel with the house instead of one after another
+     once it is built. __GAMES_SRC[id][0] is the game itself (the loader below uses it); the rest must match the URLs the game requests (a mismatch only costs a
+     wasted download: the game still loads its own). assets/games-menu.js prefetches these when the Games picker opens; holiday.js the season's game when idle. */
+  window.__GAMES_SRC = {feast: ['../assets/feast3d/feast.js?v=9', '../assets/snowball.js?v=37', '../assets/feast3d/feast-props.js?v=2'],
+    deck: ['../assets/deck3d/deck.js?v=52', '../assets/snowball.js?v=37', '../assets/deck3d/deck-props.js?v=46', '../assets/deck3d/deck-sfx.js?v=34'],
+    snowball: ['../assets/find/find.js?v=42', '../assets/snowball.js?v=37'],
+    escape: ['../assets/escape/escape.js?v=55', '../assets/escape/logic.js?v=55', '../assets/snowball.js?v=36'],
+    room: ['../assets/room3d/room.js?v=12', '../assets/room3d/room-logic.js?v=4', '../assets/room3d/room-data.js?v=2', '../assets/snowball.js?v=37']};
+  window.__FEAST_SRC = window.__GAMES_SRC.feast[0];
+  (function(){ var m = /[?&](feast|deck|snowball|escape|room)=/.exec(location.search); if(!m) return; window.__GAMES_SRC[m[1]].forEach(function(u){ var l = document.createElement('link'); l.rel = 'preload'; l.as = 'script'; l.href = u; document.head.appendChild(l); }); })();</script>
   <canvas id="c" tabindex="0" aria-label="3D model of 118 Hillside Drive"></canvas>
   <img id="ov" class="ov" alt="">
   <div id="ovtag" class="ovtag" hidden>Photo · drag to explore in 3D</div>
@@ -1899,11 +1908,32 @@ const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: r
    is made, as the default onBeforeCompile (materials with their own hook chain to it); ?r40env=0 turns it off. */
 const R40E = window.R40E = {on: !/[?&]r40env=0\b/.test(location.search), n: 0, lampWb: .1, duskIn: .3,
   U: {envMapB: {value: null}, r40Mask: {value: null}, r40MB: {value: new THREE.Vector4(0, 0, 0, 0)}, r40MY: {value: new THREE.Vector2(0, 1)}, r40K: {value: 0}, r40MetK: {value: 1}}};
+/* r41 W (owner 11/12, launch-blocking: from inside the big-glass rooms at midday the sunlit yard read near-white, "like snow").
+   rule:window-pull - with two environments the glass is clear (r40), so the garden seen from a room was drawn at the ROOM's exposure,
+   1.2-2 stops over what the same garden gets outdoors, and ACES clipped lawn, paving and leaves to white. A real-estate photographer
+   exposes the window for the outside (a second, darker frame blended into the glass: the "window pull"). Here every lit surface
+   OUTSIDE the house envelope is drawn, before tone mapping, at the exterior exposure plus R41W.stops: its radiance is scaled by
+   E_ext / E_now. E_ext = the time of day's outdoor exposure x the outdoor meter's typical gain; E_now = the exposure in use.
+   Tuned 11/12 on the owner's Mac (browser pane, GPU): by day the outdoor stops settle at .965-.98 on a base of .80-.84 (gain
+   R41W.outGain 1.2), the glazed rooms at .90-1.13. R41W.stops 0: the garden through the glass is never brighter than the same
+   garden seen standing outside (the +.6 of the first pass never engaged: E_ext was above every room's exposure). At the rooms'
+   calibrated stops the pull is 1 (no change); it takes up to ~.25 stop off when a room's exposure climbs over the outdoor one. The factor follows EXPO_IN (eased, so a doorway crossing
+   blends) and is never above 1 (dusk: the garden is darker than the room, nothing is pulled). It depends on where the camera
+   stands, never where it looks. The envelope is a plan distance field from the BIM interior spaces (R41W.tex, 3-in cells, linear
+   filtered: no cells), with the height range of the nearest room: a window reveal, a sill or a jamb inside the wall thickness is the
+   room's, ground below the floor and a roof above the ceiling are outside. The meter's all-round view is drawn without the pull, so
+   every room keeps its calibrated exposure. ?r41w=0 turns it off. */
+/* r41 W3 (11/12): OFF by default, ?r41w=1 turns it on. With the tuned values it changes nothing at the rooms' calibrated stops (pull 1),
+   and its shader code made the hall-bath and lower-bath probe mirrors draw black (GL INVALID_OPERATION on their draw; ?r41w=0 restores
+   them; binding its uniforms in the mirror hook was not enough). Until that is solved the mirrors win. */
+const R41W = window.R41W = {on: R40E.on && /[?&]r41w=1\b/.test(location.search), d0: .7, d1: 1.2, dMax: 4, stops: 0, outGain: 1.2, pull: 1, built: false,
+  U: {r41Dist: {value: null}, r41DB: {value: new THREE.Vector4(0, 0, 0, 0)}, r41DY: {value: new THREE.Vector2(0, 1)}, r41Pull: {value: 0}}};
 if(R40E.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) && defined( USE_ENVMAP )';
   C.common += `\n${G}\nvarying vec3 vR40W;\n#endif\n`;
   C.worldpos_vertex += `\n${G}\nvR40W = worldPosition.xyz;\n#endif\n`;
   C.envmap_physical_pars_fragment += `
 #if defined( STANDARD ) && defined( USE_ENVMAP ) && defined( ENVMAP_TYPE_CUBE_UV )
+#define R41G8 ${/[?&]ghost41=0\b/.test(location.search) ? 'false' : 'true'}
 uniform sampler2D envMapB, r40Mask; uniform vec4 r40MB; uniform vec2 r40MY, r40Mode; uniform float r40K, r40MetK;
 float r40MaskAt( vec3 P ){
   vec2 uv = ( P.xz - r40MB.xy ) * r40MB.zw;
@@ -1914,12 +1944,14 @@ float r40MaskAt( vec3 P ){
 float r40Interior( const in GeometricContext geometry ){
   if( r40Mode.x < 0.5 ) return 0.0;
   if( r40Mode.y > 0.5 || r40MB.z <= 0.0 ) return r40K;
-  vec3 P = vR40W + inverseTransformDirection( geometry.normal, viewMatrix ) * 0.75;
+  vec3 N = inverseTransformDirection( geometry.normal, viewMatrix ), P = vR40W + N * 0.75;
   float m = r40MaskAt( P );
   // r41: furnishings, hardware and window coverings (mode 2) hang ON the room side of a wall; within ~6 in of an exterior wall's inner face
   // the plan cells are not interior air, so a knob's, towel ring's or shade rail's faces along the wall read the open sky and shone.
   // For them the room on either side, 6 in away, counts too (an outdoor piece would have to be inside the wall to reach it)
   if( m < 0.999 && r40Mode.x > 1.5 ){ m = max( m, max( max( r40MaskAt( P + vec3( 0.5, 0.0, 0.0 ) ), r40MaskAt( P - vec3( 0.5, 0.0, 0.0 ) ) ), max( r40MaskAt( P + vec3( 0.0, 0.0, 0.5 ) ), r40MaskAt( P - vec3( 0.0, 0.0, 0.5 ) ) ) ) ); }
+  // r41 G8: a level surface (ceiling, floor, counter top) keeps its test point over the wall line: also read 3 in to each side
+  else if( R41G8 && m < 0.999 && abs( N.y ) > 0.5 ) m = max( m, max( max( r40MaskAt( P + vec3( 0.25, 0.0, 0.0 ) ), r40MaskAt( P - vec3( 0.25, 0.0, 0.0 ) ) ), max( r40MaskAt( P + vec3( 0.0, 0.0, 0.25 ) ), r40MaskAt( P - vec3( 0.0, 0.0, 0.25 ) ) ) ) );
   return m;
 }
 vec3 r40IrrB( const in GeometricContext geometry ){ return PI * textureCubeUV( envMapB, inverseTransformDirection( geometry.normal, viewMatrix ), 1.0 ).rgb * envMapIntensity; }
@@ -1935,10 +1967,30 @@ vec3 r40RadB( const in vec3 viewDir, const in vec3 normal, const in float roughn
     // the default hook (a material's own onBeforeCompile chains to it): shared uniforms + this material's mode (x: on unless it has its own envMap)
     // (an accessor: page hooks keep the previous hook and call it as a plain function, so the default returns one bound to its material)
     Object.defineProperty(THREE.Material.prototype, 'onBeforeCompile', {configurable: true,
-      get(){ const m = this; return function r40DefaultHook(sh){ if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
+      get(){ const m = this; return function r40DefaultHook(sh){ if(sh && sh.uniforms && R41W.on) Object.assign(sh.uniforms, R41W.U); if(m && m.isMeshStandardMaterial) r40Uniforms(m, sh, false); }; },
       set(v){ Object.defineProperty(this, 'onBeforeCompile', {value: v, writable: true, configurable: true, enumerable: true}); }});
   } else { R40E.on = false; console.warn('[r40] lights_fragment_maps anchors missing: one environment'); } }
-function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
+if(!R40E.on) R41W.on = false;
+if(R41W.on){ const C = THREE.ShaderChunk, G = '#if defined( STANDARD ) || defined( PHONG ) || defined( LAMBERT ) || defined( TOON )', TM = '#if defined( TONE_MAPPING )';
+  if(C.tonemapping_fragment.indexOf(TM) === 0 && C.project_vertex.includes('gl_Position')){
+    C.common += `\n${G}\nvarying vec3 vR41P;\n#endif\n`;
+    C.project_vertex += `\n${G}\n{ vec4 r41w = vec4( transformed, 1.0 );\n#ifdef USE_INSTANCING\nr41w = instanceMatrix * r41w;\n#endif\nvR41P = ( modelMatrix * r41w ).xyz; }\n#endif\n`;
+    C.tonemapping_pars_fragment += `
+${G}
+uniform sampler2D r41Dist; uniform vec4 r41DB; uniform vec2 r41DY; uniform float r41Pull;
+// 1 inside the house envelope (rooms, their walls, reveals and sills), 0 outside it; soft over R41W.d0-d1 ft beyond the room air
+float r41Envelope( vec3 P ){
+  vec2 uv = ( P.xz - r41DB.xy ) * r41DB.zw;
+  if( uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0 ) return 0.0;
+  vec4 t = texture2D( r41Dist, uv ); float y = ( P.y - r41DY.x ) / r41DY.y;
+  float v = clamp( y - t.g * 255.0 + 0.5, 0.0, 1.0 ) * clamp( t.b * 255.0 - y + 0.5, 0.0, 1.0 );
+  return v * ( 1.0 - smoothstep( ${R41W.d0.toFixed(3)}, ${R41W.d1.toFixed(3)}, t.r * ${R41W.dMax.toFixed(3)} ) );
+}
+#endif
+`;
+    C.tonemapping_fragment = `${G}\n\tif( r41Pull > 0.0 ) gl_FragColor.rgb *= 1.0 - r41Pull * ( 1.0 - r41Envelope( vR41P ) );\n#endif\n` + C.tonemapping_fragment;
+  } else { R41W.on = false; console.warn('[r41w] tone-mapping anchors missing: no window pull'); } }
+function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); if(R41W.on) Object.assign(sh.uniforms, R41W.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
 const PPF = 26.8, OX = 1300, OY = 1900, UDX = -1181, UDY = 294;   // upper drawing registered to the A2.2 walls
@@ -7091,6 +7143,11 @@ function navQA(){
     finally{ performance.now = realNow; if(GV) GV.fix = gfix; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
     window.__LIGHT = rows; tour(0); };
   SEC.ideas = async R => { if(!window.__IDEA42){ R.note('ideas', '-', 'no idea hook'); return; } await __IDEA42.navCheck(R, {moveTo: (x, z, f) => moveTo(x, z, f), collide: (p, f) => collide(p, f), finish, step, probe, geo}); };   // r42: walk each layout idea that carries viewpoints
+  /* r41 decor: every ordered pair of holiday dresses ends exactly as a clean switch from 'None' (assets/holiday/holiday.js, HOLIDAY.qa) */
+  SEC.decor = async R => { const Q = window.HOLIDAY; if(!Q || !Q.qa){ R.note('decor', '-', 'no holiday control on this page'); return; } setMode('tour'); finish();
+    const q = await Q.qa(); if(!q.pairs){ R.fail('decor', '-', 'qa did not run: ' + q.why); return; } R.n += q.pairs.length;
+    for(const p of q.pairs) if(!p.ok) R.fail('decor', (p.ctx ? p.ctx + ': ' : '') + p.from + '>' + p.to, (p.noFrames ? '(read without drawn frames: a hidden window?) ' : '') + p.n + ' leftover(s): ' + p.diff.slice(0, 4).map(d => d[0] + ' ' + d[1] + ' -> ' + d[2]).join('; '));
+    R.note('decor', '-', q.pairs.length + ' switches, ' + q.leftovers + ' leftover(s), ' + q.ms + ' ms' + (q.starved ? ', ' + q.starved + ' read without drawn frames' : '') + (q.sweeps.length ? ', swept ' + q.sweeps.join(' ') : '')); };
   let o = {};
   async function navCheck(o_ = {}){ o = o_; const R = {fails: [], notes: [], rows: [], n: 0, row(sec, id, m){ this.n++; if(o.rows) this.rows.push(Object.assign({sec, id}, m)); }, fail(sec, id, why){ this.fails.push({sec, id, why}); }, note(sec, id, why){ this.notes.push({sec, id, why}); }};
     const todo = o.only ? [].concat(o.only) : (window.HILLSIDE ? ['games', 'grab'] : Object.keys(SEC).filter(k => k !== 'games')), saved = {mode, stopIdx}, t0 = performance.now();
@@ -9774,7 +9831,7 @@ async function boot(){
         get tod(){ return TOD_KEY; },
         hooks: {click: null, frame: null}};
       { const _ck = clickAt; clickAt = function(cx, cy, dbl){ try{ if(HX.hooks.click && HX.hooks.click(cx, cy, dbl)) return; }catch(e){ console.warn('[escape] click', e); } return _ck.apply(this, arguments); }; }
-      const es = document.createElement('script'); es.src = /[?&]feast=/.test(location.search) ? window.__FEAST_SRC : /[?&]room=/.test(location.search) ? '../assets/room3d/room.js?v=12' : /[?&]deck=/.test(location.search) ? '../assets/deck3d/deck.js?v=50' : /[?&]snowball=/.test(location.search) ? '../assets/find/find.js?v=42' : '../assets/escape/escape.js?v=55'; document.head.appendChild(es); }
+      const es = document.createElement('script'); es.src = window.__GAMES_SRC[(/[?&](feast|room|deck|snowball)=/.exec(location.search) || [0, 'escape'])[1]][0]; /* r43: the URLs live with the early fetch in the page head */ document.head.appendChild(es); }
     if(/[?&]qa=1\b/.test(location.search)) window.__TOUR = navQA();   // QA camera hook (?qa=1 only)
     BOOT22.ready(); REVEAL.begin();
     await BOOT22.y(.95, 'Rendering the first view'); tick();
@@ -10400,7 +10457,7 @@ function glass20MirrorMat(q, clone){
   // A mirror shows only what it reflects (the room capture, with the MR-1 light floor that follows the light level): no emission.
   if(m.emissive) m.emissive.setRGB(0, 0, 0); m.emissiveIntensity = 0; m.emissiveMap = null;
   const U = q.U;
-  m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U);
+  m.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U); if(typeof R41W !== 'undefined' && R41W.on) Object.assign(sh.uniforms, R41W.U);   /* r41 W2: the window pull's sampler must be bound (left on unit 0 with this cube envMap, the draw failed: black mirror) */
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vG20W;').replace('#include <project_vertex>', '#include <project_vertex>\nvG20W = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vG20W; uniform vec3 gBoxMin, gBoxMax, gProbe;')
       .replace('reflectVec = inverseTransformDirection( reflectVec, viewMatrix );', `reflectVec = inverseTransformDirection( reflectVec, viewMatrix );
@@ -10568,8 +10625,9 @@ function lightMeterPoll(){
   const st = gl.clientWaitSync(METER.sync, 0, 0); if(st !== gl.ALREADY_SIGNALED && st !== gl.CONDITION_SATISFIED) return;
   gl.deleteSync(METER.sync); METER.sync = null;
   gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-  let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
+  let s = 0, ws = 0, hi = 0; for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = METER.atlas ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), v = METER.buf[(j * 16 + i) * 4] / 255; s += w * v; ws += w; if(v > .88) hi++; }
   METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt;
+  if(METER.atlas && typeof ghost41MeterCal === 'function') ghost41MeterCal();   // r41 G5: the all-round view, evenly weighted, calibrated per room (see GHOST r41)
 }
 const METER_PASS = {enabled: true, needsSwap: false, clear: false, renderToScreen: false, setSize(){},
   render(r, w, read){ if(!LIGHT.meter.on || !METER.quad) return; lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
@@ -11006,7 +11064,7 @@ GOV.apply = (k, force) => {
   if(composer && ssao){ const bt = ssao.beautyRenderTarget, n = Math.max(0, k.aa);
     if(bt && bt.isWebGLMultisampleRenderTarget && bt.samples !== n){ bt.samples = n; bt.dispose(); }
     if(composer._govFx){ const on = k.aa === 0; if(composer._govFx.enabled !== on){ composer._govFx.enabled = on; sizePost(); } } }
-  const sm = Math.min(G.sharp ? G.L[G.lvl].sm : k.sm, renderer.capabilities.maxTextureSize || 4096, coarse && !PERF.off('phone') ? (k.i === 0 ? 4096 : 2048) : 1e9);
+  const sm = Math.min(G.sharp ? G.L[G.lvl].sm : k.sm, renderer.capabilities.maxTextureSize || 4096, coarse && !PERF.off('phone') ? (G.ceil === 0 ? 4096 : 2048) : 1e9);   // r41 G6: the phone cap follows the quality button, not the level being drawn
   if(sun.shadow.mapSize.x !== sm){ sun.shadow.mapSize.set(sm, sm); if(sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map = null; } PERF.shadowDirty = true; }
   if(force || A.fol !== k.fol) GOV.foliage(k.fol);
   Object.assign(A, {ao: k.ao, fol: k.fol, i: k.i});
@@ -12561,7 +12619,7 @@ function hwFrame(){ if(!HW.on || !HW.built) return; const t = (performance.now()
     else if(f.o){ f.o.scale.set(1 + .15 * k, 2.1 + .5 * k, 1 + .15 * k); } }
   // point lights without shadows shine through walls: outdoor accents only while the camera is outside, candles only inside
   // r40: the page's debounced inside state, and the two sets cross-fade with EXPO_IN (they switched in one frame)
-  HW.inside = !isDoll() && ENV_INSIDE; const kIn = isDoll() ? 1 : Math.max(0, Math.min(1, EXPO_IN));
+  const inside = HW.inside = !isDoll() && ENV_INSIDE, kIn = isDoll() ? 1 : Math.max(0, Math.min(1, EXPO_IN));   // r41: `inside` is read by the fog puffs below (r40 dropped it: every frame threw, which switched Halloween off half-way)
   for(const {l, d} of HW.bind){ const f = d.out ? (isDoll() ? 1 : 1 - kIn) : kIn; l.intensity = f <= 0 ? 0 : f * d.i * (d.fl != null && !still ? 1 + .22 * hwFlickN(t, d.fl * 1.9) : 1); }
   if(HW.chandL && !still) HW.chandL.intensity = HW.chandL.userData.hwBase * (1 + .25 * hwFlickN(t, 4.4));
   // sky group rides with the camera (moon + stars at infinity)
@@ -12627,10 +12685,11 @@ function hwNight(){
 { const _s = setTOD; setTOD = function(key){ if(HW.on) key = 'dusk'; const r = _s.apply(this, [key]); if(HW.on) hwNight(); return r; }; }
 // the camera meter would lift the night back to daylight: while on, exposure is fixed (HW.expo outside / HW.expoIn inside)
 { const _m = lightMeterMul; lightMeterMul = function(dt){ const r = _m.apply(this, arguments); return HW.on ? HW.expo * Math.pow(HW.expoIn / HW.expo, Math.max(0, Math.min(1, EXPO_IN))) : r; }; }   // r40: blended in stops by EXPO_IN
-{ const _r = renderFrame; renderFrame = function(){ if(HW.on) try{ hwFrame(); }catch(e){ console.warn('[halloween] frame', e); HW.on = false; } return _r.apply(this, arguments); }; }
+{ const _r = renderFrame; renderFrame = function(){ if(HW.on) try{ hwFrame(); HW.frameErr = 0; }catch(e){   // r41: a frame error no longer flips HW.on by hand (that left the whole dress up while the page thought it was down): it is reported, and a dress that keeps failing is taken down properly
+      if(!HW.frameErr) console.warn('[halloween] frame', e); if(++HW.frameErr > 30){ HW.frameErr = 0; setTimeout(() => { try{ window.HALLOWEEN.off(); }catch(x){} }, 0); } } return _r.apply(this, arguments); }; }
 function hwOn(){
   if(HW.on) return HW.report; if(!MODEL || !BIM || !FURN.items().length) { console.warn('[halloween] model not ready'); return null; }
-  HW.saved = {tod: TOD_KEY, dl: new Map(), other: new Map(), lights: null, light: {band: LIGHT.dusk.band, bandAt: LIGHT.dusk.bandAt, duskHemi: LIGHT.duskHemi, duskLift: LIGHT.duskLift}};
+  HW.saved = {tod: TOD_KEY, dl: new Map(), other: new Map(), lights: null, light: {band: LIGHT.dusk.band, bandAt: LIGHT.dusk.bandAt, duskHemi: LIGHT.duskHemi, duskLift: LIGHT.duskLift}, amb: [amb.color.clone(), amb.intensity]};   // r41: the ambient colour too (hwNight paints it violet; nothing else set it back)
   Object.assign(LIGHT.dusk, {band: hwLin(HW.pal.band).getHex(), bandAt: .22}); LIGHT.duskHemi = .28; LIGHT.duskLift = .015;   // lightFrame() re-applies these every frame
   HW.chandSrc = DUSK_LIGHTS.find(l => l.parent && l.parent.name === 'main' && Math.abs(l.position.x - ROOM.entry.at[0]) < 4 && Math.abs(l.position.z - ROOM.entry.at[1]) < 4) || null;
   try{ hwBuild(); }catch(e){ console.error('[halloween] build', e); }
@@ -12642,8 +12701,8 @@ function hwOn(){
 function hwOff(){
   if(!HW.on) return; HW.on = false; scene.remove(HW.ext); scene.remove(HW.sky); if(HW.inn.parent) HW.inn.parent.remove(HW.inn);
   hwRestore(); for(const [l, o] of HW.saved.dl){ l.color.copy(o.c); l.distance = o.d; l.position.copy(o.p); l.decay = o.k; } HW.bind = []; for(const [l, o] of HW.saved.other){ l.color.copy(o.c); l.intensity = o.i; }
-  { const o = HW.saved.light; LIGHT.dusk.band = o.band; LIGHT.dusk.bandAt = o.bandAt; LIGHT.duskHemi = o.duskHemi; LIGHT.duskLift = o.duskLift; }
-  setTOD(HW.saved.tod); for(const [l, o] of HW.saved.dl) if(Math.abs(l.intensity - o.i) > 1e-6 && TOD_KEY === 'dusk') l.intensity = o.i;
+  { const o = HW.saved.light; LIGHT.dusk.band = o.band; LIGHT.dusk.bandAt = o.bandAt; LIGHT.duskHemi = o.duskHemi; LIGHT.duskLift = o.duskLift; } if(HW.saved.amb){ amb.color.copy(HW.saved.amb[0]); amb.intensity = HW.saved.amb[1]; }
+  setTOD(HW.saved.tod); if(!R40E.on) for(const [l, o] of HW.saved.dl) if(Math.abs(l.intensity - o.i) > 1e-6 && TOD_KEY === 'dusk') l.intensity = o.i;   // r43: with r40's lighting, setTOD() sets the room lamps for dusk itself (x R40E.duskIn); the saved level was read while Halloween held them at full, so putting it back left every lamp 3.3x too bright after Halloween at dusk
   document.documentElement.classList.remove('halloween'); if(window.__perf) __perf.shadowDirty = true; }
 // self-check: a full on/off cycle must leave furniture, lights and time of day exactly as they were
 function hwCheck(){ const snap = () => ({tod: TOD_KEY, furn: FURN.items().map(it => it.obj.visible + ':' + it.obj.layers.mask).join(','), dl: DUSK_LIGHTS.map(l => l.color.getHexString() + l.intensity.toFixed(3) + l.position.toArray().map(v => v.toFixed(2)) + l.distance + '/' + l.decay).join(','),
@@ -12985,7 +13044,7 @@ function w24Compile(objs){ const proxy = Object.create(scene); let chunk = null;
   finally{ for(const l of flips) l.visible = false; renderer.setRenderTarget(rt0); }
   return objs.length > 0; }
 const W24_JOBS = [
-  {name: 'hwbuild', ready: () => !HW.on && !HW.built && !HW_AUTO && !!(MODEL && BIM && FURN.items().length) && (mode === 'tour' || mode === 'walk'),
+  {name: 'hwbuild', ready: () => !HW.on && !HW.built && !HW_AUTO && !!(MODEL && BIM && FURN.items().length) && (mode === 'tour' || mode === 'walk') && !!window.HOLIDAY && (HOLIDAY.season === 'halloween' || HOLIDAY.prep.others),   // r43: first in Halloween's season, otherwise once the holiday control has made the season's dress (and the other one) ready; never under a game (holiday.js is not loaded there)
    run: () => { HW.chandSrc = DUSK_LIGHTS.find(l => l.parent && l.parent.name === 'main' && Math.abs(l.position.x - ROOM.entry.at[0]) < 4 && Math.abs(l.position.z - ROOM.entry.at[1]) < 4) || null; hwBuild(); }},
   {name: 'hwcompile', ready: () => !HW.on && HW.built && !WARM24.hwCompiled && !DUSK,
    // the Halloween set, then everything in the scene, for the Halloween (dusk-lamps-on) light set; programs already compiled are cache hits
@@ -16733,8 +16792,40 @@ function tgMeshes(){ if(TG_MESHES) return TG_MESHES; TG_MESHES = [];
     GROUPS[k].traverse(o => { if(!o.isMesh || o.isInstancedMesh || !o.geometry || o.userData.tg || !tgVis(o)) return; const m = Array.isArray(o.material) ? o.material[0] : o.material; if(m && m.visible === false) return;
       if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); TG_MESHES.push({o, b}); }); }
   return TG_MESHES; }
+/* r43: every ray of the Thanksgiving build is straight down, and three.js tests every triangle of every mesh whose box holds the point (about 1.6 ms a
+   ray, 94 % of the build: 2.5 s on a laptop, far more on a phone). A mesh's triangles are now put once into 2 ft cells in world space (only meshes a
+   ray actually reaches, once per build), and a ray tests only the few triangles in its cell: the same answer (highest surface the ray meets, the
+   same face culling as Mesh.raycast for the material's side, the same groups and draw range) at a fraction of the cost. ?tgrays=three: the old way. */
+const TGRAY3 = /[?&]tgrays=three\b/.test(location.search);
+let TGTRI = null; const TGTRI_S = 2, _tgA = new THREE.Vector3(), _tgB = new THREE.Vector3(), _tgC = new THREE.Vector3();
+function tgTris(o){ if(!TGTRI || TGTRI.L !== TG_MESHES) TGTRI = {L: TG_MESHES, m: new Map()}; let T = TGTRI.m.get(o); if(T) return T;
+  const g = o.geometry, pos = g.attributes.position, idx = g.index, M = o.matrixWorld, mats = Array.isArray(o.material) ? o.material : null, dr = g.drawRange;
+  const P = [], sg = [], cells = new Map(), S = TGTRI_S;
+  const runs = mats ? g.groups.map(q => [q.start, q.start + q.count, mats[q.materialIndex]]).map(([a, b, m]) => [Math.max(a, dr.start), Math.min(b, dr.start + dr.count), m])
+                    : [[Math.max(0, dr.start), Math.min(idx ? idx.count : pos.count, dr.start + dr.count), o.material]];
+  for(const [a0, a1, m] of runs){ if(!m) continue; const side = m.side === THREE.DoubleSide ? 0 : m.side === THREE.BackSide ? -1 : 1;
+    for(let i = a0; i + 2 < a1 + 0 && i + 2 < (idx ? idx.count : pos.count); i += 3){ const i0 = idx ? idx.getX(i) : i, i1 = idx ? idx.getX(i + 1) : i + 1, i2 = idx ? idx.getX(i + 2) : i + 2;
+      _tgA.fromBufferAttribute(pos, i0).applyMatrix4(M); _tgB.fromBufferAttribute(pos, i1).applyMatrix4(M); _tgC.fromBufferAttribute(pos, i2).applyMatrix4(M);
+      const ny = (_tgB.z - _tgA.z) * (_tgC.x - _tgA.x) - (_tgB.x - _tgA.x) * (_tgC.z - _tgA.z);   // y of (B-A) x (C-A): faces up when > 0
+      if(ny === 0 || (side > 0 && ny < 0) || (side < 0 && ny > 0)) continue;                     // a down ray meets a front face only from above (Mesh.raycast's culling)
+      const t = sg.length; sg.push(ny); P.push(_tgA.x, _tgA.y, _tgA.z, _tgB.x, _tgB.y, _tgB.z, _tgC.x, _tgC.y, _tgC.z);
+      const x0 = Math.floor(Math.min(_tgA.x, _tgB.x, _tgC.x) / S), x1 = Math.floor(Math.max(_tgA.x, _tgB.x, _tgC.x) / S), z0 = Math.floor(Math.min(_tgA.z, _tgB.z, _tgC.z) / S), z1 = Math.floor(Math.max(_tgA.z, _tgB.z, _tgC.z) / S);
+      for(let cx = x0; cx <= x1; cx++) for(let cz = z0; cz <= z1; cz++){ const k = cx * 100003 + cz; let l = cells.get(k); if(!l) cells.set(k, l = []); l.push(t); } } }
+  T = {P: new Float32Array(P), ny: sg, cells}; TGTRI.m.set(o, T); return T; }
 function tgHit(x, z, yTop, far){ const c = []; for(const m of t33Cand(x, z)) if(x >= m.b.min.x && x <= m.b.max.x && z >= m.b.min.z && z <= m.b.max.z && m.b.min.y <= yTop && m.b.max.y >= yTop - far) c.push(m.o);
-  if(!c.length) return null; tgRC.set(_tgO.set(x, yTop, z), _tgDown); tgRC.near = 0; tgRC.far = far; const h = tgRC.intersectObjects(c, false); return h.length ? h[0] : null; }
+  if(!c.length) return null;
+  if(TGRAY3){ tgRC.set(_tgO.set(x, yTop, z), _tgDown); tgRC.near = 0; tgRC.far = far; const h = tgRC.intersectObjects(c, false); return h.length ? h[0] : null; }
+  const k = Math.floor(x / TGTRI_S) * 100003 + Math.floor(z / TGTRI_S); let best = null, by = -Infinity, bn = 0;
+  for(const o of c){ if(!o.geometry || !o.geometry.attributes.position) continue; const T = tgTris(o), L = T.cells.get(k); if(!L) continue; const P = T.P;
+    for(const t of L){ const j = t * 9, ax = P[j], az = P[j + 2], bx = P[j + 3], bz = P[j + 5], cx = P[j + 6], cz = P[j + 8];
+      const d = (bx - ax) * (cz - az) - (cx - ax) * (bz - az); if(d === 0) continue;
+      const u = ((x - ax) * (cz - az) - (cx - ax) * (z - az)) / d, v = ((bx - ax) * (z - az) - (x - ax) * (bz - az)) / d;
+      if(u < -1e-9 || v < -1e-9 || u + v > 1 + 1e-9) continue;
+      const y = P[j + 1] + u * (P[j + 4] - P[j + 1]) + v * (P[j + 7] - P[j + 1]); if(y > yTop || y < yTop - far || y <= by) continue; by = y; best = o; bn = t; } }
+  if(!best) return null; const T = tgTris(best), j = bn * 9, P = T.P;
+  _tgA.set(P[j], P[j + 1], P[j + 2]); _tgB.set(P[j + 3], P[j + 4], P[j + 5]); _tgC.set(P[j + 6], P[j + 7], P[j + 8]);
+  const n = new THREE.Vector3().subVectors(_tgB, _tgA).cross(new THREE.Vector3().subVectors(_tgC, _tgA)).normalize();
+  return {point: new THREE.Vector3(x, by, z), distance: yTop - by, object: best, face: {normal: n}}; }
 function tgDrop(x, z, yTop, far = 3){ const h = tgHit(x, z, yTop, far); if(h) return h.point.y; const g = ground(x, z); return g <= yTop && g >= yTop - far ? g : null; }
 // ---- the kit: shared geometry, one InstancedMesh per (parent, kind) with per-instance colour
 /* ================= v33 decor (patch_v33_decor.py): photoreal Thanksgiving kit ================= */
@@ -17070,8 +17161,12 @@ function t33Merge(items, mat, name){ let nv = 0, ni = 0; for(const it of items){
   G.setAttribute('color', new THREE.BufferAttribute(C, 3)); G.setAttribute('aSSS', new THREE.BufferAttribute(S, 1)); G.setIndex(new THREE.BufferAttribute(I, 1)); G.computeBoundingSphere(); G.computeBoundingBox();
   const m = new THREE.Mesh(G, mat); m.userData.tg = true; m.userData.t33 = true; m.name = name; T33.verts += nv; T33.items += items.length; return m; }
 // ---- pieces (world ft; y from a drop onto whatever is there; skipped + reported when nothing is). Placements are v31's.
-function tgBuild(){
-  const t0 = performance.now(), K = tgGeo(), G = K.G; T33.verts = 0; T33.items = 0;
+/* r41: the build is a generator with a pause every few dozen pieces, so it can run in slices (THANKSGIVING.prepare(): ahead of time while the
+   visitor is idle in the Thanksgiving season, or a frame at a time while the loading pill shows) instead of one long freeze. tgBuild() still
+   runs it to the end in one go (and finishes a sliced build that is under way, rather than starting a second one). */
+function tgBuild(){ const it = TG.prepIt || tgBuildG(); TG.prepIt = null; const t0 = performance.now(); while(!it.next().done){} T33.syncMs = Math.round(performance.now() - t0); }
+function* tgBuildG(){
+  const t0 = performance.now(), K = tgGeo(), G = K.G; T33.verts = 0; T33.items = 0; yield;
   const R = (() => { let a = 1234567; return () => { a = (a * 1664525 + 1013904223) >>> 0; return a / 4294967296; }; })();
   const rep = TG.report; rep.placed = 0; rep.skipped = []; rep.calls = 0; rep.leaves = 0; TG_MESHES = null;
   const ext = TG.ext = new THREE.Group(); ext.name = 'tgExt'; const inn = TG.inn = new THREE.Group(); inn.name = 'tgIn'; const innU = TG.innU = new THREE.Group(); innU.name = 'tgInU';
@@ -17201,11 +17296,12 @@ function tgBuild(){
     put('ext', 'decor', G.torus, 'K12', W(b, M4(1.45, .45, 0, .9, .9, 1.2)), tn(1), 0); put('ext', 'decor', G.cyl, 'K8', W(b, M4(1.45, .45, -.08, .2, .16, .2, Math.PI / 2, 0, 0)), tn(1), 0);
     for(const sg of [-1, 1]){ between('ext', 'decor', G.cyl, 'W0', pt(b, 1.45, .45, sg * .25), pt(b, -2.4, 1.2, sg * .55), .06, tn(.9)); between('ext', 'decor', G.cyl, 'K8', pt(b, -.7, .95, sg * .5), pt(b, -.8, 0, sg * .55), .04, tn(1)); }
     for(let i = 0; i < 5; i++){ const q = pt(b, (R() - .5) * 1.1, 0, (R() - .5) * .8); pumpkin('ext', q.x, y + 1.05 + (i > 3 ? .45 : 0), q.z, .6 + R() * .15, PUMP[i % 6]); } }
+  yield;
   // leaf piles (raked under the oak and by the bales)
   for(const [cx, cz, Rr, hh, n] of [[9.5, -27, 1.7, .55, coarse ? 140 : 280], [17.6, -27.4, 1.2, .4, coarse ? 90 : 170], [6.5, -31.5, 1.1, .35, coarse ? 70 : 130]]){
     const g0 = ground(cx, cz), hit = tgHit(cx, cz, g0 + 30, 31); if(hit && hit.point.y > g0 + .1){ rep.skipped.push('leafpile'); continue; }
     for(let i = 0; i < n; i++){ const r = Rr * Math.sqrt(R()), a = R() * 6.283, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r, h = hh * Math.pow(Math.max(0, 1 - (r / Rr) * (r / Rr)), .8) * (.55 + R() * .45);
-      leaf('ext', x, ground(x, z) + .03 + h, z, .34 + R() * .14, eq((R() - .5) * 1.1, R() * 6.283, (R() - .5) * 1.1)); rep.leaves++; } }
+      leaf('ext', x, ground(x, z) + .03 + h, z, .34 + R() * .14, eq((R() - .5) * 1.1, R() * 6.283, (R() - .5) * 1.1)); rep.leaves++; } yield; }
   if((y = at(11, -36, -4.8, 'wheelbarrow-leaves', 2, 5)) != null) leafScatter('ext', 11.6, y, -35.2, 1.6, 1.2, 18);
   // balcony
   if((y = at(-18.5, -44.5, 5.57, 'balcony', 1, 2)) != null){ pumpkin('ext', -19.3, y, -44.6, .9, 0); pumpkin('ext', -18.4, y, -44.8, .7, 1); mum('ext', -17.4, y, -44.6); }
@@ -17233,6 +17329,7 @@ function tgBuild(){
   if((y = at(-24, -3.3, 7.0, 'loft-seat')) != null){ pumpkin(P(0, y), -24.2, y, -3.1, .45, 4); pumpkin(P(0, y), -23.7, y, -3.5, .35, 3); }
   if((y = at(-18.1, -34.6, 7.6, 'primary-throw')) != null) throwOn(P(0, y), -18.1, y, -33.0, 4.6, 1.4);
   if((y = at(-22.4, -27.7, 6.7, 'nightstand')) != null) gourds(P(0, y), -22.4, y, -27.7, 3, .2);
+  yield;
   // ---- THE SET TABLE (great room): glass top y 2.50 at (10.5, 21.4), 6.6 x 3.3 ft
   const TY = 2.5, TX = 10.5, TZ = 21.4;
   put('inn', 'decor', K.rb('runner', 5.8, .012, 1.15, .005), 'F4', M4(TX, TY + .007, TZ, 1, 1, 1), tn(1), .05);
@@ -17273,7 +17370,10 @@ function tgBuild(){
     [[0, 0, .5], [.2, .1, .34], [-.12, .17, .24]].forEach(([dx, dz, h]) => candle(par, x + dx, yy + .02, z + dz, .17, h, 'pillar'));
     pool(par, x, yy + .012, z, 3.2, 3.2, 0x8a4612); };
   for(const [x, z, y0, tag] of TGCANDLES) cluster(x, z, y0, tag);
-  const L = TG.light = new THREE.PointLight(0xffb060, .6, 14, 2); L.position.set(TX, 3.6, TZ); L.castShadow = false; L.userData.tg = true; inn.add(L);
+  yield;
+  /* r41: the table's candle light is a descriptor, bound at on() to the room lamp over the table (the way Halloween binds its lights): a new light
+     in the scene changed the light count, so every lit material in the house recompiled the first time Thanksgiving went up (seconds on a phone) */
+  TG.lampD = {c: new THREE.Color(0xffb060), p: new THREE.Vector3(TX, 3.6, TZ).applyMatrix4(grp('furn').matrixWorld), d: 14, k: 2}; TG.light = null;
   // ---- leaves on the ground (outdoors), only on terrain / paving / the pergola pad / the porch deck (v31 rule)
   const AREAS = [[7.5, -28, 26, 1400, 12], [-8.6, 40.9, 24, 700, 0], [-6, 30, 10, 200, 0], [-4, 12, 4, 40, 0, true], [-2.6, -40, 8, 120, 0]];
   const OK = /^(terrain|land|v27-flagstones|paver|pergola23-pad)/i; const KQ = coarse ? .5 : 1;
@@ -17283,10 +17383,10 @@ function tgBuild(){
       const g = ground(x, z), h = tgHit(x, z, deck ? 2 : g + 40, deck ? 3 : 41); let yy;
       if(h && h.point.y > g + .05){ if(!(deck || okHit(h.object)) || (h.face && h.face.normal.y < .5 && !h.object.isMesh)) continue; yy = h.point.y; }
       else if(deck) continue; else yy = g;
-      i++; leaf('ext', x, yy + .025, z, .3 + R() * .16, eq((R() - .5) * .35, R() * 6.283, (R() - .5) * .35)); rep.leaves++; } }
+      i++; leaf('ext', x, yy + .025, z, .3 + R() * .16, eq((R() - .5) * .35, R() * 6.283, (R() - .5) * .35)); rep.leaves++; if(i % 40 === 0) yield; } }
   // ---- flush: one merged mesh per (group, material), one instanced fx mesh per group
   const parents = {ext, inn, innU};
-  for(const [k, list] of B){ const [par, mk] = k.split('|'), m = t33Merge(list, K.mats[mk], 'tg:' + par + ':' + mk);
+  for(const [k, list] of B){ yield; const [par, mk] = k.split('|'), m = t33Merge(list, K.mats[mk], 'tg:' + par + ':' + mk);
     m.castShadow = mk !== 'glass'; m.receiveShadow = mk !== 'glass'; if(mk !== 'glass') m.customDepthMaterial = K.depth; if(mk === 'glass') m.renderOrder = 2; parents[par].add(m); rep.calls++; }
   const IQ = new THREE.Quaternion(), _c = new THREE.Color();
   for(const par of ['ext', 'inn', 'innU']){ const L2 = FX[par]; if(!L2.length) continue; const g = K.fxGeo.clone(), kinds = new Float32Array(L2.length), im = new THREE.InstancedMesh(g, K.mats.fx, L2.length);
@@ -17308,10 +17408,10 @@ function tgHide(){ TG.hidden = []; const seen = new Set();
     let o = h.object; if(o.parent && /decor/i.test(o.parent.name)) o = o.parent; if(seen.has(o)) continue; seen.add(o); TG.hidden.push([o, o.visible]); o.visible = false; }
   TG_MESHES = null; }
 function tgRestore(){ for(const [o, v] of TG.hidden) o.visible = v; TG.hidden = []; }
-function tgFrame(){ if(!TG.light) return; const t = performance.now() / 1000, f = .88 + .08 * Math.sin(t * 7.3) + .05 * Math.sin(t * 13.1 + 1.7); TG.light.intensity = 2.0 * f * TG.dimF;
+function tgFrame(){ if(!TG.light || !TG.on) return; const t = performance.now() / 1000, f = .88 + .08 * Math.sin(t * 7.3) + .05 * Math.sin(t * 13.1 + 1.7); TG.light.intensity = 2.0 * f * TG.dimF;
   t33Frame(t, f); }
 { const _rf = renderFrame; renderFrame = function(){ if(TG.on) try{ tgFrame(); }catch(e){ console.warn('[thanksgiving] frame', e); } return _rf.apply(this, arguments); }; }
-{ const _s = setTOD; setTOD = function(key){ const r = _s.call(this, TG.on ? 'dusk' : key); if(TG.on){ for(const l of DUSK_LIGHTS){ l.intensity = TGDUSK.lamps; l.color.set(TGDUSK.lampCol); } TG.hemiOut = hemi.color.clone(); TG.hemiOutI = hemi.intensity; } return r; }; }
+{ const _s = setTOD; setTOD = function(key){ const r = _s.call(this, TG.on ? 'dusk' : key); if(TG.on){ for(const l of DUSK_LIGHTS){ l.intensity = TGDUSK.lamps; l.color.set(TGDUSK.lampCol); } if(TG.light && TG.lampD) TG.light.color.copy(TG.lampD.c); TG.hemiOut = hemi.color.clone(); TG.hemiOutI = hemi.intensity; } return r; }; }
 // evening indoors: the camera meter's result x .7 (dimmer room; candles and lamps carry it); outdoors untouched
 { const _m = lightMeterMul; lightMeterMul = function(){ const r = _m.apply(this, arguments); return TG.on ? r * Math.pow(TGDUSK.inExpo, Math.max(0, Math.min(1, EXPO_IN))) : r; }; }   // r40: blended by EXPO_IN
 // indoor bounce light: a warm candle-lit room (golden walls, soft amber ceiling, dark floor), same hook Halloween uses
@@ -17339,15 +17439,37 @@ function tgOn(){
   tgHide();
   if(!TG.built || TG.key !== ACTIVE_VAR){ if(TG.built) tgDispose(); try{ tgBuild(); }catch(e){ console.error('[thanksgiving] build', e); } }
   scene.add(TG.ext); grp('furn').add(TG.inn); grp('furnU').add(TG.innU);
+  { const D = TG.lampD; let best = null, bd = 1e9; if(D) for(const l of DUSK_LIGHTS){ if(l.parent !== scene) continue; const d = Math.hypot(l.position.x - D.p.x, l.position.z - D.p.z); if(d < bd){ bd = d; best = l; } }   // r41: the table light borrows the nearest room lamp
+    if(best){ TG.lampSaved = {l: best, p: best.position.clone(), c: best.color.clone(), d: best.distance, k: best.decay}; best.position.copy(D.p); best.distance = D.d; best.decay = D.k; best.color.copy(D.c); TG.light = best; } }
   TG.on = true; tgDuskIn(); setTOD('dusk'); tgFrame();
-  document.documentElement.classList.add('thanksgiving'); tgLoadSfx();
+  document.documentElement.classList.add('thanksgiving'); setTimeout(() => { if(TG.on) (window.requestIdleCallback || setTimeout)(() => tgLoadSfx()); }, 4000);   // r43: the old in-tour games' sounds (82 KB) wait until the dress is up and the page is idle: they competed with it on a phone's connection
   if(was) applyVisibility(); if(window.__perf) __perf.shadowDirty = true; return TG.report; }
 function tgOff(){
   if(!TG.on) return; const was = DOLLCUT && DOLLCUT.state; if(was) DOLLCUT.restore();
   TG.on = false; for(const g of [TG.ext, TG.inn, TG.innU]) if(g && g.parent) g.parent.remove(g);
-  tgRestore(); tgDuskOut(); setTOD(TG.saved.tod); for(const [l, i, c] of TG.saved.dl){ l.intensity = i; l.color.copy(c); }
+  tgRestore(); tgDuskOut(); { const q = TG.lampSaved; if(q){ q.l.position.copy(q.p); q.l.color.copy(q.c); q.l.distance = q.d; q.l.decay = q.k; } TG.lampSaved = null; TG.light = null; }
+  setTOD(TG.saved.tod); for(const [l, i, c] of TG.saved.dl){ l.intensity = i; l.color.copy(c); }
   document.documentElement.classList.remove('thanksgiving'); if(was) applyVisibility(); if(window.__perf) __perf.shadowDirty = true; }
-function tgDispose(){ for(const g of [TG.ext, TG.inn, TG.innU]) if(g){ if(g.parent) g.parent.remove(g); g.traverse(o => { if(o.isInstancedMesh){ o.dispose && o.dispose(); if(o.userData.t33) o.geometry.dispose(); } else if(o.isMesh && o.userData.t33) o.geometry.dispose(); }); } TG.built = false; TG.flames = null; TG.light = null; }
+function tgDispose(){ for(const g of [TG.ext, TG.inn, TG.innU]) if(g){ if(g.parent) g.parent.remove(g); g.traverse(o => { if(o.isInstancedMesh){ o.dispose && o.dispose(); if(o.userData.t33) o.geometry.dispose(); } else if(o.isMesh && o.userData.t33) o.geometry.dispose(); }); } TG.built = false; TG.flames = null; }
+/* r41: THANKSGIVING.prepare({idle}) builds the set in slices and compiles its few materials for the dinner-time light set (lamps on), so on() only
+   has to show it. idle(): a function that says whether the visitor is idle; while it says no, the work waits (the season's idle preload). */
+function tgPrepare(o){ o = o || {}; if(!(o.idle && TG.prepP)){ TG.prepIdle = o.idle || null; TG.prepSlice = o.slice || (o.idle ? 10 : 40); }   // r43: an idle call never slows a build a pick is waiting for (that one lifts the gate)
+  if(!MODEL || !BIM || !FURN.items().length) return Promise.resolve(false);
+  const wait = ms => new Promise(r => setTimeout(r, ms)), idleOK = () => !TG.prepIdle || TG.prepIdle();
+  const build = () => { if(TG.built && TG.key === ACTIVE_VAR) return Promise.resolve(true); if(TG.on) return Promise.resolve(false);
+    if(!TG.prepP){ if(TG.built) tgDispose(); TG.prepIt = tgBuildG(); const t0 = performance.now(); let work = 0;
+      TG.prepP = (async () => { try{ for(;;){ const it = TG.prepIt; if(!it) break;   // finished by a direct tgBuild() meanwhile
+            if(!idleOK()){ await wait(400); continue; }
+            const ts = performance.now(); let d = false; while(!(d = it.next().done) && performance.now() - ts < TG.prepSlice); work += performance.now() - ts;
+            if(d){ TG.prepIt = null; break; } await wait(TG.prepIdle ? 30 : 0); }
+          T33.prepMs = Math.round(work); T33.prepWall = Math.round(performance.now() - t0); return TG.built; }
+        catch(e){ console.warn('[thanksgiving] prepare', e); TG.prepIt = null; return false; } finally{ TG.prepP = null; } })(); }
+    return TG.prepP; };
+  const warm = async () => { if(!TG.built || TG.warmed === TG.ext) return TG.built; const objs = [], seen = new Set();
+    for(const g of [TG.ext, TG.inn, TG.innU]) if(g) g.traverse(x => { if(!x.material || !(x.isMesh || x.isPoints)) return; const k = [].concat(x.material).map(m => m.uuid).join() + (x.isInstancedMesh ? 'i' : ''); if(!seen.has(k)){ seen.add(k); objs.push(x); } });
+    const ext = TG.ext, t0 = performance.now(); while(objs.length){ if(!idleOK()){ await wait(400); continue; } let more = false; try{ more = w24Compile(objs); }catch(e){ console.warn('[thanksgiving] warm', e); break; } if(more) await wait(16); }
+    TG.warmed = ext; T33.warmMs = Math.round(performance.now() - t0); return true; };
+  return build().then(ok => ok ? warm() : false); }
 function tgLoadSfx(cb){ if(window.TGSFX || TG.sfx === 2){ cb && cb(); return; } if(TG.sfx === 1){ if(cb) (TG.sfxQ = TG.sfxQ || []).push(cb); return; } TG.sfx = 1; if(cb) TG.sfxQ = [cb];
   const sc = document.createElement('script'); sc.src = 'tgsfx.js'; sc.async = true; sc.onload = sc.onerror = () => { TG.sfx = 2; const q = TG.sfxQ || []; TG.sfxQ = null; q.forEach(f => { try{ f(); }catch(e){} }); }; document.head.appendChild(sc); }
 // self-check: an on/off cycle must leave furniture, lights, time of day, sky and scene exactly as they were
@@ -17360,7 +17482,7 @@ function tgCheck(){ const snap = () => { let lights = 0, objs = 0; scene.travers
   if(hw) window.HALLOWEEN.on(); else if(was) tgOn();
   const diff = Object.keys(a).filter(k => a[k] !== b[k]); return {ok: !diff.length && (!hwRound || (hwRound.exclusive && !hwRound.diff.length)), diff, hwRound, changedWhileOn: Object.keys(a).filter(k => a[k] !== mid[k]), report: TG.report}; }
 window.THANKSGIVING = {on: tgOn, off: tgOff, toggle: () => { TG.on ? window.THANKSGIVING.off() : window.THANKSGIVING.on(); return TG.on; }, get isOn(){ return TG.on; }, check: tgCheck, get report(){ return TG.report; },
-  loadSfx: tgLoadSfx, sfx: (name, o) => { try{ window.TGSFX && TGSFX.play(name, o); }catch(e){} },
+  loadSfx: tgLoadSfx, sfx: (name, o) => { try{ window.TGSFX && TGSFX.play(name, o); }catch(e){} }, prepare: tgPrepare, get ready(){ return TG.built && TG.key === ACTIVE_VAR && TG.warmed === TG.ext; },
   dim: (on) => { TG.dimF = on ? .4 : 1; try{ tgFrame(); }catch(e){} },   // R1: while a game runs, decor glow drops to 40 %
   decor: () => ({ext: TG.ext, inn: TG.inn, innU: TG.innU, table: {x: 10.5, y: 2.5, z: 21.4}, light: TG.light})};
 function tgSync(){ const b = document.getElementById('tgBtn'); if(b){ b.setAttribute('aria-pressed', String(TG.on)); b.classList.toggle('on', TG.on); } }
@@ -20469,6 +20591,7 @@ async function bim2Load(){
   BIM2T.load0 = performance.now();
   try{ railMats(); }catch(e){ console.warn('[bim2] rail materials', e); }   // stair/rail photo materials are created lazily by the page
   BIM2S = await BIM2.load({THREE, glb: BIM2_CFG.glb, meta: BIM2_CFG.meta, mapMaterial: bim2MapMaterial, groupOf: bim2GroupOf, attach: (g, m) => grp(g).add(m)});
+  try{ ghostFlattenJogs(BIM2S); }catch(e){ console.warn('[ghost41] jogs', e); }   // r41 G4: collinear wall segments a stud's width apart -> one flat face
   KGEO = null; window.__KSRC = 'bim2'; window.__BIM2 = BIM2; SCENE_META = BIM2S.meta; HOUSE = BIM2S;
   // design options (meta.options): nothing is fetched at boot; an option's package is fetched the first time it is shown (bim2EnsureOption)
   if(MODEL){ MODEL.rooms = null; MODEL.collide = null; }   // the legacy room grid is retired: rooms come from the meta spaces
@@ -22921,10 +23044,12 @@ if(R10.on && typeof lightMeterInit === 'function'){
     gl.deleteSync(METER.sync); METER.sync = null;
     gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, METER.buf); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
     let s = 0, ws = 0, hi = 0, cr = 0, cg = 0, cb = 0, cw = 0; const B = METER.buf;
-    for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
+    const AT = METER.atlas;   // r41 G5: the all-round atlas (GHOST r41) is weighted evenly: no centre in a ring of four views
+    for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const dx = (i + .5) / 8 - 1, dy = (j + .5) / 8 - 1, w = AT ? 1 : 1 - .5 * Math.min(1, dx * dx + dy * dy), o = (j * 16 + i) * 4;
       const r = B[o] / 255, g = B[o + 1] / 255, b = B[o + 2] / 255, v = .2126 * r + .7152 * g + .0722 * b; s += w * v; ws += w; if(v > .88) hi++;
       const mx = Math.max(r, g, b), mn = Math.min(r, g, b); if(v > .12 && v < .9 && (mx - mn) < .25){ cr += w * r; cg += w * g; cb += w * b; cw += w; } }   // mid-tones, not strongly coloured (paint accents, sky)
-    METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; R10WB.mean = cw > 4 ? [cr / cw, cg / cw, cb / cw] : null; };
+    METER.m = s / ws; METER.hi = hi / 256; METER.e = METER.eAt; R10WB.mean = cw > 4 ? [cr / cw, cg / cw, cb / cw] : null;
+    if(AT && typeof ghost41MeterCal === 'function') ghost41MeterCal(); };
   const prev10 = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prev10) prev10.apply(this, arguments);
     try{ if(DUSK || (typeof HW !== 'undefined' && HW.on) || (typeof TG !== 'undefined' && TG.on) || !GRADE_PASS || !GRADE_PASS.uniforms.wb) return;
       const k = typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0, m = R10WB.mean, C = R10WB.cur;
@@ -23019,7 +23144,8 @@ function r13Band(P, C, rows, shade){ for(let r = 0; r + 1 < rows.length; r++) fo
    break (an opening, an open-plan edge), so a band never ends in a hard square end */
 const R13U = [0, .12, .3, .55, 1], R13PROF = R13U.map(u => (1 - u) * (1 - u));
 function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0), on = i => !!rows[0][i];
-  for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = [.15, .55, .85, 1][d]; }
+  const TP = /[?&]ghost41=0\b/.test(location.search) ? [.15, .55, .85, 1] : [0, .45, .8, 1];   // r41 G3: a band's last column fades to nothing (was .15: a square end)
+  for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = TP[d]; }
   return (r, i) => 1 - (1 - s0) * R13PROF[r] * tp[i]; }
 
 /* R13-1 rule:room-edge-occlusion - every interior read as evenly lit white boxes: no darkening where wall meets ceiling, wall meets
@@ -23030,6 +23156,7 @@ function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0)
    the wall base, and up both walls of each inside corner. Merged into one mesh per house group; fades with EXPO_IN (indoors only) and
    only in Tour / Walk. */
 const R13E = {step: .75, ceilW: 1.6, wallW: 1.4, floorW: .8, vertW: 1.3, sCeil: .6, sWall: .64, sFloor: .58, sVert: .66, lift: .012};
+if(!/[?&]ghost41=0\b/.test(location.search)) Object.assign(R13E, {ceilW: 1.1, wallW: .9, floorW: .6, vertW: .9, sCeil: .86, sWall: .88, sFloor: .84, sVert: .9});   // r41 G3: a soft few-percent falloff (was 34-42 % over 1.3-1.6 ft)
 function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
   const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
   const bucket = k => out[k] = out[k] || {P: [], C: []};
@@ -23061,10 +23188,12 @@ function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null
       const e2 = inN((i + 1) % n); if(!e2 || e2.L < .8) continue;
       const cr = e.dx * e2.dy - e.dy * e2.dx; if(cr * sg < .5) continue;   // a convex polygon vertex = an inside room corner (~90 deg)
       const vx = P[(i + 1) % n][0], vy = P[(i + 1) % n][1], cv = ceil(vx - e.dx * .1 + e.nx * .1, vy - e.dy * .1 + e.ny * .1); if(cv == null) continue; rep.corners++;
-      for(const [dx, dy, nx, ny] of [[-e.dx, -e.dy, e.nx, e.ny], [e2.dx, e2.dy, e2.nx, e2.ny]]){   // along each wall, away from the corner
+      const SIDES = [[-e.dx, -e.dy, e.nx, e.ny], [e2.dx, e2.dy, e2.nx, e2.ny]], G41 = !/[?&]ghost41=0\b/.test(location.search);
+      const both = z => SIDES.every(([sx, sy, snx, sny]) => wall(vx + sx * .4, vy + sy * .4, snx, sny, z) && wall(vx + sx * 1.1, vy + sy * 1.1, snx, sny, z));   // r41 G3: a corner is two walls
+      for(const [dx, dy, nx, ny] of SIDES){   // along each wall, away from the corner
         const W = E.vertW, L = E.lift, rows = R13U.map(() => []), zs = []; for(let z = f + .05; z < cv - .05; z += 1) zs.push(z); zs.push(cv - .02);
         for(let k = 0; k < zs.length; k++){ const z = zs[k], z1 = zs[Math.min(zs.length - 1, k + 1)], z0 = zs[Math.max(0, k - 1)];
-          const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
+          const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && (!G41 || both(z)) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
           R13U.forEach((u, r) => rows[r].push(ok ? V(vx + dx * u * W + nx * L, vy + dy * u * W + ny * L, z) : null)); }
         // rows[r] = a constant distance from the corner, running up the wall
         r13Band(bucket(top).P, bucket(top).C, rows, r13Shade(rows, E.sVert)); } } }
@@ -23403,6 +23532,191 @@ if(R17.on){
       if(R17.meshes) for(const m of R17.meshes) m.visible = k > .01; }catch(e){} requestAnimationFrame(tick17); };
   requestAnimationFrame(tick17); }
 BIM3.report.r17 = R17.report;
+/* ===== GHOST r41 (owner 11/12: "shadows at random places", "whole shadows popping in and out when I pivot", "the corner darkening looks
+   overdone", "no jogs that aren't in the house") =====================================================================================
+   G1 rule:shadow-map-integrity - the sun's shadow map is cached and redrawn only when something asks (PERF shadow cache). The redraw
+      happened inside whichever scene render came first after the request, and two of those draw the scene in a different state:
+      (a) the speed governor's small-object cull (GOV.cull, motion levels 3-7) hides every mesh under k.cull pixels for the frame, so a
+          redraw during motion baked the map WITHOUT them (measured at the kitchen stop: 170 casters missing - cabinet hardware, door
+          leaves and window-shade cells of other rooms) and it stayed that way until the next redraw;
+      (b) the mirror probes (glass20Step) draw cube faces with every mirror hidden; a redraw that landed there baked the map without
+          the mirrors and nightstand / medicine-cabinet glass (15 casters).
+      Every tiny pivot is a "move", so whole shadows dropped out and came back. Now the cull hides objects from the camera only (the
+      shadow pass shows them), and the map is never redrawn while drawing into a cube target (it waits for the next camera frame).
+   G2 rule:no-screen-space-ao - SSAO is drawn from the depth buffer of the current view: what is off screen does not occlude, so corner
+      shading popped in and out at the screen edges as the view turned, its 1.6-ft kernel drew halos and doubled edges, and the governor
+      switched it between full, half resolution and off as the camera stopped and started. Removed at every level (the composer keeps
+      its MSAA beauty pass and the grade). Occlusion is now view-independent only: the r13 room-edge bands (computed once, in world
+      space), the r13 contact shadows under furniture and the sun's shadow map. Shadow filter taps are the same (16) at every level, so
+      a still frame and a moving frame draw the same shadow edge.
+   G3 rule:subtle-room-edges - the r13 bands took 34-42 % of the light at a corner over 1.3-1.6 ft (a grey stripe down every corner and
+      along every ceiling line; real white rooms in the listing photos show a soft few-percent falloff). Now 10-16 % over .6-1.1 ft,
+      band ends fade to nothing (no square ends), and a vertical corner band is laid only where BOTH walls of the corner are there at
+      that height (an open stair edge is not a corner: the loft wall beside the handrail and the stair-hall wall had full-height
+      bands at corners that do not exist).
+   G4 rule:flat-walls - collinear wall segments of the BIM model that miss each other by 1/4"-3" (two walls drawn a stud's
+      width apart) showed a seam, two shades and a stepped baseboard (living room left of the window, primary bedroom between the
+      closet door and the corner, ...). Right after the model loads, each such room face is moved onto the plane of the longer segment
+      it meets: wall paint, baseboard and casing vertices within 1" in front of the short face, the ceiling / floor edge on that line,
+      and the room polygon's edge (so the corner bands and the interior mask follow). Real jogs (more than 3") are untouched.
+   G5 rule:meter-where-you-stand - the camera meter read the picture on screen (centre-weighted 16x16): turning 5 degrees in place moved
+      the exposure by up to .1 stop (14/255 on a white wall, stairs and loft stops), so recessed cans or a window entering the frame
+      brightened or darkened the whole room. The meter now reads four level 90-degree views around the eye (one 32-px view per frame
+      into a 2 x 2 atlas, redrawn when the eye moves 2.4" or every 1.5 s), evenly weighted: the same for every direction you look from
+      one spot. Calibrated per room so each room's tour stop is exposed as the screen meter exposed it (daylight; dusk: one factor
+      for the house, x.906). The eye-adaptation ease (tau .45 s, .3 stop/s) is unchanged.
+   ?ghost41=0 turns G1-G5 off (?ghost41m=0: G5 only). */
+const GHOST41 = window.GHOST41 = {on: !/[?&]ghost41=0\b/.test(location.search), jogs: [], shadowSkips: 0, cullShown: 0, ssao: 'off'};
+function ghostFlattenJogs(S){
+  if(!GHOST41.on || !S || !S.colliders || !S.meshes) return 0;
+  const MAX = .24, MIN = .015, faces = [];   // 3/16" to 2.9": a 3" step (lower bedroom 2) may be real and is left
+  for(const c of S.colliders){ if(c.kind !== 'WALL' || !c.poly || c.poly.length < 4) continue; const P = c.poly, n = P.length; let A = 0;
+    for(let i = 0, j = n - 1; i < n; j = i++) A += P[j][0] * P[i][1] - P[i][0] * P[j][1];
+    for(let i = 0; i < n; i++){ const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); if(L < 1) continue;
+      const ux = dx / L, uy = dy / L, s = A > 0 ? 1 : -1; faces.push({c, a, b, L, u: [ux, uy], n: [uy * s, -ux * s]}); } }   // n: out of the wall body
+  const room = (x, y, st) => S.spaces.find(s => s.storey === st && s.interior && !s.openAir && S.contains(s, x, y));
+  for(let i = 0; i < faces.length; i++) for(let j = i + 1; j < faces.length; j++){ const f = faces[i], g = faces[j];
+    if(f.c === g.c || f.c.storey !== g.c.storey || f.n[0] * g.n[0] + f.n[1] * g.n[1] < .9995) continue;
+    const n = f.n, d = (g.a[0] - f.a[0]) * n[0] + (g.a[1] - f.a[1]) * n[1]; if(Math.abs(d) < MIN || Math.abs(d) > MAX) continue;
+    const u = f.u, pg = [(g.a[0] - f.a[0]) * u[0] + (g.a[1] - f.a[1]) * u[1], (g.b[0] - f.a[0]) * u[0] + (g.b[1] - f.a[1]) * u[1]].sort((p, q) => p - q);
+    if(Math.max(pg[0] - f.L, -pg[1]) > .7 || Math.min(pg[1], f.L) - Math.max(pg[0], 0) > .05) continue;   // end to end (gap under 8"), not side by side
+    // the whole run of each wall on this line (a wall is split into pieces around its openings): the shorter wall moves, all of it
+    const run = F => { let L = 0, s0 = 1e9, s1 = -1e9; const dF = F.a[0] * n[0] + F.a[1] * n[1];
+      for(const h of faces){ if(h.c.element !== F.c.element || h.c.storey !== F.c.storey || h.n[0] * n[0] + h.n[1] * n[1] < .9995 || Math.abs(h.a[0] * n[0] + h.a[1] * n[1] - dF) > .005) continue;
+        L += h.L; for(const p of [h.a, h.b]){ const sv = (p[0] - f.a[0]) * u[0] + (p[1] - f.a[1]) * u[1]; s0 = Math.min(s0, sv); s1 = Math.max(s1, sv); } } return {L, s0, s1}; };
+    const rf = run(f), rg = run(g), K = rf.L >= rg.L ? f : g, Mv = K === f ? g : f, rm = K === f ? rg : rf, dk = K.a[0] * n[0] + K.a[1] * n[1], dm = Mv.a[0] * n[0] + Mv.a[1] * n[1];
+    const sm = [rm.s0, rm.s1].map(v => v - ((K.a[0] - f.a[0]) * u[0] + (K.a[1] - f.a[1]) * u[1]));
+    const mid = [(Mv.a[0] + Mv.b[0]) / 2 + n[0] * .6, (Mv.a[1] + Mv.b[1]) / 2 + n[1] * .6], sp = room(mid[0], mid[1], Mv.c.storey);
+    if(!sp) continue;   // a room face only (siding steps outside are left as built)
+    GHOST41.jogs.push({keep: K.c.element, move: Mv.c.element, storey: Mv.c.storey, room: sp.id, inches: +((dk - dm) * 12).toFixed(2), n, u, o: K.a.slice(), dm, dk, s0: sm[0], s1: sm[1], y0: Math.min(K.c.z0, Mv.c.z0) - .3, y1: Math.max(K.c.z1, Mv.c.z1) + .3, verts: 0}); }
+  // de-duplicate (the same face pair is found from both walls' polygons only once, but two keeps can claim one face: take the first)
+  const seen = new Set(); GHOST41.jogs = GHOST41.jogs.filter(J => { const k = J.move + '|' + J.n.map(v => v.toFixed(3)) + '|' + J.dm.toFixed(3); if(seen.has(k)) return false; seen.add(k); return true; });
+  const e = new THREE.Matrix4();
+  ghostMoveJogs(S, false); return GHOST41.jogs.length; }
+// the vertex / room / collider moves; from = true: a later pass over faces the page added after load (r42 office alcove end)
+function ghostMoveJogs(S, from){ const e = new THREE.Matrix4();
+  for(const J of GHOST41.jogs){ const del = J.dk - J.dm, small = Math.abs(del) < .055, tmax = small ? .003 : (del > 0 ? Math.min(.09, del - .008) : .09);
+    const hit = (px, py, y) => { if(y < J.y0 || y > J.y1) return false; const s = (px - J.o[0]) * J.u[0] + (py - J.o[1]) * J.u[1]; if(s < J.s0 - .012 || s > J.s1 + .012) return false;
+      const t = px * J.n[0] + py * J.n[1] - J.dm; return t > -.004 && t < tmax; };
+    for(const m of S.meshes){ const b = m.userData && m.userData.bim2; if(!b || !m.geometry || (b.storey && b.storey !== J.storey) || /^(roofs|site|glass)$/.test(b.group) || /^leaf\|/.test(m.name)) continue;
+      m.updateMatrixWorld(true); if(!m.matrixWorld.equals(e)) continue; const pa = m.geometry.attributes.position, A = pa.array; let k = 0;
+      const q0 = from ? (m.userData.g41n == null ? pa.count : m.userData.g41n) : 0; if(!from && m.userData.g41n == null) m.userData.g41n = pa.count;   // a later pass only sees faces added since
+      for(let q = q0; q < pa.count; q++){ const x = A[q * 3], y = A[q * 3 + 1], z = A[q * 3 + 2]; if(!hit(z, x, y)) continue;   // world x = plan y, world z = plan x
+        A[q * 3 + 2] = z + J.n[0] * del; A[q * 3] = x + J.n[1] * del; k++; }
+      if(k){ pa.needsUpdate = true; m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox(); J.verts += k; } }
+    if(from) continue;
+    for(const s of S.spaces){ if(s.storey !== J.storey || !s.poly) continue; let k = 0;
+      for(const p of s.poly){ const sv = (p[0] - J.o[0]) * J.u[0] + (p[1] - J.o[1]) * J.u[1], t = p[0] * J.n[0] + p[1] * J.n[1] - J.dm;
+        if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; k++; } }
+      if(k){ J.poly = (J.poly || []).concat(s.id); if(s.bb) s.bb = [Math.min(...s.poly.map(p => p[0])), Math.min(...s.poly.map(p => p[1])), Math.max(...s.poly.map(p => p[0])), Math.max(...s.poly.map(p => p[1]))]; } }
+    // r41 G4b: the moved wall's collider face goes with its paint, so walking and click-to-move keep their clearance from what is drawn
+    for(const c of S.colliders){ if(c.element !== J.move || c.storey !== J.storey || !c.poly) continue;
+      for(const p of c.poly){ const sv = (p[0] - J.o[0]) * J.u[0] + (p[1] - J.o[1]) * J.u[1], t = p[0] * J.n[0] + p[1] * J.n[1] - J.dm;
+        if(Math.abs(t) < .01 && sv > J.s0 - .02 && sv < J.s1 + .02){ p[0] += J.n[0] * del; p[1] += J.n[1] * del; J.coll = (J.coll || 0) + 1; } }
+      if(c.bb) c.bb = [Math.min(...c.poly.map(p => p[0])), Math.min(...c.poly.map(p => p[1])), Math.max(...c.poly.map(p => p[0])), Math.max(...c.poly.map(p => p[1]))]; } }
+  return GHOST41.jogs.length; }
+// r41 G4c: faces the page adds to the walls after load (r42: the office alcove's end, which the model never built) are flattened too
+{ const _bh41 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _bh41.apply(this, arguments); try{ if(GHOST41.on && BIM2S && GHOST41.jogs.length) ghostMoveJogs(BIM2S, true); }catch(e){ console.warn('[ghost41] late faces', e); } return r; }; }
+/* QA (?qa=1): the shadow-pass trace and a window on the renderer state for the pivot test (GHOST41.trace = true to record) */
+if(/[?&]qa=1\b/.test(location.search)){ const SM = renderer.shadowMap, orig = SM.render.bind(SM); GHOST41.sm = [];
+  SM.render = function(lights, sc, cam){ if(GHOST41.trace && (SM.autoUpdate || SM.needsUpdate) && sun.castShadow){ let n = 0, hidden = 0;
+      const vis = o => { for(let x = o; x; x = x.parent) if(!x.visible) return false; return true; };
+      sc.traverse(o => { if(!o.isMesh || !o.castShadow) return; if(vis(o) && o.layers.test(sun.shadow.camera.layers)) n++; else if(o.visible === false || !o.layers.test(sun.shadow.camera.layers)) hidden++; });
+      const rt = renderer.getRenderTarget(); GHOST41.sm.push({f: renderer.info.render.frame, t: +performance.now().toFixed(1), casters: n, off: hidden, size: sun.shadow.mapSize.x, rt: rt ? (rt.isWebGLCubeRenderTarget ? 'cube' : 'rt' + rt.width) : 'screen', cam: cam === camera ? 'eye' : 'other'});
+      if(GHOST41.sm.length > 4000) GHOST41.sm.splice(0, 1000); }
+    return orig(lights, sc, cam); };
+  window.__g41 = {GOV, METER, sun, renderer, scene, camera, LOOK, PERF, get R40X(){ return R40X; }, get R40L(){ return R40L; }, ACC: window.__aa && __aa.ACC, get EXPO_IN(){ return EXPO_IN; }, get room(){ return LIGHT_ENV_ID; }, get DUSK(){ return DUSK; }, get TOD(){ return TOD_KEY; }}; }
+if(GHOST41.on){
+  // G1: the shadow map is drawn with what the scene really holds
+  { const SM = renderer.shadowMap, orig = SM.render.bind(SM);
+    SM.render = function(lights, sc, cam){
+      if(!(SM.autoUpdate || SM.needsUpdate)) return orig(lights, sc, cam);
+      const rt = renderer.getRenderTarget(); if(rt && rt.isWebGLCubeRenderTarget && sun.shadow.map){ GHOST41.shadowSkips++; return; }   // a probe capture: the next camera frame draws the map
+      const hid = []; for(const o of (GOV.cullList || [])) if(!o.visible){ o.visible = true; hid.push(o); }
+      GHOST41.cullShown += hid.length;
+      try{ return orig(lights, sc, cam); } finally { for(const o of hid) o.visible = false; } }; }
+  // G2: no screen-space AO at any governor level; the same shadow filter at every level
+  if(typeof GOV !== 'undefined' && GOV.L){ const tp = 16;   // one filter at every level (the top levels already used 16)
+    for(const l of GOV.L){ l.ao = 0; l.taps = tp; l.cost = l.s * l.s * .66 * (tp === 16 ? 1 : .86) * (l.aa >= 8 ? 1.15 : l.aa >= 4 ? 1 : l.aa >= 2 ? .93 : .88); }
+    if(GOV.k){ GOV.k.ao = 0; GOV.k.taps = tp; } }
+  LOOK.aoStrength = 0;
+  // G5: the camera meter reads where the camera STANDS, not where it looks
+  if(typeof METER_PASS !== 'undefined' && !/[?&]ghost41m=0\b/.test(location.search)){ const orig = METER_PASS.render, Q = 32;
+    const G5 = GHOST41.meter = {rt: null, cam: new THREE.PerspectiveCamera(90, 1, .3, 5000), k: 4, pos: new THREE.Vector3(1e9, 0, 0), at: -1e9, key: '', ready: false, sweeps: 0, every: 10000, gap: 500, last: new THREE.Vector3(1e9, 0, 0), movedAt: 0, M: METER,
+      // the calibration (ghost41MeterCal): per room (R40L.zone), the screen meter's reading at the room's tour stop(s) over the all-round
+      // reading there, so each stop is exposed as before. Measured 11/12 with GHOST41.calibrate() (?qa=1) at every stop: by day the
+      // geometric mean of morning, midday and golden (they agree within 3 %), dusk on its own (lamps: the view mattered more, 0.84-1.25).
+      // Out = the median over the outdoor stops. A room is crossed by the meter's own ease (no pop).
+      // 11/12 later, against main e5a6149 on the owner's Mac, both SETTLED (20 s at the stop): 'stairs' is the zone of the ENTRY stop (its eye
+      // is in the open stair-hall air); .845 put it ~.1 stop over main's 1.22 -> .881 (1.22). Dusk great room 1.024 gave ~.56 vs main .68
+      // -> .955 (.67, measured); dusk living room .845 gives ~.61 vs main .62 (kept). Exposure ~ f^-(k / gamma): -1.33 by day, -2 at dusk.
+      cal: .97, calDusk: .973, out: .941, outDusk: 1.03, hiK: 1,
+      room: {stairs: .881, living: .899, great: 1.041, mainbed3: 1.084, mainbed2: 1.033, mainbath: 1.026, mainbed1: .934, entry: 1.122, loft: .943, pbath: .977,
+        primary: 1.06, lbed1: .929, lbath: .947, lbed2: .946, laundry: .945, office: .981, rec: .954, garage: .975},
+      roomDusk: {stairs: .984, living: .845, great: .955, mainbed3: 1.16, mainbed2: 1.007, mainbath: 1.201, mainbed1: .964, entry: .958, loft: .924, pbath: .835,
+        primary: 1.143, lbed1: .973, lbath: .989, lbed2: .957, laundry: .929, office: 1.017, rec: .876, garage: .977}};
+    METER_PASS.render = function(r, w, read){
+      if(!LIGHT.meter.on || !METER.quad) return; if(G5.off || isDoll()){ METER.atlas = null; return orig.call(this, r, w, read); }   // the dollhouse is not metered (lightMeterMul)   // G5.off: QA comparison with the screen meter
+      const now = performance.now(), cp = camera.position, key = [TOD_KEY, DUSK ? 1 : 0, ACTIVE_VAR, (typeof HW !== 'undefined' && HW.on) ? 1 : 0, (typeof TG !== 'undefined' && TG.on) ? 1 : 0].join('|');
+      if(!G5.rt){ G5.rt = new THREE.WebGLRenderTarget(2 * Q, 2 * Q, {minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat}); G5.rt.texture.generateMipmaps = false; }
+      const rest = cp.distanceToSquared(G5.last) < 1e-8; if(!rest) G5.movedAt = now; G5.last.copy(cp);   // the eye stopped this frame: measure where it stands at once
+      const fading = R40X.k < 1 || (EXPO_IN > .001 && EXPO_IN < .999) || Math.abs(Math.log2(r.toneMappingExposure / (G5.eSweep || 1))) > .015, settled = now - G5.movedAt > 1500 && G5.at < G5.movedAt + 1500;   // the room light still crossfading; and once more when it has settled
+      if(G5.k >= 4 && ((cp.distanceToSquared(G5.pos) > .04 && (rest || now - G5.at > G5.gap)) || (fading && now - G5.at > G5.gap) || settled || now - G5.at > G5.every || key !== G5.key)){ G5.k = 0; G5.pos.copy(cp); G5.at = now; G5.key = key; G5.eSweep = r.toneMappingExposure; }
+      if(G5.k < 4){   // one of four level views (90 deg each, the full circle around the eye) per frame into a 2 x 2 atlas
+        const c = G5.cam, prev = r.getRenderTarget(), q = G5.k; c.near = camera.near; c.far = camera.far; c.updateProjectionMatrix(); c.position.copy(G5.pos); c.rotation.set(0, q * Math.PI / 2, 0, 'YXZ'); c.updateMatrixWorld();
+        const vp = G5.rt.viewport, sc = G5.rt.scissor; vp.set((q & 1) * Q, (q >> 1) * Q, Q, Q); sc.copy(vp); G5.rt.scissorTest = true;
+        r.setRenderTarget(G5.rt); R41W.hold = true; try{ r.render(scene, c); } finally { R41W.hold = false; } r.setRenderTarget(prev); G5.k++;   /* r41 W: the meter sees the room without the window pull (its calibration) */ if(G5.k === 4){ G5.ready = true; G5.sweeps++; } }
+      if(!G5.ready || G5.k < 4) return G5.ready ? undefined : orig.call(this, r, w, read);
+      lightMeterPoll(); if(METER.sync || (METER.n++ % LIGHT.meter.every)) return;
+      METER.atlas = G5; const gl = r.getContext(), prev = r.getRenderTarget(); METER.mat.uniforms.tDiffuse.value = G5.rt.texture; r.setRenderTarget(METER.rt); METER.quad.render(r);
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, METER.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, 16 * 16 * 4, gl.STREAM_READ);
+      gl.readPixels(0, 0, 16, 16, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+      METER.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); METER.eAt = r.toneMappingExposure; r.setRenderTarget(prev); }; } }
+/* GHOST r41, second pass (owner 11/12, the kitchen micro-pivot captures, the boxy ceiling, "flashes as you pivot"):
+   G5b rule:meter-calibration-applied - the page's lightMeterPoll is replaced whole by r10 (colour meter + AWB), so the all-round
+      reading was centre-weighted and never calibrated (the first pass put both in the replaced function). Both now run in the
+      poll that is in use (ghost41MeterCal, called from r10's poll and from the page's own); the factors are measured by
+      GHOST41.calibrate() (?qa=1). The atlas (four small extra scene draws) is redrawn when the eye has moved 2.4" (at once when it stops, at most every .5 s while it moves, the room light crossfades or the exposure is still adapting (the reading is made at the exposure it drives), so a walk does not pay a draw every frame), once more 1.5 s after it stops, and every 10 s (doors, shades); turning in place does not redraw it.
+   G6 rule:one-shadow-map-size - the governor's levels carried their own shadow-map size (8192 / 4096 / 2048 / 1024) and the phone
+      cap followed the level being drawn: a level change while moving, or the still frame at the top level on a phone in Ultra,
+      reallocated and redrew the sun's map at another resolution, so window-blind and rail shadows changed in one frame. One size
+      for every level now (4096; phones 2048, Ultra phones 4096), and a still frame keeps the moving level's foliage shadows.
+   G7 rule:accumulate-only-a-still-view - the still-frame supersampler (ACC) compared the camera against matrixWorld BEFORE this
+      frame's render had rebuilt it: a turn that began without an input event (a glide, a flight's last frame, a game's look) was
+      averaged into the previous view's history for a frame - a faint double of the room (books on the cabinet doors, doubled
+      wall / ceiling lines). The pose is rebuilt before the comparison now.
+   G8 rule:one-room-light-per-ceiling - the two-environment mask (R40M) is a 6-in grid read 9" off each surface along its normal:
+      on a ceiling or floor that point stays over the wall line, so a strip along every wall (1.2 % of all ceiling area, measured on
+      the as-built model: 5221 of 426602 one-inch samples) read the sky instead of the room, in 6-in cells: the boxy pattern above
+      the kitchen cabinets. A level surface now also reads the mask 3" to each side (max of five taps): 0 of 426602 ceiling samples
+      and 0.01 % of floor samples read the sky; points just outside the outer walls read the room 1.4 % more often than before. */
+function ghost41MeterCal(){ const A = GHOST41.meter; if(!A || !METER.atlas || METER.m == null) return; METER.mRaw = METER.m;
+  const z = R40L.zone, f = !R40L.state ? (DUSK ? A.outDusk : A.out) : DUSK ? (A.roomDusk[z] || A.calDusk) : (A.room[z] || A.cal);
+  METER.m *= f; METER.calF = f; GHOST41.reads = (GHOST41.reads || 0) + 1; }
+if(GHOST41.on){
+  // G6: one shadow-map size at every governor level; a still frame keeps the moving level's foliage shadows
+  if(typeof GOV !== 'undefined' && GOV.L){ for(const l of GOV.L) l.sm = 4096;
+    const ap = GOV.apply; GOV.apply = (k, force) => { if(GOV.sharp && GOV.L[GOV.lvl] && k.fol !== GOV.L[GOV.lvl].fol) k = Object.assign({}, k, {fol: GOV.L[GOV.lvl].fol});
+      return ap(k, force); }; }
+  // G7: the still-frame accumulator sees this frame's camera pose
+  { const A = window.__aa && __aa.ACC; if(A && A.frame){ const f = A.frame; A.frame = function(orig, args){ try{ camera.updateMatrixWorld(); }catch(e){} return f(orig, args); }; } }
+  // G5b: QA - measure the meter calibration at every tour stop (await GHOST41.calibrate({tod: 'midday'}))
+  GHOST41.calibrate = async function(o = {}){ const T = window.__TOUR, A = GHOST41.meter; if(!T || !A) return null;
+    const raf = () => new Promise(r => requestAnimationFrame(r)), frames = async n => { for(let i = 0; i < n; i++) await raf(); };
+    const lp = window.lightMeterPoll; let reads = 0; window.lightMeterPoll = function(){ const had = METER.sync; const r = lp.apply(this, arguments); if(had && !METER.sync) reads++; return r; };
+    const fresh = async () => { const n0 = reads; for(let i = 0; i < 240 && reads < n0 + 2; i++) await raf(); return reads >= n0 + 2; };
+    const rows = [], tod0 = TOD_KEY; try{
+      for(let i = 0; i < T.STOPS.length; i++){ const s = T.STOPS[i]; if(o.only && !o.only.includes(s.id)) continue;
+        T.showStop(i); T.finish(); if(o.tod) T.dbg.setTOD(o.tod); await frames(o.settle || 150);   // a stop sets its own time of day
+        A.off = true; await fresh(); const ms = METER.m;
+        A.off = false; A.k = 4; A.at = -1e9; await frames(6); await fresh(); const ma = METER.mRaw;
+        rows.push({id: s.id, room: R40L.zone, tod: TOD_KEY, inside: R40L.state, ms: +ms.toFixed(4), ma: +ma.toFixed(4), r: +(ms / ma).toFixed(3), e: +renderer.toneMappingExposure.toFixed(3)}); } }
+    finally { window.lightMeterPoll = lp; A.off = false; if(o.tod) T.dbg.setTOD(tod0); }
+    const gm = a => Math.exp(a.reduce((s, v) => s + Math.log(v), 0) / a.length), med = a => a.slice().sort((p, q) => p - q)[a.length >> 1], room = {};
+    for(const r of rows) if(r.inside && r.room) (room[r.room] = room[r.room] || []).push(r.r);
+    const out = {rows, room: Object.fromEntries(Object.entries(room).map(([k, v]) => [k, +gm(v).toFixed(3)])), out: rows.some(r => !r.inside) ? +med(rows.filter(r => !r.inside).map(r => r.r)).toFixed(3) : null,
+      inMedian: rows.some(r => r.inside) ? +med(rows.filter(r => r.inside).map(r => r.r)).toFixed(3) : null};
+    return out; }; }
 /* NAV r18 (owner 11/4) =====================================================================================================
    1 rule:eye-five-feet - walking eye = the floor under the eye (tread, deck, terrain: walkSurfaceAt) + 5.0 ft. The page's EYE is 5.0
      (patch_bim3_v33 NAV r18 callsite), so walk mode, click-to-move, waypoints and entering walk all stand at 5 ft. Tour stops: a stop
@@ -23749,8 +24063,68 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
     setMode: (m, o) => setMode(m, o), flyTo: (pos, look, dur) => flyTo(pos, look, 'look', dur),
     look(pos, at){ anim = null; glide = null; flightN++; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
     todGet: () => ({key: TOD_KEY, manual: todManual}),
+    /* r41: for the props' ground rays (assets/deck3d/deck-props.js): the terrain's height field, and the scene without terrain, hills and trees */
+    ground: (x, z) => ground(x, z), rayRoots(){ const skip = new Set(['terrain', 'hills', 'trees'].map(k => GROUPS[k]).filter(Boolean)); return scene.children.filter(o => !skip.has(o)); },
+    /* r41: the visitor has not touched anything for ms and nothing is moving (the idle warm-up's own test) */
+    idle: (ms = 2500) => { try{ return w24Idle(ms); }catch(e){ return false; } },
+    /* r43: compile a list of objects' programs for the tour's light set (~12 ms a call; true while more are left): a dress made ready off-screen draws its first frame without compiling */
+    /* r43: like w24Compile, but eight objects to a renderer.compile() call: each call walks the whole scene for its lights first (about 10 ms
+       here), so one object a call made a 100-material set take a second and more */
+    compile(objs, budget = 12){ const proxy = Object.create(scene); let batch = []; proxy.traverseVisible = cb => scene.traverseVisible(cb); proxy.traverse = cb => { for(const o of batch) cb(o); };
+      const flips = []; scene.traverse(o => { if(o.isLight && !o.visible && (o.isPointLight || o.isSpotLight || o.isRectAreaLight) && o.userData.perfOff){ o.visible = true; flips.push(o); } });
+      const rt0 = renderer.getRenderTarget(); renderer.setRenderTarget(typeof HITCH_SCENE_RT === 'function' ? HITCH_SCENE_RT() : null); const ts = performance.now();
+      try{ while(objs.length && performance.now() - ts < budget){ batch = objs.splice(Math.max(0, objs.length - 8)); renderer.compile(proxy, camera); } }
+      finally{ for(const l of flips) l.visible = false; renderer.setRenderTarget(rt0); }
+      return objs.length > 0; },
+    /* r43: Halloween made ready before it is shown: its set built (one block: it is not sliced) and its programs compiled in ~12 ms slices, so the
+       first frame with it does not stall on them (170 ms on a laptop). idle(): optional, the slices wait while it says the visitor is busy. */
+    async hwPrepare(idle){ if(HW.on) return true;
+      if(!HW.built){ HW.chandSrc = DUSK_LIGHTS.find(l => l.parent && l.parent.name === 'main' && Math.abs(l.position.x - ROOM.entry.at[0]) < 4 && Math.abs(l.position.z - ROOM.entry.at[1]) < 4) || null; hwBuild(); }
+      else if(HW.builtKey !== hw22Key()) return false;   // a layout change since: hwOn() rebuilds it
+      if(WARM24.hwSetWarm === HW.ext) return true; const objs = [], seen = new Set(), ext = HW.ext;
+      for(const g of [HW.ext, HW.inn, HW.sky]) if(g) g.traverse(o => { if(!o.material || !(o.isMesh || o.isPoints || o.isLine || o.isSprite)) return; const k = [].concat(o.material).map(m => m.uuid).join() + (o.isInstancedMesh ? 'i' : ''); if(!seen.has(k)){ seen.add(k); objs.push(o); } });
+      while(objs.length){ if(idle && !idle()){ await new Promise(r => setTimeout(r, 400)); continue; } let more = false; try{ more = HH.compile(objs); }catch(e){ console.warn('[halloween] warm', e); break; } if(more) await new Promise(r => setTimeout(r, 16)); }
+      WARM24.hwSetWarm = ext; return true; },
+    get hwReady(){ try{ return HW.built && HW.builtKey === hw22Key() && WARM24.hwSetWarm === HW.ext; }catch(e){ return false; } },
     /* a time of day chosen from the holiday control holds like one chosen from the Time of day button (manual), and is handed back exactly as it was found */
-    todSet(key, manual){ todManual = manual !== false; if(todManual) try{ window.__story && window.__story.apply(); }catch(e){} if(TOD_KEY !== key) setTOD(key); if(!todManual) try{ window.__story && window.__story.apply(); }catch(e){} }};
+    todSet(key, manual){ todManual = manual !== false; if(todManual) try{ window.__story && window.__story.apply(); }catch(e){} if(TOD_KEY !== key) setTOD(key); if(!todManual) try{ window.__story && window.__story.apply(); }catch(e){} },
+    /* r41 decor QA: everything a dress may touch, as flat key -> 'a|b|c' strings, so a switch can be compared with a clean load of the target dress.
+       Objects inside a dress (userData hw / tg / t33, or a holiday-* root) are only counted: their own flicker is theirs. */
+    snap(){ const S = {}, f = v => typeof v === 'number' ? (Math.abs(v) < 1e-6 ? '0' : (+v).toPrecision(4)) : v && v.isColor ? v.getHexString() : v && (v.isVector2 || v.isVector3 || v.isVector4) ? v.toArray().map(x => (+x).toPrecision(4)).join(',') : v && v.isTexture ? 'tex' : v == null ? '-' : typeof v === 'object' ? 'obj' : String(v);
+      const own = o => { for(let q = o; q; q = q.parent){ const u = q.userData; if(u && (u.hw || u.tg || u.t33)) return true; if(/^(holiday|tg:|hw)/.test(q.name || '')) return true; } return false; };
+      const XLP = new Set(((window.__XLobj && __XLobj.pool) || []).map(p => p.light)), mats = new Map(); let n = 0, nl = 0, nd = 0;
+      scene.traverse(o => { n++; if(own(o)){ nd++; return; } if(o.isLight){ nl++; const dark = !(o.intensity > 1e-3);
+          S['light:' + (o.name || o.type) + ':' + o.id] = XLP.has(o) ? [o.visible, dark ? 'off' : 'on'].join('|') : (dark && !o.isAmbientLight) ? [o.visible, 'off'].join('|') : [o.visible, f(o.color), f(o.intensity), f(o.position), f(o.distance), f(o.decay), o.groundColor ? f(o.groundColor) : '-'].join('|'); }
+        if(o.isMesh && !o.visible) S['hidden:' + o.id] = (o.name || '') + '|' + (o.parent && o.parent.name || '');
+        if(o.isMesh && o.layers.mask !== 1) S['layers:' + o.id] = String(o.layers.mask);
+        if(o.material) for(const m of [].concat(o.material)) if(!/mirror/i.test(m.name || '')) mats.set(m.uuid, m); });
+      S.objects = n; S.lights = nl; S.dressObjects = nd;
+      for(const [u, m] of mats){ const a = []; for(const k of ['color', 'emissive', 'emissiveIntensity', 'opacity', 'envMapIntensity', 'visible', 'transparent']) if(m[k] !== undefined) a.push(f(m[k]));
+        if(m.uniforms) for(const [k, v] of Object.entries(m.uniforms)) if(v && v.value !== undefined && !/time|cam|proj|view|model|matrix/i.test(k)) a.push(k + '=' + f(v.value));
+        S['mat:' + (m.name || m.type) + ':' + u.slice(0, 8)] = a.join('|'); }
+      S.fog = scene.fog ? [f(scene.fog.color), f(scene.fog.near), f(scene.fog.far)].join('|') : '-'; S.background = scene.background ? (scene.background.isColor ? f(scene.background) : 'tex') : '-';
+      S.env = scene.environment === ((ENV_INSIDE && ENV_IN ? ENV_IN : ENV_RT) || {}).texture ? 'current' : 'stale';
+      S.exposure = f(BASE_EXPOSURE); S.sunDir = f(SUN_DIR); S.tod = TOD_KEY + '|' + (todManual ? 'manual' : 'auto') + '|' + DUSK;
+      try{ if(GRADE_PASS) for(const [k, v] of Object.entries(GRADE_PASS.uniforms)) if(v && v.value !== undefined && !v.value.isTexture) S['grade:' + k] = f(v.value); }catch(e){}
+      try{ for(const [k, v] of Object.entries(GLASS20_U)) S['glass20:' + k] = f(v.value); if(typeof GLASS_U !== 'undefined' && GLASS_U) for(const [k, v] of Object.entries(GLASS_U)) if(v && v.value !== undefined) S['glass:' + k] = f(v.value); }catch(e){}
+      try{ for(const [k, v] of Object.entries(LIGHT.dusk)) if(typeof v !== 'function') S['lightDusk:' + k] = f(v); S.duskHemi = f(LIGHT.duskHemi); S.duskLift = f(LIGHT.duskLift); }catch(e){}
+      try{ for(const k of ['sky', 'env', 'sun', 'win', 'glowScale']) S['v27:' + k] = JSON.stringify(V27D[k]); }catch(e){}
+      try{ S.hwState = [HW.on, !!(HW.ext && HW.ext.parent), !!(HW.inn && HW.inn.parent), !!(HW.sky && HW.sky.parent), HW.hidden.size, HW.bind.length, !!HW22.fix, !!HW22.lamps].join('|'); }catch(e){}
+      try{ S.tgState = [TG.on, !!(TG.ext && TG.ext.parent), !!(TG.inn && TG.inn.parent), !!(TG.innU && TG.innU.parent), TG.hidden.length, !!TG.savedV, TG.dimF].join('|'); }catch(e){}
+      const R = document.documentElement, cs = getComputedStyle(R); S.htmlClass = R.className.split(/\s+/).filter(c => /hallow|thanks|winter|holiday|season|^hw|^tg|^hol/i.test(c)).sort().join(' '); S.bodyClass = document.body.className;
+      for(const v of ['--paper', '--paper-2', '--ink', '--muted', '--line', '--accent', '--accent-ink', '--glass', '--pg', '--pgs', '--pt', '--ph-hi', '--busy-surface', '--busy-accent']) S['css' + v] = cs.getPropertyValue(v).trim();
+      const tab = document.querySelector('.tab[aria-selected="true"]'); if(tab){ const t = getComputedStyle(tab); S.tabLook = t.backgroundColor + '|' + t.color + '|' + t.boxShadow; }
+      for(const id of ['viewBtn', 'holBtn', 'busy24']){ const e = document.getElementById(id); if(e && (id !== 'busy24' || e.classList.contains('on'))){ const t = getComputedStyle(e); S['ui:' + id] = t.backgroundColor + '|' + t.color + '|' + t.borderColor; } }
+      const tc = document.querySelector('meta[name=theme-color]'), ic = document.querySelector('link[rel~=icon]'); S.themeColor = tc ? tc.content : '-'; S.icon = ic ? ic.getAttribute('href') : '-'; S.title = document.title;
+      S.cursor = getComputedStyle(document.body).cursor + '|' + canvas.className; S.audioPlaying = [...document.querySelectorAll('audio,video')].filter(a => !a.paused).length;
+      return S; },
+    /* r41: a dress that is not on owns nothing in the scene. Anything one left behind (a frame error that flipped its flag, an off() that threw half-way)
+       is taken down through its own off(), so its saved lights, sky and furniture come back exactly as found. Returns what it had to clean. */
+    sweep(){ const out = [];
+      try{ if(!HW.on && HW.saved && ((HW.ext && HW.ext.parent) || (HW.sky && HW.sky.parent) || (HW.inn && HW.inn.parent) || HW.hidden.size || HW22.fix || document.documentElement.classList.contains('halloween'))){ out.push('halloween'); HW.on = true; try{ window.HALLOWEEN.off(); }catch(e){ console.warn('[holiday] sweep halloween', e); HW.on = false; } } }catch(e){}
+      try{ if(!TG.on && TG.saved && ((TG.ext && TG.ext.parent) || (TG.inn && TG.inn.parent) || (TG.innU && TG.innU.parent) || TG.hidden.length || TG.savedV || document.documentElement.classList.contains('thanksgiving'))){ out.push('thanksgiving'); TG.on = true; try{ window.THANKSGIVING.off(); }catch(e){ console.warn('[holiday] sweep thanksgiving', e); TG.on = false; } } }catch(e){}
+      for(const c of ['halloween', 'thanksgiving']) if(document.documentElement.classList.contains(c) && !(c === 'halloween' ? HW.on : TG.on)){ document.documentElement.classList.remove(c); out.push(c + '-class'); }
+      return out; }};
   const tell = (k, v) => { try{ HH.on[k] && HH.on[k](v); }catch(e){ console.warn('[holiday] ' + k, e); } };
   const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); tell('mode', mode); return r; };
   const _av = applyVisibility; applyVisibility = function(){ const r = _av.apply(this, arguments); tell('vis'); return r; };
@@ -24430,6 +24804,42 @@ function r40BuildMask(){
 window.__r40at = (x, y, z, nx = 0, ny = 1, nz = 0) => { const U = R40E.U, t = U.r40Mask.value; if(!t) return null; const B = U.r40MB.value, Y = U.r40MY.value, P = [x + nx * .75, y + ny * .75, z + nz * .75];
   const u = (P[0] - B.x) * B.z, v = (P[2] - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0; const i = Math.min(R40M.nx - 1, Math.floor(u * R40M.nx)), j = Math.min(R40M.nz - 1, Math.floor(v * R40M.nz)), d = t.image.data, o = (j * R40M.nx + i) * 4, yy = (P[1] - Y.x) / Y.y;
   const f = (lo, hi) => Math.max(0, Math.min(1, yy - lo + .5)) * Math.max(0, Math.min(1, hi - yy + .5)); return Math.max(f(d[o], d[o + 1]), f(d[o + 2], d[o + 3])); };
+// ---- R41W: the house envelope for the window pull (see R41W at the top). Per 3-in plan cell: R = distance to the nearest interior
+// room air (0-4 ft), G / B = that room column's floor and ceiling (the R40M height scale), so a jamb in the wall reads its room's height
+function r41WBuild(){
+  if(!R41W.on || !R40M.done || typeof BIM2 === 'undefined' || !BIM2.state || !BIM2.state.spaces) return false;
+  const S = BIM2.state, sp = S.spaces.filter(s => s.interior), key = R40M.key + ':' + sp.map(s => s.bb && s.bb.map(v => v.toFixed(2)).join(',')).join(';');
+  if(R41W.built && key === R41W.key) return true; if(!sp.length) return false;
+  const t0 = performance.now(), c = .25, pad = R41W.dMax + 1; let px0 = 1e9, py0 = 1e9, px1 = -1e9, py1 = -1e9;
+  for(const s of sp){ px0 = Math.min(px0, s.bb[0]); py0 = Math.min(py0, s.bb[1]); px1 = Math.max(px1, s.bb[2]); py1 = Math.max(py1, s.bb[3]); }
+  const X0 = py0 - pad, Z0 = px0 - pad, NX = Math.ceil((py1 - py0 + 2 * pad) / c), NZ = Math.ceil((px1 - px0 + 2 * pad) / c), N = NX * NZ;   // world X = plan y, world Z = plan x
+  const lo = new Float32Array(N).fill(1e9), hi = new Float32Array(N).fill(-1e9), src = new Int32Array(N).fill(-1), dd = new Float32Array(N).fill(1e9);
+  for(const s of sp){ const i0 = Math.max(0, Math.floor((s.bb[1] - X0) / c)), i1 = Math.min(NX - 1, Math.ceil((s.bb[3] - X0) / c)), j0 = Math.max(0, Math.floor((s.bb[0] - Z0) / c)), j1 = Math.min(NZ - 1, Math.ceil((s.bb[2] - Z0) / c));
+    for(let j = j0; j <= j1; j++) for(let i = i0; i <= i1; i++){ const X = X0 + (i + .5) * c, Z = Z0 + (j + .5) * c; if(!S.contains(s, Z, X)) continue; const top = S.topOf(s, Z, X); if(!(top > s.floorZ)) continue;
+      const q = j * NX + i; lo[q] = Math.min(lo[q], s.floorZ); hi[q] = Math.max(hi[q], top); src[q] = q; dd[q] = 0; } }
+  // two-pass nearest-source propagation (8 neighbours), Euclidean distance to the source cell
+  const pass = (j0, j1, dj, i0, i1, di, nb) => { for(let j = j0; j !== j1; j += dj) for(let i = i0; i !== i1; i += di){ const q = j * NX + i;
+    for(const [a, b] of nb){ const ii = i + a, jj = j + b; if(ii < 0 || jj < 0 || ii >= NX || jj >= NZ) continue; const s0 = src[jj * NX + ii]; if(s0 < 0) continue;
+      const sx = s0 % NX, sz = (s0 / NX) | 0, d = Math.hypot(sx - i, sz - j); if(d < dd[q]){ dd[q] = d; src[q] = s0; } } } };
+  pass(0, NZ, 1, 0, NX, 1, [[-1, -1], [0, -1], [1, -1], [-1, 0]]); pass(NZ - 1, -1, -1, NX - 1, -1, -1, [[1, 1], [0, 1], [-1, 1], [1, 0]]);
+  pass(0, NZ, 1, 0, NX, 1, [[-1, -1], [0, -1], [1, -1], [-1, 0]]);
+  const Y0 = R40M.y0, sc = R40M.sc, lv = y => Math.max(0, Math.min(255, y)), data = new Uint8Array(N * 4);
+  for(let q = 0; q < N; q++){ const s0 = src[q]; if(s0 < 0){ data.set([255, 255, 0, 0], q * 4); continue; }
+    data.set([lv(Math.round(dd[q] * c / R41W.dMax * 255)), lv(Math.floor((lo[s0] - .3 - Y0) / sc)), lv(Math.ceil((hi[s0] + .3 - Y0) / sc)), 255], q * 4); }
+  const tex = new THREE.DataTexture(data, NX, NZ, THREE.RGBAFormat, THREE.UnsignedByteType); tex.magFilter = tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.flipY = false; tex.needsUpdate = true;
+  if(R41W.U.r41Dist.value) R41W.U.r41Dist.value.dispose(); R41W.U.r41Dist.value = tex; R41W.U.r41DB.value.set(X0, Z0, 1 / (NX * c), 1 / (NZ * c)); R41W.U.r41DY.value.set(Y0, sc);
+  Object.assign(R41W, {built: true, key, ms: +(performance.now() - t0).toFixed(1), nx: NX, nz: NZ}); return true; }
+// the pull for this frame: exterior radiance x E_ext / E_now (at most 1), in stops by EXPO_IN; 0 in the uniform = no pull
+function r41WFrame(){
+  if(!R41W.on) return; if(!R41W.built || (R40L.frame % 240) === 0) try{ r41WBuild(); }catch(e){ if(!R41W.warned){ R41W.warned = true; console.warn('[r41w] envelope', e); } }
+  const kIn = r40C(typeof EXPO_IN === 'number' ? EXPO_IN : 0), E = renderer.toneMappingExposure, ext = (typeof BASE_EXPOSURE === 'number' ? BASE_EXPOSURE : E) * R41W.outGain * Math.pow(2, R41W.stops);
+  const p = R41W.built && !isDoll() && kIn > 0 && E > 0 ? Math.pow(Math.min(1, ext / E), kIn) : 1; R41W.pull = p;
+  R41W.U.r41Pull.value = R41W.hold ? 0 : 1 - p; }
+if(R41W.on){ const prevOBR = scene.onBeforeRender; scene.onBeforeRender = function(){ if(prevOBR) prevOBR.apply(this, arguments); try{ r41WFrame(); }catch(e){} }; }
+// QA: the envelope as the shader reads it at a world point (1 room / wall, 0 outside)
+window.__r41env = (x, y, z) => { const t = R41W.U.r41Dist.value; if(!t) return null; const B = R41W.U.r41DB.value, Y = R41W.U.r41DY.value, u = (x - B.x) * B.z, v = (z - B.y) * B.w; if(u < 0 || v < 0 || u > 1 || v > 1) return 0;
+  const i = Math.min(R41W.nx - 1, Math.floor(u * R41W.nx)), j = Math.min(R41W.nz - 1, Math.floor(v * R41W.nz)), d = t.image.data, o = (j * R41W.nx + i) * 4, yy = (y - Y.x) / Y.y, cl = a => Math.max(0, Math.min(1, a));
+  const dist = d[o] / 255 * R41W.dMax, s = cl((dist - R41W.d0) / (R41W.d1 - R41W.d0)); return {dist: +dist.toFixed(2), env: +(cl(yy - d[o + 1] + .5) * cl(d[o + 2] - yy + .5) * (1 - s * s * (3 - 2 * s))).toFixed(3)}; };
 /* r41 owner 11/12: "the light filtering shades appear to be luminous". The light-filtering fabrics (roller shades r28filter, honeycomb cells
    r29cellFilter, skylight shades r35skyShade) and the rainbow privacy film (r28film) carried a FIXED emissive (.14 / .22 / .5 / .32) standing
    in for daylight coming through them, at every time of day: at dusk (the tour's opening light) and in the night decor modes a lowered shade
@@ -24541,5 +24951,13 @@ html.ph .gsec .gh h3{grid-column:1;grid-row:1;margin:0}
 html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
-<script src="../assets/games-menu.js?v=2" defer></script>
-<script src="../assets/holiday/holiday.js?v=8" defer></script>
+<script src="../assets/games-menu.js?v=3" defer></script>
+<script src="../assets/holiday/holiday.js?v=26" defer></script>
+<script>/* r43 service worker (../sw.js; what it does and how to turn it off are at the top of that file): registered a few seconds after the page has
+   loaded, only on 118hillside.com itself (or with ?sw=1 anywhere, for testing); ?sw=0 unregisters it and clears its caches in this browser.
+   SW_ON = false turns it off for everyone: this page then unregisters it and clears its caches on each visitor's next load (also set ENABLED = false in sw.js). */
+(function(){ try{ if(!('serviceWorker' in navigator)) return; var q = location.search, SW_ON = true;
+  if(!SW_ON || /[?&]sw=0\b/.test(q)){ navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }); if(window.caches) caches.keys().then(function(ks){ ks.forEach(function(k){ if(/^hillside-/.test(k)) caches.delete(k); }); }); return; }
+  if(!(/[?&]sw=1\b/.test(q) || /(^|\.)118hillside\.com$/.test(location.hostname))) return;
+  var go = function(){ setTimeout(function(){ navigator.serviceWorker.register('../sw.js', {scope: '../'}).catch(function(e){ console.warn('[sw]', e); }); }, 3000); };
+  if(document.readyState === 'complete') go(); else addEventListener('load', go); }catch(e){} })();</script>
