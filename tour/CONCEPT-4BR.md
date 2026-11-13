@@ -243,7 +243,7 @@ exterior walls and adding a fireplace vent are all permit work.
 - The old living room's big west window runs past the new library/bath wall, which meets it at a mullion. A real project
   would reframe or split that window.
 - The oven column (drawer, wall oven, built-in microwave, cabinet above), the stone cladding, the low built-ins and the
-  crown are simple stand-ins drawn for this concept. The mantel top is at 4 ft 2 and the TV sits 3 in above it. The north run (the one with the range) was carried 2 ft
+  crown are simple stand-ins drawn for this concept. The mantel top is at 4 ft 11 and the TV (centre 6 ft 5) sits 2 in above it. The north run (the one with the range) was carried 2 ft
   further toward the living area, with an upper cabinet over that end and a panelled end.
 - The island sink is centred on the island (the plan has it a little west with the dishwasher beside it).
 - The closet doors, the laundry closet door (shut) and the bedroom door (standing open) are drawn fixed; the two pocket

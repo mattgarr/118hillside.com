@@ -46,7 +46,7 @@ EWIN_T, EUNITS = (3.9, 9.78125), 3            # r44c owner: three units a side (
 EWIN_D, EWIN_W = (EWIN_T[0] + EWIN_T[1]) / 2, EWIN_T[1] - EWIN_T[0]
 EWIN = [(RIDGE_Y - EWIN_D, EWIN_W, 3.4375, 7.75), (RIDGE_Y + EWIN_D, EWIN_W, 3.4375, 7.75)]
 GG = dict(zb=8.45, margin=0.30)                                       # gable glass: bottom, and the drop of its top edge below the rake         # street gable windows either side of the hearth: centre y, width, sill, head
-FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 3.03), mantel=(3.85, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 6.45))   # mantel: bottom, height, depth, length
+FP = dict(cy=RIDGE_Y, w=7.0, d=1.25, box=(5.0, 0.95, 3.03), mantel=(4.35, 0.6, 0.85, 6.2), hearth=(1.5, 0.25), tv=(65, 6.45))   # mantel: bottom, height, depth, length
 PASS = (5.2, 9.0, 7.6)               # the way in from the library through the west gable wall: y0, y1, head
 DOOR_H = 6.7812
 REMOVED_SPACES = ['SP-L1-BED2', 'SP-L1-BED2-CLOSET', 'SP-L1-BED3', 'SP-L1-BED3-CLOSET', 'SP-L1-KITCHEN']
