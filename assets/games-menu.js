@@ -64,6 +64,14 @@
 @media (max-height:560px){#gm36 .hd p{display:none}#gm36 a.row{min-height:56px;padding:8px 12px}#gm36 .m{margin-top:3px}}\
 @media (prefers-reduced-motion:reduce){#gm36[open]{animation:none}#gm36 .ch .sp{animation-duration:1.6s}}';
 
+  /* r43: the picker fetches ahead. On open, the in-season game's files (the tour page's window.__GAMES_SRC: the game and what it loads next) go into the
+     browser cache at low priority; pointing at or focusing another row does the same for that one. Then the game's own page finds them there.
+     Not on a data saver or a 2g/3g connection, and nowhere the tour page did not list them (the old seasonal pages). */
+  var fetched = {};
+  function roomy(){ try{ var c = navigator.connection; return !c || (!c.saveData && (!c.effectiveType || c.effectiveType === '4g')); }catch(e){ return true; } }
+  function prefetch(id){ var S = window.__GAMES_SRC, L = S && S[id]; if(!L || fetched[id] || !roomy()) return false; fetched[id] = true;
+    L.forEach(function(u){ if(document.querySelector('link[rel=prefetch][href="' + u + '"],link[rel=preload][href="' + u + '"]')) return; var l = document.createElement('link'); l.rel = 'prefetch'; l.href = u; document.head.appendChild(l); });
+    return true; }
   var dlg = null, opener = null, going = false;
   function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
   function build(){
@@ -86,7 +94,8 @@
     dlg.innerHTML = h; dlg.classList.remove('going'); going = false;
     dlg.querySelector('.x').addEventListener('click', function(){ close(); });
     dlg.querySelector('.all').addEventListener('click', function(){ ga('games_menu_all'); });
-    [].forEach.call(dlg.querySelectorAll('a.row'), function(a){ a.addEventListener('click', function(e){ pick(a, e); }); }); }
+    [].forEach.call(dlg.querySelectorAll('a.row'), function(a){ a.addEventListener('click', function(e){ pick(a, e); });
+      ['pointerenter', 'focus', 'touchstart'].forEach(function(ev){ a.addEventListener(ev, function(){ prefetch(a.dataset.g); }, {passive: true}); }); }); }
   /* a tapped row answers at once: pressed, a spinner, "Loading..."; then the browser goes there */
   function pick(a, e){
     if(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;   // open in a new tab: leave this one as it is
@@ -102,8 +111,8 @@
     opener = from && from.focus ? from : null; if(opener) opener.setAttribute('aria-expanded', 'true');
     try{ dlg.showModal(); }catch(e){ location.href = paths().games; return false; }   // a browser without <dialog>: the games page has the same five
     var f = dlg.querySelector('a.row'); if(f) try{ f.focus({preventScroll: true}); }catch(e){}
-    ga('games_menu_open'); return true; }
+    prefetch(list()[0].id); ga('games_menu_open'); return true; }
   function close(){ if(dlg && dlg.open) dlg.close(); }
   addEventListener('pageshow', function(e){ if(e.persisted && dlg){ going = false; if(dlg.open) dlg.close(); } });   // back from a game: the picker is not left spinning
-  window.GAMESMENU = {open: open, close: close, list: list, order: order, paths: paths, get isOpen(){ return !!(dlg && dlg.open); }};
+  window.GAMESMENU = {open: open, close: close, list: list, order: order, paths: paths, prefetch: prefetch, get isOpen(){ return !!(dlg && dlg.open); }};
 })();
