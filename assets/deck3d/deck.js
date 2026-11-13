@@ -38,8 +38,8 @@
     {id: 'windows', label: 'Windows', pos: [-8.5, 2.4, 40.5], look: [0, 3, 12], cat: [-4, 24], say: 'Now the windows. The whole street sees these.', sections: ['win'],
      fit: [[-10.5, 5.2, 4.7], [-10.5, 0, 4.7], [4.2, 5.8, 29.6], [4.2, .8, 29.6], [2.4, 5.2, 5.5]]},
     {id: 'living', label: 'Living room', inside: true, pos: [13, 5, 2.9], look: [4.8, 3.9, -3.9], cat: [10.7, -3.2], say: 'Inside. This is where I spend my evenings. And mornings.', sections: ['tree', 'room'],
-     fit: [[-3.2, 7.6, -5.2], [-6.2, .1, -5.6], [9, 8.5, -6], [9.4, .1, 1.2], [2.5, .1, -3.3]],
-     catP: [.6, -1.6], fitP: [[-3.2, 7.5, -5.2], [-5.8, .2, -5.4], [2.5, .2, -3.3], [7.2, 2.6, -.6], [3.05, 8.4, -8]]},   // a tall screen leaves a short band: the tree, the table, the box and the far beam
+     fit: [[-2.5, 6.8, -6.0], [-5.6, .1, -6.2], [9, 8.5, -6], [9.4, .1, 1.2], [2.5, .1, -3.3]],
+     catP: [.6, -1.6], fitP: [[-2.5, 6.7, -6.0], [-5.2, .2, -6.1], [2.5, .2, -3.3], [7.2, 2.6, -.6], [3.05, 8.4, -8]]},   // a tall screen leaves a short band: the tree, the table, the box and the far beam
     {id: 'terrace', label: 'Terrace', pos: [27, 1.8, -38.5], look: [0, 3.4, -37.5], posP: [30, 2, -39], lookP: [0, 4.8, -37.5], cat: [9.5, -39.5], say: 'Out back. Dinner’s on the terrace tonight.', sections: ['ter'],
      fit: [[-9.6, 5.4, -37.3], [8.3, 5, -27], [.7, -4.4, -25.6], [3.8, -4.4, -51.2], [-6, -1, -44]]},
     {id: 'oak', label: 'The oak', pos: [35, 2, -47], look: [8.3, 9, -27], posP: [39, 2, -52], lookP: [8.3, 9, -27], fitP: [[8.3, -.8, -27], [8.3, 12.5, -29], [0, 8, -29], [17, 8, -28]], cat: [14, -33], say: 'Last, the oak. Biggest thing here, and it’s never been decorated.', sections: ['oak', 'wear'],
@@ -47,7 +47,7 @@
   const EXTRA = [   // more places to stand once the house is lit
     {id: 'walk', label: 'Front walk', pos: [-1.5, 2.6, 49], look: [-2.5, 6.2, 14], posP: [-1.5, 2.8, 56], lookP: [-2.5, 7, 14], cat: [-3.4, 36.5]},
     {id: 'dining', label: 'Dining room', inside: true, pos: [16.2, 5, 30.5], look: [6, 4, 22.5], cat: [8.6, 26.4]},
-    {id: 'tree', label: 'By the tree', inside: true, pos: [4.6, 4.6, .6], look: [-3.2, 3.6, -5.2], cat: [1.2, -2.6]},
+    {id: 'tree', label: 'By the tree', inside: true, pos: [4.6, 4.6, .6], look: [-2.5, 3.3, -6.0], cat: [1.2, -2.6]},
     {id: 'table', label: 'Under the oak', pos: [10.5, .2, -45.5], look: [-2, -.6, -37], cat: [5.4, -41]},
     {id: 'corner', label: 'From the corner', pos: [-24, 2.6, 58], look: [-4, 6.5, 12], cat: [-13, 44]}];
   const placeOf = id => PLACES.find(p => p.id === id) || EXTRA.find(p => p.id === id);
@@ -639,7 +639,7 @@
       const open = () => { if(shared) sharedStart(); else startCard(); };
       const intro = document.getElementById('intro28'); if(intro){ const mo = new MutationObserver(() => { if(!document.getElementById('intro28')){ mo.disconnect(); open(); } }); mo.observe(document.body, {childList: true}); } else open(); };
     let need = 0; const done = () => { if(--need <= 0) go(); }; const load = (src, has) => { if(has) return; need++; const s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = () => { console.warn('[deck3d] could not load ' + src); done(); }; document.head.appendChild(s); };
-    load('../assets/snowball.js?v=37', !!window.SNOWBALL); load('../assets/deck3d/deck-props.js?v=46', !!window.DECKPROPS); load('../assets/deck3d/deck-sfx.js?v=34', !!window.DECKSFX); if(!need) go(); }
+    load('../assets/snowball.js?v=37', !!window.SNOWBALL); load('../assets/deck3d/deck-props.js?v=47', !!window.DECKPROPS); load('../assets/deck3d/deck-sfx.js?v=34', !!window.DECKSFX); if(!need) go(); }
   (function wait(n){ let fr = 0; try{ fr = H.renderer.info.render.frame; }catch(e){} const ld = document.getElementById('loading'), up = ld && !ld.classList.contains('done');
     if((fr > 8 && !up) || n > 240) setTimeout(boot, 700); else setTimeout(() => wait(n + 1), 250); })(0);
 

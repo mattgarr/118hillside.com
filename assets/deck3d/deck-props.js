@@ -332,9 +332,9 @@
         for(let i = 0; i < 60; i++){ const dir = new V3(R() - .5, R() - .5, R() - .5).normalize(), p = c.clone().addScaledVector(dir, b[3] * Math.pow(R(), .4)); leaves.push({p, q: qY(dir.clone().add(new V3(0, .6, 0))), s: [.07, .24 + R() * .1, .07], c: cs[Math.floor(R() * 4)]}); }
         for(let i = 0; i < 14; i++){ const dir = new V3(R() - .5, R() - .5, R() - .5).normalize(); lp.push({p: new V3(o.x, o.y, o.z).add(c).addScaledVector(dir, b[3] * .95), c: '#ffe0b0', s: .5}); } });
       br.forEach(m => t3.add(m)); t3.add(inst(G.leaf, std('#ffffff', {roughness: .7}), leaves)); lightSet(g, lp, {mode: 1, seq: 2, seed: 5}); blob(g, o.x, o.y, o.z, 1.3, .7); }
-    const TREE_AT = [-3.15, 0, -5.2];
+    const TREE_AT = [-2.5, 0, -6.0];   // r45 (QA): a little smaller and a foot further into the corner by the back glass doors, so it no longer stands in the opening from the foyer to the living room
     function buildTree(S){ if(S.tree === 'none') return null; const g = grp('tree'), [x, y, z] = TREE_AT;
-      if(S.tree === 'olive') olive(g, {x, y, z}); else conifer(g, {x, y, z, kind: S.tree, h: S.tree === 'pencil' ? 7.0 : 6.6, r: S.tree === 'pencil' ? 1.15 : 2.2, topper: S.topper});
+      if(S.tree === 'olive') olive(g, {x, y, z}); else conifer(g, {x, y, z, kind: S.tree, h: S.tree === 'pencil' ? 6.6 : 5.6, r: S.tree === 'pencil' ? 1.0 : 1.8, topper: S.topper});
       return g; }
 
     /* ---------- candles, menorah, kinara ---------- */

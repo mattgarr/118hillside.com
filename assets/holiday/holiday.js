@@ -51,7 +51,7 @@
   const W = {on: false, built: false, S: null, P: null, inside: false, tod0: null, todMine: false, raf: 0, lastIn: 0, ms: 0, late: 0};
   let mine = false;   // true while this file changes the time of day (a change by the visitor is theirs to keep)
   function loadProps(){ if(window.DECKPROPS) return Promise.resolve(); if(loadProps.p) return loadProps.p;
-    return (loadProps.p = new Promise((res, rej) => { const s = document.createElement('script'); s.src = ASSET + 'deck3d/deck-props.js?v=46'; s.onload = () => res(); s.onerror = () => { loadProps.p = null; rej(new Error('deck-props.js did not load')); }; document.head.appendChild(s); })); }
+    return (loadProps.p = new Promise((res, rej) => { const s = document.createElement('script'); s.src = ASSET + 'deck3d/deck-props.js?v=47'; s.onload = () => res(); s.onerror = () => { loadProps.p = null; rej(new Error('deck-props.js did not load')); }; document.head.appendChild(s); })); }
   const ctx = () => ({inside: true});   // window candles and the menorah sit on the inside sill, where they would really be; the glass shows them from the street
   /* parts follow what the tour is showing: nothing is left on a roof or in a tree that is not drawn */
   function syncVis(){ const P = W.P; if(!P) return; const show = W.on && H.mode !== 'design'; P.root.visible = show; if(!show) return;
@@ -250,6 +250,7 @@
   #holVeil.on{opacity:1}
   #holLive{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
   html.uidle27 #holShow,html.clean27 #holShow{opacity:.0;visibility:hidden;pointer-events:none;transition:opacity .5s ease,visibility 0s linear .5s}
+  html.holshow45 #card,html.holshow45 #mini{visibility:hidden!important;pointer-events:none!important}   /* r45: the stop card said 'Stop 3 of 25 · Entry foyer' over the yard: the caption bar is the card while the views run */
   @media (prefers-reduced-motion:reduce){#holVeil{transition:none}#holPanel .opt.busy .r{animation-duration:1.8s}}`;
   let btn = null, row = null, panel = null, opener = null, bar = null, veil = null;
   const SUN = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.6v1.8M10 15.6v1.8M2.6 10h1.8M15.6 10h1.8M4.8 4.8l1.3 1.3M13.9 13.9l1.3 1.3M4.8 15.2l1.3-1.3M13.9 6.1l1.3-1.3"/></svg>';
@@ -296,8 +297,8 @@
       + '<span class="sep" aria-hidden="true"></span><button type="button" class="dk" data-a="dusk" aria-pressed="false">' + MOON + '<span>Dusk</span></button><button type="button" class="done" data-a="done">Done</button>';
     document.body.appendChild(bar);
     bar.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation(); const a = b.dataset.a; show.auto(false);
-      if(a === 'prev') show.go(show.i - 1); else if(a === 'next') show.go(show.i + 1); else if(a === 'dusk') dusk(H.tod !== 'dusk'); else show.stop(); });
-    bar.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Escape') show.stop(); });
+      if(a === 'prev') show.go(show.i - 1); else if(a === 'next') show.go(show.i + 1); else if(a === 'dusk') dusk(H.tod !== 'dusk'); else show.stop(true); });
+    bar.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Escape') show.stop(true); });
     for(const ev of ['pointerdown', 'wheel', 'touchstart']) bar.addEventListener(ev, e => e.stopPropagation(), {passive: true});
     veil = document.createElement('div'); veil.id = 'holVeil'; veil.setAttribute('aria-hidden', 'true'); (document.getElementById('app') || document.body).appendChild(veil);
     render(); }
@@ -328,7 +329,7 @@
   const show = {i: -1, list: null, t: 0, on: false,
     start(o){ const k = current(); if(k === 'none' || busy) return false; this.list = DRESS[k].views; this.on = true; close(false);
       if(H.mode !== 'tour') try{ H.setMode('tour'); }catch(e){}
-      bar.hidden = false; placeBar(); render(); this.go(0, true); this.auto(!(o && o.auto === false) && !reduce); ga('holiday_show', {kind: k});
+      root.classList.add('holshow45'); bar.hidden = false; placeBar(); render(); this.go(0, true); this.auto(!(o && o.auto === false) && !reduce); ga('holiday_show', {kind: k});
       try{ window.__v33discPlace && __v33discPlace(); }catch(e){} return true; },
     go(i, first, own){ const L = this.list; if(!L) return; const now = performance.now(); if(!own && now - (this.autoAt || 0) < 900) return; if(own) this.autoAt = now; this.i = (i + L.length) % L.length; const v = L[this.i], tall = H.camera.aspect < .8, pos = tall && v.posP ? v.posP : v.pos, look = tall && v.lookP ? v.lookP : v.look;
       bar.querySelector('.cap b').textContent = v.t; bar.querySelector('.cap i').textContent = (this.i + 1) + ' of ' + L.length;
@@ -337,7 +338,9 @@
       if(v.inside || wasIn || far){ veil.classList.add('on'); clearTimeout(this.vt); this.vt = setTimeout(() => { try{ H.look(pos, look); }catch(e){} setTimeout(() => veil.classList.remove('on'), 140); }, 260); }
       else H.flyTo(pos, look, first ? 1.8 : 1.6); },
     auto(on){ clearInterval(this.t); this.t = 0; if(!on) return; let n = 0; this.t = setInterval(() => { if(!this.on) return this.auto(false); if(document.hidden) return; if(++n >= this.list.length){ this.auto(false); return; } this.go(this.i + 1, false, true); }, 8000); },
-    stop(){ if(!this.on) return; this.on = false; this.auto(false); clearTimeout(this.vt); if(veil) veil.classList.remove('on'); if(bar) bar.hidden = true; this.list = null; this.i = -1; try{ window.__v33discPlace && __v33discPlace(); }catch(e){} }};
+    stop(back){ if(!this.on) return; this.on = false; this.auto(false); clearTimeout(this.vt); if(veil) veil.classList.remove('on'); if(bar) bar.hidden = true; this.list = null; this.i = -1; root.classList.remove('holshow45');
+      if(back && H.backToStop && H.mode === 'tour') try{ H.backToStop(); }catch(e){}   /* r45: Done (or Esc) goes back to the stop the card names */
+      try{ window.__v33discPlace && __v33discPlace(); }catch(e){} }};
   /* moving on your own ends the slideshow's own pace (the bar stays, so the next view is one tap away) */
   { const cv = document.getElementById('c'); if(cv) for(const ev of ['pointerdown', 'wheel']) cv.addEventListener(ev, () => { if(show.on) show.auto(false); }, {passive: true}); }
   document.addEventListener('click', e => { if(show.on && e.target && e.target.closest && e.target.closest('#card, #mini, nav.tabs, #cv27, #wplabels, #labels')) show.stop(); }, true);

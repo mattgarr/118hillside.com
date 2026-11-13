@@ -1420,7 +1420,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
      once it is built. __GAMES_SRC[id][0] is the game itself (the loader below uses it); the rest must match the URLs the game requests (a mismatch only costs a
      wasted download: the game still loads its own). assets/games-menu.js prefetches these when the Games picker opens; holiday.js the season's game when idle. */
   window.__GAMES_SRC = {feast: ['../assets/feast3d/feast.js?v=10', '../assets/snowball.js?v=37', '../assets/feast3d/feast-props.js?v=2'],
-    deck: ['../assets/deck3d/deck.js?v=52', '../assets/snowball.js?v=37', '../assets/deck3d/deck-props.js?v=46', '../assets/deck3d/deck-sfx.js?v=34'],
+    deck: ['../assets/deck3d/deck.js?v=53', '../assets/snowball.js?v=37', '../assets/deck3d/deck-props.js?v=47', '../assets/deck3d/deck-sfx.js?v=34'],
     snowball: ['../assets/find/find.js?v=42', '../assets/snowball.js?v=37'],
     escape: ['../assets/escape/escape.js?v=57', '../assets/escape/logic.js?v=56', '../assets/snowball.js?v=36'],
     room: ['../assets/room3d/room.js?v=13', '../assets/room3d/room-logic.js?v=4', '../assets/room3d/room-data.js?v=2', '../assets/snowball.js?v=37']};
@@ -2068,8 +2068,8 @@ const STOPS = [
   p:'The first of three bedrooms on the main level opens off the dining area through a pocket door. It has a vaulted ceiling and two windows toward the street.'},
  {id:'middlebed', t:'Middle bedroom', dims:'10′10″ × 10′0″', ph:[], level:'main', rooms:['mainbeds'], pos:[30.9,EYE,15.1], look:[23.5,EYE,23.2],
   p:'The middle bedroom, at the end of the bedroom hall, has a vaulted ceiling and a closet with three sliding doors.'},
- {id:'hallbath', t:'Hall bath', level:'main', rooms:['mainbath'], pos:[31.0,EYE,9.6], look:[25.8,EYE,5.8],
-  p:'The full bath on the bedroom hall has a Carrara marble-topped vanity and a tub with a shower.'},
+ {id:'hallbath', t:'Hall bath', level:'main', rooms:['mainbath'], pos:[26.6,EYE,9.2], look:[32.3,EYE,11.2],
+  p:'The full bath on the bedroom hall has a tub with a shower under a window, and a Carrara marble-topped vanity by the door.'},
  {id:'backbed', t:'Back bedroom', dims:'9′9″ × 11′6″', ph:[73,64,'x04'], photo:73, level:'main', rooms:['mainbeds'], pos:[21.0,EYE,3.7], look:[24.4,EYE,-6.6],
   p:'The back bedroom, at the other end of the hall, is staged here as a gym and office.'},
  {id:'stairs', t:'Stairs', photo:36, level:'main', rooms:['stairs'], pos:S(1150,1790,EYE), look:S(820,1650,7.4),
@@ -6699,7 +6699,7 @@ const FRAME22 = window.FRAME22 = {DIAG: 52.5, HF: 95, HFMAX: 100, EYE: 5.0, CLEA
   great: {at: [15.2, 17.6], to: [11.2, 31.5], ph: [8.6, 31]},   // r36: where the kitchen meets the room, in the clear aisle by the built-ins, facing the way photo p15 faces: shelves and cabinets left, dining table, sitting area, the large windows right. Was over the coffee table looking back at the kitchen:     // sitting-area corner down the long axis -> dining, glass wall, kitchen beyond
   mainbeds: {at: [18.5, 35.0], to: [26.4, 28.8], hf: 100, eye: 4.8, rise: -.12},   // r36: just inside the door, where photo p74 was taken and facing the same way: bed, closet doors, window. Was over the bed facing a corner:     // headboard corner, low with a falling front (rise) -> bed in front, both windows leading, closet doors to the side
   middlebed: {at: [30.9, 15.1], to: [23.5, 23.2], hf: 100},   // r38: the window corner (window behind, left): the bed against the far wall, the sliding closet on the right. From the hall door the bed's foot filled the frame
-  hallbath: {at: [31.0, 9.6], to: [25.8, 5.8], ph: [27.6, 5.2], hf: 100},   // r38: the window corner by the tub, looking back past the open door's edge to the marble-topped vanity and the hall (photo p57's spot, by the door, has the open leaf in front of the vanity)
+  hallbath: {at: [26.6, 9.2], to: [32.3, 11.2], hf: 100, rise: -.2},   // r45 (QA: the stop looked out of the room, at the door and the hall): just inside the door, into the room: the tub and shower under the window, towels on the tile. Was r38: the window corner by the tub, looking back past the open door's edge to the marble-topped vanity and the hall (photo p57's spot, by the door, has the open leaf in front of the vanity)
   backbed: {at: [21.0, 3.7], to: [24.4, -6.6], hf: 100},   // r38: by the south wall, the way photo p73 faces: closet left, window, leaning mirror right, the oval desk. Two feet further from the door than this, the walk on to the stairs plans 10.1-10.5 s (here 8.2 s)
   stairs: {at: [-9.5, -3], to: [-18.5, -8], hf: 100, rise: .08},   // foyer edge, square to the stair hall -> open treads and cable rails of both flights as one sculptural run, landing bench, loft rail and window light above
   loft: {at: [-19.8, -11.7], to: [-23.2, -3.6], rise: .05},   // r41: on the loft floor two steps past the top tread, turned toward the window seat: cable rail over the stairwell left, gable clerestory with the trees, the corner windows and the window seat, the art wall's edge. Was over the stairwell itself (-13.5, -10.8, hovering 8 ft over the flight): the walk up climbed to the top and then backed 5 ft out over the stairs to reach it (owner 11/12: "a weird pull back to the camera view once you get to the top of the stairs")    // was: stair-hall corner across the loft's diagonal -> window seat in the corner windows, gable clerestory with the trees, art wall, rail over the stairwell; frame risen for the gable light
@@ -24059,7 +24059,7 @@ if(typeof lightMeterPoll === 'function' && typeof lightMeterMul === 'function' &
     get ready(){ try{ return !!(MODEL && BIM && FURN.items().length); }catch(e){ return false; } },
     shown: k => !!(GROUPS[k] && GROUPS[k].visible),                                   // 'roof', 'trees', 'furn': what the tour is drawing now
     inside: p => { try{ return !!bim2SpaceAt(p.x, p.z, p.y); }catch(e){ return false; } },
-    setMode: (m, o) => setMode(m, o), flyTo: (pos, look, dur) => flyTo(pos, look, 'look', dur),
+    setMode: (m, o) => setMode(m, o), flyTo: (pos, look, dur) => flyTo(pos, look, 'look', dur), backToStop: () => showStop(stopIdx),   // r45: the 'best views' Done button returns to the stop on the card
     look(pos, at){ anim = null; glide = null; flightN++; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
     todGet: () => ({key: TOD_KEY, manual: todManual}),
     /* r41: for the props' ground rays (assets/deck3d/deck-props.js): the terrain's height field, and the scene without terrain, hills and trees */
@@ -24246,8 +24246,9 @@ function r36Plan(A, B){   // A, B: {x, z, f}; returns [{x, z, f}] from a node by
 function r36Route(from, to, ff, tf, rooms, rooms0){   // world eye positions -> {pts: [Vector3], cum, L, doors} or null
   const key = [from.x, from.y, from.z, to.x, to.y, to.z].map(v => v.toFixed(1)).join(',') + R36N.key; if(R36N.cache.has(key)) return R36N.cache.get(key);
   let res = null; try{ let way = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, {x: to.x, z: to.z, f: tf, rooms: rooms || null});
-    /* r37: a route through the garage door goes through the middle of it, not past a jamb */
-    if(way && !R36N.noClear) for(const it of r36Doors()){ if(!/SECTIONAL/.test(it.b3kind || '') || !it.c0) continue; const q = it.coll; let hit = false;
+    /* r37: a route through the garage door goes through the middle of it, not past a jamb. r45: the same for the iron-and-glass front and back doors
+       (a door with sidelights): their whole width is one collider, so the walk from the porch used to pass through a sidelight, inches off the glass */
+    if(way && !R36N.noClear) for(const it of r36Doors()){ if(!/SECTIONAL|SIDELIGHTS/.test(it.b3kind || '') || !it.c0) continue; const q = it.coll; let hit = false;
       for(let i = 0; i < way.length - 1 && !hit; i++){ const a = way[i], b = way[i + 1], k = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .4)); for(let u = 0; u <= k; u++){ const x = a.x + (b.x - a.x) * u / k, z = a.z + (b.z - a.z) * u / k; if(x > q.x0 - .3 && x < q.x1 + .3 && z > q.z0 - .3 && z < q.z1 + .3 && Math.abs(a.f - q.y0) < 2.5){ hit = true; break; } } }
       if(hit){ const C = {x: it.c0[0], z: it.c0[1], f: q.y0}, w1 = r36Plan({x: from.x, z: from.z, f: ff, rooms: rooms0 || null}, C), w2 = w1 && r36Plan(C, {x: to.x, z: to.z, f: tf, rooms: rooms || null}); if(w1 && w2) way = w1.concat(w2.slice(1)); break; } }
     /* r37: no doubling back at either end: the walk leaves its start (and reaches its end) by the farthest route point in plain sight on foot (the planner starts and ends at a
@@ -24971,7 +24972,7 @@ html.ph .gsec .gh .gm{grid-column:1;grid-row:2}
 html.ph .gsec .gh .go{grid-column:2;grid-row:1 / span 2;margin:0;align-self:center}
 </style>
 <script src="../assets/games-menu.js?v=3" defer></script>
-<script src="../assets/holiday/holiday.js?v=26" defer></script>
+<script src="../assets/holiday/holiday.js?v=27" defer></script>
 <script>/* r43 service worker (../sw.js; what it does and how to turn it off are at the top of that file): registered a few seconds after the page has
    loaded, only on 118hillside.com itself (or with ?sw=1 anywhere, for testing); ?sw=0 unregisters it and clears its caches in this browser.
    SW_ON = false turns it off for everyone: this page then unregisters it and clears its caches on each visitor's next load (also set ENABLED = false in sw.js). */
