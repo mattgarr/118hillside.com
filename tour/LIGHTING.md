@@ -237,3 +237,28 @@ stops. `?ghost41=0` turns r41 off.
 - **Meter factors against main** (settled, 15-20 s at the stop; main e5a6149 -> r41): entry midday 1.22 -> 1.22-1.25 (the
   entry stop's eye is in the stair-hall air, zone `stairs`: .845 -> .881), great room at dusk .68 -> .68 (1.024 -> .955), living
   room at dusk .62 -> .59 (kept .845). Readings taken 6-7 s after arriving were still adapting (.3 stop/s) and are not comparisons.
+
+## 8. r47: no drawn shadow or light mask with an edge of its own
+
+Owner, 11/13 (phone, walking the main level): furniture throwing "a hard, pure-black, sharp-edged skewed rectangle" on the rug, and "some
+kind of weird light clipping plane" on the plain wall beside the foyer stairs. Neither came from the r41 work; both are older and both
+are hard-edged stand-ins that only looked right from some views.
+
+- **Contact shadows under staged furniture** (`V33C`, `v33Contact`; was v33 S8): the decal was the piece's bounding rectangle at 78 %
+  black with a 5-in soft rim, drawn un-tone-mapped. From above the piece hid it; from eye height under a pedestal table or a round swivel
+  chair the whole rectangle showed. Now each piece gets its own ambient shadow: its meshes are sampled into a height map over the
+  footprint (lowest and highest solid per cell) and every floor texel gets the share of the sky dome the piece hides within 1.2 ft (16
+  directions x 16 bands of sin^2 elevation, nearer solids count more), at most 90 % dark right under a solid, typically 20-40 % beside
+  it. One texture per kind and size (about 45, built with the pieces). The quad is cut back at a wall or a floor edge (`v33Fit`,
+  walk colliders and `walkSurfaceAt`), so nothing shows through a wall. `r13Contact` no longer adds its rectangle under these pieces
+  (fixtures, cabinets and things standing on tops keep theirs). Same at every governor level, on phone and desktop.
+- **Lamp light mask** (`RM29`, the v29 leak mask): a fragment took a room lamp's light only if its 3-in plan cell carried the lamp's
+  room number and its height was inside that room's floor and ceiling, all or nothing. On a wall that runs from one room record into the
+  next (the foyer wall into the stair hall; the stair wall below the loft floor) the light stopped at the cell and the height where the
+  record ended. It showed whenever the room lamps are lit: golden hour (the default, .32) and dusk; never at midday. Now each lamp room
+  has a reach field (`RM29.fieldOf`): 1 over the room, falling smoothly to 0 over 7 ft measured through the air round the walls
+  that stand there (through a doorway or an open edge, not through a wall), with the floor and ceiling of the air column per cell (under a
+  loft's outline over a stair void the floor follows the treads down). All fields sit in one linear-filtered atlas; the shader reads a
+  field once per lamp room whose tile holds the fragment (the lamps of a room share the read), and fades over half a foot inside the
+  floor / ceiling thickness. Layout ideas keep the mask off, as before (it is built from the as-built rooms).
+  QA: `__v29leak()` lists the fields; `__rm29.reachAt(room, x, y, z)` reads one.
