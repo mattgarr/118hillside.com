@@ -626,9 +626,9 @@ def staging():
     add('outdoorLounge', (22.3, -2.2), 90, {}); add('outdoorLounge', (22.3, 1.9), 270, {}); add('outdoorCoffee', (22.3, -0.15), 0, {'w': 2.2, 'd': 1.5}); add('plantPot', (23.9, -3.3), 0)
     return F
 
-CARD = {'name': 'Open kitchen and great room', 'stats': [['Great room', '31 × 27 ft'], ['Dining table', 'Seats 8'], ['Glass doors', '14 ft']], 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': LABEL,
+CARD = {'name': 'Open kitchen and great room', 'stats': [['Great room', '31 × 27 ft'], ['Dining table', 'Seats 8'], ['Glass doors', '14 ft']], 'short': 'Illustrative idea', 'beds': 4, 'bedrooms': 4, 'baths': 3, 'office': True, 'label': 'Illustrative idea.',
         'description': 'One vaulted great room from end to end: a gas hearth at the street end, an island kitchen at the other, a table for eight at folding glass doors to a new deck. The old living room becomes a library and a bath.',
-        'note': 'Concept r44 (owner pick "1-open B-flip", 11/12/2026): the front and middle bedrooms, the hall bath, the hall and the old kitchen all come out of the original gable; hearth on the street gable; L kitchen on the north and west walls; folding glass doors centred on the table; a 3/4 bath, hall with stacked washer and dryer and a library in the old living room; back bedroom entered through a vestibule. Status: illustrative, not designed or reviewed by an architect or engineer.',
+        'note': 'Concept r44 (owner pick "1-open B-flip", 11/12/2026): the front and middle bedrooms, the hall bath, the hall and the old kitchen all come out of the original gable; hearth on the street gable; L kitchen on the north and west walls; folding glass doors centred on the table; a 3/4 bath, hall with stacked washer and dryer and a library in the old living room; back bedroom entered through a vestibule. Status: illustrative idea.',
         'status': 'illustrative', 'source': 'concept r44 (tour/CONCEPT-4BR.md)', 'pageExtras': True}
 
 def register(hide, hide_ranges, sha):

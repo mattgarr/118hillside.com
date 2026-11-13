@@ -985,6 +985,13 @@ html:not(.ph) .v31games.v45fp:hover{background:rgba(31,31,29,.08)}
 html.ph .v31games.v45fp{display:none!important}
 html:not(.ph) #holBtn,html:not(.ph) #fsBtn{display:none!important}
 html.ph .v45fs{display:none!important}
+#b22pill{display:none!important}   /* r45 owner: no 'Refining the view' pill */
+/* r45 phone Design sheet: the level chips and Room labels on one row (it scrolls sideways if it must), and the description in full */
+html.ph.m27-design #card .toggles{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px}
+html.ph.m27-design #card .toggles::-webkit-scrollbar{display:none}
+html.ph.m27-design #card .toggles>*{flex:0 0 auto}
+html.ph.m27-design #card .toggles .lvseg button{padding:0 10px}
+html.ph.m27-design .card p#blurb:not(.phall){display:block;-webkit-line-clamp:unset;overflow:visible;cursor:default}
 html:not(.ph) #hwGamesPill{display:none!important}
 html.ph .phmore{background:var(--v31ink)!important;color:#fbfaf7!important;width:40px!important;height:40px!important;flex:0 0 40px!important}
 html.ph #hwGamesPill{display:none!important}
@@ -7264,7 +7271,7 @@ function focusRoom(r){
 /* gallery */
 function openGallery(){
   const w=$('#gwrap'); if(!w.dataset.built){ w.dataset.built='1';
-    const head=document.createElement('header'); head.innerHTML='<button type="button" class="btn gx36">Back to the 3D tour</button><h1>Photos by room</h1><p>Browse the home room by room. Tap “Show in 3D” to see where each room is.</p><p>The 3D model is an illustrative visual aid; sizes are approximate. <a href="#" onclick="document.getElementById(\'aboutDlg\').showModal();return false">About this tour</a></p>'; w.appendChild(head); head.querySelector('.gx36').onclick=()=>closeGallery();   /* r36 */
+    const head=document.createElement('header'); head.innerHTML='<button type="button" class="btn gx36">Back to the 3D tour</button><h1>Photos by room</h1><p>Browse room by room; “Show in 3D” takes you there. Model sizes are approximate. <a href="#" onclick="document.getElementById(\'aboutDlg\').showModal();return false">About this tour</a></p>'; w.appendChild(head); head.querySelector('.gx36').onclick=()=>closeGallery();   /* r36 */
     const order=ROOMS.map(r=>r.id);
     for(const id of order){ const r=ROOM[id]; const sec=document.createElement('section'); sec.className='gsec';
       sec.innerHTML=`<div class="gh"><h3></h3><span class="gm"></span><button class="btn go">Show in 3D</button></div><div class="grid"></div>`;
@@ -8697,8 +8704,8 @@ const DESIGN = (() => {
     $('#blurb').textContent = sel === 'asbuilt' ? 'The house as it stands. Pick a layout below to see an idea for the original part of the home.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
     $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'An idea only. It is not engineered, permitted or priced.'
-      : (d && d.label ? d.label + ' ' : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and ') + (d && d.label ? 'The house is sold as built.' : 'the house is sold as built.');
-    $('#dNote').hidden = sel === 'asbuilt';
+      : '';   /* r45 owner: an idea's whole label is 'Illustrative idea' (the banner and the Floor plans menu say it); no further wording */
+    $('#dNote').hidden = sel !== 'custom';
     try{ IDEAS35.sync(); }catch(e){}
   }
   function choose(id, fly){ sel = id; selId = null; wallStart = null; pre.visible = false; tool = 'select'; setToolUI(); setActive(id); card(); chips(); status(); save();
@@ -12030,7 +12037,7 @@ const BOOT22 = (() => {
     if(B.refining || B.done) return; B.refining = true; B.log.reveal = now(); step('revealed');
     if(B.prog){ document.documentElement.classList.add('b22ref');
       const host = (typeof canvas !== 'undefined' && canvas.parentElement) || document.body, pill = document.createElement('div');
-      pill.id = 'b22pill'; pill.className = 'perfpill'; pill.setAttribute('role', 'status'); pill.innerHTML = '<i></i>Refining the view…'; host.appendChild(pill); B.pill = pill;
+      pill.id = 'b22pill'; pill.className = 'perfpill'; pill.setAttribute('role', 'status'); pill.innerHTML = '<i></i>Refining the view…'; pill.style.display = 'none'; host.appendChild(pill); B.pill = pill;   /* r45 owner: the pill is not shown (the element stays for the code that toggles it) */
       FX.start(); }
     B.poll = setInterval(B.check, 250); B.check(); };
   B.check = () => {
@@ -16436,7 +16443,6 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     const DESC = {asbuilt: 'The house as it is today, and as it is offered. The living room, the kitchen and the dining area are separate rooms on the main level.',
       apr24b: 'Keeps all six bedrooms. The kitchen opens to the dining room around a long island, with a family room beside it.',
       jan24: 'Kitchen, dining and family room become one open space, with a pantry and a new bath.'};
-    const NOTE = 'Illustrative idea. Not designed or reviewed by an architect or engineer. The house is sold as built.';
     const CH = '<span class="ch" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>';
     const XB = '<button type="button" class="x" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button>';
     const cssT = `
@@ -16466,6 +16472,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
 #dm45 .ch{width:22px;height:22px;display:grid;place-items:center;color:#8d897f}
 #dm45 .ch svg{width:16px;height:16px}
 #dm45 .k42s{display:block;width:56px;height:56px;border-radius:10px;background:#efece4;padding:5px}
+#dm45 img.k42s,#dm45 .top img.k42s{padding:0;object-fit:cover}
 #dm45 .k42s path{stroke:#4a4e50;stroke-width:.3;stroke-linejoin:round;fill:#fbfaf7}
 #dm45 .k42s path.kb{fill:#e2c79c}#dm45 .k42s path.kw{fill:#bcd0d8}#dm45 .k42s path.kc{fill:#dcdcd4}
 #dm45 .ft{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 22px 16px;border-top:1px solid #e9e5dc;font-size:13.5px;color:#67665f}
@@ -16495,6 +16502,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   #dm45 .top{grid-template-columns:92px minmax(0,1fr);gap:14px}#dm45 .top .k42s{width:92px;height:92px}#dm45 .pb{flex:1 1 auto;min-height:44px;padding:0 12px}}
 @media (max-height:560px){#dm45 .hd p{display:none}#dm45 .row{min-height:60px;padding:6px 12px}#dm45 .row .m{display:none}#dm45 .top{grid-template-columns:72px minmax(0,1fr)}#dm45 .top .k42s{width:72px;height:72px}#dm45 .st div{padding:6px 6px 5px}#dm45 .ds{margin-top:10px}}
 @media (prefers-reduced-motion:reduce){#dm45[open]{animation:none}#dm45 .row,#dm45 .pb{transition:none}}`;
+    const PLANIMG = {asbuilt: 1, apr24b: 1, jan24: 1, open4k: 1};   // tour/plan_<id>.jpg, drawn by tour/bim2/tools/plan_thumbs.py from each layout's own rooms and walls
+    const thumb = id => PLANIMG[id] ? '<img class="k42s" src="plan_' + id + '.jpg?v=1" alt="" width="56" height="56" decoding="async">' : sketch(id);
     const cnt = f => f ? '<b>' + f.beds + '</b> bed <i>·</i> <b>' + f.baths + '</b> bath' : '';
     const tag = k => k === 'real' ? 'The real house' : k === 'mine' ? 'Your design' : 'Illustrative idea';
     function build(){ if(dlg) return dlg;
@@ -16511,7 +16520,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     function listView(){ cur = null; const L = plans(), n = L.length - 1;
       let h = '<div class="hd"><h2 id="dm45h">Floor plans</h2><p>The house as it is, and ' + ideaWords(n).toLowerCase() + ' for its main level.</p></div><ul class="ls">';
       for(const p of L){ const f = facts(p.id), k = kindOf(p.id), on = ACTIVE_VAR === p.id;
-        h += '<li><button type="button" class="row" data-id="' + p.id + '"' + (on ? ' aria-current="true"' : '') + '>' + sketch(p.id) + '<span class="tx"><span class="t">' + (cnt(f) || p.name) + '</span><span class="s">' + p.name + '</span>'
+        h += '<li><button type="button" class="row" data-id="' + p.id + '"' + (on ? ' aria-current="true"' : '') + '>' + thumb(p.id) + '<span class="tx"><span class="t">' + (cnt(f) || p.name) + '</span><span class="s">' + p.name + '</span>'
           + '<span class="m">' + (on ? '<i>Showing now</i>' : '') + tag(k) + '</span></span>' + CH + '</button></li>'; }
       h += '</ul><div class="ft"><span>Pick one to read about it and see it in 3D.</span></div>' + XB;
       dlg.innerHTML = h; }
@@ -16521,10 +16530,10 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
       for(const q of (o.stats || [])) if(Array.isArray(q) && q.length === 2) S.push(q);
       const desc = DESC[id] || o.description || p.line || '';
       dlg.innerHTML = '<div class="hd dh"><button type="button" class="bk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5"/></svg>All floor plans</button></div>'
-        + '<div class="bd"><div class="top">' + sketch(id) + '<div><p class="m">' + (ACTIVE_VAR === id ? '<i>Showing now</i>' : '') + tag(k) + '</p><h2 id="dm45h">' + p.name + '</h2><p class="cnt">' + cnt(f) + '</p></div></div>'
+        + '<div class="bd"><div class="top">' + thumb(id) + '<div><p class="m">' + (ACTIVE_VAR === id ? '<i>Showing now</i>' : '') + tag(k) + '</p><h2 id="dm45h">' + p.name + '</h2><p class="cnt">' + cnt(f) + '</p></div></div>'
         + '<p class="ds">' + desc + '</p>'
         + (S.length ? '<dl class="st">' + S.map(q => '<div><dd>' + q[1] + '</dd><dt>' + q[0] + '</dt></div>').join('') + '</dl>' : '')
-        + (idea ? '<p class="nt">' + NOTE + '</p>' : '') + '</div>'
+        + '</div>'
         + '<div class="ft ac"><button type="button" class="pb pri" data-a="see">See it in 3D</button><button type="button" class="pb" data-a="walk">Walk through</button>'
         + '<button type="button" class="pb" data-a="real"' + (idea && ACTIVE_VAR !== 'asbuilt' ? '' : ' hidden') + '>Real house</button></div>' + XB;
       const b = dlg.querySelector('.pb.pri'); if(b) try{ b.focus({preventScroll: true}); }catch(e){} const bd = dlg.querySelector('.bd'); if(bd) bd.scrollTop = 0; }
@@ -16546,15 +16555,6 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   function openPicker(where, from){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
     if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
     hideNudge(); setPk(false); DM.open(from || document.activeElement); lastSig = ''; sync(); return; }
-  function openPickerOld(where){ ga('design_cta', {where, stop: stopId(), kind: 'plans'});
-    if(!pickerUsed){ pickerUsed = true; ss('hillside.cta42.used', '1'); }
-    hideNudge();
-    for(const p of plans()) load(p.id);
-    const wasMin = isPh() && $('#card').classList.contains('min');   // (Design opens the sheet itself)
-    setPk(true); if(mode !== 'design') setMode('design'); else { try{ DESIGN.view(1.2); }catch(e){} }
-    try{ if(wasMin) sheetByPk = true; if(isPh() && $('#card').classList.contains('min')) $('#collapse').click(); }catch(e){}
-    sideFit(); render(); lastSig = ''; sync();
-    setTimeout(() => { const c = list.querySelector('.k42c[aria-checked="true"]') || list.querySelector('.k42c'); if(c) try{ c.focus({preventScroll: true}); }catch(e){} const cd = $('#card'); if(cd) cd.scrollTop = 0; }, 60); }
 
   /* ---- holiday decor, and more ways to redecorate */
   function openDecor(where){ ga('decor_cta', {where, stop: stopId()}); hideNudge();
@@ -16578,7 +16578,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
     const id = stopId(); return PLAN_STOPS.has(id) && plans().length > 1 ? 'plans' : DECOR_STOPS.has(id) && window.HOLIDAY ? 'decor' : ''; }
   function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>See the floor plans</b></span>' + ARROW; }   /* r45 calm pass: short (was 'Compare floor plans: 6, 5 or 4 bedrooms') */
-    return ICON_DECOR + '<span class="c42x"><b>' + (isPh() ? 'Holiday decor' : 'See it decorated for the holidays') + '</b></span>' + ARROW; }
+    return ICON_DECOR + '<span class="c42x"><b>' + 'Holiday decor' + '</b></span>' + ARROW; }
   chip.addEventListener('click', e => { e.stopPropagation(); const where = chip.classList.contains('c42in') ? 'stop-card' : 'stop-chip'; if(chip.dataset.k === 'plans') openPicker(where); else openDecor(where); });
   for(const n of [chip, nudge, banner, hm]) for(const ev of ['pointerdown', 'wheel', 'touchstart']) n.addEventListener(ev, e => e.stopPropagation(), {passive: true});   // not the canvas: no drag or walk through them
   nudge.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
@@ -16641,7 +16641,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   /* ---- the closing card: one line with both */
   function finLinks(){ const fl = document.querySelector('#fin36 .fl'); if(!fl) return false; if(fl.querySelector('.c42f')) return true;
     const a = el('button', 'c42f'); a.type = 'button'; a.textContent = 'Floor plans';
-    const d = el('button', 'c42f', '<span class="c42w">See it decorated for the holidays</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
+    const d = el('button', 'c42f', '<span class="c42w">Holiday decor</span><span class="c42n">Holiday decor</span>'); d.type = 'button';
     a.addEventListener('click', e => { e.stopPropagation(); openPicker('finale'); });
     d.addEventListener('click', e => { e.stopPropagation(); openDecor('finale'); });
     const ph = fl.querySelector('[data-a="photos"]'); if(ph) ph.after(a, d); else fl.append(a, d); return true; }

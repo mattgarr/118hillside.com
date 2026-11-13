@@ -33,7 +33,7 @@ B2 = os.path.dirname(HERE)
 OPT_ID, LEGACY = 'OS-REMODEL-open4', 'open4'
 GLB_OUT, META_OUT = 'scene.opt-%s.glb' % OPT_ID, 'scene.opt-%s.meta.json' % OPT_ID
 GREAT = 'SP-L1-GREAT'
-LABEL = 'Illustrative idea. Not designed or reviewed by an architect or engineer.'
+LABEL = 'Illustrative idea.'
 
 # ---------------------------------------------------------------- the layout (plan feet) ----------------------------------------
 RIDGE_Y, PITCH, C_S, C_N = 18.446, 0.41, 6.0299, 21.1556
