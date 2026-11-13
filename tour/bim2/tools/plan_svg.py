@@ -163,7 +163,7 @@ def label_point(s, g, v):
     c = g.representative_point(); return (c.x, c.y)
 def extra_labels(v):
     if v == 'open4k':
-        return [('KITCHEN', (33.0, 27.2)), ('LIVING', (19.3, 21.0)), ('DINING FOR 8, EXTENDS TO 10', (21.0, 11.3)), ('DECK', (25.5, -3.2)), ('FOLDING GLASS WALL', (25.2, 3.6)), ('PREP SINK', (28.6, 22.9)), ('POCKET DOOR', (8.65, 24.55))]
+        return [('KITCHEN', (33.0, 27.2)), ('LIVING', (19.3, 21.0)), ('DINING: 8 SEATED', (17.7, 11.55)), ('10 WITH LEAF (DASHED)', (17.7, 10.75)), ('DECK', (25.5, -3.2)), ('FOLDING GLASS WALL', (25.2, 3.6)), ('PREP SINK', (28.6, 22.9)), ('POCKET DOOR', (8.65, 24.55))]
     return [('FRONT PORCH', (9.0, -4.5))] if v == 'asbuilt' else []
 
 def opening_svg(o, D):
@@ -263,6 +263,12 @@ def fixtures(D, v):
             w_, d_, shape = LOOSE[k]; f2 = dict(f); f2['params'] = dict({'w': w_, 'd': d_}, **{kk: vv for kk, vv in pr.items() if kk in ('w', 'd')}); g = foot(f2)
             if shape == 'round': x, y = P(g.centroid.x, g.centroid.y); A('<circle cx="%.1f" cy="%.1f" r="%.1f" fill="#fff" stroke="#888" stroke-width=".6"/>' % (x, y, (pr.get('dia') or w_) / 2 * S))
             else: poly(g.buffer(-.12).buffer(.12) if shape == 'soft' else g, '#fff', .9 if k == 'pianoUpright' else .6, '', '#222' if k == 'pianoUpright' else '#888')
+            if k == 'diningTable' and pr.get('extW'):          # the table with its leaf in (dashed), and where the end chair goes then
+                ex = pr['extW'] - pr['w']; th = math.radians(f.get('rot') or 0); sd = np.array([-math.sin(th), math.cos(th)]); a0 = np.array(f['at'][:2], float)
+                for sg, e in (((-1, ex / 2), (1, ex / 2)) if pr.get('extBoth') else ((1 if abs(sd[0]) > .5 and sd[0] * -1 > 0 else -1 if abs(sd[0]) > .5 else 1, ex),)):
+                    u = sd * sg; n_ = np.array([-u[1], u[0]]); p0 = a0 + u * pr['w'] / 2; p1 = p0 + u * e
+                    poly(Polygon([p0 - n_ * pr['d'] / 2, p1 - n_ * pr['d'] / 2, p1 + n_ * pr['d'] / 2, p0 + n_ * pr['d'] / 2]), 'none', .7, '4 3', '#555')
+                    c0 = p1 + u * .9; poly(Polygon([c0 - u * .75 - n_ * .75, c0 + u * .75 - n_ * .75, c0 + u * .75 + n_ * .75, c0 - u * .75 + n_ * .75]).buffer(-.12).buffer(.12), 'none', .6, '3 2', '#777')
             if k == 'pianoUpright':
                 th = math.radians(f.get('rot') or 0); fwd = np.array([math.cos(th), math.sin(th)]); side = np.array([-fwd[1], fwd[0]]); a0 = np.array(f['at'][:2], float)
                 poly(Polygon([a0 - side * (w_ / 2 - .2) + fwd * 1.3, a0 + side * (w_ / 2 - .2) + fwd * 1.3, a0 + side * (w_ / 2 - .2) + fwd * (d_ - .08), a0 - side * (w_ / 2 - .2) + fwd * (d_ - .08)]), '#fff', .5, '', '#444')
@@ -289,7 +295,7 @@ def fixtures(D, v):
         if k == 'island':
             poly(g, '#f4f4f4', 1.0); text((c.x, c.y), 'ISLAND', 7.5)
             if pr.get('sink') and pr.get('sinkEnd'):             # the prep sink in its end cabinet (rot 180: the -x end is north)
-                sy = f['at'][1] - pr['sinkEnd'] * (pr['w'] / 2 - 1.27) * (1 if (f.get('rot') or 0) == 180 else -1); poly(sbox(f['at'][0] - 1.78, sy - .8, f['at'][0] - .48, sy + .8).buffer(-.1, join_style=1), '#fff', .8)
+                sy = f['at'][1] - pr['sinkEnd'] * (pr['w'] / 2 - pr.get('sinkInset', 1.27)) * (1 if (f.get('rot') or 0) == 180 else -1); poly(sbox(f['at'][0] - 1.78, sy - .8, f['at'][0] - .48, sy + .8).buffer(-.1, join_style=1), '#fff', .8)
             continue
         if k == 'builtinBookcase': poly(g, '#fff', .8); g2 = g.buffer(-.15); poly(g2, 'none', .4, '', '#777'); continue
         if k == 'windowSeat': poly(g, '#fff', .9); text((c.x, c.y), 'WINDOW SEAT', 7); continue
@@ -315,7 +321,7 @@ def fixtures(D, v):
     return out
 B4_FP = dict(cx=19.3, w=6.0, d=1.2)
 # loose furniture shown on a concept plan: kind -> (width, depth, outline)
-LOOSE = {'sofa3': (7.5, 3.2, 'soft'), 'armchairBoucle': (2.8, 2.7, 'soft'), 'diningTableGlass': (7.0, 3.4, 'rect'), 'diningTable': (7.0, 3.5, 'rect'), 'sideboard': (4.0, 1.6, 'rect'), 'parsonsChair': (1.5, 1.7, 'soft'), 'ottomanRound': (2.6, 2.6, 'round'),
+LOOSE = {'rug2': (8.0, 10.0, 'rect'), 'sofa3': (7.5, 3.2, 'soft'), 'armchairBoucle': (2.8, 2.7, 'soft'), 'diningTableGlass': (7.0, 3.4, 'rect'), 'diningTable': (7.0, 3.5, 'rect'), 'sideboard': (4.0, 1.6, 'rect'), 'parsonsChair': (1.5, 1.7, 'soft'), 'ottomanRound': (2.6, 2.6, 'round'),
          'drumTable': (1.4, 1.4, 'round'), 'pianoUpright': (4.95, 2.05, 'rect'), 'pianoBench': (2.6, 1.15, 'rect'), 'outdoorDiningTable': (7.0, 3.4, 'rect'), 'outdoorChair': (1.8, 1.9, 'soft'),
          'outdoorLounge': (2.6, 2.8, 'soft'), 'outdoorCoffee': (2.6, 1.6, 'rect')}
 
