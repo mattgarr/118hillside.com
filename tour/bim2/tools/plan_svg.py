@@ -100,7 +100,7 @@ def plan(v, title, subtitle):
         for yy in (K4.KB_Y0, K4.KB_Y1):
             A('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#444" stroke-width=".8" stroke-dasharray="10 4 2 4"/>' % (*P(K4.POST[1], yy), *P(B4.X_E, yy)))
         x, y = P(14.3, B4.RIDGE_Y - .75); A('<text x="%.1f" y="%.1f" font-size="8" fill="#444" letter-spacing=".4">RIDGE BEAM ABOVE, 31 FT &#183; VAULTED CEILING</text>' % (x, y))
-        for (a, b, c0, c1) in K4.SKY:
+        for (a, b, c0, c1) in (K4.SKY if SKY is None else SKY):
             A('<polygon points="%s" fill="none" stroke="#444" stroke-width=".8" stroke-dasharray="5 3"/>' % pts([(a, c0), (b, c0), (b, c1), (a, c1)]))
             x, y = P((a + b) / 2, (c0 + c1) / 2); A('<text x="%.1f" y="%.1f" font-size="7" fill="#555" text-anchor="middle">SKY</text>' % (x, y + 2.5))
     # ---- fixtures
@@ -268,7 +268,8 @@ def fixtures(D, v):
                 for sg, e in (((-1, ex / 2), (1, ex / 2)) if pr.get('extBoth') else ((pr.get('extSign', 1 if abs(sd[0]) > .5 and sd[0] * -1 > 0 else -1 if abs(sd[0]) > .5 else 1), ex),)):
                     u = sd * sg; n_ = np.array([-u[1], u[0]]); p0 = a0 + u * pr['w'] / 2; p1 = p0 + u * e
                     poly(Polygon([p0 - n_ * pr['d'] / 2, p1 - n_ * pr['d'] / 2, p1 + n_ * pr['d'] / 2, p0 + n_ * pr['d'] / 2]), 'none', .7, '4 3', '#555')
-                    c0 = p1 + u * .9; poly(Polygon([c0 - u * .75 - n_ * .75, c0 + u * .75 - n_ * .75, c0 + u * .75 + n_ * .75, c0 - u * .75 + n_ * .75]).buffer(-.12).buffer(.12), 'none', .6, '3 2', '#777')
+                    c0 = p1 + u * .9
+                    if not pr.get('extNoChair'): poly(Polygon([c0 - u * .75 - n_ * .75, c0 + u * .75 - n_ * .75, c0 + u * .75 + n_ * .75, c0 - u * .75 + n_ * .75]).buffer(-.12).buffer(.12), 'none', .6, '3 2', '#777')
             if k == 'pianoUpright':
                 th = math.radians(f.get('rot') or 0); fwd = np.array([math.cos(th), math.sin(th)]); side = np.array([-fwd[1], fwd[0]]); a0 = np.array(f['at'][:2], float)
                 poly(Polygon([a0 - side * (w_ / 2 - .2) + fwd * 1.3, a0 + side * (w_ / 2 - .2) + fwd * 1.3, a0 + side * (w_ / 2 - .2) + fwd * (d_ - .08), a0 - side * (w_ / 2 - .2) + fwd * (d_ - .08)]), '#fff', .5, '', '#444')
@@ -321,7 +322,7 @@ def fixtures(D, v):
         text((B4_FP['cx'], B4.Y_N - B4_FP['d'] - .7), 'GAS FIREPLACE &#183; HEARTH', 6.5)
     return out
 B4_FP = dict(cx=19.3, w=6.0, d=1.2)
-SHOW_FP = True; EXTRA = []
+SHOW_FP = True; EXTRA = []; SKY = None
 # loose furniture shown on a concept plan: kind -> (width, depth, outline)
 LOOSE = {'rug2': (8.0, 10.0, 'rect'), 'sofa3': (7.5, 3.2, 'soft'), 'armchairBoucle': (2.8, 2.7, 'soft'), 'diningTableGlass': (7.0, 3.4, 'rect'), 'diningTable': (7.0, 3.5, 'rect'), 'sideboard': (4.0, 1.6, 'rect'), 'parsonsChair': (1.5, 1.7, 'soft'), 'ottomanRound': (2.6, 2.6, 'round'),
          'drumTable': (1.4, 1.4, 'round'), 'pianoUpright': (4.95, 2.05, 'rect'), 'pianoBench': (2.6, 1.15, 'rect'), 'outdoorDiningTable': (7.0, 3.4, 'rect'), 'outdoorChair': (1.8, 1.9, 'soft'),
