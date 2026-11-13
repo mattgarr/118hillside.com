@@ -16671,6 +16671,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     goReal('banner'); });
   /* 'Real house' outside the picker: the same view of the house as it is (in the tour, the as-built stop that matches the idea stop: IT46) */
   function goReal(where){ ga('plan_pick', {plan: 'asbuilt', concept: 'real', where});
+    if(IT46.on){ try{ IT46.real(); }catch(x){ console.warn('[cta42] real', x); } lastSig = ''; sync(); return; }
     const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); }
 
   /* ---- the closing card: one line with both */
@@ -16798,7 +16799,9 @@ const IT46 = window.IT46 = (() => {
   /* QA and the page console: show(id) = pick the idea and start its tour; real() = the banner's 'Real house' */
   async function show(v){ if(!has(v)) return false; try{ const ok = await bim2EnsureOption(v); if(!ok) return false; }catch(e){ return false; }
     if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return start(v); }
-  function real(){ const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); }
+  function real(){   // in the tour: the as-built stop that matches; walking: back to the tour at the stop that matches the nearest idea stop (the same spot can be inside a wall of the house as built)
+    if(on && mode === 'walk'){ try{ stopIdx = window.__back38.target(); }catch(e){} DESIGN.choose('asbuilt', false); setMode('tour'); return; }
+    const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); }
   function tune(key, f){ const s = on && STOPS.find(x => x.i46 && x.key === key); if(!s) return null; s.f = f; s.framed = false; frame(on); showStop(STOPS.indexOf(s)); return FRAME_FOR(s); }   // QA: try a framing for one idea stop
   return {has, alias, start, show, real, tune, ids: () => Object.keys(IDEA_TOURS), realCount: REAL.length, get on(){ return on; }, get stops(){ return on ? LISTS[on] : REAL; }};
 })();
