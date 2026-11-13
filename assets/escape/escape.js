@@ -1,7 +1,7 @@
 /* Locked In at Hillside (r39): an escape room played inside the 3D model of 118 Hillside Drive, in three levels.
    Loaded by tour/index.html on ?escape=<level>; talks to the engine through window.HILLSIDE.
 
-   Levels: easy (Pop the Cork, this file), medium (The Missing Treat Tin, medium.js) and hard (The Sunset Heist, hard.js). The start
+   Levels: easy (The Lemonade Lock, this file), medium (The Missing Treat Tin, medium.js) and hard (The Sunset Heist, hard.js). The start
    card picks one, remembers it, and the share link carries it (?level=). A level's props, animals and drawings load only when it starts.
    The design is assets/escape/DESIGN.md. Every level's logic (what needs what, the codes, the objectives and Snowball's hints) is data in
    logic.js; this file gates every ring and button with it, and `node assets/escape/check.js` proves each level solvable and leak-free.
@@ -47,8 +47,8 @@
   /* ================================================================== levels */
   const LEVELS = ['easy', 'medium', 'hard'];
   const META = {
-    easy:   {name: 'Easy', title: 'Pop the Cork', time: 'About 5 minutes', mins: 5, who: 'A first go, and younger players', where: 'The main floor',
-      blurb: 'Snowball has locked the champagne in a drinks fridge. One clue, and the sun.'},
+    easy:   {name: 'Easy', title: 'The Lemonade Lock', time: 'About 5 minutes', mins: 5, who: 'A first go, and younger players', where: 'The main floor',
+      blurb: 'Snowball has locked the lemonade in a drinks fridge. One clue, and the sun.'},
     medium: {name: 'Medium', title: 'The Missing Treat Tin', time: '15 to 20 minutes', mins: 15, who: 'Families, and anyone who did Easy', where: 'Two floors',
       blurb: 'The treat tin is gone and four of Snowball’s friends are acting very strange.'},
     hard:   {name: 'Hard', title: 'The Sunset Heist', time: '30 to 40 minutes', mins: 30, who: 'Sharp teens and grown-ups', where: 'The whole house, sunrise to sunset',
@@ -625,7 +625,7 @@
     const cat = window.SNOWBALL ? SNOWBALL.svg({id: 'sbhud', seed: 7}).replace(/viewBox="[^"]+"/, 'viewBox="110 10 280 300"') : '';
     root = el('div', {id: 'escRoot'}, `
       <div id="escTop">
-        <div id="escL"><div class="escChip" id="escGoal" role="status" aria-live="polite"><div class="k"><b id="escTitle">Pop the Cork</b><span id="escTime">0:00</span><span id="escProg"></span></div><p id="escGoalT"></p></div>
+        <div id="escL"><div class="escChip" id="escGoal" role="status" aria-live="polite"><div class="k"><b id="escTitle">The Lemonade Lock</b><span id="escTime">0:00</span><span id="escProg"></span></div><p id="escGoalT"></p></div>
           <div id="escPlace" aria-live="polite"></div></div>
         <div id="escR"><div id="escBtns">
           <button class="escChip" id="escHint" type="button" aria-label="Ask Snowball for a hint"><span class="av">${cat}</span><span class="tx"><b>Ask Snowball</b><small>For a hint</small></span></button>
@@ -980,7 +980,7 @@
     rig, rigTravel, rigCut, yp, aspect, placeFov, fadeThrough, win, finishCard, fmtT, fmtH, arcSVG, store, LIGHT, phone, reduce, hour: () => S.hour, place: () => S.place, ex: () => S.ex,
     get cat(){ return CAT; }, EYE, $, $$};
 
-  /* ================================================================== Easy: Pop the Cork (the r35 level, with the shade fix)
+  /* ================================================================== Easy: The Lemonade Lock (the r35 level, with the shade fix; r45: lemonade, not champagne)
      The great-room roller shades now start down, so the light on the floor can't give the code away before Snowball's drawing is found;
      the drawing shows them rolled up, and the gold ring that raises them appears once you've seen it. */
   function EASY(E){
@@ -1035,15 +1035,18 @@
     function buildFridge(){ let bc = null; const v = new THREE.Vector3();
       H.scene.traverse(o => { if(bc || o.name !== 'beverageCooler') return; o.getWorldPosition(v); if(Math.abs(v.x - 19.64) < 1.2 && Math.abs(v.z - 13.5) < 1.6 && Math.abs(v.y) < 1) bc = o; });
       const host = H.grp('main');
-      const prof = [[0, 0], [.13, 0], [.145, .02], [.145, .52], [.12, .62], [.06, .78], [.05, .97], [.058, .975], [.058, 1.0], [0, 1.0]].map(p => new THREE.Vector2(p[0], p[1]));
-      const glassM = new THREE.MeshStandardMaterial({color: lin(0x0d3a25), roughness: .22, metalness: .1, emissive: lin(0x0a3320), emissiveIntensity: .32});
-      const foilM = new THREE.MeshStandardMaterial({color: lin(0xd2a646), roughness: .35, metalness: .7, emissive: lin(0x8a6418), emissiveIntensity: .7});
-      const labelM = new THREE.MeshStandardMaterial({color: lin(0xf1ead8), roughness: .8, emissive: lin(0xf1ead8), emissiveIntensity: .35});
+      // r45: a bottle of pink lemonade (it used to be champagne): a round-shouldered glass bottle, a white cap and a lemon on the label
+      const prof = [[0, 0], [.13, 0], [.145, .02], [.145, .5], [.13, .6], [.07, .7], [.055, .82], [.055, .9], [0, .9]].map(p => new THREE.Vector2(p[0], p[1]));
+      const glassM = new THREE.MeshStandardMaterial({color: lin(0xf4a3b5), roughness: .18, metalness: .05, emissive: lin(0xd8667f), emissiveIntensity: .3});
+      const capM = new THREE.MeshStandardMaterial({color: lin(0xf5f2ea), roughness: .4, metalness: .2, emissive: lin(0xf5f2ea), emissiveIntensity: .25});
+      const lc0 = document.createElement('canvas'); lc0.width = 256; lc0.height = 64; { const g = lc0.getContext('2d'); g.fillStyle = '#f6efd9'; g.fillRect(0, 0, 256, 64);
+        for(const cx of [40, 168]){ g.fillStyle = '#f2cf3b'; g.beginPath(); g.ellipse(cx, 32, 22, 16, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = '#5c9a3c'; g.beginPath(); g.ellipse(cx + 20, 16, 9, 4, -.6, 0, Math.PI * 2); g.fill(); } }
+      const labelT = new THREE.CanvasTexture(lc0); labelT.encoding = THREE.sRGBEncoding;
+      const labelM = new THREE.MeshStandardMaterial({map: labelT, roughness: .8, emissive: lin(0xf1ead8), emissiveIntensity: .2});
       const bottle = new THREE.Group(); bottle.name = 'esc-bottle';
       bottle.add(new THREE.Mesh(new THREE.LatheGeometry(prof, 28), glassM));
-      const foil = new THREE.Mesh(new THREE.CylinderGeometry(.062, .068, .26, 20), foilM); foil.position.y = .875; bottle.add(foil);
-      const cap = new THREE.Mesh(new THREE.SphereGeometry(.07, 16, 10), foilM); cap.position.y = 1.0; cap.scale.y = .7; bottle.add(cap);
-      const lab = new THREE.Mesh(new THREE.CylinderGeometry(.148, .148, .26, 28, 1, true), labelM); lab.position.y = .3; bottle.add(lab);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(.064, .064, .07, 20), capM); cap.position.y = .925; bottle.add(cap);
+      const lab = new THREE.Mesh(new THREE.CylinderGeometry(.148, .148, .22, 28, 1, true), labelM); lab.position.y = .28; bottle.add(lab);
       bottle.rotation.z = Math.PI / 2; bottle.rotation.y = .12; bottle.position.set(20.16, 1.37 + .152, 12.5); bottle.traverse(o => { o.raycast = () => {}; }); host.add(bottle); FR.bottle = bottle;
       const gc = document.createElement('canvas'); gc.width = gc.height = 128; const gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(255,226,170,1)'); gr.addColorStop(.4, 'rgba(255,205,130,.45)'); gr.addColorStop(1, 'rgba(255,190,110,0)'); gx.fillStyle = gr; gx.fillRect(0, 0, 128, 128);
       const glow = FR.glow = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0})); glow.position.set(19.64, 1.75, 13.2); glow.scale.set(2.7, 2.9, 1); glow.raycast = () => {}; glow.renderOrder = 6; host.add(glow);
@@ -1074,7 +1077,7 @@
         if(S.place === 'great' || (S.ex && S.ex.id === 'floor')) say('There it is.', 3600, true); else say('Something just changed. Go look.', 5200, true); } }
     const SP = {
       fridge: {from: ['coffee'], lock: 'fridge', label: () => 'Drinks fridge', at: () => [19.64, 1.9, 11.5], pos: [19.64, 2.3, 8.3], look: [19.64, 1.72, 11.7], fit: {w: 2.5, h: 3.1},
-        sheet: () => ({title: 'The drinks fridge', body: '<p>Smoked glass, one bottle on the shelf, and a keypad lock that wants three digits.</p>'}),
+        sheet: () => ({title: 'The drinks fridge', body: '<p>Smoked glass, one bottle of pink lemonade on the shelf, and a keypad lock that wants three digits.</p>'}),
         face: (cur, cls) => lockFace(cur, cls === 'ok' ? 'open' : cls === 'bad' ? 'bad' : 'locked'),
         seen(){ if(give('sawFridge') && !has('sawDrawing')) say('Locked. I did that.', 3800); }},
       pocket: {from: ['coffee'], label: () => doorShut() ? 'Drawing on the door' : 'Pocket door', at: () => [22.0, doorShut() ? 2.2 : 4.1, 9.55],
@@ -1130,7 +1133,7 @@
         light: [null, () => { catAt([14.3, 0, 24.7]); if(!lightOn(S.hour)) sweepTo(T_SUN, 1200); }, () => { const go = () => setTimeout(() => examine('floor'), 250); if(!lightUp(S.hour)) setSlider(T_SUN); if(S.ex) return; if(S.place === 'great') go(); else goTo('great', {done: go}); }]},
       win(){ win(); $('#escGoalT').textContent = 'The fridge is open.';
         const a = yp([19.35, 2.8, 8.3], [19.75, 1.6, 12.2]); rigTravel([[rig.pos.x, rig.pos.y, rig.pos.z], [19.35, 2.8, 8.3]], {yaw: a[0], pitch: a[1], fov: aspect() < 1 ? 80 : 58, off: [0, 0]}, {dur: 1.2});
-        setTimeout(openFridgeDoor, 250); setTimeout(() => toast('Champagne.', 2400), 1300);
+        setTimeout(openFridgeDoor, 250); setTimeout(() => toast('Pink lemonade.', 2400), 1300);
         setTimeout(() => { // the afternoon runs out, the house lights come on, and the doorbell goes: the last view is the lit house from outside
           const sh = aspect() < 1 ? {pos: [-6, 5, 34], pos2: [-6, 5, 31], look: [-6, 5, 0], fov: 80, off: [0, -.36], cat: [-4.6, 0, 6]} : {pos: [-5, 6.2, 41], pos2: [-5, 6, 36.5], look: [-5, 4.8, 0], fov: 58, off: [-.17, 0], cat: [-4.6, 0, 6]};
           const a1 = yp(sh.pos, sh.look), a2 = yp(sh.pos2, sh.look);
@@ -1138,13 +1141,13 @@
             rigTravel([sh.pos, sh.pos2], {yaw: a2[0], pitch: a2[1], fov: sh.fov, off: sh.off}, {dur: 9}); }, 520);
           setTimeout(() => { SND.bell(); }, 1500);
           setTimeout(() => door('D-LG-02', true), 2500);
-          setTimeout(() => { SND.cork(); finishCard({title: 'Cork popped.', bubbles: true,
-            lede: 'The house is lit for the evening. Snowball says you’re nearly as clever as he is. He’s keeping the box the champagne came in.',
+          setTimeout(() => { SND.cork(); finishCard({title: 'Lemonade time.', bubbles: true,
+            lede: 'The house is lit for the evening. Snowball says you’re nearly as clever as he is. He’s keeping the bottle cap.',
             real: '118 Hillside Drive is in Woodside, California, with six bedrooms and three full baths. The afternoon sun really does come through the great room like that. Come and stand in it.',
-            share: t => `Locked In at Hillside: Snowball the cat locked the champagne in a fridge at 118 Hillside Drive, and I got it out in ${t}. Your turn.`}); }, 5600); }, 3400); }};
+            share: t => `Locked In at Hillside: Snowball the cat locked the lemonade in a fridge at 118 Hillside Drive, and I got it out in ${t}. Your turn.`}); }, 5600); }, 3400); }};
   }
-  EASY.card = {lede: 'Snowball, the orange tabby who runs this house, has locked tonight’s champagne in a drinks fridge. He wants to see if you’re as clever as he is.',
-    note: `<div class="note"><p>I locked up the champagne. The code is somewhere in the house. I left you one clue. It’s a good one.</p><p class="sig">${PAW}</p><p class="ps">P.S. If you get stuck, ask me. I love being asked.</p></div>`};
+  EASY.card = {lede: 'Snowball, the orange tabby who runs this house, has locked tonight’s pink lemonade in a drinks fridge. He wants to see if you’re as clever as he is.',
+    note: `<div class="note"><p>I locked up the lemonade. The code is somewhere in the house. I left you one clue. It’s a good one.</p><p class="sig">${PAW}</p><p class="ps">P.S. If you get stuck, ask me. I love being asked.</p></div>`};
   window.ESCAPE_LEVELS.easy = {make: EASY, card: EASY.card};
 
   /* ================================================================== frame loop */

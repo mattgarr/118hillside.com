@@ -50,7 +50,7 @@ Not used, and why: the lazy Susan and the glass-front cabinets are not in the mo
 
 ## 3. The levels at a glance
 
-| | Easy: Pop the Cork | Medium: The Missing Treat Tin | Hard: The Sunset Heist |
+| | Easy: The Lemonade Lock | Medium: The Missing Treat Tin | Hard: The Sunset Heist |
 |---|---|---|---|
 | Time | 3 to 6 min | 12 to 20 min | 25 to 40 min |
 | Floors | Main | Main and lower | All three, and outside |
@@ -64,9 +64,9 @@ All three share the same controls: drag to look, white circles to walk, gold rin
 
 ---
 
-## 4. Easy: Pop the Cork (kept, leak fixed)
+## 4. Easy: The Lemonade Lock (kept, leak fixed)
 
-**Plot.** Snowball has locked the evening's champagne in the drinks fridge at the coffee bar and drawn one clue. Reveal: the fridge opens at dusk, the house lights come on, and the doorbell rings.
+**Plot.** Snowball has locked the evening's pink lemonade in the drinks fridge at the coffee bar and drawn one clue. Reveal: the fridge opens at dusk, the house lights come on, and the doorbell rings.
 
 **Puzzles.**
 1. *The drawing on the pocket door.* Slide the kitchen pocket door shut; Snowball's drawing is taped to its kitchen face. Aha: the clue was on the door you walked through.

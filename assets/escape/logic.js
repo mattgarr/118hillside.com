@@ -13,9 +13,9 @@
   'use strict';
   const LOGIC = {
 
-    /* ------------------------------------------------------------------ Easy: Pop the Cork */
+    /* ------------------------------------------------------------------ Easy: The Lemonade Lock */
     easy: {
-      title: 'Pop the Cork', doy: 288, hours: [7, 19], start: 10,
+      title: 'The Lemonade Lock', doy: 288, hours: [7, 19], start: 10,
       steps: {
         lookFridge:   {needs: [], gives: ['sawFridge']},
         shutPocket:   {needs: [], gives: ['doorShut'], free: true},
@@ -28,7 +28,7 @@
       locks: {fridge: {answer: '327', parts: ['p_code'], pause: 0}},
       goals: [
         {id: 'arrive', needs: [], done: ['sawFridge', 'sawDrawing'], floor: 'main',
-          text: 'Snowball locked the champagne in a drinks fridge. Find the fridge.',
+          text: 'Snowball locked the lemonade in a drinks fridge. Find the fridge.',
           hints: ['Coffee bar. Past the kitchen. Follow the white circles.', 'I’ll wait by the kitchen door.', 'Fine. Come with me.']},
         {id: 'fridge', needs: ['sawFridge'], done: ['sawDrawing'], floor: 'main',
           text: 'It needs a three-digit code. Snowball left you something.',
