@@ -16222,6 +16222,7 @@ html:not(.ph) #cb42:not(.b42ab){flex-wrap:nowrap}html:not(.ph) #cb42:not(.b42ab)
 #cb42.b42ab{padding:6px 14px;gap:8px;background:var(--glass);color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 10px rgba(20,24,26,.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:13px;flex-wrap:nowrap;pointer-events:none}
 #cb42.b42ab .b42m{flex:0 1 auto}#cb42.b42ab .b42m b{font-weight:500}#cb42.b42ab .b42m b::before{background:var(--accent)}#cb42.b42ab .b42m span,#cb42.b42ab .b42s{display:none}
 html.cb42on .ideas35{display:none!important}
+html.vmo27:not(.ph) #cb42:not(.b42ab),html.ph.phm #cb42{visibility:hidden}   /* r45: out of the way while the View menu (the phone's menu) is open; it keeps its place */
 html.ph.bks36on.cb42on .perfpill{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 html.ph.cb42on .qhint{top:calc(var(--cb42t,110px) + var(--cb42h,60px) + 8px)}
 /* next to the holiday control: more ways to redecorate */
@@ -16481,7 +16482,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     // under the top bar (the booking line on a phone); on a computer centred over the part of the screen the Design panel leaves free
     const bar = document.querySelector('header.bar'), bk = $('#bks36'); let top = 70;
     if(isPh()){ const r = bk && bk.offsetParent ? bk.getBoundingClientRect() : (bar ? bar.getBoundingClientRect() : null); if(r) top = r.bottom + 8; }
-    else if(bar){ let bt = 0; for(const c of bar.children){ const r = c.getBoundingClientRect(); if(r.height > 0 && r.top < 200) bt = Math.max(bt, r.bottom); } top = (bt || bar.getBoundingClientRect().bottom) + 10; }
+    else if(bar){ let bt = 0; for(const c of bar.children){ if(c.id === 'phMenu' || c.classList.contains('qrow')) continue; const r = c.getBoundingClientRect();   /* r45: the open View menu is not part of the bar's height (the banner dropped below it, onto the stop card) */ if(r.height > 0 && r.top < 200) bt = Math.max(bt, r.bottom); } top = (bt || bar.getBoundingClientRect().bottom) + 10; }
     let cx = innerWidth / 2, w = innerWidth - 32; const card = $('#card');
     const side = !isPh() || innerWidth > innerHeight;   // a computer, or a phone held sideways: the open card is a column on the left
     if(side && card){ const r = card.getBoundingClientRect(); if(!card.classList.contains('min') && r.height > 120 && r.right < innerWidth * .55){ cx = (r.right + innerWidth) / 2; w = innerWidth - r.right - 32; } }
