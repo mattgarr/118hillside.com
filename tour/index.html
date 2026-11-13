@@ -7162,6 +7162,21 @@ function navQA(){
     finally{ performance.now = realNow; if(GV) GV.fix = gfix; try{ clock.oldTime = realNow(); if(anim) anim.t0 = -1e9; }catch(e){} }
     window.__LIGHT = rows; tour(0); };
   SEC.ideas = async R => { if(!window.__IDEA42){ R.note('ideas', '-', 'no idea hook'); return; } await __IDEA42.navCheck(R, {moveTo: (x, z, f) => moveTo(x, z, f), collide: (p, f) => collide(p, f), finish, step, probe, geo}); };   // r42: walk each layout idea that carries viewpoints
+  /* r46 idea tours: every stop of an idea's own guided tour (IDEA_TOURS) is a standing view on its floor, clear of walls and furniture, forward and back; then the house again */
+  SEC.ideatour = async R => { const I = window.IT46; if(!I){ R.note('ideatour', '-', 'no idea tours'); return; }
+    for(const v of I.ids()){ if(!(await I.show(v))){ R.fail('ideatour', v, 'did not start'); continue; } finish(); const n = STOPS.length, seq = STOPS.map((s, i) => i).concat(STOPS.map((s, i) => n - 1 - i));
+      if(ACTIVE_VAR !== v || mode !== 'tour') R.fail('ideatour', v, 'shows ' + ACTIVE_VAR + ' in ' + mode);
+      for(const i of seq){ await pause(); showStop(i); finish(); const s = STOPS[i], m = probe(), id = v + '>' + s.id, fr = FRAME_FOR(s); R.row('ideatour', id, m);
+        if(ACTIVE_VAR !== v){ R.fail('ideatour', id, 'the idea was dropped'); break; }
+        if(!look(s)) continue;
+        if(dist(m, fr.pos) > .05) R.fail('ideatour', id, 'not at the stop: ' + m.pos + ' vs ' + fr.pos.map(r2));
+        const L = lvlOf(s), hover = L != null && Math.abs(m.pos[1] - (L + EYE)) < .15 && Math.abs(m.eye - EYE) >= .15;
+        if(!hover && Math.abs(m.eye - EYE) > .15) R.fail('ideatour', id, 'eye ' + m.eye + ' ft over the floor');
+        if(Math.abs(m.pitch) > LAND_TILT + .02) R.fail('ideatour', id, 'tilted ' + m.pitch + ' rad');
+        const g = geo(m, .6); if(g && s.i46) R.fail('ideatour', id, g); }
+      const at = STOPS[stopIdx].id; I.real(); finish(); if(ACTIVE_VAR !== 'asbuilt' || STOPS.length !== I.realCount) R.fail('ideatour', v, 'Real house left ' + ACTIVE_VAR + ', ' + STOPS.length + ' stops');
+      R.note('ideatour', v, n + ' stops, forward and back; Real house from ' + at + ' -> ' + STOPS[stopIdx].id); }
+    setMode('tour'); finish(); };
   /* r41 decor: every ordered pair of holiday dresses ends exactly as a clean switch from 'None' (assets/holiday/holiday.js, HOLIDAY.qa) */
   SEC.decor = async R => { const Q = window.HOLIDAY; if(!Q || !Q.qa){ R.note('decor', '-', 'no holiday control on this page'); return; } setMode('tour'); finish();
     const q = await Q.qa(); if(!q.pairs){ R.fail('decor', '-', 'qa did not run: ' + q.why); return; } R.n += q.pairs.length;
@@ -8642,7 +8657,9 @@ const DESIGN = (() => {
      walk-through started from inside it (the button, or a double-click on a spot), which is labelled on screen for as long as it lasts;
      going back to Design from that walk keeps the idea, anything else drops it. */
   function modeVar(m, prev, o){
-    if(m === 'design'){ if(prev !== 'design' && !(prev === 'walk' && walking)) sel = 'asbuilt'; walking = false; return sel; }
+    const it = sel !== 'asbuilt' && ACTIVE_VAR === sel && !!(window.IT46 && IT46.has(sel));   /* r46: an idea that has its own tour stops (IDEA_TOURS) stays on screen through Tour, Walk and Design until 'Real house' */
+    if(m === 'design'){ if(prev !== 'design' && !(prev === 'walk' && walking) && !it) sel = 'asbuilt'; walking = false; return sel; }
+    if(it && (m === 'tour' || m === 'walk')){ walking = m === 'walk'; return sel; }
     walking = m === 'walk' && sel !== 'asbuilt' && !!(o && o.keep) && (prev === 'design' || (prev === 'walk' && walking));
     return walking ? sel : 'asbuilt'; }
   const sent = t => { t = String(t || ''); return t.charAt(0) + t.slice(1).replace(/([A-Z])([a-z]*)/g, (m, a, b) => a.toLowerCase() + b); };   // sentence case: 'Semi-Open Plan' -> 'Semi-open plan'
@@ -10324,7 +10341,7 @@ window.__lookApply = () => { lookMaterials(); if(typeof setTOD === 'function') s
   function nearest(){
     const P = camera.position, cr = curRoom && curRoom.id; let best = -1, bs = 1e9, cur = 1e9;
     try{ if(ACTIVE_VAR !== 'asbuilt' && DESIGN.walking()){ const d = (bim2DesignOptions() || []).find(q => q.id === ACTIVE_VAR);   // r45: walking an idea, the stop its room gives (the nearest as-built stop can be through a wall)
-        for(const r of ((d && d.rooms) || [])) if(r.stop && inPoly(r.poly, P.z, P.x)){ const i = STOPS.findIndex(q => q && q.id === r.stop); if(i >= 0) return i; } } }catch(e){}
+        for(const r of ((d && d.rooms) || [])) if(r.stop && inPoly(r.poly, P.z, P.x)){ const sid = window.IT46 ? IT46.alias(r.stop) : r.stop, i = STOPS.findIndex(q => q && q.id === sid); if(i >= 0) return i; } } }catch(e){}
     for(let i = 0; i < STOPS.length; i++){ const s = STOPS[i]; if(!s || s.aerial || !s.pos) continue;
       const L = s.level === 'outside' ? LV.outside : LV[s.level]; let d = Math.hypot(s.pos[0] - P.x, s.pos[2] - P.z);
       if(L != null && Math.abs(L - feet) > 2.5) d += 30; if(cr && s.rooms && s.rooms.includes(cr)) d -= 12;
@@ -16539,11 +16556,15 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
         + '<p class="ds">' + desc + '</p>'
         + (S.length ? '<dl class="st">' + S.map(q => '<div><dd>' + q[1] + '</dd><dt>' + q[0] + '</dt></div>').join('') + '</dl>' : '')
         + '</div>'
-        + '<div class="ft ac"><button type="button" class="pb pri" data-a="see">See it in 3D</button><button type="button" class="pb" data-a="walk">Walk through</button>'
+        + '<div class="ft ac"><button type="button" class="pb pri" data-a="see">See it in 3D</button>' + (IT46.has(id) ? '<button type="button" class="pb" data-a="tour">Tour this idea</button>' : '<button type="button" class="pb" data-a="walk">Walk through</button>')
         + '<button type="button" class="pb" data-a="real"' + (idea && ACTIVE_VAR !== 'asbuilt' ? '' : ' hidden') + '>Real house</button></div>' + XB;
       const b = dlg.querySelector('.pb.pri'); if(b) try{ b.focus({preventScroll: true}); }catch(e){} const bd = dlg.querySelector('.bd'); if(bd) bd.scrollTop = 0; }
     function act(a, id){ if(!id) return; opener = null; close(); setPk(false);
-      if(a === 'real'){ choose('asbuilt', 'menu'); return; }
+      if(a === 'real'){ if(mode === 'design') choose('asbuilt', 'menu'); else goReal('menu'); return; }
+      if(a === 'tour'){   /* r46: the idea's own guided stops (IDEA_TOURS), from its great-room stop */
+        if(ACTIVE_VAR === id && IT46.on === id){ ga('plan_tour', {plan: id, where: 'menu'}); IT46.start(id); return; }
+        choose(id, 'menu-tour'); let pr = null; try{ pr = bim2EnsureOption(id); }catch(e){}
+        Promise.resolve(pr).then(() => setTimeout(() => { if(mode !== 'design' || ACTIVE_VAR !== id) return; ga('plan_tour', {plan: id, where: 'menu'}); IT46.start(id); }, 80), () => {}); return; }
       choose(id, a === 'walk' ? 'menu-walk' : 'menu');
       if(a === 'walk'){ let pr = null; try{ pr = id === 'asbuilt' ? null : bim2EnsureOption(id); }catch(e){}
         Promise.resolve(pr).then(() => setTimeout(() => { if(mode !== 'design' || ACTIVE_VAR !== id) return; ga('plan_walk', {plan: id}); const w = $('#dWalk'); if(w) w.click(); }, 80), () => {}); }
@@ -16581,7 +16602,8 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   function chipKind(){ if(inGame() || mode !== 'tour' || photoUp() || root.classList.contains('clean27') || root.classList.contains('phm')) return '';
     const hs = $('#holShow'); if(hs && !hs.hidden) return ''; const P = $('#holPanel'); if(P && !P.hidden) return '';
     const fin = $('#fin36'); if(fin && fin.classList.contains('on')) return '';
-    const id = stopId(); return plans().length > 1 && (isPh() || PLAN_STOPS.has(id)) ? 'plans' : ''; }   /* r46: never 'decor'; on a phone the Floor plans pill stands on every stop */
+    if(typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt') return '';   /* r46: an idea's banner already has Floor plans */
+    return plans().length > 1 && isPh() ? 'plans' : ''; }   /* r46 calm pass: on a computer the top bar's Floor plans button is the one way in (the chip over the stop card is gone); on a phone the pill stands on every stop */   /* r46: never 'decor'; on a phone the Floor plans pill stands on every stop */
   function chipText(k){ if(k === 'plans'){ const b = bedsPhrase(); return ICON_PLAN + '<span class="c42x"><b>' + (isPh() ? 'Floor plans' : 'See the floor plans') + '</b></span>' + ARROW; }   /* r45 calm pass: short (was 'Compare floor plans: 6, 5 or 4 bedrooms') */
     return ICON_DECOR + '<span class="c42x"><b>' + 'Holiday decor' + '</b></span>' + ARROW; }
   chip.addEventListener('click', e => { e.stopPropagation(); const where = chip.classList.contains('c42in') ? 'stop-card' : 'stop-chip'; if(chip.dataset.k === 'plans') openPicker(where); else openDecor(where); });
@@ -16640,8 +16662,10 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     root.style.setProperty('--cb42t', Math.round(top) + 'px'); root.style.setProperty('--cb42h', Math.round(banner.offsetHeight || 0) + 'px'); }
   banner.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation();
     if(b.dataset.a === 'plans'){ openPicker('banner', b); return; }   /* r45: the layouts menu */
-    ga('plan_pick', {plan: 'asbuilt', concept: 'real', where: 'banner'});
-    const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); });
+    goReal('banner'); });
+  /* 'Real house' outside the picker: the same view of the house as it is (in the tour, the as-built stop that matches the idea stop: IT46) */
+  function goReal(where){ ga('plan_pick', {plan: 'asbuilt', concept: 'real', where});
+    const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); }
 
   /* ---- the closing card: one line with both */
   function finLinks(){ const fl = document.querySelector('#fin36 .fl'); if(!fl) return false; if(fl.querySelector('.c42f')) return true;
@@ -16682,6 +16706,90 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   return {openPicker, openDecor, choose, plans, facts, sync, get used(){ return pickerUsed; }};
 })();
 window.CTA42 = CTA42;
+
+/* ---------------- r46 it46: guided tour stops for a layout idea (owner 11/13: "should we have modified tour stops for alternative layouts?") ----------------
+   An idea listed in IDEA_TOURS keeps the tour's shape while it is on screen: the same stop card, next / previous, count and plan dots. The
+   as-built stops in the part of the house it changes (`from`) give way to the idea's own stops; every other stop stays, with the idea's
+   geometry in view, and with its caption reworded (`text`) where it names a room the idea changes. An idea without an entry here keeps
+   the simple walk-through.
+   To give another idea a tour, add one entry:
+     start  the stop "Tour this idea" opens on
+     from   {as-built stop id: idea stop key}: the as-built stops the idea replaces, and where each lands when the idea comes on
+     text   {kept stop id: {t, dims, p}}: wording for a kept stop while the idea shows
+     stops  in walking order, placed where the first replaced stop was: key, t (title), dims, rooms (ROOMS ids, for the walk planner and the
+            photo gallery), real (the as-built stop 'Real house' goes to), p (caption: what is in view, facts from the model only), and
+            f = a FRAME22 spec in world feet: at [x, z] camera, to [x, z] aim, ph / atP portrait aim / position, hf, rise, riseP.
+            World x = plan north, world z = plan east.
+   While an idea's tour is on, STOPS itself holds its list (the array every part of the page reads), so nothing else needs to know. A stop
+   id is '<idea>:<key>' (open4k:hearth), which is what the tour_stop analytics event carries.
+   window.IT46 = {has(id), on, start(id), show(id), real(), alias(stopId), ids(), realCount}. */
+const IDEA_TOURS = {
+  open4k: {
+    start: 'great',
+    from: {living: 'library', kitchen: 'kitchen', great: 'great', mainbeds: 'hearth', middlebed: 'kitchen', hallbath: 'bath', backbed: 'bedroom'},
+    text: {
+      street: {dims: '', p: 'The paver driveway runs up to the garage on the left. Beside it, the front steps climb to a new deck along the great room.'},
+      porch: {t: 'Deck', dims: '', p: 'The deck runs along the south side of the great room, from the iron-and-glass front doors to the folding glass doors.'},
+      entry: {p: 'The foyer stands between two pairs of iron-and-glass doors, under a cathedral ceiling with a starburst light fixture. The library is straight ahead.'},
+      stairs: {p: 'Back in the foyer, the stairs have open treads and cable railings. One flight goes up to the loft and the primary suite. The other goes down to the lower level.'}},
+    stops: [
+      {key: 'library', t: 'Library', rooms: ['living'], real: 'living', f: {at: [0.6, 2.6], to: [8.5, -6.0]},
+        p: 'The old living room becomes a library, with built-in shelves under the same exposed beams.'},
+      {key: 'great', t: 'Great room', dims: '31 × 27 ft', rooms: ['great'], real: 'great', f: {at: [17.3, 8.6], to: [18.6, 36.0], rise: .1},
+        p: 'One vaulted room runs from the kitchen to a stone hearth at the street end, with new glass in the gable above it.'},
+      {key: 'hearth', t: 'Hearth', rooms: ['great'], real: 'mainbeds', f: {at: [18.45, 22.4], to: [18.45, 36.0], rise: .12},
+        p: 'Two sofas face a gas fireplace in a stone surround that rises to the ridge beam. The windows on each side follow the roof line.'},
+      {key: 'kitchen', t: 'Kitchen & island', rooms: ['kitchen'], real: 'kitchen', f: {at: [18.6, 25.2], to: [27.0, 9.0]},
+        p: 'The kitchen runs along two walls, with the range under two tiers of upper cabinets. The island has a sink and counter stools.'},
+      {key: 'dining', t: 'Dining', rooms: ['great'], real: 'great', f: {at: [19.0, 22.4], to: [3.0, 13.0]},
+        p: 'The table seats eight beside 14 feet of folding glass doors, which open to the deck.'},
+      {key: 'bath', t: 'New bath', rooms: ['mainbath'], real: 'hallbath', f: {at: [10.7, -2.6], to: [14.4, -8.4], hf: 100},
+        p: 'A three-quarter bath opens off a short hall beside the library.'},
+      {key: 'bedroom', t: 'Back bedroom', rooms: ['mainbeds'], real: 'backbed', f: {at: [17.7, 1.6], to: [23.5, -2.6], hf: 100},
+        p: 'The back bedroom stays where it is, entered through a small vestibule off the hall.'}]}
+};
+const IT46 = window.IT46 = (() => {
+  const REAL = STOPS.slice(), LISTS = {};
+  let on = null, last = null, inSet = 0;
+  const has = v => typeof v === 'string' && Object.prototype.hasOwnProperty.call(IDEA_TOURS, v);
+  const game = () => { try{ return !!(window.HILLSIDE || (window.HWGAMES && HWGAMES.active)); }catch(e){ return false; } };
+  const sid = (v, k) => v + ':' + k;
+  function build(v){ if(LISTS[v]) return LISTS[v];
+    const T = IDEA_TOURS[v], like = REAL.find(s => T.from[s.id]) || REAL[0], out = []; let put = false;
+    const mine = T.stops.map(q => ({id: sid(v, q.key), key: q.key, i46: v, t: q.t, dims: q.dims || '', level: q.level || 'main', rooms: q.rooms || like.rooms, ph: [], real: q.real, f: q.f, p: q.p, tod: like.tod,
+      fixed: true, pos: [q.f.at[0], LV[q.level || 'main'] + EYE, q.f.at[1]], look: [q.f.to[0], LV[q.level || 'main'] + EYE, q.f.to[1]]}));
+    for(const s of REAL){ if(T.from[s.id]){ if(!put){ put = true; out.push(...mine); } continue; }
+      out.push(T.text && T.text[s.id] ? Object.assign({}, s, T.text[s.id], {t46: v}) : s); }
+    if(!put) out.push(...mine);
+    return (LISTS[v] = out); }
+  function frame(v){ for(const s of LISTS[v]){ if(!s.i46 || s.framed) continue; try{ if(frame22Apply(s.id, s.f)){ const f = FRAME_FOR(s); s.pos = f.pos; s.look = f.look; s.framed = true; } }catch(e){ console.warn('[it46] frame', s.id, e); } } }
+  /* the as-built stop id an idea room names -> the stop standing in the list now */
+  function alias(id){ if(!on) return id; const T = IDEA_TOURS[on]; return T.from[id] ? sid(on, T.from[id]) : id; }
+  function swap(v){ const want = has(v) && !game() ? v : null; if(want === on) return false;
+    if(on && want){ swap(null); }
+    const cur = STOPS[stopIdx] || {}; let nid;
+    if(want){ const T = IDEA_TOURS[want]; nid = last && last.v === want && last.real === cur.id ? last.idea : (T.from[cur.id] ? sid(want, T.from[cur.id]) : cur.id); }
+    else { nid = cur.i46 ? cur.real : cur.id; last = cur.i46 ? {v: on, idea: cur.id, real: cur.real} : null; }
+    const L = want ? build(want) : REAL; STOPS.length = 0; for(const s of L) STOPS.push(s); on = want; if(want) frame(want);
+    const i = STOPS.findIndex(s => s.id === nid); stopIdx = i < 0 ? 0 : i; return true; }
+  { const _av = applyVisibility; applyVisibility = function(){ let ch = false; try{ ch = swap(ACTIVE_VAR); }catch(e){ console.warn('[it46] swap', e); }
+      const r = _av.apply(this, arguments);
+      if(ch && mode === 'tour' && !inSet){ try{ showStop(stopIdx); }catch(e){ console.warn('[it46] stop', e); } }   // 'Real house' (or an idea picked) while standing at a stop: the matching stop of the other list
+      return r; }; }
+  { const _sm = setMode; setMode = function(m){ inSet++; let r; try{ r = _sm.apply(this, arguments); } finally{ inSet--; }
+      try{ if(on && mode === 'walk') setTab('walk'); }catch(e){}   // walking an idea from its tour is the Walk tab (the banner says which layout)
+      return r; }; }
+  { const _ss = showStop; showStop = function(){ const r = _ss.apply(this, arguments);
+      try{ const s = STOPS[stopIdx]; if(s && (s.i46 || s.t46)) $('#dims').textContent = s.dims || ''; }catch(e){} return r; }; }
+  function start(v){ if(!has(v) || ACTIVE_VAR !== v || on !== v) return false; const T = IDEA_TOURS[v], i = STOPS.findIndex(s => s.id === sid(v, T.start));
+    if(mode === 'tour') showStop(i < 0 ? 0 : i); else { stopIdx = i < 0 ? 0 : i; setMode('tour'); } return true; }
+  /* QA and the page console: show(id) = pick the idea and start its tour; real() = the banner's 'Real house' */
+  async function show(v){ if(!has(v)) return false; try{ const ok = await bim2EnsureOption(v); if(!ok) return false; }catch(e){ return false; }
+    if(mode !== 'design') setMode('design'); DESIGN.choose(v, false); return start(v); }
+  function real(){ const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); }
+  return {has, alias, start, show, real, ids: () => Object.keys(IDEA_TOURS), realCount: REAL.length, get on(){ return on; }, get stops(){ return on ? LISTS[on] : REAL; }};
+})();
+
 
 
 /* ---------------- v27 ui27: auto-hide, clean view, View menu, compact card, pad / plan chip (patch_v27_ui) ---------------- */
@@ -21119,7 +21227,7 @@ window.__IDEA42 = {
         if(want === 'open' && stopped) R.fail('ideas', id, 'a walker is stopped at bim ' + stopped + ' (a removed wall still collides?)');
         if(want === 'wall' && !stopped) R.fail('ideas', id, 'a walker passes through a wall'); }
       R.note('ideas', v, n + ' floor samples, ' + bad + ' without floor; cleared ' + ((window.__R42cleared || {})[v] || []).length + ' house pieces; cans ' + JSON.stringify(OPT42.cans[v]) + '; staged ' + OPT42.staged[v]); }
-    setMode('tour'); qa.finish(); }
+    try{ DESIGN.choose('asbuilt', false); }catch(e){}   /* r46: an idea with tour stops would stay on in Tour */ setMode('tour'); qa.finish(); }
 };
 /* ---- the page modules that used to read the legacy model (landscape, Halloween props, AV, light fixtures) read the scene meta
    through these views, in the legacy record shapes they consume (BIM plan frame: x east, y north, feet). Lookup only. ---- */
@@ -22822,8 +22930,8 @@ const SELL36 = window.SELL36 = (() => {
   { const _ss = showStop; showStop = function(){ const r = _ss.apply(this, arguments); try{ finSync(); }catch(e){ console.warn('[sell36] finale', e); } return r; }; }
   { const _sm = setMode; setMode = function(){ const r = _sm.apply(this, arguments); try{ finSync(); }catch(e){ console.warn('[sell36] finale', e); } return r; }; }
   /* r43 analytics: one GA4 event per stop reached (tour_stop) and per mode change (tour_mode), so the owner can see how far visitors get */
-  { let gaStop = -1, gaMode = mode, gaSeen = 0; const gaSend = (n, p) => { try{ if(typeof window.gtag === 'function') window.gtag('event', n, p); }catch(e){} };
-    const _ssA = showStop; showStop = function(){ const r = _ssA.apply(this, arguments); try{ if(stopIdx !== gaStop){ gaStop = stopIdx; gaSeen++; const s = STOPS[stopIdx] || {}; gaSend('tour_stop', {stop_id: s.id, stop_name: s.t, stop_number: stopIdx + 1, stops_seen: gaSeen, mode: mode}); } }catch(e){} return r; };
+  { let gaStop = '', gaMode = mode, gaSeen = 0; const gaSend = (n, p) => { try{ if(typeof window.gtag === 'function') window.gtag('event', n, p); }catch(e){} };
+    const _ssA = showStop; showStop = function(){ const r = _ssA.apply(this, arguments); try{ const s = STOPS[stopIdx] || {}; if(s.id !== gaStop){ gaStop = s.id; gaSeen++; gaSend('tour_stop', {stop_id: s.id, stop_name: s.t, stop_number: stopIdx + 1, stops_seen: gaSeen, mode: mode, plan: ACTIVE_VAR}); } }catch(e){} return r; };   /* r46: by stop id (an idea's own stops are '<idea>:<stop>', e.g. open4k:hearth), with the layout showing */
     const _smA = setMode; setMode = function(){ const r = _smA.apply(this, arguments); try{ if(mode !== gaMode){ gaMode = mode; gaSend('tour_mode', {mode: mode, stop_id: (STOPS[stopIdx] || {}).id}); } }catch(e){} return r; }; }
   addEventListener('resize', () => { if(!fin.hidden) finPlace(); });
   if(window.ResizeObserver) new ResizeObserver(() => { if(!fin.hidden) finPlace(); }).observe(card);
