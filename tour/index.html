@@ -25557,7 +25557,10 @@ const R46 = window.__r46 = (() => {
     H.after = async quick => { try{ const pill = document.getElementById('busy24'); if(pill && pill.parentNode !== document.body) document.body.appendChild(pill);
         if(quick) return;
         for(let i = 0; i < 3; i++){ const P = Object.keys(B2OPT.busy).filter(k => !B2OPT.built[k]).map(k => B2OPT.busy[k]); if(!P.length) break; await Promise.all(P.map(q => Promise.resolve(q).catch(() => {}))); }
-        await frame(); if(R36N.on && !game && (mode === 'tour' || mode === 'walk')){ R36N.chk = 0; r36Grids(); } await frame(); }catch(e){} };   // the walking grid only where the next tap walks
+        await frame(); if(R36N.on && !game && (mode === 'tour' || mode === 'walk')){ R36N.chk = 0; r36Grids(); } await frame();
+        /* an idea shown in Design: its walking grid (0.7 s on a laptop when the layout is new) is made once the visitor has been still for 1.5 s, so 'Tour this idea' / 'Walk through' start at once */
+        if(R36N.on && !game && mode === 'design' && ACTIVE_VAR !== 'asbuilt'){ const v = ACTIVE_VAR, t0 = now(); (function w(){ if(ACTIVE_VAR !== v || mode !== 'design' || now() - t0 > 30000) return; let ok = false; try{ ok = w24Idle(1500); }catch(e){} if(!ok) return void setTimeout(w, 600); try{ R36N.chk = 0; r36Grids(); }catch(e){} })(); }
+      }catch(e){} };   // the walking grid only where the next tap walks
     /* fetches made ahead are handed to the loader once (a Response is read once; the browser's cache serves any later ask) */
     H.fetch = (u, init) => { const k = String(u).split('?')[0], had = H.store.get(k); if(had){ H.store.delete(k); return had.then(r => (r && r.ok ? r : fetch(u, init)), () => fetch(u, init)); } return fetch(u, init); };
     const optURLs = o => { const base = BIM2S.metaBase || location.href, U = []; if(o.meta && !o.data) U.push([new URL(o.meta, base).href, {cache: 'no-cache'}]); if(o.glb) U.push([new URL(o.glb, base).href, undefined]); return U; };
