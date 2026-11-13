@@ -1476,7 +1476,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
         <button class="chip" id="tLabels" aria-pressed="true">Room labels</button>
       </div>
       <div class="design" id="design" hidden>
-        <div class="dsec"><div class="dlab">Layout of the original house</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
+        <div class="dsec"><div class="dlab">Layout</div><div class="opts" id="optChips" role="radiogroup" aria-label="Layout of the original house"></div></div>
         <div class="dact"><button class="btn" id="dWalk">Walk through the house</button><button class="btn" id="dEdit">Edit a copy</button></div>
         <div class="dtools" id="dTools" hidden>
           <div class="trow" role="toolbar" aria-label="Edit tools">
@@ -8658,10 +8658,15 @@ const DESIGN = (() => {
   }
   function chips(){
     const box = $('#optChips'); box.innerHTML = '';
-    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today'}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea'})));
+    /* r44f owner: a lighter picker; each layout leads with its bedroom and bath count, the as-built included, most bedrooms first */
+    const cnt = id => { try{ if(id === 'asbuilt') return [6, 3]; const o = BIM2.option(id) || {}; const b = +(o.bedrooms || o.beds) || 0; return b ? [b, +o.baths || 0] : null; }catch(e){ return null; } };
+    const list = [{id: 'asbuilt', name: 'As built', sub: 'The house today', n: cnt('asbuilt')}].concat(opts().map(d => ({id: d.id, name: nameOf(d.id), sub: 'Remodel idea', n: cnt(d.id)})).sort((a, b) => ((b.n || [0])[0]) - ((a.n || [0])[0])));
     if(custom) list.push({id: 'custom', name: 'My design', sub: (custom.base && custom.base !== 'asbuilt') ? 'From ' + nameOf(custom.base).toLowerCase() : 'From today’s layout'});
     for(const o of list){ const b = document.createElement('button'); b.type = 'button'; b.className = 'opt ' + (o.id === 'asbuilt' ? 'today' : 'idea'); b.dataset.id = o.id; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(o.id === sel)); b.tabIndex = o.id === sel ? 0 : -1;
-      const nm = document.createElement('span'); nm.textContent = o.name; b.appendChild(nm); const sm = document.createElement('small'); sm.textContent = o.sub; b.appendChild(sm); b.onclick = () => choose(o.id, true); box.appendChild(b); }
+      const nm = document.createElement('span'), sm = document.createElement('small');
+      if(o.n){ nm.className = 'obb'; nm.innerHTML = '<b>' + o.n[0] + '</b> bed <i>·</i> <b>' + o.n[1] + '</b> bath'; sm.textContent = o.id === 'asbuilt' ? 'As built today' : o.name; b.setAttribute('aria-label', o.n[0] + ' bedrooms, ' + o.n[1] + ' baths: ' + o.name + (o.id === 'asbuilt' ? ', the house today' : ', remodel idea')); }
+      else { nm.textContent = o.name; sm.textContent = o.sub; }
+      b.appendChild(nm); b.appendChild(sm); b.onclick = () => choose(o.id, true); box.appendChild(b); }
     if(!box._r35){ box._r35 = true; box.addEventListener('keydown', e => { const L = [...box.querySelectorAll('.opt')], i = L.indexOf(document.activeElement); if(i < 0) return;   // radio group: arrows move and choose
         const j = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (i + 1) % L.length : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (i - 1 + L.length) % L.length : -1; if(j < 0) return;
         e.preventDefault(); e.stopPropagation(); const id = L[j].dataset.id; choose(id, true); const n = box.querySelector('.opt[data-id="' + id + '"]'); if(n) n.focus(); }); }
@@ -8675,7 +8680,7 @@ const DESIGN = (() => {
     $('#eyebrow').textContent = 'Design'; $('#lvl').textContent = sel === 'asbuilt' ? 'As built' : 'Remodel idea';
     $('#title').textContent = sel === 'asbuilt' ? 'The house today' : sel === 'custom' ? 'My design' : nameOf(sel);   /* r20: no date */
     $('#dims').textContent = ''; $('#blurb').hidden = false; strip([], '');
-    $('#blurb').textContent = sel === 'asbuilt' ? 'This is the house as it stands. Try a remodel idea for the original part of the home, move the furniture, or see the outside in another color or with a new garden.'
+    $('#blurb').textContent = sel === 'asbuilt' ? 'The house as it stands. Pick a layout below to see an idea for the original part of the home.'
       : sel === 'custom' ? 'Your changes are saved in this browser. Select a wall, door, window or piece of furniture to change it, or pick a tool.' : d.description;
     $('#dNote').textContent = sel === 'asbuilt' ? '' : sel === 'custom' ? 'An idea only. It is not engineered, permitted or priced.'
       : (d && d.label ? d.label + ' ' : 'A concept sketch, for ideas only. It is not engineered, permitted or priced, and ') + (d && d.label ? 'The house is sold as built.' : 'the house is sold as built.');
@@ -8883,7 +8888,9 @@ html .design .dnow .tool{flex:0 0 auto;font-weight:600;background:var(--ink);col
 html .design .opt{display:grid;grid-template-columns:16px 1fr auto;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 12px;font-size:14px;font-weight:500;text-align:left;border-radius:10px;line-height:1.2}
 .design .opt::before{content:"";width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;opacity:.5;box-sizing:border-box}
 .design .opt[aria-checked="true"]::before{opacity:1;border-width:5px}
-html .design .opt small{display:block;margin:0;font-family:inherit;font-size:12px;font-weight:400;text-align:right;white-space:nowrap}
+html .design .opt small{display:block;margin:0;font-family:inherit;font-size:12.5px;font-weight:400;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+html .design .opt .obb{font-size:15.5px;font-weight:400;white-space:nowrap;letter-spacing:.005em}html .design .opt .obb b{font-weight:700}html .design .opt .obb i{font-style:normal;opacity:.55;margin:0 1px}
+html .design .opt{grid-template-columns:16px auto minmax(0,1fr)}
 .design .dact .btn{min-height:38px}
 .design .dnote[hidden]{display:none}
 html .design .tool{min-height:36px;padding:6px 11px;font-size:12.5px}
@@ -8963,7 +8970,7 @@ html.v33game .ideas35{display:none}
     const k = mode + '|' + walk + '|' + L.join(',') + '|' + lk + '|' + ACTIVE_VAR; if(k === last) return; last = k; landSync();
     try{ if(window.__v31rmPaint) window.__v31rmPaint(); }catch(e){}   // the View menu's 'Remodel ideas' row follows
     $('#dNowTxt').textContent = L.length ? 'Showing ideas: ' + L.join(', ') + '. These are ideas, not the house as sold.' : 'You are looking at the house as it is today.';
-    now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length;
+    now.classList.toggle('on', L.length > 0); $('#dToday').hidden = !L.length; now.style.display = L.length ? '' : 'none';   // r44f: nothing to say while the house is as built (the title says so)
     const out = mode !== 'design' && L.length > 0; chip.hidden = !out; document.documentElement.classList.toggle('ideas35on', out);
     if(out){ $('#ideas35Txt').textContent = walk ? 'Walking a remodel idea: ' + DESIGN.nameOf(DESIGN.sel()).toLowerCase() + '. Not the house as sold.' : 'Showing ideas: ' + L.join(', ') + '. Not the house as sold.'; $('#ideas35Back').hidden = !walk; }
     try{ if(typeof window.__v33discPlace === 'function') window.__v33discPlace(); }catch(e){} }
