@@ -7191,7 +7191,9 @@ function navQA(){
     console[out.ok ? 'info' : 'warn']('[navCheck] ' + R.n + ' poses checked, ' + R.fails.length + ' problem(s)'); if(R.fails.length) console.table(R.fails); return out; }
   return {camera, target, scene, STOPS, flyTo, setMode, showStop, look(pos, at){ anim = null; glide = null; nav = 'look'; camera.position.set(...pos); camera.lookAt(new THREE.Vector3(...at)); lookFromCamera(); },
     navCheck, probe, step, finish, mid, interrupt, openAt: navOpenAt, walkSurfaceAt, state: () => ({mode, nav, stopIdx, yaw, pitch, feet, anim: !!anim, glide: !!glide, fov: camera.fov}),
-    dbg: {FLOORS, COLLIDERS, NAV, NAVL, LV, EYE, WPS, ground, collide, moveTo, pick, clickAt: (x, y, d) => clickAt(x, y, d), viewReset, setTOD, keys}}; }
+    dbg: {FLOORS, COLLIDERS, NAV, NAVL, LV, EYE, WPS, ground, collide, moveTo, pick, clickAt: (x, y, d) => clickAt(x, y, d), viewReset, setTOD, keys,
+      /* r46: the door checks (a walked move's route and plan, a door posed open or shut) */
+      r46: {R36N: () => R36N, anim: () => anim, last: () => R36N.last, pose: it => door28Pose(it), toggle: it => door28Toggle(it), slideSide: (it, x, z) => { try{ bim3SlideSide(it, bim3SlideAt(it, x, z)); }catch(e){} }}}}; }
 function setMode(m, opts={}){
   if(m==='photos'){ openGallery(); return; }
   closeGallery(); hidePhoto();
@@ -21433,7 +21435,7 @@ function bim3Doors(){
     const it = door28Item({id: o.id, note: (o.spaces && /CLOSET|STORAGE|LAUNDRY/.test((o.spaces.A || '') + (o.spaces.B || ''))) ? 'closet' : '', normal: o.normal, center: c, width: W, isExternal: o.exterior}, 'bim3');
     it.v = null; it.b3kind = kind0; it.parts = []; it.legs = [];
     const exterior = o.exterior, isSwing = /SWING|DOUBLE|HIDDEN|PIVOT/.test(kind0);
-    it.dur = /SECTIONAL/.test(kind0) ? 3.0 : /MULTI/.test(kind0) ? 1.0 : .8;
+    it.dur = /SECTIONAL/.test(kind0) ? 3.0 : /MULTI/.test(kind0) ? 1.0 : /SIDELIGHTS/.test(kind0) ? 1.3 : .8;   // r46: the iron entry doors fold back 172 deg; in 0.8 s that was a whip
     let t0 = 0;
     L.forEach((lf, k) => { const ms = byNode.get(lf.node) || []; if(!ms.length){ B3D.report.missing.push(lf.node); return; }
       const h = lf.hinge && lf.hinge[0] ? lf.hinge[0] : [c[0], c[1], o.sill], pw = [h[1], h[2], h[0]];   // BIM -> world
@@ -21446,7 +21448,12 @@ function bim3Doors(){
         const v = [c[0] - h[0], c[1] - h[1]], s = bim3SideDir(o, lf.swingSide || 'B');
         const vw = [v[1], v[0]], sw = [s[1], s[0]], e = 1e-3, vx = vw[0] * Math.cos(e) + vw[1] * Math.sin(e), vz = -vw[0] * Math.sin(e) + vw[1] * Math.cos(e);
         part.sign = ((vx - vw[0]) * sw[0] + (vz - vw[1]) * sw[1]) >= 0 ? 1 : -1; part.ang = open; part.ang0 = ang0; t0 = Math.max(t0, Math.min(1, ang0 / open)); }
-      else if(/POCKET/.test(kind0)){ const dir = lf.hingeEnd === 'END' ? 1 : -1; part.u3 = new THREE.Vector3(ax[1] * dir, 0, ax[0] * dir); part.d = Math.max(.5, (lf.w || W) - .25); part.f0 = lf.openFraction || 0; t0 = part.f0; }
+      else if(/POCKET/.test(kind0)){ let dir = lf.hingeEnd === 'END' ? 1 : -1; part.d = lf.travel > 0 ? lf.travel : Math.max(.5, (lf.w || W) - .25); part.f0 = lf.openFraction || 0; t0 = part.f0;
+        /* r46 (owner 11/13: "pocket ... doors actually close all the way"): a leaf modelled open stands in its pocket, so it shuts by sliding to the middle
+           of its opening, from whichever end it stands at. It used to slide its width less 3 in toward the end the meta named: a 3 in slot at the
+           strike jamb, and the primary bath's door (wrong end named) went further into the wall. A leaf modelled shut opens as before. */
+        if(part.f0 > .5){ const bc = box.getCenter(new THREE.Vector3()), al = (pw[2] + bc.z - c[0]) * ax[0] + (pw[0] + bc.x - c[1]) * ax[1]; if(Math.abs(al) > .5){ dir = al > 0 ? 1 : -1; part.d = Math.abs(al) / part.f0; } }
+        part.u3 = new THREE.Vector3(ax[1] * dir, 0, ax[0] * dir); }
       else if(/BYPASS|MULTI|SLID/.test(kind0)){   /* r37 owner 11/11: every sliding panel slides, panels stack on their own tracks, and the door opens from either end (see bim3Slide) */
         part.u3 = new THREE.Vector3(ax[1], 0, ax[0]); part.s = h[0] * ax[0] + h[1] * ax[1]; part.w = lf.w || W / L.length; part.trk = Math.round((h[0] * (o.normal || [0, 1])[0] + h[1] * (o.normal || [0, 1])[1]) / .03); part.f0 = lf.openFraction || 0; }
       else if(/SECTIONAL|ROLL/.test(kind0)){ const sB = bim3SideDir(o, 'B'); box.getCenter(part.cen = new THREE.Vector3()); part.inW = new THREE.Vector3(sB[1], 0, sB[0]); part.H = box.max.y - box.min.y;
@@ -21659,6 +21666,12 @@ function r42DoorSticking(G, na, nb, I, nIa){
   const partner = new Map();
   for(let t = 0; t < nIa; t += 3){ const v = [I[t], I[t + 1], I[t + 2]]; if(v.some(x => x >= na)) continue;
     for(const x of v){ if(!inner.has(x)) continue; for(const y of v){ if(y === x || inner.has(y) || !ledgeV.includes(y)) continue; const d = inPlane(x, y), p0 = partner.get(x); if(!p0 || d < p0.d) partner.set(x, {y, d}); } } }
+  /* r46 (owner 11/13: "I see a bunch of little gaps when closed"): every triangle has its own vertices here (the hard-edge pass above), so the
+     copies of one ledge corner each found a partner in their own triangle only; the copy in the far triangle of a ledge quad took the corner at
+     the other end of the panel and moved 40 % of the way to it, which opened a wedge in the bevel along every panel edge (about 75 open edges a
+     leaf: you saw through the door). All the copies at one place now take the same partner, the nearest any of them found. */
+  { const kq = x => Math.round(P[x * 3] * 4000) + ',' + Math.round(P[x * 3 + 1] * 4000) + ',' + Math.round(P[x * 3 + 2] * 4000), best = new Map();
+    for(const [x, pr] of partner){ const k = kq(x), q = best.get(k); if(!q || pr.d < q.d) best.set(k, pr); } for(const x of inner){ const q = best.get(kq(x)); if(q) partner.set(x, q); } }
   const tgt = new Map();   // vertex -> [x, y, z]
   for(const x of inner){ const pr = partner.get(x); let px = P[x * 3], py = P[x * 3 + 1], pz = P[x * 3 + 2];
     if(pr){ const y = pr.y; px += (P[y * 3] - px) * R42S.back; py += (P[y * 3 + 1] - py) * R42S.back; pz += (P[y * 3 + 2] - pz) * R42S.back; }
@@ -24826,6 +24839,17 @@ function r37Taut(lo, hi){   // the shortest line through a band: from (0, lo[0])
     if(!next) next = [n - 1, clamp(lo[n - 1], cy + smin * (n - 1 - cx), cy + smax * (n - 1 - cx))];
     if(next[0] <= cx) next = [cx + 1, clamp(cy, lo[cx + 1], hi[cx + 1])]; seg(next[0], next[1]); }
   return y; }
+/* r46 (QA: the foyer to the living room ended 1.5 ft from the hall closet's pocket door, facing it, then turned 131 deg standing: three seconds of
+   white door). How far the eye sees along a heading before a wall or a shut door (the walking colliders that stand across eye level), up to 6 ft;
+   glass (a window, a glazed door) is not a wall to the eye. skip: the colliders of the doors this walk opens. */
+function r46Glass(){ if(R36N.glass) return R36N.glass; const G = []; try{ for(const o of (BIM2S.meta.openings || [])){ const r = o.raw || o; if(!(/Window/i.test(r.class || o.class || '') || (o.glazed || 0) > .3) || !o.center || !o.axis) continue; G.push({x: o.center[1], z: o.center[0], ux: o.axis[1], uz: o.axis[0], hw: (o.width || 3) / 2, y0: o.sill, y1: o.head}); } }catch(e){} return R36N.glass = G; }
+function r46Ahead(x, z, f, yaw, skip){ const dx = -Math.sin(yaw), dz = -Math.cos(yaw), ey = f + EYE; let best = 6;
+  for(const c of COLLIDERS){ if(c.pass || (skip && skip.has(c)) || (c.v && c.v !== ACTIVE_VAR) || c.y1 < ey || c.y0 > ey - .5) continue; let t0 = 0, t1 = best;
+    if(Math.abs(dx) < 1e-9){ if(x < c.x0 || x > c.x1) continue; } else { let p = (c.x0 - x) / dx, q = (c.x1 - x) / dx; if(p > q){ const w = p; p = q; q = w; } t0 = Math.max(t0, p); t1 = Math.min(t1, q); if(t0 > t1) continue; }
+    if(Math.abs(dz) < 1e-9){ if(z < c.z0 || z > c.z1) continue; } else { let p = (c.z0 - z) / dz, q = (c.z1 - z) / dz; if(p > q){ const w = p; p = q; q = w; } t0 = Math.max(t0, p); t1 = Math.min(t1, q); if(t0 > t1) continue; }
+    best = t0; }
+  if(best < 6){ const hx = x + dx * (best + .2), hz = z + dz * (best + .2); for(const g of r46Glass()) if(ey > g.y0 + .3 && ey < g.y1 && Math.abs((hx - g.x) * g.ux + (hz - g.z) * g.uz) < g.hw && Math.abs(-(hx - g.x) * g.uz + (hz - g.z) * g.ux) < .9) return 6; }
+  return best; }
 function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n, s, yaw, pitch}
   const p = a.path, L = p.L, S = R36N, DG = Math.PI / 180, LONG = L > S.LONG, YAW = LONG ? S.YAWL : S.YAW, YACC = LONG ? S.YACCL : S.YACC, TUBE = LONG ? S.TUBEL : S.TUBE, ds = .25, N = Math.max(3, Math.ceil(L / ds) + 1), sAt = i => L * i / (N - 1), V = new THREE.Vector3(), W = new THREE.Vector3();
   const sm = (A, k, pin) => { for(let it = 0; it < k; it++){ const B = A.slice(); for(let i = 1; i < A.length - 1; i++) A[i] = (B[i - 1] + 2 * B[i] + B[i + 1]) / 4; if(!pin){ A[0] = (2 * B[0] + B[1]) / 3; A[A.length - 1] = (2 * B[A.length - 1] + B[A.length - 2]) / 3; } } return A; };
@@ -24879,11 +24903,16 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
     v[0] = 0; for(let i = 1; i < N; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] * v[i - 1] + 2 * S.ACC * ds)); v[N - 1] = 0; for(let i = N - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * S.DEC * ds));
     const tS = new Float64Array(N); for(let i = 1; i < N; i++) tS[i] = tS[i - 1] + 2 * ds / Math.max(.05, v[i - 1] + v[i]); return tS; };
   // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk); a turn made standing counts its time, and as a reversal when it turns back on the walk's last turn
-  for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.tv = q.tv + c.stand / DG; c.rev = q.rev + (c.stand > 1.5 * DG && q.dir && Math.sign(c.gEnd - c.g[N - 1]) !== q.dir ? 1 : 0); c.cost = c.tS[N - 1] + standT(c.stand) + c.tv / 90 + c.rev * 3 + Math.max(0, c.rev - 1) * 8 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.gEnd - c.g[0]) / DG - 200) / 20; }   // a turn of more than 200 deg in all is never chosen when less will do; nor (r41) a second reversal when a plan with one will do
+  /* r46: seconds of the plan spent facing a wall or a shut door at arm's length (all of it under 2 ft, none over 4), walking and through the turn
+     made standing. It counts against a plan (1.5 x), so of two ways round to the stop's view the head takes the one that looks into the room. */
+  const skipC = new Set(p.doors.map(q => q.it.coll).concat(p.doors.map(q => q.it.coll2)).filter(Boolean)), near = d => clamp((4 - d) / 2, 0, 1);
+  const blank = c => { let b = 0; try{ for(let i = 1; i < N; i++){ r36PathPos(p, sAt(i), V); b += near(r46Ahead(V.x, V.z, V.y - EYE, c.g[i], skipC)) * (c.tS[i] - c.tS[i - 1]); }
+      if(c.stand > .2 * DG){ const T = standT(c.stand), k = Math.max(2, Math.ceil(c.stand / (10 * DG))); r36PathPos(p, L, V); for(let q = 0; q < k; q++) b += near(r46Ahead(V.x, V.z, V.y - EYE, lerp(c.g[N - 1], c.gEnd, (q + .5) / k), skipC)) * T / k; } }catch(e){} return b; };
+  for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.dirL = q.dir; c.tv = q.tv + c.stand / DG; c.rev = q.rev + (c.stand > 1.5 * DG && q.dir && Math.sign(c.gEnd - c.g[N - 1]) !== q.dir ? 1 : 0); c.blank = R36N.noBlank ? 0 : blank(c); c.cost = c.tS[N - 1] + standT(c.stand) + c.tv / 90 + c.rev * 3 + Math.max(0, c.rev - 1) * 8 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.gEnd - c.g[0]) / DG - 200) / 20 + c.blank * 1.5; }   // a turn of more than 200 deg in all is never chosen when less will do; nor (r41) a second reversal when a plan with one will do
   const C = cands.reduce((x, c) => !x || c.cost < x.cost ? c : x, null), g = C.g, gp = C.gp;
   // r41: a long walk that the turn made standing would take just past the 10 s rule (R38.MAXD; the garage out to the yard) cruises up to 15 % faster rather than become a dissolve
   { const tot = () => C.tS[N - 1] + standT(C.stand) + .5, M38 = (window.R38 && R38.MAXD) || 10; if(L > 30 && tot() > M38 - .1) for(const vk of [1.05, 1.1, 1.15]){ C.tS = pace(g, gp, vk); C.vk = vk; if(tot() <= M38 - .1) break; } }
-  const tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev + (c.stand > .2 * DG ? '/st' + (c.stand / DG).toFixed(0) : '')).join(',');
+  const tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev + (c.stand > .2 * DG ? '/st' + (c.stand / DG).toFixed(0) : '') + (c.blank > .05 ? '/b' + c.blank.toFixed(1) : '')).join(','); a.r46 = {k: C.k, stand: C.stand / DG, blank: C.blank, cost: C.cost};
   // s(t) on a 240 Hz clock, its speed softened (no sudden change of pace), then the head integrated along it
   const dt = 1 / 240, T1 = tS[N - 1], n1 = Math.ceil(T1 / dt) + 1, sT = new Float64Array(n1);
   for(let k = 0, i = 0; k < n1; k++){ const t = Math.min(T1, k * dt); while(i < N - 2 && tS[i + 1] < t) i++; const u = clamp((t - tS[i]) / Math.max(1e-9, tS[i + 1] - tS[i]), 0, 1); sT[k] = lerp(sAt(i), sAt(i + 1), u); }
@@ -24895,8 +24924,12 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
   // r41: the walk itself ends on g[N - 1], within BACKDEG of the way in; the head goes on round to the stop's view (gE) once you have stopped (under .15
   // ft/s), braking so that it never overshoots. (Begun earlier, as you slow, it came back a few degrees as the line curved in: a second turning reversal)
   const gE = C.gEnd, gW = g[N - 1], rem = gE - gW, sgE = Math.sign(rem), stand = C.stand > .2 * DG;
+  /* r46: where the turn left to make goes on the way the head was already turning as it walked in (or it was not turning), it begins over the last
+     half foot, under 2.2 ft/s, instead of after a dead stop: one motion. A turn back the other way still waits for the stop (r41: begun early it
+     came back a few degrees as the line curved in). */
+  const dLast = g[N - 1] - g[Math.max(0, N - 1 - 8)], early = stand && !R36N.noEarly && (Math.abs(dLast) < 1.5 * DG || Math.sign(dLast) === sgE);
   for(let k = 0; k < n1 + 240 * 6; k++){ const s = sT[Math.min(k, n1 - 1)], sN = sT[Math.min(k + 1, n1 - 1)], v = (sN - s) / dt, pg = G(gp, sN), prr = (pg - G(gp, s)) / dt; let tg = G(g, sN), tr = (tg - G(g, s)) / dt, ya = YA, yw = YW, st = false;
-    if(stand && s > L - .5 && v < .15){ tg = gE; tr = 0; ya = AS; yw = WS; st = true; }
+    if(stand && ((s > L - .5 && v < .15) || (early && s > L - 1.2 && v < 2.2))){ tg = gE; tr = 0; ya = AS; yw = WS; st = true; }   // r46: (early) the turn begins as you take the last step
     ss.push(s); ys.push(y); ps.push(pt); if(k >= n1 - 1 && Math.abs(y - gE) < .03 * DG && Math.abs(w) < .4 * DG && Math.abs(pt - gp[N - 1]) < .03 * DG && Math.abs(pw) < .4 * DG) break;
     let ac = clamp(wn * wn * (tg - y) + 2 * wn * (tr - w), -ya, ya); if(st){ const er = tg - y; if(w * er > 0 && w * w > 1.6 * ya * Math.abs(er)) ac = -Math.sign(w) * ya; }   // brakes in time: never past the stop's view
     { const w2 = w + ac * dt; w = Math.abs(w2) > yw ? Math.sign(w2) * Math.max(yw, Math.abs(w) - ya * dt) : w2; } y += w * dt;   // a lower cap (walking after standing) is reached by slowing, not at once
@@ -24911,7 +24944,9 @@ function r36PathStep(a, tt){   // one frame of a walked move (r37: read from the
   const p = a.path; if(tt >= 1){ camera.position.copy(a.to); curT.copy(a.toT); camera.lookAt(curT); return; }
   const T = a.tl; if(!T) return r36PathStepFlat(a, tt);
   const now = performance.now();
-  if(a.t0 !== a.t0m){ a.tv = Math.max(0, (now - a.t0) / 1000); a.rate = 1; }   // someone set the clock (the ?qa=1 check, a skip): go there
+  if(a.t0 !== a.t0m){ a.tv = Math.max(0, (now - a.t0) / 1000); a.rate = 1;   // someone set the clock (the ?qa=1 check, a skip): go there
+    /* r46: and the doors the walk has opened by then stand open (they were left shut, so a frame taken part way showed the camera in closed glass) */
+    for(let i = 0; i < p.doors.length; i++){ const d = p.doors[i], it = d.it; if(a.tv > a.dts[i] - (it.dur || .8) - 1.1 && it.t < 1){ if(it.t < .5 && it.sl && d.x != null && !DOOR28.moving.has(it)){ it.r37a = null; try{ bim3SlideSide(it, bim3SlideAt(it, d.x, d.z)); }catch(e){} } DOOR28.moving.delete(it); it.dir = 0; it.lt = 0; it.t = 1; try{ door28Pose(it); }catch(e){} } } }
   else { const rd = clamp((now - a.lastNow) / 1000, 0, .1); let hold = false;
     for(let i = 0; i < p.doors.length; i++){ const d = p.doors[i], tA = a.dts[i]; if(a.tv > tA + .6) continue; const togo = d.s - r37At(T, a.tv, R37O).s;
       if(tA - a.tv < (d.it.dur || .8) + 1.1 || togo < 7) r36OpenDoor(d.it, d.x, d.z); if(tA - a.tv < .6 && d.it.t < .85) hold = true; }   // wait at a door that is still swinging

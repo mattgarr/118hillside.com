@@ -333,6 +333,8 @@ def build():
     wall_run('W-L1-B5D', 'x', 16.74, 17.11, -6.41, X_WW, lambda x, y: zw(y) + 0.03, openings=[(-6.1, -0.7, DOOR_H), (0.27, 2.93, DOOR_H)])   # closet and vestibule / bedroom
     for i, (x0, x1, y) in enumerate(((-6.05, -3.35, 16.86), (-3.45, -0.75, 16.95))):          # the closet's two sliding doors
         door_slab('D-L1-B5C', 'x', x0, x1, y - 0.04, y + 0.04, 0.04, DOOR_H - 0.06)
+    # r46: the box 'lever' drawn below is a placeholder for the door's hardware. Run tour/bim2/tools/doors46.py after this build: it puts the house's
+    # round knob in its place and sets the feet of these leaves 1/8 in over the floor.
     door_slab('D-L1-B5B', 'y', 17.18, 19.76, 2.78, 2.88, 0.04, DOOR_H - 0.06)
     for xa, xb in ((2.70, 2.78), (2.88, 2.96)): ubox('D-L1-B5B', 'y', 19.50, 19.56, xa, xb, 2.95, 3.01, mat='nickel-brushed', grp='openings'); ubox('D-L1-B5B', 'y', 19.44, 19.62, xa if xa < 2.75 else xb - 0.03, xa + 0.03 if xa < 2.75 else xb, 2.92, 3.04, mat='nickel-brushed', grp='openings')            # the bedroom door, standing open
     # baseboards in the great room (square, as built height) where no cabinet or opening stands

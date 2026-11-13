@@ -19600,7 +19600,12 @@ function bim3Doors(){
         const v = [c[0] - h[0], c[1] - h[1]], s = bim3SideDir(o, lf.swingSide || 'B');
         const vw = [v[1], v[0]], sw = [s[1], s[0]], e = 1e-3, vx = vw[0] * Math.cos(e) + vw[1] * Math.sin(e), vz = -vw[0] * Math.sin(e) + vw[1] * Math.cos(e);
         part.sign = ((vx - vw[0]) * sw[0] + (vz - vw[1]) * sw[1]) >= 0 ? 1 : -1; part.ang = open; part.ang0 = ang0; t0 = Math.max(t0, Math.min(1, ang0 / open)); }
-      else if(/POCKET/.test(kind0)){ const dir = lf.hingeEnd === 'END' ? 1 : -1; part.u3 = new THREE.Vector3(ax[1] * dir, 0, ax[0] * dir); part.d = Math.max(.5, (lf.w || W) - .25); part.f0 = lf.openFraction || 0; t0 = part.f0; }
+      else if(/POCKET/.test(kind0)){ let dir = lf.hingeEnd === 'END' ? 1 : -1; part.d = lf.travel > 0 ? lf.travel : Math.max(.5, (lf.w || W) - .25); part.f0 = lf.openFraction || 0; t0 = part.f0;
+        /* r46 (owner 11/13: "pocket ... doors actually close all the way"): a leaf modelled open stands in its pocket, so it shuts by sliding to the middle
+           of its opening, from whichever end it stands at. It used to slide its width less 3 in toward the end the meta named: a 3 in slot at the
+           strike jamb, and the primary bath's door (wrong end named) went further into the wall. A leaf modelled shut opens as before. */
+        if(part.f0 > .5){ const bc = box.getCenter(new THREE.Vector3()), al = (pw[2] + bc.z - c[0]) * ax[0] + (pw[0] + bc.x - c[1]) * ax[1]; if(Math.abs(al) > .5){ dir = al > 0 ? 1 : -1; part.d = Math.abs(al) / part.f0; } }
+        part.u3 = new THREE.Vector3(ax[1] * dir, 0, ax[0] * dir); }
       else if(/BYPASS/.test(kind0)){ const sgn = k === 1 ? 1 : -1; part.u3 = new THREE.Vector3(ax[1] * sgn, 0, ax[0] * sgn); part.d = (k % 2) ? (lf.w || W / L.length) * .92 : 0; part.f0 = lf.openFraction || 0; }
       else if(/MULTI|SLID/.test(kind0)){ part.u3 = new THREE.Vector3(-ax[1], 0, -ax[0]); part.f0 = lf.openFraction || 0; }
       else if(/SECTIONAL|ROLL/.test(kind0)){ const sB = bim3SideDir(o, 'B'); box.getCenter(part.cen = new THREE.Vector3()); part.inW = new THREE.Vector3(sB[1], 0, sB[0]); part.H = box.max.y - box.min.y;
