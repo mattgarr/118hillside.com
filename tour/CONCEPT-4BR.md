@@ -182,7 +182,7 @@ street, y north).
 - **Kitchen at the west end, L-shaped.** The range (36 in, chimney hood, pot filler) is centred on the north wall, which is now a
   solid cabinet wall: the two small windows that flanked the range are closed up (siding outside), with upper cabinets the
   length of the run either side of the hood, glass fronts next to it, quartz up the wall to the uppers and the hood, lights
-  and plug strips under them. The run goes 2 ft further toward the living area and ends in a drinks fridge and a panelled end. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
+  under them. The run goes 2 ft further toward the living area and ends in a drinks fridge and a panelled end. The west gable wall is the tall wall, 14 ft of it: two pantries, the oven column, the fridge built in between tall
   cabinets, one crown along the top and a panelled end. (The owner asked for about 3 ft more cabinetry toward the table;
   the tall wall took the full 3 ft, now starting at y 18.) An 8-ft x 3 ft 6 island carries, on its working side, a pull-out trash and recycling cabinet, the sink, the
   dishwasher and a drawer stack, with four stools on the dining side. Deep pot drawers sit either side of the range, and the

@@ -265,7 +265,7 @@ def build():
     boxel('FP-L1-B5', 'floors', 'L1', 'flagstone-grey', fx - FP['hearth'][0], fy0 - 0.02, 0.0, fx + 0.12, fy1 + 0.02, FP['hearth'][1], faces='xyYZ')        # raised hearth
     mz, mh, md, ml = FP['mantel']
     boxel('FP-L1-B5', 'ceilings', 'L1', 'fir-beam', fx - md, FP['cy'] - ml / 2, mz, fx + 0.1, FP['cy'] + ml / 2, mz + mh, faces='xyYzZ')
-    boxel('FP-L1-B5', 'trim', '-', 'steel-black', X_EO, FP['cy'] - 0.6, 5.0, X_EO + 0.35, FP['cy'] + 0.6, 6.2, faces='XyYzZ')
+    boxel('FP-L1-B5', 'trim', '-', 'hardie-lap#paint-ext-body', X_EO, FP['cy'] - 0.4, 3.0, X_EO + 0.2, FP['cy'] + 0.4, 3.75, faces='XyYzZ')   # a small direct-vent cap in the siding colour
     colliders.append({'id': 'FP-L1-B5#0', 'element': 'FP-L1-B5', 'kind': 'WALL', 'poly': [[fx - FP['hearth'][0], fy0], [X_E, fy0], [X_E, fy1], [fx - FP['hearth'][0], fy1]], 'z0': 0, 'z1': 8.0, 'storey': 'L1', 'exterior': False})
 
     # ---- the deck: the porch deck carried about 9 ft east along the folding doors, the steps narrowed, cable rail on the new edges
@@ -424,7 +424,6 @@ def fixtures():
     UP = dict(CAB, h=3.5, mountY=4.5, pull='knob', led=True)
     for i, glass in enumerate((False, False, True)): add('upperCabinet', 'FIX', (X0 + 2.23 * (i + 0.5), N), 270, dict(UP, w=2.23, glass=glass, hinge='left' if i < 2 else 'right'))
     for i, glass in enumerate((True, False, False)): add('upperCabinet', 'FIX', (17.55 + 2.0167 * (i + 0.5), N), 270, dict(UP, w=2.0167, glass=glass))
-    add('outletStrip', 'BUILTIN', (10.7, N - 0.06), 270, {'w': 6.4, 'mountY': 4.32}); add('outletStrip', 'BUILTIN', (20.55, N - 0.06), 270, {'w': 5.8, 'mountY': 4.32})
     add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[X0, NF], [23.68, NF], [23.68, N], [X0, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
     add('counterTop', 'BUILTIN', (15.8, N - 0.03), 0, {'mat': 'brittanicca', 'mountY': 3.0, 'outlines': [[[14.05, N - 0.05], [17.55, N - 0.05], [17.55, N], [14.05, N]]], 'noSplash': True, 't': 3.0})   # quartz behind the range, up to the hood
     # the street gable: stone on the chimney breast, the TV over the mantel, low built-ins under the windows either side
