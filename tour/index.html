@@ -6758,7 +6758,8 @@ function navQA(){
   const finish = () => { for(let i = 0; i < 3 && (anim || glide); i++){ if(anim) anim.t0 = -1e9; if(glide) glide.t0 = -1e9; tick0(true); } tick0(true); camera.updateMatrixWorld(); };
   const mid = f => { if(anim){ anim.t0 = performance.now() - anim.dur * 1000 * f; tick0(true); } };
   const solids = () => withVar(['main', 'upper', 'furn', 'furnU']).filter(g => g.visible);
-  const cast = (rc, objs) => { for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if(h.object.isSprite || !h.object.visible || (m && m.transparent && m.opacity < .5) || /^(find-|esc-)/.test(h.object.name || '')) continue; return h; } return null; };
+  const shown = o => { for(; o; o = o.parent) if(!o.visible) return false; return true; };
+  const cast = (rc, objs) => { for(const h of rc.intersectObjects(objs, true)){ const m = h.object.material; if(h.object.isSprite || !shown(h.object) || (m && m.transparent && m.opacity < .5) || /^(find-|esc-)/.test(h.object.name || '')) continue; return h; } return null; };
   const nameOf = o => (o.name || (o.material && o.material.name) || (o.parent && o.parent.name) || '?').slice(0, 44);
   function probe(){ camera.updateMatrixWorld(); const P = camera.position.clone(), rc = new THREE.Raycaster(), objs = solids(); let clr = 99, what = '', ins = 0, insWhat = '';
     for(let k = 0; k < 16; k++){ const a = k * Math.PI / 8, d = new V3(Math.cos(a), 0, Math.sin(a)); rc.set(P, d); rc.far = 3; const f = cast(rc, objs); if(f && f.distance < clr){ clr = f.distance; what = nameOf(f.object); }
@@ -20694,7 +20695,7 @@ function opt42Clear(v, o){
   const only = new Set(C22_ONLY.map(e => e.o)), opId = c => { const m = c.name && /(?:^|:)((?:D|WN|OP|SK)-[A-Z0-9]+-[A-Z0-9]+)(?::|$)/.exec(c.name); return m ? m[1] : null; };   // pieces of an opening: gone35 decides
   for(const k of ['main', 'furn', 'ceil', 'trim']){ const G = GROUPS[k]; if(!G) continue;
     for(const c of G.children){ if(c.isInstancedMesh || (c.userData && (c.userData.kind === 'ceilingFan' || c.userData.bim2))) continue;
-      const F = fx.get(c); if((F && (F.v || keep.has(F.id))) || only.has(c) || opId(c)) continue;
+      const F = c.userData && c.userData.el === 'r28-attic-cabinet' ? null : fx.get(c); if((F && (F.v || keep.has(F.id))) || only.has(c) || opId(c)) continue;
       B.setFromObject(c); if(B.isEmpty()) continue; const sx = B.max.z - B.min.z, sy = B.max.x - B.min.x;
       if(sx > 14 || sy > 14 || B.max.y < -.5 || B.min.y > 13) continue;
       if(!BIM2.inPoly(R, (B.min.z + B.max.z) / 2, (B.min.x + B.max.x) / 2)) continue;

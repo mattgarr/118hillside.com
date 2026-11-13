@@ -357,8 +357,6 @@ def fixtures():
     add('baseCabinet', 'FIX', (18.35, N), 270, dict(CAB, w=2.1, doors='drawers'))
     add('baseCabinet', 'FIX', (20.45, N), 270, dict(CAB, w=2.1))
     add('upperCabinet', 'FIX', (8.6, N), 270, dict(CAB, h=3.5, mountY=4.5, w=2.4, pull='knob', led=True))
-    add('upperCabinet', 'FIX', (13.3, N), 270, dict(CAB, h=3.5, mountY=4.5, w=1.4, pull='knob', led=True))
-    add('upperCabinet', 'FIX', (17.95, N), 270, dict(CAB, h=3.5, mountY=4.5, w=0.7, pull='knob'))
     add('counterTop', 'BUILTIN', (13.0, N - 1.04), 0, {'mat': 'brittanicca', 'mountY': 2.896, 'outlines': [[[W, 29.0], [W + 2.08, 29.0], [W + 2.08, NF], [21.5, NF], [21.5, N], [W, N]]], 'holes': [[[14.3, NF], [17.3, NF], [17.3, N], [14.3, N]]], 'splash': 0.33, 't': 0.104})
     # the island: 8 ft x 3 ft 6, sink and dishwasher on the working (north) side, four stools on the dining side
     add('island', 'FIX', (15.8, 26.0), 270, dict(CAB, w=8.0, d=3.5, seatingSide='front', overhang=1.25, counter='quartz', cabDepth=2, sink=True))
@@ -369,6 +367,9 @@ def fixtures():
     add('toilet', 'FIX', (-3.6, 14.32), 270, None, 'SP-L1-BATH')
     add('showerSystem', 'BUILTIN', (-8.1, 18.42), 270, {'armY': 6.75, 'bar': True, 'finish': 'nickelBrushed', 'grab': 0, 'head': 'round'}, 'SP-L1-LAUNDRY-CLOSET')
     add('showerGlass', 'FIX', (-7.97, 14.70), 270, {'w': 2.3, 'h': 6.6, 'door': True, 'doorW': 2.2, 'finish': 'chrome'}, 'SP-L1-BATH')
+    # the back bedroom: a queen bed on the north wall, as on the plan
+    add('bedQueen', 'FIX', (-1.6, 26.67), 270, None, 'SP-L1-BED1')
+    add('nightstand', 'FIX', (-5.2, 26.67), 270, None, 'SP-L1-BED1'); add('nightstand', 'FIX', (2.0, 26.67), 270, None, 'SP-L1-BED1')
     # the hall: stacked washer and dryer
     add('washerFront', 'FIX', (X_WW, 13.0), 180, {'stacked': True}, 'SP-L1-HALL')
     return F
@@ -420,7 +421,7 @@ def register(hide, hide_ranges, sha):
     e = {'id': OPT_ID, 'legacyId': LEGACY, 'set': 'OS-REMODEL'}; e.update(CARD)
     e.update({'hide': hide, 'hideRanges': hide_ranges, 'glb': GLB_OUT, 'sha256': sha, 'remap': [], 'meta': META_OUT,
               'region': [[-10.5, -1.4], [5.4, -1.4], [5.4, 4.4], [37.0, 4.4], [37.0, 32.5], [5.0, 32.5], [5.0, 27.1], [-7.0, 27.1], [-7.0, 18.85], [-9.95, 18.85]],
-              'clearRegion': [[-9.7, -0.9], [5.0, -0.9], [5.0, 4.3], [36.9, 4.3], [36.9, 32.3], [5.1, 32.3], [5.1, 16.9], [-6.5, 16.9], [-6.5, 18.6], [-9.7, 18.6]],
+              'clearRegion': [[-9.7, -0.9], [5.0, -0.9], [5.0, 4.3], [8.9, 4.3], [8.9, 3.9], [22.7, 3.9], [22.7, 4.3], [36.9, 4.3], [36.9, 32.3], [5.1, 32.3], [5.1, 16.9], [-6.5, 16.9], [-6.5, 18.6], [-9.7, 18.6]],
               'walkStart': {'at': [1.0, -3.6], 'look': [20.0, 12.0]},
               # entry -> library -> great room; round the island; out through the folding doors; hall, vestibule, bedroom, bath; walls that must still stop a walker
               'walkTests': [[[0.0, -3.0], [2.5, 5.5], 'open'], [[2.5, 6.8], [9.0, 7.0], 'open'], [[9.0, 7.0], [26.0, 8.0], 'open'], [[10.0, 20.0], [10.0, 28.0], 'open'], [[10.5, 28.2], [21.0, 28.2], 'open'], [[21.2, 28.0], [21.2, 20.0], 'open'],
@@ -431,17 +432,17 @@ def register(hide, hide_ranges, sha):
                          {'name': 'Bedroom', 'at': [-1.6, 21.5]}, {'name': 'Bath', 'at': [-6.6, 12.6]}, {'name': 'Hall', 'at': [1.0, 12.0]}],
               # viewpoints, world frame [north, up, east]
               'views': {'foyer': {'pos': [-4.0, 5.0, -3.0], 'look': [20.7, 4.7, 9.0]},
-                        'arrival': {'pos': [5.6, 5.0, 2.2], 'look': [13.0, 4.6, 24.0]},
+                        'arrival': {'pos': [6.4, 5.0, -1.6], 'look': [9.5, 4.6, 24.0]},
                         'entry': {'pos': [7.0, 5.0, 6.6], 'look': [15.5, 4.8, 30.0]},
                         'hearth': {'pos': [17.6, 5.0, 21.6], 'look': [18.45, 4.6, 36.0]},
                         'kitchen': {'pos': [18.6, 5.0, 25.2], 'look': [27.0, 4.2, 9.0]},
                         'dining': {'pos': [19.0, 5.0, 22.4], 'look': [3.0, 3.4, 13.0]},
-                        'island': {'pos': [28.2, 5.0, 21.4], 'look': [14.0, 4.0, 14.0]},
+                        'island': {'pos': [29.0, 5.0, 22.8], 'look': [14.0, 4.0, 13.0]},
                         'living': {'pos': [18.45, 5.0, 23.6], 'look': [18.45, 4.4, 36.0]},
                         'library': {'pos': [0.6, 5.0, 2.6], 'look': [8.5, 4.2, -6.0]},
-                        'bedroom': {'pos': [18.6, 5.0, 1.6], 'look': [24.5, 4.0, -2.0]},
+                        'bedroom': {'pos': [18.4, 5.0, 3.9], 'look': [24.5, 3.4, -3.0]},
                         'bath': {'pos': [11.6, 5.0, -2.2], 'look': [12.2, 3.8, -8.5]},
-                        'hall': {'pos': [10.6, 5.0, 1.6], 'look': [15.5, 4.4, 1.6]},
+                        'hall': {'pos': [8.4, 5.0, 1.0], 'look': [16.5, 4.2, 1.6]},
                         'deck': {'pos': [-2.6, 5.0, 19.0], 'look': [13.0, 4.4, 15.8]},
                         'driveway': {'pos': [-14.0, 1.0, 34.0], 'look': [2.0, 1.4, 18.0]},
                         'street': {'pos': [18.4, 1.6, 52.0], 'look': [18.4, 6.0, 30.0]},
