@@ -444,3 +444,22 @@ recommendation to remodel before selling.
 - QA: `FOLD42.walk([25, -1], [25, 8])` is null with the wall open and stops at y ≈ 3.75 with it shut (`FOLD42.set(0)`).
 - Rebuild: `python3 tour/bim2/tools/build_open4k.py` (after `build_open4.py` if the as-built package changed).
 
+
+### r44f QA pass on the B-flip (owner round, 11/12/2026)
+- West wall of the old living room (`W-L1-026`, rebuilt as `W-L1-B5X`): the four-unit window `WN-L1-10` is split. Its two south units stay
+  as the library's window (`WN-L1-B5X1`), the third is framed in where the library / bath wall meets the outside wall, the fourth stays
+  as the bath's window (`WN-L1-B5X2`) with its sill raised to 4 ft above the vanity. Siding and exterior trim are re-made to suit.
+- Interior trim: every new opening has the house's casing on both faces (3-1/2 in legs; fillet, frieze and cap at the head, a plain
+  frieze under a low ceiling), a jamb lining, and baseboards on the new partitions (`casing`, `liner`, `wall_run(trim=True)`).
+  The rectangular windows have the same head, a stool and an apron. Elements end in `-T`.
+- Pocket doors: library / hall (29 in) and bath / hall (27-1/2 in) each show 6 in of leaf standing out of the pocket jamb, with an
+  edge pull and flush pulls (`pocket_leaf`). The bath door's wall leaves a pocket about 2 in short of the leaf.
+- Doors drawn as three-panel leaves (`door_slab`): laundry closet, the two closet sliders, the bedroom door.
+- Back bedroom: the closet wall is back on the old wall's faces (y 16.74 / 17.11), the six casing pieces of the old high cabinet doors
+  are hidden, and the room outlines the option gives the page reach 2-1/4 in into the walls (`GROW`), because a wall face lying on
+  its room's own outline fell outside the interior light mask and took sun and shadow.
+- Floor: after everything else is built, any strip of the footprint with no floor surface gets oak cut exactly to the gap
+  (`floor_gaps_filled` in the build report); the visible one was 1-3/4 in wide along the library side of the way into the great room.
+- Folding doors: house casing inside, jamb and head linings inside and out; the page draws their panes with the windows' clear glass.
+- `walkStart` is in the great room at the kitchen end, facing the hearth. `rooms` (named outlines) tells the page which room a
+  walker is in; without it the nearest label is used.
