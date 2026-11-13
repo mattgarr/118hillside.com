@@ -10983,6 +10983,27 @@ function bath20NoBase(){
     }); }
   BATH20.stats.baseboardTrisDropped = dropped;
 }
+/* r48 laundry (owner 11/13: "the laundry room is missing the correct stacked washer dryer and built-in countertop and cabinets. I thought they
+   were in a previous version"). They were: v26 drew the room from photo p04 and the cabinet maker's drawing (bim/hillside.bim.json, the
+   LX-* elements: corner sink base, pull-out base, open basket base, L-shaped white quartzite top with 4in splash, undermount sink, spring
+   faucet, diagonal corner wall cabinet, two-door and one-door wall cabinets, the stacked GE pair). When the house moved to the compiled
+   package (bim2) the run-time fixtures came from scene.meta.json furnishings only, and that list still had the pre-v26 side-by-side
+   washer and dryer under the window (FX-washerFront-07, FX-dryerFront-08); the LX-* pieces were never built again. Now the meta's pair is
+   dropped and the v26 pieces are built from the legacy list, refitted to the compiled walls: the machine wall's face is 0.35in further
+   west (x -23.3234, was -23.294) and the window wall steps back 0.74in (y -29.9777) east of x -22.7609, so the corner group moves west
+   and the window-run pieces sit on the stepped face (no gap behind the open base, the splash or the one-door wall cabinet). */
+const LAUNDRY48 = window.LAUNDRY48 = {drop: ['FX-washerFront-07', 'FX-dryerFront-08'], by: 'v26-laundry', dx: -0.0294,
+  shiftX: ['LX-SINKBASE', 'LX-TRASH', 'LX-SINK', 'LX-FAUCET', 'LX-UC-CORNER', 'LX-UC-W30', 'LX-SPLASH-M'],
+  set: {'LX-OPENBASE': {at: [-18.5843, -29.9777], opts: {w: 3.1448}}, 'LX-SPLASH-W': {at: [-20.1364, -29.9777], opts: {w: 6.249}},
+    'LX-UC-W12': {at: [-17.382, -29.9777]},
+    'LX-COUNTER': {opts: {outlines: [[[-23.3234, -29.9159], [-22.7609, -29.9159], [-22.7609, -29.9777], [-17.0119, -29.9777], [-17.0119, -27.8327], [-20.1222, -27.8327],
+      [-21.2401, -26.7148], [-21.2401, -25.4993], [-23.3234, -25.4993]]], holes: [[[-21.182, -28.6408], [-22.0482, -27.7746], [-21.2999, -27.0263], [-20.4337, -27.8925]]]}}},
+  built: 0};
+function laundry48Pieces(){ const L = LAUNDRY48, src = (window.BIM && BIM.raw && BIM.raw.elements) || [];
+  return src.filter(e => e.by === L.by && e.kind && e.at).map(e => { const f = {id: e.id, kind: e.kind, at: e.at.slice(), rot: e.rot || 0, opts: Object.assign({}, e.opts || {}), space: 'SP-L0-LAUNDRY'};
+    if(L.shiftX.includes(e.id)) f.at[0] = +(f.at[0] + L.dx).toFixed(4);
+    const s = L.set[e.id]; if(s){ if(s.at){ f.at[0] = s.at[0]; f.at[1] = s.at[1]; } Object.assign(f.opts, s.opts || {}); }
+    return f; }); }
 /* r48b B (QA 11/13, hall bath): the tub/shower's end wall has a 1'5" x 2'10" window (WN-L1-09, sill 3'5", head 6'3", centred on the tub)
    and the shower trim was laid out as if the wall were blank: the valve and diverter plates sat on the glass and the slide bar ran down
    the window's edge. Per fixture overrides of the scene meta's params (by furnishing id): one pressure-balance trim below the sill (the tub
@@ -21217,12 +21238,12 @@ function bim2BuildHouse(){
   for(const c of C.COLLIDERS) COLLIDERS.push(Object.assign({v: null}, c));
   ROOFPLANES = bim2RoofPlanes();
   // run-time fixtures: typed furnishings from the meta (FIX / BUILTIN kinds); the legacy list only when the package has none yet
-  const fx = (BIM2S.meta.furnishings || []).filter(f => f.render && f.render.kind).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}, (window.FX48B_OPTS || {})[f.id] || {}), space: f.space}));
+  const fx = (BIM2S.meta.furnishings || []).filter(f => f.render && f.render.kind && !LAUNDRY48.drop.includes(f.id)).map(f => ({id: f.id, kind: f.render.kind, at: f.at, rot: f.rot || 0, opts: Object.assign({}, f.render.opts || {}, f.params || {}, (window.FX48B_OPTS || {})[f.id] || {}), space: f.space}));
   // a kind no page library can make (e.g. AV 'inWallSpeaker': the page's AV builder still draws AV from the legacy list) is reported, not tried
   const PAGE_KINDS = new Set(['counterTop', 'openShelves', 'fridge4Door', 'shoeBench', 'showerSystem']), FIXK = new Set(((window.FIX && FIX.kinds) || []).map(k => k.kind));
   const can = f => PAGE_KINDS.has(f.kind) || FIXK.has(f.kind) || (window.BUILTIN && BUILTIN.has && BUILTIN.has(f.kind));
   const skip = fx.filter(f => !can(f)); if(skip.length){ const by = {}; for(const f of skip) by[f.kind] = (by[f.kind] || 0) + 1; console.info('[bim2] furnishings with no page builder (skipped):', JSON.stringify(by)); window.__BIM2_SKIPPED = skip.map(f => f.id); }
-  if(fx.length) buildFixturesBIM(fx.filter(can)); else { console.info('[bim2] scene has no furnishings; using the legacy fixture list'); buildFixturesBIM(BIM.fixtures.filter(f => !BIM.swap.has(f.id))); }
+  if(fx.length){ buildFixturesBIM(fx.filter(can)); try{ const lx = laundry48Pieces(); buildFixturesBIM(lx); LAUNDRY48.built = lx.length; }catch(e){ console.warn('[r48 laundry]', e); } } else { console.info('[bim2] scene has no furnishings; using the legacy fixture list'); buildFixturesBIM(BIM.fixtures.filter(f => !BIM.swap.has(f.id))); }
   try{ avMats(); buildAVBIM(); }catch(e){ console.warn('av', e); }
   BIM2T.house1 = performance.now();
 }
