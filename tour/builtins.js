@@ -631,6 +631,21 @@ def('coffeeStation', { w: 2.5, h: 8, d: 2.08, finish: 'cabinetWhite', kick: 4 * 
   for (i = 0; i < 2; i++) raisedDoor(b, fin, dw - 0.03, uh - 0.1, (i ? 1 : -1) * dw / 2, n1 + 1.42 + uh / 2, zf + DOORT * 0.6);
 }, function (o) { return [o.w, o.d + 0.2, o.h]; }, 'Coffee station in a tall cabinet wall: drawers, an open lit niche with a machine, an appliance garage and doors above.');
 
+// r44d: cabinet finishing pieces (origin on the wall, faces +z unless noted)
+// the scribe fill between the top of a run of wall cabinets and a ceiling that rises away from the wall
+def('scribeFill', { w: 8, d: 13 * IN, mountY: 8, h: 0.47, finish: 'cabinetWhite' }, function (b, o) {
+  b.bb(o.finish, -o.w / 2, o.mountY, 0, o.w / 2, o.mountY + o.h, o.d, 0.004);
+}, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Scribe fill from the top of wall cabinets up to a sloping ceiling.');
+// the light rail under a run of wall cabinets
+def('lightRail', { w: 6, d: 13 * IN, mountY: 4.4, h: 0.1, finish: 'cabinetWhite' }, function (b, o) {
+  b.bb(o.finish, -o.w / 2, o.mountY, o.d - 0.07, o.w / 2, o.mountY + o.h, o.d + DOORT, 0.004);
+}, function (o) { return [o.w, o.d, o.mountY + o.h]; }, 'Light rail under wall cabinets.');
+// a finished (raised-panel) end for a wall-cabinet run: stands square to the wall, w = the cabinets' depth
+def('endPanel', { w: 13 * IN, h: 3.5, mountY: 4.5, t: 0.06, finish: 'cabinetWhite' }, function (b, o) {
+  b.bb(o.finish, -o.w / 2, o.mountY, 0, o.w / 2, o.mountY + o.h, o.t);
+  raisedDoor(b, o.finish, o.w - 0.16, o.h - 0.2, 0, o.mountY + o.h / 2, o.t + DOORT * 0.6);
+}, function (o) { return [o.w, o.t + 0.06, o.mountY + o.h]; }, 'Finished end panel for a wall-cabinet run.');
+
 // r44b: a wall-mounted pot filler over a range (origin on the wall at the swivel, faces +z)
 def('potFiller', { mountY: 4.9, finish: 'satinNickel', reach: 1.5 }, function (b, o) {
   var y = o.mountY, f = o.finish, r = o.reach, h = r / 2;
