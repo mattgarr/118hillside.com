@@ -1894,7 +1894,7 @@ var ACCEL_PHONETEX = 0;
       return IL.call(this, k.replace(/\.(jpe?g|png|webp)$/i, '.m.webp'), onLoad, onProgress, function(e){ ACCEL_PHONETEX--; IL.call(self, url, onLoad, onProgress, onError); }); }
     return IL.apply(this, arguments); };
 })();</script>
-<script src="fixtures.js?v=44c"></script>
+<script src="fixtures.js?v=44d"></script>
 <script src="staging.js?v=43f"></script>
 <script src="staging33.js?v=2"></script>
 <script src="builtins.js?v=44e"></script>
@@ -9380,7 +9380,7 @@ if(window.FIX && FIX.make && !FIX.__fridge4){ FIX.__fridge4 = true; const _mk = 
     sb(-w / 2 + .005, w / 2 - .005, toe + g, ys - g / 2);                                                  // freezer drawer
     bar(0, ys - .2, w - .7, false);
     for(const sg of [-1, 1]){ const x0 = sg < 0 ? -w / 2 + .005 : g / 2, x1 = sg < 0 ? -g / 2 : w / 2 - .005;   // French doors
-      sb(x0, x1, ys + g / 2, h - g); bar(sg * .16, ys + .45 + 1.65, 3.1, true);
+      sb(x0, x1, ys + g / 2, h - g); { const hl = Math.min(3.1, h - ys - .7); bar(sg * .16, Math.min(ys + .45 + 1.65, h - .2 - hl / 2), hl, true); }   /* r47 (owner 11/13: "the refrigerator handles ... are actually going above the fridge"): the door handles were 3.1 ft long, centred 2.1 ft above the drawer line, whatever the fridge's height; on this 5.9 ft fridge they stood 5 in over its top. They now fit the doors: at most 3.1 ft, ending 0.2 ft below the top */
       b.rbox('fGloss', .2, .045, .06, .015, sg * (w / 2 - .22), h - .02, zf + dt - .03, {seg: 2}); }      // hinge covers
     b.bb('fSide', -w / 4 - .1, h - .3, zf + dt + .001, -w / 4 + .1, h - .285, zf + dt + .003);            // badge (a small dark-steel nameplate)
     if(O.dispenser){ const dw = .78, dh = 1.32, dx = -w / 4 - .05, dy = ys + (h - ys) * .52, zz = zf + dt;
@@ -21853,6 +21853,10 @@ function r42MergeDoorPanels(){
     if(uT.idx0) uT.idx0 = A.index; if(uT.alt) uT.alt = {};
     F.parent.remove(F); F.visible = false; F.userData.r42merged = T.uuid; R42D.merged++; R42D.tris += I.length / 3; }
   BIM3.report.r42doors = {merged: R42D.merged, tris: R42D.tris, skipped: R42D.skipped.length}; return R42D; }
+/* r47 (lead 11/13: "the knobs read as dark grey putty"): the model's brushed nickel was a mid grey at 75 % metal, and a metal that dark has only its
+   reflections to show, of rooms that are mostly shade. Satin nickel here: a light warm grey, a third metal, a soft broad highlight. */
+function r47Nickel(){ try{ const m = M.b2_nickel_brushed; if(m && !m.userData.r47){ m.userData.r47 = true; m.color.set(0xd6d3cb).convertSRGBToLinear(); m.metalness = .35; m.roughness = .3; m.envMapIntensity = 1.5; m.needsUpdate = true; } }catch(e){} }
+{ const _b47 = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b47.apply(this, arguments); r47Nickel(); return r; }; }
 { const _b42d = bim2BuildHouse; bim2BuildHouse = function(){ const r = _b42d.apply(this, arguments); try{ r42MergeDoorPanels(); }catch(e){ console.warn('[r42] door panels', e); } return r; }; }
 /* ---- runtime checks (the page no longer judges the model's geometry; compile/validate/kernel reports do): what the page itself must get
    right when it consumes the package. Feeds window.__CHECKS (tools/checks.py gate = 0 items). */
@@ -24872,7 +24876,13 @@ const R36V = new THREE.Vector3(), R36V2 = new THREE.Vector3();
       acceleration capped), and each frame reads the plan at its own time, so 30, 60 and 120 fps show the same motion.
    A door on the way opens a second ahead of you; if one is still swinging the walk eases to a stop before it. Free walking and drag-to-look
    are not touched. */
-Object.assign(R36N, {YAW: 50, YACC: 120, YAWL: 60, YACCL: 145, LONG: 45, PYAW: 30, PACC: 70, TUBE: 18, TUBEL: 22, LA: 4.5, ACC: 5.5, DEC: 4.5, BACKDEG: 82, YAWS: 60, YACCS: 150});   // deg/s, deg/s2, ft, ft/s2 (a walk over LONG ft may turn up to YAWL: a two-flight move turns about 450 deg); r41: BACKDEG, the most the head leads the way you are walking over the second half of a walk, and YAWS / YACCS, the turn made standing once you have stopped (see r37Plan)
+Object.assign(R36N, {YAW: 60, YACC: 130, YAWL: 66, YACCL: 150, LONG: 45, PYAW: 30, PACC: 70, TUBE: 18, TUBEL: 22, LA: 4.5, ACC: 5.5, DEC: 4.5, BACKDEG: 720, BACKV: 2.4, YAWS: 60, YACCS: 150});
+/* r47 (owner 11/13: "often you're looking a weird direction, then stop, then pivot. It would be better if the view starts pivoting to the final view
+   towards the end of the movement ... rather than stop and then rotate; zero in on where we're going to look"). This overrides r41's rule (the head
+   within 82 deg of the way you walk, the rest of the turn made standing): BACKDEG 720 switches that band off, so every plan eases from the way ahead
+   onto the stop's own view over the last part of the walk (at most 45 % of it, sized to the turn) and arrives on it; where the view looks back, the
+   last few feet are walked partly sideways or backwards, slowly (the pace drops wherever the head turns faster than YAW, now 60 deg/s, 66 on long
+   walks). r46's rule still chooses the way round that does not sweep a wall at arm's length. */   // deg/s, deg/s2, ft, ft/s2 (a walk over LONG ft may turn up to YAWL: a two-flight move turns about 450 deg); r41: BACKDEG, the most the head leads the way you are walking over the second half of a walk, and YAWS / YACCS, the turn made standing once you have stopped (see r37Plan)
 function r37Dist(g){   // clearance (ft) from each walkable cell of a level grid to the nearest cell that is not (chamfer transform), kept on the grid
   if(g.dist) return g.dist; const G = R36N.lv, NX = G.NX, NZ = G.NZ, n = NX * NZ, D = new Float32Array(n), b = Math.SQRT2;
   for(let k = 0; k < n; k++) D[k] = g.ok[k] ? 1e6 : 0;
@@ -25018,7 +25028,7 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
     for(let i = 0; i < N; i++){ const w = smooth(0, 1, i / (N - 1)); g[i] = y0 + dW * w; gp[i] = lerp(a.pitch0, a.pitch1, w); } cands.push({k: 'short', g, gp, gEnd: y0 + d}); }
   else {
     for(const d0 of alts(angDiff(psi[0], y0))) for(const d1 of alts(angDiff(psi[N - 1], y1))){ const g = new Float64Array(N), gp = new Float64Array(N), y0u = psi[0] + d0, y1v = psi[N - 1] + d1, y1u = endW(y1v), dd = Math.abs(d0) / DG, da = Math.abs(y1u - psi[N - 1]) / DG;
-      const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, L * .7);
+      const Ld = clamp(2 + dd / 7, 3, L * .5), La = clamp(3 + da / 5, 4, Math.max(4, L * (MB > 3.2 ? .45 : .7)));
       for(let i = 0; i < N; i++){ const s = sAt(i), wd = smooth(0, Ld, s), wa = smooth(L - La, L, s); g[i] = lerp(lerp(y0u, psi[i], wd), y1u, wa); gp[i] = lerp(lerp(a.pitch0, tp[i], wd), a.pitch1, wa); }
       g[0] = y0 + Math.round((y0u - y0) / (2 * Math.PI)) * 2 * Math.PI; const h = g.slice(), h0 = g.slice(); taut(g); sm(gp, 24, true); cands.push({k: 'travel', g, gp, gEnd: y1v}); taut(h, 1.6); cands.push({k: 'travel+', g: h, gp, gEnd: y1v}); if(LONG || L > 30){ const h2 = h0; taut(h2, 2.4); cands.push({k: 'travel++', g: h2, gp, gEnd: y1v}); } }   // (r41: and over 30 ft, where a wider band can take the wiggle of a hall out of the head)
     if(L < 40) for(const d of alts(angDiff(y0, y1))){ const g = new Float64Array(N), gp = new Float64Array(N), M = 30 * DG, dW = endW(y0 + d, true) - y0;
@@ -25027,10 +25037,12 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
   for(const c of cands) c.stand = Math.abs(c.gEnd - c.g[N - 1]);
   // speed: cruise, slower where the head would turn faster than the cap, on stairs and in doorways; eased in and out
   const V0 = L > S.PACE * S.MAXS ? clamp(L / 5.6, S.PACE, 13) : S.PACE;
-  const pace = (g, gp, vk) => { const v = new Float64Array(N), Vc = V0 * (vk || 1);
+  const pace = (g, gp, vk, bk) => { const v = new Float64Array(N), Vc = V0 * (vk || 1);
     for(let i = 0; i < N; i++){ const i0 = Math.max(0, i - 1), i1 = Math.min(N - 1, i + 1), d1 = Math.abs(g[i1] - g[i0]) / ((i1 - i0) * ds) / DG, d2 = i0 < i && i1 > i ? Math.abs(g[i1] - 2 * g[i] + g[i0]) / ds / ds / DG : 0, s = sAt(i), p1 = Math.abs(gp[i1] - gp[i0]) / ((i1 - i0) * ds) / DG;
       let m = Math.min(Vc, YAW * .88 / Math.max(1e-6, d1), Math.sqrt(YACC * .6 / Math.max(1e-6, d2)), S.PYAW * .8 / Math.max(1e-6, p1));
-      if(slope[i] > .25) m = Math.min(m, Math.min(Vc, 9.5) * .75); for(const q of p.doors) if(Math.abs(q.s - s) < 2) m = Math.min(m, Vc * .8); v[i] = Math.max(.8, m); }
+      if(slope[i] > .25) m = Math.min(m, Math.min(Vc, 9.5) * .75); for(const q of p.doors) if(Math.abs(q.s - s) < 2) m = Math.min(m, Vc * .8);
+      { const cb = Math.cos(g[i] - trv[i]); if(cb < -.05) m = Math.min(m, S.BACKV * (bk || 1) / -cb); }   // r47: where the view has swung past square to the way you walk, the part of the walk that goes backwards is a slow step (BACKV ft/s), not a dolly pulling back
+      v[i] = Math.max(.8, m); }
     v[0] = 0; for(let i = 1; i < N; i++) v[i] = Math.min(v[i], Math.sqrt(v[i - 1] * v[i - 1] + 2 * S.ACC * ds)); v[N - 1] = 0; for(let i = N - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * S.DEC * ds));
     const tS = new Float64Array(N); for(let i = 1; i < N; i++) tS[i] = tS[i - 1] + 2 * ds / Math.max(.05, v[i - 1] + v[i]); return tS; };
   // the plan that is quickest, turns least and turns back least (a little preference for facing the way you walk); a turn made standing counts its time, and as a reversal when it turns back on the walk's last turn
@@ -25042,7 +25054,8 @@ function r37Plan(a){   // 2-4: the whole move, planned at 240 Hz -> a.tl {dt, n,
   for(const c of cands){ c.tS = pace(c.g, c.gp); const q = turns(c.g); c.dirL = q.dir; c.tv = q.tv + c.stand / DG; c.rev = q.rev + (c.stand > 1.5 * DG && q.dir && Math.sign(c.gEnd - c.g[N - 1]) !== q.dir ? 1 : 0); c.blank = R36N.noBlank ? 0 : blank(c); c.cost = c.tS[N - 1] + standT(c.stand) + c.tv / 90 + c.rev * 3 + Math.max(0, c.rev - 1) * 8 + (/direct/.test(c.k) ? .6 : 0) + (/\+/.test(c.k) ? .4 : 0) + Math.max(0, Math.abs(c.gEnd - c.g[0]) / DG - 200) / 20 + c.blank * 1.5; }   // a turn of more than 200 deg in all is never chosen when less will do; nor (r41) a second reversal when a plan with one will do
   const C = cands.reduce((x, c) => !x || c.cost < x.cost ? c : x, null), g = C.g, gp = C.gp;
   // r41: a long walk that the turn made standing would take just past the 10 s rule (R38.MAXD; the garage out to the yard) cruises up to 15 % faster rather than become a dissolve
-  { const tot = () => C.tS[N - 1] + standT(C.stand) + .5, M38 = (window.R38 && R38.MAXD) || 10; if(L > 30 && tot() > M38 - .1) for(const vk of [1.05, 1.1, 1.15]){ C.tS = pace(g, gp, vk); C.vk = vk; if(tot() <= M38 - .1) break; } }
+  { const tot = () => C.tS[N - 1] + standT(C.stand) + .5, M38 = (window.R38 && R38.MAXD) || 10; if(L > 30 && tot() > M38 - .1) for(const vk of [1.05, 1.1, 1.15]){ C.tS = pace(g, gp, vk); C.vk = vk; if(tot() <= M38 - .1) break; }
+    if(tot() > M38 - .1) for(const bk of [1.25, 1.5, 2]){ C.tS = pace(g, gp, C.vk || 1, bk); if(tot() <= M38 - .1) break; } }   // r47: nor does the slow step back at the end turn a walk into a dissolve
   const tS = C.tS; a.r37k = C.k + ' ' + cands.map(c => c.k + ':' + c.tS[N - 1].toFixed(1) + 's/' + c.tv.toFixed(0) + '/' + c.rev + (c.stand > .2 * DG ? '/st' + (c.stand / DG).toFixed(0) : '') + (c.blank > .05 ? '/b' + c.blank.toFixed(1) : '')).join(','); a.r46 = {k: C.k, stand: C.stand / DG, blank: C.blank, cost: C.cost};
   // s(t) on a 240 Hz clock, its speed softened (no sudden change of pace), then the head integrated along it
   const dt = 1 / 240, T1 = tS[N - 1], n1 = Math.ceil(T1 / dt) + 1, sT = new Float64Array(n1);
@@ -25080,7 +25093,11 @@ function r36PathStep(a, tt){   // one frame of a walked move (r37: read from the
     for(let i = 0; i < p.doors.length; i++){ const d = p.doors[i], it = d.it; if(a.tv > a.dts[i] - (it.dur || .8) - 1.1 && it.t < 1){ if(it.t < .5 && it.sl && d.x != null && !DOOR28.moving.has(it)){ it.r37a = null; try{ bim3SlideSide(it, bim3SlideAt(it, d.x, d.z)); }catch(e){} } DOOR28.moving.delete(it); it.dir = 0; it.lt = 0; it.t = 1; try{ door28Pose(it); }catch(e){} } } }
   else { const rd = clamp((now - a.lastNow) / 1000, 0, .1); let hold = false;
     for(let i = 0; i < p.doors.length; i++){ const d = p.doors[i], tA = a.dts[i]; if(a.tv > tA + .6) continue; const togo = d.s - r37At(T, a.tv, R37O).s;
-      if(tA - a.tv < (d.it.dur || .8) + 1.1 || togo < 7) r36OpenDoor(d.it, d.x, d.z); if(tA - a.tv < .6 && d.it.t < .85) hold = true; }   // wait at a door that is still swinging
+      if(tA - a.tv < (d.it.dur || .8) + 1.1 || togo < 7){ if(!d.r47){ d.r47 = true; r36OpenDoor(d.it, d.x, d.z); }
+        /* r47: from here the leaf is moved by this walk's own frame time (the same rd that moves the camera), not by the door animation's wall clock
+           in the draw loop: a frame that is late, a draw that is skipped or a phone that drops to a few frames a second cannot leave the leaf behind */
+        const it = d.it; if(it.t < 1){ DOOR28.moving.delete(it); it.dir = 0; it.lt = 0; it.t = Math.min(1, it.t + rd / (it.dur || .8)); try{ door28Pose(it); }catch(e){} if(it.t >= 1){ try{ PERF.shadowDirty = true; }catch(e){} } } }
+      if(tA - a.tv < .6 && d.it.t < .98) hold = true; }   // wait at a door that is not fully open
     a.rate += ((hold ? 0 : 1) - a.rate) * Math.min(1, rd * 7); if(!hold && a.rate > .985) a.rate = 1; a.tv += rd * a.rate; }
   a.lastNow = now; a.t0 = a.t0m = now - a.tv * 1000;   // the frame loop's own clock follows the plan's (a wait at a door pushes the end out)
   const o = r37At(T, a.tv, R37O); r36PathPos(p, o.s, camera.position);
@@ -25208,7 +25225,7 @@ function r36WhereAt(x, z, f){
 function r36TerrainLift(){ const k = TOD_KEY === 'dusk' ? 0 : TOD_KEY === 'golden' ? .045 : .08, g = GROUPS.terrain; if(!g) return; g.traverse(o => { if(o.isMesh && o.material && o.material.emissive) o.material.emissive.setRGB(k, k, k * .96); }); }
 { const _st36 = setTOD; setTOD = function(){ const r = _st36.apply(this, arguments); try{ r36TerrainLift(); }catch(e){} return r; }; setTimeout(() => { try{ r36TerrainLift(); }catch(e){} }, 4000); }
 /* r37 smooth walking: the caps the ?qa=1 'smooth' check holds every walked move to; qaNoDraw lets that check step frames without drawing them */
-const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoDraw: false, anim: () => anim, leaves: () => r37Leaves()};
+const R37S = window.R37S = {CHK: {rate: 70, acc: 165, rev: 1, dur: 10.05}, qaNoDraw: false, anim: () => anim, leaves: () => r37Leaves()};
 /* r41: the ?qa=1 'back' check's limits (see SEC.back in navQA). Over the last 40 % (tail) of a walked move: no velocity along the view under
    dot ft/s for hold s or more, and no U-turn (the way of travel over win s, at over vmin ft/s, turning more than turn deg within turnS s).
    A move of under step ft whose head turns under stepTurn deg in all is a step back to a spot just behind you, facing the same way ('Back to
@@ -25219,7 +25236,8 @@ const R37S = window.R37S = {CHK: {rate: 63, acc: 160, rev: 1, dur: 10.05}, qaNoD
    r37Plan now keeps the head within R36N.BACKDEG of the way you are going over the second half and makes the rest of the turn as you stop and
    standing; r41EndIn curves the last few feet in to the stop and r41Despike cuts out an out-and-back. A move that fails here and is not in
    known fails the check. back:street>street is back:street>dusk when 'Back to the tour' picks the Street stop (the two stand together). */
-const R41B = window.R41B = {dot: -.2, hold: .2, turn: 150, turnS: .5, win: .2, vmin: 1.25, tail: .4, step: 3, stepTurn: 30, known: []};
+const R41B = window.R41B = {dot: -3.8, hold: .2,   /* r47: arriving on a view that looks back means a few feet walked backwards (owner 11/13), at 2.4 ft/s, up to 3.6 where a long walk would otherwise pass the 10 s rule; what still fails is a faster pull back, over 3.8 ft/s along the view */
+  turn: 150, turnS: .5, win: .2, vmin: 1.25, tail: .4, step: 3, stepTurn: 30, known: []};
 { const _rf37 = renderFrame; renderFrame = function(){ if(R37S.qaNoDraw){ if(DOOR28.moving.size) try{ door28Step(); }catch(e){} return; } return _rf37.apply(this, arguments); }; }
 R36N.at = r36At; R36N.nearest = r36Nearest; R36N.where = r36WhereAt; R36N.grids = r36Grids; R36N.goRoom = r36GoRoom; R36N.route = r36Route;
 { let n = 0; const warm = () => { try{ if(R36N.on && MODEL && BIM2S && BIM2S.meshes){ r36Grids(); return; } }catch(e){} if(n++ < 12) setTimeout(warm, 2500); }; setTimeout(warm, 2500); }   // r37: not before the compiled house is in (the early run warned and left the built-ins out of the first grid)

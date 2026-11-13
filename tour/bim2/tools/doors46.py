@@ -16,6 +16,15 @@
      further into the wall. (The page slid every pocket leaf its width less 3 in, which left a 3 in slot at the strike jamb.)
    - the foot of every interior leaf: 7/16 in clear of the floor becomes 1/8 in.
 
+r47 (owner 11/13, later the same day)
+3  "In reality there's a small 45 degree bevel between the surface and the recessed panels." The kernel's sticking (a square 1/8 in step, a
+   flat 1/2 in ledge, a 5/16 in step) becomes one 45 degree bevel, 7/16 in wide, from the face of the stiles and rails down to the flat
+   panel, mitred at the corners, in the leaf's own geometry (the tour page used to reshape it at run time, and only in the house's own
+   doors). Each leaf is checked for open edges after the change. The layout idea "open4k" draws its three doors as plain boxes; they are
+   rebuilt as the same three-panel leaf.
+4  Pocket leaves get a round flush pull on each face, sliding closet panels a small finger pull, brushed nickel, 36 in up.
+5  The foot of an interior leaf is 3/8 in over the floor (r46 had 1/8 in).
+
 It edits the shipped packages in place, in tour/, halloween/ and thanksgiving/: scene.glb and each layout idea's GLB, then every
 scene.meta.json (glb sha256 and bytes, option sha256, mesh counts, the door leaves). Safe to run again: hardware already changed is
 marked in the mesh's extras, and the closing fixes measure the geometry first.
@@ -31,7 +40,13 @@ SITES = ('tour', 'halloween', 'thanksgiving')
 IN = 1 / 12
 NICKEL = 'nickel-brushed'
 LEAF_MATS = ('paint-trim-semigloss', 'door-panel-field')
-FOOT = 0.125 * IN                 # the reveal under a shut leaf
+FOOT = 0.375 * IN                 # the clearance under an interior leaf
+LEDGE, STEP2, RECESS = 0.0417, 0.0259, 0.0362      # the kernel's sticking: ledge width, the ledge above the panel floor, the floor below the face
+FLUSH = [[(1.06, 0.0), (1.06, 0.03)], [(1.06, 0.03), (0.96, 0.06), (0.84, 0.03), (0.62, 0.014), (0.0, 0.014)]]       # a round flush pull, 2-1/8 in
+FINGER = [[(0.75, 0.0), (0.75, 0.015)], [(0.75, 0.015), (0.67, 0.03), (0.56, 0.012), (0.0, 0.008)]]                  # a finger pull, 1-1/2 in
+PULL = 'pull-r47'; LEAF47 = 'leaf-r47'
+# the house's three-panel leaf, from its foot (ft): bottom rail, lower panels, lock rail, top panel, top rail; stiles and mullion (the panel openings in the face)
+LEAF = dict(stile=0.3388, b0=0.7138, lock=0.3026, top_h=1.6724, top_rail=0.3388, mull=0.3026)
 LINING = 0.0625                   # the jamb lining (3/4 in) inside the rough opening the meta gives
 FLOOR = 0.005                     # the finished floor stands this far above the storey datum in the model
 # the knob, as (radius, height off the face) in inches: a round rose with a bevelled rim, a neck, a slightly flattened ball.
@@ -95,12 +110,39 @@ class Glb:
             bv['byteOffset'] = start; bv['byteLength'] = len(out) - start
         for i, a in enumerate(A):
             p, r = self.role[i]
-            if r == 'P': a['min'] = [float(v) for v in p['V'][:, :3].min(0)]; a['max'] = [float(v) for v in p['V'][:, :3].max(0)]
+            if r == 'P' and len(p['V']): a['min'] = [float(v) for v in p['V'][:, :3].min(0)]; a['max'] = [float(v) for v in p['V'][:, :3].max(0)]
         while len(out) % 4: out.append(0)
         J['buffers'][0]['byteLength'] = len(out); self.bin = bytes(out)
         js = json.dumps(J, separators=(',', ':')).encode(); js += b' ' * ((4 - len(js) % 4) % 4)
         g = bytearray(b'glTF') + struct.pack('<II', 2, 0) + struct.pack('<I', len(js)) + b'JSON' + js + struct.pack('<I', len(out)) + b'BIN\x00' + out + self.tail
         struct.pack_into('<I', g, 8, len(g)); open(self.path, 'wb').write(g)
+
+    def add_mesh(self, name, extras, material, parent=None):
+        """a new, empty primitive (its own node and mesh) in this package's layout; parent: the node it hangs under (a leaf)"""
+        J = self.J; A = J['accessors']; BV = J['bufferViews']; mat = next(i for i, m in enumerate(J['materials']) if m.get('name') == material)
+        il = any(b.get('byteStride') for b in BV); ibv = A[self.prims[0]['q']['indices']]['bufferView']
+        def acc(typ, ct, bv, off): A.append({'type': typ, 'componentType': ct, 'count': 0, 'bufferView': bv, 'byteOffset': off}); return len(A) - 1
+        if il:
+            BV.append({'buffer': 0, 'byteOffset': 0, 'byteLength': 0, 'byteStride': 32, 'target': 34962}); v = len(BV) - 1
+            ap, an, au = acc('VEC3', 5126, v, 0), acc('VEC3', 5126, v, 12), acc('VEC2', 5126, v, 24); ai = acc('SCALAR', 5125, ibv, 1 << 40)
+        else:
+            ids = []
+            for typ, ct, tg in (('VEC3', 5126, 34962), ('VEC3', 5126, 34962), ('VEC2', 5126, 34962), ('SCALAR', 5125, 34963)):
+                BV.append({'buffer': 0, 'byteOffset': 0, 'byteLength': 0, 'target': tg}); ids.append(acc(typ, ct, len(BV) - 1, 0))
+            ap, an, au, ai = ids
+        q = {'attributes': {'POSITION': ap, 'NORMAL': an, 'TEXCOORD_0': au}, 'mode': 4, 'material': mat, 'indices': ai}
+        ex = dict(extras); ex['ranges'] = []; J['meshes'].append({'name': name, 'extras': ex, 'primitives': [q]}); mi = len(J['meshes']) - 1
+        nx = {k: v for k, v in extras.items() if k != 'hardware'}; J['nodes'].append({'name': name, 'extras': nx, 'mesh': mi}); ni = len(J['nodes']) - 1
+        if parent is not None: J['nodes'][parent].setdefault('children', []).append(ni); self.parent[ni] = parent
+        else: J['scenes'][J.get('scene', 0)]['nodes'].append(ni)
+        p = {'mesh': mi, 'q': q, 'V': np.zeros((0, 8), np.float32), 'I': np.zeros((0, 3), np.uint32)}; self.prims.append(p); self.node_of[mi] = ni
+        for a_, k in ((ap, 'P'), (an, 'N'), (au, 'U'), (ai, 'I')): self.role[a_] = (p, k)
+        self.dirty = True; return p
+
+    def node_named(self, name):
+        for ni, n in enumerate(self.J['nodes']):
+            if n.get('name') == name: return ni
+        return None
 
     def pieces(self):
         """every run of triangles that belongs to a door element: (prim, element, first triangle, count, material, leaf key or None)"""
@@ -118,11 +160,11 @@ def uv_box(P, N):
     U[a == 0] = P[a == 0][:, [2, 1]]; U[a == 1] = P[a == 1][:, [2, 0]]; U[a == 2] = P[a == 2][:, [0, 1]]; return U
 
 
-def knob(C, d):
-    """one knob: centre C on the door face, pointing out along the unit vector d (level). Returns positions, normals, triangles."""
+def knob(C, d, prof_all=None):
+    """one knob (or a pull: prof_all): centre C on the door face, pointing out along the unit vector d (level). Returns positions, normals, triangles."""
     up = np.array([0.0, 1.0, 0.0]); e2 = np.cross(d, up); P = []; Nn = []; T = []
     th = np.arange(SEG) * 2 * math.pi / SEG; ring = np.outer(np.cos(th), up) + np.outer(np.sin(th), e2)
-    for prof in KNOB:
+    for prof in (prof_all or KNOB):
         pr = np.array(prof, float) * IN; seg = np.diff(pr, axis=0); sn = np.stack([seg[:, 1], -seg[:, 0]], 1); sn /= np.linalg.norm(sn, axis=1)[:, None]
         vn = np.zeros_like(pr); vn[:-1] += sn; vn[1:] += sn; vn /= np.linalg.norm(vn, axis=1)[:, None]; base = len(P)
         for (r, h), (nr, nh) in zip(pr, vn):
@@ -172,7 +214,7 @@ def do_knobs(g, O, rep):
     for p, el, s, c, mat, leaf, r in list(g.pieces()):
         if mat != NICKEL or not is_interior(O.get(el)): continue
         me = g.J['meshes'][p['mesh']]; hw = me['extras'].setdefault('hardware', {})
-        if hw.get(el) == MARK: continue
+        if any(k.split('#')[0] == el for k in hw): continue                  # already a knob, or a pull this tool made
         s, c = r[2], r[3]                                                    # (live: an earlier swap in this mesh moved the later runs)
         P = p['V'][:, :3].astype(float) + g.trans(p['mesh']); tri = p['I'][s:s + c]; fr, th = lever_frames(P, tri, el)
         Ps, Ns, Ts = [], [], []; n0 = 0
@@ -222,8 +264,9 @@ def do_foot(g, O, sill_of, rep):
         if mat not in LEAF_MATS or not is_interior(o): continue
         sill = o['sill'] if o else sill_of(g.J['nodes'][g.node_of[p['mesh']]].get('extras', {}).get('storey'))
         t0 = g.trans(p['mesh']); vs = np.unique(p['I'][s:s + c]); y = p['V'][vs, 1].astype(float) + t0[1]; b = y.min() - sill
-        if not (0.03 < b < 0.05): continue
-        k = vs[np.abs(y - y.min()) < 0.004]; new = sill + FLOOR + FOOT; p['V'][k, 1] = np.float32(new - t0[1]); g.dirty = True; done[el] = (b - FLOOR, FOOT)
+        new = sill + FLOOR + FOOT
+        if not (0.008 < b < 0.06) or abs(y.min() - new) < 5e-4: continue
+        k = vs[np.abs(y - y.min()) < 0.004]; p['V'][k, 1] = np.float32(new - t0[1]); g.dirty = True; done[el] = (b - FLOOR, FOOT)
     for el, (a, b) in sorted(done.items()): rep.append((os.path.relpath(g.path, ROOT), el, 'foot of the leaf', '%.2f in -> %.2f in over the floor' % (a * 12, b * 12)))
 
 
@@ -355,6 +398,205 @@ def apply_leaves(openings, moves, pockets):
     return ch
 
 
+def add_run(g, p, el, P, N, T):
+    """a new run of triangles for an element at the end of a primitive"""
+    rs = g.J['meshes'][p['mesh']]['extras'].setdefault('ranges', []); r = [el, None, len(p['I']), 0]; rs.append(r); replace_run(g, p, r, P, N, T, keep=True)
+
+
+def nickel_prim(g, el, leaf, storey):
+    """the primitive that carries an element's nickel: the leaf's own (made if it has none), or the package's merged one for that storey"""
+    for p, e, s, c, mat, lf, r in g.pieces():
+        if mat == NICKEL and e == el and lf == leaf: return p, True
+    if leaf:
+        return g.add_mesh('%s|openings|%s|%s' % (leaf, storey, NICKEL), {'group': 'openings', 'storey': storey, 'material': NICKEL, 'leaf': leaf}, NICKEL, g.node_named(leaf)), False
+    name = 'openings|%s|%s' % (storey, NICKEL)
+    for p in g.prims:
+        if g.J['meshes'][p['mesh']].get('name') == name: return p, False
+    return g.add_mesh(name, {'group': 'openings', 'storey': storey, 'material': NICKEL}, NICKEL), False
+
+
+def leaf_slabs(g, O, el, mats=LEAF_MATS):
+    """the leaves of a door element as slabs: [lo, hi along the opening, d0, d1 across it, y0, leaf key]. A leaf of its own is one slab; in a
+    merged run the frame's connected pieces are."""
+    o = O[el]; axw, nw, cw = frame(o); out = []
+    for p, e, s, c, mat, leaf, r in g.pieces():
+        if e != el or mat != 'paint-trim-semigloss': continue
+        t0 = g.trans(p['mesh']); tri = p['I'][r[2]:r[2] + r[3]]; vs = np.unique(tri); Pw = p['V'][vs, :3].astype(float) + t0; a = (Pw - cw) @ axw; d = (Pw - cw) @ nw
+        if leaf: out.append([a.min(), a.max(), d.min(), d.max(), Pw[:, 1].min(), leaf])
+        else:
+            grp = weld_groups(Pw, np.searchsorted(vs, tri))
+            for gid in np.unique(grp): k = grp == gid; out.append([a[k].min(), a[k].max(), d[k].min(), d[k].max(), Pw[k, 1].min(), None])
+    out.sort(key=lambda q: q[0]); return out
+
+
+def do_pulls(g, O, rep):
+    """pocket leaves: a flush pull on each face, 2 in from the leading edge; sliding closet panels: a finger pull at each free stile"""
+    todo = {}
+    for p, el, s, c, mat, leaf, r in g.pieces():
+        o = O.get(el)
+        if o and mat == 'paint-trim-semigloss' and is_interior(o) and (o.get('leaves') or [{}])[0].get('kind') in ('POCKET', 'BYPASS'): todo[el] = g.J['nodes'][g.node_of[p['mesh']]].get('extras', {}).get('storey', 'L1')
+    for el, storey in sorted(todo.items()):
+        o = O[el]; axw, nw, cw = frame(o); kind = o['leaves'][0]['kind']; slabs = leaf_slabs(g, O, el); n = len(slabs); made = 0
+        for i, (lo, hi, d0, d1, y0, leaf) in enumerate(slabs):
+            p, has = nickel_prim(g, el, leaf, storey); hw = g.J['meshes'][p['mesh']]['extras'].setdefault('hardware', {}); key = el if leaf else '%s#%d' % (el, i)
+            if has and hw.get(key) != PULL and leaf: continue                 # (a leaf with other hardware of its own)
+            if hw.get(key) == PULL: continue
+            if kind == 'POCKET':
+                lf = o['leaves'][0]; sg = 1 if lf.get('hingeEnd') == 'END' else -1; cen = (lo + hi) / 2
+                if (lf.get('openFraction') or 0) >= 0.5: sg = 1 if cen > 0 else -1          # modelled in its pocket: that end is the pocket
+                at = [lo + 2 * IN] if sg > 0 else [hi - 2 * IN]; prof = FLUSH
+            else:
+                at = ([lo + 2 * IN] if i == 0 else []) + ([hi - 2 * IN] if i == n - 1 else []) + ([lo + 2 * IN, hi - 2 * IN] if 0 < i < n - 1 else []); prof = FINGER
+            y = o['sill'] + 0.0417 + 3.0; Ps, Ns, Ts = [], [], []; n0 = 0
+            for a_ in at:
+                for dd, sgn in ((d0, -1), (d1, 1)):
+                    kp, kn, kt = knob(cw + axw * a_ + nw * dd + np.array([0, y, 0]), nw * sgn, prof); Ps.append(kp); Ns.append(kn); Ts.append(kt + n0); n0 += len(kp)
+            add_run(g, p, el, np.concatenate(Ps), np.concatenate(Ns), np.concatenate(Ts)); hw[key] = PULL; made += len(at)
+        if made: rep.append((os.path.relpath(g.path, ROOT), el, 'pulls', '%d %s pull%s, both faces' % (made, 'flush' if kind == 'POCKET' else 'finger', '' if made == 1 else 's')))
+
+
+def open_edges(tris):
+    """edges of a triangle soup (n, 3, 3) that no other triangle's edge covers (a crack). Welded at 0.0001 ft; an edge that lies along other edges
+    (a T junction) is covered."""
+    key = lambda v: tuple(np.round(v, 4)); E = {}
+    for t in tris:
+        for i in range(3):
+            a, b = key(t[i]), key(t[(i + 1) % 3])
+            if a == b: continue
+            E.setdefault((a, b) if a < b else (b, a), []).append(1)
+    lone = [e for e, c in E.items() if len(c) == 1]; allE = [(np.array(a), np.array(b)) for a, b in E]; bad = 0
+    for a, b in lone:
+        a = np.array(a); b = np.array(b); d = b - a; L = np.linalg.norm(d); d /= L; iv = []
+        for fa, fb in allE:
+            if (fa == a).all() and (fb == b).all(): continue
+            pa = (fa - a) @ d; pb = (fb - a) @ d
+            if np.linalg.norm(fa - a - d * pa) > 3e-4 or np.linalg.norm(fb - a - d * pb) > 3e-4: continue
+            iv.append((min(pa, pb), max(pa, pb)))
+        iv.sort(); c = 0.0
+        for x0, x1 in iv:
+            if x0 > c + 3e-4: break
+            c = max(c, x1)
+        if c < L - 3e-4: bad += 1
+    return bad
+
+
+def do_bevel(g, O, rep):
+    """the sticking round every recessed panel: one 45 degree bevel from the face to the panel floor"""
+    groups = {}
+    for p, el, s, c, mat, leaf, r in g.pieces():
+        if mat in LEAF_MATS and is_interior(O.get(el)): groups.setdefault((el, leaf), {})[mat] = (p, r)
+    for (el, leaf), G in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1] or '')):
+        if len(G) < 2: continue
+        (pf, rf), (pd, rd) = G['paint-trim-semigloss'], G['door-panel-field']
+        Wd = pd['V'][:, :3].astype(float) + g.trans(pd['mesh']); td = pd['I'][rd[2]:rd[2] + rd[3]]
+        if not len(td): continue
+        gn = np.cross(Wd[td[:, 1]] - Wd[td[:, 0]], Wd[td[:, 2]] - Wd[td[:, 0]]); ar = np.linalg.norm(gn, axis=1); n = gn[ar.argmax()] / ar.max(); n[1] = 0; n /= np.linalg.norm(n); t = np.array([-n[2], 0.0, n[0]])
+        fi = np.where((np.abs(gn @ n) > 0.9 * ar) & (ar > 1e-9))[0]; fl = td[fi]
+        if not len(fl): continue
+        vs = np.unique(fl); grp = weld_groups(Wd[vs], np.searchsorted(vs, fl)); rects = []
+        for gid in np.unique(grp):
+            q = Wd[vs[grp == gid]]; k = fi[np.isin(fl, vs[grp == gid]).all(1)][0]; sgn = 1.0 if gn[k] @ n > 0 else -1.0
+            rects.append((float((q @ n).mean()), sgn, (q @ t).min(), (q @ t).max(), q[:, 1].min(), q[:, 1].max()))
+        Wf = pf['V'][:, :3].astype(float) + g.trans(pf['mesh']); tf = pf['I'][rf[2]:rf[2] + rf[3]]; Nf = pf['V'][:, 3:6].astype(float); new = Wf.copy(); side = {}; tol = 1.5e-3; moved = 0
+        for v in np.unique(tf):
+            x, u, y = Wf[v] @ n, Wf[v] @ t, Wf[v][1]
+            for D, sgn, u0, u1, y0, y1 in rects:
+                if abs(x - (D + sgn * STEP2)) > 2e-3: continue
+                def on(a0, a1, b0, b1):
+                    return a0 - tol <= u <= a1 + tol and b0 - tol <= y <= b1 + tol and (abs(u - a0) < tol or abs(u - a1) < tol or abs(y - b0) < tol or abs(y - b1) < tol)
+                if on(u0, u1, y0, y1): new[v] = Wf[v] + n * (D - x); side[v] = sgn; moved += 1; break                      # the ledge's inner edge: down to the floor
+                if on(u0 - LEDGE, u1 + LEDGE, y0 - LEDGE, y1 + LEDGE):                                                      # its outer edge: up to the face, in to 45 degrees
+                    du = (LEDGE - RECESS) * (1 if abs(u - (u0 - LEDGE)) < tol else -1 if abs(u - (u1 + LEDGE)) < tol else 0)
+                    dy = (LEDGE - RECESS) * (1 if abs(y - (y0 - LEDGE)) < tol else -1 if abs(y - (y1 + LEDGE)) < tol else 0)
+                    new[v] = Wf[v] + n * (D + sgn * RECESS - x) + t * du + np.array([0, dy, 0]); side[v] = sgn; moved += 1; break
+        if not moved: continue
+        P, Nn = [], []
+        for tr in tf:
+            A = new[tr]; f = np.cross(A[1] - A[0], A[2] - A[0]); L = np.linalg.norm(f)
+            if L < 1e-9: continue                                           # the step that closed
+            f /= L; sg = [side[v] for v in tr if v in side]
+            if sg: flip = f @ n * sg[0] < -1e-6                                # a face of the sticking looks out of its own side of the slab
+            else: flip = f @ Nf[tr].sum(0) < 0
+            if flip: A = A[::-1]; f = -f
+            P.append(A); Nn.append(np.tile(f, (3, 1)))
+        P = np.concatenate(P); Nn = np.concatenate(Nn); soup = np.concatenate([P.reshape(-1, 3, 3), Wd[td]])
+        before = open_edges(np.concatenate([Wf[tf], Wd[td]])); after = open_edges(soup); name = os.path.relpath(g.path, ROOT)
+        if after > before: rep.append((name, el, 'sticking NOT changed', '%s: %d open edges after (%d before)' % (leaf or 'merged', after, before))); continue
+        replace_run(g, pf, rf, P, Nn, np.arange(len(P)).reshape(-1, 3))
+        rep.append((name, el, 'sticking', '%s45 degree bevel, %d ledge corners moved, %d panel faces, open edges %d' % ((leaf.split('|')[-1] + ': ') if leaf else '', moved, len(rects), after)))
+
+
+def house_leaf(Oc, ua, nn, W, H, T):
+    """the house's three-panel leaf as geometry: a slab W x H x T standing on Oc (its low corner on the mid-plane), ua along its width, nn across
+    it. Returns (frame positions, normals) and (panel floor positions, normals), three vertices a triangle."""
+    up = np.array([0.0, 1.0, 0.0]); R = min(RECESS, T / 2 - 0.004); a0 = LEAF['stile']; a1 = W - a0; m0 = W / 2 - LEAF['mull'] / 2; m1 = W / 2 + LEAF['mull'] / 2
+    b0 = LEAF['b0']; c1 = H - LEAF['top_rail']; c0 = c1 - LEAF['top_h']; b1 = c0 - LEAF['lock']; F, Fn, D, Dn = [], [], [], []
+    def w(u, y, d): return Oc + ua * u + up * y + nn * d
+    def tri(dst, dn, a, b, c, hint):
+        f = np.cross(b - a, c - a); L = np.linalg.norm(f)
+        if L < 1e-12: return
+        f /= L
+        if f @ hint < 0: b, c = c, b; f = -f
+        dst.append([a, b, c]); dn.append([f, f, f])
+    def fan(dst, dn, pts, hint):
+        for i in range(1, len(pts) - 1): tri(dst, dn, pts[0], pts[i], pts[i + 1], hint)
+    panels = [(a0, m0, b0, b1), (m1, a1, b0, b1), (a0, a1, c0, c1)]
+    for sgn in (-1, 1):
+        d = sgn * T / 2; hn = nn * sgn; P = lambda u, y: w(u, y, d)
+        fan(F, Fn, [P(0, 0), P(a0, 0), P(a0, b0), P(a0, b1), P(a0, c0), P(a0, c1), P(a0, H), P(0, H)], hn)                     # stiles
+        fan(F, Fn, [P(W, H), P(a1, H), P(a1, c1), P(a1, c0), P(a1, b1), P(a1, b0), P(a1, 0), P(W, 0)], hn)
+        fan(F, Fn, [P(a0, 0), P(a1, 0), P(a1, b0), P(m1, b0), P(m0, b0), P(a0, b0)], hn)                                        # bottom rail
+        fan(F, Fn, [P(a0, c0), P(a0, b1), P(m0, b1), P(m1, b1), P(a1, b1), P(a1, c0)], hn)                                      # lock rail
+        fan(F, Fn, [P(a0, c1), P(a1, c1), P(a1, H), P(a0, H)], hn); fan(F, Fn, [P(m0, b0), P(m1, b0), P(m1, b1), P(m0, b1)], hn)  # top rail, mullion
+        for u0, u1, y0, y1 in panels:
+            o = [(u0, y0), (u1, y0), (u1, y1), (u0, y1)]; q = [(u0 + R, y0 + R), (u1 - R, y0 + R), (u1 - R, y1 - R), (u0 + R, y1 - R)]; df = sgn * (T / 2 - R); cen = np.array([(u0 + u1) / 2, (y0 + y1) / 2])
+            for k in range(4):
+                k1 = (k + 1) % 4; mid = (np.array(o[k]) + np.array(o[k1])) / 2 - cen; mid /= np.linalg.norm(mid); hint = hn - (ua * mid[0] + up * mid[1])   # the bevel looks out and in toward the panel
+                fan(F, Fn, [w(o[k][0], o[k][1], d), w(o[k1][0], o[k1][1], d), w(q[k1][0], q[k1][1], df), w(q[k][0], q[k][1], df)], hint)
+            fan(D, Dn, [w(x, y, df) for x, y in q], hn)
+    for (u0, y0, u1, y1), hint in (((0, 0, a0, 0), -up), ((a0, 0, a1, 0), -up), ((a1, 0, W, 0), -up), ((0, H, a0, H), up), ((a0, H, a1, H), up), ((a1, H, W, H), up), ((0, 0, 0, H), -ua), ((W, 0, W, H), ua)):
+        fan(F, Fn, [w(u0, y0, -T / 2), w(u1, y1, -T / 2), w(u1, y1, T / 2), w(u0, y0, T / 2)], hint)                             # the four edges of the slab
+    return (np.array(F).reshape(-1, 3), np.array(Fn).reshape(-1, 3)), (np.array(D).reshape(-1, 3), np.array(Dn).reshape(-1, 3))
+
+
+def do_box_leaves(g, O, rep):
+    """a package that draws its doors as plain boxes (build_open4k.py's door_slab: stiles and rails as blocks): each leaf becomes the house's
+    three-panel leaf, on the same slab. A sliding pair gets finger pulls."""
+    els = {}
+    for p, el, s, c, mat, leaf, r in g.pieces():
+        if mat in LEAF_MATS and el not in O and not leaf: els.setdefault(el, {})[mat] = (p, r)
+    for el, G in sorted(els.items()):
+        if 'paint-trim-semigloss' not in G or 'door-panel-field' not in G: continue
+        pf, rf = G['paint-trim-semigloss']; pd, rd = G['door-panel-field']; hw = g.J['meshes'][pf['mesh']]['extras'].setdefault('hardware', {})
+        if hw.get(el) == LEAF47: continue
+        W_ = pf['V'][:, :3].astype(float) + g.trans(pf['mesh']); tri = pf['I'][rf[2]:rf[2] + rf[3]]; vs = np.unique(tri); grp = weld_groups(W_[vs], np.searchsorted(vs, tri))
+        boxes = [(W_[vs[grp == i]].min(0), W_[vs[grp == i]].max(0)) for i in np.unique(grp)]; par = list(range(len(boxes)))
+        def find(x):
+            while par[x] != x: par[x] = par[par[x]]; x = par[x]
+            return x
+        for i in range(len(boxes)):
+            for j in range(i):
+                if (boxes[i][0] <= boxes[j][1] + 2e-3).all() and (boxes[j][0] <= boxes[i][1] + 2e-3).all(): par[find(i)] = find(j)
+        slabs = {}
+        for i, b in enumerate(boxes):
+            k = find(i); lo, hi = slabs.get(k, (b[0], b[1])); slabs[k] = (np.minimum(lo, b[0]), np.maximum(hi, b[1]))
+        F, Fn, D, Dn, pulls = [], [], [], [], []; slabs = sorted(slabs.values(), key=lambda q: (q[0][0], q[0][2]))
+        for i, (lo, hi) in enumerate(slabs):
+            ex = hi - lo; ax = 0 if ex[0] > ex[2] else 2; W = ex[ax]; T = ex[2 - ax]; ua = np.zeros(3); ua[ax] = 1; nn = np.zeros(3); nn[2 - ax] = 1
+            Oc = lo.copy(); Oc[2 - ax] += T / 2; (a, an), (b, bn) = house_leaf(Oc, ua, nn, W, ex[1], T); F.append(a); Fn.append(an); D.append(b); Dn.append(bn)
+            if len(slabs) == 2:                                               # a sliding pair: a finger pull at each panel's outer stile
+                u = 2 * IN if i == 0 else W - 2 * IN
+                for sgn in (-1, 1): pulls.append((Oc + ua * u + nn * sgn * T / 2 + np.array([0, 3.0, 0]), nn * sgn))
+        F = np.concatenate(F); Fn = np.concatenate(Fn); D = np.concatenate(D); Dn = np.concatenate(Dn)
+        bad = open_edges(np.concatenate([F.reshape(-1, 3, 3), D.reshape(-1, 3, 3)])); assert bad == 0, (el, bad)
+        replace_run(g, pf, rf, F, Fn, np.arange(len(F)).reshape(-1, 3)); replace_run(g, pd, rd, D, Dn, np.arange(len(D)).reshape(-1, 3)); hw[el] = LEAF47
+        if pulls:
+            storey = g.J['nodes'][g.node_of[pf['mesh']]].get('extras', {}).get('storey', 'L1'); pn, _ = nickel_prim(g, el, None, storey); Ps, Ns, Ts = [], [], []; n0 = 0
+            for C, d in pulls: kp, kn, kt = knob(C, d, FINGER); Ps.append(kp); Ns.append(kn); Ts.append(kt + n0); n0 += len(kp)
+            add_run(g, pn, el, np.concatenate(Ps), np.concatenate(Ns), np.concatenate(Ts)); g.J['meshes'][pn['mesh']]['extras'].setdefault('hardware', {})[el + '#pulls'] = PULL
+        rep.append((os.path.relpath(g.path, ROOT), el, 'box door -> panelled leaf', '%d %s, bevelled panels%s' % (len(slabs), 'leaf' if len(slabs) == 1 else 'leaves', ', finger pulls' if pulls else '')))
+
+
 def main():
     check = '--check' in sys.argv; rep = []
     for site in SITES:
@@ -369,17 +611,21 @@ def main():
             g = Glb(gp); O = dict(base_O)
             if mf and os.path.exists(os.path.join(d, mf)):
                 D = metas.setdefault(os.path.join(d, mf), json.load(open(os.path.join(d, mf)))); O.update({o['id']: o for o in D.get('openings', [])})
-            do_knobs(g, O, rep); do_foot(g, O, sill_of, rep); do_bypass(g, O, rep, moves)
+            do_knobs(g, O, rep); do_box_leaves(g, O, rep); do_foot(g, O, sill_of, rep); do_bypass(g, O, rep, moves); do_bevel(g, O, rep); do_pulls(g, O, rep)
             if not mf: pockets.update(pocket_meta(g, O, rep))
             if g.dirty and not check: g.save()
             if not mf and g.dirty:                                           # the base model's own mesh list and counts
                 cnt = {}
                 for p in g.prims: cnt[g.J['meshes'][p['mesh']].get('name')] = (len(p['I']), len(p['V']))
+                have = set(m.get('name') for m in meta.get('meshes', []))
+                for p in g.prims:
+                    me = g.J['meshes'][p['mesh']]; ex = me.get('extras', {})
+                    if meta.get('meshes') is not None and me.get('name') not in have: meta['meshes'].append({'name': me.get('name'), 'group': ex.get('group'), 'storey': ex.get('storey'), 'material': ex.get('material'), 'tris': 0, 'verts': 0, 'ranges': len(ex.get('ranges') or [])})
                 for m in meta.get('meshes', []):
                     if m.get('name') in cnt: m['tris'], m['verts'] = int(cnt[m['name']][0]), int(cnt[m['name']][1])
                 if meta.get('stats') and meta.get('meshes'):
-                    meta['stats']['triangles'] = int(sum(m['tris'] for m in meta['meshes']))
-                    for k, v in meta['stats'].get('byGroup', {}).items(): v['tris'] = int(sum(m['tris'] for m in meta['meshes'] if m.get('group') == k))
+                    meta['stats']['triangles'] = int(sum(m['tris'] for m in meta['meshes'])); meta['stats']['meshes'] = len(meta['meshes'])
+                    for k, v in meta['stats'].get('byGroup', {}).items(): v['tris'] = int(sum(m['tris'] for m in meta['meshes'] if m.get('group') == k)); v['meshes'] = int(sum(1 for m in meta['meshes'] if m.get('group') == k))
         if check: continue
         for path, D in metas.items(): apply_leaves(D.get('openings'), moves, pockets)
         raw = open(os.path.join(d, meta['glb']['file']), 'rb').read(); meta['glb']['sha256'] = hashlib.sha256(raw).hexdigest(); meta['glb']['bytes'] = len(raw)
