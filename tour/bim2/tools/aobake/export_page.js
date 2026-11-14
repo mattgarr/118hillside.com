@@ -85,15 +85,23 @@ const srv = http.createServer((q, r) => { try{ const u = decodeURIComponent(q.ur
           T.push(E[0] * x + E[4] * y + E[8] * z + E[12], E[1] * x + E[5] * y + E[9] * z + E[13], E[2] * x + E[6] * y + E[10] * z + E[14]); } }
       objs.push({group: tg.split('@')[0], cat, kind, name: o.name || (o.parent && o.parent.name) || '', mat: (mat && mat.name) || '', t0, nt: T.length / 9 - t0}); });
     const f = new Float32Array(T);
-    return {scene: sceneId, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs};
+    // page-built receivers (cabinets, counters, backsplashes...): the page's own list, so the keys match the loader's
+    const pieces = (window.R50 && R50.pieces ? R50.pieces() : []).map(({key, mesh}) => { const g = mesh.geometry, P = g.attributes.position; mesh.updateMatrixWorld(true); const E = mesh.matrixWorld.elements;
+      const pos = new Float32Array(P.count * 3); for(let i = 0; i < P.count; i++){ const x = P.getX(i), y = P.getY(i), z = P.getZ(i); pos[3 * i] = E[0] * x + E[4] * y + E[8] * z + E[12]; pos[3 * i + 1] = E[1] * x + E[5] * y + E[9] * z + E[13]; pos[3 * i + 2] = E[2] * x + E[6] * y + E[10] * z + E[14]; }
+      let idx; if(g.index) idx = new Uint32Array(g.index.array); else { idx = new Uint32Array(P.count - P.count % 3); for(let i = 0; i < idx.length; i++) idx[i] = i; }
+      const n = P.count, sv = [...new Set([0, n / 3 | 0, (2 * n) / 3 | 0, n - 1])].sort((a, b) => a - b);
+      let vis = true; for(let q = mesh; q; q = q.parent) if(!q.visible) vis = false;
+      return {key, n, vis, local: sv.map(i => [i, +P.getX(i).toFixed(4), +P.getY(i).toFixed(4), +P.getZ(i).toFixed(4)]), pos: b64(new Uint8Array(pos.buffer)), idx: b64(new Uint8Array(idx.buffer))}; });
+    return {scene: sceneId, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs, pieces};
   }, scene);
   // binary: 4-byte json length, json (with base64 blobs moved out), then blobs
   const blobs = []; const put = s => { const buf = Buffer.from(s, 'base64'); const o = {off: 0, len: buf.length}; blobs.push([o, buf]); return o; };
   for(const m of res.pkg){ m.pos = put(m.pos); if(m.idx) m.idx = put(m.idx); }
+  for(const m of res.pieces){ m.pos = put(m.pos); m.idx = put(m.idx); }
   res.occ = put(res.occ);
   let off = 0; for(const [o, buf] of blobs){ o.off = off; off += buf.length; }
   const js = Buffer.from(JSON.stringify(res)); const hdr = Buffer.alloc(4); hdr.writeUInt32LE(js.length);
   fs.writeFileSync(out, Buffer.concat([hdr, js, ...blobs.map(x => x[1])]));
-  console.log('exported', scene, 'pkg meshes', res.pkg.length, 'occluder tris', res.occTris, 'skipped', JSON.stringify(res.why), (Date.now() - t0) + 'ms');
+  console.log('exported', scene, 'pkg meshes', res.pkg.length, 'occluder tris', res.occTris, 'page receivers', res.pieces.length, 'skipped', JSON.stringify(res.why), (Date.now() - t0) + 'ms');
   await b.close(); srv.close();
 })().catch(e => { console.error(e); process.exit(1); });

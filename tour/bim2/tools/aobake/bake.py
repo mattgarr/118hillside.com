@@ -185,17 +185,26 @@ def _hidden(ch, entries, extra_occ, G):
 
 def make_layout(glb_path, y0, spaces, tag, extra_occ=None):
     """deterministic UV layout of one GLB's receiving meshes. Returns dict with entries + charts (for the bake)."""
-    t0 = time.time()
     g = GLB(glb_path)
-    entries, charts = [], []
-    for ei, e in enumerate(g.mesh_entries()):
-        ent = dict(name=e['name'], nverts=e['nverts'], recv=is_receiver(e), uv=None, ranges=e['extras'].get('ranges', []))
-        entries.append(ent)
+    entries = []
+    for e in g.mesh_entries():
+        entries.append(dict(name=e['name'], nverts=e['nverts'], recv=is_receiver(e), uv=None, ranges=e['extras'].get('ranges', []), P=e['pos'], I=e['idx']))
         if not e['name'].startswith('leaf|') and e['extras'].get('group') != 'glass' and 'glass' not in e['extras'].get('material', ''):
             _G_layout.setdefault('tris', []).append(e['pos'][e['idx']])
+    L = layout_core(entries, y0, spaces, tag, extra_occ, 'point')
+    L.update(sha=sha256(glb_path), file=os.path.basename(glb_path), bytes=g.bytes)
+    return L
+
+
+def layout_core(entries, y0, spaces, tag, extra_occ, curved):
+    """charts for the receiving entries (planar connected components; curved ones: 'point' = one texel block, 'vertex' = AO per
+    vertex, carried in the uv itself), hidden ones dropped, the rest shelf-packed from row y0"""
+    t0 = time.time()
+    charts = []
+    for ei, ent in enumerate(entries):
         if not ent['recv']:
             continue
-        P, I = e['pos'], e['idx']
+        P, I = ent['P'], ent['I']
         fn = np.cross(P[I[:, 1]] - P[I[:, 0]], P[I[:, 2]] - P[I[:, 0]])
         L = np.linalg.norm(fn, axis=1)
         ok = L > 1e-10
@@ -204,7 +213,7 @@ def make_layout(glb_path, y0, spaces, tag, extra_occ=None):
         # element of each triangle (for skylight wells)
         el = np.empty(len(I), object)
         el[:] = ''
-        for r in e['extras'].get('ranges', []):
+        for r in ent.get('ranges', []):
             el[r[2]:r[2] + r[3]] = r[0]
         order = np.argsort(lab, kind='stable')
         labs = lab[order]
@@ -247,19 +256,21 @@ def make_layout(glb_path, y0, spaces, tag, extra_occ=None):
                 ch['local'] = Q
                 ch['w'] = int(math.ceil(ext[0] + 1e-6)) + 1 + 2 * PAD
                 ch['h'] = int(math.ceil(ext[1] + 1e-6)) + 1 + 2 * PAD
+            elif curved == 'vertex':
+                ch['vertex'] = True
+                ch['local'] = np.zeros((len(vids), 2))
+                ch['w'] = ch['h'] = 0
             else:
                 ch['local'] = np.zeros((len(vids), 2))
                 ch['w'] = ch['h'] = 1 + 2 * PAD
             charts.append(ch)
-        ent['P'] = P
-        ent['I'] = I
     # charts no one can see (stud faces in a wall cavity, the underside of a floor above a ceiling, faces pressed against another
     # surface): every probe ray from every probe point hits something within 1.5 ft. Probed against this GLB's own geometry
     # (+ extra_occ: the base package with an idea's hidden elements removed), so the layout depends on the GLBs only.
     charts = [c for c in charts if not _hidden(c, entries, extra_occ, _G_layout)]
     _G_layout.clear()
     # shelf packing, tallest first
-    order = sorted(range(len(charts)), key=lambda k: (-charts[k]['h'], -charts[k]['w'], k))
+    order = sorted([k for k in range(len(charts)) if not charts[k].get('vertex')], key=lambda k: (-charts[k]['h'], -charts[k]['w'], k))
     x, y, shelf_h = RES, y0 + RES, 0
     for k in order:
         ch = charts[k]
@@ -277,6 +288,9 @@ def make_layout(glb_path, y0, spaces, tag, extra_occ=None):
         if ent['recv']:
             ent['uv'] = np.zeros((ent['nverts'], 2), np.float64)
     for ch in charts:
+        if ch.get('vertex'):
+            ch['uvv'] = ch['local']
+            continue
         uvv = ch['local'] + np.array([ch['ox'] + PAD + 0.5, ch['oy'] + PAD + 0.5])
         entries[ch['mesh']]['uv'][ch['vids']] = uvv
         ch['uvv'] = uvv
@@ -284,22 +298,27 @@ def make_layout(glb_path, y0, spaces, tag, extra_occ=None):
     log('[layout] %s: %d receiving meshes, %d charts (%d curved), rows %d (+%d), fill %.0f%%, %.1fs' % (
         tag, sum(1 for e in entries if e['recv']), len(charts), sum(1 for c in charts if not c['planar']), rows, y0,
         100.0 * area / max(1, W * rows), time.time() - t0))
-    return dict(entries=entries, charts=charts, rows=rows, y0=y0, sha=sha256(glb_path), file=os.path.basename(glb_path), bytes=g.bytes)
+    return dict(entries=entries, charts=charts, rows=rows, y0=y0)
 
 
-def write_uv(layout, outdir, stem):
+def write_uv(layout, outdir, stem, page=False):
     """binary: 'AOUV' u32 version u32 jsonLen json [uint16 pairs]. json: glb sha, entries [name, nverts, off (pairs)]"""
     ents, blobs, off = [], [], 0
     for e in layout['entries']:
         if not e['recv']:
             continue
         q = np.clip(np.round(e['uv'] * 16), 0, 65535).astype('<u2')
+        if 'direct' in e:                  # per-vertex AO (curved page pieces): u = 65535, v = AO x 65535
+            m = e['direct'] >= 0
+            q[m, 0] = 65535
+            q[m, 1] = np.clip(np.round(e['direct'][m] * 65535), 0, 65535).astype('<u2')
         n = e['nverts']
         sv = sorted({0, n // 3, (2 * n) // 3, n - 1})
-        ents.append([e['name'], n, off, [[int(i)] + [round(float(c), 3) for c in e['P'][i]] for i in sv]])
+        smp = e['local'] if page else [[int(i)] + [round(float(c), 3) for c in e['P'][i]] for i in sv]
+        ents.append([e['name'], n, off, smp])
         blobs.append(q.tobytes())
         off += e['nverts']
-    hdr = json.dumps({'format': 'aobake-uv', 'layout': LAYOUT_VERSION, 'glb': layout['file'], 'sha256': layout['sha'], 'y0': layout['y0'],
+    hdr = json.dumps({'format': 'aobake-uv', 'layout': LAYOUT_VERSION, 'glb': layout['file'], 'sha256': layout['sha'], 'page': page, 'y0': layout['y0'],
                       'rows': layout['rows'], 'scale': 16, 'entries': ents}, separators=(',', ':')).encode()
     hdr += b' ' * ((4 - len(hdr) % 4) % 4)
     body = b'AOUV' + np.array([1, len(hdr)], '<u4').tobytes() + hdr + b''.join(blobs)
@@ -480,7 +499,7 @@ def trace_all(P, N, occ_tris, glass_tris, procs):
 def base_tris_for_option(opt):
     """the base package's triangles with the idea's hidden elements removed (meta options[].hide / hideRanges)"""
     meta = json.load(open(os.path.join(BIM2, 'scene.meta.json')))
-    o = next(x for x in meta['options'] if x['id'] == opt)
+    o = next(x for x in meta['options'] if x['id'] == opt) if opt else {}
     hide = o.get('hide') or []
     hide = json.loads(hide) if isinstance(hide, str) else hide
     hr = o.get('hideRanges') or []
@@ -524,6 +543,21 @@ def main():
     pk = {}
     for m in page['pkg']:
         pk[(m['opt'], m['name'])] = m
+    # page-built receivers (cabinets, counters, backsplashes): their own region after the GLB regions, curved parts per vertex
+    pents = []
+    for m in page.get('pieces', []):
+        if not m['vis'] or len(m['idx']) == 0:
+            continue
+        pents.append(dict(name=m['key'], nverts=m['n'], recv=True, uv=None, ranges=[], P=m['pos'], I=m['idx'], local=m['local'], _page=m))
+    _G_layout['tris'] = [base_tris_for_option(opt) if opt else base_tris_for_option(None)] + [e['P'][e['I']] for e in pents]
+    yp = int(math.ceil((layouts[-1]['y0'] + layouts[-1]['rows']) / 4.0) * 4) if opt else BASE_ROWS
+    sp_all = load_spaces([os.path.join(BIM2, 'scene.meta.json')] + ([os.path.join(BIM2, 'scene.opt-%s.meta.json' % opt)] if opt else []))
+    LP = layout_core(pents, yp, sp_all, 'page pieces', None, 'vertex')
+    man = hashlib.sha256(json.dumps([[e['name'], e['nverts'], e['local']] for e in pents]).encode()).hexdigest()
+    LP.update(sha=man, file='page', bytes=0, page=True)
+    for e in pents:
+        e['direct'] = np.full(e['nverts'], -1.0)
+    layouts.append(LP)
     # ---- sample points
     PTS, NRM, REF = [], [], []     # REF: (layout, chart index, kind, payload)
     t0 = time.time()
@@ -531,7 +565,24 @@ def main():
         optid = None if li == 0 else opt
         for ci, ch in enumerate(L['charts']):
             ent = L['entries'][ch['mesh']]
-            m = pk.get((optid, ent['name']))
+            if L.get('page'):
+                m = ent['_page']
+                if '_vis' not in ent:
+                    ent['_vis'] = np.ones(len(ent['I']), bool)
+                if ch.get('vertex'):       # AO per vertex: the vertex, along its area-weighted normal in this component
+                    Pp, I = m['pos'], ent['I']
+                    fn = np.cross(Pp[I[ch['tris'], 1]] - Pp[I[ch['tris'], 0]], Pp[I[ch['tris'], 2]] - Pp[I[ch['tris'], 0]])
+                    vn = np.zeros((len(Pp), 3))
+                    for k in range(3):
+                        np.add.at(vn, I[ch['tris'], k], fn)
+                    vv = ch['vids']
+                    nn = vn[vv] / np.maximum(np.linalg.norm(vn[vv], axis=1, keepdims=True), 1e-12)
+                    PTS.append(Pp[vv])
+                    NRM.append(nn)
+                    REF.append((li, ci, 'vertex', vv))
+                    continue
+            else:
+                m = pk.get((optid, ent['name']))
             if m is None or not m['vis'] or m['n'] < ent['nverts']:
                 continue
             Pw = m['pos']
@@ -602,7 +653,7 @@ def main():
     occf, glf = trace_all(P, N, occ, glass, a.procs)
     vis = 1 - occf * (1 - np.clip(glf * GLASS_K, 0, 1))
     # ---- atlas
-    H = layouts[-1]['y0'] + layouts[-1]['rows'] if opt else layouts[0]['rows']
+    H = layouts[-1]['y0'] + layouts[-1]['rows'] if (opt or LP['rows'] > 0) else layouts[0]['rows']
     H = int(math.ceil(H / 4.0) * 4)
     A = np.ones((H, W), np.float64)
     WT = np.zeros((H, W), np.float64)
@@ -613,6 +664,9 @@ def main():
         o += n
         if ch.get('sky'):
             v = np.ones_like(v)
+        if kind == 'vertex':
+            layouts[li]['entries'][ch['mesh']]['direct'][keys] = v
+            continue
         if kind == 'point':
             x0, y0 = ch['ox'], ch['oy']
             A[y0:y0 + ch['h'], x0:x0 + ch['w']] = v[0]
@@ -622,7 +676,7 @@ def main():
     # denoise: per chart, a masked 3x3 binomial (twice), only texels of the same chart
     for li, L in enumerate(layouts):
         for ch in L['charts']:
-            if not ch['planar']:
+            if not ch['planar'] or ch.get('vertex'):
                 continue
             x0, y0, w, h = ch['ox'], ch['oy'], ch['w'], ch['h']
             a_ = A[y0:y0 + h, x0:x0 + w]
@@ -651,6 +705,10 @@ def main():
     open(os.path.join(a.out, afn), 'wb').write(data)
     uvs = []
     for li, L in enumerate(layouts):
+        if L.get('page'):
+            fn, nb = write_uv(L, a.out, stem + '.ao.page', page=True)
+            uvs.append({'page': True, 'sha256': L['sha'], 'file': fn, 'bytes': nb, 'n': len(L['entries'])})
+            continue
         st = 'scene' if li == 0 else 'scene.opt-%s' % opt
         fn, nb = write_uv(L, a.out, st)
         uvs.append({'glb': L['file'], 'sha256': L['sha'], 'file': fn, 'bytes': nb, 'option': None if li == 0 else opt})

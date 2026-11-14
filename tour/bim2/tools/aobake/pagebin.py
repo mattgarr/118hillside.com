@@ -14,6 +14,9 @@ def read(path):
     for m in j['pkg']:
         m['pos'] = blob(m['pos'], np.float32).reshape(-1, 3).astype(np.float64)
         m['idx'] = blob(m['idx'], np.uint32).reshape(-1, 3).astype(np.int64) if m.get('idx') else None
+    for m in j.get('pieces', []):
+        m['pos'] = blob(m['pos'], np.float32).reshape(-1, 3).astype(np.float64)
+        m['idx'] = blob(m['idx'], np.uint32).reshape(-1, 3).astype(np.int64)
     j['occ'] = blob(j['occ'], np.float32).reshape(-1, 3, 3)
     return j
 

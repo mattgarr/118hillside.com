@@ -2065,12 +2065,12 @@ if(R50.on){ const C = THREE.ShaderChunk, GV = '#if defined( STANDARD ) && define
   if(C.aomap_fragment && C.uv2_pars_vertex !== undefined && C.uv2_vertex !== undefined){
     C.common += `\n${GV}\nvarying vec2 vAoUv;\n#endif\n`;
     C.uv2_pars_vertex += `\n${GV}\nattribute vec2 aoUv; uniform vec2 aoScale;\n#endif\n`;
-    C.uv2_vertex += `\n${GV}\nvAoUv = aoUv * aoScale;\n#endif\n`;
+    C.uv2_vertex += `\n${GV}\nvAoUv = aoUv.x > 65534.5 ? vec2( -1.0, aoUv.y / 65535.0 ) : aoUv * aoScale;   // u = 65535: the AO itself, per vertex (curved page-built parts)\n#endif\n`;
     C.envmap_physical_pars_fragment += `\n${GF}\nuniform sampler2D aoTex; uniform vec4 aoK;\n#endif\n`;
     C.aomap_fragment += `
 ${GF}
 	if( aoK.x > 0.0 ){
-		float aoV = max( texture2D( aoTex, vAoUv ).r, 1e-4 );
+		float aoV = max( vAoUv.x < 0.0 ? vAoUv.y : texture2D( aoTex, vAoUv ).r, 1e-4 );
 		float aoD = ( 1.0 - pow( aoV, aoK.y ) ) * aoK.x, aoE = exp( -2.0 * aoD / aoK.z );
 		aoD = aoK.z * ( 1.0 - aoE ) / ( 1.0 + aoE );   // soft floor: span * tanh( d / span )
 		vec3 aoM = 1.0 - aoD * vec3( 0.93, 0.98, 1.05 );
@@ -24091,6 +24091,22 @@ BIM3.report.r13 = R13.report;
    fetched the first time it is shown. QA: __ao.state(). */
 (() => {
   const R = R50, Q = location.search, LS = 'tour.shading50';
+  /* the page-built pieces that take baked shading too (cabinets, counters, backsplashes, vanities, built-ins: fixed, never staging),
+     each keyed by its furnishing id + the mesh's place under it + its vertex count. The bake's exporter calls this same function, so
+     the keys always agree; each uv entry is also checked against sampled vertex positions before it is used. */
+  R.pieces = () => { const out = [], uses = new Map(), sc = scene, PK = /^(kitchen|bath|laundry|builtin|fixture)$/;
+    sc.traverse(o => { if(o.isMesh && o.geometry) uses.set(o.geometry, (uses.get(o.geometry) || 0) + 1); });
+    sc.traverse(o => { const u = o.userData; if(!u || typeof u.el !== 'string' || !o.isObject3D || o.isMesh) return;
+      let p = o.parent; while(p && p !== sc){ if(p.userData && typeof p.userData.el === 'string') return; p = p.parent; }   // the outermost piece root
+      let top = o; while(top.parent && top.parent !== sc) top = top.parent; if(!/^(furn|furnU|main|upper)(@|$)/.test(top.name || '') || !top.visible) return;   // the pieces of the layout on show
+      let k = 0; o.traverse(m => { if(!m.isMesh) return; const i = k++; if(m.isInstancedMesh || m.isSkinnedMesh || uses.get(m.geometry) !== 1 || !m.geometry.attributes.position) return;
+        let cat = null, bad = false; for(let q = m; q; q = q.parent){ const d = q.userData || {}; if(d.contents || d.noAO) bad = true; if(cat == null && d.category) cat = d.category; if(q === o) break; }
+        const mat = Array.isArray(m.material) ? null : m.material, nm = (m.name || '') + ' ' + ((mat && mat.name) || '') + ' ' + (o.userData.kind || '');
+        if(bad || !mat || !mat.isMeshStandardMaterial || mat.transparent || mat.envMap || mat.blending !== THREE.NormalBlending || (cat && !PK.test(cat))) return;
+        if(mat.emissive && (mat.emissive.r + mat.emissive.g + mat.emissive.b) * mat.emissiveIntensity > .6) return;
+        if(/mirror|glass|led|lamp|light|sconce|screen|display/i.test(nm)) return;
+        out.push({key: o.userData.el + '|' + i + '|' + m.geometry.attributes.position.count, mesh: m}); }); });
+    return out; };
   const qv = (/[?&]ao=(\d{1,3})\b/.exec(Q) || [])[1];
   R.level = R.DEFAULT; try{ const v = localStorage.getItem(LS); if(v != null && isFinite(+v)) R.level = Math.max(0, Math.min(100, Math.round(+v))); }catch(e){}
   if(qv != null) R.level = Math.max(0, Math.min(100, +qv));
@@ -24111,6 +24127,14 @@ BIM3.report.r13 = R13.report;
     if(dv.getUint32(0, true) !== 0x56554f41) throw new Error('uv magic');   // 'AOUV'
     const hl = dv.getUint32(8, true), H = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 12, hl))), d0 = 12 + hl;
     if(H.sha256 !== u.sha256) throw new Error('uv header sha');
+    if(H.page){   // page-built pieces: no GLB behind them, so each entry is checked on its own (key, vertex count, local positions) and skipped if it does not fit
+      const by = new Map(R.pieces().map(p => [p.key, p.mesh])); let ok = 0, miss = 0; const plan = [];
+      for(const [key, n, off, smp] of H.entries){ const m = by.get(key), g = m && m.geometry, P = g && g.attributes.position;
+        if(!P || P.count !== n || !smp.every(s => s[0] < n && Math.abs(P.getX(s[0]) - s[1]) < 2e-3 && Math.abs(P.getY(s[0]) - s[2]) < 2e-3 && Math.abs(P.getZ(s[0]) - s[3]) < 2e-3)){ miss++; continue; }
+        plan.push({m, n, smp: null, src: new Uint16Array(buf, d0 + off * 4, n * 2)}); ok++; }
+      for(let i = 0; i < plan.length;){ await slice(() => { const t = now(); while(i < plan.length && now() - t < 4){ const p = plan[i++], g = p.m.geometry;
+          g.setAttribute('aoUv', aoAttr(g, p.src, p.n)); p.geo = g; p.pos = g.attributes.position; p.page = true; R.att.push(p); } }); }
+      return (C[u.file] = {n: ok, miss}); }
     const S = BIM2S, list = u.option ? (S.optionMeshes || []).filter(m => m.userData.bim2 && m.userData.bim2.option === u.option) : S.meshes, by = new Map();
     for(const m of list) if(!by.has(m.name)) by.set(m.name, m);
     const plan = [];
@@ -24129,7 +24153,7 @@ BIM3.report.r13 = R13.report;
     const r = await fetch(dir + stem + '.ao.json', {cache: 'no-cache'}); if(!r.ok) throw new Error('no sidecar (' + r.status + ')');
     const idx = await r.json(); if(idx.format !== 'aobake' || !idx.atlas || !Array.isArray(idx.uv)) throw new Error('sidecar format');
     const S = BIM2S;
-    for(const u of idx.uv){ const have = u.option ? (S.optionSha || {})[u.option] : S.glbSha;   // the GLB bytes the page loaded
+    for(const u of idx.uv){ if(u.page) continue; const have = u.option ? (S.optionSha || {})[u.option] : S.glbSha;   // the GLB bytes the page loaded
       if(!have || have !== u.sha256) throw new Error('stale sidecar for ' + u.glb + ' (' + String(u.sha256).slice(0, 12) + ' vs loaded ' + String(have).slice(0, 12) + ')'); }
     const atlasP = fetch(dir + idx.atlas.file).then(x => { if(!x.ok) throw new Error('atlas ' + x.status); return x.blob(); }).then(decode);
     for(const u of idx.uv) await uvSet(u);
@@ -24145,7 +24169,7 @@ BIM3.report.r13 = R13.report;
   // the attached sets follow the page: a geometry the page replaced (merges, the dollhouse cut) is re-checked once, kept only if it still fits
   const seen = new WeakSet();
   function follow(){ for(const p of R.att){ const g = p.m.geometry; if(g === p.geo && g.attributes.position === p.pos && (g.attributes.aoUv && g.attributes.aoUv.count === g.attributes.position.count)) continue;
-      if(seen.has(g.attributes.position)) continue; seen.add(g.attributes.position);
+      if(seen.has(g.attributes.position)) continue; seen.add(g.attributes.position); if(p.page){ if(g.attributes.aoUv) g.deleteAttribute('aoUv'); continue; }
       if(g.attributes.position.count >= p.n && okSamples(g.attributes.position, p.smp)){ g.setAttribute('aoUv', aoAttr(g, p.src, p.n)); p.geo = g; p.pos = g.attributes.position; } } }
   let last = now(), fr = 0, started = false;
   const tick = () => { requestAnimationFrame(tick); const t = now(), dt = Math.min(.1, (t - last) / 1000); last = t;

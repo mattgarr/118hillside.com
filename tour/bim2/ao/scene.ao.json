@@ -8,15 +8,22 @@
    "glb": "scene.glb",
    "sha256": "8304de4b6e8e9eb572a232f49952d75e4f9573d37fbad96997af73469d0c60b5",
    "file": "scene.uv.8304de4b6e8e.bin",
-   "bytes": 451168,
+   "bytes": 451180,
    "option": null
+  },
+  {
+   "page": true,
+   "sha256": "e7ee4342f9055b47a54a813864b576bc41d2b3bc68e965d8d5e663074a96305a",
+   "file": "scene.ao.page.uv.e7ee4342f905.bin",
+   "bytes": 1013864,
+   "n": 340
   }
  ],
  "atlas": {
-  "file": "scene.ao.ba9273d730ce.webp",
+  "file": "scene.ao.0d48e069e1e9.webp",
   "w": 2048,
-  "h": 1772,
-  "bytes": 850588
+  "h": 2428,
+  "bytes": 1147396
  },
  "params": {
   "rays": 96,
@@ -27,6 +34,6 @@
   "glassK": 2.5,
   "store": "visibility"
  },
- "baked": "2026-11-14T22:14:06Z",
- "seconds": 83.5
+ "baked": "2026-11-14T22:31:30Z",
+ "seconds": 118.3
 }
