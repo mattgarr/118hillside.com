@@ -24001,7 +24001,8 @@ function r49PieceAO(items){ if(typeof inWallBody !== 'function' || !BIM2S) retur
   for(const it of cand){ const hung = E.hung.test(it.kind);
     // a piece standing inside / under a taller one of the list (a base cabinet under its counter) leaves its wall to that one
     if(!hung && cand.some(q => q !== it && !E.hung.test(q.kind) && q.y1 > it.y1 - .05 && q.world.min.y < it.y1 && it.wx > q.world.min.x && it.wx < q.world.max.x && it.wz > q.world.min.z && it.wz < q.world.max.z && (q.y1 > it.y1 + .02 || q.w * q.d > it.w * it.d))){ (rep.why = rep.why || []).push([it.kind, 'under']); rep.skipped++; continue; }
-    let sp = null; for(let z = it.y0 + .3; z > it.y0 - 9 && !sp; z -= .5){ const q = BIM2S.spaceUnderFeet(it.wz, it.wx, z); if(q && q.floorZ <= it.y0 + .3) sp = q; }   // a hung piece or a counter: the room under it if(!sp || !sp.interior || sp.openAir){ (rep.why = rep.why || []).push([it.kind, 'nospace']); rep.skipped++; continue; }
+    let sp = null; for(let z = it.y0 + .3; z > it.y0 - 9 && !sp; z -= .5){ const q = BIM2S.spaceUnderFeet(it.wz, it.wx, z); if(q && q.floorZ <= it.y0 + .3) sp = q; }   // a hung piece or a counter: the room under it
+    if(!sp || !sp.interior || sp.openAir){ (rep.why = rep.why || []).push([it.kind, 'nospace']); rep.skipped++; continue; }
     const c = Math.cos(it.fb.ry), s = Math.sin(it.fb.ry), U = [c, -s], Vv = [s, c], hz = hung ? (it.y0 + it.y1) / 2 : it.y0 + Math.min(1, (it.y1 - it.y0) * .5);
     const f0 = hung ? null : sp.floorZ;
     for(const [n, t, hn, ht] of [[U, Vv, it.w / 2, it.d / 2], [[-U[0], -U[1]], Vv, it.w / 2, it.d / 2], [Vv, U, it.d / 2, it.w / 2], [[-Vv[0], -Vv[1]], U, it.d / 2, it.w / 2]]){
