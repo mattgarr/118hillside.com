@@ -269,3 +269,34 @@ are hard-edged stand-ins that only looked right from some views.
   colour (`R40E.lampWb` .1) over the oak floor band, and a low-roughness metal returned it as pure orange, x3 (`r40MetK`). Now, for metalness >= .5
   on the ROOM side only, the reflection is pulled toward its own luminance first (`r40MetW` = `R40E.metWb` .8 at dusk, 0 otherwise): nickel with a
   mild warm cast. Diffuse surfaces, glass, lamps, other times of day and the sky side (exterior metal keeps its sunset warmth) are unchanged.
+
+## 10. r49: corner depth back, baked
+
+Owner, 11/14 (iPhone): "the lighting no longer shades corners and stuff ... Looks a bit just flat / CGI."
+
+- **What was lost.** A phone never had SSAO: on a coarse pointer `setupPost` makes no composer. On the phone, the corner shading was only the
+  r13 bands, and r41 G3 cut those from 34-42 % over 1.3-1.6 ft to 10-16 % over .6-1.1 ft. On the desktop, r41 G2 also removed SSAO, which had
+  given the grey under the upper cabinets, the backsplash, and the wall behind furniture. r48b's lid test (`r48Lid`) was not a cause.
+  With it on, the room-edge build lays 1297 ceiling columns (.75 ft each); with it bypassed (`?lid48=0`, `__R48LF.off`), 1309. Floor
+  (1382) and vertical corner (1835) segments are the same either way. The 12 dropped columns, in 7 spaces (lower bedroom 2 and its
+  closet, under-stair closet, lounge, lower stairs, primary bath, garage), all sit where nothing closes the room at the ceiling line:
+  the stair opening (L2 floor 1.3 ft up), the shower skylight well (glass 3.6 ft up), the lounge's taller bay (1.5 ft), and edges under a
+  soffit or gutter. A band there would float, so `r48Lid` is unchanged. QA: `R13.report.edgeAO.by` (per space: ceil, floor, vert,
+  lidCut, cuts), `R13.rebuildEdges()`.
+- **r49 (`R49`, `?ao49=0` for r48's look).** Everything is baked in world space, built once, and the same at every governor level, on the
+  phone and the desktop, moving or still:
+  - room-edge bands 16-20 % at the crease over .75-1.3 ft, on seven rows of a (1-u)^2.2 curve (was five rows of a square), so the falloff is
+    soft with no visible stripe or knee. Where two bands meet in a corner they multiply (about 30 %);
+  - the v33 contact shadows are x1.12 deeper (`V33C.g`);
+  - `r49PieceAO`: each staged or fixture piece that stands against a wall (bed, sofa, sideboard, nightstand, bookcase, base and tall
+    cabinets, counter, fridge, washer, vanity, toilet) shades that wall from the floor to its top, then fades out over .5-.85 ft above
+    it. A hung piece (upper cabinet, over-range microwave) shades the wall below it, fading over .7 ft. The band fades out .45 ft past both
+    ends and is deeper the closer the wall (24 / 32 / 20 % at most for standing pieces, hung pieces and counters). It is laid on the first
+    surface in front of the wall, so it lands on a backsplash slab rather than the hidden wall face behind it. Nothing is laid on an
+    opening, outdoors, or in a layout idea. QA: `R49.report.piece` (`why`: per side, ok and the gap).
+- **Cost.** The r13 build now runs as six idle slices (room edges in three parts, contact, piece bands, shades + ceiling tone) instead of
+  one task. Headless Chromium in the container (2 CPUs, no drawing), sum / longest slice: 321 / 107 ms unthrottled, 944 / 301 ms at 4x CPU
+  throttle. main's single task: 215 ms unthrottled, 691 ms at 4x. The piece bands are rebuilt in their own idle slice when the furniture
+  changes. About +16k decal triangles (multiply blended, no new pass, program or light).
+- Holiday pages: they never took r41's lighter bands, so they keep their r13 strengths and profile. They get the piece bands, the contact
+  gain and the sliced build.

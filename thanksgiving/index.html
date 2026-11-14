@@ -17969,7 +17969,7 @@ function v33Accent(){
    blocked elevation band along each, nearer solids count more), at most V33C.k dark. A table top a foot up gives a faint wide shade, a
    foot on the floor a tight dark one, a round piece a round one. One texture per kind and size. Its quad stops at a wall and at a floor
    edge (v33Fit), so nothing is drawn through a wall or over a drop. It does not depend on the quality level, the device or the view. */
-const V33C = {skip: /^(rug2?|tvWall|art|wallMirror|towel\w*|pillows|bedRunner|throwBlanket|throwDrape|seatCushion|windowSeat)$/, pad: 1.2, G: 40, k: .9, hClip: 2.2, y: .045, n: 0, fields: 0, ms: 0, mats: {}};
+const V33C = {skip: /^(rug2?|tvWall|art|wallMirror|towel\w*|pillows|bedRunner|throwBlanket|throwDrape|seatCushion|windowSeat)$/, pad: 1.2, G: 40, k: .9, hClip: 2.2, y: .045, n: 0, fields: 0, ms: 0, mats: {}, g: /[?&]ao49=0\b/.test(location.search) ? 1 : 1.12};   // r49: g, a little deeper (a share v of the dome hidden draws as min(1, g v))
 function v33Field(o, w, dd){
   const t0 = performance.now(), P = V33C.pad, ex = w + 2 * P, ez = dd + 2 * P, s = Math.max(ex, ez) / V33C.G, NX = Math.max(8, Math.ceil(ex / s)), NZ = Math.max(8, Math.ceil(ez / s)), N = NX * NZ;
   const X0 = -w / 2 - P, Z0 = -P, LO = new Float32Array(N).fill(1e9), HI = new Float32Array(N).fill(-1e9), A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), M = new THREE.Matrix4();
@@ -17997,7 +17997,7 @@ function v33Field(o, w, dd){
   // a 3x3 blur (the 16 directions leave spokes round a thin leg), a clear outer ring, then alpha = k x hidden share
   const data = new Uint8Array(N * 4);
   for(let j = 0; j < NZ; j++) for(let i = 0; i < NX; i++){ let v = 0; if(i > 0 && j > 0 && i < NX - 1 && j < NZ - 1){ let sum = 0, n = 0; for(let b = -1; b <= 1; b++) for(let a = -1; a <= 1; a++){ const wg = (a ? 1 : 2) * (b ? 1 : 2); sum += wg * F[(j + b) * NX + i + a]; n += wg; } v = sum / n; }
-    data[(j * NX + i) * 4 + 3] = Math.round(255 * V33C.k * Math.min(1, v)); }
+    data[(j * NX + i) * 4 + 3] = Math.round(255 * V33C.k * Math.min(1, v * V33C.g)); }
   const tex = new THREE.DataTexture(data, NX, NZ, THREE.RGBAFormat, THREE.UnsignedByteType); tex.magFilter = tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.flipY = false; tex.needsUpdate = true;
   V33C.fields++; V33C.ms += performance.now() - t0; return {tex, X0, Z0, ex: NX * s, ez: NZ * s}; }
 function v33ContactMat(key, o, w, dd){ if(key && V33C.mats[key] !== undefined) return V33C.mats[key];
@@ -21444,7 +21444,14 @@ function r13Band(P, C, rows, shade){ for(let r = 0; r + 1 < rows.length; r++) fo
     P.push(...a, ...b, ...c, ...a, ...c, ...d); C.push(sa, sa, sa, sb, sb, sb, sc, sc, sc, sa, sa, sa, sc, sc, sc, sd, sd, sd); } }
 /* smooth occlusion profile across a band (no visible outer edge: quadratic fall-off to exactly 1) and a taper along it toward every
    break (an opening, an open-plan edge), so a band never ends in a hard square end */
-const R13U = [0, .12, .3, .55, 1], R13PROF = R13U.map(u => (1 - u) * (1 - u));
+/* r49 rule:baked-depth - owner 11/14 (iPhone): "the lighting no longer shades corners and stuff ... looks a bit just flat / CGI". The phone never
+   had SSAO (coarse pointer: no composer); what it lost was r41 G3 taking the room-edge bands down to 10-16 % over .6-1.1 ft. The desktop also
+   lost SSAO (r41 G2). r49 gives the depth back baked, in world space, built once: the bands are deeper again with a softer, longer fall-off
+   (seven rows on a (1-u)^2.2 curve instead of five on a square, so no stripe and no knee), the furniture contact shadows are a little
+   deeper, and pieces that stand against a wall (beds, sofas, sideboards, cabinets, counters, appliances) or hang on one (upper cabinets)
+   shade the wall behind / under them (r49PieceAO). Nothing depends on the view, the device or the quality level. ?ao49=0: r48's look. */
+const R49 = window.R49 = {on: !/[?&]ao49=0\b/.test(location.search), report: {}};
+const R13U = [0, .12, .3, .55, 1], R13PROF = R13U.map(u => (1 - u) * (1 - u));   // r49: this page keeps its r13 bands (it never took r41's lighter ones)
 function r13Shade(rows, s0){ const n = rows[0].length, tp = new Array(n).fill(0), on = i => !!rows[0][i];
   for(let i = 0; i < n; i++){ if(!on(i)) continue; let d = 0; while(d < 3 && on(i - d - 1) && on(i + d + 1)) d++; tp[i] = [.15, .55, .85, 1][d]; }
   return (r, i) => 1 - (1 - s0) * R13PROF[r] * tp[i]; }
@@ -21466,7 +21473,7 @@ const R48L = new Map();
    taps waited behind it). Same test, same answer: a plain mesh goes through the page's triangle grid (rgGet, RG24: Mesh.raycast's own sphere and
    box checks first, then only the triangles whose world-XZ box holds the vertical ray, each with Mesh.raycast's intersectTriangle and near / far
    tests); any other object (instanced, skinned, morphed, its own raycast) is raycast as before. ?lid48=slow: the old path. */
-const R48LF = window.__R48LF = {slow: /[?&]lid48=slow\b/.test(location.search), ms: 0, n: 0, calls: [], made: [],
+const R48LF = window.__R48LF = {slow: /[?&]lid48=slow\b/.test(location.search), off: /[?&]lid48=0\b/.test(location.search), ms: 0, n: 0, calls: [], made: [],
   rc: new THREE.Raycaster(), sph: new THREE.Sphere(), inv: new THREE.Matrix4(), ray: new THREE.Ray(), A: new THREE.Vector3(), B: new THREE.Vector3(), C: new THREE.Vector3(), P: new THREE.Vector3(), W: new THREE.Vector3()};
 const r48LidOK = o => o.isMesh && !/^r1[37]-/.test(o.name || '') && !(o.material && o.material.transparent);
 function r48LidSlow(w, c){ const objs = ['ceil', 'upper', 'main', 'vault', 'vaultUp', 'roof', 'lowerRoof'].map(g => GROUPS[g]).filter(Boolean), rc = new THREE.Raycaster(new THREE.Vector3(w[0], c - .4, w[1]), new THREE.Vector3(0, 1, 0), 0, .82);
@@ -21494,22 +21501,25 @@ function r48LidFast(w, c){ const F = R48LF, rc = F.rc; rc.set(F.P.set(w[0], c - 
   return hit; }
 /* QA: R48LF.check() asks every probe of the last build again the old way and counts the answers that differ (0 expected) */
 R48LF.check = () => { let bad = 0; const ex = []; for(const [w, c, v] of R48LF.calls){ const s = r48LidSlow(w, c); if(s !== v){ bad++; if(ex.length < 5) ex.push([w, c, v, s]); } } return {n: R48LF.calls.length, bad, ex}; };
-function r48Lid(x, y, c){ const k = Math.round(x * 4) + ',' + Math.round(y * 4) + ',' + Math.round(c * 4); let v = R48L.get(k); if(v !== undefined) return v; v = true;
+function r48Lid(x, y, c){ if(R48LF.off) return true; const k = Math.round(x * 4) + ',' + Math.round(y * 4) + ',' + Math.round(c * 4); let v = R48L.get(k); if(v !== undefined) return v; v = true;
   const t0 = performance.now();
   try{ const w = W2(x, y); v = R48LF.slow || typeof rgGet !== 'function' ? r48LidSlow(w, c) : r48LidFast(w, c); if(R48LF.calls.length < 20000) R48LF.calls.push([w, c, v]); }catch(e){ v = true; }
   R48LF.ms += performance.now() - t0; R48LF.n++;
   R48L.set(k, v); return v; }
-{ const _ea = r13EdgeAO; r13EdgeAO = function(){ try{ return _ea.apply(this, arguments); } finally { for(const o of R48LF.made) RG24.grids.delete(o); R48LF.made = []; } }; }   // the grids made only for these probes are let go
-function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
-  const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
+{ const _ea = r13EdgeAO; r13EdgeAO = function(part){ try{ return _ea.apply(this, arguments); } finally { if(!part || part.last) { for(const o of R48LF.made) RG24.grids.delete(o); R48LF.made = []; } } }; }   // r49: a sliced build lets them go after its last part   // the grids made only for these probes are let go
+/* r49: part = {i, n, acc, last} builds every n-th space from i into acc (one idle slice each); the meshes are made after the last part */
+function r13EdgeAO(part){ if(!BIM2S || typeof inWallBody !== 'function') return null;
+  const acc = part ? (part.acc.out = part.acc.out || {}, part.acc.rep = part.acc.rep || {spaces: 0, edges: 0, corners: 0, tris: 0}, part.acc) : null;
+  const OP = (BIM2S.openings || []), out = acc ? acc.out : {}, E = R13E, rep = acc ? acc.rep : {spaces: 0, edges: 0, corners: 0, tris: 0}; let si = -1;
   const bucket = k => out[k] = out[k] || {P: [], C: []};
   const wall = (x, y, nx, ny, h) => { const w = W2(x - nx * .3, y - ny * .3); return inWallBody(w[0], w[1], h); };
   const opening = (x, y, z0, z1) => { for(const o of OP){ const ax = o.axis || [1, 0], nn = o.normal || [-ax[1], ax[0]], dx = x - o.center[0], dy = y - o.center[1];
       if(Math.abs(dx * ax[0] + dy * ax[1]) < o.width / 2 + .08 && Math.abs(dx * nn[0] + dy * nn[1]) < (o.thickness || .5) / 2 + .45 && o.sill < z1 && o.head > z0) return true; } return false; };
   const V = (x, y, z) => { const w = W2(x, y); return [w[0], z, w[1]]; };
-  for(const s of BIM2S.spaces){ if(!s.interior || s.openAir || !s.poly || s.poly.length < 3) continue; rep.spaces++;
+  for(const s of BIM2S.spaces){ if(!s.interior || s.openAir || !s.poly || s.poly.length < 3) continue; si++; if(part && si % part.n !== part.i) continue; rep.spaces++;
     const P = s.poly, n = P.length; let A = 0; for(let i = 0, j = n - 1; i < n; j = i++) A += P[j][0] * P[i][1] - P[i][0] * P[j][1];
     const sg = A > 0 ? 1 : -1, f = s.floorZ, top = s.storey === 'L2' ? 'upper' : 'main';
+    const SP = (rep.by = rep.by || {})[(s.id || s.name || rep.spaces) + ''] = {name: s.name || s.id, storey: s.storey, ceil: 0, lidCut: 0, floor: 0, vert: 0};
     const ceil = (x, y) => { const c = BIM2S.ceilAt(s, x, y); return (c == null || c < f + 6 || c > f + 30) ? null : c; };
     const inN = i => { const a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); return L < 1e-6 ? null : {a, dx: dx / L, dy: dy / L, L, nx: -dy / L * sg, ny: dx / L * sg}; };
     for(let i = 0; i < n; i++){ const e = inN(i); if(!e || e.L < .8) continue; rep.edges++;
@@ -21519,11 +21529,13 @@ function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null
       const NR = R13U.length, mk = () => R13U.map(() => []), cc = mk(), ww = mk(), ff = mk();
       for(let k = 0; k <= N; k++){ const q = S[k], prev = S[Math.max(0, k - 1)], next = S[Math.min(N, k + 1)];
         const okC = q.c != null && wall(q.x, q.y, e.nx, e.ny, q.c - .3) && r48Lid(q.x + e.nx * .4, q.y + e.ny * .4, q.c) && !opening(q.x, q.y, q.c - E.wallW, q.c) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, q.c - E.wallW, q.c) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, q.c - E.wallW, q.c);
+        if(okC) SP.ceil++; else if(q.c != null && wall(q.x, q.y, e.nx, e.ny, q.c - .3) && !r48Lid(q.x + e.nx * .4, q.y + e.ny * .4, q.c)){ SP.lidCut++; (SP.cuts = SP.cuts || []).push([+(q.x + e.nx * .4).toFixed(2), +(q.y + e.ny * .4).toFixed(2), +q.c.toFixed(2)]); }   // QA: R13.report.edgeAO.by
         if(okC){ const L = E.lift;
           R13U.forEach((u, r) => { const d = u * E.ceilW, x = q.x + e.nx * d, y = q.y + e.ny * d, c = ceil(x, y); cc[r].push(c == null ? null : V(x, y, c - L)); });
           R13U.forEach((u, r) => { ww[r].push(V(q.x + e.nx * L, q.y + e.ny * L, q.c - .004 - u * E.wallW)); }); }
         else { for(let r = 0; r < NR; r++){ cc[r].push(null); ww[r].push(null); } }
         const okF = wall(q.x, q.y, e.nx, e.ny, f + 1) && !opening(q.x, q.y, f - .1, f + .4) && !opening((q.x + next.x) / 2, (q.y + next.y) / 2, f - .1, f + .4) && !opening((q.x + prev.x) / 2, (q.y + prev.y) / 2, f - .1, f + .4);
+        if(okF) SP.floor++;
         R13U.forEach((u, r) => { ff[r].push(okF ? V(q.x + e.nx * u * E.floorW, q.y + e.ny * u * E.floorW, f + .025) : null); }); }
       for(let k = 0; k <= N; k++) if(cc.some(r => !r[k])) for(const r of cc) r[k] = null;   // a ceiling column is all or nothing
       r13Band(bucket('ceil').P, bucket('ceil').C, cc, r13Shade(cc, E.sCeil)); r13Band(bucket(top).P, bucket(top).C, ww, r13Shade(ww, E.sWall)); r13Band(bucket(top).P, bucket(top).C, ff, r13Shade(ff, E.sFloor));
@@ -21535,9 +21547,11 @@ function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null
         const W = E.vertW, L = E.lift, rows = R13U.map(() => []), zs = []; for(let z = f + .05; z < cv - .05; z += 1) zs.push(z); zs.push(cv - .02);
         for(let k = 0; k < zs.length; k++){ const z = zs[k], z1 = zs[Math.min(zs.length - 1, k + 1)], z0 = zs[Math.max(0, k - 1)];
           const ok = wall(vx + dx * .4, vy + dy * .4, nx, ny, z) && !opening(vx + dx * .15, vy + dy * .15, z0, z1) && !opening(vx + dx * W * .8, vy + dy * W * .8, z0, z1);
+          if(ok) SP.vert++;
           R13U.forEach((u, r) => rows[r].push(ok ? V(vx + dx * u * W + nx * L, vy + dy * u * W + ny * L, z) : null)); }
         // rows[r] = a constant distance from the corner, running up the wall
         r13Band(bucket(top).P, bucket(top).C, rows, r13Shade(rows, E.sVert)); } } }
+  if(part && !part.last) return null;
   const meshes = [];
   for(const k in out){ if(!out[k].P.length || !GROUPS[k]) continue; const m = r13Mesh(out[k].P, out[k].C, R13.edgeMat || (R13.edgeMat = r13DecalMat(R13.k)), 'r13-edge-ao-' + k); GROUPS[k].add(m); meshes.push(m); rep.tris += out[k].P.length / 9; }
   R13.report.edgeAO = rep; return meshes; }
@@ -21589,7 +21603,60 @@ function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].concat(w
     r13Band(p, cc, rows, sh); rep.pieces++; }
   const meshes = []; R13.cMat = R13.cMat || r13DecalMat({value: 1});
   for(const gn in P){ const m = r13Mesh(P[gn], C[gn], R13.cMat, 'r13-contact-' + gn); m.userData.r13 = true; GROUPS[gn].add(m); meshes.push(m); }
+  R49.items = items;   // r49PieceAO reads them in its own idle slice (r49Piece)
   R13.report.contact = rep; return meshes; }
+
+/* r49 rule:piece-shades-its-wall - a bed, sofa, sideboard, cabinet run or fridge standing against a wall left the wall behind it as bright as
+   open wall; an upper cabinet left the wall under it (the backsplash) as bright as the rest. A real room is darker there (the piece hides
+   part of the sky the wall would see). For every staged / fixture piece of those kinds, each side of its footprint that has a wall within
+   R49P.gap ft gets a soft band on that wall's face: from the floor up to the piece's top and then fading out over fH above it (for a
+   hung cabinet, from its underside fading down), fading out over m past both ends, deeper the closer the wall. Where the wall face has
+   an opening (window, door) nothing is laid. Built with the contact shadows (so it follows Design changes), indoor rooms only. */
+const R49P = {gap: .8, step: .25, m: .45, k: .24, kHung: .32, kTop: .2, fH: .85, fHung: .7, fTop: .5,
+  wall: /^(sofa\w*|sectional|bed\w*|nightstand|sideboard|consoleTable|builtinBookcase|cubeShelf|desk\w*|ovalDesk|dresser\w*|bench|baseCabinet|tallCabinet|fridge\w*|washer\w*|dryer\w*|laundry(Base|CornerBase)|beverageCooler|vanity|counter|toilet|armchair\w*|slipChair)$/,
+  hung: /^(upperCabinet|upperMicrowave|laundryCornerUpper)$/, top: /^(counter|baseCabinet|vanity|laundry(Base|CornerBase))$/};
+const r49RC = new THREE.Raycaster(), r49V = new THREE.Vector3(), r49D = new THREE.Vector3(); let r49Objs = [];
+function r49PieceAO(items){ if(typeof inWallBody !== 'function' || !BIM2S) return [];
+  const rep = R49.report.piece = {pieces: 0, sides: 0, skipped: 0, tris: 0}, P = {}, E = R49P;
+  const cand = items.filter(it => (it.gn === 'furn' || it.gn === 'furnU' || it.gn === 'furn@asbuilt') && it.o.visible && (E.wall.test(it.kind) || E.hung.test(it.kind)));
+  for(const it of cand){ const hung = E.hung.test(it.kind);
+    // a piece standing inside / under a taller one of the list (a base cabinet under its counter) leaves its wall to that one
+    if(!hung && cand.some(q => q !== it && !E.hung.test(q.kind) && q.y1 > it.y1 - .05 && q.world.min.y < it.y1 && it.wx > q.world.min.x && it.wx < q.world.max.x && it.wz > q.world.min.z && it.wz < q.world.max.z && (q.y1 > it.y1 + .02 || q.w * q.d > it.w * it.d))){ (rep.why = rep.why || []).push([it.kind, 'under']); rep.skipped++; continue; }
+    let sp = null; for(let z = it.y0 + .3; z > it.y0 - 9 && !sp; z -= .5){ const q = BIM2S.spaceUnderFeet(it.wz, it.wx, z); if(q && q.floorZ <= it.y0 + .3) sp = q; }   // a hung piece or a counter: the room under it
+    if(!sp || !sp.interior || sp.openAir){ (rep.why = rep.why || []).push([it.kind, 'nospace']); rep.skipped++; continue; }
+    const c = Math.cos(it.fb.ry), s = Math.sin(it.fb.ry), U = [c, -s], Vv = [s, c], hz = hung ? (it.y0 + it.y1) / 2 : it.y0 + Math.min(1, (it.y1 - it.y0) * .5);
+    const f0 = hung ? null : sp.floorZ;
+    for(const [n, t, hn, ht] of [[U, Vv, it.w / 2, it.d / 2], [[-U[0], -U[1]], Vv, it.w / 2, it.d / 2], [Vv, U, it.d / 2, it.w / 2], [[-Vv[0], -Vv[1]], U, it.d / 2, it.w / 2]]){
+      if(ht < .35) continue;
+      const S = [it.wx + n[0] * hn, it.wz + n[1] * hn], at = (g, o, z) => inWallBody(S[0] + n[0] * g + t[0] * o, S[1] + n[1] * g + t[1] * o, z);
+      const hitAll = g => at(g, 0, hz) && at(g, -ht * .6, hz) && at(g, ht * .6, hz);
+      const why = (rep.why = rep.why || []), wk = [it.kind, +it.y0.toFixed(2), +it.y1.toFixed(2)]; if(at(-.3, 0, hz)){ why.push(wk.concat('inwall')); continue; }   // the piece stands in a wall (a niche or an embedded fixture): no face to shade
+      let g1 = null; for(let g = -.27; g <= E.gap; g += .03) if(hitAll(g)){ g1 = g; break; } if(g1 === null){ why.push(wk.concat('nowall')); continue; }
+      let lo = g1 - .03, hi = g1; for(let q = 0; q < 5; q++){ const mid = (lo + hi) / 2; if(at(mid, 0, hz)) hi = mid; else lo = mid; }
+      // the first surface in front of that wall face: a backsplash slab or a panel between the piece and the wall takes the band instead (three
+      // short horizontal rays at the band's height against the listed pieces and the unnamed fixture parts (slabs) near it only; the median, so one canister on a counter does not move it)
+      const hR = hung ? it.y0 - .3 : it.y1 + .2, sx = [S[0] - n[0] * .3, S[0] + n[0] * (lo + .06)], sz = [S[1] - n[1] * .3, S[1] + n[1] * (lo + .06)];
+      const x0 = Math.min(...sx) - ht, x1 = Math.max(...sx) + ht, z0 = Math.min(...sz) - ht, z1 = Math.max(...sz) + ht;
+      r49Objs = items.filter(q => q !== it && (!q.kind || cand.includes(q)) && !q.o.userData.decor && q.world.max.y > hR && q.world.min.y < hR && q.world.max.x > x0 && q.world.min.x < x1 && q.world.max.z > z0 && q.world.min.z < z1).map(q => q.o);
+      const gs = !r49Objs.length ? [lo, lo, lo] : [-ht * .5, 0, ht * .5].map(o => { r49RC.set(r49V.set(S[0] - n[0] * .3 + t[0] * o, hR, S[1] - n[1] * .3 + t[1] * o), r49D.set(n[0], 0, n[1])); r49RC.far = lo + .36;
+        const h = r49RC.intersectObjects(r49Objs, true).find(x => x.object.isMesh && !x.object.userData.noAO && !x.object.userData.r13 && !(x.object.material && x.object.material.transparent)); return h ? Math.min(lo, h.distance - .3) : lo; }).sort((a, b) => a - b);
+      const gf = gs[1] > -.3 ? gs[1] : lo, k = (hung ? E.kHung : E.top.test(it.kind) ? E.kTop : E.k) * Math.sqrt(Math.max(0, Math.min(1, 1 - Math.max(0, gf) / E.gap))); if(k < .03){ why.push(wk.concat('far')); continue; } why.push(wk.concat('ok', +gf.toFixed(2), +lo.toFixed(2)));
+      const fH = hung ? E.fHung : E.top.test(it.kind) ? E.fTop : Math.min(E.fH, .35 + .5 * (it.y1 - it.y0));
+      // heights (rows) and the fall-off on each: a hung piece from its underside down; a standing piece from its foot up past its top
+      const zs = [], sh = [];
+      if(hung){ for(const u of R13U){ zs.push(it.y0 - .01 - u * fH); sh.push(R13PROF[R13U.indexOf(u)]); } }
+      else { const z0 = (f0 != null ? f0 : it.y0) + .03; for(let z = z0; z < it.y1 - .1; z += .75){ zs.push(z); sh.push(1); } R13U.forEach((u, r) => { zs.push(it.y1 + u * fH); sh.push(R13PROF[r]); }); }
+      const os = []; for(let o = -ht - E.m; o < ht + E.m - 1e-6; o += E.step) os.push(o); os.push(ht + E.m);
+      const lat = o => { const a = Math.abs(o) - (ht - .15); if(a <= 0) return 1; const u = Math.min(1, a / (E.m + .15)); return (1 - u) * (1 - u); };
+      const L = .012, rows = zs.map(() => []);
+      for(const o of os){ const px = S[0] + n[0] * (gf - L) + t[0] * o, pz = S[1] + n[1] * (gf - L) + t[1] * o, inner = [S[0] + n[0] * (lo + .06) + t[0] * o, S[1] + n[1] * (lo + .06) + t[1] * o];
+        zs.forEach((z, r) => rows[r].push(inWallBody(inner[0], inner[1], z) ? [px, z, pz] : null)); }
+      const p = P[it.gn] = P[it.gn] || {P: [], C: []};
+      r13Band(p.P, p.C, rows, (r, i) => 1 - k * sh[r] * lat(os[i])); rep.sides++; }
+    rep.pieces++; }
+  const meshes = [], mat = R13.edgeMat || (R13.edgeMat = r13DecalMat(R13.k));
+  for(const gn in P){ if(!P[gn].P.length || !GROUPS[gn]) continue; const m = r13Mesh(P[gn].P, P[gn].C, mat, 'r49-piece-ao-' + gn); m.userData.r13 = true; m.userData.r49 = true; GROUPS[gn].add(m); meshes.push(m); rep.tris += P[gn].P.length / 9; }
+  return meshes; }
 
 /* R13-3 rule:lit-shade-glows - a table lamp whose bulb is on (staging33 lampTop: 'bulb' emissive) showed a grey, unlit shade
    wherever the shade was the oat linen (lower bedroom, stop 15), and only a faint 0.18 glow on the white drums. A shade around a lit
@@ -21620,12 +21687,18 @@ function r13Ceil(){ if(!GROUPS.ceil) return 0; const inCeil = new Set(), outside
   R13.report.ceilMats = n; return n; }
 
 if(R13.on){
-  const go = () => { if(R13.built === true) return; R13.built = true; const t0 = performance.now();
-    try{ R13.edges = r13EdgeAO(); }catch(e){ console.warn('[r13] edge ao', e); }
-    try{ R13.contact = r13Contact(); }catch(e){ console.warn('[r13] contact', e); }
-    try{ r13Shades(); }catch(e){ console.warn('[r13] shades', e); }
-    try{ r13Ceil(); }catch(e){ console.warn('[r13] ceil', e); }
-    R13.report.buildMs = +(performance.now() - t0).toFixed(1); R13.furnN = r13FurnN(); };
+  // r49: the build runs as four idle slices (edges, contact, the piece bands, shades + ceiling tone) instead of one task, so no slice
+  // holds the main thread for long on a slow phone; buildMs is their sum, buildSlices each one
+  const idle = f => (window.requestIdleCallback || setTimeout)(f, {timeout: 1000});
+  const r49Piece = () => { for(const m of (R13.piece || [])){ m.parent && m.parent.remove(m); m.geometry.dispose(); } R13.piece = [];
+    if(!R49.on || !R49.items) return; const t0 = performance.now(); try{ R13.piece = r49PieceAO(R49.items); }catch(e){ console.warn('[r49] piece ao', e); } R49.report.pieceMs = +(performance.now() - t0).toFixed(1); };
+  R49.rebuild = r49Piece;
+  const go = () => { if(R13.built === true || R13.built === 'b') return; R13.built = 'b'; let ms = 0; const per = [];
+    const EA = {}, EN = 3, steps = [...Array(EN)].map((_, i) => () => { const r = r13EdgeAO({i, n: EN, acc: EA, last: i === EN - 1}); if(i === EN - 1) R13.edges = r; }).concat([() => { R13.contact = r13Contact(); }, r49Piece, () => { try{ r13Shades(); }catch(e){ console.warn('[r13] shades', e); } r13Ceil(); }]);
+    const run = () => { const t0 = performance.now(); try{ steps[per.length](); }catch(e){ console.warn('[r13] build', per.length, e); } const d = performance.now() - t0; ms += d; per.push(+d.toFixed(1));
+      if(per.length < steps.length) return idle(run);
+      R13.report.buildMs = +ms.toFixed(1); R13.report.buildSlices = per; R13.furnN = r13FurnN(); R13.built = true; };
+    run(); };
   // r35 rule:no-piece-no-shadow - the contact shadows are one merged mesh per furniture group, so they must be rebuilt whenever what
   // is shown changes, not only when the number of pieces does: Furniture off left every sofa, bed and rug-side table as a dark
   // patch on the bare floor (owner 11/10), and a piece moved or removed in Design left its shadow behind. The signature is the
@@ -21636,8 +21709,10 @@ if(R13.on){
   let r13At = 0;
   const r13Sync = () => { if(R13.built !== true) return; const s = r13FurnN(); if(s === R13.furnN) return; const now = performance.now(); if(now - r13At < 150) return; r13At = now;
     for(const m of (R13.contact || [])){ m.parent && m.parent.remove(m); m.geometry.dispose(); } R13.contact = r13Contact(); R13.furnN = s; R13.report.rebuilt = (R13.report.rebuilt || 0) + 1;
+    if(R49.on){ const tok = R49.tok = (R49.tok || 0) + 1; idle(() => { if(tok === R49.tok) r49Piece(); }); }   // r49: the piece bands follow in their own idle slice
     try{ PERF.shadowDirty = true; }catch(e){} };
   R13.sync = r13Sync;
+  R13.rebuildEdges = () => { for(const m of (R13.edges || [])){ m.parent && m.parent.remove(m); m.geometry.dispose(); } R48L.clear(); const t0 = performance.now(); R13.edges = r13EdgeAO(); R13.report.edgeMs = +(performance.now() - t0).toFixed(1); return R13.report.edgeAO; };   // QA
   // after the loading screen is done (idle: no added load time), and again for the contact shadows if the furniture set changes (Design options)
   const poll = setInterval(() => { try{ const L = document.querySelector('#loading'); if(!(L && L.classList.contains('done')) || !BIM2S) return;
       if(!R13.built){ (window.requestIdleCallback || setTimeout)(go, {timeout: 1500}); R13.built = 'q'; return; }
@@ -21647,6 +21722,7 @@ if(R13.on){
   // written from inside a scene render)
   const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? Math.max(0, Math.min(1, EXPO_IN)) : 0; R13.k.value = k;
       if(R13.edges) for(const m of R13.edges) m.visible = k > .01 && ACTIVE_VAR === 'asbuilt';   // r35: the corner bands are the as-built rooms' corners; in a layout idea they would hang in the air where walls were
+      if(R13.piece) for(const m of R13.piece) m.visible = k > .01 && ACTIVE_VAR === 'asbuilt';   // r49: the wall bands behind pieces are the as-built walls'
       r13Sync(); }catch(e){} requestAnimationFrame(tick13); };
   requestAnimationFrame(tick13); }
 BIM3.report.r13 = R13.report;
