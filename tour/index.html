@@ -1475,7 +1475,7 @@ html.hwload .loading .loadnote{color:#c9bcd8}
     <div class="qm" id="qmLand"><button class="tod qbtn" id="landBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="landPop" title="Landscape ideas"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 16c0-7 4.5-11 12-12-.5 7.5-4.5 12-11 12H4zM4 16c3-3.5 5.5-5.5 8-7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ql">Landscape</span><em class="qv" id="landVal">Today</em><svg class="car" viewBox="0 0 10 10" width="9" height="9" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="qpop" id="landPop" role="menu" aria-label="Landscape idea, front and back yard" hidden></div></div>
     <div class="qm" id="qmPaint"><button class="tod qbtn" id="paintBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="paintPop" title="Exterior colors"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 4.5h11v4H3zM14 6.5h2.5v4.2l-6.5 1v1.8M8.6 13.3h2.8V18H8.6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="ql">Colors</span><em class="qv" id="paintVal">As built</em><svg class="car" viewBox="0 0 10 10" width="9" height="9" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="qpop" id="paintPop" role="menu" aria-label="Exterior colors" hidden></div></div>
     <button class="tod" id="hdBtn" aria-pressed="false" aria-label="Rendering quality: HD or Ultra (slower)" title="Rendering quality: HD, or Ultra (sharper, slower)"><b id="hdTxt">HD</b></button>
-    <button class="tod" id="tod" data-dusk="1" aria-label="Change the time of day" title="Time of day: morning, midday, afternoon, golden hour, dusk"><i></i><span id="todtxt">Dusk</span></button><button class="tod" id="hwBtn" aria-pressed="false" aria-label="Halloween decorations on or off" title="Halloween: decorate the house for the Deja Boo party"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 5.6c-1-.1-1.4-1.3-1-2.6M10 5.6c3.4-1.4 7 .6 7 5.2S13.6 17 10 16.2C6.4 17 3 15.4 3 10.8s3.6-6.6 7-5.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.6 9.4l1.4 1.2-1.6.4zM13.4 9.4l-1.4 1.2 1.6.4zM7 13c1.8 1.2 4.2 1.2 6 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg><span>Halloween</span></button><button class="tod" id="tgBtn" aria-pressed="false" aria-label="Thanksgiving decorations on or off" title="Thanksgiving: set the table and dress the house for fall"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 2.5l1.6 3.4 2.6-1.6-.4 3.4 3.4-.2-2 2.8 2.6 1.6-3.4 1-.2 3.2-2.8-2-1.4 3.4-1.4-3.4-2.8 2-.2-3.2-3.4-1 2.6-1.6-2-2.8 3.4.2-.4-3.4 2.6 1.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M10 11v7" stroke="currentColor" stroke-width="1.3"/></svg><span>Thanksgiving</span></button>
+    <button class="tod" id="tod" data-dusk="1" aria-label="Change the time of day" title="Time of day: morning, midday, afternoon, golden hour, dusk"><i></i><span id="todtxt">Dusk</span></button><div class="tod aorow" id="aoRow" title="Soft shading in corners, under cabinets and along the edges of rooms"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 3.5v13h12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 5.5v7.5h8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/></svg><span class="aol">Shading</span><input type="range" id="aoRange" min="0" max="100" step="1" value="55" aria-label="Shading in corners" aria-valuetext="Subtle"><em class="aov" id="aoVal">Subtle</em></div><button class="tod" id="hwBtn" aria-pressed="false" aria-label="Halloween decorations on or off" title="Halloween: decorate the house for the Deja Boo party"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 5.6c-1-.1-1.4-1.3-1-2.6M10 5.6c3.4-1.4 7 .6 7 5.2S13.6 17 10 16.2C6.4 17 3 15.4 3 10.8s3.6-6.6 7-5.2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.6 9.4l1.4 1.2-1.6.4zM13.4 9.4l-1.4 1.2 1.6.4zM7 13c1.8 1.2 4.2 1.2 6 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg><span>Halloween</span></button><button class="tod" id="tgBtn" aria-pressed="false" aria-label="Thanksgiving decorations on or off" title="Thanksgiving: set the table and dress the house for fall"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 2.5l1.6 3.4 2.6-1.6-.4 3.4 3.4-.2-2 2.8 2.6 1.6-3.4 1-.2 3.2-2.8-2-1.4 3.4-1.4-3.4-2.8 2-.2-3.2-3.4-1 2.6-1.6-2-2.8 3.4.2-.4-3.4 2.6 1.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M10 11v7" stroke="currentColor" stroke-width="1.3"/></svg><span>Thanksgiving</span></button>
     <button type="button" class="tod phonly phit phsep" id="phClean"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Full screen</span></button><button type="button" class="tod phonly phit" id="phGest"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M7 11V4.8a1.3 1.3 0 0 1 2.6 0V10m0-1.2V3.6a1.3 1.3 0 0 1 2.6 0V10m0-4.4a1.3 1.3 0 0 1 2.6 0V12c0 3.3-2 5.5-5 5.5-2.3 0-3.4-1.2-4.6-3.2L3.6 11.6a1.3 1.3 0 0 1 2.1-1.5L7 11.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Touch gestures</span></button>
     <button type="button" class="tod phonly phit" id="phAbout"><svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5M10 6.2v.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>About this tour</span></button>
     <p class="phonly phnote">Design has furniture, paint and landscape ideas.</p>
@@ -1749,6 +1749,25 @@ html:not(.ph) .qrow #hdBtn::before{content:"Rendering quality";flex:1;padding-le
 html:not(.ph) .qrow #hdBtn b{font-family:var(--f-ui);font-size:13px;font-weight:400;letter-spacing:0;color:var(--muted)}
 html:not(.ph) .qrow #hdBtn[aria-pressed="true"] b{color:var(--accent);font-weight:600}
 html:not(.ph) .qrow .phonly{display:none!important}
+/* r50: Shading (baked corner shading) - a quiet row like Time of day: label, a thin slider, the value in words */
+.qrow .aorow{cursor:default;--aoa:var(--accent);--aot:rgba(127,127,127,.32)}
+.qrow .aorow .aol{flex:1 1 auto!important}
+.qrow .aorow input[type=range]{-webkit-appearance:none;appearance:none;flex:0 0 108px;width:108px;height:22px;margin:0;padding:0;background:transparent;cursor:pointer;touch-action:none}
+.qrow .aorow input[type=range]:focus{outline:none}
+.qrow .aorow input[type=range]:focus-visible{outline:2px solid var(--aoa);outline-offset:2px;border-radius:4px}
+.qrow .aorow input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(to right,var(--aoa) var(--ao50,55%),var(--aot) var(--ao50,55%))}
+.qrow .aorow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;margin-top:-6px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.3)}
+.qrow .aorow input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--aot)}
+.qrow .aorow input[type=range]::-moz-range-progress{height:3px;border-radius:2px;background:var(--aoa)}
+.qrow .aorow input[type=range]::-moz-range-thumb{width:15px;height:15px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.3)}
+.qrow .aorow .aov{flex:0 0 50px;text-align:right;font-style:normal;font-weight:400;color:var(--muted)}
+html:not(.ph) .qrow .aorow:hover{background:none}
+.ph .qrow .aorow{--aoa:var(--ph-hi,var(--accent));--aot:rgba(127,127,127,.38)}
+.ph .qrow .aorow:hover,.ph .qrow .aorow:active{background:none}
+.ph .qrow .aorow input[type=range]{flex:0 1 128px;width:128px;height:30px}
+.ph .qrow .aorow input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8.5px}
+.ph .qrow .aorow input[type=range]::-moz-range-thumb{width:20px;height:20px}
+.ph .qrow .aorow .aov{flex:0 0 54px;color:var(--pm);font-size:14px}
 
 /* ---- U4 compact stop card (desktop) ---- */
 html:not(.ph) #collapse{font-size:0;color:transparent;width:30px;height:30px;border-radius:8px;top:7px;right:7px}
@@ -1886,7 +1905,7 @@ html.tgload .loading::after{content:"";position:absolute;left:0;right:0;top:-60p
   i.src = tg ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/tg_poster_ph.jpg' : 'thumbs/tg_poster.jpg') : hw ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/hw_poster_ph.jpg' : 'thumbs/hw_poster.jpg') : (() => { try{ const k = sessionStorage.getItem('hillside.tod.v27'); if(k && k !== 'dusk') return 'thumbs/p69.jpg'; }catch(e){} return 'thumbs/p02.jpg'; })(); })();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="house_loader.js?v=46"></script>
+<script src="house_loader.js?v=50"></script>
 <script>/* v20 reveal: count three.js loads in flight */ (function(){ var M = window.THREE && THREE.DefaultLoadingManager; if(!M) return;
   var R = window.__revealLM = {pending: 0, errors: 0, last: 0}, s = M.itemStart, e = M.itemEnd, x = M.itemError;
   M.itemStart = function(u){ R.pending++; R.last = performance.now(); return s.apply(this, arguments); };
@@ -2029,6 +2048,38 @@ float r41Envelope( vec3 P ){
 `;
     C.tonemapping_fragment = `${G}\n\tif( r41Pull > 0.0 ) gl_FragColor.rgb *= 1.0 - r41Pull * ( 1.0 - r41Envelope( vR41P ) );\n#endif\n` + C.tonemapping_fragment;
   } else { R41W.on = false; console.warn('[r41w] tone-mapping anchors missing: no window pull'); } }
+/* r50 baked shading (tour/bim2/tools/aobake/README.md). Owner 11/14: the lighting "no longer shades corners ... flat / CGI". The
+   house's own surfaces carry a baked ambient-occlusion atlas (ray traced offline: 96 cosine rays, 3 ft, glass does not occlude,
+   skylight wells and window reveals kept clear) on a second uv set (attribute aoUv, texel units x16) that comes from a sidecar
+   guarded by the GLB's sha256. It darkens the DIFFUSE light from every source (sun, lamps, sky and room environments), never
+   specular or emissive, by one shared curve: R50.K(level) maps the Shading slider (0-100) to strength / curve / floor so 55 is the
+   preview's "subtle" and 100 its "medium", with a slight warm tint. Same programs as before: the code sits in the shared chunks
+   under the r40 environment guard (the shaders that already read envMapB), uniforms through R40E.U. A mesh with no uv set reads
+   texel (0, 0), which is white. ?ao=0 turns it off (?ao=<0-100> sets the level). */
+const R50 = window.R50 = {on: R40E.on && !/[?&]ao=0*(?:&|$)/.test(location.search) && !/[?&]ao50=0\b/.test(location.search),
+  DEFAULT: 55,    // the Shading slider's default (0-100). 55 = the preview's "subtle" (strength .7, floor .70); 100 = its "medium". Change this one number.
+  U: {aoTex: {value: null}, aoScale: {value: new THREE.Vector2(0, 0)}, aoK: {value: new THREE.Vector4(0, 1, .3, 0)}},
+  K(a){ a = Math.max(0, Math.min(1, a)); const t = Math.max(0, Math.min(1, (a - .55) / .45));   // a: 0-1 (slider / 100) x the fade-in
+    return [a <= .55 ? a / .55 * .7 : .7 + .3 * t, 1 + .35 * t, .30 + .13 * t]; }};   // [strength, curve exponent, 1 - floor]
+if(R50.on){ const C = THREE.ShaderChunk, GV = '#if defined( STANDARD ) && defined( USE_ENVMAP )', GF = GV + ' && defined( ENVMAP_TYPE_CUBE_UV )';
+  if(C.aomap_fragment && C.uv2_pars_vertex !== undefined && C.uv2_vertex !== undefined){
+    C.common += `\n${GV}\nvarying vec2 vAoUv;\n#endif\n`;
+    C.uv2_pars_vertex += `\n${GV}\nattribute vec2 aoUv; uniform vec2 aoScale;\n#endif\n`;
+    C.uv2_vertex += `\n${GV}\nvAoUv = aoUv * aoScale;\n#endif\n`;
+    C.envmap_physical_pars_fragment += `\n${GF}\nuniform sampler2D aoTex; uniform vec4 aoK;\n#endif\n`;
+    C.aomap_fragment += `
+${GF}
+	if( aoK.x > 0.0 ){
+		float aoV = max( texture2D( aoTex, vAoUv ).r, 1e-4 );
+		float aoD = ( 1.0 - pow( aoV, aoK.y ) ) * aoK.x, aoE = exp( -2.0 * aoD / aoK.z );
+		aoD = aoK.z * ( 1.0 - aoE ) / ( 1.0 + aoE );   // soft floor: span * tanh( d / span )
+		vec3 aoM = 1.0 - aoD * vec3( 0.93, 0.98, 1.05 );
+		reflectedLight.directDiffuse *= aoM; reflectedLight.indirectDiffuse *= aoM;
+	}
+#endif
+`;
+    Object.assign(R40E.U, R50.U);
+  } else { R50.on = false; console.warn('[r50] shader chunks missing: no baked shading'); } }
 function r40Uniforms(m, sh, cam){ Object.assign(sh.uniforms, R40E.U); if(R41W.on) Object.assign(sh.uniforms, R41W.U); const W = R40E.modes || (R40E.modes = new WeakMap()); let v = W.get(m); if(!v){ v = {value: new THREE.Vector2()}; W.set(m, v); } v.value.set(R40E.on && !m.envMap ? (R40E.furn && R40E.furn.has(m) ? 2 : 1) : 0, cam ? 1 : 0); sh.uniforms.r40Mode = v; R40E.n++; }
 
 /* ---------------- plan coordinates -> world feet ---------------- */
@@ -24026,11 +24077,101 @@ if(R13.on){
   // the corner bands fade with the page's own smoothed indoor factor, Tour / Walk only (exteriors, dollhouse, design: off)
   // own rAF tick (outside every render call: the SSAO normal pass hides these decals through o.visible, so visibility must never be
   // written from inside a scene render)
-  const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? (R40E.on ? 1 : Math.max(0, Math.min(1, EXPO_IN))) : 0; R13.k.value = k;   // r40: with two environments the rooms' corner bands stay on when seen from outside
+  const tick13 = () => { try{ const on = (mode === 'tour' || mode === 'walk'), k = on && typeof EXPO_IN === 'number' ? (R40E.on ? 1 : Math.max(0, Math.min(1, EXPO_IN))) : 0; R13.k.value = k * (R50.band ? R50.band() : 1);   // r50: the bands give way to the baked shading as it fades in (off at the default and above). r40: with two environments the rooms' corner bands stay on when seen from outside
       if(R13.edges) for(const m of R13.edges) m.visible = k > .01 && ACTIVE_VAR === 'asbuilt';   // r35: the corner bands are the as-built rooms' corners; in a layout idea they would hang in the air where walls were
       r13Sync(); }catch(e){} requestAnimationFrame(tick13); };
   requestAnimationFrame(tick13); }
 BIM3.report.r13 = R13.report;
+/* ===== r50 baked shading: the sidecars, the fade-in, the Shading control (shader: R50 near r40Uniforms) =====
+   After the loading screen (idle, off the critical path): bim2/ao/<scene>.ao.json (no-cache, small) names the uv sets and the atlas.
+   Each uv set names the GLB sha256 it was made for; the page compares it with the sha of the bytes it actually loaded (BIM2S.glbSha,
+   BIM2S.optionSha) and with a few sampled vertex positions per mesh, and ignores the whole set on any mismatch (today's look). The
+   atlas is decoded off the main thread (createImageBitmap), the uv sets are attached in time-sliced steps, then the shading fades in
+   over half a second. A layout idea brings its own set (its own meshes, and the as-built meshes re-baked without the removed walls),
+   fetched the first time it is shown. QA: __ao.state(). */
+(() => {
+  const R = R50, Q = location.search, LS = 'tour.shading50';
+  const qv = (/[?&]ao=(\d{1,3})\b/.exec(Q) || [])[1];
+  R.level = R.DEFAULT; try{ const v = localStorage.getItem(LS); if(v != null && isFinite(+v)) R.level = Math.max(0, Math.min(100, Math.round(+v))); }catch(e){}
+  if(qv != null) R.level = Math.max(0, Math.min(100, +qv));
+  R.f = 0; R.cur = null; R.bound = null; R.sets = {}; R.att = []; R.log = []; R.err = null; R.tm = {sliceMax: 0, sliceSum: 0, slices: 0};
+  const dir = String(BIM2_CFG.glb).replace(/[^/]*$/, '') + 'ao/';
+  const keyNow = () => { try{ if(typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt' && BIM2S){ const o = BIM2.option(ACTIVE_VAR); return o ? o.id : 'none'; } }catch(e){} return 'asbuilt'; };
+  // effective level 0-1 now (slider x fade); the r13 corner bands take what the bake does not: full with no bake, off at .55 and above
+  R.eff = () => R.on && R.bound && R.bound === R.cur ? R.level / 100 * R.f * R.f * (3 - 2 * R.f) : 0;
+  R.band = () => Math.max(0, 1 - R.eff() / .55);
+  const now = () => performance.now(), yieldT = () => new Promise(r => setTimeout(r, 0));
+  async function slice(fn){ const t = now(); const r = fn(); const d = now() - t; R.tm.slices++; R.tm.sliceSum += d; R.tm.sliceMax = Math.max(R.tm.sliceMax, d); await yieldT(); return r; }
+  const okSamples = (pos, S) => { for(const s of S){ const i = s[0]; if(i >= pos.count) return false; if(Math.abs(pos.getX(i) - s[1]) > .3 || Math.abs(pos.getY(i) - s[2]) > .3 || Math.abs(pos.getZ(i) - s[3]) > .3) return false; } return true; };
+  const aoAttr = (geo, src, n) => { const c = geo.attributes.position.count; if(c === n) return new THREE.BufferAttribute(src, 2);
+    const a = new Uint16Array(c * 2); a.set(src.subarray(0, Math.min(n, c) * 2)); return new THREE.BufferAttribute(a, 2); };   // page-appended vertices read (0, 0): white
+  async function uvSet(u){   // fetch + check + attach one uv set (cached per file: the base set serves every scene)
+    const C = R.uvCache || (R.uvCache = {}); if(C[u.file]) return C[u.file];
+    const buf = await (await fetch(dir + u.file)).arrayBuffer(); const dv = new DataView(buf);
+    if(dv.getUint32(0, true) !== 0x56554f41) throw new Error('uv magic');   // 'AOUV'
+    const hl = dv.getUint32(8, true), H = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 12, hl))), d0 = 12 + hl;
+    if(H.sha256 !== u.sha256) throw new Error('uv header sha');
+    const S = BIM2S, list = u.option ? (S.optionMeshes || []).filter(m => m.userData.bim2 && m.userData.bim2.option === u.option) : S.meshes, by = new Map();
+    for(const m of list) if(!by.has(m.name)) by.set(m.name, m);
+    const plan = [];
+    for(const [name, n, off, smp] of H.entries){ const m = by.get(name), g = m && m.geometry;
+      if(!g || !g.attributes.position || g.attributes.position.count < n || !okSamples(g.attributes.position, smp)) throw new Error('uv set does not fit mesh ' + name);
+      plan.push({m, n, smp, src: new Uint16Array(buf, d0 + off * 4, n * 2)}); }
+    for(let i = 0; i < plan.length;){ await slice(() => { const t = now(); while(i < plan.length && now() - t < 4){ const p = plan[i++], g = p.m.geometry;
+        g.setAttribute('aoUv', aoAttr(g, p.src, p.n)); p.geo = g; p.pos = g.attributes.position; R.att.push(p); } }); }
+    return (C[u.file] = {n: plan.length, rows: H.rows, y0: H.y0});
+  }
+  async function decode(blob){
+    if(window.createImageBitmap) try{ return await createImageBitmap(blob, {premultiplyAlpha: 'none', colorSpaceConversion: 'none'}); }catch(e){}
+    const url = URL.createObjectURL(blob), im = new Image(); im.src = url; try{ await im.decode(); } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); } return im; }
+  async function loadSet(key){
+    const t0 = now(), stem = key === 'asbuilt' ? 'scene' : 'scene.opt-' + key;
+    const r = await fetch(dir + stem + '.ao.json', {cache: 'no-cache'}); if(!r.ok) throw new Error('no sidecar (' + r.status + ')');
+    const idx = await r.json(); if(idx.format !== 'aobake' || !idx.atlas || !Array.isArray(idx.uv)) throw new Error('sidecar format');
+    const S = BIM2S;
+    for(const u of idx.uv){ const have = u.option ? (S.optionSha || {})[u.option] : S.glbSha;   // the GLB bytes the page loaded
+      if(!have || have !== u.sha256) throw new Error('stale sidecar for ' + u.glb + ' (' + String(u.sha256).slice(0, 12) + ' vs loaded ' + String(have).slice(0, 12) + ')'); }
+    const atlasP = fetch(dir + idx.atlas.file).then(x => { if(!x.ok) throw new Error('atlas ' + x.status); return x.blob(); }).then(decode);
+    for(const u of idx.uv) await uvSet(u);
+    const img = await atlasP;
+    const tex = new THREE.Texture(img); tex.format = THREE.LuminanceFormat; tex.flipY = false; tex.premultiplyAlpha = false; tex.generateMipmaps = false;
+    tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping; tex.needsUpdate = true; tex.name = 'ao50:' + key;
+    const set = {key, tex, scale: [1 / (16 * idx.atlas.w), 1 / (16 * idx.atlas.h)], ms: Math.round(now() - t0), bytes: idx.atlas.bytes, idx};
+    R.log.push({key, ms: set.ms, atlas: idx.atlas.file}); return set; }
+  function want(key){ if(R.sets[key]) return; R.sets[key] = {loading: true};
+    loadSet(key).then(s => { R.sets[key] = s;
+      for(const k in R.sets){ const o = R.sets[k]; if(k !== key && k !== 'asbuilt' && k !== R.cur && o && o.tex){ o.tex.dispose(); delete R.sets[k]; } } })   // at most the as-built set and one idea in memory
+      .catch(e => { R.sets[key] = {failed: String(e && e.message || e)}; R.err = R.sets[key].failed; console.info('[r50] baked shading off for', key + ':', R.err); }); }
+  // the attached sets follow the page: a geometry the page replaced (merges, the dollhouse cut) is re-checked once, kept only if it still fits
+  const seen = new WeakSet();
+  function follow(){ for(const p of R.att){ const g = p.m.geometry; if(g === p.geo && g.attributes.position === p.pos && (g.attributes.aoUv && g.attributes.aoUv.count === g.attributes.position.count)) continue;
+      if(seen.has(g.attributes.position)) continue; seen.add(g.attributes.position);
+      if(g.attributes.position.count >= p.n && okSamples(g.attributes.position, p.smp)){ g.setAttribute('aoUv', aoAttr(g, p.src, p.n)); p.geo = g; p.pos = g.attributes.position; } } }
+  let last = now(), fr = 0, started = false;
+  const tick = () => { requestAnimationFrame(tick); const t = now(), dt = Math.min(.1, (t - last) / 1000); last = t;
+    if(!R.on){ R.U.aoK.value.x = 0; return; }
+    if(!started){ const L = document.querySelector('#loading'); if(!BIM2S || (L && !L.classList.contains('done'))) return; started = true; }
+    const k = keyNow(); if(k !== R.cur){ R.cur = k; R.f = 0; }   // a layout switch is a cut: the new set fades in when it is ready
+    const ready = k !== 'none' && (k === 'asbuilt' || (B2OPT.built[(BIM2.option(k) || {}).legacyId || k] && (BIM2S.optionLoaded || {})[k] === 'ok'));
+    if(ready && !R.sets[k] && !R.idleQ){ R.idleQ = true; (window.requestIdleCallback || setTimeout)(() => { R.idleQ = false; want(k); }, {timeout: 1500}); }
+    const s = R.sets[k];
+    if(s && s.tex && R.bound !== k){ R.U.aoTex.value = s.tex; R.U.aoScale.value.set(s.scale[0], s.scale[1]); R.bound = k; R.f = 0; }
+    if(R.bound === k && s && s.tex) R.f = Math.min(1, R.f + dt / .5); else R.f = 0;
+    const a = R.eff(), K = R.K(a); R.U.aoK.value.set(a > 0 ? K[0] : 0, K[1], K[2], 0);
+    if(++fr % 30 === 0 && R.att.length) follow(); };
+  requestAnimationFrame(tick);
+  // ---- the Shading control (View menu / phone menu): 0-100, remembered per visitor, ?ao= overrides
+  const WORDS = v => v <= 0 ? 'Off' : v < 35 ? 'Light' : v < 75 ? 'Subtle' : v < 95 ? 'Medium' : 'Strong';
+  R.set = v => { R.level = Math.max(0, Math.min(100, Math.round(+v || 0))); try{ localStorage.setItem(LS, String(R.level)); }catch(e){} sync(); };
+  function sync(){ const i = document.getElementById('aoRange'), o = document.getElementById('aoVal'); if(!i) return; if(+i.value !== R.level) i.value = R.level;
+    const w = WORDS(R.level); if(o) o.textContent = w; i.setAttribute('aria-valuetext', w); i.style.setProperty('--ao50', R.level + '%'); }
+  const row = document.getElementById('aoRow'), inp = document.getElementById('aoRange');
+  if(row && !R.on) row.hidden = true;
+  if(inp){ inp.addEventListener('input', () => R.set(inp.value)); for(const ev of ['pointerdown', 'touchstart', 'click']) inp.addEventListener(ev, e => e.stopPropagation()); sync(); }
+  window.__ao = {state: () => ({on: R.on, level: R.level, def: R.DEFAULT, f: +R.f.toFixed(3), eff: +R.eff().toFixed(3), band: +R.band().toFixed(3), cur: R.cur, bound: R.bound, err: R.err,
+    sets: Object.fromEntries(Object.entries(R.sets).map(([k, s]) => [k, s.tex ? {ms: s.ms, bytes: s.bytes, w: s.tex.image.width, h: s.tex.image.height} : s])), attached: R.att.length,
+    k: R.U.aoK.value.toArray().map(v => +v.toFixed(3)), tm: {slices: R.tm.slices, sliceMax: +R.tm.sliceMax.toFixed(1), sliceSum: +R.tm.sliceSum.toFixed(1)}, log: R.log}), R};
+})();
 /* ===== EASED EDGES r14 (11/4: r13 tells #6 / #7; bim3_work/r14) ===== ?r14-off turns the block off. */
 const R14 = window.R14 = {on: !/[?&]r14-off\b/.test(location.search), report: {boxes: 0, eased: 0, edges: 0, trisAdded: 0, counters: 0}, depth: 0};
 /* R14-1 rule:eased-edge (casework) - FIX casework carcasses, kicks, shelves and panels (frozen v33 fixtures.js: Builder.bb without a

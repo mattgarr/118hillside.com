@@ -204,8 +204,9 @@
         const oU = u => S.metaBase ? new URL(u, S.metaBase).href : u, oBust = u => u + (u.indexOf('?') < 0 ? '?' : '&') + 'r=' + Date.now();
         if(opt.meta && !opt.data){ const mb = await fetchBuf(oU(opt.meta), o.fetch, {cache: 'no-cache'}); opt.data = JSON.parse(new TextDecoder().decode(mb)); }
         let buf = await fetchBuf(oU(opt.glb), o.fetch);
-        if(opt.sha256){ const h = await sha256Hex(buf); if(h && h !== opt.sha256){   /* r44: a cached older idea model after a deploy: fetch it fresh once (the scene meta naming its sha is always revalidated) */
-            buf = await fetchBuf(oBust(oU(opt.glb)), o.fetch); const h2 = await sha256Hex(buf); if(h2 && h2 !== opt.sha256) console.warn('bim2: ' + opt.glb + ' sha256 ' + h2.slice(0, 12) + ' does not match ' + String(opt.sha256).slice(0, 12) + '; loading anyway'); } }
+        { let h = await sha256Hex(buf); if(opt.sha256 && h && h !== opt.sha256){   /* r44: a cached older idea model after a deploy: fetch it fresh once (the scene meta naming its sha is always revalidated) */
+            buf = await fetchBuf(oBust(oU(opt.glb)), o.fetch); h = await sha256Hex(buf); if(h && h !== opt.sha256) console.warn('bim2: ' + opt.glb + ' sha256 ' + h.slice(0, 12) + ' does not match ' + String(opt.sha256).slice(0, 12) + '; loading anyway'); }
+          (S.optionSha = S.optionSha || {})[opt.id] = h || null; }   /* r50: the sha of the bytes actually loaded (baked-shading sidecars are guarded by it) */
         const gl = await new Promise((res, rej) => new T.GLTFLoader().parse(buf, '', res, rej)); const sc = gl.scene || gl.scenes[0]; sc.updateMatrixWorld(true);
         const L = []; sc.traverse(x => { if(x.isMesh) L.push(x); });
         for(const m of L){ const ex = Object.assign({}, (m.parent && m.parent.userData) || {}, m.userData || {}); const info = {group: ex.group || 'walls', storey: ex.storey || null, material: ex.material || '', ranges: (ex.ranges || []).sort((a, b) => a[2] - b[2]), ex, option: opt.id};
