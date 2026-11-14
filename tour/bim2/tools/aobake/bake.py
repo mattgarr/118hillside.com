@@ -36,6 +36,8 @@ RAYS = 96
 RLEN = 3.0               # ft
 GLEN = 8.0               # ft: how far a ray may travel to find a window / skylight pane
 EPS = 0.015              # ft: ray origin offset along the normal
+THIN = 0.35 / 12          # ft: strips thinner than this keep only THIN_K of their darkening (they alias into dotted lines)
+THIN_K = 0.3
 GLASS_K = 2.5            # occlusion is removed in proportion to the share of the hemisphere that sees glazing (x this)
 LAYOUT_VERSION = 1
 BAKE_VERSION = 1
@@ -254,6 +256,7 @@ def layout_core(entries, y0, spaces, tag, extra_occ, curved):
                     Q = Q[:, ::-1]
                     ext = ext[::-1]
                 ch['local'] = Q
+                ch['thin'] = ext[1] * ts < THIN    # a bevel or reveal strip narrower than a pixel at walking distance
                 ch['w'] = int(math.ceil(ext[0] + 1e-6)) + 1 + 2 * PAD
                 ch['h'] = int(math.ceil(ext[1] + 1e-6)) + 1 + 2 * PAD
             elif curved == 'vertex':
@@ -322,7 +325,9 @@ def write_uv(layout, outdir, stem, page=False):
                       'rows': layout['rows'], 'scale': 16, 'entries': ents}, separators=(',', ':')).encode()
     hdr += b' ' * ((4 - len(hdr) % 4) % 4)
     body = b'AOUV' + np.array([1, len(hdr)], '<u4').tobytes() + hdr + b''.join(blobs)
-    fn = '%s.uv.%s.bin' % (stem, layout['sha'][:12])
+    import gzip
+    body = gzip.compress(body, 9, mtime=0)   # the page inflates it off the main thread (DecompressionStream)
+    fn = '%s.uv.%s.bin.gz' % (stem, layout['sha'][:12])
     open(os.path.join(outdir, fn), 'wb').write(body)
     return fn, len(body)
 
@@ -668,6 +673,8 @@ def main():
         o += n
         if ch.get('sky'):
             v = np.ones_like(v)
+        elif ch.get('thin'):
+            v = 1 - (1 - v) * THIN_K
         if kind == 'vertex':
             layouts[li]['entries'][ch['mesh']]['direct'][keys] = v
             continue

@@ -24100,6 +24100,7 @@ BIM3.report.r13 = R13.report;
       let p = o.parent; while(p && p !== sc){ if(p.userData && typeof p.userData.el === 'string') return; p = p.parent; }   // the outermost piece root
       let top = o; while(top.parent && top.parent !== sc) top = top.parent; if(!/^(furn|furnU|main|upper)(@|$)/.test(top.name || '') || !top.visible) return;   // the pieces of the layout on show
       let k = 0; o.traverse(m => { if(!m.isMesh) return; const i = k++; if(m.isInstancedMesh || m.isSkinnedMesh || uses.get(m.geometry) !== 1 || !m.geometry.attributes.position) return;
+        for(let q = m; q && q !== sc; q = q.parent) if(!q.visible) return;   // hidden pieces (another layout's) are not this scene's
         let cat = null, bad = false; for(let q = m; q; q = q.parent){ const d = q.userData || {}; if(d.contents || d.noAO) bad = true; if(cat == null && d.category) cat = d.category; if(q === o) break; }
         const mat = Array.isArray(m.material) ? null : m.material, nm = (m.name || '') + ' ' + ((mat && mat.name) || '') + ' ' + (o.userData.kind || '');
         if(bad || !mat || !mat.isMeshStandardMaterial || mat.transparent || mat.envMap || mat.blending !== THREE.NormalBlending || (cat && !PK.test(cat))) return;
@@ -24123,7 +24124,10 @@ BIM3.report.r13 = R13.report;
     const a = new Uint16Array(c * 2); a.set(src.subarray(0, Math.min(n, c) * 2)); return new THREE.BufferAttribute(a, 2); };   // page-appended vertices read (0, 0): white
   async function uvSet(u){   // fetch + check + attach one uv set (cached per file: the base set serves every scene)
     const C = R.uvCache || (R.uvCache = {}); if(C[u.file]) return C[u.file];
-    const buf = await (await fetch(dir + u.file)).arrayBuffer(); const dv = new DataView(buf);
+    const res = await fetch(dir + u.file); if(!res.ok) throw new Error('uv ' + res.status);
+    let buf; if(/\.gz$/.test(u.file)){ if(!window.DecompressionStream) throw new Error('no DecompressionStream');
+      buf = await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); } else buf = await res.arrayBuffer();
+    const dv = new DataView(buf);
     if(dv.getUint32(0, true) !== 0x56554f41) throw new Error('uv magic');   // 'AOUV'
     const hl = dv.getUint32(8, true), H = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 12, hl))), d0 = 12 + hl;
     if(H.sha256 !== u.sha256) throw new Error('uv header sha');
@@ -24133,8 +24137,8 @@ BIM3.report.r13 = R13.report;
         if(!P || P.count !== n || !smp.every(s => s[0] < n && Math.abs(P.getX(s[0]) - s[1]) < 2e-3 && Math.abs(P.getY(s[0]) - s[2]) < 2e-3 && Math.abs(P.getZ(s[0]) - s[3]) < 2e-3)){ miss++; continue; }
         plan.push({m, n, smp: null, src: new Uint16Array(buf, d0 + off * 4, n * 2)}); ok++; }
       for(let i = 0; i < plan.length;){ await slice(() => { const t = now(); while(i < plan.length && now() - t < 4){ const p = plan[i++], g = p.m.geometry;
-          g.setAttribute('aoUv', aoAttr(g, p.src, p.n)); p.geo = g; p.pos = g.attributes.position; p.page = true; R.att.push(p); } }); }
-      return (C[u.file] = {n: ok, miss}); }
+          p.attr = aoAttr(g, p.src, p.n); g.setAttribute('aoUv', p.attr); p.geo = g; p.pos = g.attributes.position; p.page = true; R.att.push(p); } }); }
+      return (C[u.file] = {n: ok, miss, plan}); }
     const S = BIM2S, list = u.option ? (S.optionMeshes || []).filter(m => m.userData.bim2 && m.userData.bim2.option === u.option) : S.meshes, by = new Map();
     for(const m of list) if(!by.has(m.name)) by.set(m.name, m);
     const plan = [];
@@ -24156,11 +24160,11 @@ BIM3.report.r13 = R13.report;
     for(const u of idx.uv){ if(u.page) continue; const have = u.option ? (S.optionSha || {})[u.option] : S.glbSha;   // the GLB bytes the page loaded
       if(!have || have !== u.sha256) throw new Error('stale sidecar for ' + u.glb + ' (' + String(u.sha256).slice(0, 12) + ' vs loaded ' + String(have).slice(0, 12) + ')'); }
     const atlasP = fetch(dir + idx.atlas.file).then(x => { if(!x.ok) throw new Error('atlas ' + x.status); return x.blob(); }).then(decode);
-    for(const u of idx.uv) await uvSet(u);
+    const page = []; for(const u of idx.uv){ const r = await uvSet(u); if(u.page && r.plan) page.push(...r.plan); }
     const img = await atlasP;
     const tex = new THREE.Texture(img); tex.format = THREE.LuminanceFormat; tex.flipY = false; tex.premultiplyAlpha = false; tex.generateMipmaps = false;
     tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping; tex.needsUpdate = true; tex.name = 'ao50:' + key;
-    const set = {key, tex, scale: [1 / (16 * idx.atlas.w), 1 / (16 * idx.atlas.h)], ms: Math.round(now() - t0), bytes: idx.atlas.bytes, idx};
+    const set = {key, tex, scale: [1 / (16 * idx.atlas.w), 1 / (16 * idx.atlas.h)], ms: Math.round(now() - t0), bytes: idx.atlas.bytes, idx, page};
     R.log.push({key, ms: set.ms, atlas: idx.atlas.file}); return set; }
   function want(key){ if(R.sets[key]) return; R.sets[key] = {loading: true};
     loadSet(key).then(s => { R.sets[key] = s;
@@ -24179,7 +24183,8 @@ BIM3.report.r13 = R13.report;
     const ready = k !== 'none' && (k === 'asbuilt' || (B2OPT.built[(BIM2.option(k) || {}).legacyId || k] && (BIM2S.optionLoaded || {})[k] === 'ok'));
     if(ready && !R.sets[k] && !R.idleQ){ R.idleQ = true; (window.requestIdleCallback || setTimeout)(() => { R.idleQ = false; want(k); }, {timeout: 1500}); }
     const s = R.sets[k];
-    if(s && s.tex && R.bound !== k){ R.U.aoTex.value = s.tex; R.U.aoScale.value.set(s.scale[0], s.scale[1]); R.bound = k; R.f = 0; }
+    if(s && s.tex && R.bound !== k){ for(const p of s.page) if(p.m.geometry === p.geo && p.geo.attributes.aoUv !== p.attr) p.geo.setAttribute('aoUv', p.attr);   // a piece shown in two layouts takes this layout's uv set
+      R.U.aoTex.value = s.tex; R.U.aoScale.value.set(s.scale[0], s.scale[1]); R.bound = k; R.f = 0; }
     if(R.bound === k && s && s.tex) R.f = Math.min(1, R.f + dt / .5); else R.f = 0;
     const a = R.eff(), K = R.K(a); R.U.aoK.value.set(a > 0 ? K[0] : 0, K[1], K[2], 0);
     if(++fr % 30 === 0 && R.att.length) follow(); };

@@ -1,0 +1,46 @@
+{
+ "format": "aobake",
+ "version": 1,
+ "scene": "jan24",
+ "option": "OS-REMODEL-jan24",
+ "uv": [
+  {
+   "glb": "scene.glb",
+   "sha256": "8304de4b6e8e9eb572a232f49952d75e4f9573d37fbad96997af73469d0c60b5",
+   "file": "scene.uv.8304de4b6e8e.bin.gz",
+   "bytes": 259936,
+   "option": null
+  },
+  {
+   "glb": "scene.opt-OS-REMODEL-jan24.glb",
+   "sha256": "d0029fa993cf5d7f42bdd41f5b0daf20587a2e5ebfd145dcdb8f29a120d87f7a",
+   "file": "scene.opt-OS-REMODEL-jan24.uv.d0029fa993cf.bin.gz",
+   "bytes": 169840,
+   "option": "OS-REMODEL-jan24"
+  },
+  {
+   "page": true,
+   "sha256": "d32ff0af2a0707071b35b608b822b2cf7862c699d5ea1ff921da30c1b094bf39",
+   "file": "scene.opt-OS-REMODEL-jan24.ao.page.uv.d32ff0af2a07.bin.gz",
+   "bytes": 334600,
+   "n": 329
+  }
+ ],
+ "atlas": {
+  "file": "scene.opt-OS-REMODEL-jan24.ao.6d7bb14388f5.webp",
+  "w": 2048,
+  "h": 3784,
+  "bytes": 1085088
+ },
+ "params": {
+  "rays": 96,
+  "len": 3.0,
+  "falloff": "1-(t/len)^2",
+  "tsIn": 1.6,
+  "tsOut": 4.0,
+  "glassK": 2.5,
+  "store": "visibility"
+ },
+ "baked": "2026-11-14T22:54:23Z",
+ "seconds": 135.1
+}
