@@ -23991,7 +23991,7 @@ function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].concat(w
    R49P.gap ft gets a soft band on that wall's face: from the floor up to the piece's top and then fading out over fH above it (for a
    hung cabinet, from its underside fading down), fading out over m past both ends, deeper the closer the wall. Where the wall face has
    an opening (window, door) nothing is laid. Built with the contact shadows (so it follows Design changes), indoor rooms only. */
-const R49P = {gap: .55, step: .25, m: .45, k: .2, kHung: .18, kTop: .14, fH: .85, fHung: .7, fTop: .5,
+const R49P = {gap: .8, step: .25, m: .45, k: .2, kHung: .18, kTop: .14, fH: .85, fHung: .7, fTop: .5,
   wall: /^(sofa\w*|sectional|bed\w*|nightstand|sideboard|consoleTable|builtinBookcase|cubeShelf|desk\w*|ovalDesk|dresser\w*|bench|baseCabinet|tallCabinet|fridge\w*|washer\w*|dryer\w*|laundry(Base|CornerBase)|beverageCooler|vanity|counter|toilet|armchair\w*|slipChair)$/,
   hung: /^(upperCabinet|upperMicrowave|laundryCornerUpper)$/, top: /^(counter|baseCabinet|vanity|laundry(Base|CornerBase))$/};
 const r49RC = new THREE.Raycaster(), r49V = new THREE.Vector3(), r49D = new THREE.Vector3(); let r49Objs = [];
@@ -24000,16 +24000,16 @@ function r49PieceAO(items){ if(typeof inWallBody !== 'function' || !BIM2S) retur
   const cand = items.filter(it => (it.gn === 'furn' || it.gn === 'furnU' || it.gn === 'furn@asbuilt') && it.o.visible && (E.wall.test(it.kind) || E.hung.test(it.kind)));
   for(const it of cand){ const hung = E.hung.test(it.kind);
     // a piece standing inside / under a taller one of the list (a base cabinet under its counter) leaves its wall to that one
-    if(!hung && cand.some(q => q !== it && !E.hung.test(q.kind) && q.y1 > it.y1 - .05 && q.world.min.y < it.y1 && it.wx > q.world.min.x && it.wx < q.world.max.x && it.wz > q.world.min.z && it.wz < q.world.max.z && (q.y1 > it.y1 + .02 || q.w * q.d > it.w * it.d))){ rep.skipped++; continue; }
-    const sp = BIM2S.spaceUnderFeet(it.wz, it.wx, hung ? it.y0 - 3 : it.y0 + .3); if(!sp || !sp.interior || sp.openAir){ rep.skipped++; continue; }
+    if(!hung && cand.some(q => q !== it && !E.hung.test(q.kind) && q.y1 > it.y1 - .05 && q.world.min.y < it.y1 && it.wx > q.world.min.x && it.wx < q.world.max.x && it.wz > q.world.min.z && it.wz < q.world.max.z && (q.y1 > it.y1 + .02 || q.w * q.d > it.w * it.d))){ (rep.why = rep.why || []).push([it.kind, 'under']); rep.skipped++; continue; }
+    let sp = null; for(let z = it.y0 + .3; z > it.y0 - 9 && !sp; z -= .5){ const q = BIM2S.spaceUnderFeet(it.wz, it.wx, z); if(q && q.floorZ <= it.y0 + .3) sp = q; }   // a hung piece or a counter: the room under it if(!sp || !sp.interior || sp.openAir){ (rep.why = rep.why || []).push([it.kind, 'nospace']); rep.skipped++; continue; }
     const c = Math.cos(it.fb.ry), s = Math.sin(it.fb.ry), U = [c, -s], Vv = [s, c], hz = hung ? (it.y0 + it.y1) / 2 : it.y0 + Math.min(1, (it.y1 - it.y0) * .5);
     const f0 = hung ? null : sp.floorZ;
     for(const [n, t, hn, ht] of [[U, Vv, it.w / 2, it.d / 2], [[-U[0], -U[1]], Vv, it.w / 2, it.d / 2], [Vv, U, it.d / 2, it.w / 2], [[-Vv[0], -Vv[1]], U, it.d / 2, it.w / 2]]){
       if(ht < .35) continue;
       const S = [it.wx + n[0] * hn, it.wz + n[1] * hn], at = (g, o, z) => inWallBody(S[0] + n[0] * g + t[0] * o, S[1] + n[1] * g + t[1] * o, z);
       const hitAll = g => at(g, 0, hz) && at(g, -ht * .6, hz) && at(g, ht * .6, hz);
-      if(at(-.15, 0, hz)) continue;   // the piece stands in a wall (a niche or an embedded fixture): no face to shade
-      let g1 = null; for(let g = -.1; g <= E.gap; g += .03) if(hitAll(g)){ g1 = g; break; } if(g1 === null) continue;
+      const why = (rep.why = rep.why || []), wk = [it.kind, +it.y0.toFixed(2), +it.y1.toFixed(2)]; if(at(-.3, 0, hz)){ why.push(wk.concat('inwall')); continue; }   // the piece stands in a wall (a niche or an embedded fixture): no face to shade
+      let g1 = null; for(let g = -.27; g <= E.gap; g += .03) if(hitAll(g)){ g1 = g; break; } if(g1 === null){ why.push(wk.concat('nowall')); continue; }
       let lo = g1 - .03, hi = g1; for(let q = 0; q < 5; q++){ const mid = (lo + hi) / 2; if(at(mid, 0, hz)) hi = mid; else lo = mid; }
       // the first surface in front of that wall face: a backsplash slab or a panel between the piece and the wall takes the band instead (three
       // short horizontal rays at the band's height against the furnishing groups only; the median, so one canister on a counter does not move it)
@@ -24018,7 +24018,7 @@ function r49PieceAO(items){ if(typeof inWallBody !== 'function' || !BIM2S) retur
       r49Objs = items.filter(q => q !== it && q.world.max.y > hR && q.world.min.y < hR && q.world.max.x > x0 && q.world.min.x < x1 && q.world.max.z > z0 && q.world.min.z < z1).map(q => q.o);
       const gs = !r49Objs.length ? [lo, lo, lo] : [-ht * .5, 0, ht * .5].map(o => { r49RC.set(r49V.set(S[0] - n[0] * .3 + t[0] * o, hR, S[1] - n[1] * .3 + t[1] * o), r49D.set(n[0], 0, n[1])); r49RC.far = lo + .36;
         const h = r49RC.intersectObjects(r49Objs, true).find(x => x.object.isMesh && !x.object.userData.noAO && !x.object.userData.r13 && !(x.object.material && x.object.material.transparent)); return h ? Math.min(lo, h.distance - .3) : lo; }).sort((a, b) => a - b);
-      const gf = gs[1] > -.1 ? gs[1] : lo, k = (hung ? E.kHung : E.top.test(it.kind) ? E.kTop : E.k) * Math.sqrt(Math.max(0, Math.min(1, 1 - Math.max(0, gf) / E.gap))); if(k < .03) continue;
+      const gf = gs[1] > -.3 ? gs[1] : lo, k = (hung ? E.kHung : E.top.test(it.kind) ? E.kTop : E.k) * Math.sqrt(Math.max(0, Math.min(1, 1 - Math.max(0, gf) / E.gap))); if(k < .03){ why.push(wk.concat('far')); continue; } why.push(wk.concat('ok', +gf.toFixed(2), +lo.toFixed(2)));
       const fH = hung ? E.fHung : E.top.test(it.kind) ? E.fTop : Math.min(E.fH, .35 + .5 * (it.y1 - it.y0));
       // heights (rows) and the fall-off on each: a hung piece from its underside down; a standing piece from its foot up past its top
       const zs = [], sh = [];
