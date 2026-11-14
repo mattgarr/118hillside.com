@@ -20,10 +20,10 @@
   }
  ],
  "atlas": {
-  "file": "scene.ao.0d48e069e1e9.webp",
+  "file": "scene.ao.a6c719de06a7.webp",
   "w": 2048,
   "h": 2428,
-  "bytes": 1147396
+  "bytes": 1147448
  },
  "params": {
   "rays": 96,
@@ -34,6 +34,6 @@
   "glassK": 2.5,
   "store": "visibility"
  },
- "baked": "2026-11-14T22:31:30Z",
- "seconds": 118.3
+ "baked": "2026-11-14T22:35:23Z",
+ "seconds": 114.4
 }

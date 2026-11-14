@@ -347,6 +347,10 @@ def chart_samples(ch, Pw, visible_tri):
         a, b, c = (uvv[vmap[int(v)]] for v in tv)
         lo = np.floor(np.minimum(np.minimum(a, b), c) - R - 0.5).astype(int)
         hi = np.ceil(np.maximum(np.maximum(a, b), c) + R - 0.5).astype(int)
+        lo = np.maximum(lo, [ch['ox'], ch['oy']])                      # never past the chart's own rectangle (its gutter)
+        hi = np.minimum(hi, [ch['ox'] + ch['w'] - 1, ch['oy'] + ch['h'] - 1])
+        if (hi < lo).any():
+            continue
         xs = np.arange(lo[0], hi[0] + 1)
         ys = np.arange(lo[1], hi[1] + 1)
         X, Y = np.meshgrid(xs + 0.5, ys + 0.5)
