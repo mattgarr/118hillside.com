@@ -23994,6 +23994,7 @@ function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].concat(w
 const R49P = {gap: .55, step: .25, m: .45, k: .2, kHung: .18, kTop: .14, fH: .85, fHung: .7, fTop: .5,
   wall: /^(sofa\w*|sectional|bed\w*|nightstand|sideboard|consoleTable|builtinBookcase|cubeShelf|desk\w*|ovalDesk|dresser\w*|bench|baseCabinet|tallCabinet|fridge\w*|washer\w*|dryer\w*|laundry(Base|CornerBase)|beverageCooler|vanity|counter|toilet|armchair\w*|slipChair)$/,
   hung: /^(upperCabinet|upperMicrowave|laundryCornerUpper)$/, top: /^(counter|baseCabinet|vanity|laundry(Base|CornerBase))$/};
+const r49RC = new THREE.Raycaster(), r49V = new THREE.Vector3(), r49D = new THREE.Vector3(); let r49Objs = [];
 function r49PieceAO(items){ if(typeof inWallBody !== 'function' || !BIM2S) return [];
   const rep = R49.report.piece = {pieces: 0, sides: 0, skipped: 0, tris: 0}, P = {}, E = R49P;
   const cand = items.filter(it => (it.gn === 'furn' || it.gn === 'furnU' || it.gn === 'furn@asbuilt') && it.o.visible && (E.wall.test(it.kind) || E.hung.test(it.kind)));
@@ -24010,7 +24011,14 @@ function r49PieceAO(items){ if(typeof inWallBody !== 'function' || !BIM2S) retur
       if(at(-.15, 0, hz)) continue;   // the piece stands in a wall (a niche or an embedded fixture): no face to shade
       let g1 = null; for(let g = -.1; g <= E.gap; g += .03) if(hitAll(g)){ g1 = g; break; } if(g1 === null) continue;
       let lo = g1 - .03, hi = g1; for(let q = 0; q < 5; q++){ const mid = (lo + hi) / 2; if(at(mid, 0, hz)) hi = mid; else lo = mid; }
-      const gf = lo, k = (hung ? E.kHung : E.top.test(it.kind) ? E.kTop : E.k) * Math.sqrt(Math.max(0, Math.min(1, 1 - Math.max(0, gf) / E.gap))); if(k < .03) continue;
+      // the first surface in front of that wall face: a backsplash slab or a panel between the piece and the wall takes the band instead (three
+      // short horizontal rays at the band's height against the furnishing groups only; the median, so one canister on a counter does not move it)
+      const hR = hung ? it.y0 - .3 : it.y1 + .2, sx = [S[0] - n[0] * .3, S[0] + n[0] * (lo + .06)], sz = [S[1] - n[1] * .3, S[1] + n[1] * (lo + .06)];
+      const x0 = Math.min(...sx) - ht, x1 = Math.max(...sx) + ht, z0 = Math.min(...sz) - ht, z1 = Math.max(...sz) + ht;
+      r49Objs = items.filter(q => q !== it && q.world.max.y > hR && q.world.min.y < hR && q.world.max.x > x0 && q.world.min.x < x1 && q.world.max.z > z0 && q.world.min.z < z1).map(q => q.o);
+      const gs = !r49Objs.length ? [lo, lo, lo] : [-ht * .5, 0, ht * .5].map(o => { r49RC.set(r49V.set(S[0] - n[0] * .3 + t[0] * o, hR, S[1] - n[1] * .3 + t[1] * o), r49D.set(n[0], 0, n[1])); r49RC.far = lo + .36;
+        const h = r49RC.intersectObjects(r49Objs, true).find(x => x.object.isMesh && !x.object.userData.noAO && !x.object.userData.r13 && !(x.object.material && x.object.material.transparent)); return h ? Math.min(lo, h.distance - .3) : lo; }).sort((a, b) => a - b);
+      const gf = gs[1] > -.1 ? gs[1] : lo, k = (hung ? E.kHung : E.top.test(it.kind) ? E.kTop : E.k) * Math.sqrt(Math.max(0, Math.min(1, 1 - Math.max(0, gf) / E.gap))); if(k < .03) continue;
       const fH = hung ? E.fHung : E.top.test(it.kind) ? E.fTop : Math.min(E.fH, .35 + .5 * (it.y1 - it.y0));
       // heights (rows) and the fall-off on each: a hung piece from its underside down; a standing piece from its foot up past its top
       const zs = [], sh = [];
@@ -24019,7 +24027,7 @@ function r49PieceAO(items){ if(typeof inWallBody !== 'function' || !BIM2S) retur
       const os = []; for(let o = -ht - E.m; o < ht + E.m - 1e-6; o += E.step) os.push(o); os.push(ht + E.m);
       const lat = o => { const a = Math.abs(o) - (ht - .15); if(a <= 0) return 1; const u = Math.min(1, a / (E.m + .15)); return (1 - u) * (1 - u); };
       const L = .012, rows = zs.map(() => []);
-      for(const o of os){ const px = S[0] + n[0] * (gf - L) + t[0] * o, pz = S[1] + n[1] * (gf - L) + t[1] * o, inner = [S[0] + n[0] * (gf + .06) + t[0] * o, S[1] + n[1] * (gf + .06) + t[1] * o];
+      for(const o of os){ const px = S[0] + n[0] * (gf - L) + t[0] * o, pz = S[1] + n[1] * (gf - L) + t[1] * o, inner = [S[0] + n[0] * (lo + .06) + t[0] * o, S[1] + n[1] * (lo + .06) + t[1] * o];
         zs.forEach((z, r) => rows[r].push(inWallBody(inner[0], inner[1], z) ? [px, z, pz] : null)); }
       const p = P[it.gn] = P[it.gn] || {P: [], C: []};
       r13Band(p.P, p.C, rows, (r, i) => 1 - k * sh[r] * lat(os[i])); rep.sides++; }
