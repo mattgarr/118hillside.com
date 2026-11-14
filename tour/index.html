@@ -72,6 +72,14 @@ html{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100
     // small files: keep a text copy for a second request during the boot (taken before the first reader consumes the body)
     memo[u] = pr.then(function(r){ if(!r || !r.ok) return null; var n = +r.headers.get('content-length'); if(n && n > 400000) return null;
       return r.clone().text().catch(function(){ return null; }); }); });
+  /* r48p: the house model's download is counted from a copy of its stream (the loader reads the original) and shown while it comes in,
+     "Loading the house… n%"; n is its share of the whole load (4-11 %, before "Building the house… 12%"), which the intro's bar reads */
+  var G = E.glb = {got: 0, total: 0, done: false, seen: false}, gp = early['bim2/scene.glb'];
+  if(gp) gp.then(function(r){ try{ var n = r && r.ok && r.body && r.clone ? +r.headers.get('content-length') : 0; if(!n) return; G.total = n;
+      var rd = r.clone().body.getReader(), pump = function(){ rd.read().then(function(x){ if(x.done){ G.done = true; return; } G.got += x.value.byteLength; pump(); }, function(){ G.done = true; }); }; pump(); }catch(e){} });
+  var gt0 = Date.now(), gi = setInterval(function(){ var L = document.getElementById('loadtxt'), t = L ? L.textContent || '' : '';
+    if(!/^Loading the house…( \d+%)?$/.test(t)){ if(G.seen || Date.now() - gt0 > 180000) clearInterval(gi); return; }
+    G.seen = true; if(G.total) L.textContent = 'Loading the house… ' + Math.round(4 + 7 * Math.min(1, G.got / G.total)) + '%'; }, 200);
   window.fetch = function(u, o){
     if(typeof u === 'string' && o === undefined && E.on){
       if(early[u]){ var pr = early[u]; delete early[u]; return pr.then(function(r){ return r || nf(u); }); }
@@ -423,11 +431,11 @@ html.halloween,html.halloween.ph{--busy-surface:rgba(21,16,27,.92);--busy-text:#
 #busy24 i{flex:none;width:14px;height:14px;border-radius:50%;border:2px solid var(--busy-accent);border-right-color:transparent;animation:busy24spin .7s linear infinite;box-sizing:border-box}
 html.halloween #busy24 i{border:0;width:16px;height:16px;border-radius:45% 45% 50% 50%;background:radial-gradient(circle at 50% 60%,#ffd27a 0 18%,#ff8a2a 40%,#c4520e 72%);box-shadow:0 0 8px 2px rgba(255,138,42,.55);animation:busy24flick 1.1s ease-in-out infinite}
 #busy24 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-html.ph #busy24{bottom:calc(84px + env(safe-area-inset-bottom,0px));font-size:12.5px}
+html.ph #busy24{bottom:calc(84px + env(safe-area-inset-bottom,0px));font-size:13.5px;padding:10px 18px 10px 13px;gap:10px}html.ph #busy24 i{width:16px;height:16px}   /* r48p: easier to see on a phone */
 @media (max-width:720px){#busy24{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
 @keyframes busy24spin{to{transform:rotate(360deg)}}
 @keyframes busy24flick{0%,100%{transform:scale(1);opacity:1}45%{transform:scale(.88,.94);opacity:.82}70%{transform:scale(1.05);opacity:1}}
-@media (prefers-reduced-motion:reduce){.busy24::after,#busy24 i{animation-duration:2.4s}#busy24{transition:none}}
+@media (prefers-reduced-motion:reduce){.busy24::after{animation-duration:2.4s}#busy24 i{animation:none}#busy24{transition:none}}   /* r48p: a still ring and the words when motion is reduced */
 
 /* ===== v28 GAME (patch_v28_game.py): Snowball's potion hunt ===== */
 .g28pill{display:inline-flex;align-items:center;gap:6px;margin-left:6px;padding:0 12px;min-height:34px;border-radius:999px;border:0;cursor:pointer;
@@ -11388,7 +11396,9 @@ GOV.warm = () => {
   const step = () => {
     if(document.hidden || performance.now() - GOV.lastMove < 1500 || anim){ return later(600); }
     if(DUSK && typeof HW !== 'undefined' && HW.on){ return later(5000); }   // v27details: the tour opens at dusk, so the idle precompile runs at dusk too (it used to park here: day was the only start); Halloween keeps it parked
-    if(!objs){ objs = []; scene.traverse(o => { if(o.material && (o.isMesh || o.isPoints || o.isLine) && !done[pass].has(o)) objs.push(o); }); i = 0; }
+    if(!objs){ objs = []; scene.traverse(o => { if(o.material && (o.isMesh || o.isPoints || o.isLine) && !done[pass].has(o)) objs.push(o); }); i = 0;
+      /* r48p: what is shown first (the rooms the next tap walks into), then the hidden groups (ideas, other plans); same set, same programs */
+      const vis = new Set(); scene.traverseVisible(o => { vis.add(o); }); objs = objs.filter(o => vis.has(o)).concat(objs.filter(o => !vis.has(o))); }
     const flips = [];
     if(pass === 1) scene.traverse(o => { if(o.isLight && !o.visible && (o.isPointLight || o.isSpotLight || o.isRectAreaLight) && o.userData.perfOff){ o.visible = true; flips.push(o); } });
     const ts = performance.now();
@@ -13191,7 +13201,7 @@ function b24Pill(){ let e = document.getElementById('busy24');
   if(!e){ e = document.createElement('div'); e.id = 'busy24'; e.setAttribute('role', 'status'); e.setAttribute('aria-live', 'polite'); e.innerHTML = '<i aria-hidden="true"></i><span></span>'; document.body.appendChild(e); }
   return e; }
 function b24ShowPill(label){ const e = b24Pill(); e.querySelector('span').textContent = label; e.classList.add('on'); e.dataset.seen = String((+e.dataset.seen || 0) + 1); }
-BUSY24.start = (btn, label, now) => { const a = BUSY24.active = {btn, label, t0: performance.now()};
+BUSY24.start = (btn, label, now) => { const a = BUSY24.active = {btn, label, t0: performance.now()}; BUSY24.endNext = false;
   if(btn && !btn.offsetParent){ const more = document.getElementById('phMore'); if(more && more.offsetParent) a.alt = more; }   // phone: the control sits in the closed menu; the menu button shows the busy state
   for(const b of [btn, a.alt]) if(b){ b.classList.add('busy24'); b.setAttribute('aria-busy', 'true'); }
   clearTimeout(BUSY24.pillT); if(now) b24ShowPill(label); else BUSY24.pillT = setTimeout(() => { if(BUSY24.active === a) b24ShowPill(label); }, 300); return a; };
@@ -13202,7 +13212,8 @@ BUSY24.end = () => { const a = BUSY24.active; if(!a) return; BUSY24.active = nul
   const q = BUSY24.queued; BUSY24.queued = null; if(q && q.isConnected) setTimeout(() => q.click(), 0); };
 // settled = the frame after the work has been rendered (that render is where new programs compile and buffers upload)
 // and then three short frames in a row (< 50 ms apart; work a change triggers a few frames later, such as a compile once a texture is in, keeps it busy); 4 s cap
-BUSY24.settle = () => { const t0 = performance.now(); let last = t0, ok = 0, n = 0;
+BUSY24.settle = () => { if(BUSY24.endNext){ BUSY24.endNext = false; requestAnimationFrame(() => BUSY24.end()); return; }   // r48p: a tour move: the pill goes with the first frame of the walk (it used to wait for three quick frames, up to 4 s, while the walk was under way)
+  const t0 = performance.now(); let last = t0, ok = 0, n = 0;
   const f = () => { const t = performance.now(), dt = t - last; last = t; n++; ok = dt < 50 ? ok + 1 : 0;
     if((n >= 2 && ok >= 3) || t - t0 > 4000) BUSY24.end(); else requestAnimationFrame(f); };
   requestAnimationFrame(f); };
@@ -13217,7 +13228,7 @@ const B24_HEAVY = [
   /* r46 perf: one quiet 'Loading…' for the waits that are left: a change of floor plan, the first time in Design or the Dollhouse, a stop whose way on foot has to be worked out afresh (R46H, in the "r46 perf" block near the end) */
   {sel: '#dm45 .pb[data-a], .k42c, #cb42 button, #id46 button', label: () => 'Loading…', slow: el => R46H.planSlow(el), after: () => R46H.after()},
   {sel: '.tab[data-mode=doll], .tab[data-mode=design], #phDoll', label: () => 'Loading…', slow: el => R46H.modeSlow(el), after: () => R46H.after()},
-  {sel: '#next, #prev, #cvNext, #cvPrev', label: () => 'Loading…', slow: el => R46H.stopSlow(el), after: () => R46H.after(true)},
+  {sel: '#next, #prev, #cvNext, #cvPrev', label: () => 'Loading…', slow: el => R46H.stopSlow(el), after: () => { BUSY24.endNext = true; return R46H.after(true); }},   /* r48p: off with the first frame of the move */
   {sel: '#hwBtn', label: () => HW.on ? 'Taking the decorations down…' : 'Lighting the jack-o’-lanterns…',
    slow: () => !HW.on && !!(MODEL && BIM && FURN.items().length) && (!b24HwKeyCached() || !(WARM24.hwCompiled || WARM24.hwEverOn))},
   {sel: '.tab[data-mode=design]', label: () => PERF.pendingVar && PERF.pendingVar.size ? 'Building the design concepts…' : 'Loading the design tools…',
@@ -23430,7 +23441,7 @@ window.__b3mr = B3MR;
    ?pace-off only the pacing (?pace=force forces it, for tests). Nothing here changes what a still frame draws. */
 const P5 = window.__p5 = {on: !/[?&]perf5-off\b/.test(location.search), stats: {laterWaits: 0, laterMs: 0, probesDeferred: 0, probesNear: 0, paceSkips: 0, paceLocks: 0}};
 P5.moving = () => { if(!P5.on) return false; const now = performance.now();
-  return !!((typeof anim !== 'undefined' && anim) || (typeof GOV !== 'undefined' && now - (GOV.lastMove || 0) < 350)); };
+  return !!((typeof anim !== 'undefined' && anim) || (typeof GOV !== 'undefined' && now - (GOV.lastMove || 0) < 350) || (typeof BUSY24 !== 'undefined' && BUSY24.active)); };   // r48p: a tap that is waiting (the pill is up) goes first
 /* background step: runs next task turn unless the camera is moving; then waits for a pause (at most 1.5 s, so work still finishes) */
 P5.later = fn => { if(!P5.on) return setTimeout(fn, 0); const t0 = performance.now();
   const go = () => { const w = performance.now() - t0; if(P5.moving() && w < 1500) return setTimeout(go, 90);
@@ -23829,10 +23840,45 @@ if(!/[?&]ghost41=0\b/.test(location.search)) Object.assign(R13E, {ceilW: 1.1, wa
    above, and the wall runs on up past it: the band's crisp top edge drew a dark hairline right across the stairwell wall at 5.6 ft. A band
    is laid only where something closes the room within 5 in over its ceiling line, 5 in out from the wall. */
 const R48L = new Map();
+/* r48p perf: each probe was a plain three.js raycast through every mesh of seven house groups, every triangle of a merged storey tested; the
+   few thousand probes of r13EdgeAO were one 5-20 s block of the phone's main thread a few seconds after the first view (trees and the first
+   taps waited behind it). Same test, same answer: a plain mesh goes through the page's triangle grid (rgGet, RG24: Mesh.raycast's own sphere and
+   box checks first, then only the triangles whose world-XZ box holds the vertical ray, each with Mesh.raycast's intersectTriangle and near / far
+   tests); any other object (instanced, skinned, morphed, its own raycast) is raycast as before. ?lid48=slow: the old path. */
+const R48LF = window.__R48LF = {slow: /[?&]lid48=slow\b/.test(location.search), ms: 0, n: 0, calls: [], made: [],
+  rc: new THREE.Raycaster(), sph: new THREE.Sphere(), inv: new THREE.Matrix4(), ray: new THREE.Ray(), A: new THREE.Vector3(), B: new THREE.Vector3(), C: new THREE.Vector3(), P: new THREE.Vector3(), W: new THREE.Vector3()};
+const r48LidOK = o => o.isMesh && !/^r1[37]-/.test(o.name || '') && !(o.material && o.material.transparent);
+function r48LidSlow(w, c){ const objs = ['ceil', 'upper', 'main', 'vault', 'vaultUp', 'roof', 'lowerRoof'].map(g => GROUPS[g]).filter(Boolean), rc = new THREE.Raycaster(new THREE.Vector3(w[0], c - .4, w[1]), new THREE.Vector3(0, 1, 0), 0, .82);
+  return rc.intersectObjects(objs, true).some(h => r48LidOK(h.object)); }
+function r48LidFast(w, c){ const F = R48LF, rc = F.rc; rc.set(F.P.set(w[0], c - .4, w[1]), F.W.set(0, 1, 0)); rc.near = 0; rc.far = .82;
+  const X = w[0], Z = w[1], MR = THREE.Mesh.prototype.raycast; let hit = false;
+  const one = o => { if(hit) return; if(o.layers.test(rc.layers) && r48LidOK(o)){
+      const g = o.geometry, mat = o.material;
+      if(o.raycast !== MR || o.isInstancedMesh || o.isSkinnedMesh || !g || !g.isBufferGeometry){ const hs = []; o.raycast(rc, hs); if(hs.length) hit = true; }
+      else if(mat !== undefined){
+        if(g.boundingSphere === null) g.computeBoundingSphere();
+        F.sph.copy(g.boundingSphere).applyMatrix4(o.matrixWorld);
+        if(rc.ray.intersectsSphere(F.sph)){ F.inv.copy(o.matrixWorld).invert(); F.ray.copy(rc.ray).applyMatrix4(F.inv);
+          if(g.boundingBox === null || F.ray.intersectsBox(g.boundingBox)){ if(!RG24.grids.has(o)) F.made.push(o); const G = rgGet(o);
+            if(!G){ const hs = []; o.raycast(rc, hs); if(hs.length) hit = true; }
+            else if(G.T && X >= G.X0 && Z >= G.Z0 && X < G.X0 + G.nx * G.cs && Z < G.Z0 + G.nz * G.cs){
+              const cell = Math.min(G.nx - 1, Math.floor((X - G.X0) / G.cs)) * G.nz + Math.min(G.nz - 1, Math.floor((Z - G.Z0) / G.cs)), idx = G.idx, pos = G.pos;
+              for(let q = G.start[cell], e = G.start[cell + 1]; q < e && !hit; q++){ const t = G.items[q], j = G.J[t], mt = G.mats[G.MI[t]];
+                const a = idx ? idx.getX(j) : j, b = idx ? idx.getX(j + 1) : j + 1, cc = idx ? idx.getX(j + 2) : j + 2;
+                F.A.fromBufferAttribute(pos, a); F.B.fromBufferAttribute(pos, b); F.C.fromBufferAttribute(pos, cc);
+                const r = mt.side === THREE.BackSide ? F.ray.intersectTriangle(F.C, F.B, F.A, true, F.P) : F.ray.intersectTriangle(F.A, F.B, F.C, mt.side !== THREE.DoubleSide, F.P);
+                if(r === null) continue; const d = rc.ray.origin.distanceTo(F.P.applyMatrix4(o.matrixWorld)); if(d >= rc.near && d <= rc.far) hit = true; } } } } } }
+    for(const ch of o.children){ one(ch); if(hit) return; } };
+  for(const k of ['ceil', 'upper', 'main', 'vault', 'vaultUp', 'roof', 'lowerRoof']){ const g = GROUPS[k]; if(g) one(g); if(hit) break; }
+  return hit; }
+/* QA: R48LF.check() asks every probe of the last build again the old way and counts the answers that differ (0 expected) */
+R48LF.check = () => { let bad = 0; const ex = []; for(const [w, c, v] of R48LF.calls){ const s = r48LidSlow(w, c); if(s !== v){ bad++; if(ex.length < 5) ex.push([w, c, v, s]); } } return {n: R48LF.calls.length, bad, ex}; };
 function r48Lid(x, y, c){ const k = Math.round(x * 4) + ',' + Math.round(y * 4) + ',' + Math.round(c * 4); let v = R48L.get(k); if(v !== undefined) return v; v = true;
-  try{ const w = W2(x, y), objs = ['ceil', 'upper', 'main', 'vault', 'vaultUp', 'roof', 'lowerRoof'].map(g => GROUPS[g]).filter(Boolean), rc = new THREE.Raycaster(new THREE.Vector3(w[0], c - .4, w[1]), new THREE.Vector3(0, 1, 0), 0, .82);
-    v = rc.intersectObjects(objs, true).some(h => h.object.isMesh && !/^r1[37]-/.test(h.object.name || '') && !(h.object.material && h.object.material.transparent)); }catch(e){ v = true; }
+  const t0 = performance.now();
+  try{ const w = W2(x, y); v = R48LF.slow || typeof rgGet !== 'function' ? r48LidSlow(w, c) : r48LidFast(w, c); if(R48LF.calls.length < 20000) R48LF.calls.push([w, c, v]); }catch(e){ v = true; }
+  R48LF.ms += performance.now() - t0; R48LF.n++;
   R48L.set(k, v); return v; }
+{ const _ea = r13EdgeAO; r13EdgeAO = function(){ try{ return _ea.apply(this, arguments); } finally { for(const o of R48LF.made) RG24.grids.delete(o); R48LF.made = []; } }; }   // the grids made only for these probes are let go
 function r13EdgeAO(){ if(!BIM2S || typeof inWallBody !== 'function') return null;
   const OP = (BIM2S.openings || []), out = {}, E = R13E, rep = {spaces: 0, edges: 0, corners: 0, tris: 0};
   const bucket = k => out[k] = out[k] || {P: [], C: []};
@@ -25291,11 +25337,18 @@ function r36Cut(a, label){
 function r36Say(text){ try{ let el = document.getElementById('r36say'); if(!el){ el = document.createElement('div'); el.id = 'r36say'; el.className = 'wptip'; el.setAttribute('role', 'status'); el.style.cssText = 'left:50%;top:18%;transform:translate(-50%,-50%);transition:opacity .3s;pointer-events:none'; const w = document.getElementById('wptip'); (w && w.parentElement || document.body).appendChild(el); }
     el.textContent = text; el.hidden = false; el.style.opacity = '1'; clearTimeout(r36Say.t); r36Say.t = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => { el.hidden = true; }, 320); }, 1500); }catch(e){} }
 /* turn the straight flight flyTo just set up into a walked route. 1 = walking, 0 = no walk within the 6 s rule (the caller cuts), -1 = leave it be */
+/* the floor heights a walked move starts and ends on, or null (no walk: the caller cuts). r48p: shared with the route made ahead (R48P) */
+function r36Ends(P, Q, o){
+  let fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); if(o.level0 != null && Math.abs(fa - o.level0) > .6 && P.y - fa > 7 && Math.abs(P.y - o.level0 - EYE) < 1.2) fa = o.level0; const ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return null;
+  let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return null;
+  return [fa, fb]; }
+/* a tour move's options from stop w (the camera at P0) to stop s. r48p: shared with R48P */
+function r36TourOpts(w, s, P0){ const atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1;
+  return {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 100, easeIn: s.easeIn}; }
 function r36Pathify(a, o){ o = o || {};
   if(!R36N.on || !a || (a.kind !== 'look' && !o.orbit)) return -1;
   const P = a.from, Q = a.to, d = Math.hypot(Q.x - P.x, Q.z - P.z); if(d < .05 && Math.abs(Q.y - P.y) < .3) return -1;   // a turn in place
-  let fa = walkSurfaceAt(P.x, P.z, P.y - EYE + .6); if(o.level0 != null && Math.abs(fa - o.level0) > .6 && P.y - fa > 7 && Math.abs(P.y - o.level0 - EYE) < 1.2) fa = o.level0; const ha = P.y - fa; if(!(ha >= 2.5 && ha <= 8.2)) return 0;
-  let fb = walkSurfaceAt(Q.x, Q.z, Q.y - EYE + .6); if(o.level != null && Math.abs(fb - o.level) > .6 && Q.y - fb > 7) fb = o.level; if(Q.y - fb > 9 || Q.y - fb < 2) return 0;
+  const E = r36Ends(P, Q, o); if(!E) return 0; const fa = E[0], fb = E[1];
   if(reduceMotion) return 0;
   const R = r36Route(P, Q, fa, fb, o.rooms, o.rooms0); if(!R || R.L > (o.cap || R36N.CAP)) return 0;
   a.path = R; a.lift = 0; a.dur = R.L > R36N.PACE * R36N.MAXS ? clamp(R.L / 12.2, R36N.MAXS, 8) : clamp(R.L / R36N.PACE, Math.min(1.1, .5 + R.L / 10), R36N.MAXS);   /* r37: a tour move of two stair flights is walked a little faster (up to 11.5 ft/s, 8 s) rather than cut */ a.t0 = performance.now(); a.yaw0 = yaw; a.pitch0 = pitch; a.sHold = null; a.easeIn = o.easeIn || null;
@@ -25320,11 +25373,58 @@ const R38 = window.R38 = {MAXD: 10.0};
     if(anim && anim.path) { camera.position.copy(anim.to); camera.lookAt(anim.toT); nav = anim.kind; if(nav === 'orbit'){ target.copy(anim.toT); orbitFromCamera(); } else lookFromCamera(); anim = null; }   // a second press mid-walk: finish this move, then start the next from where it ends
     const was = stopIdx, P0 = camera.position.clone(), r = _ss36.apply(this, arguments);
     try{ if(fly !== false && anim && R36N.on && mode === 'tour' && !r36Game()){ const s = STOPS[stopIdx], a = anim;
-        const w = STOPS[was], atW = w && !w.aerial && P0.distanceTo(new THREE.Vector3(...FRAME_FOR(w).pos)) < 1, O = {level: LV[s.level], rooms: s.rooms, rooms0: atW ? w.rooms : null, level0: atW ? LV[w.level] : null, orbit: true, cap: 100, easeIn: s.easeIn};
+        const w = STOPS[was], O = r36TourOpts(w, s, P0);
         if(a.kind === 'look'){ const k = r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(k === 0) r36Cut(a); }
         else if(!s.aerial && !(w && w.aerial) && P0.y < 40){ const k = reduceMotion ? 0 : r36Pathify(a, O); if(k === 1 && r38Long(a)) r36Cut(a); else if(k === 1) a.tour = true; else if(reduceMotion || !r36LineClear(P0, a.to)) r36Cut(a); }   // an outdoor stop (street, yard, the dusk front) is walked to as well when a route is short enough
         else if(reduceMotion) r36Cut(a); } }catch(e){ console.warn('[r36 nav] tour move', e); }
     return r; }; }
+/* r48p perf (owner on an iPhone, 11/14: "Freezes when going to next stop after front porch. Ultimately loads but very slow. Trees also take a
+   long time to load."). The first walk into a room had its route worked out on the tap: the A* search and its relaxation, and when the furniture
+   had settled since, the walking grid as well (1.2-2.4 s on a 4x-throttled phone profile; 0.3-0.6 s on a laptop). Now, once the trees are planted
+   and the visitor has been still for 1.2 s at a Tour stop, the routes of the next and the previous move are made ahead, one per idle slot, into
+   r36Route's own cache: the same inputs (r36Ends and r36TourOpts are the code the tap runs) and the same key, so the tap finds the same route.
+   A search that ran out of its time budget is not kept (the tap tries again, as before). A stop that opens a door when shown (STOPS open) or is
+   flown to in orbit is left to the tap. Then the textures of what stands near the next and the previous stop are uploaded in idle slices
+   (renderer.initTexture, ~10 ms a slice), so the first frames of the move do not decode and upload them. Nothing here changes what is drawn.
+   R48P.ready (all of that done at the stop on show) holds back the idea prebuild (R46H.pre). ?prefetch48=0 turns it off. */
+const R48P = window.__R48P = {off: /[?&]prefetch48=0\b/.test(location.search), log: [], ready: false, routes: 0, tex: 0, texMs: 0, t0: performance.now(), texFor: null, texList: null};
+function r48pRoute(j){   // what r36Pathify asks r36Route for on the tour move from here to stop j, or null (not a walk made ahead)
+  if(!R36N.on || mode !== 'tour' || anim || glide || reduceMotion || r36Game()) return null;
+  const w = STOPS[stopIdx], s = STOPS[j]; if(!w || !s || j === stopIdx || w.aerial || s.aerial || (s.open && s.open.length) || (s.nav || 'look') !== 'look') return null;
+  const fr = FRAME_FOR(s); if(!fr || !fr.pos || !fr.pos.every(Number.isFinite)) return null;
+  const P = camera.position.clone(), Q = new THREE.Vector3(...fr.pos); if(Math.hypot(Q.x - P.x, Q.z - P.z) < .05 && Math.abs(Q.y - P.y) < .3) return null;
+  const o = r36TourOpts(w, s, P), E = r36Ends(P, Q, o); if(!E) return null;
+  return {P, Q, fa: E[0], fb: E[1], o, key: [P.x, P.y, P.z, Q.x, Q.y, Q.z].map(v => v.toFixed(1)).join(',') + R36N.key}; }
+/* the tap on Next / Back will plan a walk (the pill goes up before it, B24_HEAVY via R46H.stopSlow) */
+function r48pUnplanned(j){ try{ const q = r48pRoute(j); return !!q && !R36N.cache.has(q.key); }catch(e){ return false; } }
+const R48P_TEXK = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'bumpMap', 'alphaMap', 'lightMap', 'displacementMap', 'specularMap', 'clearcoatMap', 'clearcoatNormalMap', 'clearcoatRoughnessMap', 'transmissionMap'];
+function r48pTexWanted(t){ if(!t || !t.isTexture || t.isCubeTexture || t.isDataTexture3D || t.isDataTexture2DArray || t.isVideoTexture || t.isDepthTexture || !(t.version > 0)) return false;
+  const im = t.image; if(!im || im.complete === false || !(im.width > 0)) return false; const pr = renderer.properties.get(t); return pr.__version !== t.version; }
+function r48pTex(){   // true: more to do
+  const near = [stopIdx + 1, stopIdx - 1, stopIdx].map(j => STOPS[j]).filter(Boolean).map(s => { try{ const f = FRAME_FOR(s); return f && f.pos ? new THREE.Vector3(...f.pos) : null; }catch(e){ return null; } }).filter(Boolean);
+  const k = stopIdx + '|' + ACTIVE_VAR; if(R48P.texFor !== k){ R48P.texFor = k; R48P.texList = []; const seen = new Set(), C = new THREE.Vector3();
+    scene.traverseVisible(o => { if(!o.isMesh || !o.material || !o.geometry || !o.geometry.boundingSphere) return; C.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld);
+      const r = o.geometry.boundingSphere.radius * o.matrixWorld.getMaxScaleOnAxis(); if(!near.some(p => p.distanceTo(C) - r < 32)) return;
+      for(const m of [].concat(o.material)) if(m) for(const q of R48P_TEXK){ const t = m[q]; if(t && !seen.has(t)){ seen.add(t); R48P.texList.push(t); } } }); }
+  const L = R48P.texList, t0 = performance.now(); let n = 0;
+  while(L.length && (n === 0 || performance.now() - t0 < 10)){ const t = L.pop(); if(!r48pTexWanted(t)) continue; renderer.initTexture(t); n++; R48P.tex++; }
+  R48P.texMs += performance.now() - t0; return L.length > 0; }
+{ const later = (ms, fn) => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, {timeout: 1500}) : fn()), ms);
+  const step = () => { let again = 700;
+    try{ const trees = !!window.__treeBuild || window.__treeBuildMs != null || performance.now() - R48P.t0 > 120000;
+      if(R48P.off || document.hidden || !trees || mode !== 'tour' || !w24Idle(1200) || (typeof DOOR28 !== 'undefined' && DOOR28.moving.size)) return;
+      const here = stopIdx + '|' + ACTIVE_VAR; if(R48P.at !== here){ R48P.at = here; R48P.ready = false; }
+      if(R48P.ready) return;
+      for(const j of [stopIdx + 1, stopIdx - 1]){ R36N.chk = 0; r36Grids(); const q = r48pRoute(j); if(!q || R36N.cache.has(q.key)) continue;
+        const t0 = performance.now(); R36N.dbg = null; let res = null; try{ res = r36Route(q.P, q.Q, q.fa, q.fb, q.o.rooms, q.o.rooms0); }catch(e){ console.warn('[r48p] route', e); }
+        if(R36N.dbg && R36N.dbg.budget) R36N.cache.delete(q.key);
+        R48P.routes++; R48P.log.push(['route', (STOPS[stopIdx] || {}).id + '>' + (STOPS[j] || {}).id, Math.round(performance.now() - t0), res ? +res.L.toFixed(1) : 0]); if(R48P.log.length > 40) R48P.log.shift();
+        again = 60; return; }
+      if(r48pTex()){ again = 30; return; }
+      R48P.ready = true; R48P.log.push(['ready', (STOPS[stopIdx] || {}).id, Math.round(performance.now() - R48P.t0), R48P.tex]); }
+    catch(e){ console.warn('[r48p]', e); }
+    finally{ later(again, step); } };
+  later(1500, step); }
 /* walk: taps, white circles, the plan */
 { const _mt36 = moveTo; moveTo = function(x, z, f, face){
     if(!R36N.on || r36Game()) return _mt36.apply(this, arguments);
@@ -25827,7 +25927,9 @@ const R46 = window.__r46 = (() => {
         if(el.classList.contains('k42c')) return el.dataset.id !== ACTIVE_VAR;
         return ACTIVE_VAR !== 'asbuilt' && (a === 'real' || /real house/i.test(el.textContent || '')); }catch(e){ return false; } };
     H.modeSlow = el => { try{ const m = el.id === 'phDoll' ? 'doll' : el.dataset.mode; if(!m || mode === m || H.seen[m]) return false; H.seen[m] = true; return true; }catch(e){ return false; } };
-    H.stopSlow = () => { try{ if(game || mode !== 'tour' || !R36N.on || !R36N.key) return false; const k = r36Key(); return k !== R36N.key && !R36N.kept.has(k); }catch(e){ return false; } };
+    H.stopSlow = el => { try{ if(game || mode !== 'tour' || !R36N.on || !R36N.key) return false; const k = r36Key(); if(k !== R36N.key && !R36N.kept.has(k)) return true;
+        /* r48p: a walk not yet planned ahead (R48P) is planned on the tap: the pill first */
+        const d = el && /next/i.test(el.id || '') ? 1 : el && /prev/i.test(el.id || '') ? -1 : 0; return !!d && typeof r48pUnplanned === 'function' && r48pUnplanned(stopIdx + d); }catch(e){ return false; } };
     H.after = async quick => { try{ const pill = document.getElementById('busy24'); if(pill && pill.parentNode !== document.body) document.body.appendChild(pill);
         if(quick) return;
         for(let i = 0; i < 3; i++){ const P = Object.keys(B2OPT.busy).filter(k => !B2OPT.built[k]).map(k => B2OPT.busy[k]); if(!P.length) break; await Promise.all(P.map(q => Promise.resolve(q).catch(() => {}))); }
@@ -25847,7 +25949,8 @@ const R46 = window.__r46 = (() => {
     H.pre = async () => { try{
         if(/[?&]prep46=0\b/.test(Q) || game || window.__LEAN || SS.get('hillside.lean') === '1'){ H.state = 'off'; return; }
         if(!roomy()){ H.state = 'skipped: connection'; return; }
-        for(;;){ const B = window.__boot22; if(B && (B.done || !B.prog) && document.querySelector('#loading.done') && !document.getElementById('intro28') && BIM2S && still(3000)) break; await new Promise(r => setTimeout(r, 1500)); }
+        const tW = now(), r48first = () => { const P = window.__R48P; return !P || P.off || P.ready || now() - tW > 90000; };   /* r48p: the next move's route and textures first (or 90 s) */
+        for(;;){ const B = window.__boot22; if(B && (B.done || !B.prog) && document.querySelector('#loading.done') && !document.getElementById('intro28') && BIM2S && still(3000) && r48first()) break; await new Promise(r => setTimeout(r, 1500)); }
         H.state = 'running'; const opts = (BIM2S.meta.options || []).filter(o => o.glb), first = opts.find(o => (o.legacyId || o.id) === 'open4k') || opts[0], rest = opts.filter(o => o !== first);
         if(first){ const key = first.legacyId || first.id, t0 = now();
           if(!B2OPT.built[key] && !B2OPT.busy[key]){ await hold(first); note('fetched ' + key); if(!(await until(2500, 120000))){ H.state = 'stopped: busy'; return; }
