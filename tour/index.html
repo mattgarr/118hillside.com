@@ -23991,7 +23991,7 @@ function r13Contact(){ const groups = ['furn', 'furnU', 'furn@asbuilt'].concat(w
    R49P.gap ft gets a soft band on that wall's face: from the floor up to the piece's top and then fading out over fH above it (for a
    hung cabinet, from its underside fading down), fading out over m past both ends, deeper the closer the wall. Where the wall face has
    an opening (window, door) nothing is laid. Built with the contact shadows (so it follows Design changes), indoor rooms only. */
-const R49P = {gap: .8, step: .25, m: .45, k: .2, kHung: .18, kTop: .14, fH: .85, fHung: .7, fTop: .5,
+const R49P = {gap: .8, step: .25, m: .45, k: .24, kHung: .32, kTop: .2, fH: .85, fHung: .7, fTop: .5,
   wall: /^(sofa\w*|sectional|bed\w*|nightstand|sideboard|consoleTable|builtinBookcase|cubeShelf|desk\w*|ovalDesk|dresser\w*|bench|baseCabinet|tallCabinet|fridge\w*|washer\w*|dryer\w*|laundry(Base|CornerBase)|beverageCooler|vanity|counter|toilet|armchair\w*|slipChair)$/,
   hung: /^(upperCabinet|upperMicrowave|laundryCornerUpper)$/, top: /^(counter|baseCabinet|vanity|laundry(Base|CornerBase))$/};
 const r49RC = new THREE.Raycaster(), r49V = new THREE.Vector3(), r49D = new THREE.Vector3(); let r49Objs = [];
