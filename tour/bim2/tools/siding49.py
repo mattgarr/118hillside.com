@@ -18,7 +18,7 @@ place (tour/, halloween/, thanksgiving/) and is safe to run again:
      the ceiling's own board thickness); the cut end of what stays gets a painted end. Its collider is cut back the same way.
   3  jan24: the kitchen's two vaults (the old wing's and the main roof's) meet at x = 4.82 with a step of up to 2.2 ft. Nothing closed the
      step: the wing roof's fascia and the roof undersides showed through it, and past them the sky. A painted face closes it, 1/8 in
-     proud of the fascia.
+     proud of the fascia. apr24b has the same open step between the kitchen and the family room north of W-L2-C02 (x = 5.09): closed too.
 
 Run: python3 tour/bim2/tools/siding49.py      then   python3 tour/bim2/tools/doors46.py   (both report 0 changes on a second run)
 """
@@ -254,6 +254,18 @@ def kitchen_step(g, paints, rep):
     rep.append(('jan24', STEP, '-', 'kitchen: the step between the two vaults closed (%s)' % pm.split('#')[-1], 'x %.3f, y %.2f..%.2f, up to %.2f ft' % (X, Y0, Y1, hi(YK) - lo(YK))))
 
 
+def family_step(g, paints, rep):
+    """apr24b: north of the infill that stays (W-L2-C02), from y 14.70 to the end of W-L1-C08 (15.58), the kitchen's vault meets the family
+    room's lower vault at x = 5.09 with nothing between them: from the kitchen one looked into the family room's roof space (its framing,
+    the entry roof's fascia). A painted face closes the step, from the old wall plate to the kitchen's ceiling."""
+    el = 'W-L1-S49F'
+    if has_el(g, el): return
+    X, Y0, Y1 = 5.09, 14.6959, 15.5803; up = lambda y: 6.0299 + 0.41 * y + .05
+    M = Mesher(); M.face([(X, Y0, ZB), (X, Y1, ZB), (X, Y1, up(Y1)), (X, Y0, up(Y0))], (1, 0, 0))
+    pm = paints.get('SP-L1-C-KITCHEN', DEFAULT_PAINT); P, N, T = M.arrays(); put(g, 'walls', 'L1', pm, el, None, P, N, T)
+    rep.append(('apr24b', el, '-', 'kitchen / family room: the step between the two vaults closed (%s)' % pm.split('#')[-1], 'x %.2f, y %.2f..%.2f, %.2f..%.2f ft' % (X, Y0, Y1, ZB, up(Y1))))
+
+
 # ------------------------------------------------------------------------------------------------ main
 def sha(p): return hashlib.sha256(open(p, 'rb').read()).hexdigest()
 BASE = []; BASE_ELS = set()
@@ -266,7 +278,7 @@ def main():
         gp = os.path.join(d0, 'scene.opt-OS-REMODEL-%s.glb' % v); mp = os.path.join(d0, 'scene.opt-OS-REMODEL-%s.meta.json' % v)
         if not os.path.exists(gp): continue
         g = D46.Glb(gp); meta = json.load(open(mp)); R = Rooms(meta); paints = room_paints(g, R); m0 = json.dumps(meta)
-        if v == 'apr24b': drop_infill(g, meta, paints, rep)
+        if v == 'apr24b': drop_infill(g, meta, paints, rep); family_step(g, paints, rep)
         if v == 'jan24': kitchen_step(g, paints, rep)
         repaint(g, R, paints, v, rep)
         if g.dirty: g.save()
