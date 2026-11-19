@@ -626,6 +626,15 @@ def main():
                 PTS.append(p)
                 NRM.append(np.repeat(ch['n'][None], len(p), 0))
                 REF.append((li, ci, 'texels', keys))
+    for m in (page.get('ovl') or []):            # r51: an overlay's own wall faces: AO per vertex, along the vertex's area-weighted normal
+        Pp, I = m['pos'], m['idx']
+        fn = np.cross(Pp[I[:, 1]] - Pp[I[:, 0]], Pp[I[:, 2]] - Pp[I[:, 0]])
+        vn = np.zeros((len(Pp), 3))
+        for k in range(3):
+            np.add.at(vn, I[:, k], fn)
+        PTS.append(Pp)
+        NRM.append(vn / np.maximum(np.linalg.norm(vn, axis=1, keepdims=True), 1e-12))
+        REF.append((-1, m['name'], 'ovl', len(Pp)))
     sizes = [len(x) for x in PTS]
     P = np.concatenate(PTS)
     N = np.concatenate(NRM)
@@ -670,7 +679,12 @@ def main():
     A = np.ones((H, W), np.float64)
     WT = np.zeros((H, W), np.float64)
     o = 0
+    OVL = {}
     for (li, ci, kind, keys), n in zip(REF, sizes):
+        if kind == 'ovl':
+            OVL[ci] = vis[o:o + n]
+            o += n
+            continue
         ch = layouts[li]['charts'][ci]
         v = vis[o:o + n]
         o += n
@@ -715,7 +729,7 @@ def main():
                 if ((q >= lo) & (q <= hi)).all(1).any():
                     ch = layouts[0]['charts'][ci]; near[ch['oy']:ch['oy'] + ch['h'], ch['ox']:ch['ox'] + ch['w']] = True
             o += n
-        return write_patch(a, img, layouts, near)
+        return write_patch(a, img, layouts, near, OVL)
     from PIL import Image
     im = Image.fromarray(img, 'L')
     import io
@@ -752,7 +766,7 @@ def main():
     log('[done] %s: atlas %dx%d %s %.0f KB, uv %s, %.0fs total' % (a.scene, W, H, afn, len(data) / 1024, ', '.join('%s %.0f KB' % (u['file'], u['bytes'] / 1024) for u in uvs), time.time() - T0))
 
 
-def write_patch(a, img, layouts, near):
+def write_patch(a, img, layouts, near, OVL):
     """r51: an overlay changes a few charts of the scene's atlas. Written: <scene stem>.ovl-<overlay>.ao.<hash12>.bin.gz - the texels that differ
     from the scene's own atlas (more than 2/255), in rectangles (x aligned to 4), each with its values and a mask; plus <stem>.ovl-<overlay>.ao.json.
     The page writes the masked texels over whichever atlas is bound while the overlay shows (the base package's charts sit at the same place in
@@ -787,7 +801,8 @@ def write_patch(a, img, layouts, near):
     open(os.path.join(a.out, fn), 'wb').write(data)
     base_uv = [u for u in idx['uv'] if not u.get('page') and not u.get('option')][0]
     J = {'format': 'aobake-patch', 'version': BAKE_VERSION, 'scene': a.scene, 'overlay': a.overlay, 'atlas': idx['atlas']['file'], 'uv': base_uv['file'], 'sha256': base_uv['sha256'],
-         'file': fn, 'bytes': len(data), 'rects': rects, 'texels': int(d.sum()), 'baked': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
+         'file': fn, 'bytes': len(data), 'rects': rects,
+         'vertex': [{'mesh': k, 'n': int(len(v)), 'ao': [int(x) for x in np.clip(np.round(v * 255), 0, 255)]} for k, v in OVL.items()], 'texels': int(d.sum()), 'baked': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
     open(os.path.join(a.out, '%s.ovl-%s.ao.json' % (stem, a.overlay)), 'w').write(json.dumps(J, indent=1))
     log('[done] patch %s: %d rects, %d texels changed, %.0f KB' % (fn, len(rects), J['texels'], len(data) / 1024))
 

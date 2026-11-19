@@ -196,7 +196,19 @@ def main():
         F = region.difference(U)
         for (ya, yb, za, zb) in holes: F = F.difference(box(ya, za, yb, zb))
         out = 0
-        for poly in getattr(F, 'geoms', [F]):
+        # cut on a 6 in grid, so the shading baked per vertex (aobake --overlay) follows the room's corners, and along the outline of what
+        # covers the face (casings, stools, aprons and the baseboard inside; the trim and the roof outside): a vertex hidden under a casing
+        # is dark, and must not shade the open wall beside it
+        cov = []
+        for (grp_, st_, mat_), d in A.m.items():
+            if mat_ not in (TRIM, 'hardie-trim#paint-ext-trim'): continue
+            for P in np.concatenate(d['P']):
+                if np.all(np.abs(P[:, 0] - (x - .004 * n[0])) < .012) and Polygon(P[:, [1, 2]]).area > 1e-7: cov.append(Polygon(P[:, [1, 2]]).buffer(1e-4))
+        cov.append(box(-24.8, 5.0, -10.7, 6.0075) if n[0] > 0 else box(-24.8, 5.0, -10.7, 8.0557))   # the baseboard inside; outside, the roof against the wall
+        C = unary_union(cov)
+        pieces_ = [F.intersection(C), F.difference(C)]
+        cells = [q.intersection(box(y, z, y + .5, z + .5)) for q in pieces_ for y in np.arange(-23.0, -12.0, .5) for z in np.arange(5.0, 14.5, .5)]
+        for poly in [q for c in cells for q in getattr(c, 'geoms', [c]) if q.geom_type == 'Polygon']:
             if poly.area < 1e-5: continue
             for t in shapely.constrained_delaunay_triangles(poly).geoms:
                 c = np.array(t.exterior.coords)[:3]
@@ -205,7 +217,7 @@ def main():
                 if np.dot(np.cross(P[1] - P[0], P[2] - P[0]), n) < 0: P = P[[0, 2, 1]]
                 A.add('walls', 'L2', mat, 'NB51-WALL', P[None], N[None]); out += Polygon(c).area
         return round(out, 3)
-    rep['siding_ft2'] = fill(SIDING, X_OUT, box(-22.40, 5.345, -12.95, 14.0), [-1, 0, 0])
+    rep['siding_ft2'] = fill(SIDING, X_OUT, box(-22.75, 5.345, -12.65, 14.0), [-1, 0, 0])   # as far as the low walls stood against it
     rep['paint_ft2'] = fill(PAINT, X_IN, box(-22.60, 5.51, -12.80, 14.10), [1, 0, 0])
     for (ya, yb, za, zb) in holes:          # the rough openings' sides (behind the lining and the frame)
         for P, N in [quad([X_IN, ya, za], [X_OUT, ya, za], [X_OUT, ya, zb], [X_IN, ya, zb], [0, 1, 0]),
@@ -254,7 +266,10 @@ def main():
         Pb = np.concatenate(d['P']).reshape(-1, 3); Nb = np.concatenate(d['N']).reshape(-1, 3)
         Nb = Nb / np.maximum(np.linalg.norm(Nb, axis=1, keepdims=True), 1e-12)
         Pw = Pb[:, [1, 2, 0]].astype(np.float32); Nw = Nb[:, [1, 2, 0]].astype(np.float32)
-        U = D46.uv_box(Pw, Nw).astype(np.float32); I = np.arange(len(Pw), dtype=np.uint32)
+        U = D46.uv_box(Pw, Nw).astype(np.float32)
+        key = np.round(np.concatenate([Pw, Nw * 8], 1), 4)                 # shared corners become one vertex (the baked shading is per vertex)
+        _, first, inv = np.unique(key, axis=0, return_index=True, return_inverse=True)
+        Pw, Nw, U, I = Pw[first], Nw[first], U[first], inv.reshape(-1).astype(np.uint32)
         if mat not in mats:
             J['materials'].append({'name': mat, 'extras': {'bim2Material': mat}, 'pbrMetallicRoughness': {'roughnessFactor': .8, 'metallicFactor': 0}}); mats[mat] = len(J['materials']) - 1
         acc = []

@@ -17184,12 +17184,17 @@ const NB51 = window.NB51 = (() => {
     const i = STOPS.findIndex(s => s.id === 'primary'); if(i < 0) return false;
     if(mode === 'tour') showStop(i); else { stopIdx = i; setMode('tour'); } return true; }
   const fx = [];
-  function ui(){ for(const f of fx) try{ f(on); }catch(e){} try{ if(window.CTA42 && CTA42.sync) CTA42.sync(); }catch(e){} }
+  /* the room and walk-to labels that name the balcony step aside while it shows (they are rebuilt by the page: kept marked every half second) */
+  { const st = document.createElement('style'); st.textContent = '#labels .lbl.nb51x,#wplabels .wpl.nb51x{display:none!important}'; document.head.appendChild(st); }
+  function labels(){ for(const e of document.querySelectorAll('#labels .lbl, #wplabels .wpl')){ const x = on && e.textContent.trim() === 'Balcony'; if(e.classList.contains('nb51x') !== x) e.classList.toggle('nb51x', x); } }
+  setInterval(() => { if(on || document.querySelector('.nb51x')) labels(); }, 500);
+  function ui(){ labels(); for(const f of fx) try{ f(on); }catch(e){} try{ if(window.CTA42 && CTA42.sync) CTA42.sync(); }catch(e){}
+    try{ const eb = document.getElementById('eyebrow'); if(eb && mode !== 'tour' && /^Stop \d+ of \d+$/.test(eb.textContent)) eb.textContent = 'Stop ' + (stopIdx + 1) + ' of ' + STOPS.length; }catch(e){} }
   // ?nobalcony=1: on once the house is in
   if(/[?&]nobalcony=1\b/.test(location.search)) (function wait(n){ const L = document.getElementById('loading');
     if(!(window.BIM2 && BIM2.state && typeof STOPS !== 'undefined' && (!L || L.classList.contains('done')))){ if(n < 2400) setTimeout(() => wait(n + 1), 250); return; }
     set(true, 'url'); })(0);
-  return {set, see, text, onChange: f => fx.push(f), clear, get on(){ return on; }, get built(){ return built; }, get hidden(){ return hid.size; }};
+  return {set, see, text, onChange: f => fx.push(f), clear, meshes, get on(){ return on; }, get built(){ return built; }, get hidden(){ return hid.size; }};
 })();
 
 /* ---------------- r46 ph46: a lighter phone screen (owner 11/13, from his iPhone: "Way too much crap with UX on phone ... remove the offered-at and
@@ -24302,9 +24307,13 @@ BIM3.report.r13 = R13.report;
   function ovl(tex){ const on = !!(window.NB51 && NB51.on);
     if(!on){ if(OV.done.size){ for(const t of OV.done) t.needsUpdate = true; OV.done.clear(); } return; }
     if(!OV.st){ OV.st = 'loading'; ovlLoad().catch(e => { OV.st = 'failed'; R.ovlErr = String(e && e.message || e); console.info('[r51] baked shading patch off:', R.ovlErr); }); return; }
-    if(OV.st !== 'ok' || !tex || OV.done.has(tex)) return;
+    if(OV.st !== 'ok') return;
+    if(!OV.vdone && window.NB51 && NB51.meshes){ OV.vdone = true;   // the overlay's own wall faces: their shading per vertex (u = 65535, v = AO)
+      for(const e of (OV.J.vertex || [])){ const m = NB51.meshes.find(q => q.name === e.mesh), g = m && m.geometry; if(!g || g.attributes.position.count !== e.n) continue;
+        const a = new Uint16Array(2 * e.n); for(let i = 0; i < e.n; i++){ a[2 * i] = 65535; a[2 * i + 1] = e.ao[i] * 257; } g.setAttribute('aoUv', new THREE.BufferAttribute(a, 2)); OV.vn = (OV.vn || 0) + 1; } }
+    if(!tex || OV.done.has(tex)) return;
     if(ovlApply(tex)) OV.done.add(tex); }
-  R.ovl = () => ({st: OV.st, rects: OV.J && OV.J.rects.length, runs: OV.runs, patched: OV.done.size, err: R.ovlErr || null});
+  R.ovl = () => ({st: OV.st, rects: OV.J && OV.J.rects.length, runs: OV.runs, patched: OV.done.size, vertexMeshes: OV.vn || 0, err: R.ovlErr || null});
   let last = now(), fr = 0, started = false;
   const tick = () => { requestAnimationFrame(tick); const t = now(), dt = Math.min(.1, (t - last) / 1000); last = t;
     if(!R.on){ R.U.aoK.value.x = 0; return; }

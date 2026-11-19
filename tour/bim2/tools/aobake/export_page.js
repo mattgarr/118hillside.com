@@ -93,12 +93,18 @@ const srv = http.createServer((q, r) => { try{ const u = decodeURIComponent(q.ur
       const n = P.count, sv = [...new Set([0, n / 3 | 0, (2 * n) / 3 | 0, n - 1])].sort((a, b) => a - b);
       let vis = true; for(let q = mesh; q; q = q.parent) if(!q.visible) vis = false;
       return {key, n, vis, local: sv.map(i => [i, +P.getX(i).toFixed(4), +P.getY(i).toFixed(4), +P.getZ(i).toFixed(4)]), pos: b64(new Uint8Array(pos.buffer)), idx: b64(new Uint8Array(idx.buffer))}; });
-    return {scene: sceneId, overlay: window.NB51 && NB51.on ? 'nobalcony51' : null, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs, pieces};
+    // r51: an overlay's own wall faces take their shading per vertex (aobake --overlay)
+    const ovl = []; sc.traverse(o => { if(!o.isMesh || !(o.userData && o.userData.nb51) || !/^walls\|/.test(o.name) || !o.visible) return; const g = o.geometry, P = g.attributes.position;
+      o.updateMatrixWorld(true); const E = o.matrixWorld.elements, pos = new Float32Array(P.count * 3);
+      for(let i = 0; i < P.count; i++){ const x = P.getX(i), y = P.getY(i), z = P.getZ(i); pos[3 * i] = E[0] * x + E[4] * y + E[8] * z + E[12]; pos[3 * i + 1] = E[1] * x + E[5] * y + E[9] * z + E[13]; pos[3 * i + 2] = E[2] * x + E[6] * y + E[10] * z + E[14]; }
+      const idx = new Uint32Array(g.index.array); ovl.push({name: o.name, n: P.count, pos: b64(new Uint8Array(pos.buffer)), idx: b64(new Uint8Array(idx.buffer))}); });
+    return {scene: sceneId, overlay: window.NB51 && NB51.on ? 'nobalcony51' : null, ovl, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs, pieces};
   }, scene);
   // binary: 4-byte json length, json (with base64 blobs moved out), then blobs
   const blobs = []; const put = s => { const buf = Buffer.from(s, 'base64'); const o = {off: 0, len: buf.length}; blobs.push([o, buf]); return o; };
   for(const m of res.pkg){ m.pos = put(m.pos); if(m.idx) m.idx = put(m.idx); }
   for(const m of res.pieces){ m.pos = put(m.pos); m.idx = put(m.idx); }
+  for(const m of (res.ovl || [])){ m.pos = put(m.pos); m.idx = put(m.idx); }
   res.occ = put(res.occ);
   let off = 0; for(const [o, buf] of blobs){ o.off = off; off += buf.length; }
   const js = Buffer.from(JSON.stringify(res)); const hdr = Buffer.alloc(4); hdr.writeUInt32LE(js.length);
