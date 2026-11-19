@@ -14,7 +14,7 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 let chromium; try{ ({chromium} = require('playwright')); }catch(e){ ({chromium} = require('/opt/npm-tools/node_modules/playwright')); }
 const ROOT = path.resolve(__dirname, '../../../..');            // repo root (serves /tour/...)
-const scene = process.argv[2] || 'asbuilt', out = process.argv[3];
+const scene = process.argv[2] || 'asbuilt', out = process.argv[3], overlay = process.argv[4] || null;   // r51: an overlay (meta overlays[]) shown on top, e.g. nobalcony51
 if(!out){ console.error('usage: node export_page.js <asbuilt|open4k|jan24|apr24b> <out.bin>'); process.exit(2); }
 const TYPES = {'.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.glb': 'model/gltf-binary', '.wasm': 'application/wasm', '.png': 'image/png',
   '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.css': 'text/css', '.bin': 'application/octet-stream', '.txt': 'text/plain', '.mp3': 'audio/mpeg'};
@@ -45,6 +45,7 @@ const srv = http.createServer((q, r) => { try{ const u = decodeURIComponent(q.ur
     await p.evaluate(id => window.IT46.show(id), scene);
     await p.waitForFunction(id => { const S = BIM2.state; return S && S.optionLoaded && Object.keys(S.optionLoaded).some(k => k.endsWith(id) && S.optionLoaded[k] === 'ok'); }, scene, {timeout: 600000, polling: 500});
   }
+  if(overlay){ await p.evaluate(() => window.NB51 && NB51.set(true, 'aobake')); await p.waitForFunction(() => window.NB51 && NB51.on, null, {timeout: 600000, polling: 500}); }
   await p.waitForTimeout(8000);   // idle-time builds (r42 alcove faces, r13) settle
   const res = await p.evaluate(sceneId => {
     const S = BIM2.state, sc = window.__TOUR.scene; sc.updateMatrixWorld(true);
@@ -83,7 +84,7 @@ const srv = http.createServer((q, r) => { try{ const u = decodeURIComponent(q.ur
       for(let ii = 0; ii < inst; ii++){ if(o.isInstancedMesh){ o.getMatrixAt(ii, IM); M4.multiplyMatrices(o.matrixWorld, IM); } else M4.copy(o.matrixWorld); const E = M4.elements;
         for(let j = a; j + 2 < bnd; j += 3) for(let q = 0; q < 3; q++){ const vi = idx ? idx.getX(j + q) : j + q; const x = pos.getX(vi), y = pos.getY(vi), z = pos.getZ(vi);
           T.push(E[0] * x + E[4] * y + E[8] * z + E[12], E[1] * x + E[5] * y + E[9] * z + E[13], E[2] * x + E[6] * y + E[10] * z + E[14]); } }
-      objs.push({group: tg.split('@')[0], cat, kind, name: o.name || (o.parent && o.parent.name) || '', mat: (mat && mat.name) || '', t0, nt: T.length / 9 - t0}); });
+      objs.push({group: tg.split('@')[0], cat, kind, name: o.name || (o.parent && o.parent.name) || '', mat: (mat && mat.name) || '', t0, nt: T.length / 9 - t0, ov: !!(o.userData && o.userData.nb51)}); });
     const f = new Float32Array(T);
     // page-built receivers (cabinets, counters, backsplashes...): the page's own list, so the keys match the loader's
     const pieces = (window.R50 && R50.pieces ? R50.pieces() : []).map(({key, mesh}) => { const g = mesh.geometry, P = g.attributes.position; mesh.updateMatrixWorld(true); const E = mesh.matrixWorld.elements;
@@ -92,7 +93,7 @@ const srv = http.createServer((q, r) => { try{ const u = decodeURIComponent(q.ur
       const n = P.count, sv = [...new Set([0, n / 3 | 0, (2 * n) / 3 | 0, n - 1])].sort((a, b) => a - b);
       let vis = true; for(let q = mesh; q; q = q.parent) if(!q.visible) vis = false;
       return {key, n, vis, local: sv.map(i => [i, +P.getX(i).toFixed(4), +P.getY(i).toFixed(4), +P.getZ(i).toFixed(4)]), pos: b64(new Uint8Array(pos.buffer)), idx: b64(new Uint8Array(idx.buffer))}; });
-    return {scene: sceneId, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs, pieces};
+    return {scene: sceneId, overlay: window.NB51 && NB51.on ? 'nobalcony51' : null, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs, pieces};
   }, scene);
   // binary: 4-byte json length, json (with base64 blobs moved out), then blobs
   const blobs = []; const put = s => { const buf = Buffer.from(s, 'base64'); const o = {off: 0, len: buf.length}; blobs.push([o, buf]); return o; };

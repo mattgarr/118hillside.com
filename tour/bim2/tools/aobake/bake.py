@@ -533,6 +533,7 @@ def main():
     ap.add_argument('--out', default=os.path.join(BIM2, 'ao'))
     ap.add_argument('--procs', type=int, default=os.cpu_count() or 2)
     ap.add_argument('--format', default='webp', choices=['webp', 'png'])
+    ap.add_argument('--overlay', default=None, help='r51: the page export was made with this overlay on (meta overlays[]); write a patch for the scene\'s atlas instead of a new atlas')
     a = ap.parse_args()
     T0 = time.time()
     os.makedirs(a.out, exist_ok=True)
@@ -548,6 +549,8 @@ def main():
     page = pagebin.read(a.page)
     if page['scene'] != a.scene:
         raise SystemExit('page export is for %s, not %s' % (page['scene'], a.scene))
+    if (page.get('overlay') or None) != a.overlay:
+        raise SystemExit('page export overlay %s, asked for %s' % (page.get('overlay'), a.overlay))
     # page geometry per package mesh
     pk = {}
     for m in page['pkg']:
@@ -649,8 +652,8 @@ def main():
     keep_po = 0
     for o in page['objs']:
         cat, kind, grp, name = o['cat'], o['kind'] or '', o['group'], o['name'] + ' ' + o['mat']
-        if grp in ('yard', 'ceil', 'roof', 'lowerRoof') or cat in ('furniture', 'lighting', 'light'):
-            continue
+        if (grp in ('yard', 'ceil', 'roof', 'lowerRoof') and not o.get('ov')) or cat in ('furniture', 'lighting', 'light'):
+            continue                                    # (an overlay's own roof is part of the package it stands in for)
         import re
         if re.search(r'mirror|xlight|sconce|r35shade|door28|pocket|hologram|pendant|chandelier', kind + ' ' + name, re.I):
             continue
@@ -700,6 +703,19 @@ def main():
     A[:RES, :] = 1
     A[:, :RES] = 1
     img = np.clip(np.round(A * 255), 0, 255).astype(np.uint8)
+    if a.overlay:
+        # only the charts near what the overlay changes (its meta clearBox, grown by the 3 ft the rays reach)
+        meta = json.load(open(os.path.join(BIM2, 'scene.meta.json')))
+        bx = [o for o in meta.get('overlays', []) if o['id'] == a.overlay][0]['clearBox']
+        lo = np.array([bx[2], bx[4], bx[0]]) - RLEN - 1; hi = np.array([bx[3], bx[5] + 3, bx[1]]) + RLEN + 1   # world: X = BIM y, Y = z, Z = BIM x
+        near = np.zeros(img.shape, bool); o = 0
+        for (li, ci, kind, keys), n in zip(REF, sizes):
+            if li == 0 and kind != 'vertex':
+                q = P[o:o + n]
+                if ((q >= lo) & (q <= hi)).all(1).any():
+                    ch = layouts[0]['charts'][ci]; near[ch['oy']:ch['oy'] + ch['h'], ch['ox']:ch['ox'] + ch['w']] = True
+            o += n
+        return write_patch(a, img, layouts, near)
     from PIL import Image
     im = Image.fromarray(img, 'L')
     import io
@@ -734,6 +750,46 @@ def main():
         if f.startswith(stem + '.ao.') and f != stem + '.ao.json' and f not in keep:
             os.remove(os.path.join(a.out, f))
     log('[done] %s: atlas %dx%d %s %.0f KB, uv %s, %.0fs total' % (a.scene, W, H, afn, len(data) / 1024, ', '.join('%s %.0f KB' % (u['file'], u['bytes'] / 1024) for u in uvs), time.time() - T0))
+
+
+def write_patch(a, img, layouts, near):
+    """r51: an overlay changes a few charts of the scene's atlas. Written: <scene stem>.ovl-<overlay>.ao.<hash12>.bin.gz - the texels that differ
+    from the scene's own atlas (more than 2/255), in rectangles (x aligned to 4), each with its values and a mask; plus <stem>.ovl-<overlay>.ao.json.
+    The page writes the masked texels over whichever atlas is bound while the overlay shows (the base package's charts sit at the same place in
+    every scene's atlas: they come from the one base uv set), and uploads the atlas afresh when it is turned off."""
+    import gzip
+    from PIL import Image
+    from scipy import ndimage
+    stem = 'scene' if not SCENES[a.scene] else 'scene.opt-%s' % SCENES[a.scene]
+    idx = json.load(open(os.path.join(a.out, '%s.ao.json' % stem)))
+    old = np.array(Image.open(os.path.join(a.out, idx['atlas']['file'])).convert('L'))
+    H = min(old.shape[0], img.shape[0], BASE_ROWS)          # the base package's rows only
+    d0 = np.abs(img[:H].astype(int) - old[:H].astype(int)) > 2
+    d = d0 & near[:H]
+    log('[patch] %d texels differ, %d of them on charts near the overlay' % (d0.sum(), d.sum()))
+    lab, n = ndimage.label(ndimage.binary_dilation(d, iterations=6))
+    rects, blobs, off = [], [], 0
+    for sl in ndimage.find_objects(lab):
+        y0, y1 = sl[0].start, sl[0].stop
+        x0, x1 = sl[1].start // 4 * 4, min(W, -(-sl[1].stop // 4) * 4)
+        m = d[y0:y1, x0:x1]
+        if not m.any():
+            continue
+        v = img[y0:y1, x0:x1]
+        rects.append([int(x0), int(y0), int(x1 - x0), int(y1 - y0), off])
+        blobs += [v.tobytes(), (m.astype(np.uint8) * 255).tobytes()]
+        off += 2 * v.size
+    data = gzip.compress(b''.join(blobs), 9, mtime=0)
+    fn = '%s.ovl-%s.ao.%s.bin.gz' % (stem, a.overlay, hashlib.sha256(data).hexdigest()[:12])
+    for f in os.listdir(a.out):
+        if f.startswith('%s.ovl-%s.ao.' % (stem, a.overlay)) and f.endswith('.bin.gz') and f != fn:
+            os.remove(os.path.join(a.out, f))
+    open(os.path.join(a.out, fn), 'wb').write(data)
+    base_uv = [u for u in idx['uv'] if not u.get('page') and not u.get('option')][0]
+    J = {'format': 'aobake-patch', 'version': BAKE_VERSION, 'scene': a.scene, 'overlay': a.overlay, 'atlas': idx['atlas']['file'], 'uv': base_uv['file'], 'sha256': base_uv['sha256'],
+         'file': fn, 'bytes': len(data), 'rects': rects, 'texels': int(d.sum()), 'baked': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
+    open(os.path.join(a.out, '%s.ovl-%s.ao.json' % (stem, a.overlay)), 'w').write(json.dumps(J, indent=1))
+    log('[done] patch %s: %d rects, %d texels changed, %.0f KB' % (fn, len(rects), J['texels'], len(data) / 1024))
 
 
 def blur_masked(a, m):
