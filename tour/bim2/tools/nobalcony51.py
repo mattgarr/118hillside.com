@@ -191,7 +191,7 @@ def main():
         # slivers (under 3/8 in across) along the old opening's edges carry the old lining's shading as a dark line: the new face covers
         # them too, standing 1/20 in proud of the wall so it is drawn over them
         alt = lambda t: 2 * t.area / max(np.hypot(*np.diff(np.array(t.exterior.coords), axis=0).T))
-        U = unary_union([t.buffer(2e-4) for t in T if t.area > 1e-9 and alt(t) > .03])
+        U = unary_union([t.buffer(2e-4) for t in T if t.area > 1e-9 and alt(t) > .03]).buffer(-6e-4)   # the new face runs 1/200 in under the old one's edge: no crack
         x = x + .004 * n[0]
         F = region.difference(U)
         for (ya, yb, za, zb) in holes: F = F.difference(box(ya, za, yb, zb))
@@ -225,7 +225,8 @@ def main():
 
     # the roof carried across: the same plane as RF-L02 / L03 / L05 (top 18.14525 + 0.25 x, underside 17.89525 + 0.25 x)
     parts, cover = roof_gap(g)
-    top = lambda x: 18.14525 + .25 * x; und = lambda x: 17.89525 + .25 * x
+    top = lambda x: 18.14525 + .004 + .25 * x; und = lambda x: 17.89525 - .004 + .25 * x   # 1/20 in proud of the roof each side, over a 1/20 in lap: no seam
+    parts = [p.buffer(.004, join_style=2).intersection(box(-46.40, -22.80, -40.358, -12.60)) for p in parts]
     nt = np.array([-.25, 0, 1.0]); nt /= np.linalg.norm(nt)
     area = 0
     for poly in parts:
@@ -239,7 +240,7 @@ def main():
             A.add('roofs', 'L1', SHINGLE, 'NB51-ROOF', P[None], np.tile(nt, (1, 3, 1)))
             A.add('roofs', 'L1', SOFFIT, 'NB51-ROOF', U[None][:, [0, 2, 1]], np.tile(-nt, (1, 3, 1)))
     rep['roof_ft2'] = round(area, 3); rep['roof_parts'] = len(parts)
-    rep['roof_at_wall'] = round(top(X_OUT), 4)
+    rep['roof_at_wall'] = round(top(X_OUT) - .004, 4)
 
     # ------------------------------------------------------------------ GLB
     J = {'asset': {'version': '2.0', 'generator': 'tour/bim2/tools/nobalcony51.py (r51)'}, 'scene': 0, 'scenes': [{'nodes': []}], 'nodes': [], 'meshes': [],
