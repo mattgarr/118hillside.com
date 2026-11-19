@@ -63,6 +63,7 @@
       lights: meta.lights || [], furnishings: meta.furnishings || [], materials: meta.materials || {}, groups: meta.groups || {}, stops: meta.stops || [],
       flights: meta.flights || [], extras: meta.extras || {}, roofs: meta.roofs || [], builtins: meta.builtins || [], slabs: meta.slabs || [], exteriorLights: meta.exteriorLights || null,
       options: (meta.options || []).map(o => Object.assign({}, o, {hide: o.hide || [], hideRanges: o.hideRanges || []})),
+      overlays: (meta.overlays || []).map(o => Object.assign({}, o, {hide: o.hide || []})),   // r51: small options shown on top of any option (setOverlay)
       boundaries: Array.isArray(meta.boundaries) ? Object.fromEntries(meta.boundaries.map(b => [b.id, b.space])) : (meta.boundaries || {}),
       cut: meta.cut || {}, site: meta.site || null, exteriorFaces: meta.exteriorFaces || []};   // FX 11/3: site.grade + kernel G1 exterior faces (rule:curb-above-grade)
   }
