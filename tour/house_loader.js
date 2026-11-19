@@ -191,13 +191,18 @@
   const GEO0 = new WeakMap();                 // the as-loaded geometry of each package mesh (the page may swap m.geometry, e.g. the dollhouse cut)
   function setVariant(key){                   // show option `key` (null / 'asbuilt' = the as-built package); returns true when it changed
     const S = st(); const opt = key && S.meta.options.find(o => o.id === key || o.legacyId === key);
-    const hide = new Set(opt ? (opt.hide || []).concat((opt.hideRanges || []).map(h => h[0] + '|' + h[1])) : []), ck = opt ? opt.id : '';
+    const ov = Object.keys(S._ov || {}).sort(), hide = new Set(opt ? (opt.hide || []).concat((opt.hideRanges || []).map(h => h[0] + '|' + h[1])) : []), ck = (opt ? opt.id : '') + ov.map(k => '+' + k).join('');
+    for(const k of ov) for(const id of S._ov[k]) hide.add(id);   // r51: overlays (setOverlay) hide their elements on top of any option
     if((S._var || '') === ck) return false; S._var = ck;
     for(const m of S.meshes){ const u = m.userData; if(u.bim2.option) continue; const g = GEO0.get(m) || m.geometry;
       if(!u.idx0) u.idx0 = g.index;
       let alt = u.alt && u.alt[ck]; if(alt === undefined){ alt = hide.size ? hiddenIndex(m, hide, g, u.idx0) : null; (u.alt = u.alt || {})[ck] = alt; }
       g.setIndex(alt || u.idx0); }
     return true; }
+  /* r51: an overlay (meta.overlays[]: a small change shown on top of whichever option is on) hides its elements with the option's;
+     setOverlay(id, true | false) then setVariant(key) again (the cache key carries the overlays, so the dollhouse cut follows) */
+  function setOverlay(id, on){ const S = st(), o = (S.meta.overlays || []).find(q => q.id === id); if(!o) return false; S._ov = S._ov || {};
+    if(on) S._ov[id] = (o.hide || []).slice(); else delete S._ov[id]; return true; }
   async function loadOptions(o, only){        // o: {fetch, mapMaterial, groupOf, attach(group, mesh, optionId)}; only: one option id / legacyId
     const S = st(); const T = T_; S.optionLoaded = S.optionLoaded || {};
     for(const opt of S.meta.options){ if(!opt.glb || (only && opt.id !== only && opt.legacyId !== only) || S.optionLoaded[opt.id]) continue; S.optionLoaded[opt.id] = 'loading'; try{
@@ -220,7 +225,7 @@
   /* ---------- world-frame façade (what the page calls) ---------- */
   const st = () => { if(!API.state) throw new Error('bim2: not loaded'); return API.state; };
   const API = {
-    VERSION, state: null, load, normalize, inPoly, W2, P2, elementOfFace, setVariant, loadOptions,
+    VERSION, state: null, load, normalize, inPoly, W2, P2, elementOfFace, setVariant, setOverlay, loadOptions,
     options(){ const S = st(); return S.meta.options.map(o => ({id: o.id, legacyId: o.legacyId || null, set: o.set || null, name: o.name || o.id, note: o.note || null,
       hide: (o.hide || []).length + (o.hideRanges || []).length, glb: o.glb || null, loaded: (S.optionLoaded || {})[o.id] || null})); },
     option(key){ return st().meta.options.find(o => o.id === key || o.legacyId === key) || null; },

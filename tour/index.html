@@ -1905,7 +1905,7 @@ html.tgload .loading::after{content:"";position:absolute;left:0;right:0;top:-60p
   i.src = tg ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/tg_poster_ph.jpg' : 'thumbs/tg_poster.jpg') : hw ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/hw_poster_ph.jpg' : 'thumbs/hw_poster.jpg') : (() => { try{ const k = sessionStorage.getItem('hillside.tod.v27'); if(k && k !== 'dusk') return 'thumbs/p69.jpg'; }catch(e){} return 'thumbs/p02.jpg'; })(); })();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="house_loader.js?v=50"></script>
+<script src="house_loader.js?v=51"></script>
 <script>/* v20 reveal: count three.js loads in flight */ (function(){ var M = window.THREE && THREE.DefaultLoadingManager; if(!M) return;
   var R = window.__revealLM = {pending: 0, errors: 0, last: 0}, s = M.itemStart, e = M.itemEnd, x = M.itemError;
   M.itemStart = function(u){ R.pending++; R.last = performance.now(); return s.apply(this, arguments); };
@@ -6453,7 +6453,7 @@ function makeDollCut(deps){
         yield; } }
     return {acts, segs}; }
   const sigOf = (st, varKey) => { let n = 0, h = 0; for(const {g} of roots(st, varKey)) g.traverse(o => { n++; const p = o.position; h = (h + p.x * 3.1 + p.y * 7.7 + p.z * 13.3 + o.rotation.y * 17.9 + (o.visible ? 1 : 0)) % 1e6; });
-    return st + '|' + (varKey || '') + '|' + n + '|' + h.toFixed(3); };
+    return st + '|' + (varKey || '') + '|' + ((window.BIM2 && BIM2.state && BIM2.state._var) || '') + '|' + n + '|' + h.toFixed(3); };   // r51: an overlay changes what the package draws
   function planFor(st, varKey){ const key = sigOf(st, varKey); let P = PLAN.get(key); if(P) return P;
     const it = work(st, varKey); let r; while(!(r = it.next()).done); P = r.value; P.key = key; PLAN.set(key, P);
     if(PLAN.size > 14) for(const k of PLAN.keys()){ if(PLAN.size <= 10) break; if(k === key || k === planKey) continue; PLAN.delete(k); const c = CAPS.get(k); if(c){ if(c.parent) c.parent.remove(c); c.geometry.dispose(); CAPS.delete(k); } }   // r35: Design moves furniture; keep the last few plans only
@@ -16746,6 +16746,20 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
 #dm45 .pb:hover{border-color:#1f1f1d}
 #dm45 .pb.pri{background:#1f1f1d;border-color:#1f1f1d;color:#fbfaf7}#dm45 .pb.pri:hover{background:#34332f}
 #dm45 .pb[hidden]{display:none}
+#dm45 .op51{flex:none;margin:0 10px;padding:10px 12px 12px;border-top:1px solid #e9e5dc}
+#dm45 .oh{margin:0 0 6px;font-size:12px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:#7a6a4f}
+#dm45 .orow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;column-gap:12px;align-items:center}
+#dm45 .ot{display:block;font:600 19px/1.15 "Cormorant Garamond",Georgia,serif;color:#1f1f1d}
+#dm45 .os{display:block;margin-top:2px;font-size:13.5px;line-height:1.35;color:#55534c}
+#dm45 .orow .m{margin-top:4px}
+#dm45 .sw51{position:relative;flex:none;width:46px;height:28px;margin:0;padding:0;border:0;border-radius:999px;background:#d9d4c8;cursor:pointer;transition:background-color .15s}
+#dm45 .sw51 i{position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fbfaf7;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+#dm45 .sw51[aria-checked="true"]{background:#55633a}#dm45 .sw51[aria-checked="true"] i{transform:translateX(18px)}
+#dm45 .sw51.busy{opacity:.6;cursor:progress}
+#dm45 .sw51:focus-visible{outline:2px solid #4b5f68;outline-offset:2px}
+#dm45 .pb.sm{min-height:34px;padding:0 13px;font-size:13.5px}
+@media (max-width:480px){#dm45 .op51{margin:0 6px;padding:8px 12px 10px}#dm45 .ot{font-size:18px}#dm45 .pb.sm{flex:none;min-height:40px;padding:0 12px}}
+@media (max-height:560px){#dm45 .op51 .os{display:none}}
 @media (max-width:480px){#dm45 .hd{padding:18px 58px 8px 18px}#dm45 .hd.dh{padding:12px 58px 0 18px}#dm45 h2{font-size:27px}#dm45 .ls{padding:2px 6px 4px}#dm45 .t{font-size:22px}#dm45 .bd{padding:8px 18px 14px}#dm45 .ft{padding:10px 18px 14px}
   #dm45 .top{grid-template-columns:92px minmax(0,1fr);gap:14px}#dm45 .top .k42s{width:92px;height:92px}#dm45 .pb{flex:1 1 auto;min-height:44px;padding:0 12px}}
 @media (max-height:560px){#dm45 .hd p{display:none}#dm45 .row{min-height:60px;padding:6px 12px}#dm45 .row .m{display:none}#dm45 .top{grid-template-columns:72px minmax(0,1fr)}#dm45 .top .k42s{width:72px;height:72px}#dm45 .st div{padding:6px 6px 5px}#dm45 .ds{margin-top:10px}}
@@ -16759,6 +16773,9 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
       dlg = el('dialog'); dlg.id = 'dm45'; dlg.setAttribute('aria-labelledby', 'dm45h'); document.body.appendChild(dlg);
       dlg.addEventListener('click', e => { if(e.target === dlg){ close(); return; }
         const x = e.target.closest('.x'); if(x){ close(); return; }
+        const sw = e.target.closest('.sw51'); if(sw){ if(sw.classList.contains('busy')) return; sw.classList.add('busy'); sw.setAttribute('aria-checked', String(!NB51.on));
+          NB51.set(!NB51.on, 'menu').then(() => { if(dlg.open && !cur){ listView(); const q = dlg.querySelector('.sw51'); if(q) try{ q.focus({preventScroll: true}); }catch(x){} } }); return; }
+        if(e.target.closest('[data-a="nb51see"]')){ opener = null; close(); setPk(false); NB51.see('menu'); return; }
         const r = e.target.closest('.row'); if(r){ detail(r.dataset.id); return; }
         if(e.target.closest('.bk')){ const id = cur; listView(); const b = dlg.querySelector('.row[data-id="' + id + '"]'); if(b) try{ b.focus({preventScroll: true}); }catch(x){} return; }
         const a = e.target.closest('.pb'); if(a) act(a.dataset.a, cur); });
@@ -16770,8 +16787,14 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
       for(const p of L){ const f = facts(p.id), k = kindOf(p.id), on = ACTIVE_VAR === p.id;
         h += '<li><button type="button" class="row" data-id="' + p.id + '"' + (on ? ' aria-current="true"' : '') + '>' + thumb(p.id) + '<span class="tx"><span class="t">' + (cnt(f) || p.name) + '</span><span class="s">' + p.name + '</span>'
           + '<span class="m">' + (on ? '<i>Showing now</i>' : '') + tag(k) + '</span></span>' + CH + '</button></li>'; }
-      h += '</ul><div class="ft"><span>Pick one to read about it and see it in 3D.</span></div>' + XB;
+      h += '</ul>' + nbRow() + '<div class="ft"><span>Pick one to read about it and see it in 3D.</span></div>' + XB;
       dlg.innerHTML = h; }
+    /* r51: one small design option under the floor plans; it changes the upper level, so it goes with any of them */
+    function nbRow(){ if(!(window.NB51 && BIM2S && (BIM2S.meta.overlays || []).some(o => o.id === 'nobalcony51'))) return ''; const on = NB51.on;
+      return '<div class="op51"><p class="oh">Options</p><div class="orow"><span class="otx"><span class="ot">Primary bedroom without the balcony</span>'
+        + '<span class="os">Three windows in place of the glass doors, with the roof carried across.</span><span class="m">' + (on ? '<i>Showing now</i>' : '') + 'Illustrative idea</span></span>'
+        + '<button type="button" class="sw51" role="switch" aria-checked="' + on + '" aria-label="Primary bedroom without the balcony"><i></i></button>'
+        + '<button type="button" class="pb sm" data-a="nb51see">See it</button></div></div>'; }
     function detail(id){ const p = plans().find(q => q.id === id); if(!p) return; cur = id; ga('plan_detail', {plan: id});
       const f = facts(id), k = kindOf(id), o = optMeta(id) || {}, idea = id !== 'asbuilt';
       const S = []; if(f){ S.push(['Bedrooms', f.beds], ['Baths', f.baths], ['Office', f.office ? 'Yes' : 'No']); }
@@ -16865,17 +16888,21 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
   function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
     const hp = $('#holPanel'), holOpen = !!(hp && !hp.hidden);
-    const show = !g && !gal && mode !== 'photos' && v !== 'asbuilt';   /* r45 calm pass: no 'As built: the house as it is' pill once the layouts have been looked at; the house needs no label, only an idea does */
-    root.classList.toggle('cb42on', show && v !== 'asbuilt');
+    const nb = !!(window.NB51 && NB51.on), show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || nb);   /* r51: the bedroom option is an idea too. r45 calm pass: no 'As built: the house as it is' pill once the layouts have been looked at; the house needs no label, only an idea does */
+    root.classList.toggle('cb42on', show);
     if(!show){ banner.hidden = true; return; }
     const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
-    if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
+    if(v === 'asbuilt' && nb){ banner.classList.remove('b42ab', 'b42sl'); const short = isPh() && innerWidth < 520, full = 'Illustrative idea: primary bedroom without the balcony';
+      b.textContent = short ? 'Illustrative idea' : full; if(short) banner.setAttribute('aria-label', full); else banner.removeAttribute('aria-label'); s.textContent = '';
+      banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
+    else if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
     else { banner.classList.remove('b42ab'); banner.classList.toggle('b42sl', isPh() && root.classList.contains('pk42') && mode === 'design'); const k = kindOf(v), f = facts(v);
       const same = f && (facts('asbuilt') || {}).beds === f.beds, nm = (plans().find(p => p.id === v) || {}).name || '';   // a concept with as many bedrooms as the house says which one it is
       const sl = banner.classList.contains('b42sl');   // the slim line on a phone: what it is, then 'Not the house as it is.' on a line of its own
       const what = k === 'mine' ? 'Your design' : 'Illustrative idea', full = what + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '');
       const short = isPh() && !sl && innerWidth < 520;   /* r46 calm phone pass: one row, the label and its two buttons (the counts are in the Floor plans menu) */
-      b.textContent = short ? what : full; if(short) banner.setAttribute('aria-label', full); else banner.removeAttribute('aria-label');
+      const fullN = full + (nb ? ', primary bedroom without the balcony' : '');
+      b.textContent = short ? what : fullN; if(short) banner.setAttribute('aria-label', fullN); else banner.removeAttribute('aria-label');
       s.textContent = '';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
     banner.hidden = false;
@@ -16893,6 +16920,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     goReal('banner'); });
   /* 'Real house' outside the picker: the same view of the house as it is (in the tour, the as-built stop that matches the idea stop: IT46) */
   function goReal(where){ ga('plan_pick', {plan: 'asbuilt', concept: 'real', where});
+    if(window.NB51 && NB51.on){ NB51.set(false, 'real'); if(typeof ACTIVE_VAR !== 'string' || ACTIVE_VAR === 'asbuilt'){ lastSig = ''; sync(); return; } }
     if(IT46.on){ try{ IT46.real(); }catch(x){ console.warn('[cta42] real', x); } lastSig = ''; sync(); return; }
     const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); }
 
@@ -17047,14 +17075,21 @@ const IT46 = window.IT46 = (() => {
         for(const s of LISTS[on]){ if(!s.i46 || !R.some(r => inPoly(r.poly, s.pos[2], s.pos[0]))) continue; const dd = Math.hypot(s.pos[0] - P.x, s.pos[2] - P.z); if(dd < bd){ bd = dd; best = s; } }
         if(best) return best.id; }catch(e){} }
     return T.from[id] ? sid(on, T.from[id]) : id; }
+  /* r51: with "Primary bedroom without the balcony" on (NB51), the Balcony stop leaves the list and the Primary bedroom stop says what it shows */
+  const nbf = L => (window.NB51 && NB51.on && !game()) ? L.filter(s => s.id !== 'balcony').map(s => s.id === 'primary' ? Object.assign({}, s, NB51.text, {nb51: true}) : s) : L;
+  let nbWas = false;
+  function nbSync(){ const now = !!(window.NB51 && NB51.on && !game()); if(now === nbWas) return false; nbWas = now;
+    const cur = STOPS[stopIdx] || {}, nid = cur.id === 'balcony' && now ? 'primary' : cur.id, L = nbf(on ? build(on) : REAL);
+    STOPS.length = 0; for(const s of L) STOPS.push(s); const i = STOPS.findIndex(s => s.id === nid); stopIdx = i < 0 ? 0 : i; return true; }
   function swap(v){ const want = has(v) && !game() ? v : null; if(want === on) return false;
     if(on && want){ swap(null); }
     const cur = STOPS[stopIdx] || {}; let nid;
     if(want){ const T = IDEA_TOURS[want]; nid = last && last.v === want && last.real === cur.id ? last.idea : (T.from[cur.id] ? sid(want, T.from[cur.id]) : cur.id); }
     else { nid = cur.i46 ? cur.real : cur.id; last = cur.i46 ? {v: on, idea: cur.id, real: cur.real} : null; }
-    const L = want ? build(want) : REAL; STOPS.length = 0; for(const s of L) STOPS.push(s); on = want; if(want) frame(want);
+    const L = nbf(want ? build(want) : REAL); STOPS.length = 0; for(const s of L) STOPS.push(s); on = want; if(want) frame(want);
+    nbWas = !!(window.NB51 && NB51.on && !game()); if(nbWas && nid === 'balcony') nid = 'primary';
     const i = STOPS.findIndex(s => s.id === nid); stopIdx = i < 0 ? 0 : i; return true; }
-  { const _av = applyVisibility; applyVisibility = function(){ let ch = false; try{ ch = swap(ACTIVE_VAR); }catch(e){ console.warn('[it46] swap', e); }
+  { const _av = applyVisibility; applyVisibility = function(){ let ch = false; try{ ch = swap(ACTIVE_VAR); ch = nbSync() || ch; }catch(e){ console.warn('[it46] swap', e); }
       const r = _av.apply(this, arguments);
       if(ch && mode === 'tour' && !inSet){ try{ showStop(stopIdx); }catch(e){ console.warn('[it46] stop', e); } }   // 'Real house' (or an idea picked) while standing at a stop: the matching stop of the other list
       return r; }; }
@@ -17077,10 +17112,78 @@ const IT46 = window.IT46 = (() => {
     if(on && mode === 'walk'){ try{ stopIdx = window.__back38.target(); }catch(e){} DESIGN.choose('asbuilt', false); setMode('tour'); return; }
     const walk = DESIGN.walking(); DESIGN.choose('asbuilt', mode === 'design'); if(walk) setMode('walk'); }
   function tune(key, f){ const s = on && STOPS.find(x => x.i46 && x.key === key); if(!s) return null; s.f = f; s.framed = false; frame(on); showStop(STOPS.indexOf(s)); return FRAME_FOR(s); }   // QA: try a framing for one idea stop
-  return {has, alias, start, show, real, tune, ids: () => Object.keys(IDEA_TOURS).filter(has), realCount: REAL.length, get on(){ return on; }, get stops(){ return on ? LISTS[on] : REAL; }};
+  return {has, alias, start, show, real, tune, ids: () => Object.keys(IDEA_TOURS).filter(has), get realCount(){ return nbf(REAL).length; }, get on(){ return on; }, get stops(){ return nbf(on ? LISTS[on] : REAL); }};
 })();
 
 
+
+/* ---------------- r51 nb51: "Primary bedroom without the balcony" (owner 11/18). A small design option, not a floor plan: it shows on top of
+   whichever main-level layout is on. Package: tour/bim2/scene.nobalcony51.glb + scene.meta.json overlays[] (tour/bim2/tools/nobalcony51.py).
+   On: the as-built elements it lists stop drawing (BIM2.setOverlay, exact triangle ranges, with any layout's own), its meshes show in the
+   house's groups (so the dollhouse section, the shadows and the Colors panel treat them as the house), its wall stops a walker, the deck
+   stops holding one, the loose pieces on the deck hide, the tour skips the Balcony stop and the Primary bedroom stop says what it shows.
+   Off by default on every visit; ?nobalcony=1 turns it on. Nothing is fetched until it is first turned on. window.NB51 = {on, set(on), see(), text}. */
+const NB51 = window.NB51 = (() => {
+  const ID = 'nobalcony51', meshes = [], hid = new Set(), extra = {coll: [], floors: []};
+  let on = false, built = false, busy = null, lastClear = 0;
+  const text = {p: 'The primary bedroom has a cathedral ceiling with four skylights, each with a remote-controlled shade. In this idea, three casement windows stand where the stacking glass doors were, and the roof below them runs straight across.'};
+  const ov = () => { try{ return (BIM2S && (BIM2S.meta.overlays || []).find(o => o.id === ID)) || null; }catch(e){ return null; } };
+  async function sha(buf){ try{ const h = await crypto.subtle.digest('SHA-256', buf); return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join(''); }catch(e){ return null; } }
+  function load(){ if(built) return Promise.resolve(true); if(busy) return busy; const o = ov(); if(!o || !window.BIM2 || !BIM2.state) return Promise.resolve(false);
+    busy = (async () => { const pill = setTimeout(() => { try{ b24ShowPill('Loading…'); }catch(e){} }, 150);
+      try{ const S = BIM2.state, url = new URL(o.glb, S.metaBase || location.href).href;
+        let buf = await (await R46H.fetch(url)).arrayBuffer(), h = await sha(buf);
+        if(o.sha256 && h && h !== o.sha256){ buf = await (await R46H.fetch(url + '?r=' + Date.now())).arrayBuffer(); h = await sha(buf); if(h && h !== o.sha256) console.warn('[nb51] package sha256 does not match the meta; loading anyway'); }
+        const gl = await new Promise((res, rej) => new THREE.GLTFLoader().parse(buf, '', res, rej)), sc = gl.scene || gl.scenes[0]; sc.updateMatrixWorld(true);
+        const L = []; sc.traverse(x => { if(x.isMesh) L.push(x); });
+        for(const m of L){ const ex = Object.assign({}, (m.parent && m.parent.userData) || {}, m.userData || {}), key = ex.material || '';
+          let mat = S.materials.get(key); if(mat === undefined){ mat = bim2MapMaterial(key, m.material, null, S.meta.materials[key.split('#')[0]] || null, S.meta.materials[key] || null) || m.material; S.materials.set(key, mat); }
+          m.material = mat; m.geometry.applyMatrix4(m.matrixWorld); m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.set(1, 1, 1); m.updateMatrix();
+          m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox(); m.castShadow = !(mat && mat.transparent); m.receiveShadow = true;
+          m.userData = {bim2: {name: m.name, group: ex.group, storey: ex.storey, material: key, ranges: (ex.ranges || []).sort((a, b) => a[2] - b[2]), ex, overlay: ID}, nb51: true};
+          m.visible = false; m.name = m.name || ('nb51|' + key); grp(bim2GroupOf(ex)).add(m); meshes.push(m); }
+        // the new wall stops a walker; the deck no longer holds one
+        for(const c of (o.colliders || [])){ const pts = c.poly.map(([x, y]) => W2(x, y)), xs = pts.map(p => p[0]), zs = pts.map(p => p[1]);
+          const C = {x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs), y0: c.z0, y1: c.z1, top: c.z1, kind: c.kind, bim2: c.element, poly: pts};
+          Object.defineProperty(C, 'v', {get: () => on ? null : '__none', set: () => {}, enumerable: true, configurable: true}); COLLIDERS.push(C); extra.coll.push(C); }
+        for(const f of FLOORS){ if(!(o.floorsOff || []).includes(f.bim2)) continue; const d = Object.getOwnPropertyDescriptor(f, 'v'), v0 = f.v;
+          if(d && d.get){ const g0 = d.get; Object.defineProperty(f, 'v', {get: () => on ? '__none' : g0(), set: () => {}, enumerable: true, configurable: true}); }
+          else Object.defineProperty(f, 'v', {get: () => on ? '__none' : v0, set: () => {}, enumerable: true, configurable: true}); extra.floors.push(f.bim2); }
+        built = true; window.__NB51 = {meshes: meshes.length, tris: meshes.reduce((n, m) => n + (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3, 0), sha: h, colliders: extra.coll.length, floorsOff: extra.floors}; return true;
+      }catch(e){ console.warn('[nb51] package', e); return false; }
+      finally{ clearTimeout(pill); try{ if(!BUSY24.active){ const e = document.getElementById('busy24'); if(e) e.classList.remove('on'); } }catch(e){} busy = null; } })();
+    return busy; }
+  /* loose page-built pieces standing on the deck or hung on its wall (the chairs and stool, the two door lights, holiday pieces): hidden while on */
+  function clear(){ const o = ov(), B = o && o.clearBox; for(const c of hid){ c.visible = true; } hid.clear(); if(!on || !B) return;
+    const bb = new THREE.Box3(), cen = new THREE.Vector3(), sz = new THREE.Vector3(), seen = new Set();
+    const test = c => { if(seen.has(c) || c.isInstancedMesh || c.isLight || (c.userData && (c.userData.bim2 || c.userData.nb51)) || !c.visible) return; seen.add(c);
+      bb.setFromObject(c); if(bb.isEmpty()) return; bb.getCenter(cen); bb.getSize(sz); if(sz.x > 8 || sz.z > 8 || sz.y > 8) return;
+      const bx = cen.z, by = cen.x, bz = cen.y; if(bx >= B[0] && bx <= B[1] && by >= B[2] && by <= B[3] && bz >= B[4] && bz <= B[5]){ c.visible = false; hid.add(c); } };
+    for(const k of Object.keys(GROUPS)){ if(/^(trees|terrain|land|landscape|hills|yard|ceil)/.test(k)) continue; for(const c of GROUPS[k].children) test(c); }
+    for(const c of scene.children) if(c.isGroup && !GROUPS[c.name]) for(const q of c.children) test(q);
+    lastClear = performance.now(); }
+  function slider(show){ try{ for(const it of ((window.B3D && B3D.items) || [])) if(it.id === 'D-L2-01') for(const p of it.parts) p.piv.visible = show; }catch(e){} }
+  async function set(v, why){ v = !!v; if(v === on) return true;
+    if(v){ const ok = await load(); if(!ok) return false; }
+    on = v; try{ if(typeof window.gtag === 'function') window.gtag('event', 'option_nobalcony', {on: v, where: why || ''}); }catch(e){}
+    BIM2.setOverlay(ID, on); for(const m of meshes) m.visible = on; slider(!on); clear();
+    try{ PERF.shadowDirty = true; }catch(e){}
+    const st = STOPS[stopIdx] && STOPS[stopIdx].id;
+    applyVisibility();
+    if(mode === 'tour'){ try{ showStop(stopIdx, st === 'balcony'); }catch(e){} }
+    setTimeout(() => { if(on) clear(); }, 2500);
+    ui(); return true; }
+  async function see(why){ const ok = await set(true, why || 'see'); if(!ok) return false;
+    const i = STOPS.findIndex(s => s.id === 'primary'); if(i < 0) return false;
+    if(mode === 'tour') showStop(i); else { stopIdx = i; setMode('tour'); } return true; }
+  const fx = [];
+  function ui(){ for(const f of fx) try{ f(on); }catch(e){} try{ if(window.CTA42 && CTA42.sync) CTA42.sync(); }catch(e){} }
+  // ?nobalcony=1: on once the house is in
+  if(/[?&]nobalcony=1\b/.test(location.search)) (function wait(n){ const L = document.getElementById('loading');
+    if(!(window.BIM2 && BIM2.state && typeof STOPS !== 'undefined' && (!L || L.classList.contains('done')))){ if(n < 2400) setTimeout(() => wait(n + 1), 250); return; }
+    set(true, 'url'); })(0);
+  return {set, see, text, onChange: f => fx.push(f), clear, get on(){ return on; }, get built(){ return built; }, get hidden(){ return hid.size; }};
+})();
 
 /* ---------------- r46 ph46: a lighter phone screen (owner 11/13, from his iPhone: "Way too much crap with UX on phone ... remove the offered-at and
    schedule links and the illustrative box ... Lower box needs to be smaller too. Lighten!"). On a phone, in every mode, the screen is the header,
@@ -17125,7 +17228,7 @@ html.ph #labels .lbl.lb46off{visibility:hidden!important;pointer-events:none!imp
     vis.sort((a, b) => a.d - b.d); let n = 0; lblN = 0;
     for(const v of vis){ const hide = v.cut || n >= 7; if(!hide) n++; else lblN++; v.e.classList.toggle('lb46off', hide); } }
   function sync(){ try{
-      const ph = isPh(), idea = ph && typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt';
+      const ph = isPh(), idea = ph && ((typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt') || !!(window.NB51 && NB51.on));   // r51: the bedroom option too
       root.classList.toggle('id46', idea); if(tag.hidden === idea) tag.hidden = !idea;
       const t = ACTIVE_VAR === 'custom' ? 'Your design' : 'Illustrative idea', sp = tag.firstChild; if(idea && sp.textContent !== t) sp.textContent = t;
       if(note){ const want = ph ? 'short' : 'full'; if(note.dataset.t46 !== want){ note.dataset.t46 = want; if(ph) note.textContent = 'ⓘ Illustrative model · AI-generated furnishings'; else note.innerHTML = note0; try{ if(window.__v33discPlace) window.__v33discPlace(); }catch(e){} } }
