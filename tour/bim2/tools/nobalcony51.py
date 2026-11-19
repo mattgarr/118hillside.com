@@ -188,7 +188,11 @@ def main():
     # doors' casings (the wall face stops at a casing's edge), less the three rough openings
     def fill(mat, x, region, n):
         T = [Polygon(P[:, [1, 2]]) for e in elem(g, 'W-L2-022') + elem(g, 'W-L2-023') if e['mat'] == mat for P in e['B'] if np.all(np.abs(P[:, 0] - x) < .006)]
-        U = unary_union([t.buffer(2e-4) for t in T if t.area > 1e-9])
+        # slivers (under 3/8 in across) along the old opening's edges carry the old lining's shading as a dark line: the new face covers
+        # them too, standing 1/20 in proud of the wall so it is drawn over them
+        alt = lambda t: 2 * t.area / max(np.hypot(*np.diff(np.array(t.exterior.coords), axis=0).T))
+        U = unary_union([t.buffer(2e-4) for t in T if t.area > 1e-9 and alt(t) > .03])
+        x = x + .004 * n[0]
         F = region.difference(U)
         for (ya, yb, za, zb) in holes: F = F.difference(box(ya, za, yb, zb))
         out = 0
