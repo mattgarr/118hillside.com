@@ -17145,6 +17145,7 @@ const NB51 = window.NB51 = (() => {
         // the new wall stops a walker; the deck no longer holds one
         for(const c of (o.colliders || [])){ const pts = c.poly.map(([x, y]) => W2(x, y)), xs = pts.map(p => p[0]), zs = pts.map(p => p[1]);
           const C = {x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs), y0: c.z0, y1: c.z1, top: c.z1, kind: c.kind, bim2: c.element, poly: pts};
+          Object.defineProperty(C, '__absent', {value: new Set(), enumerable: false});   // the layout ideas mark the house's colliders they do not have here; this one belongs to no layout, so it ignores that
           Object.defineProperty(C, 'v', {get: () => on ? null : '__none', set: () => {}, enumerable: true, configurable: true}); COLLIDERS.push(C); extra.coll.push(C); }
         for(const f of FLOORS){ if(!(o.floorsOff || []).includes(f.bim2)) continue; const d = Object.getOwnPropertyDescriptor(f, 'v'), v0 = f.v;
           if(d && d.get){ const g0 = d.get; Object.defineProperty(f, 'v', {get: () => on ? '__none' : g0(), set: () => {}, enumerable: true, configurable: true}); }
@@ -17186,7 +17187,7 @@ const NB51 = window.NB51 = (() => {
   const fx = [];
   /* the room and walk-to labels that name the balcony step aside while it shows (they are rebuilt by the page: kept marked every half second) */
   { const st = document.createElement('style'); st.textContent = '#labels .lbl.nb51x,#wplabels .wpl.nb51x{display:none!important}'; document.head.appendChild(st); }
-  function labels(){ for(const e of document.querySelectorAll('#labels .lbl, #wplabels .wpl')){ const x = on && e.textContent.trim() === 'Balcony'; if(e.classList.contains('nb51x') !== x) e.classList.toggle('nb51x', x); } }
+  function labels(){ for(const e of document.querySelectorAll('#labels .lbl, #wplabels .wpl')){ const x = on && /^Balcony\b/.test(e.textContent.trim()); if(e.classList.contains('nb51x') !== x) e.classList.toggle('nb51x', x); } }
   setInterval(() => { if(on || document.querySelector('.nb51x')) labels(); }, 500);
   function ui(){ labels(); for(const f of fx) try{ f(on); }catch(e){} try{ if(window.CTA42 && CTA42.sync) CTA42.sync(); }catch(e){}
     try{ const eb = document.getElementById('eyebrow'); if(eb && mode !== 'tour' && /^Stop \d+ of \d+$/.test(eb.textContent)) eb.textContent = 'Stop ' + (stopIdx + 1) + ' of ' + STOPS.length; }catch(e){} }

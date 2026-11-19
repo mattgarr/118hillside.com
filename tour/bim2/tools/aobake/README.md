@@ -22,6 +22,19 @@ One scene, e.g. after an idea's GLB changes (the siding branch, r49, changed jan
 node tour/bim2/tools/aobake/export_page.js jan24 /tmp/aobake/jan24.page.bin && python3 tour/bim2/tools/aobake/bake.py jan24 --page /tmp/aobake/jan24.page.bin
 ```
 
+An overlay (r51, `overlays[]` in scene.meta.json: a small design option shown on top of any layout, e.g. "Primary bedroom without
+the balcony") gets a patch instead of an atlas: export with the overlay on, bake with `--overlay`:
+
+```sh
+node tour/bim2/tools/aobake/export_page.js asbuilt /tmp/aobake/nb.page.bin nobalcony51 && python3 tour/bim2/tools/aobake/bake.py asbuilt --page /tmp/aobake/nb.page.bin --overlay nobalcony51
+```
+
+It writes `scene.ovl-<overlay>.ao.json` and `scene.ovl-<overlay>.ao.<hash12>.bin.gz`: the base-package texels near the overlay (its
+`clearBox` grown by the ray length) that differ from the as-built atlas, in rectangles with a mask, plus the overlay's own wall faces' AO
+per vertex. The page writes the masked texels over whichever atlas is bound while the overlay shows (the base package's charts sit at the
+same place in every scene's atlas) and uploads the atlas afresh when it is turned off. Re-bake it when scene.glb, the as-built atlas or the
+overlay's GLB changes.
+
 Then commit `tour/bim2/ao/` (the bake removes that scene's superseded atlas and page-uv files; a base uv file named for an old
 GLB sha can be deleted by hand once no index names it).
 
