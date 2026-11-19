@@ -9,9 +9,9 @@ It writes tour/bim2/scene.nobalcony51.glb and registers it in tour/bim2/scene.me
              the deck SL-DK-BALC, the three low walls round it W-L2-P01..P03 with their caps and corner boards)
   glb        what it adds, in the house's own materials (the page maps them as it maps scene.glb):
              - the wall where the doors stood: lap siding outside, the bedroom's paint inside, the baseboard run through
-             - three windows, each one casement of the bedroom's own north window (WN-L2-05, the 2024 wing's white Andersen pair, 2 x 2
-               lites) taken as a single unit 2 ft wide, at that window's sill (8.695) and head (12.695): its frame, glass and jamb lining,
-               its flat casing with head cap, stool and apron inside, its trim outside
+             - in the doors' rough opening, a mulled group of three casements: the bedroom's own north window (WN-L2-05, the 2024 wing's
+               white pair, 2 x 2 lites) with a third unit of the same size, at that window's sill (8.695) and head (12.695): frames, glass,
+               slim mullions and jamb lining, one continuous flat casing with head cap, stool and apron inside, one trim surround outside
              - the lower roof carried across where the deck was: the same plane, shingles and underside as the roof on each side
   colliders  the new wall (world frame boxes are built by the page from these BIM-frame records)
   floorsOff  walkable records that stop holding a walker while it shows
@@ -42,7 +42,6 @@ STUD = 'stud-2x6'
 TRIM = 'mdf-primed#paint-trim-semigloss'
 SHINGLE = 'comp-shingle-arch'
 SOFFIT = 'soffit'
-UNIT_W = 2.0                                           # rough opening of each new window (ft); the source casement's is 2.853
 
 
 def elem(g, el):
@@ -74,30 +73,52 @@ def clip_tri(P, N, c):
     return [(np.array([out[0][0], out[k][0], out[k + 1][0]]), np.array([out[0][1], out[k][1], out[k + 1][1]])) for k in range(1, len(out) - 1)]
 
 
-def unit_pieces(g):
+def group_pieces(g, n_units=3, fit=None):
+    """r51b (owner 11/18, after the first look: "match the bedroom's existing window"): WN-L2-05 is two casements mulled side by side
+    under one casing (one head with its cap, one stool and apron, a slim mullion between the units). The group of three is that window
+    with one more unit in the middle: the pair's left part up to the mullion's centre line, a middle unit (the right unit's left half
+    from the mullion's centre, and its mirror image), and the pair's right part. Each unit keeps the source unit's pitch (the pair's
+    rough width / 2); `fit` (a rough width) narrows every unit equally inside its panes when the group would not fit. Returns the pieces in
+    the north-wall frame, the group's centre and its rough width."""
     W = elem(g, SRC_WIN)
-    gl = [e for e in W if e['mat'] == 'glass'][0]['B'].reshape(-1, 3)[:, 0]
-    xs = np.unique(np.round(gl, 4))                     # pane edges: the left unit's two panes meet its vertical bar at its centre
-    c = float((xs[1] + xs[2]) / 2)                      # -34.3345
     lin = [e for e in W if e['mat'] == 'paint-trim-semigloss'][0]['B'].reshape(-1, 3)
-    x_left = float(lin[:, 0].min())                     # the rough opening's left side (jamb lining)
-    shift = (2 * (c - x_left) - UNIT_W) / 2             # taken out of each half, inside the panes (no member stands there)
-    x_cut = float((xs[0] + xs[1]) / 2)
-    cu = c - shift                                      # the new unit's centre
-    pieces = []
+    xL, xR = float(lin[:, 0].min()), float(lin[:, 0].max())          # the pair's rough opening (its jamb linings)
+    P_ = (xR - xL) / 2                                                 # the unit pitch: 2.833
+    xc = (xL + xR) / 2                                                 # the mullion's centre line
+    gl = np.unique(np.round([e for e in W if e['mat'] == 'glass'][0]['B'].reshape(-1, 3)[:, 0], 4))
+    cm = xc + P_ / 2                                                   # inside the right unit's vertical grille bar
     src = [(SRC_WIN, e) for e in W] + [(t, e) for t in SRC_TRIM for e in elem(g, t)]
+    def clip(P, N, lo, hi):
+        out = []
+        for q, n in clip_tri(P, N, hi):
+            Q = q.copy(); Q[:, 0] *= -1; M = n.copy(); M[:, 0] *= -1
+            for q2, n2 in clip_tri(Q, M, -lo):
+                q2 = q2.copy(); q2[:, 0] *= -1; n2 = n2.copy(); n2[:, 0] *= -1; out.append((q2, n2))
+        return out
+    pieces = []
     for name, e in src:
         T = []
         for P, N in zip(e['B'], e['NB']):
-            for q, n in clip_tri(P.copy(), N.copy(), c):
-                q = q.copy(); q[q[:, 0] > x_cut + 1e-6, 0] -= shift
-                T.append((q, n))
-                m = q.copy(); m[:, 0] = 2 * cu - m[:, 0]; mn = n.copy(); mn[:, 0] = -mn[:, 0]
-                T.append((m[[0, 2, 1]], mn[[0, 2, 1]]))
+            T += clip(P.copy(), N.copy(), -1e9, xc)                                         # left jamb, left unit, half the mullion
+            for q, n in clip(P.copy(), N.copy(), xc, 1e9):                                  # half the mullion, right unit, right jamb: one pitch on
+                q = q.copy(); q[:, 0] += P_ * (n_units - 2); T.append((q, n))
+            for k in range(n_units - 2):                                                    # middle units
+                for q, n in clip(P.copy(), N.copy(), xc, cm):
+                    a = q.copy(); a[:, 0] += P_ * k; T.append((a, n))
+                    m = q.copy(); m[:, 0] = 2 * cm - m[:, 0] + P_ * k; mn = n.copy(); mn[:, 0] = -mn[:, 0]; T.append((m[[0, 2, 1]], mn[[0, 2, 1]]))
         if T:
             pieces.append(dict(src=name, mat=e['mat'], group=e['group'], storey=e['storey'], P=np.array([t[0] for t in T]), N=np.array([t[1] for t in T])))
-    rough = (x_left - cu, -(x_left - cu))
-    return pieces, cu, rough, shift
+    width = P_ * n_units; centre = xL + width / 2
+    if fit is not None and fit < width - 1e-6:                         # narrower units: each loses the same inside its two panes
+        d = (width - fit) / n_units
+        cuts = [(xL + P_ * u + P_ * .25, xL + P_ * u + P_ * .75) for u in range(n_units)]   # the middle of each unit's two panes
+        for p in pieces:
+            X = p['P'][..., 0]; sh = np.zeros_like(X)
+            for u, (c1, c2) in enumerate(cuts):
+                sh -= np.where(X > c1, d / 2, 0) + np.where(X > c2, d / 2, 0)
+            p['P'][..., 0] = X + sh
+        width = fit; centre = xL + width / 2
+    return pieces, centre, width, P_
 
 
 # ------------------------------------------------------------------ mesh accumulation (world frame for the GLB: X = BIM y, Y = z, Z = BIM x)
@@ -170,20 +191,23 @@ def main():
     X_OUT = float(min(e['B'][:, :, 0].min() for e in sid))
 
     # the three windows, centred on the door opening, solid wall between and at the ends
-    pieces, cu, rough, shift = unit_pieces(g)
-    sill, head = float(win['sill']), float(win['head'])            # 8.695 / 12.695: the bedroom's north window
-    mid = (yA + yB) / 2; end = .125; pitch = ((yB - yA) - 2 * end - UNIT_W) / 2
-    centres = [mid - pitch, mid, mid + pitch]
+    # the doors' rough opening (the wall's own hole, W-L2-022), reused: header and jambs stay
+    ro = (float(door['center'][1]) - door['width'] / 2, float(door['center'][1]) + door['width'] / 2)   # -22.056 .. -13.306
+    pieces, cu, gw, pitch = group_pieces(g, 3)
+    if gw > ro[1] - ro[0] - 2 * .0625:                               # keep 3/4 in of wall at each end at least
+        pieces, cu, gw, pitch = group_pieces(g, 3, fit=ro[1] - ro[0] - 2 * .0625)
+    sill, head = float(win['sill']), float(win['head'])            # 8.695 / 12.695: the bedroom's north window (WN-L2-05)
+    mid = (ro[0] + ro[1]) / 2                                       # centred under the two gable windows (their mullion is at -17.68 too)
+    centres = [mid]
     # north wall (BIM x along, y out) -> west wall (BIM y along, -x out): X = -y + k, Y = x - cu + cy
     k = X_IN + (-8.7845)                                           # the north wall's paint face is y = -8.7845
-    for i, cy in enumerate(centres):
-        el = 'NB51-WN-%d' % (i + 1)
-        for p in pieces:
-            P = p['P']; Q = np.empty_like(P); Q[..., 0] = -P[..., 1] + k; Q[..., 1] = P[..., 0] - cu + cy; Q[..., 2] = P[..., 2]
-            N = p['N']; M = np.empty_like(N); M[..., 0] = -N[..., 1]; M[..., 1] = N[..., 0]; M[..., 2] = N[..., 2]
-            elp = el if p['src'] == SRC_WIN else el + '-' + p['src']
-            A.add(p['group'], p['storey'], p['mat'], elp, Q, M)
-    holes = [(cy - UNIT_W / 2, cy + UNIT_W / 2, sill, head) for cy in centres]
+    for p in pieces:
+        P = p['P']; Q = np.empty_like(P); Q[..., 0] = -P[..., 1] + k; Q[..., 1] = P[..., 0] - cu + mid; Q[..., 2] = P[..., 2]
+        N = p['N']; M = np.empty_like(N); M[..., 0] = -N[..., 1]; M[..., 1] = N[..., 0]; M[..., 2] = N[..., 2]
+        A.add(p['group'], p['storey'], p['mat'], 'NB51-WN' if p['src'] == SRC_WIN else 'NB51-WN-' + p['src'], Q, M)
+    holes = [(mid - gw / 2, mid + gw / 2, sill, head)]
+    rep['door_rough_opening'] = [round(ro[0], 4), round(ro[1], 4), round(ro[1] - ro[0], 4), float(door['sill']), float(door['head'])]
+    rep['group_rough'] = [round(mid - gw / 2, 4), round(mid + gw / 2, 4), round(gw, 4)]; rep['unit_rough_w'] = round(gw / 3, 4)
     # each face fills what the wall's own face leaves open around the doors: the opening, and the strips the kernel left bare under the
     # doors' casings (the wall face stops at a casing's edge), less the three rough openings
     def fill(mat, x, region, n):
@@ -297,14 +321,13 @@ def main():
              'floorsOff': ['SL-DK-BALC'],
              # loose page-built pieces standing on the deck or on its wall (chairs, stool, lights) hide while it shows
              'clearBox': [-46.4, -40.15, -22.8, -12.6, 5.3, 12.6],
-             'windows': [{'id': 'NB51-WN-%d' % (i + 1), 'center': [round(X_OUT + (X_IN - X_OUT) / 2, 4), round(cy, 4)], 'width': UNIT_W, 'sill': sill, 'head': head,
-                          'like': SRC_WIN} for i, cy in enumerate(centres)],
-             'note': 'r51: the stacking doors become a wall with three casement windows (one unit of WN-L2-05 each, %.2f ft rough, sill %.3f, head %.3f); the lower roof plane is carried across the deck.' % (UNIT_W, sill, head)}
+             'windows': [{'id': 'NB51-WN', 'center': [round(X_OUT + (X_IN - X_OUT) / 2, 4), round(mid, 4)], 'width': round(gw, 4), 'units': 3, 'sill': sill, 'head': head,
+                          'normal': [-1, 0], 'axis': [0, 1], 'thickness': round(X_IN - X_OUT, 4), 'like': SRC_WIN}],
+             'note': 'r51: the stacking doors become a wall with a mulled group of three casements (the units of WN-L2-05, %.3f ft rough overall, sill %.3f, head %.3f) in their rough opening; the lower roof plane is carried across the deck.' % (gw, sill, head)}
     meta['overlays'] = [o for o in meta.get('overlays', []) if o.get('id') != OV_ID] + [entry]
     open(os.path.join(B2, 'scene.meta.json'), 'w').write(json.dumps(meta, separators=(',', ':'), ensure_ascii=False))
     rep.update({'glb': GLB_OUT, 'bytes': len(glb), 'sha256': sha[:12], 'meshes': len(J['meshes']), 'tris': int(sum(d['n'] for d in A.m.values())),
-                'opening': [round(yA, 4), round(yB, 4)], 'centres': [round(c, 4) for c in centres], 'unit_w': UNIT_W, 'pane_cut_each_half': round(shift, 4),
-                'wall_between_rough': round(pitch - UNIT_W, 4), 'end_wall': end, 'sill': sill, 'head': head,
+                'unit_pitch_src': round(pitch, 4), 'end_wall_each': round(((ro[1] - ro[0]) - gw) / 2, 4), 'sill': sill, 'head': head,
                 'sill_above_roof_in': round((sill - top(X_OUT)) * 12, 2), 'faces': [X_IN, X_OUT]})
     print(json.dumps(rep))
 

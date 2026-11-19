@@ -17150,6 +17150,11 @@ const NB51 = window.NB51 = (() => {
         for(const f of FLOORS){ if(!(o.floorsOff || []).includes(f.bim2)) continue; const d = Object.getOwnPropertyDescriptor(f, 'v'), v0 = f.v;
           if(d && d.get){ const g0 = d.get; Object.defineProperty(f, 'v', {get: () => on ? '__none' : g0(), set: () => {}, enumerable: true, configurable: true}); }
           else Object.defineProperty(f, 'v', {get: () => on ? '__none' : v0, set: () => {}, enumerable: true, configurable: true}); extra.floors.push(f.bim2); }
+        // the group's honeycomb shades, raised, one per unit, like the bedroom's other windows (r29Cells)
+        try{ const sg = new THREE.Group(); sg.name = 'nb51-shades'; sg.visible = false; grp('upper').add(sg); extra.shades = sg;
+          for(const w of (o.windows || [])){ const [cx, cz] = W2(w.center[0], w.center[1]), u = W2(w.axis[0], w.axis[1]), inn = W2(-w.normal[0], -w.normal[1]);
+            const F = {o: {id: w.id}, cx, cz, inn, u, sill: w.sill, head: w.head, W: w.width, T: w.thickness, storey: 'L2'};
+            if(R28W.cellMat) r29CellShade({id: w.id}, F, 'blackout', w.units || 1, R28W.cellMat, sg); } }catch(e){ console.warn('[nb51] shades', e); }
         built = true; window.__NB51 = {meshes: meshes.length, tris: meshes.reduce((n, m) => n + (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3, 0), sha: h, colliders: extra.coll.length, floorsOff: extra.floors}; return true;
       }catch(e){ console.warn('[nb51] package', e); return false; }
       finally{ clearTimeout(pill); try{ if(!BUSY24.active){ const e = document.getElementById('busy24'); if(e) e.classList.remove('on'); } }catch(e){} busy = null; } })();
@@ -17170,11 +17175,12 @@ const NB51 = window.NB51 = (() => {
         if(cut){ g.setIndex(keep); m.userData.nb51cut = cut; } } }catch(e){ console.warn('[nb51] r17', e); }
     lastClear = performance.now(); }
   function unclear17(){ try{ for(const m of ((typeof R17 !== 'undefined' && R17.meshes) || [])) if(m.userData.nb51cut){ m.geometry.setIndex(null); m.userData.nb51cut = 0; } }catch(e){} }
-  function slider(show){ try{ for(const it of ((window.B3D && B3D.items) || [])) if(it.id === 'D-L2-01') for(const p of it.parts) p.piv.visible = show; }catch(e){} }
+  function slider(show){ try{ for(const it of ((window.B3D && B3D.items) || [])) if(it.id === 'D-L2-01') for(const p of it.parts) p.piv.visible = show; }catch(e){}
+    try{ scene.traverse(q => { if(q.name === 'r35shade:roller:D-L2-01') q.visible = show; }); }catch(e){} }   // the doors' roller shade goes with them
   async function set(v, why){ v = !!v; if(v === on) return true;
     if(v){ const ok = await load(); if(!ok) return false; }
     on = v; try{ if(typeof window.gtag === 'function') window.gtag('event', 'option_nobalcony', {on: v, where: why || ''}); }catch(e){}
-    BIM2.setOverlay(ID, on); for(const m of meshes) m.visible = on; slider(!on); clear();
+    BIM2.setOverlay(ID, on); for(const m of meshes) m.visible = on; if(extra.shades) extra.shades.visible = on; slider(!on); clear();
     try{ PERF.shadowDirty = true; }catch(e){}
     const st = STOPS[stopIdx] && STOPS[stopIdx].id;
     applyVisibility();
@@ -22941,13 +22947,18 @@ function r29Cells(){   // owner 11/10: every other window blind in the house is 
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
   const MAT = {blackout: new THREE.MeshStandardMaterial({map: tex, color: lin(0xf2efe9), roughness: .95}),
                filter: new THREE.MeshStandardMaterial({map: tex, color: 0xffffff, roughness: .9, emissive: lin(0xfff3df), emissiveMap: tex, emissiveIntensity: .22})};
-  MAT.blackout.name = 'r29cellBlackout'; MAT.filter.name = 'r29cellFilter';
+  MAT.blackout.name = 'r29cellBlackout'; MAT.filter.name = 'r29cellFilter'; R28W.cellMat = MAT;
   R28W.cells = [];
   for(const o of (BIM2S.meta.openings || [])){
     if(!/^WN-/.test(o.id) || SKIP.test(o.id)) continue; const F = r28Frame(o.id); if(!F) continue;
     const sp = BIM2S.spaceById[(o.spaces || {}).B] || BIM2S.spaceById[(o.spaces || {}).A] || {}, kind = /bedroom/i.test(sp.name || '') ? 'blackout' : 'filter';
     const units = +((/-(\d)$/.exec(o.type || '') || [])[1] || 0) || Math.max(1, Math.round(F.W / 3.4)), n = Math.min(units, 4);
-    const g = new THREE.Group(); g.name = 'r35shade:cell:' + o.id; g.userData.r35 = {kind: 'cell', id: o.id}; grp(F.storey === 'L2' ? 'upper' : 'main').add(g);
+    r29CellShade(o, F, kind, n, MAT);
+    R28W.cells.push(o.id + ':' + kind + 'x' + n); }
+}
+/* one honeycomb shade per unit of a window (r29Cells; r51 also for the bedroom option's new windows, under its own parent group) */
+function r29CellShade(o, F, kind, n, MAT, parent){
+    const g = new THREE.Group(); g.name = 'r35shade:cell:' + o.id; g.userData.r35 = {kind: 'cell', id: o.id}; (parent || grp(F.storey === 'L2' ? 'upper' : 'main')).add(g);
     // r35: fully up at rest - the headrail, the cells packed into a slim band, the bottom rail under it. A tap lowers the shade to the sill.
     // The hardware, measured off the listing photos (living room and bedroom, shades raised: the whole raised assembly is about 4" tall):
     // a slim extruded-aluminium headrail 1-1/2" tall x 2" deep with a squared face and end caps, inside the top of the opening; a dark hairline
@@ -22966,8 +22977,7 @@ function r29Cells(){   // owner 11/10: every other window blind in the house is 
     bl35Add({id: o.id, kind: 'cell', fab: kind, g, F, d, y1: top, y0: F.sill, dur: .55, cols, fit, fd: .068,
       pose(e){ const len = S.up + (S.full - S.up) * e; for(const p of parts){ p.f.scale.y = len; p.b.position.y = top - HR - RV - len - BR / 2; } }});
     R28W.cellDims = {headrail_in: [HR * 12, .166 * 12], reveal_in: RV * 12, stackRaised_in: [.11 * 12, .16 * 12], bottomRail_in: [BR * 12, .15 * 12]};
-    R28W.cells.push(o.id + ':' + kind + 'x' + n); }
-}
+  return true; }
 function r28Pantry(){
   if(!(window.FIX && FIX.make)) return;
   const cab = FIX.make('tallCabinet', {w: 2.06, h: 8, d: 2, split: 5.75, style: 'raised', pull: 'knob', hw: 'satinNickel'});
