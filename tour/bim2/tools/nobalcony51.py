@@ -184,8 +184,25 @@ def main():
             elp = el if p['src'] == SRC_WIN else el + '-' + p['src']
             A.add(p['group'], p['storey'], p['mat'], elp, Q, M)
     holes = [(cy - UNIT_W / 2, cy + UNIT_W / 2, sill, head) for cy in centres]
-    for P, N in wall_face(X_OUT, yA, yB, 5.345, zHead, holes, [-1, 0, 0]): A.add('walls', 'L2', SIDING, 'NB51-WALL', P, N)
-    for P, N in wall_face(X_IN, yA, yB, 5.51, zHead + .005, holes, [1, 0, 0]): A.add('walls', 'L2', PAINT, 'NB51-WALL', P, N)
+    # each face fills what the wall's own face leaves open around the doors: the opening, and the strips the kernel left bare under the
+    # doors' casings (the wall face stops at a casing's edge), less the three rough openings
+    def fill(mat, x, region, n):
+        T = [Polygon(P[:, [1, 2]]) for e in elem(g, 'W-L2-022') + elem(g, 'W-L2-023') if e['mat'] == mat for P in e['B'] if np.all(np.abs(P[:, 0] - x) < .006)]
+        U = unary_union([t.buffer(2e-4) for t in T if t.area > 1e-9])
+        F = region.difference(U)
+        for (ya, yb, za, zb) in holes: F = F.difference(box(ya, za, yb, zb))
+        out = 0
+        for poly in getattr(F, 'geoms', [F]):
+            if poly.area < 1e-5: continue
+            for t in shapely.constrained_delaunay_triangles(poly).geoms:
+                c = np.array(t.exterior.coords)[:3]
+                if Polygon(c).area < 1e-9: continue
+                P, N = np.array([[x, a, b] for a, b in c]), np.tile(np.asarray(n, float), (3, 1))
+                if np.dot(np.cross(P[1] - P[0], P[2] - P[0]), n) < 0: P = P[[0, 2, 1]]
+                A.add('walls', 'L2', mat, 'NB51-WALL', P[None], N[None]); out += Polygon(c).area
+        return round(out, 3)
+    rep['siding_ft2'] = fill(SIDING, X_OUT, box(-22.40, 5.345, -12.95, 14.0), [-1, 0, 0])
+    rep['paint_ft2'] = fill(PAINT, X_IN, box(-22.60, 5.51, -12.80, 14.10), [1, 0, 0])
     for (ya, yb, za, zb) in holes:          # the rough openings' sides (behind the lining and the frame)
         for P, N in [quad([X_IN, ya, za], [X_OUT, ya, za], [X_OUT, ya, zb], [X_IN, ya, zb], [0, 1, 0]),
                      quad([X_IN, yb, za], [X_OUT, yb, za], [X_OUT, yb, zb], [X_IN, yb, zb], [0, -1, 0]),
