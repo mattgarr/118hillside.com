@@ -720,7 +720,7 @@ def main():
     if a.overlay:
         # only the charts near what the overlay changes (its meta clearBox, grown by the 3 ft the rays reach)
         meta = json.load(open(os.path.join(BIM2, 'scene.meta.json')))
-        bx = [o for o in meta.get('overlays', []) if o['id'] == a.overlay][0]['clearBox']
+        bx = [o for o in meta.get('overlays', []) if o['id'] == a.overlay][0]; bx = bx.get('aoBox') or bx['clearBox']   # r52: aoBox for an overlay that clears nothing
         lo = np.array([bx[2], bx[4], bx[0]]) - RLEN - 1; hi = np.array([bx[3], bx[5] + 3, bx[1]]) + RLEN + 1   # world: X = BIM y, Y = z, Z = BIM x
         near = np.zeros(img.shape, bool); o = 0
         for (li, ci, kind, keys), n in zip(REF, sizes):

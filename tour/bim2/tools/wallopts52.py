@@ -278,12 +278,12 @@ def build(key):
     entry.update({'sha256': sha, 'bytes': len(glb), 'hide': hide})
     if W_:
         entry.update({'colliders': [{'id': EL + '-WALL#0', 'element': EL + '-WALL', 'kind': 'WALL', 'poly': [[X_OUT, yA], [X_IN, yA], [X_IN, yB], [X_OUT, yB]], 'z0': 5.34, 'z1': zHead, 'storey': 'L2', 'exterior': True}],
-                      'floorsOff': ['SL-DK-BALC'], 'aoPatch': 'nobalcony51', 'clearBox': [-46.4, -40.15, -22.8, -12.6, 5.3, 12.6],
+                      'floorsOff': ['SL-DK-BALC'], 'aoPatch': V['id'], 'clearBox': [-46.4, -40.15, -22.8, -12.6, 5.3, 12.6],
                       'windows': [{'id': EL + '-WN', 'center': [round(X_OUT + (X_IN - X_OUT) / 2, 4), round(mid, 4)], 'width': round(gw, 4), 'units': 3, 'sill': sill, 'head': round(head, 4),
                                    'normal': [-1, 0], 'axis': [0, 1], 'thickness': round(X_IN - X_OUT, 4), 'like': NB.SRC_WIN}],
                       'note': 'r52: as nobalcony51, the group of three casements %.3f ft rough overall, sill %.3f, head %.3f (the door opening\'s head), 2 x 3 lites a sash.' % (gw, sill, head)})
     else:
-        entry.update({'colliders': [], 'floorsOff': [],
+        entry.update({'colliders': [], 'floorsOff': [], 'aoPatch': V['id'], 'aoBox': [X_OUT - 1.0, X_IN + 1.0, yA - 1.0, yB + 1.0, 5.3, 14.2],
                       'note': 'r52: the stacking doors on a %.1f in curb, head %.1f in above the floor (%.3f); the wall above and the curb below; the balcony as built.' % (V['curb_in'], V['head_in'], head)})
     meta['overlays'] = [o for o in meta.get('overlays', []) if o.get('id') != V['id']] + [entry]
     open(os.path.join(B2, 'scene.meta.json'), 'w').write(json.dumps(meta, separators=(',', ':'), ensure_ascii=False))
