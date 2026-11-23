@@ -230,7 +230,10 @@ def main():
                 if np.all(np.abs(P[:, 0] - (x - .004 * n[0])) < .012) and Polygon(P[:, [1, 2]]).area > 1e-7: cov.append(Polygon(P[:, [1, 2]]).buffer(1e-4))
         cov.append(box(-24.8, 5.0, -10.7, 6.0075) if n[0] > 0 else box(-24.8, 5.0, -10.7, 8.0557))   # the baseboard inside; outside, the roof against the wall
         C = unary_union(cov)
-        pieces_ = [F.intersection(C), F.difference(C)]
+        # r52: two narrow rings round what covers the face (1 1/2 in and 4 in out), so the dark of a covered vertex fades within an inch or two,
+        # as the baked atlas does beside it (it used to run on to the next 6 in grid line: a dark band over the baseboard that stopped at the patch's ends)
+        C1, C2 = C.buffer(.125, join_style=2), C.buffer(.34, join_style=2)
+        pieces_ = [F.intersection(C), F.intersection(C1).difference(C), F.intersection(C2).difference(C1), F.difference(C2)]
         cells = [q.intersection(box(y, z, y + .5, z + .5)) for q in pieces_ for y in np.arange(-23.0, -12.0, .5) for z in np.arange(5.0, 14.5, .5)]
         for poly in [q for c in cells for q in getattr(c, 'geoms', [c]) if q.geom_type == 'Polygon']:
             if poly.area < 1e-5: continue
