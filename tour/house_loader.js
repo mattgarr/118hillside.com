@@ -178,9 +178,10 @@
     for(const r of info.ranges) for(let t = r[2]; t < r[2] + r[3]; t++) K.set((I.getX(3 * t) * nv + I.getX(3 * t + 1)) * nv + I.getX(3 * t + 2), r);
     info.triKey = K; info.triNv = nv; }
   function rangeAt(R, t){ let lo = 0, hi = R.length - 1; while(lo <= hi){ const m = (lo + hi) >> 1, r = R[m]; if(t < r[2]) hi = m - 1; else if(t >= r[2] + r[3]) lo = m + 1; else return r; } return null; }
-  function hiddenIndex(m, hide, g, I){        // a copy of the mesh's index with the triangles of hidden elements collapsed (degenerate)
+  function hiddenIndex(m, hide, g, I, keep){        // a copy of the mesh's index with the triangles of hidden elements collapsed (degenerate)
     const u = m.userData.bim2, R = u.ranges, K = u.triKey, nv = u.triNv; if(!I) return null; let arr = null;
-    const gone = r => !!r && (hide.has(r[0]) || !!(r[1] && hide.has(r[0] + '|' + r[1])));
+    const leafM = !!(keep && keep.size && u.ex && u.ex.leaf);   // r52: an overlay may hide a door's frame and keep its operable leaves (overlay.keepLeaves)
+    const gone = r => !!r && !(leafM && keep.has(r[0])) && (hide.has(r[0]) || !!(r[1] && hide.has(r[0] + '|' + r[1])));
     if(K){ const src = I.array, Rs = R.slice().sort((a, b) => a[2] - b[2]);
       for(let t = 0, n = src.length / 3; t < n; t++){ const a = src[3 * t], b = src[3 * t + 1], c = src[3 * t + 2]; if(a === b && b === c) continue;
         const r = (a < nv && b < nv && c < nv && K.get((a * nv + b) * nv + c)) || rangeAt(Rs, t);
@@ -193,11 +194,11 @@
   function setVariant(key){                   // show option `key` (null / 'asbuilt' = the as-built package); returns true when it changed
     const S = st(); const opt = key && S.meta.options.find(o => o.id === key || o.legacyId === key);
     const ov = Object.keys(S._ov || {}).sort(), hide = new Set(opt ? (opt.hide || []).concat((opt.hideRanges || []).map(h => h[0] + '|' + h[1])) : []), ck = (opt ? opt.id : '') + ov.map(k => '+' + k).join('');
-    for(const k of ov) for(const id of S._ov[k]) hide.add(id);   // r51: overlays (setOverlay) hide their elements on top of any option
+    const keep = new Set(); for(const k of ov){ for(const id of S._ov[k]) hide.add(id); const q = (S.meta.overlays || []).find(x => x.id === k); for(const id of ((q && q.keepLeaves) || [])) keep.add(id); }   // r51: overlays (setOverlay) hide their elements on top of any option
     if((S._var || '') === ck) return false; S._var = ck;
     for(const m of S.meshes){ const u = m.userData; if(u.bim2.option) continue; const g = GEO0.get(m) || m.geometry;
       if(!u.idx0) u.idx0 = g.index;
-      let alt = u.alt && u.alt[ck]; if(alt === undefined){ alt = hide.size ? hiddenIndex(m, hide, g, u.idx0) : null; (u.alt = u.alt || {})[ck] = alt; }
+      let alt = u.alt && u.alt[ck]; if(alt === undefined){ alt = hide.size ? hiddenIndex(m, hide, g, u.idx0, keep) : null; (u.alt = u.alt || {})[ck] = alt; }
       g.setIndex(alt || u.idx0); }
     return true; }
   /* r51: an overlay (meta.overlays[]: a small change shown on top of whichever option is on) hides its elements with the option's;

@@ -1905,7 +1905,7 @@ html.tgload .loading::after{content:"";position:absolute;left:0;right:0;top:-60p
   i.src = tg ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/tg_poster_ph.jpg' : 'thumbs/tg_poster.jpg') : hw ? (Math.min(innerWidth, innerHeight) < 600 && innerHeight > innerWidth ? 'thumbs/hw_poster_ph.jpg' : 'thumbs/hw_poster.jpg') : (() => { try{ const k = sessionStorage.getItem('hillside.tod.v27'); if(k && k !== 'dusk') return 'thumbs/p69.jpg'; }catch(e){} return 'thumbs/p02.jpg'; })(); })();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="house_loader.js?v=51"></script>
+<script src="house_loader.js?v=52"></script>
 <script>/* v20 reveal: count three.js loads in flight */ (function(){ var M = window.THREE && THREE.DefaultLoadingManager; if(!M) return;
   var R = window.__revealLM = {pending: 0, errors: 0, last: 0}, s = M.itemStart, e = M.itemEnd, x = M.itemError;
   M.itemStart = function(u){ R.pending++; R.last = performance.now(); return s.apply(this, arguments); };
@@ -16758,6 +16758,21 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
 #dm45 .sw51.busy{opacity:.6;cursor:progress}
 #dm45 .sw51:focus-visible{outline:2px solid #4b5f68;outline-offset:2px}
 #dm45 .pb.sm{min-height:34px;padding:0 13px;font-size:13.5px}
+#dm45 .sc52{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+#dm45 .sc52 .ls{flex:none;overflow:visible}
+#dm45 .oh52{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px}
+#dm45 .oh52 .oh{margin:0}
+#dm45 .or52{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:12px;align-items:center;width:100%;min-height:52px;margin:0;padding:7px 10px;border:0;border-radius:12px;background:none;text-align:left;cursor:pointer;transition:background-color .12s}
+#dm45 .or52 + .or52{margin-top:1px}
+#dm45 .or52:hover{background:#f1eee6}
+#dm45 .or52:active{background:#e9e4d8}
+#dm45 .or52[aria-checked="true"]{background:#f1eee6}
+#dm45 .or52:focus-visible{outline:2px solid #4b5f68;outline-offset:1px}
+#dm45 .or52.busy{cursor:progress}
+#dm45 .or52 .rd{position:relative;width:20px;height:20px;border-radius:50%;border:2px solid #b9b2a2;background:#fbfaf7;transition:border-color .12s}
+#dm45 .or52[aria-checked="true"] .rd{border-color:#55633a}
+#dm45 .or52[aria-checked="true"] .rd::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#55633a}
+#dm45 .or52 .m{margin-top:3px}
 @media (max-width:480px){#dm45 .op51{margin:0 6px;padding:8px 12px 10px}#dm45 .ot{font-size:18px}#dm45 .pb.sm{flex:none;min-height:40px;padding:0 12px}}
 @media (max-height:560px){#dm45 .op51 .os{display:none}}
 @media (max-width:480px){#dm45 .hd{padding:18px 58px 8px 18px}#dm45 .hd.dh{padding:12px 58px 0 18px}#dm45 h2{font-size:27px}#dm45 .ls{padding:2px 6px 4px}#dm45 .t{font-size:22px}#dm45 .bd{padding:8px 18px 14px}#dm45 .ft{padding:10px 18px 14px}
@@ -16773,28 +16788,33 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
       dlg = el('dialog'); dlg.id = 'dm45'; dlg.setAttribute('aria-labelledby', 'dm45h'); document.body.appendChild(dlg);
       dlg.addEventListener('click', e => { if(e.target === dlg){ close(); return; }
         const x = e.target.closest('.x'); if(x){ close(); return; }
-        const sw = e.target.closest('.sw51'); if(sw){ if(sw.classList.contains('busy')) return; sw.classList.add('busy'); sw.setAttribute('aria-checked', String(!NB51.on));
-          NB51.set(!NB51.on, 'menu').then(() => { if(dlg.open && !cur){ listView(); const q = dlg.querySelector('.sw51'); if(q) try{ q.focus({preventScroll: true}); }catch(x){} } }); return; }
+        const rd = e.target.closest('.or52'); if(rd){ if(rd.classList.contains('busy')) return; const k = rd.dataset.w || null; if(k === NB51.cur) return;
+          for(const q of dlg.querySelectorAll('.or52')){ q.classList.add('busy'); q.setAttribute('aria-checked', String(q === rd)); }
+          NB51.pick(k, 'menu').then(() => { if(dlg.open && !cur){ const sc = dlg.querySelector('.sc52'), y = sc ? sc.scrollTop : 0; listView(); const s2 = dlg.querySelector('.sc52'); if(s2) s2.scrollTop = y;
+              const q = dlg.querySelector('.or52[aria-checked="true"]'); if(q) try{ q.focus({preventScroll: true}); }catch(x){} } }); return; }
         if(e.target.closest('[data-a="nb51see"]')){ opener = null; close(); setPk(false); NB51.see('menu'); return; }
         const r = e.target.closest('.row'); if(r){ detail(r.dataset.id); return; }
         if(e.target.closest('.bk')){ const id = cur; listView(); const b = dlg.querySelector('.row[data-id="' + id + '"]'); if(b) try{ b.focus({preventScroll: true}); }catch(x){} return; }
         const a = e.target.closest('.pb'); if(a) act(a.dataset.a, cur); });
       dlg.addEventListener('close', () => { const o = opener; opener = null; cur = null; if(o && o.isConnected) try{ o.focus({preventScroll: true}); }catch(e){} });
-      dlg.addEventListener('keydown', e => e.stopPropagation()); dlg.addEventListener('keyup', e => e.stopPropagation());   // arrows and Space must not walk the tour behind it
+      dlg.addEventListener('keydown', e => { e.stopPropagation(); const r = e.target.closest && e.target.closest('.or52'); if(!r || !/^Arrow(Up|Down|Left|Right)$/.test(e.key)) return;
+        const L = Array.from(dlg.querySelectorAll('.or52')), n = L[(L.indexOf(r) + (/Down|Right/.test(e.key) ? 1 : L.length - 1)) % L.length]; e.preventDefault(); try{ n.focus(); }catch(x){} });
+      dlg.addEventListener('keyup', e => e.stopPropagation());   // arrows and Space must not walk the tour behind it
       return dlg; }
     function listView(){ cur = null; const L = plans(), n = L.length - 1;
-      let h = '<div class="hd"><h2 id="dm45h">Floor plans</h2><p>The house as it is, and ' + ideaWords(n).toLowerCase() + ' for its main level.</p></div><ul class="ls">';
+      let h = '<div class="hd"><h2 id="dm45h">Floor plans</h2><p>The house as it is, and ' + ideaWords(n).toLowerCase() + ' for its main level.</p></div><div class="sc52"><ul class="ls">';
       for(const p of L){ const f = facts(p.id), k = kindOf(p.id), on = ACTIVE_VAR === p.id;
         h += '<li><button type="button" class="row" data-id="' + p.id + '"' + (on ? ' aria-current="true"' : '') + '>' + thumb(p.id) + '<span class="tx"><span class="t">' + (cnt(f) || p.name) + '</span><span class="s">' + p.name + '</span>'
           + '<span class="m">' + (on ? '<i>Showing now</i>' : '') + tag(k) + '</span></span>' + CH + '</button></li>'; }
-      h += '</ul>' + nbRow() + '<div class="ft"><span>Pick one to read about it and see it in 3D.</span></div>' + XB;
+      h += '</ul>' + nbRow() + '</div><div class="ft"><span>Pick one to read about it and see it in 3D.</span></div>' + XB;
       dlg.innerHTML = h; }
-    /* r51: one small design option under the floor plans; it changes the upper level, so it goes with any of them */
-    function nbRow(){ if(!(window.NB51 && BIM2S && (BIM2S.meta.overlays || []).some(o => o.id === 'nobalcony51'))) return ''; const on = NB51.on;
-      return '<div class="op51"><p class="oh">Options</p><div class="orow"><span class="otx"><span class="ot">Primary bedroom without the balcony</span>'
-        + '<span class="os">Three windows in place of the glass doors, with the roof carried across.</span><span class="m">' + (on ? '<i>Showing now</i>' : '') + 'Illustrative idea</span></span>'
-        + '<button type="button" class="sw51" role="switch" aria-checked="' + on + '" aria-label="Primary bedroom without the balcony"><i></i></button>'
-        + '<button type="button" class="pb sm" data-a="nb51see">See it</button></div></div>'; }
+    /* r52: under the floor plans, the options for the primary bedroom's west wall (one at a time); they change the upper level, so they go with any plan */
+    function nbRow(){ if(!(window.NB51 && BIM2S)) return ''; const L = NB51.list(); if(!L.length) return ''; const c = NB51.cur;
+      const row = (k, t, d, idea) => { const on = (k || null) === c; return '<button type="button" class="or52" role="radio" aria-checked="' + on + '" data-w="' + (k || '') + '"><i class="rd"></i><span class="otx"><span class="ot">' + t + '</span>'
+        + '<span class="os">' + d + '</span><span class="m">' + (on ? '<i>Showing now</i>' : '') + (idea ? 'Illustrative idea' : 'The real house') + '</span></span></button>'; };
+      return '<div class="op51"><div class="oh52"><p class="oh" id="op52h">Primary bedroom west wall</p><button type="button" class="pb sm" data-a="nb51see">See it</button></div><div role="radiogroup" aria-labelledby="op52h">'
+        + row('', 'As built', 'Three-panel sliding glass door, 8 ft tall, opening to the balcony.', false)
+        + L.map(v => row(v.key, v.label, v.sub, true)).join('') + '</div></div>'; }
     function detail(id){ const p = plans().find(q => q.id === id); if(!p) return; cur = id; ga('plan_detail', {plan: id});
       const f = facts(id), k = kindOf(id), o = optMeta(id) || {}, idea = id !== 'asbuilt';
       const S = []; if(f){ S.push(['Bedrooms', f.beds], ['Baths', f.baths], ['Office', f.office ? 'Yes' : 'No']); }
@@ -16888,11 +16908,11 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
   /* ---- the banner: a concept on screen, in any mode; "As built" once the picker has been used (it steps aside for the paint / landscape ideas strip) */
   function label(){ const v = typeof ACTIVE_VAR === 'string' ? ACTIVE_VAR : 'asbuilt', g = inGame(), gal = photoUp();
     const hp = $('#holPanel'), holOpen = !!(hp && !hp.hidden);
-    const nb = !!(window.NB51 && NB51.on), show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || nb);   /* r51: the bedroom option is an idea too. r45 calm pass: no 'As built: the house as it is' pill once the layouts have been looked at; the house needs no label, only an idea does */
+    const nb = !!(window.NB51 && NB51.any), show = !g && !gal && mode !== 'photos' && (v !== 'asbuilt' || nb);   /* r51: the bedroom option is an idea too. r45 calm pass: no 'As built: the house as it is' pill once the layouts have been looked at; the house needs no label, only an idea does */
     root.classList.toggle('cb42on', show);
     if(!show){ banner.hidden = true; return; }
     const b = banner.querySelector('b'), s = banner.querySelector('.b42m span');
-    if(v === 'asbuilt' && nb){ banner.classList.remove('b42ab', 'b42sl'); const short = isPh() && innerWidth < 520, full = 'Illustrative idea: primary bedroom without the balcony';
+    if(v === 'asbuilt' && nb){ banner.classList.remove('b42ab', 'b42sl'); const short = isPh() && innerWidth < 520, full = 'Illustrative idea: primary bedroom ' + NB51.phrase;
       b.textContent = short ? 'Illustrative idea' : full; if(short) banner.setAttribute('aria-label', full); else banner.removeAttribute('aria-label'); s.textContent = '';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
     else if(v === 'asbuilt'){ banner.classList.add('b42ab'); banner.classList.remove('b42sl'); b.textContent = 'As built: the house as it is'; s.textContent = ''; }
@@ -16901,7 +16921,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
       const sl = banner.classList.contains('b42sl');   // the slim line on a phone: what it is, then 'Not the house as it is.' on a line of its own
       const what = k === 'mine' ? 'Your design' : 'Illustrative idea', full = what + (f && v !== 'custom' ? ': ' + (same && nm ? nm.toLowerCase() + ', ' : '') + bedLine(f) + (sl ? '' : ', ' + factLine(f)) : '');
       const short = isPh() && !sl && innerWidth < 520;   /* r46 calm phone pass: one row, the label and its two buttons (the counts are in the Floor plans menu) */
-      const fullN = full + (nb ? ', primary bedroom without the balcony' : '');
+      const fullN = full + (nb ? ', primary bedroom ' + NB51.phrase : '');
       b.textContent = short ? what : fullN; if(short) banner.setAttribute('aria-label', fullN); else banner.removeAttribute('aria-label');
       s.textContent = '';
       banner.querySelector('[data-a=plans]').hidden = root.classList.contains('pk42') && mode === 'design'; }
@@ -16920,7 +16940,7 @@ html.phm :is(#cta42,#ng42,#cb42),html.clean27 :is(#cta42,#ng42,#cb42),html.fin36
     goReal('banner'); });
   /* 'Real house' outside the picker: the same view of the house as it is (in the tour, the as-built stop that matches the idea stop: IT46) */
   function goReal(where){ ga('plan_pick', {plan: 'asbuilt', concept: 'real', where});
-    if(window.NB51 && NB51.on){ NB51.set(false, 'real'); if(typeof ACTIVE_VAR !== 'string' || ACTIVE_VAR === 'asbuilt'){ lastSig = ''; sync(); return; } }
+    if(window.NB51 && NB51.any){ NB51.pick(null, 'real'); if(typeof ACTIVE_VAR !== 'string' || ACTIVE_VAR === 'asbuilt'){ lastSig = ''; sync(); return; } }
     if(IT46.on){ try{ IT46.real(); }catch(x){ console.warn('[cta42] real', x); } lastSig = ''; sync(); return; }
     const walk = DESIGN.walking(); try{ DESIGN.choose('asbuilt', mode === 'design'); }catch(x){} if(walk) setMode('walk'); lastSig = ''; sync(); }
 
@@ -17076,10 +17096,11 @@ const IT46 = window.IT46 = (() => {
         if(best) return best.id; }catch(e){} }
     return T.from[id] ? sid(on, T.from[id]) : id; }
   /* r51: with "Primary bedroom without the balcony" on (NB51), the Balcony stop leaves the list and the Primary bedroom stop says what it shows */
-  const nbf = L => (window.NB51 && NB51.on && !game()) ? L.filter(s => s.id !== 'balcony').map(s => s.id === 'primary' ? Object.assign({}, s, NB51.text, {nb51: true}) : s) : L;
-  let nbWas = false;
-  function nbSync(){ const now = !!(window.NB51 && NB51.on && !game()); if(now === nbWas) return false; nbWas = now;
-    const cur = STOPS[stopIdx] || {}, nid = cur.id === 'balcony' && now ? 'primary' : cur.id, L = nbf(on ? build(on) : REAL);
+  const nbf = L => (window.NB51 && NB51.any && !game()) ? L.filter(s => !(NB51.on && s.id === 'balcony')).map(s => s.id === 'primary' ? Object.assign({}, s, NB51.text, {nb51: true}) : s) : L;   // r52: the door options keep the Balcony stop
+  let nbWas = null;
+  const nbKey = () => (window.NB51 && NB51.any && !game()) ? NB51.cur : null;
+  function nbSync(){ const now = nbKey(); if(now === nbWas) return false; nbWas = now;
+    const cur = STOPS[stopIdx] || {}, nid = cur.id === 'balcony' && now && NB51.on ? 'primary' : cur.id, L = nbf(on ? build(on) : REAL);
     STOPS.length = 0; for(const s of L) STOPS.push(s); const i = STOPS.findIndex(s => s.id === nid); stopIdx = i < 0 ? 0 : i; return true; }
   function swap(v){ const want = has(v) && !game() ? v : null; if(want === on) return false;
     if(on && want){ swap(null); }
@@ -17087,7 +17108,7 @@ const IT46 = window.IT46 = (() => {
     if(want){ const T = IDEA_TOURS[want]; nid = last && last.v === want && last.real === cur.id ? last.idea : (T.from[cur.id] ? sid(want, T.from[cur.id]) : cur.id); }
     else { nid = cur.i46 ? cur.real : cur.id; last = cur.i46 ? {v: on, idea: cur.id, real: cur.real} : null; }
     const L = nbf(want ? build(want) : REAL); STOPS.length = 0; for(const s of L) STOPS.push(s); on = want; if(want) frame(want);
-    nbWas = !!(window.NB51 && NB51.on && !game()); if(nbWas && nid === 'balcony') nid = 'primary';
+    nbWas = nbKey(); if(nbWas && NB51.on && nid === 'balcony') nid = 'primary';
     const i = STOPS.findIndex(s => s.id === nid); stopIdx = i < 0 ? 0 : i; return true; }
   { const _av = applyVisibility; applyVisibility = function(){ let ch = false; try{ ch = swap(ACTIVE_VAR); ch = nbSync() || ch; }catch(e){ console.warn('[it46] swap', e); }
       const r = _av.apply(this, arguments);
@@ -17117,50 +17138,68 @@ const IT46 = window.IT46 = (() => {
 
 
 
-/* ---------------- r51 nb51: "Primary bedroom without the balcony" (owner 11/18). A small design option, not a floor plan: it shows on top of
-   whichever main-level layout is on. Package: tour/bim2/scene.nobalcony51.glb + scene.meta.json overlays[] (tour/bim2/tools/nobalcony51.py).
-   On: the as-built elements it lists stop drawing (BIM2.setOverlay, exact triangle ranges, with any layout's own), its meshes show in the
-   house's groups (so the dollhouse section, the shadows and the Colors panel treat them as the house), its wall stops a walker, the deck
-   stops holding one, the loose pieces on the deck hide, the tour skips the Balcony stop and the Primary bedroom stop says what it shows.
-   Off by default on every visit; ?nobalcony=1 turns it on. Nothing is fetched until it is first turned on. window.NB51 = {on, set(on), see(), text}. */
+/* ---------------- r51 nb51 / r52: the primary bedroom's west wall, four ways (and as built). Small design options, not floor plans: one shows at a
+   time, on top of whichever main-level layout is on. Packages: scene.meta.json overlays[] (tour/bim2/tools/nobalcony51.py: w1; wallopts52.py: w2, d1, d2).
+     w1  windows, balcony removed          w2  tall windows, balcony removed          d1 / d2  a 6'-8" / 7'-0" sliding door on a curb, the balcony kept
+   On: the as-built elements the overlay lists stop drawing (BIM2.setOverlay, exact triangle ranges, with any layout's own), its meshes show in the
+   house's groups (so the dollhouse section, the shadows and the Colors panel treat them as the house). w1 / w2: the wall stops a walker, the deck
+   stops holding one, the loose pieces on the deck hide, the tour skips the Balcony stop. d1 / d2: the door's own leaves stay (they still slide), their
+   foot and head moved (overlay.leafMap). The Primary bedroom stop says what it shows.
+   Off by default on every visit; ?wall=w1|w2|d1|d2 turns one on (?nobalcony=1 = w1). Nothing is fetched until an option is first picked.
+   window.NB51 = {cur, any, on (the balcony is removed), pick(key | null), set(on) (w1), see(), list(), text, phrase}. */
 const NB51 = window.NB51 = (() => {
-  const ID = 'nobalcony51', meshes = [], hid = new Set(), extra = {coll: [], floors: []};
-  let on = false, built = false, busy = null, lastClear = 0;
-  const text = {p: 'The primary bedroom has a cathedral ceiling with four skylights, each with a remote-controlled shade. In this idea, three casement windows stand where the stacking glass doors were, and the roof below them runs straight across.'};
-  const ov = () => { try{ return (BIM2S && (BIM2S.meta.overlays || []).find(o => o.id === ID)) || null; }catch(e){ return null; } };
+  const P0 = 'The primary bedroom has a cathedral ceiling with four skylights, each with a remote-controlled shade. In this idea, ';
+  const VAR = {
+    w1: {id: 'nobalcony51', label: 'Windows, balcony removed', sub: 'Three windows in place of the glass doors, with the roof carried across.', phrase: 'with windows, balcony removed',
+      p: P0 + 'three casement windows stand where the stacking glass doors were, and the roof below them runs straight across.'},
+    w2: {id: 'wall52-w2', label: 'Tall windows, balcony removed', sub: 'The same three windows, rising to the top of the door opening.', phrase: 'with tall windows, balcony removed',
+      p: P0 + 'three tall casement windows stand where the stacking glass doors were, rising to the top of the door opening, and the roof below them runs straight across.'},
+    d1: {id: 'wall52-d1', label: '6\'-8" door on a curb', sub: 'A shorter three-panel sliding door on a 5 1/2 in curb. The balcony stays.', phrase: 'with a 6\'-8" door on a curb',
+      p: P0 + 'a 6\'-8" three-panel sliding glass door stands on a low curb and opens to the balcony.'},
+    d2: {id: 'wall52-d2', label: '7\'-0" door on a curb', sub: 'A three-panel sliding door on a 5 1/2 in curb, 4 in taller. The balcony stays.', phrase: 'with a 7\'-0" door on a curb',
+      p: P0 + 'a 7\'-0" three-panel sliding glass door stands on a low curb and opens to the balcony.'}};
+  const ORDER = ['w1', 'w2', 'd1', 'd2'], ST = {}, hid = new Set(), extra = {floors: []};
+  let cur = null, seq = 0, lastClear = 0, floorsDone = false;
+  const removed = () => cur === 'w1' || cur === 'w2';
+  const ov = k => { try{ return (k && BIM2S && (BIM2S.meta.overlays || []).find(o => o.id === VAR[k].id)) || null; }catch(e){ return null; } };
+  const list = () => ORDER.filter(k => ov(k)).map(k => ({key: k, id: VAR[k].id, label: VAR[k].label, sub: VAR[k].sub}));
   async function sha(buf){ try{ const h = await crypto.subtle.digest('SHA-256', buf); return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join(''); }catch(e){ return null; } }
-  function load(){ if(built) return Promise.resolve(true); if(busy) return busy; const o = ov(); if(!o || !window.BIM2 || !BIM2.state) return Promise.resolve(false);
-    busy = (async () => { const pill = setTimeout(() => { try{ b24ShowPill('Loading…'); }catch(e){} }, 150);
+  function load(key){ const s = ST[key] || (ST[key] = {meshes: [], coll: [], shades: null, built: false, busy: null}); if(s.built) return Promise.resolve(true); if(s.busy) return s.busy;
+    const o = ov(key); if(!o || !window.BIM2 || !BIM2.state) return Promise.resolve(false); const ID = o.id;
+    s.busy = (async () => { const pill = setTimeout(() => { try{ b24ShowPill('Loading…'); }catch(e){} }, 150);
       try{ const S = BIM2.state, url = new URL(o.glb, S.metaBase || location.href).href;
         let buf = await (await R46H.fetch(url)).arrayBuffer(), h = await sha(buf);
         if(o.sha256 && h && h !== o.sha256){ buf = await (await R46H.fetch(url + '?r=' + Date.now())).arrayBuffer(); h = await sha(buf); if(h && h !== o.sha256) console.warn('[nb51] package sha256 does not match the meta; loading anyway'); }
         const gl = await new Promise((res, rej) => new THREE.GLTFLoader().parse(buf, '', res, rej)), sc = gl.scene || gl.scenes[0]; sc.updateMatrixWorld(true);
         const L = []; sc.traverse(x => { if(x.isMesh) L.push(x); });
-        for(const m of L){ const ex = Object.assign({}, (m.parent && m.parent.userData) || {}, m.userData || {}), key = ex.material || '';
-          let mat = S.materials.get(key); if(mat === undefined){ mat = bim2MapMaterial(key, m.material, null, S.meta.materials[key.split('#')[0]] || null, S.meta.materials[key] || null) || m.material; S.materials.set(key, mat); }
+        for(const m of L){ const ex = Object.assign({}, (m.parent && m.parent.userData) || {}, m.userData || {}), key_ = ex.material || '';
+          let mat = S.materials.get(key_); if(mat === undefined){ mat = bim2MapMaterial(key_, m.material, null, S.meta.materials[key_.split('#')[0]] || null, S.meta.materials[key_] || null) || m.material; S.materials.set(key_, mat); }
           m.material = mat; m.geometry.applyMatrix4(m.matrixWorld); m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.set(1, 1, 1); m.updateMatrix();
           m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox(); m.castShadow = !(mat && mat.transparent); m.receiveShadow = true;
-          m.userData = {bim2: {name: m.name, group: ex.group, storey: ex.storey, material: key, ranges: (ex.ranges || []).sort((a, b) => a[2] - b[2]), ex, overlay: ID}, nb51: true};
-          m.visible = false; m.name = m.name || ('nb51|' + key); grp(bim2GroupOf(ex)).add(m); meshes.push(m); }
+          m.userData = {bim2: {name: m.name, group: ex.group, storey: ex.storey, material: key_, ranges: (ex.ranges || []).sort((a, b) => a[2] - b[2]), ex, overlay: ID}, nb51: true};
+          m.visible = false; m.name = m.name || ('nb51|' + key_); grp(bim2GroupOf(ex)).add(m); s.meshes.push(m); }
         // the new wall stops a walker; the deck no longer holds one
         for(const c of (o.colliders || [])){ const pts = c.poly.map(([x, y]) => W2(x, y)), xs = pts.map(p => p[0]), zs = pts.map(p => p[1]);
           const C = {x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs), y0: c.z0, y1: c.z1, top: c.z1, kind: c.kind, bim2: c.element, poly: pts};
           Object.defineProperty(C, '__absent', {value: new Set(), enumerable: false});   // the layout ideas mark the house's colliders they do not have here; this one belongs to no layout, so it ignores that
-          Object.defineProperty(C, 'v', {get: () => on ? null : '__none', set: () => {}, enumerable: true, configurable: true}); COLLIDERS.push(C); extra.coll.push(C); }
-        for(const f of FLOORS){ if(!(o.floorsOff || []).includes(f.bim2)) continue; const d = Object.getOwnPropertyDescriptor(f, 'v'), v0 = f.v;
-          if(d && d.get){ const g0 = d.get; Object.defineProperty(f, 'v', {get: () => on ? '__none' : g0(), set: () => {}, enumerable: true, configurable: true}); }
-          else Object.defineProperty(f, 'v', {get: () => on ? '__none' : v0, set: () => {}, enumerable: true, configurable: true}); extra.floors.push(f.bim2); }
+          Object.defineProperty(C, 'v', {get: () => cur === key ? null : '__none', set: () => {}, enumerable: true, configurable: true}); COLLIDERS.push(C); s.coll.push(C); }
+        if(!floorsDone && (o.floorsOff || []).length){ floorsDone = true;
+          for(const f of FLOORS){ if(!o.floorsOff.includes(f.bim2)) continue; const d = Object.getOwnPropertyDescriptor(f, 'v'), v0 = f.v;
+            if(d && d.get){ const g0 = d.get; Object.defineProperty(f, 'v', {get: () => removed() ? '__none' : g0(), set: () => {}, enumerable: true, configurable: true}); }
+            else Object.defineProperty(f, 'v', {get: () => removed() ? '__none' : v0, set: () => {}, enumerable: true, configurable: true}); extra.floors.push(f.bim2); } }
         // the group's honeycomb shades, raised, one per unit, like the bedroom's other windows (r29Cells)
-        try{ const sg = new THREE.Group(); sg.name = 'nb51-shades'; sg.visible = false; grp('upper').add(sg); extra.shades = sg;
-          for(const w of (o.windows || [])){ const [cx, cz] = W2(w.center[0], w.center[1]), u = W2(w.axis[0], w.axis[1]), inn = W2(-w.normal[0], -w.normal[1]);
+        try{ if((o.windows || []).length){ const sg = new THREE.Group(); sg.name = 'nb51-shades:' + key; sg.visible = false; grp('upper').add(sg); s.shades = sg;
+          for(const w of o.windows){ const [cx, cz] = W2(w.center[0], w.center[1]), u = W2(w.axis[0], w.axis[1]), inn = W2(-w.normal[0], -w.normal[1]);
             const F = {o: {id: w.id}, cx, cz, inn, u, sill: w.sill, head: w.head, W: w.width, T: w.thickness, storey: 'L2'};
-            if(R28W.cellMat) r29CellShade({id: w.id}, F, 'blackout', w.units || 1, R28W.cellMat, sg); } }catch(e){ console.warn('[nb51] shades', e); }
-        built = true; window.__NB51 = {meshes: meshes.length, tris: meshes.reduce((n, m) => n + (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3, 0), sha: h, colliders: extra.coll.length, floorsOff: extra.floors}; return true;
+            if(R28W.cellMat) r29CellShade({id: w.id}, F, 'blackout', w.units || 1, R28W.cellMat, sg); } } }catch(e){ console.warn('[nb51] shades', e); }
+        s.built = true; s.sha = h; s.shaOk = !o.sha256 || !h || h === o.sha256;
+        (window.__NB51 = window.__NB51 || {})[key] = {id: ID, meshes: s.meshes.length, tris: s.meshes.reduce((n, m) => n + (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3, 0), sha: h, shaOk: s.shaOk, colliders: s.coll.length, floorsOff: extra.floors};
+        return true;
       }catch(e){ console.warn('[nb51] package', e); return false; }
-      finally{ clearTimeout(pill); try{ if(!BUSY24.active){ const e = document.getElementById('busy24'); if(e) e.classList.remove('on'); } }catch(e){} busy = null; } })();
-    return busy; }
-  /* loose page-built pieces standing on the deck or hung on its wall (the chairs and stool, the two door lights, holiday pieces): hidden while on */
-  function clear(){ const o = ov(), B = o && o.clearBox; for(const c of hid){ c.visible = true; } hid.clear(); unclear17(); if(!on || !B) return;
+      finally{ clearTimeout(pill); try{ if(!BUSY24.active){ const e = document.getElementById('busy24'); if(e) e.classList.remove('on'); } }catch(e){} s.busy = null; } })();
+    return s.busy; }
+  /* loose page-built pieces standing on the deck or hung on its wall (the chairs and stool, the two door lights, holiday pieces): hidden while the balcony is removed */
+  function clear(){ const o = ov(cur), B = o && o.clearBox; for(const c of hid){ c.visible = true; } hid.clear(); unclear17(); if(!removed() || !B) return;
     const bb = new THREE.Box3(), cen = new THREE.Vector3(), sz = new THREE.Vector3(), seen = new Set();
     const test = c => { if(seen.has(c) || c.isInstancedMesh || c.isLight || (c.userData && (c.userData.bim2 || c.userData.nb51 || c.userData.noPick)) || !c.visible) return; seen.add(c);
       bb.setFromObject(c); if(bb.isEmpty()) return; bb.getCenter(cen); bb.getSize(sz); if(sz.x > 8 || sz.z > 8 || sz.y > 8){ if(!c.isMesh) for(const q of c.children) test(q); return; }   // a fixture group with a light wash: its parts
@@ -17175,34 +17214,50 @@ const NB51 = window.NB51 = (() => {
         if(cut){ g.setIndex(keep); m.userData.nb51cut = cut; } } }catch(e){ console.warn('[nb51] r17', e); }
     lastClear = performance.now(); }
   function unclear17(){ try{ for(const m of ((typeof R17 !== 'undefined' && R17.meshes) || [])) if(m.userData.nb51cut){ m.geometry.setIndex(null); m.userData.nb51cut = 0; } }catch(e){} }
-  function slider(show){ try{ for(const it of ((window.B3D && B3D.items) || [])) if(it.id === 'D-L2-01') for(const p of it.parts) p.piv.visible = show; }catch(e){}
-    try{ scene.traverse(q => { if(q.name === 'r35shade:roller:D-L2-01') q.visible = show; }); }catch(e){} }   // the doors' roller shade goes with them
-  async function set(v, why){ v = !!v; if(v === on) return true;
-    if(v){ const ok = await load(); if(!ok) return false; }
-    on = v; try{ if(typeof window.gtag === 'function') window.gtag('event', 'option_nobalcony', {on: v, where: why || ''}); }catch(e){}
-    BIM2.setOverlay(ID, on); for(const m of meshes) m.visible = on; if(extra.shades) extra.shades.visible = on; slider(!on); clear();
+  const doorParts = () => { const L = []; try{ for(const it of ((window.B3D && B3D.items) || [])) if(it.id === 'D-L2-01') for(const p of it.parts) L.push(p); }catch(e){} return L; };
+  /* the doors' own leaves: hidden with the windows; shown, with their foot and head moved, for a door on a curb (M = overlay.leafMap: heights below
+     lo rise by a, above hi move by b, straight in between, so the rails keep their size); the doors' roller shade shows only as built */
+  function leaves(show, M){ for(const p of doorParts()){ p.piv.visible = show;
+      for(const m of p.piv.children){ const g = m.isMesh && m.geometry, P = g && g.attributes.position; if(!P) continue;
+        if(!m.userData.w52y) m.userData.w52y = Float32Array.from({length: P.count}, (_, i) => P.getY(i));
+        const Y0 = m.userData.w52y, z0 = M ? M.z0 : 0, s = M ? (M.hi + M.b - M.lo - M.a) / (M.hi - M.lo) : 1;
+        for(let i = 0; i < P.count; i++){ const z = Y0[i] + z0; P.setY(i, !M ? Y0[i] : (z <= M.lo ? z + M.a : z >= M.hi ? z + M.b : M.lo + M.a + (z - M.lo) * s) - z0); }
+        P.needsUpdate = true; g.computeBoundingBox(); g.computeBoundingSphere(); } }
+    try{ scene.traverse(q => { if(q.name === 'r35shade:roller:D-L2-01') q.visible = !cur; }); }catch(e){} }
+  async function pick(k, why){ k = VAR[k] ? k : null; const my = ++seq; if(k === cur) return true;
+    if(k){ const ok = await load(k); if(!ok) return false; if(my !== seq) return false; }
+    cur = k; try{ if(typeof window.gtag === 'function') window.gtag('event', 'option_wall', {wall: k || 'asbuilt', where: why || ''}); }catch(e){}
+    for(const q of ORDER){ const s = ST[q], on = q === cur; if(ov(q)) BIM2.setOverlay(VAR[q].id, on); if(!s) continue; for(const m of s.meshes) m.visible = on; if(s.shades) s.shades.visible = on; }
+    const o = ov(cur); leaves(!removed(), (o && o.leafMap) || null); clear();
     try{ PERF.shadowDirty = true; }catch(e){}
     const st = STOPS[stopIdx] && STOPS[stopIdx].id;
     applyVisibility();
     if(mode === 'tour'){ try{ showStop(stopIdx, st === 'balcony'); }catch(e){} }
-    setTimeout(() => { if(on) clear(); }, 2500);
+    setTimeout(() => { if(removed()) clear(); }, 2500);
     ui(); return true; }
-  async function see(why){ const ok = await set(true, why || 'see'); if(!ok) return false;
+  const set = (v, why) => pick(v ? (cur || 'w1') : null, why);
+  async function see(why, k){ if(k || !cur){ const ok = await pick(k || 'w1', why || 'see'); if(!ok) return false; }
     const i = STOPS.findIndex(s => s.id === 'primary'); if(i < 0) return false;
     if(mode === 'tour') showStop(i); else { stopIdx = i; setMode('tour'); } return true; }
   const fx = [];
-  /* the room and walk-to labels that name the balcony step aside while it shows (they are rebuilt by the page: kept marked every half second) */
+  /* the room and walk-to labels that name the balcony step aside while it is removed (they are rebuilt by the page: kept marked every half second) */
   { const st = document.createElement('style'); st.textContent = '#labels .lbl.nb51x,#wplabels .wpl.nb51x{display:none!important}'; document.head.appendChild(st); }
-  function labels(){ for(const e of document.querySelectorAll('#labels .lbl, #wplabels .wpl')){ const x = on && /^Balcony\b/.test(e.textContent.trim()); if(e.classList.contains('nb51x') !== x) e.classList.toggle('nb51x', x); } }
-  setInterval(() => { if(on || document.querySelector('.nb51x')) labels(); }, 500);
-  function ui(){ labels(); for(const f of fx) try{ f(on); }catch(e){} try{ if(window.CTA42 && CTA42.sync) CTA42.sync(); }catch(e){}
+  function labels(){ const on = removed(); for(const e of document.querySelectorAll('#labels .lbl, #wplabels .wpl')){ const x = on && /^Balcony\b/.test(e.textContent.trim()); if(e.classList.contains('nb51x') !== x) e.classList.toggle('nb51x', x); } }
+  setInterval(() => { if(removed() || document.querySelector('.nb51x')) labels(); }, 500);
+  function ui(){ labels(); for(const f of fx) try{ f(removed(), cur); }catch(e){} try{ if(window.CTA42 && CTA42.sync) CTA42.sync(); }catch(e){}
     try{ const eb = document.getElementById('eyebrow'); if(eb && mode !== 'tour' && /^Stop \d+ of \d+$/.test(eb.textContent)) eb.textContent = 'Stop ' + (stopIdx + 1) + ' of ' + STOPS.length; }catch(e){} }
-  // ?nobalcony=1: on once the house is in
-  if(/[?&]nobalcony=1\b/.test(location.search)) (function wait(n){ const L = document.getElementById('loading');
-    if(!(window.BIM2 && BIM2.state && typeof STOPS !== 'undefined' && (!L || L.classList.contains('done')))){ if(n < 2400) setTimeout(() => wait(n + 1), 250); return; }
-    set(true, 'url'); })(0);
-  return {set, see, text, onChange: f => fx.push(f), clear, meshes, get on(){ return on; }, get built(){ return built; }, get hidden(){ return hid.size; }};
+  // ?wall=w1|w2|d1|d2 (?nobalcony=1 = w1): on once the house is in
+  { const q = /[?&]wall=(w1|w2|d1|d2)\b/i.exec(location.search), k0 = q ? q[1].toLowerCase() : (/[?&]nobalcony=1\b/.test(location.search) ? 'w1' : null);
+    if(k0) (function wait(n){ const L = document.getElementById('loading');
+      if(!(window.BIM2 && BIM2.state && typeof STOPS !== 'undefined' && (!L || L.classList.contains('done')))){ if(n < 2400) setTimeout(() => wait(n + 1), 250); return; }
+      pick(k0, 'url'); })(0); }
+  return {set, pick, see, list, onChange: f => fx.push(f), clear, keyOf: id => ORDER.find(k => VAR[k].id === id) || null,
+    get text(){ return cur ? {p: VAR[cur].p} : {}; }, get phrase(){ return cur ? VAR[cur].phrase : ''; }, get label(){ return cur ? VAR[cur].label : ''; },
+    get meshes(){ return (cur && ST[cur] && ST[cur].meshes) || []; }, meshesOf: k => (ST[k] && ST[k].meshes) || [],
+    get cur(){ return cur; }, get id(){ return cur ? VAR[cur].id : null; }, get any(){ return !!cur; }, get on(){ return removed(); },
+    get built(){ return !!(cur && ST[cur] && ST[cur].built); }, get hidden(){ return hid.size; }};
 })();
+
 
 /* ---------------- r46 ph46: a lighter phone screen (owner 11/13, from his iPhone: "Way too much crap with UX on phone ... remove the offered-at and
    schedule links and the illustrative box ... Lower box needs to be smaller too. Lighten!"). On a phone, in every mode, the screen is the header,
@@ -17247,7 +17302,7 @@ html.ph #labels .lbl.lb46off{visibility:hidden!important;pointer-events:none!imp
     vis.sort((a, b) => a.d - b.d); let n = 0; lblN = 0;
     for(const v of vis){ const hide = v.cut || n >= 7; if(!hide) n++; else lblN++; v.e.classList.toggle('lb46off', hide); } }
   function sync(){ try{
-      const ph = isPh(), idea = ph && ((typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt') || !!(window.NB51 && NB51.on));   // r51: the bedroom option too
+      const ph = isPh(), idea = ph && ((typeof ACTIVE_VAR === 'string' && ACTIVE_VAR !== 'asbuilt') || !!(window.NB51 && NB51.any));   // r51: the bedroom option too
       root.classList.toggle('id46', idea); if(tag.hidden === idea) tag.hidden = !idea;
       const t = ACTIVE_VAR === 'custom' ? 'Your design' : 'Illustrative idea', sp = tag.firstChild; if(idea && sp.textContent !== t) sp.textContent = t;
       if(note){ const want = ph ? 'short' : 'full'; if(note.dataset.t46 !== want){ note.dataset.t46 = want; if(ph) note.textContent = 'ⓘ Illustrative model · AI-generated furnishings'; else note.innerHTML = note0; try{ if(window.__v33discPlace) window.__v33discPlace(); }catch(e){} } }
@@ -24304,27 +24359,32 @@ BIM3.report.r13 = R13.report;
   /* r51: an overlay (NB51, the bedroom without the balcony) changes a few charts of the base package: bim2/ao/scene.ovl-<id>.ao.json names a
      patch baked with it on (aobake --overlay): the texels that change, in rectangles with a mask. While it shows, they are written over
      whichever atlas is bound (the base package's charts sit at the same place in every scene's atlas); off, the atlas uploads afresh. */
-  const OV = {id: 'nobalcony51', st: null, J: null, buf: null, done: new Set(), src: null};
-  async function ovlLoad(){ const r = await fetch(dir + 'scene.ovl-' + OV.id + '.ao.json', {cache: 'no-cache'}); if(!r.ok) throw new Error('no patch (' + r.status + ')');
+  /* r52: one patch per overlay (the wall options show one at a time); an overlay with no patch file keeps the atlas as it is and its own faces unshaded */
+  const OVS = {}, OVD = new Set(); let OV = null, ovSrc = null, ovWas = null;
+  const ovOf = id => OVS[id] || (OVS[id] = {id, st: null, J: null, buf: null, vdone: false});
+  async function ovlLoad(O){ const r = await fetch(dir + 'scene.ovl-' + O.id + '.ao.json', {cache: 'no-cache'}); if(!r.ok) throw new Error('no patch (' + r.status + ')');
     const J = await r.json(); if(J.format !== 'aobake-patch') throw new Error('patch format'); if(!BIM2S || J.sha256 !== BIM2S.glbSha) throw new Error('stale patch');
     const q = await fetch(dir + J.file); if(!q.ok || !window.DecompressionStream) throw new Error('patch ' + q.status);
-    OV.buf = new Uint8Array(await new Response(q.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); OV.J = J; OV.st = 'ok'; }
-  function ovlApply(tex){ if(!renderer || !renderer.copyTextureToTexture) return false; if(!OV.src) OV.src = new THREE.DataTexture(new Uint8Array(4), 1, 1, THREE.LuminanceFormat, THREE.UnsignedByteType);
-    const S = OV.src, b = OV.buf, P = new THREE.Vector2(); tex.unpackAlignment = 1; let n = 0;
-    for(const [x0, y0, w, h, off] of OV.J.rects){ const v = b.subarray(off, off + w * h), m = b.subarray(off + w * h, off + 2 * w * h);
+    O.buf = new Uint8Array(await new Response(q.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); O.J = J; O.st = 'ok'; }
+  function ovlApply(O, tex){ if(!renderer || !renderer.copyTextureToTexture) return false; if(!ovSrc) ovSrc = new THREE.DataTexture(new Uint8Array(4), 1, 1, THREE.LuminanceFormat, THREE.UnsignedByteType);
+    const S = ovSrc, b = O.buf, P = new THREE.Vector2(); tex.unpackAlignment = 1; let n = 0;
+    for(const [x0, y0, w, h, off] of O.J.rects){ const v = b.subarray(off, off + w * h), m = b.subarray(off + w * h, off + 2 * w * h);
       for(let y = 0; y < h; y++) for(let x = 0; x < w;){ if(!m[y * w + x]){ x++; continue; } let e = x; while(e < w && m[y * w + e]) e++;
         S.image = {data: v.subarray(y * w + x, y * w + e), width: e - x, height: 1}; P.set(x0 + x, y0 + y); renderer.copyTextureToTexture(P, S, tex); n++; x = e; } }
-    OV.runs = n; return true; }
-  function ovl(tex){ const on = !!(window.NB51 && NB51.on);
-    if(!on){ if(OV.done.size){ for(const t of OV.done) t.needsUpdate = true; OV.done.clear(); } return; }
-    if(!OV.st){ OV.st = 'loading'; ovlLoad().catch(e => { OV.st = 'failed'; R.ovlErr = String(e && e.message || e); console.info('[r51] baked shading patch off:', R.ovlErr); }); return; }
+    O.runs = n; return true; }
+  /* which patch an overlay takes: its own (r51's), the one its meta names (aoPatch: the tall windows change the house's own surfaces as r51's do), or none */
+  const ovPatch = id => { if(!id) return null; if(id === 'nobalcony51') return id; const o = BIM2S && (BIM2S.meta.overlays || []).find(q => q.id === id); return (o && o.aoPatch) || null; };
+  function ovl(tex){ const own = (window.NB51 && NB51.id) || null, id = ovPatch(own);
+    if(id !== ovWas){ ovWas = id; if(OVD.size){ for(const t of OVD) t.needsUpdate = true; OVD.clear(); } OV = id ? ovOf(id) : null; return; }   // off, or another option: the atlas uploads afresh first
+    if(!OV) return;
+    if(!OV.st){ OV.st = 'loading'; const O = OV; ovlLoad(O).catch(e => { O.st = 'failed'; R.ovlErr = String(e && e.message || e); console.info('[r51] baked shading patch off:', R.ovlErr); }); return; }
     if(OV.st !== 'ok') return;
-    if(!OV.vdone && window.NB51 && NB51.meshes){ OV.vdone = true;   // the overlay's own wall faces: their shading per vertex (u = 65535, v = AO)
+    if(!OV.vdone && own === OV.id && NB51.meshes.length){ OV.vdone = true;   // the overlay's own wall faces: their shading per vertex (u = 65535, v = AO)
       for(const e of (OV.J.vertex || [])){ const m = NB51.meshes.find(q => q.name === e.mesh), g = m && m.geometry; if(!g || g.attributes.position.count !== e.n) continue;
         const a = new Uint16Array(2 * e.n); for(let i = 0; i < e.n; i++){ a[2 * i] = 65535; a[2 * i + 1] = e.ao[i] * 257; } g.setAttribute('aoUv', new THREE.BufferAttribute(a, 2)); OV.vn = (OV.vn || 0) + 1; } }
-    if(!tex || OV.done.has(tex)) return;
-    if(ovlApply(tex)) OV.done.add(tex); }
-  R.ovl = () => ({st: OV.st, rects: OV.J && OV.J.rects.length, runs: OV.runs, patched: OV.done.size, vertexMeshes: OV.vn || 0, err: R.ovlErr || null});
+    if(!tex || OVD.has(tex)) return;
+    if(ovlApply(OV, tex)) OVD.add(tex); }
+  R.ovl = () => ({id: OV && OV.id, st: OV && OV.st, rects: OV && OV.J && OV.J.rects.length, runs: OV && OV.runs, patched: OVD.size, vertexMeshes: (OV && OV.vn) || 0, err: R.ovlErr || null});
   let last = now(), fr = 0, started = false;
   const tick = () => { requestAnimationFrame(tick); const t = now(), dt = Math.min(.1, (t - last) / 1000); last = t;
     if(!R.on){ R.U.aoK.value.x = 0; return; }

@@ -45,7 +45,7 @@ const srv = http.createServer((q, r) => { try{ const u = decodeURIComponent(q.ur
     await p.evaluate(id => window.IT46.show(id), scene);
     await p.waitForFunction(id => { const S = BIM2.state; return S && S.optionLoaded && Object.keys(S.optionLoaded).some(k => k.endsWith(id) && S.optionLoaded[k] === 'ok'); }, scene, {timeout: 600000, polling: 500});
   }
-  if(overlay){ await p.evaluate(() => window.NB51 && NB51.set(true, 'aobake')); await p.waitForFunction(() => window.NB51 && NB51.on, null, {timeout: 600000, polling: 500}); }
+  if(overlay){ await p.evaluate(id => window.NB51 && NB51.pick(NB51.keyOf(id), 'aobake'), overlay); await p.waitForFunction(id => window.NB51 && NB51.id === id, overlay, {timeout: 600000, polling: 500}); }   // r52: any of the wall options
   await p.waitForTimeout(8000);   // idle-time builds (r42 alcove faces, r13) settle
   const res = await p.evaluate(sceneId => {
     const S = BIM2.state, sc = window.__TOUR.scene; sc.updateMatrixWorld(true);
@@ -98,7 +98,7 @@ const srv = http.createServer((q, r) => { try{ const u = decodeURIComponent(q.ur
       o.updateMatrixWorld(true); const E = o.matrixWorld.elements, pos = new Float32Array(P.count * 3);
       for(let i = 0; i < P.count; i++){ const x = P.getX(i), y = P.getY(i), z = P.getZ(i); pos[3 * i] = E[0] * x + E[4] * y + E[8] * z + E[12]; pos[3 * i + 1] = E[1] * x + E[5] * y + E[9] * z + E[13]; pos[3 * i + 2] = E[2] * x + E[6] * y + E[10] * z + E[14]; }
       const idx = new Uint32Array(g.index.array); ovl.push({name: o.name, n: P.count, pos: b64(new Uint8Array(pos.buffer)), idx: b64(new Uint8Array(idx.buffer))}); });
-    return {scene: sceneId, overlay: window.NB51 && NB51.on ? 'nobalcony51' : null, ovl, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs, pieces};
+    return {scene: sceneId, overlay: (window.NB51 && NB51.id) || null, ovl, option: optId, glbSha: S.glbSha, optionSha: S.optionSha || null, pkg, occ: b64(new Uint8Array(f.buffer)), occTris: f.length / 9, why, objs, pieces};
   }, scene);
   // binary: 4-byte json length, json (with base64 blobs moved out), then blobs
   const blobs = []; const put = s => { const buf = Buffer.from(s, 'base64'); const o = {off: 0, len: buf.length}; blobs.push([o, buf]); return o; };

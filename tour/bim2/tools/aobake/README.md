@@ -35,6 +35,10 @@ per vertex. The page writes the masked texels over whichever atlas is bound whil
 same place in every scene's atlas) and uploads the atlas afresh when it is turned off. Re-bake it when scene.glb, the as-built atlas or the
 overlay's GLB changes.
 
+r52: the other west-wall options (`tour/bim2/tools/wallopts52.py`) have no patch of their own. `wall52-w2` (tall windows) names r51's patch
+in its meta (`aoPatch`), since it changes the house's own surfaces the same way; its own faces and the door options' (`wall52-d1`, `wall52-d2`)
+are drawn without baked shading. `export_page.js <scene> <out> <overlay id>` takes any of them; `bake.py --overlay` needs the overlay's `clearBox`.
+
 Then commit `tour/bim2/ao/` (the bake removes that scene's superseded atlas and page-uv files; a base uv file named for an old
 GLB sha can be deleted by hand once no index names it).
 
