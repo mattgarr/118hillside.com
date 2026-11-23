@@ -166,6 +166,9 @@ def build(key):
         capT = .0625; nose = .11
         for P, N in boxq(xF, X_IN, yA, yB, curb - capT, curb, skip=('-z', '-x', '+x')) + boxq(X_IN, X_IN + nose, yLa, yLb, curb - capT, curb, skip=('-x',)):
             A.add('trim', 'L2', TRIM, EL + '-CAP', P, N)
+        # the sill under the leaves, on top of the curb, out to the siding's face (the door as built has the floor's own strip there)
+        for P, N in boxq(X_OUT - .02, xF, yA, yB, curb - capT, curb, skip=('-z', '+x')):
+            A.add('openings', 'L2', 'window-frame', EL + '-SILL', P, N)
         rep['door'] = dict(curb_in=round((curb - FLOOR - .005) * 12, 2), head_in=round((head - FLOOR) * 12, 2), leaf_h_in=round((float(f(np.array([13.3617]))[0]) - float(f(np.array([FLOOR]))[0])) * 12, 2))
         hide = [DOOR] + CASING
         entry['keepLeaves'] = [DOOR]
